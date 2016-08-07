@@ -1,0 +1,8 @@
+isQueryFile=0
+useHashBasedPayloads=1
+weightFile=nmslib/compr/models/one_feature.model
+
+fieldIndexFile=nmslib/compr/memfwdindex/text_unlemm
+fieldFeatures=avg_embed
+embedFile=nmslib/compr/WordEmbeddings/word2vec_retro_unweighted_minProb=0.001.txt
+

@@ -1,0 +1,26 @@
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.005 	@     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.01 	@     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.025	@     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.05	  @     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.075	@     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.1	  @     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.2	  @     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.3	  @     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.4	  @     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.5	  @     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.6	  @     dev1
+exper@bm25=text+model1=text+simple_tran=text+model1Lambda=text:0.1+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3+probSelfTran=text:0.7	  @     dev1
+
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.005	@     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.01 	@     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.025	@     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.05	  @     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.075	@     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.1	  @     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.2	  @     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.3	  @     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.4	  @     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.5	  @     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.6	  @     dev1
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm+model1Lambda=text_unlemm:0.1+minProbModel1=text_unlemm:2.5e-3+minProbSimpleTran=text_unlemm:2.5e-3+probSelfTran=text_unlemm:0.7	  @     dev1
+

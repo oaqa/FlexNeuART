@@ -1,0 +1,12 @@
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:1e-4+minProbSimpleTran=text:1e-4       @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:2.5e-4+minProbSimpleTran=text:2.5e-4   @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:5e-4+minProbSimpleTran=text:5e-4       @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:1e-3+minProbSimpleTran=text:1e-3       @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:2.5e-3+minProbSimpleTran=text:2.5e-3   @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:5e-3+minProbSimpleTran=text:5e-3       @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:7.5e-3+minProbSimpleTran=text:7.5e-3   @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:1e-2+minProbSimpleTran=text:1e-2       @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:2.5e-2+minProbSimpleTran=text:2.5e-2   @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:5e-2+minProbSimpleTran=text:5e-2       @     dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+minProbModel1=text:1e-2+minProbSimpleTran=text:1e-2       @     dev2
+

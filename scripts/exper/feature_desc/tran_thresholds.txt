@@ -1,0 +1,8 @@
+exper@bm25=text+model1=text+simple_tran=text+minProbModel1=text:5e-3	  @   dev2
+exper@bm25=text+model1=text+simple_tran=text+minProbModel1=text:1e-2	  @   dev2
+exper@bm25=text+model1=text+simple_tran=text+minProbModel1=text:2.5e-2	@   dev2
+exper@bm25=text+model1=text+simple_tran=text+minProbModel1=text:5e-2	  @   dev2
+exper@bm25=text+model1=text+simple_tran=text+minProbModel1=text:1e-1	  @   dev2
+exper@bm25=text+model1=text+simple_tran=text+minProbModel1=text:2.5e-1	@   dev2
+exper@bm25=text	@   dev2
+

@@ -1,0 +1,15 @@
+exper@bm25=text+avg_embed=text_unlemm	word2vec_retro_unweighted_minProb=0.001.txt                   dev1
+exper@bm25=text+avg_embed=text_unlemm	word2vec_retro_weighted_minProb=0.001.txt                     dev1
+exper@bm25=text+avg_embed=text_unlemm	word2vec.txt                                                  dev1
+exper@bm25=text+avg_embed=text_unlemm	paragram_300_ws353_retro_unweighted_minProb=0.001.txt         dev1
+exper@bm25=text+avg_embed=text_unlemm	paragram_300_ws353_retro_weighted_minProb=0.001.txt           dev1
+exper@bm25=text+avg_embed=text_unlemm	paragram_300_ws353.txt                                        dev1
+exper@bm25=text+avg_embed=text_unlemm	glove.twitter.27B.200d_retro_unweighted_minProb=0.001.txt     dev1
+exper@bm25=text+avg_embed=text_unlemm	glove.twitter.27B.200d_retro_weighted_minProb=0.001.txt       dev1
+exper@bm25=text+avg_embed=text_unlemm	glove.twitter.27B.200d.txt                                    dev1
+exper@bm25=text+avg_embed=text_unlemm	paragram_300_sl999_retro_unweighted_minProb=0.001.txt         dev1
+exper@bm25=text+avg_embed=text_unlemm	paragram_300_sl999_retro_weighted_minProb=0.001.txt           dev1
+exper@bm25=text+avg_embed=text_unlemm	paragram_300_sl999.txt                                        dev1
+exper@bm25=text+avg_embed=text_unlemm	glove.840B.300d_retro_unweighted_minProb=0.001.txt            dev1
+exper@bm25=text+avg_embed=text_unlemm	glove.840B.300d_retro_weighted_minProb=0.001.txt              dev1
+exper@bm25=text+avg_embed=text_unlemm	glove.840B.300d.txt                                           dev1

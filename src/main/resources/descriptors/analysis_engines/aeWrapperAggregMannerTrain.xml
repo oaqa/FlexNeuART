@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<analysisEngineDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <frameworkImplementation>org.apache.uima.java</frameworkImplementation>
+  <primitive>false</primitive>  
+  <delegateAnalysisEngineSpecifiers>
+    <delegateAnalysisEngine key="aeAnnotAggreg">
+      <import name="descriptors.analysis_engines.aeAnnotAggreg"/>
+    </delegateAnalysisEngine>
+    <delegateAnalysisEngine key="aeLexStat">
+      <import name="descriptors.analysis_engines.aeLexStat"/>
+    </delegateAnalysisEngine>
+    <delegateAnalysisEngine key="xmiConsumer">
+      <import name="descriptors.cas_consumers.xmiConsumer"/>
+    </delegateAnalysisEngine>
+    <delegateAnalysisEngine key="aeCreateParallelCorpora">
+      <import name="descriptors.analysis_engines.aeCreateParallelCorpora"/>
+    </delegateAnalysisEngine>
+    <delegateAnalysisEngine key="aeQrelWriter">
+      <import name="descriptors.analysis_engines.aeQrelWriter"/>
+    </delegateAnalysisEngine>
+    <delegateAnalysisEngine key="aeSolrIndexFileWriter">
+      <import name="descriptors.analysis_engines.aeSolrIndexFileWriter"/>
+    </delegateAnalysisEngine>
+  </delegateAnalysisEngineSpecifiers>
+  <analysisEngineMetaData>
+    <name>aeWrapperAggreg</name>
+    <description/>
+    <version>1.0</version>
+    <vendor/>
+    <configurationParameters searchStrategy="language_fallback">
+      <configurationParameter>
+        <name>QrelFile</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+        <overrides>
+          <parameter>aeQrelWriter/QrelFile</parameter>
+        </overrides>
+      </configurationParameter>
+      <configurationParameter>
+        <name>QuestionFile</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+        <overrides>
+          <parameter>aeSolrIndexFileWriter/QuestionFile</parameter>
+        </overrides>
+      </configurationParameter>
+      <configurationParameter>
+        <name>AnswerFile</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+        <overrides>
+          <parameter>aeSolrIndexFileWriter/AnswerFile</parameter>
+        </overrides>
+      </configurationParameter>
+      <configurationParameter>
+        <name>QuestionFilePrefix</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+        <overrides>
+          <parameter>aeCreateParallelCorpora/QuestionFilePrefix</parameter>
+        </overrides>
+      </configurationParameter>
+      <configurationParameter>
+        <name>AnswerFilePrefix</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+        <overrides>
+          <parameter>aeCreateParallelCorpora/AnswerFilePrefix</parameter>
+        </overrides>
+      </configurationParameter>
+    </configurationParameters>
+    <configurationParameterSettings>
+      <nameValuePair>
+        <name>QrelFile</name>
+        <value>
+          <string>output/manner/train/qrels.txt</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>QuestionFile</name>
+        <value>
+          <string>output/manner/train/SolrQuestionFile.txt</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>AnswerFile</name>
+        <value>
+          <string>output/manner/train/SolrAnswerFile.txt</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>QuestionFilePrefix</name>
+        <value>
+          <string>output/manner/train/question</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>AnswerFilePrefix</name>
+        <value>
+          <string>output/manner/train/answer</string>
+        </value>
+      </nameValuePair>
+    </configurationParameterSettings>
+    <flowConstraints>
+      <fixedFlow>
+        <node>aeAnnotAggreg</node>
+        <node>aeLexStat</node>
+        <!--node>xmiConsumer</node-->
+        <node>aeCreateParallelCorpora</node>
+        <node>aeQrelWriter</node>
+        <node>aeSolrIndexFileWriter</node>
+      </fixedFlow>
+    </flowConstraints>
+    <fsIndexCollection/>
+    <capabilities>
+      <capability>
+        <inputs/>
+        <outputs/>
+        <languagesSupported/>
+      </capability>
+    </capabilities>
+  <operationalProperties>
+      <modifiesCas>true</modifiesCas>
+      <multipleDeploymentAllowed>true</multipleDeploymentAllowed>
+      <outputsNewCASes>false</outputsNewCASes>
+    </operationalProperties>
+  </analysisEngineMetaData>
+  <resourceManagerConfiguration/>
+</analysisEngineDescription>

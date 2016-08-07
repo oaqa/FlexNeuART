@@ -1,0 +1,21 @@
+exper@bm25=text+model1=text                                         @         dev2
+exper@bm25=text+model1=text+simple_tran=text                        @         dev2
+exper@bm25=text+model1=text_unlemm+simple_tran=text_unlemm          @         dev2
+exper@bm25=text+model1=bigram+simple_tran=bigram                    @         dev2
+exper@bm25=text+model1=srl+simple_tran=srl                          @         dev2
+exper@bm25=text+model1=srl_lab+simple_tran=srl_lab                  @         dev2
+exper@bm25=text+model1=dep+simple_tran=dep                          @         dev2
+exper@bm25=text+model1=wnss+simple_tran=wnss                        @         dev2
+
+exper@bm25=text+model1=text,text_unlemm+simple_tran=text,text_unlemm              @         dev2
+
+exper@bm25=text,text_unlemm,bigram,dep+overall_match=text,text_unlemm,bigram,dep	@         dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram	        @         dev2
+exper@bm25=text,text_unlemm,bigram	                                              @         dev2
+exper@bm25=text,text_unlemm,bigram,dep	                                          @         dev2
+
+
+exper@bm25=text,text_unlemm,bigram+model1=text+simple_tran=text                                                                          @    dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text_unlemm+simple_tran=text_unlemm                      @    dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text                                    @    dev2
+exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram+model1=text+simple_tran=text+model1=bigram+simple_tran=bigram   @    dev2

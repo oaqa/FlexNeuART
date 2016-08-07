@@ -1,0 +1,8 @@
+isQueryFile=0
+useHashBasedPayloads=1
+weightFile=nmslib/stackoverflow/models/one_feature.model
+simpleIndexType=cosine
+
+fieldIndexFile=nmslib/stackoverflow/memfwdindex/text
+fieldFeatures=bm25
+
