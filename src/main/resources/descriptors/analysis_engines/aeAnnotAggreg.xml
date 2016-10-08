@@ -38,12 +38,27 @@
           <parameter>FixedFlowController/ActionAfterCasMultiplier</parameter>
         </overrides>
       </configurationParameter>
+    <configurationParameter>
+        <name>DoPOSTagging</name>
+        <type>Boolean</type>
+        <multiValued>false</multiValued>
+        <mandatory>false</mandatory>
+        <overrides>
+          <parameter>aeInputSplitterClearAnnot1/DoPOSTagging</parameter>
+        </overrides>
+      </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
         <name>ActionAfterCasMultiplier</name>
         <value>
           <string>drop</string>
+        </value>
+      </nameValuePair>
+    <nameValuePair>
+        <name>DoPOSTagging</name>
+        <value>
+          <boolean>true</boolean>
         </value>
       </nameValuePair>
     </configurationParameterSettings>

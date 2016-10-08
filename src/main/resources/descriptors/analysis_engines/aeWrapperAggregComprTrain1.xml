@@ -4,7 +4,7 @@
   <primitive>false</primitive>  
   <delegateAnalysisEngineSpecifiers>
     <delegateAnalysisEngine key="aeAnnotAggreg">
-      <import name="descriptors.analysis_engines.aeAnnotAggreg"/>
+      <import name="descriptors.analysis_engines.aeAnnotAggregSimple"/>
     </delegateAnalysisEngine>
     <delegateAnalysisEngine key="aeLexStat">
       <import name="descriptors.analysis_engines.aeLexStat"/>

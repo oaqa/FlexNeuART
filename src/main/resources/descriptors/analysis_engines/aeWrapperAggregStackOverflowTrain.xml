@@ -3,7 +3,7 @@
   <frameworkImplementation>org.apache.uima.java</frameworkImplementation>
   <primitive>false</primitive>  
   <delegateAnalysisEngineSpecifiers>
-    <delegateAnalysisEngine key="aeAnnotAggregSimple">
+    <delegateAnalysisEngine key="aeAnnotAggreg">
       <import name="descriptors.analysis_engines.aeAnnotAggregSimple"/>
     </delegateAnalysisEngine>
     <delegateAnalysisEngine key="aeLexStat">

@@ -10,6 +10,12 @@
     <vendor/>
     <configurationParameters>
       <configurationParameter>
+        <name>DoPOSTagging</name>
+        <type>Boolean</type>
+        <multiValued>false</multiValued>
+        <mandatory>false</mandatory>
+      </configurationParameter>
+      <configurationParameter>
         <name>CheckQuality</name>
         <type>Boolean</type>
         <multiValued>false</multiValued>
@@ -38,6 +44,12 @@
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
+        <name>DoPOSTagging</name>
+        <value>
+          <boolean>false</boolean>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
         <name>CheckQuality</name>
         <value>
           <boolean>false</boolean>
@@ -49,13 +61,13 @@
           <integer>4</integer>
         </value>
       </nameValuePair>
-    <nameValuePair>
+      <nameValuePair>
         <name>SkipAnswers</name>
         <value>
           <boolean>false</boolean>
         </value>
       </nameValuePair>
-    <nameValuePair>
+      <nameValuePair>
         <name>IncludeNotBest</name>
         <value>
           <boolean>false</boolean>

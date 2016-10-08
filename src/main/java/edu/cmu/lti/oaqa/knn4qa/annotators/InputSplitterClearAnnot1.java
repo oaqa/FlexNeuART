@@ -53,11 +53,14 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   private static final String PARAM_CHECK_QUALITY = "CheckQuality";
   private static final String PARAM_SKIP_ANSWERS  = "SkipAnswers";
   private static final String PARAM_INCLUDE_NOT_BEST = "IncludeNotBest";
+  private static final String PARAM_DO_POS_TAGGING    = "DoPOSTagging";
+  
   
   private int       mMinTokQty    = 0;
   private boolean   mCheckQuality = false;
   private boolean   mSkipAnswers  = false;
   private boolean   mIncludeNotBest = false;
+  private boolean   mDoPOSTagging   = false;
   
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
     super.initialize(aContext);
@@ -69,12 +72,17 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     tmpBool = (Boolean) aContext.getConfigParameterValue(PARAM_SKIP_ANSWERS);
     if (tmpBool != null) mSkipAnswers = tmpBool;    
     tmpBool = (Boolean) aContext.getConfigParameterValue(PARAM_INCLUDE_NOT_BEST);
-    if (tmpBool != null) mIncludeNotBest = tmpBool;    
-
-    logger.info(String.format("MinTokQty=%d CheckQuality=%b SkipAnswers=%b IncludeNotBest=%b"
-        , mMinTokQty, mCheckQuality, mSkipAnswers, mIncludeNotBest));
+    if (tmpBool != null) mIncludeNotBest = tmpBool;
+    tmpBool = (Boolean) aContext.getConfigParameterValue(PARAM_DO_POS_TAGGING);
+    if (tmpBool != null) mDoPOSTagging = tmpBool;
     
-    mClearNLPEngine = new BasicEngine(aContext);
+    // quality checker needs POS tags
+    if (mCheckQuality) mDoPOSTagging = true;
+
+    logger.info(String.format("DoPOSTagging=%b MinTokQty=%d CheckQuality=%b SkipAnswers=%b IncludeNotBest=%b"
+        , mDoPOSTagging, mMinTokQty, mCheckQuality, mSkipAnswers, mIncludeNotBest));
+    
+    mClearNLPEngine = new BasicEngine(aContext, mDoPOSTagging);
   }
   
   JCas                          mQuestJCas = null;

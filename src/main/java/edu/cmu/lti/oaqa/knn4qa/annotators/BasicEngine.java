@@ -64,21 +64,29 @@ public class BasicEngine {
   }
   
 
-  public BasicEngine(UimaContext context) throws ResourceInitializationException{
-    AnalysisEngineDescription aggregate = createEngineDescription(
-// The specified Stanford model and the ClearNLP model result
-// in almost identical tagging speed of 6-8K tokens per second with 3-4 threads
-// Yet, Stanford sentence segmentation, lemmatization, and tokenization provide better results.
-        
-//        createEngineDescription(ClearNlpSegmenter.class),
-//        createEngineDescription(ClearNlpPosTagger.class, ClearNlpPosTagger.PARAM_VARIANT, "mayo"),
-//        createEngineDescription(ClearNlpLemmatizer.class)
-
-      createEngineDescription(StanfordSegmenter.class),
-      createEngineDescription(StanfordLemmatizer.class),
-      createEngineDescription(StanfordPosTagger.class, StanfordPosTagger.PARAM_VARIANT, "left3words-distsim")
-
+  public BasicEngine(UimaContext context, boolean doPOSTagging) throws ResourceInitializationException{
+    AnalysisEngineDescription aggregate = null;
+    if (doPOSTagging) {
+      aggregate = createEngineDescription(
+  // The specified Stanford model and the ClearNLP model result
+  // in almost identical tagging speed of 6-8K tokens per second with 3-4 threads
+  // Yet, Stanford sentence segmentation, lemmatization, and tokenization seem to provide better results.
+          
+  //        createEngineDescription(ClearNlpSegmenter.class),
+  //        createEngineDescription(ClearNlpPosTagger.class, ClearNlpPosTagger.PARAM_VARIANT, "mayo"),
+  //        createEngineDescription(ClearNlpLemmatizer.class)
+        createEngineDescription(StanfordSegmenter.class),
+        createEngineDescription(StanfordLemmatizer.class),
+        createEngineDescription(StanfordPosTagger.class, StanfordPosTagger.PARAM_VARIANT, "left3words-distsim")  
+          );
+      logger.info("Using POS tagger");
+    } else {
+      aggregate = createEngineDescription(
+        createEngineDescription(StanfordSegmenter.class),
+        createEngineDescription(StanfordLemmatizer.class)
         );
+      logger.info("Not using POS tagger");
+    }
 
     mEngine = createEngine(aggregate);
     long threadId = Thread.currentThread().getId();
