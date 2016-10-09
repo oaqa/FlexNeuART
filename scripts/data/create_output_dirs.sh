@@ -7,7 +7,7 @@ done
 
 mkdir -p output/ComprMinusManner/tran
 
-for part in dev1 dev2 test train1 train2 tran ; do
+for part in dev1 dev2 test train tran ; do
   mkdir -p output/compr/$part
 done
 
