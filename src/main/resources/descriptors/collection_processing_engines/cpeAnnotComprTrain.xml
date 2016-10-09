@@ -9,7 +9,7 @@
                 <nameValuePair>
                     <name>InputFile</name>
                     <value>
-                        <string>input/comprehensive-Oct2007_train2.gz</string>
+                        <string>input/comprehensive-Oct2007_train.gz</string>
                     </value>
                 </nameValuePair>
 <!--
@@ -26,7 +26,7 @@
     <casProcessors casPoolSize="4" processingUnitThreadCount="4">
     <casProcessor deployment="integrated" name="aeWrapperAggreg">
         <descriptor>
-            <import name="descriptors.analysis_engines.aeWrapperAggregComprTrain2"/>
+            <import name="descriptors.analysis_engines.aeWrapperAggregComprTrain"/>
         </descriptor>
             <deploymentParameters/>
         <errorHandling>

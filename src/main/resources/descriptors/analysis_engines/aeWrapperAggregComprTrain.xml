@@ -78,31 +78,31 @@
       <nameValuePair>
         <name>QrelFile</name>
         <value>
-          <string>output/compr/train2/qrels.txt</string>
+          <string>output/compr/train/qrels.txt</string>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>QuestionFile</name>
         <value>
-          <string>output/compr/train2/SolrQuestionFile.txt</string>
+          <string>output/compr/train/SolrQuestionFile.txt</string>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>AnswerFile</name>
         <value>
-          <string>output/compr/train2/SolrAnswerFile.txt</string>
+          <string>output/compr/train/SolrAnswerFile.txt</string>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>QuestionFilePrefix</name>
         <value>
-          <string>output/compr/train2/question</string>
+          <string>output/compr/train/question</string>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>AnswerFilePrefix</name>
         <value>
-          <string>output/compr/train2/answer</string>
+          <string>output/compr/train/answer</string>
         </value>
       </nameValuePair>
     </configurationParameterSettings>
