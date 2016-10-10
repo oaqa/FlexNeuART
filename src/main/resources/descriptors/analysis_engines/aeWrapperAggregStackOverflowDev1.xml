@@ -108,7 +108,7 @@
     </configurationParameterSettings>
     <flowConstraints>
       <fixedFlow>
-        <node>aeAnnotAggregSimple</node>
+        <node>aeAnnotAggreg</node>
         <node>aeLexStat</node>
         <!--node>xmiConsumer</node-->
         <node>aeCreateParallelCorpora</node>
