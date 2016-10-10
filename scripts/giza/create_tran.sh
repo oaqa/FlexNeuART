@@ -38,7 +38,7 @@ fi
 SUBSET=$3
 
 if [ "$SUBSET" = "" ] ; then
-  echo "Specify a SUBSET: e.g., manner, compr, ComprMinusManner (3d arg)"
+  echo "Specify a SUBSET: e.g., compr, stackoverflow, ComprMinusManner (3d arg)"
   exit 1
 fi
 
