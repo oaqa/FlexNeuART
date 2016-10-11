@@ -44,7 +44,12 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-TRAN_DIR="tran/$collect"
+tran_collect=$collect
+if [ "$collect" = "manner" ] ; then
+  tran_collect="ComprMinusManner"
+fi
+
+TRAN_DIR="tran/$tran_collect"
 
 if [ ! -d "$TRAN_DIR" ] ; then
   echo "Directory $TRAN_DIR doesn't exist"
