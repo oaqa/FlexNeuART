@@ -52,7 +52,7 @@ fi
 FIELD=$5
 
 if [ "$FIELD" = "" ] ; then
-  echo "Specify a FIELD: e.g., text, bigram, srl, srl_lab, dep, wnss (5th arg)"
+  echo "Specify a FIELD: e.g., text, text_unlemm, bigram, srl, srl_lab, dep, wnss (5th arg)"
   exit 1
 fi
 
