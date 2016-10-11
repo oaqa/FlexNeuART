@@ -26,7 +26,7 @@ fi
 TARGET_DIR_PREFIX="$2"
 
 if [ "$TARGET_DIR_PREFIX" = "" ] ; then
- echo "Specify the top-level directory for output files (2d arg)"
+ echo "Specify the top-level directory for translation files (2d arg)"
  exit 1
 fi
 
