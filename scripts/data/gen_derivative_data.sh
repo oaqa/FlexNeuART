@@ -81,6 +81,11 @@ COMPLETE_EMBED_DIR=WordEmbeddings/Complete
 OUT_EMBED_DIR=WordEmbeddings/$collect
 MAX_WORD_EMBED_QTY=100000
 
+if [ ! -d "$OUT_EMBED_DIR" ] ; then
+  mkdir -p "$OUT_EMBED_DIR"
+  check "mkdir -p $OUT_EMBED_DIR"
+fi
+
 cd src/main/c
 check "cd src/main/c"
 make 
