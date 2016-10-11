@@ -101,23 +101,23 @@ cd -
 
 FILT_CMD="scripts/embeddings/filter_embed.py memfwdindex/$collect/text_unlemm $MAX_WORD_EMBED_QTY"
 
-if [ "$collect" != "$STACK_OVERFLOW" ] ; then
-  # We don't compress word embeddings or else C++ code won't be able to read it!
-  for f in glove.twitter.27B.200d glove.840B.300d paragram_300_sl999  paragram_300_ws353 ; do
-    bzcat $COMPLETE_EMBED_DIR/$f.txt.bz2 | $FILT_CMD > $OUT_EMBED_DIR/$f.txt
-    check_pipe "bzcat $COMPLETE_EMBED_DIR/$fb.bz2 ... "
-  done
-fi
+#if [ "$collect" != "$STACK_OVERFLOW" ] ; then
+#  # We don't compress word embeddings or else C++ code won't be able to read it!
+#  for f in glove.twitter.27B.200d glove.840B.300d paragram_300_sl999  paragram_300_ws353 ; do
+#    bzcat $COMPLETE_EMBED_DIR/$f.txt.bz2 | $FILT_CMD > $OUT_EMBED_DIR/$f.txt
+#    check_pipe "bzcat $COMPLETE_EMBED_DIR/$fb.bz2 ... "
+#  done
+#fi
 
 src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.bin | $FILT_CMD > $OUT_EMBED_DIR/word2vec.txt
 check_pipe "src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.bin ... "
 
 # Task 4 retrofit
-if [ "$collect" != "$STACK_OVERFLOW" ] ; then
-  EMBED_LIST="glove.twitter.27B.200d glove.840B.300d paragram_300_sl999  paragram_300_ws353 word2vec"
-else
+#if [ "$collect" != "$STACK_OVERFLOW" ] ; then
+#  EMBED_LIST="glove.twitter.27B.200d glove.840B.300d paragram_300_sl999  paragram_300_ws353 word2vec"
+#else
   EMBED_LIST="word2vec"
-fi
+#fi
 
 MIN_RETROFIT_PROB=0.001
 scripts/embeddings/do_retrofit.sh $collect  "$EMBED_LIST"  $MIN_RETROFIT_PROB
