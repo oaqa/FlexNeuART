@@ -56,14 +56,14 @@ if [ ! -d "$TRAN_DIR" ] ; then
   exit 1
 fi
 
-FIELD_LIST="text text_unlemm"
+FIELD_LIST="text"
 
 for field in $FIELD_LIST ; do
   TRAN_DIR_TEXT="$TRAN_DIR/$field"
   TRAN_DIR_TEXT_ORIG="$TRAN_DIR/$field.orig"
 
   if [ ! -d "$TRAN_DIR_TEXT_ORIG" ] ; then
-    echo "Directory $TRAN_DIR_TEXT_ORIG doesn't exist"
+    echo "Warning: Directory $TRAN_DIR_TEXT_ORIG doesn't exist"
     exit 1
   fi
 
