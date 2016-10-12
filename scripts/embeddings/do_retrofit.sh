@@ -2,19 +2,31 @@
 
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr"
+  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow"
   exit 1
 fi
 
 EMBED_LIST=$2
 if [ "$EMBED_LIST" = "" ] ; then
-  echo "Specify the list of word embedding files (3d arg)"
+  echo "Specify the list of word embedding files (2d arg)"
   exit 1
 fi
 
-minProb=$3
+minProb=$4
 if [ "$minProb" = "" ] ; then
   echo "Specify the probability threshold (3d arg)"
+  exit 1
+fi
+
+tran_collect=$collect
+if [ "$collect" = "manner" ] ; then
+  tran_collect="ComprMinusManner"
+fi
+
+TRAN_DIR="tran/$tran_collect"
+
+if [ ! -d "$TRAN_DIR" ] ; then
+  echo "Directory $TRAN_DIR doesn't exist"
   exit 1
 fi
 
@@ -33,12 +45,12 @@ function check {
 }
 
 lexicon_weighted="WordEmbeddings/$collect/retro_minProb=${minProb}_lex_weighted"
-scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir tran/$collect/ -giza_iter_qty 5 -l $lexicon_weighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f weighted
-check "scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir tran/$collect/ -giza_iter_qty 5 -l $lexicon_weighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f weighted"
+scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir $TRAN_DIR -giza_iter_qty 5 -l $lexicon_weighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f weighted
+check "scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir $TRAN_DIR -giza_iter_qty 5 -l $lexicon_weighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f weighted"
 
 lexicon_unweighted="WordEmbeddings/$collect/retro_minProb=${minProb}_lex_unweighted"
-scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir tran/$collect/ -giza_iter_qty 5 -l $lexicon_unweighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f unweighted
-check "scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir tran/$collect/ -giza_iter_qty 5 -l $lexicon_unweighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f unweighted"
+scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir $TRAN_DIR -giza_iter_qty 5 -l $lexicon_unweighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f unweighted
+check "scripts/embeddings/run_create_retrofit_lex.sh -giza_root_dir $TRAN_DIR -giza_iter_qty 5 -l $lexicon_unweighted  -min_prob $minProb -memindex_dir memfwdindex/$collect/ -f unweighted"
 
 for efile in $EMBED_LIST ; do 
   # Weighted retrofitting

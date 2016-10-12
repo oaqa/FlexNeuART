@@ -56,7 +56,7 @@ if [ ! -d "$TRAN_DIR" ] ; then
   exit 1
 fi
 
-FIELD_LIST="text text_unlemm"
+FIELD_LIST="text_unlemm text"
 
 for field in $FIELD_LIST ; do
   TRAN_DIR_TEXT="$TRAN_DIR/$field"
