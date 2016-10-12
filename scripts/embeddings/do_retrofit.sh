@@ -12,7 +12,7 @@ if [ "$EMBED_LIST" = "" ] ; then
   exit 1
 fi
 
-minProb=$4
+minProb=$3
 if [ "$minProb" = "" ] ; then
   echo "Specify the probability threshold (3d arg)"
   exit 1
