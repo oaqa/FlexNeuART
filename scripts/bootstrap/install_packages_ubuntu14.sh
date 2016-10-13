@@ -46,13 +46,13 @@ function check_java_check_status {
   fi
 }
 
-run_cmd "mkdir -p INSTALL_DIR"
+run_cmd "mkdir -p $INSTALL_DIR"
 
 cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 INSTALL_DIR="$PWD"
 cd - ; check "cd - "
 
-run_cmd "mkdir -p DATA_DIR"
+run_cmd "mkdir -p $DATA_DIR"
 
 cd $DATA_DIR ; check "cd $DATA_DIR"
 DATA_DIR="$PWD"
@@ -146,8 +146,6 @@ echo "NMSLIB core is compiled!"
 cd ../query_server/cpp_client_server/ ; check "cd ../query_server/cpp_client_server/"
 run_cmd "make -j $BUILD_THREAD_QTY"
 echo "NMSLIB query server is compiled!"
-
-cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 
 # Now let's create all directory structure
 cd $DATA_DIR ; check "cd $DATA_DIR"
