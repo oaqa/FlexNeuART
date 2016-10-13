@@ -154,7 +154,7 @@ for dir in input output lucene_index memfwdindex WordEmbeddings tran ; do
   run_cmd "mkdir $dir"
   for collect in manner compr ComprMinusManner stackoverflow ; do
     run_cmd "mkdir $dir/$collect"
-  do
+  done
 done
 run_cmd "mkdir WordEmbeddings/Complete"
 
