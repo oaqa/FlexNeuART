@@ -169,6 +169,7 @@ NMSLIB_DIR="INSTALL_DIR/nmslib/similarity_search"
 
 cd "$KNN4QA_DIR" ; check "cd $KNN4QA_DIR"
 run_cmd "scripts/data/create_knn4qa_links.sh \"$DATA_DIR\""
+run_cmd "scripts/data/create_output_dirs.sh"
 
 # Returning to data home dir
 cd "$DATA_DIR" ; check "cd $DATA_DIR"
