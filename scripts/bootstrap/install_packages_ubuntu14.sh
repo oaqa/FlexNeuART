@@ -90,11 +90,8 @@ MAIN_PACKAGE_LIST="wget g++  \
 sudo apt-get install $MAIN_PACKAGE_LIST
 check "sudo apt-get install $MAIN_PACKAGE_LIST"
 
-mkdir -p $INSTALL_DIR
-check "Creating directory: $INSTALL_DIR"
-
-cd $INSTALL_DIR
-check "cd $INSTALL_DIR"
+# Returning to software home dir
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 
 run_cmd "git clone https://github.com/moses-smt/giza-pp.git"
 echo "GIZA++ is downloaded!"
@@ -103,6 +100,9 @@ cd giza-pp ; check "cd giza-pp"
 
 run_cmd "make -j $BUILD_THREAD_QTY"
 echo "GIZA++ is compiled!"
+
+# Returning to software home dir
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 
 KNN4QA_BRANCH=""
 run_cmd "git clone https://github.com/oaqa/knn4qa.git"
@@ -113,6 +113,9 @@ if [ "$KNN4QA_BRANCH" != "" ] ; then
   cd .. ; check "cd .. "
 fi
 echo "knn4qa is downloaded!"
+
+# Returning to software home dir
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 
 run_cmd "wget http://archive.apache.org/dist/thrift/0.9.2/thrift-0.9.2.tar.gz -O thrift-0.9.2.tar.gz"
 echo "Apache Thrift is downloaded"
@@ -130,6 +133,9 @@ echo "Apache Thrift is built. I am going to install it now. You may need to ente
 run_cmd "sudo make install && sudo ldconfig"
 
 echo "Apache Thrift is installed!"
+
+# Returning to software home dir
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 
 run_cmd "git clone https://github.com/searchivarius/nmslib.git"
 cd nmslib 
@@ -164,7 +170,9 @@ NMSLIB_DIR="INSTALL_DIR/nmslib/similarity_search"
 cd "$KNN4QA_DIR" ; check "cd $KNN4QA_DIR"
 run_cmd "scripts/data/create_knn4qa_links.sh \"$DATA_DIR\""
 
+# Returning to data home dir
 cd "$DATA_DIR" ; check "cd $DATA_DIR"
+
 run_cmd "mkdir nmslib"
 cd "nmslib" ; check "cd nmslib"
 
