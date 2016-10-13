@@ -28,10 +28,10 @@ function start_server {
   NMSLIB_INDEX=$1
   PROG_NAME="query_server"
 
-  if [ ! -f "$NMSLIB_INDEX" ] ; then
-    echo "Can't find index file: $NMSLIB_INDEX"
-    exit 1
-  fi
+  #if [ ! -f "$NMSLIB_INDEX" ] ; then
+    #echo "Can't find index file: $NMSLIB_INDEX"
+    #exit 1
+  #fi
 
   # For simplicity, we assume that there would be only one instance of the query server running on the experimentation server!
   pgrep $PROG_NAME &> /dev/null
@@ -40,7 +40,7 @@ function start_server {
     exit 1
   fi
 
-  $NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -L $NMSLIB_INDEX &> server.log  &
+  $NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> server.log  &
 
   PID=$!
 

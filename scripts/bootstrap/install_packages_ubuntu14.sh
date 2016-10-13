@@ -172,6 +172,7 @@ cd "$KNN4QA_DIR" ; check "cd $KNN4QA_DIR"
 run_cmd "scripts/data/create_knn4qa_links.sh \"$DATA_DIR\""
 run_cmd "scripts/data/create_output_dirs.sh"
 run_cmd "mvn compile"
+run_cmd "ln -s /usr/share/wordnet"
 
 echo "Links from data directory to $KNN4QA_DIR are created!"
 

@@ -77,10 +77,10 @@ if [ "$NMSLIB_INDEX" = "" ] ; then
   exit 1
 fi
 
-if [ ! -f "$NMSLIB_INDEX" ] ; then
-  echo "$NMSLIB_INDEX is not an index file (3rd positional arg)!"
-  exit 1
-fi
+#if [ ! -f "$NMSLIB_INDEX" ] ; then
+#  echo "$NMSLIB_INDEX is not an index file (3rd positional arg)!"
+#  exit 1
+#fi
 
 EXPER_DIR_BASE=results/final/$collect/$TEST_PART/nmslib/sw-graph
 
@@ -121,7 +121,7 @@ if [ "$?" = "0" ] ; then
   exit 1
 fi
 
-$NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -L $NMSLIB_INDEX &> server.log  &
+$NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> server.log  &
 
 pid=$!
 
