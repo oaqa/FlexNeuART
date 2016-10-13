@@ -142,7 +142,7 @@ cd nmslib
 check "cd nmslib"
 
 run_cmd "git fetch"
-run_cmd "git checkout nmslib4a_cikm2016"
+run_cmd "git checkout nmslib4qa_cikm2016"
 
 cd similarity_search
 check "cd similarity_search"
@@ -182,6 +182,9 @@ for collect in compr stackoverflow ; do
   run_cmd "mkdir -p $collect/queries"
   run_cmd "$KNN4QA_DIR/scripts/data/create_nmslib4qa_links.sh \"$DATA_DIR\" \"$INSTALL_DIR\" $collect"
 done
+
+cd $NMSLIB_DIR ; check "cd $NMSLIB_DIR"
+run_cmd "ln -s $DATA_DIR/nmslib"
 
 echo "Data directories are created, please, explore $DATA_DIR/data, $KNN4QA_DIR, and $NMSLIB_DIR"
 echo "Script finished successfully!"

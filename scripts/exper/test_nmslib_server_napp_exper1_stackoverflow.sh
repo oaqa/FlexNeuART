@@ -148,7 +148,7 @@ NMSLIB_METHOD="napp_qa1"
 NMSLIB_FIELDS="text"
 NMSLIB_PORT=10000
 NMSLIB_HEADER="nmslib/$collect/headers/$NMSLIB_HEADER_NAME"
-NMSLIB_PATH_SERVER=../nmslib4qa/query_server/cpp_client_server
+NMSLIB_PATH_SERVER=../nmslib/query_server/cpp_client_server
 WORD_EMBEDDINGS="word2vec_retro_unweighted_minProb=0.001.txt"
 #FIELD_CODE_PIVOT="3field"
 FIELD_CODE_PIVOT="text_field"

@@ -146,7 +146,7 @@ NMSLIB_METHOD="napp_qa1"
 NMSLIB_FIELDS="text"
 NMSLIB_PORT=10000
 NMSLIB_HEADER="nmslib/$collect/headers/$NMSLIB_HEADER_NAME"
-NMSLIB_PATH_SERVER=../nmslib4qa/query_server/cpp_client_server
+NMSLIB_PATH_SERVER=../nmslib/query_server/cpp_client_server
 WORD_EMBEDDINGS="word2vec_retro_unweighted_minProb=0.001.txt"
 
 echo "The number of threads:       $THREAD_QTY"
