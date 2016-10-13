@@ -9,7 +9,7 @@
                 <nameValuePair>
                     <name>InputFile</name>
                     <value>
-                        <string>input/StackOverflow_dev1.gz</string>
+                        <string>input/stackoverflow/StackOverflow_dev1.gz</string>
                     </value>
                 </nameValuePair>
 <!--

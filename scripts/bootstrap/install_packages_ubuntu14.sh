@@ -116,5 +116,48 @@ check "cd nmslib"
 
 run_cmd "git fetch"
 run_cmd "git checkout nmslib4a_cikm2016"
-cd .. ; check "cd .. "
+
+cd similarity_search
+check "cd similarity_search"
+run_cmd "cmake ."
+run_cmd "make -j $BUILD_THREAD_QTY"
+echo "NMSLIB core is compiled!"
+cd ../query_server/cpp_client_server/ ; check "cd ../query_server/cpp_client_server/"
+run_cmd "make -j $BUILD_THREAD_QTY"
+echo "NMSLIB query server is compiled!"
+
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
+
+# Now let's create all directory structure
+run_cmd "mkdir data"
+cd data ; check "cd data"
+
+for dir in input output lucene_index memfwdindex WordEmbeddings tran ; do
+  run_cmd "mkdir $dir"
+  for collect in manner compr ComprMinusManner stackoverflow ; do
+    run_cmd "mkdir $dir/$collect"
+  do
+done
+run_cmd "mkdir WordEmbeddings/Complete"
+
+KNN4QA_DIR="$INSTALL_DIR/knn4qa"
+NMSLIB_DIR="INSTALL_DIR/nmslib/similarity_search"
+
+cd "$KNN4QA_DIR" ; check "cd $KNN4QA_DIR"
+run_cmd "scripts/data/create_knn4qa_links.sh \"$DATA_DIR\""
+
+cd "$DATA_DIR" ; check "cd $DATA_DIR"
+run_cmd "mkdir nmslib"
+cd "nmslib" ; check "cd nmslib"
+
+for collect in compr stackoverflow ; do
+  run_cmd "mkdir pivots"
+  run_cmd "mkdir queries"
+  run_cmd "$KNN4QA_DIR/scripts/data/create_knn4qa_links.sh \"$DATA_DIR\" \"$INSTALL_DIR\" $collect"
+done
+
+echo "Data directories are created, please, explore $DATA_DIR/data, $KNN4QA_DIR, and $NMSLIB_DIR"
+echo "Script finished successfully!"
+
+
 

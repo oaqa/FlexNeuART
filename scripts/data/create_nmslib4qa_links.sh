@@ -19,19 +19,29 @@ if [ ! -d "$DATA_ROOT" ] ; then
   echo "'$DATA_ROOT' is not a directory (1st arg)!"
   exit 1
 fi
-collect=$2
+INSTALL_DIR=$2
+if [ "$INSTALL_DIR" = "" ] ; then
+  echo "Specify the directory where our software is installed (including clones of repositories knn4qa and nmslib) (2d arg)"
+  exit 1
+fi
+if [ ! -d "$INSTALL_DIR" ] ; then
+  echo "Not a directory: $INSTALL_DIR"
+  exit 1
+fi
+KNN4QA_DIR="$INSTALL_DIR/knn4qa"
+if [ ! -d "$INSTALL_DIR" ] ; then
+  echo "Not a directory: $INSTALL_DIR"
+  exit 1
+fi
+
+collect=$3
 if [ "$collect" = "" ] ; then
-  echo "Specify collection name (2d arg): manner, compr2M, or compr"
+  echo "Specify collection name (3d arg): manner, compr, stackoverflow, ..."
   exit 1
 fi
 tran_src_name="$collect"
 if [ "$collect" = "manner" ] ; then
   tran_src_name="ComprMinusManner"
-elif [ "$collect" = "compr2M" -o "$collect" = "compr" ] ; then
-  tran_src_name="compr"
-else
-  echo "Unknown collection name: $collect (expect manner, compr2M, or compr)"
-  exit 1
 fi
 if [ ! -d "$collect" ] ; then
   echo "Not a directory: '$collect'"
@@ -49,3 +59,12 @@ ln -s "$DATA_ROOT/memfwdindex/$collect" memfwdindex
 check "ln -s "$DATA_ROOT/memfwdindex/$collect" memfwdindex"
 ln -s "$DATA_ROOT/WordEmbeddings/$collect" WordEmbeddings
 check "ln -s "$DATA_ROOT/WordEmbeddings/$collect" WordEmbeddings"
+# Headers and/or models may not be always present
+if [ -d "$KNN4QA_DIR/scripts/nmslib/meta/compr/headers/"  ] ; then
+  ln -s "$KNN4QA_DIR/scripts/nmslib/meta/compr/headers/" 
+  check "ln -s $KNN4QA_DIR/scripts/nmslib/meta/compr/headers/" 
+fi
+if [ -d "$KNN4QA_DIR/scripts/nmslib/meta/compr/models/"  ] ; then
+  ln -s "$KNN4QA_DIR/scripts/nmslib/meta/compr/models/" 
+  check "ln -s $KNN4QA_DIR/scripts/nmslib/meta/compr/models/" 
+fi

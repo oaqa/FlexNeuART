@@ -9,7 +9,7 @@
                 <nameValuePair>
                     <name>InputFile</name>
                     <value>
-                        <string>input/manner-v2.0_train.gz</string>
+                        <string>input/manner/manner-v2.0_train.gz</string>
                     </value>
                 </nameValuePair>
 <!--

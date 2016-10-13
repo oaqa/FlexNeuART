@@ -9,7 +9,7 @@
                 <nameValuePair>
                     <name>InputFile</name>
                     <value>
-                        <string>input/ComprMinusManner.gz</string>
+                        <string>input/ComprMinusManner/ComprMinusManner.gz</string>
                     </value>
                 </nameValuePair>
 <!--
