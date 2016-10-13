@@ -165,7 +165,7 @@ done
 run_cmd "mkdir WordEmbeddings/Complete"
 
 KNN4QA_DIR="$INSTALL_DIR/knn4qa"
-NMSLIB_DIR="INSTALL_DIR/nmslib/similarity_search"
+NMSLIB_DIR="$INSTALL_DIR/nmslib/similarity_search"
 
 cd "$KNN4QA_DIR" ; check "cd $KNN4QA_DIR"
 run_cmd "scripts/data/create_knn4qa_links.sh \"$DATA_DIR\""
