@@ -46,8 +46,8 @@ function check_java_check_status {
   fi
 }
 
-run_cmd "INSTALL_DIR"
-run_cmd "DATA_DIR"
+run_cmd "mkdir -p INSTALL_DIR"
+run_cmd "mkdir -p DATA_DIR"
 
 # This is a very crude check, feel free to
 # remove if you are comfortable with using
