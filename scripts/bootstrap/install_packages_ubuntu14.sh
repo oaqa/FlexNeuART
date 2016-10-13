@@ -47,7 +47,16 @@ function check_java_check_status {
 }
 
 run_cmd "mkdir -p INSTALL_DIR"
+
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
+INSTALL_DIR="$PWD"
+cd - ; check "cd - "
+
 run_cmd "mkdir -p DATA_DIR"
+
+cd $DATA_DIR ; check "cd $DATA_DIR"
+DATA_DIR="$PWD"
+cd - ; check "cd - "
 
 # This is a very crude check, feel free to
 # remove if you are comfortable with using
@@ -62,6 +71,8 @@ check_java_check_status
 echo "Oracle Java 8 found!"
 
 echo "I am going to install a few packages via 'sudo apt-get install'. You may need to enter a password!"
+
+run_cmd "sudo apt-get update"
 
 MAIN_PACKAGE_LIST="wget g++  \
                       git    \
