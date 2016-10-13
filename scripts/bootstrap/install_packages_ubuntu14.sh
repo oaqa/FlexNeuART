@@ -7,10 +7,17 @@ if [ "$INSTALL_DIR" = "" ] ; then
   exit 1
 fi
 
-BUILD_THREAD_QTY=$2
+DATA_DIR="$2"
+
+if [ "$DATA_DIR" = "" ] ; then
+  echo "Specify a data directory (1st arg)"
+  exit 1
+fi
+
+BUILD_THREAD_QTY=$3
 
 if [ "$BUILD_THREAD_QTY" = "" ] ; then
-  echo "Specify the number of threads to build C/C++ applications, e.g., 4"
+  echo "Specify the number of threads to build C/C++ applications, e.g., 4 (3d arg)"
   exit 1
 fi
 
@@ -38,6 +45,9 @@ function check_java_check_status {
     exit 1
   fi
 }
+
+run_cmd "INSTALL_DIR"
+run_cmd "DATA_DIR"
 
 # This is a very crude check, feel free to
 # remove if you are comfortable with using
@@ -129,8 +139,7 @@ echo "NMSLIB query server is compiled!"
 cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 
 # Now let's create all directory structure
-run_cmd "mkdir data"
-cd data ; check "cd data"
+cd $DATA_DIR ; check "cd $DATA_DIR"
 
 for dir in input output lucene_index memfwdindex WordEmbeddings tran ; do
   run_cmd "mkdir $dir"
