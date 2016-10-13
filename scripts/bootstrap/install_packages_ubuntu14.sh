@@ -177,9 +177,9 @@ run_cmd "mkdir nmslib"
 cd "nmslib" ; check "cd nmslib"
 
 for collect in compr stackoverflow ; do
-  run_cmd "mkdir pivots"
-  run_cmd "mkdir queries"
-  run_cmd "$KNN4QA_DIR/scripts/data/create_knn4qa_links.sh \"$DATA_DIR\" \"$INSTALL_DIR\" $collect"
+  run_cmd "mkdir $collect/pivots"
+  run_cmd "mkdir $collect/queries"
+  run_cmd "$KNN4QA_DIR/scripts/data/create_nmslib4qa_links.sh \"$DATA_DIR\" \"$INSTALL_DIR\" $collect"
 done
 
 echo "Data directories are created, please, explore $DATA_DIR/data, $KNN4QA_DIR, and $NMSLIB_DIR"
