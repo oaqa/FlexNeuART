@@ -59,12 +59,8 @@ ln -s "$DATA_ROOT/memfwdindex/$collect" memfwdindex
 check "ln -s "$DATA_ROOT/memfwdindex/$collect" memfwdindex"
 ln -s "$DATA_ROOT/WordEmbeddings/$collect" WordEmbeddings
 check "ln -s "$DATA_ROOT/WordEmbeddings/$collect" WordEmbeddings"
-# Headers and/or models may not be always present
-if [ -d "$KNN4QA_DIR/scripts/nmslib/meta/compr/headers/"  ] ; then
-  ln -s "$KNN4QA_DIR/scripts/nmslib/meta/compr/headers/" 
-  check "ln -s $KNN4QA_DIR/scripts/nmslib/meta/compr/headers/" 
-fi
-if [ -d "$KNN4QA_DIR/scripts/nmslib/meta/compr/models/"  ] ; then
-  ln -s "$KNN4QA_DIR/scripts/nmslib/meta/compr/models/" 
-  check "ln -s $KNN4QA_DIR/scripts/nmslib/meta/compr/models/" 
-fi
+
+ln -s "$KNN4QA_DIR/scripts/nmslib/meta/$collect/headers/" 
+check "ln -s $KNN4QA_DIR/scripts/nmslib/meta/$collect/headers/" 
+ln -s "$KNN4QA_DIR/scripts/nmslib/meta/$collect/models/" 
+check "ln -s $KNN4QA_DIR/scripts/nmslib/meta/$collect/models/" 
