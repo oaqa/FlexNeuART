@@ -70,22 +70,23 @@ if [ "$TEST_PART" = "" ] ; then
   exit 1 
 fi
 
-NMSLIB_INDEX="${POS_ARGS[2]}"
-
-if [ "$NMSLIB_INDEX" = "" ] ; then
-  echo "Specify a location of the sw-graph index (3rd positional arg)!"
-  exit 1
-fi
-
-#if [ ! -f "$NMSLIB_INDEX" ] ; then
-#  echo "$NMSLIB_INDEX is not an index file (3rd positional arg)!"
-#  exit 1
-#fi
 
 EXPER_DIR_BASE=results/final/$collect/$TEST_PART/nmslib/sw-graph
 
+NMSLIB_INDEX_DIR="nmslib/$collect/index/test/$NMSLIB_HEADER_NAME"
+if [ ! -d "$NMSLIB_INDEX_DIR" ] ; then
+  mkdir -p $NMSLIB_INDEX_DIR ; 
+  check "mkdir -p $NMSLIB_INDEX_DIR"
+fi
+
+INDEX_PARAMS="NN=10,initIndexAttempts=2,efConstruction=900"
+
+NMSLIB_INDEX="$NMSLIB_INDEX_DIR/sw-graph_${INDEX_PARAMS}"
+
 echo "Header: $NMSLIB_HEADER_NAME"
 echo "Base exper dir: $EXPER_DIR_BASE"
+echo "NMSLIB index dir: $NMSLIB_INDEX_DIR"
+echo "NMSLIB index: $NMSLIB_INDEX"
 
 EXTR_TYPE_FINAL="none"
 EXTR_MODEL_FINAL="none"
@@ -121,7 +122,7 @@ if [ "$?" = "0" ] ; then
   exit 1
 fi
 
-$NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> server.log  &
+$NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -C $INDEX_PARAMS -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> server.log  &
 
 pid=$!
 

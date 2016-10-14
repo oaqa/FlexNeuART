@@ -57,7 +57,7 @@ QUERY_SET="dev1"
 QUERY_FILE="text_queries.txt"
 GS_CACHE_DIR="gs_cache/$COLLECT_NAME/$HEADER_FILE"
 REPORT_DIR="results/tunning/$COLLECT_NAME/$HEADER_FILE"
-INDEX_DIR="indices/$COLLECT_NAME/$HEADER_FILE"
+INDEX_DIR="nmslib/$COLLECT_NAME/index/tuning/$HEADER_FILE"
 SPACE="qa1"
 CHUNK_INDEX_SIZE=$((114*1024))
 K=100
@@ -85,7 +85,7 @@ if [ ! -d "$INDEX_DIR" ] ; then
   check "mkdir -p "$INDEX_DIR""
 fi
 
-REPORT_PREF="$REPORT_DIR/tunning_napp_bm25_text_step2_${QUERY_SET}"
+REPORT_PREF="$REPORT_DIR/tunning_napp_bm25_text_${QUERY_SET}"
 GS_CACHE_PREF="$GS_CACHE_DIR/${SPACE}_${QUERY_SET}"
 INDEX_PREF="$INDEX_DIR/napp"
 
@@ -114,8 +114,8 @@ do
   pivot_file_name="pivots_text_field_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
   INDEX_PARAMS="chunkIndexSize=$CHUNK_INDEX_SIZE,numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex,pivotFile=nmslib/$COLLECT_NAME/pivots/$pivot_file_name"
 
-  INDEX_PARAM_PREF="numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex"
-  INDEX_NAME="${INDEX_PREF}_${INDEX_PARAM_PREF}_${pivot_file_name}"
+  INDEX_PARAMS_NOSLASH=`echo $INDEX_PARAMS|sed 's|/|_|g'`
+  INDEX_NAME="${INDEX_PREF}_${INDEX_PARAMS_NOSLASH}"
 
   INDEX_NAME_COMP="${INDEX_NAME}.gz"
   if [ -f "$INDEX_NAME_COMP" ]

@@ -26,6 +26,7 @@ PID=""
 
 function start_server {
   NMSLIB_INDEX=$1
+  INDEX_PARAMS=$2
   PROG_NAME="query_server"
 
   #if [ ! -f "$NMSLIB_INDEX" ] ; then
@@ -40,7 +41,7 @@ function start_server {
     exit 1
   fi
 
-  $NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> server.log  &
+  $NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -c $INDEX_PARAMS -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> server.log  &
 
   PID=$!
 
@@ -117,23 +118,19 @@ if [ "$TEST_PART" = "" ] ; then
   exit 1 
 fi
 
-NMSLIB_INDEX_DIR="${POS_ARGS[1]}"
-
-if [ "$NMSLIB_INDEX_DIR" = "" ] ; then
-  echo "Specify a location of the directory with NAPP indices (2d positional arg)!"
-  exit 1
-fi
-
-if [ ! -d "$NMSLIB_INDEX_DIR" ] ; then
-  echo "$NMSLIB_INDEX_DIR is not a directory (2rd positional arg)!"
-  exit 1
-fi
-
 NMSLIB_HEADER_NAME="header_bm25_text"
 EXPER_DIR_BASE=results/final/$collect/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
 
+NMSLIB_INDEX_DIR="nmslib/$collect/index/test/$NMSLIB_HEADER_NAME"
+if [ ! -d "$NMSLIB_INDEX_DIR" ] ; then
+  mkdir -p $NMSLIB_INDEX_DIR ; 
+  check "mkdir -p $NMSLIB_INDEX_DIR"
+fi
+
+
 echo "Header: $NMSLIB_HEADER_NAME"
 echo "Base exper dir: $EXPER_DIR_BASE"
+echo "NMSLIB index dir: $NMSLIB_INDEX_DIR"
 
 CAND_PROV_TYPE="nmslib"
 NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
@@ -154,19 +151,20 @@ if [ "$max_num_query_param" != "" ] ; then
   echo "Max # of queries param:      $max_num_query_param"
 fi
 
+PIVOT_FILE_PARAM="pivotFile=nmslib/$collect/pivots/pivots_text_field_maxTermQty50K_pivotTermQty1000"
 
 PARAMS=( \
-"napp_numPivot=8000,numPivotIndex=200_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=13" \
-"napp_numPivot=8000,numPivotIndex=200_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=14" \
+"napp_numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=13" \
+"napp_numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=14" \
 
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=10" \
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=11" \
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=12" \
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=5" \
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=6" \
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=7" \
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=8" \
-"napp_numPivot=8000,numPivotIndex=100_pivots_text_field_maxTermQty50K_pivotTermQty1000" "numPivotSearch=9" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=10" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=11" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=12" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=5" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=6" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=7" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=8" \
+"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=9" \
 
 )
 
@@ -182,7 +180,9 @@ do
   ii=$((2*$i))
   iq=$((2*$i+1))
 
-  index_name=${PARAMS[$ii]}
+  index_params=${PARAMS[$ii]}
+  index_params_noslash=`echo $index_params|sed 's|/|_|g'`
+  index_name=napp_${index_params_noslash}
   query_time_params=${PARAMS[$iq]}
 
   echo "Index name: $index_name"
@@ -198,7 +198,7 @@ do
       kill -9 $PID 
       sleep 5
     fi
-    start_server $NMSLIB_INDEX_DIR/$index_name
+    start_server $NMSLIB_INDEX_DIR/$index_name $index_params
     PREV_INDEX=$index_name
   fi
 
