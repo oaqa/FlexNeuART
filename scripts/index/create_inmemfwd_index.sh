@@ -28,7 +28,7 @@ if [ "$collect" = "manner" ] ; then
     exit 1
   fi
 elif [ "$collect" = "compr" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train1,train2,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt # -exclude_fields "srl,srl_lab,dep,wnss"
+  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt # -exclude_fields "srl,srl_lab,dep,wnss"
   if [ "$?" != "0" ] ; then
     echo "FAILURE!!!"
     exit 1
@@ -43,7 +43,7 @@ elif [ "$collect" = "compr_notran" ] ; then
   # compr_notran is used merely for filtering of embeddings and IBM Model1 translation tables
   # therefore, we create index only for two text fields, excluding everything else 
   IN_DIR="output/compr/"
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train1,train2,dev1,dev2,test  -solr_file SolrAnswerFile.txt  -exclude_fields "bigram,srl,srl_lab,dep,wnss"
+  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test  -solr_file SolrAnswerFile.txt  -exclude_fields "bigram,srl,srl_lab,dep,wnss"
   if [ "$?" != "0" ] ; then
     echo "FAILURE!!!"
     exit 1
@@ -51,7 +51,7 @@ elif [ "$collect" = "compr_notran" ] ; then
 elif [ "$collect" = "compr2M" ] ; then
   # For compr2M the order of parts MUST be the same as in create_lucene_index.sh !!!
   IN_DIR="output/compr/"
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train1,train2,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -n 2000000
+  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -n 2000000
   if [ "$?" != "0" ] ; then
     echo "FAILURE!!!"
     exit 1

@@ -25,7 +25,7 @@ if [ "$collect" = "manner" ] ; then
     exit 1
   fi
 elif [ "$collect" = "compr" ] ; then
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train1,train2,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt
+  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt
   if [ "$?" != "0" ] ; then
     echo "FAILURE!!!"
     exit 1
@@ -39,7 +39,7 @@ elif [ "$collect" = "stackoverflow" ] ; then
 elif [ "$collect" = "compr2M" ] ; then
   # For compr2M the order of parts MUST be the same as in create_inmemfwd_index.sh !!!
   IN_DIR="output/compr/"
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train1,train2,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -n 2000000
+  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -n 2000000
   if [ "$?" != "0" ] ; then
     echo "FAILURE!!!"
     exit 1

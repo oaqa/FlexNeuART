@@ -88,8 +88,8 @@ MAIN_PACKAGE_LIST="wget g++  \
                       automake libtool flex bison pkg-config \
                       libssl-dev libboost-thread-dev make"
 
-sudo apt-get install $MAIN_PACKAGE_LIST
-check "sudo apt-get install $MAIN_PACKAGE_LIST"
+sudo apt-get install --assume-yes $MAIN_PACKAGE_LIST
+check "sudo apt-get install --assume-yes $MAIN_PACKAGE_LIST"
 
 # Returning to software home dir
 cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
