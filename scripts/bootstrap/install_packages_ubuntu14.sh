@@ -188,10 +188,15 @@ echo "Installed a patched version of Clear NLP 2.0.2!"
 
 # Installing trec_eval
 
+# Returning to software home dir
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
+
 run_cmd "wget https://github.com/usnistgov/trec_eval/archive/v9.0.4.tar.gz -O v9.0.4.tar.gz"
 run_cmd "tar -zxvf v9.0.4.tar.gz"
 cd trec_eval-9.0.4/ ; check "cd trec_eval-9.0.4/"
 run_cmd "make -j $BUILD_THREAD_QTY"
+cd "$KNN4QA_DIR" ; check "cd $KNN4QA_DIR"
+run_cmd "ln -s $INSTALL_DIR/trec_eval-9.0.4/"
 
 echo "trec_eval is installed!"
 
