@@ -177,6 +177,8 @@ run_cmd "ln -s /usr/share/wordnet"
 echo "Links from data directory to $KNN4QA_DIR are created!"
 
 # Returning to software home dir
+cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
+
 run_cmd "git clone https://github.com/searchivarius/clearnlp-clearnlp-2.0.2.mod.git"
 cd clearnlp-clearnlp-2.0.2.mod ; check "cd clearnlp-clearnlp-2.0.2.mod"
 run_cmd "mvn compile"
