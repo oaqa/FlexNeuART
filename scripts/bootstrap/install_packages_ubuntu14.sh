@@ -206,7 +206,7 @@ cd "$DATA_DIR" ; check "cd $DATA_DIR"
 run_cmd "mkdir nmslib"
 cd "nmslib" ; check "cd nmslib"
 
-for collect in compr stackoverflow ; do
+for collect in manner compr stackoverflow ; do
   run_cmd "mkdir -p $collect/pivots"
   run_cmd "mkdir -p $collect/queries"
   run_cmd "mkdir -p $collect/index"
