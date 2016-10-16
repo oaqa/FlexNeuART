@@ -127,7 +127,9 @@ run_cmd "./configure --without-erlang --without-nodejs --without-lua \
                      --without-php --without-ruby --without-haskell \
                      --without-go --without-d"
 
-run_cmd "make -j $BUILD_THREAD_QTY"
+#run_cmd "make -j $BUILD_THREAD_QTY"
+# A multi-threaded build of thrift fails for some reason some time
+run_cmd "make"
 
 echo "Apache Thrift is built. I am going to install it now. You may need to enter a password!"
 
