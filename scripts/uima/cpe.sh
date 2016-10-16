@@ -11,7 +11,7 @@ fi
 MEM_SIZE_MX_KB=`free|grep Mem|awk '{print $2}'`
 MEM_SIZE_MIN_KB=$((3*$MEM_SIZE_MX_KB/4))
 export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MX_KB}k -server"
-mvn compile exec:java -Dexec.mainClass=org.apache.uima.examples.cpe.SimpleRunCPE  -Dexec.args="$DescPath"
+mvn compile exec:java -Dexec.mainClass=edu.cmu.lti.oaqa.knn4qa.apps.SimpleRunCPE_fixed  -Dexec.args="$DescPath"
 if [ "$?" != "0" ] ; then
   echo "Annotation process failed!"
   exit 1
