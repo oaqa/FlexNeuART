@@ -57,7 +57,7 @@ echo "Full path to raw input files: $INSTALL_DIR"
 
 # Let's check if you downloaded GoogleNews embeddings
 EmbedName="GoogleNews-vectors-negative300.bin"
-EmbedDir="$DATA_DIR/Embeddings/Complete/"
+EmbedDir="$DATA_DIR/WordEmbeddings/Complete/"
 if [ ! -f "$EmbedDir/$EmbedName" ] ; then
   echo "Download the file GoogleNews-vectors-negative300.bin and place it $EmbedDir (from https://code.google.com/archive/p/word2vec/)" 
   exit 1
