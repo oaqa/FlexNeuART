@@ -46,34 +46,6 @@ fi
 
 KNN4QA_DIR="$INSTALL_DIR/knn4qa"
 
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
-
-function check_pipe {
-  f="${PIPESTATUS[*]}"
-  name=$1
-  if [ "$f" != "0 0" ] ; then
-    echo "******************************************"
-    echo "* Failed (pipe): $name, exit statuses: $f "
-    echo "******************************************"
-    exit 1
-  fi
-}
-
-function run_cmd {
-  cmd="$1"
-  bash -c "$cmd"
-  check "$cmd"
-}
-
 cd $KNN4QA_DIR ; check "cd $KNN4QA_DIR"
 
 CPE_DIR="$KNN4QA_DIR/src/main/resources/descriptors/collection_processing_engines"
@@ -85,6 +57,34 @@ function restore_desc_exit {
   cc $CPE_DIR ; check "cd $CPE_DIR"
   git checkout * ; check "git checkout *"
   exit $exit_status
+}
+
+function check {
+  f="$?"
+  name=$1
+  if [ "$f" != "0" ] ; then
+    echo "**************************************"
+    echo "* Failed: $name"
+    echo "**************************************"
+    restore_desc_exit 1
+  fi
+}
+
+function check_pipe {
+  f="${PIPESTATUS[*]}"
+  name=$1
+  if [ "$f" != "0 0" ] ; then
+    echo "******************************************"
+    echo "* Failed (pipe): $name, exit statuses: $f "
+    echo "******************************************"
+    restore_desc_exit 1
+  fi
+}
+
+function run_cmd {
+  cmd="$1"
+  bash -c "$cmd"
+  check "$cmd"
 }
 
 # 1. Splitting collections
@@ -149,6 +149,79 @@ for col in manner compr stackoverflow ; do
   check "$CMD_NAME logging to $LOG_FILE"
 done
 
+echo "Lucene and forward indices are created!"
+
+# 4 Creating IBM Model 1 translation files
+for col in ComprMinusManner compr stackoverflow ; do
+  for field in text text_unlemm ; do
+    CMD_NAME="Building IBM Model 1 for $col field $field"
+    LOG_FILE="log_model1.${col}_${field}"
+    echo "Running $CMD_NAME logging to $LOG_FILE"
+    scripts/giza/create_tran.sh output tran $col tran $field /home/ubuntu/soft/giza-pp 0 5  > $LOG_FILE
+    check "$CMD_NAME logging to $LOG_FILE"
+  done
+done
+
+echo "IBM Model 1 translation files are created!"
+
+# 5 Building derivative data
+for col in ComprMinusManner compr stackoverflow ; do
+  CMD_NAME="Generative derivative data for $col"
+  LOG_FILE="log_deriv.$col"
+  echo "Running $CMD_NAME logging to $LOG_FILE"
+  scripts/data/gen_derivative_data.sh $col
+  check "$CMD_NAME logging to $LOG_FILE"
+done
+
+echo "Derivative data is generated!"
+
+# 6 Let's generate pivots and queries
+for col in compr stackoverflow ; do
+  CMD_NAME="generative pivots for $col"
+  LOG_FILE="log_pivots.$col"
+  echo "Running $CMD_NAME logging to $LOG_FILE"
+  scripts/nmslib/gen_nmslib_pivots.sh /home/ubuntu/data $col
+  check "$CMD_NAME logging to $LOG_FILE"
+done
+echo "Pivots are generated!"
+
+for col in compr stackoverflow ; do
+  CMD_NAME="generative queries for $col"
+  LOG_FILE="log_queries.$col"
+  echo "Running $CMD_NAME logging to $LOG_FILE"
+  scripts/nmslib/gen_nmslib_queries.sh /home/ubuntu/data $col
+  check "$CMD_NAME logging to $LOG_FILE"
+done
+echo "Queries are generated!"
+
+# 7 Feature experiments 
+for col in ComprMinusManner compr stackoverflow ; do
+  CMD_NAME="running feature experiments for $col (using 2 parallel processes)"
+  LOG_FILE="log_feature_exper.$col"
+  echo "Running $CMD_NAME logging to $LOG_FILE"
+  scripts/exper/run_feature_experiments.sh manner scripts/exper/feature_desc/test4combinations.txt 2 2>&1| tee $LOG_FILE
+  check_pipe "$CMD_NAME logging to $LOG_FILE"
+done
+echo "Test feature experiments are finished!"
+
+# 8 Main experiments
+
+for col in compr stackoverflow ; do
+  # First all brute-force
+  TEST_SUBSET="test"
+  run_cmd "scripts/exper/test_nmslib_server_bruteforce_bm25_text.sh $col $TEST_SUBSET"
+  run_cmd "scripts/exper/test_nmslib_server_bruteforce_cosine_text.sh $col $TEST_SUBSET"
+  run_cmd "scripts/exper/test_nmslib_server_bruteforce_exper1.sh $col $TEST_SUBSET"
+  run_cmd "scripts/exper/test_nmslib_server_bruteforce_swgraph.sh $col $TEST_SUBSET"
+
+  # Now tests with indices
+  run_cmd "scripts/exper/test_nmslib_server_napp_bm25_text_${col}.sh $TEST_SUBSET"
+  run_cmd "scripts/exper/test_nmslib_server_napp_exper1_${col}.sh $TEST_SUBSET"
+  run_cmd "scripts/exper/test_nmslib_server_swgraph.sh $col $TEST_SUBSET"
+done
+
+
+echo "Main experiments are finished!"
 echo "All major work is done!"
 restore_desc_exit 0
 
