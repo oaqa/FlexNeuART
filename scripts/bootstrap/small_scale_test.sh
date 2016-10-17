@@ -36,6 +36,25 @@ if [ ! -d "$RAW_DIR" ] ; then
   exit 1
 fi
 
+function check_simple {
+  f="$?"
+  name=$1
+  if [ "$f" != "0" ] ; then
+    echo "**************************************"
+    echo "* Failed: $name"
+    echo "**************************************"
+    exit 1
+  fi
+}
+
+cd $INSTALL_DIR ; check_simple "cd $INSTALL_DIR" ; INSTALL_DIR=$PWD ; cd - ; check_simple "cd -"
+cd $DATA_DIR ; check_simple "cd $DATA_DIR" ; DATA_DIR=$PWD ; cd - ; check_simple "cd -"
+cd $RAW_DIR ; check_simple "cd $RAW_DIR" ; RAW_DIR=$PWD ; cd - ; check_simple "cd -"
+
+echo "Full installation path:       $INSTALL_DIR"
+echo "Full data path:               $INSTALL_DIR"
+echo "Full path to raw input files: $INSTALL_DIR"
+
 # Let's check if you downloaded GoogleNews embeddings
 EmbedName="GoogleNews-vectors-negative300.bin"
 EmbedDir="$DATA_DIR/Embeddings/Complete/"
@@ -46,7 +65,7 @@ fi
 
 KNN4QA_DIR="$INSTALL_DIR/knn4qa"
 
-cd $KNN4QA_DIR ; check "cd $KNN4QA_DIR"
+cd $KNN4QA_DIR ; check_simple "cd $KNN4QA_DIR"
 
 CPE_DIR="$KNN4QA_DIR/src/main/resources/descriptors/collection_processing_engines"
 
@@ -55,7 +74,7 @@ function restore_desc_exit {
   exit_status=$1
   echo "Let's try to restore descriptor files in $CPE_DIR"
   cc $CPE_DIR ; check "cd $CPE_DIR"
-  git checkout * ; check "git checkout *"
+  git checkout * ; check_simple "git checkout *"
   exit $exit_status
 }
 
