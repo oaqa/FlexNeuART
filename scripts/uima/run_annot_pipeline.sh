@@ -1,5 +1,16 @@
 #!/bin/bash
 
+function check_pipe {
+  f="${PIPESTATUS[*]}"
+  name=$1
+  if [ "$f" != "0 0" ] ; then
+    echo "******************************************"
+    echo "* Failed (pipe): $name, exit statuses: $f "
+    echo "******************************************"
+    exit 1
+  fi
+}
+
 # This script runs annotation pipelines for a given collection
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -10,36 +21,28 @@ fi
 if [ "$collect" = "manner" ] ; then
   for d in Dev1 Dev2 Train Test ; do 
     echo $d 
-    scripts/uima/cpe.sh src/main/resources/descriptors/collection_processing_engines/cpeAnnotManner${d}.xml 2>&1|tee log_$d
-    if [ "$?" != "0" ] ; then
-      echo "FAILURE!!!"
-      exit 1
-    fi
+    uima_desc="src/main/resources/descriptors/collection_processing_engines/cpeAnnotManner${d}.xml"
+    scripts/uima/cpe.sh "$uima_desc" 2>&1|tee log_$d
+    check_pipe "UIMA pipeline with CPE descriptor $uima_desc"
   done
 elif [ "$collect" = "compr" ] ; then
   for d in Dev1 Dev2 Train Tran Test ; do 
     echo $d 
-    scripts/uima/cpe.sh src/main/resources/descriptors/collection_processing_engines/cpeAnnotCompr${d}.xml 2>&1|tee log_$d
-    if [ "$?" != "0" ] ; then
-      echo "FAILURE!!!"
-      exit 1
-    fi
+    uima_desc="src/main/resources/descriptors/collection_processing_engines/cpeAnnotCompr${d}.xml"
+    scripts/uima/cpe.sh "$uima_desc"  2>&1|tee log_$d
+    check_pipe "UIMA pipeline with CPE descriptor $uima_desc"
   done
 elif [ "$collect" = "stackoverflow" ] ; then
   for d in Dev1 Dev2 Train Tran Test ; do 
     echo $d 
-    scripts/uima/cpe.sh src/main/resources/descriptors/collection_processing_engines/cpeAnnotStackOverflow${d}.xml 2>&1|tee log_$d
-    if [ "$?" != "0" ] ; then
-      echo "FAILURE!!!"
-      exit 1
-    fi
+    uima_desc="src/main/resources/descriptors/collection_processing_engines/cpeAnnotStackOverflow${d}.xml"
+    scripts/uima/cpe.sh "$uima_desc"  2>&1|tee log_$d
+    check_pipe "UIMA pipeline with CPE descriptor $uima_desc"
   done
 elif [ "$collect" = "ComprMinusManner" ] ; then
-  scripts/uima/cpe.sh src/main/resources/descriptors/collection_processing_engines/cpeAnnotComprMinusMannerTran.xml 2>&1|tee log_ComprMinusManner
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
+  uima_desc="src/main/resources/descriptors/collection_processing_engines/cpeAnnotComprMinusMannerTran.xml"
+  scripts/uima/cpe.sh "$uima_desc"  2>&1|tee log_ComprMinusManner
+  check_pipe "UIMA pipeline with CPE descriptor $uima_desc"
 else
   echo "Wrong collection name '$collect'"
   exit 1
