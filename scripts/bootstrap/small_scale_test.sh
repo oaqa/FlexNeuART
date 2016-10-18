@@ -223,10 +223,11 @@ for col in compr stackoverflow ; do
 done
 echo "Pivots are generated!"
 
+QUERY_PART="dev1"
 for col in compr stackoverflow ; do
   CMD_NAME="generative queries for $col"
   LOG_FILE="log_queries.$col"
-  CMD="scripts/nmslib/gen_nmslib_queries.sh \"$DATA_DIR\" $col"
+  CMD="scripts/nmslib/gen_nmslib_queries.sh \"$DATA_DIR\" $col" "$QUERY_PART"
   run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 echo "Queries are generated!"
