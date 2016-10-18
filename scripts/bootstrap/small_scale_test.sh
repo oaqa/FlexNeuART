@@ -234,7 +234,7 @@ echo "Queries are generated!"
 
 # 7 Feature experiments 
 NUM_PARALLEL_PROC=2
-for col in ComprMinusManner compr stackoverflow ; do
+for col in manner compr stackoverflow ; do
   CMD_NAME="running feature experiments for $col (using 2 parallel processes)"
   LOG_FILE="log_feature_exper.$col"
   CMD="scripts/exper/run_feature_experiments.sh manner scripts/exper/feature_desc/test4combinations.txt $NUM_PARALLEL_PROC"
