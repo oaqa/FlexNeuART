@@ -205,7 +205,7 @@ done
 echo "IBM Model 1 translation files are created!"
 
 # 5 Building derivative data
-for col in ComprMinusManner compr stackoverflow ; do
+for col in manner compr stackoverflow ; do
   CMD_NAME="Generative derivative data for $col"
   LOG_FILE="log_deriv.$col"
   CMD="scripts/data/gen_derivative_data.sh $col"
