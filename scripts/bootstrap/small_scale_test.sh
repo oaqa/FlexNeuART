@@ -149,6 +149,12 @@ split_collection "manner" "manner.xml.bz2" "manner-v2.0" "0.60,0.05,0.15,0.20" "
 split_collection "compr" "FullOct2007.xml.bz2" "comprehensive-Oct2007" "0.048,0.0024,0.0094,0.0117,0.9285" "train,dev1,dev2,test,tran"
 split_collection "stackoverflow" "PostsNoCode2016-04-28.xml.bz2"  "StackOverflow" "0.048,0.0024,0.0094,0.0117,0.9285" "train,dev1,dev2,test,tran"
 
+# Now let's compute the difference between two collections
+CMD_NAME="Computing the diff. between Comprehnsive and Manner"
+CMD="scripts/data/diff_collect.sh -i1 \"$RAW_DIR\comprehensive-Oct2007.bz2\" -i2 \"$RAW_DIR\manner-v2.0.bz2\" -o input/ComprMinusManner.gz"
+LOG_FILE="log_diff"
+run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
+
 echo "Splitting collections into subsets is completed!"
 
 # 2.2 We want smaller subsets, so we replace CPE descriptors with descriptors that limit the number of documents processed
