@@ -112,6 +112,17 @@ function run_cmd {
   check "$cmd"
 }
 
+function run_cmd_complex {
+  CMD="$1"
+  CMD_NAME="$2"
+  LOG_FILE="$3"
+  echo "$CMD_NAME logging to $LOG_FILE"
+  echo "Command line:"
+  echo "$CMD"
+  bash -c "$CMD" &>$LOG_FILE
+  check "$CMD_NAME"
+}
+
 # 1. Splitting collections
 
 function split_collection {
@@ -119,7 +130,7 @@ function split_collection {
   inpf=$2
   outf=$3
   probs=$4
-  subsets=$t
+  subsets=$5
   if [ ! -f "$RAW_DIR/$inpf" ] ; then
     echo "Cannot find input raw file $RAW_DIR/$inpf for collection $col"
     exit 1
@@ -127,9 +138,8 @@ function split_collection {
 
   CMD_NAME="splitting collection $col"
   LOG_FILE="log_split.$col"
-  echo "$CMD_NAME logging to $LOG_FILE"
-  scripts/data/split_input.sh -i "$RAW_DIR/$inpf"  -o "$DATA_DIR/input/$col/$outf" -p "$probs" -n "$subsets" &>$LOG_FILE
-  check "$CMD_NAME"
+  CMD="scripts/data/split_input.sh -i \"$RAW_DIR/$inpf\"  -o \"$DATA_DIR/input/$col/$outf\" -p \"$probs\" -n \"$subsets\" "
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 }
 
 # 2. Annotating collections
