@@ -206,7 +206,7 @@ echo "IBM Model 1 translation files are created!"
 
 # 5 Building derivative data
 for col in manner compr stackoverflow ; do
-  CMD_NAME="Generative derivative data for $col"
+  CMD_NAME="generating derivative data for $col"
   LOG_FILE="log_deriv.$col"
   CMD="scripts/data/gen_derivative_data.sh $col"
   run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
@@ -216,7 +216,7 @@ echo "Derivative data is generated!"
 
 # 6 Let's generate pivots and queries
 for col in compr stackoverflow ; do
-  CMD_NAME="generative pivots for $col"
+  CMD_NAME="generating pivots for $col"
   LOG_FILE="log_pivots.$col"
   CMD="scripts/nmslib/gen_nmslib_pivots.sh \"$DATA_DIR\" $col"
   run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
@@ -225,9 +225,9 @@ echo "Pivots are generated!"
 
 QUERY_PART="dev1"
 for col in compr stackoverflow ; do
-  CMD_NAME="generative queries for $col"
+  CMD_NAME="generating queries for $col"
   LOG_FILE="log_queries.$col"
-  CMD="scripts/nmslib/gen_nmslib_queries.sh \"$DATA_DIR\" $col" "$QUERY_PART"
+  CMD="scripts/nmslib/gen_nmslib_queries.sh \"$DATA_DIR\" $col $QUERY_PART"
   run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 echo "Queries are generated!"
