@@ -124,12 +124,12 @@ public class CollectionDiffer {
           // This is a bit funny, because this element is supposed to be mandatory,
           // but it's not.
           System.err.println("Skipping due to parsing error, exception: " + e);
-          skipOverlapQty++;
+          skipErrorQty++;
           continue;
         }
         if (hSubj.contains(q.mQuestion.trim())) {
           //System.out.println(String.format("Skipping uri='%s', question='%s'", q.mQuestUri, q.mQuestion));
-          skipErrorQty++;
+          skipOverlapQty++;
           continue;
         }
         
