@@ -251,11 +251,13 @@ if [ "$delete_trec_runs" = "1" ] ; then
   check "rm ${TREC_RUN_DIR}/*" 
 else
   echo "Bzipping trec runs in the directory: ${TREC_RUN_DIR}"
+  rm -f ${TREC_RUN_DIR}/*.bz2
   bzip2 ${TREC_RUN_DIR}/*
   # There should be at least one run, so, if rm fails, it fails because files can't be deleted
   check "bzip2 ${TREC_RUN_DIR}/*" 
 fi
 
 echo "Bzipping trec_eval output in the directory: ${REPORT_DIR}"
+rm -f ${REPORT_DIR}/*.trec_eval.bz2
 bzip2 ${REPORT_DIR}/*.trec_eval
 check "bzip2 ${REPORT_DIR}/*.trec_eval"
