@@ -161,9 +161,8 @@ echo "IMPORTANT NOTE!!!! If something goes awfully wrong you may need to manuall
 for col in manner compr ComprMinusManner stackoverflow ; do
   CMD_NAME="annotation pipeline for $col"
   LOG_FILE="log_annot.$col"
-  echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/uima/run_annot_pipeline.sh manner &>$LOG_FILE
-  check "$CMD_NAME logging to $LOG_FILE"
+  CMD="scripts/uima/run_annot_pipeline.sh $col"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 
 echo "Annotation process is completed!"
@@ -173,27 +172,25 @@ echo "Annotation process is completed!"
 for col in manner compr stackoverflow ; do
   CMD_NAME="creating Lucene index for $col"
   LOG_FILE="log_lucene_index.$col"
-  echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/index/create_lucene_index.sh $col &> $LOG_FILE
-  check "$CMD_NAME logging to $LOG_FILE"
+  CMD="scripts/index/create_lucene_index.sh $col"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 
   CMD_NAME="creating forward index for $col"
   LOG_FILE="log_inmemfwd_index.$col"
-  echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/index/create_inmemfwd_index.sh $col &> $LOG_FILE
-  check "$CMD_NAME logging to $LOG_FILE"
+  CMD="scripts/index/create_inmemfwd_index.sh $col"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 
 echo "Lucene and forward indices are created!"
 
 # 4 Creating IBM Model 1 translation files
+GIZA_ITER_QTY=5
 for col in ComprMinusManner compr stackoverflow ; do
   for field in text text_unlemm ; do
     CMD_NAME="Building IBM Model 1 for $col field $field"
     LOG_FILE="log_model1.${col}_${field}"
-    echo "Running $CMD_NAME logging to $LOG_FILE"
-    scripts/giza/create_tran.sh output tran $col tran $field /home/ubuntu/soft/giza-pp 0 5  &> $LOG_FILE
-    check "$CMD_NAME logging to $LOG_FILE"
+    CMD="scripts/giza/create_tran.sh output tran $col tran $field \"$INSTALL_DIR/giza-pp\" 0 $GIZA_ITER_QTY"
+    run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
   done
 done
 
@@ -203,9 +200,8 @@ echo "IBM Model 1 translation files are created!"
 for col in ComprMinusManner compr stackoverflow ; do
   CMD_NAME="Generative derivative data for $col"
   LOG_FILE="log_deriv.$col"
-  echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/data/gen_derivative_data.sh $col &> $LOG_FILE
-  check "$CMD_NAME logging to $LOG_FILE"
+  CMD="scripts/data/gen_derivative_data.sh $col"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 
 echo "Derivative data is generated!"
@@ -214,45 +210,60 @@ echo "Derivative data is generated!"
 for col in compr stackoverflow ; do
   CMD_NAME="generative pivots for $col"
   LOG_FILE="log_pivots.$col"
-  echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/nmslib/gen_nmslib_pivots.sh /home/ubuntu/data $col &> $LOG_FILE
-  check "$CMD_NAME logging to $LOG_FILE"
+  CMD="scripts/nmslib/gen_nmslib_pivots.sh \"$DATA_DIR\" $col"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 echo "Pivots are generated!"
 
 for col in compr stackoverflow ; do
   CMD_NAME="generative queries for $col"
   LOG_FILE="log_queries.$col"
-  echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/nmslib/gen_nmslib_queries.sh /home/ubuntu/data $col &> $LOG_FILE
-  check "$CMD_NAME logging to $LOG_FILE"
+  CMD="scripts/nmslib/gen_nmslib_queries.sh \"$DATA_DIR\" $col"
 done
 echo "Queries are generated!"
 
 # 7 Feature experiments 
+NUM_PARALLEL_PROC=2
 for col in ComprMinusManner compr stackoverflow ; do
   CMD_NAME="running feature experiments for $col (using 2 parallel processes)"
   LOG_FILE="log_feature_exper.$col"
-  echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/exper/run_feature_experiments.sh manner scripts/exper/feature_desc/test4combinations.txt 2 2>&1| tee $LOG_FILE
-  check_pipe "$CMD_NAME logging to $LOG_FILE"
+  CMD="scripts/exper/run_feature_experiments.sh manner scripts/exper/feature_desc/test4combinations.txt $NUM_PARALLEL_PROC"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 echo "Test feature experiments are finished!"
 
 # 8 Main experiments
 
 for col in compr stackoverflow ; do
-  # First all brute-force
+  # all brute-force
   TEST_SUBSET="test"
-  run_cmd "scripts/exper/test_nmslib_server_bruteforce_bm25_text.sh $col $TEST_SUBSET"
-  run_cmd "scripts/exper/test_nmslib_server_bruteforce_cosine_text.sh $col $TEST_SUBSET"
-  run_cmd "scripts/exper/test_nmslib_server_bruteforce_exper1.sh $col $TEST_SUBSET"
-  run_cmd "scripts/exper/test_nmslib_server_bruteforce_swgraph.sh $col $TEST_SUBSET"
+  for script in "scripts/exper/test_nmslib_server_bruteforce_bm25_text.sh" \
+                "scripts/exper/test_nmslib_server_bruteforce_cosine_text.sh" \
+                "scripts/exper/test_nmslib_server_bruteforce_exper1.sh" \
+                "scripts/exper/test_nmslib_server_bruteforce_swgraph.sh" ; do
+    CMD_NAME="bruteforce testing with the script $script"
+    CMD="$script $col $TEST_SUBSET"
+    LOG_FILE="log_${script}.$col"
+    run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
+  done 
 
-  # Now tests with indices
-  run_cmd "scripts/exper/test_nmslib_server_napp_bm25_text_${col}.sh $TEST_SUBSET"
-  run_cmd "scripts/exper/test_nmslib_server_napp_exper1_${col}.sh $TEST_SUBSET"
-  run_cmd "scripts/exper/test_nmslib_server_swgraph.sh $col $TEST_SUBSET"
+  # indexing scripts with one parameter
+  for script in "scripts/exper/test_nmslib_server_napp_bm25_text_${col}.sh" \
+                "scripts/exper/test_nmslib_server_napp_exper1_${col}.sh" ; do
+
+    CMD_NAME="indexed testing with the script $script"
+    CMD="$script $TEST_SUBSET"
+    LOG_FILE="log_${script}.$col"
+    run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
+  done
+
+  # indexing scripts with two parameters
+  for script in "scripts/exper/test_nmslib_server_swgraph.sh" ; do
+    CMD_NAME="indexed testing with the script $script"
+    CMD="$script $col $TEST_SUBSET"
+    LOG_FILE="log_${script}.$col"
+    run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
+  done
 done
 
 
