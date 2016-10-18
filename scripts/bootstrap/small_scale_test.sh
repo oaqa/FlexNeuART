@@ -247,29 +247,29 @@ echo "Test feature experiments are finished!"
 for col in compr stackoverflow ; do
   # all brute-force
   TEST_SUBSET="test"
-  for script in "scripts/exper/test_nmslib_server_bruteforce_bm25_text.sh" \
-                "scripts/exper/test_nmslib_server_bruteforce_cosine_text.sh" \
-                "scripts/exper/test_nmslib_server_bruteforce_exper1.sh" \
-                "scripts/exper/test_nmslib_server_bruteforce_swgraph.sh" ; do
+  for script in "test_nmslib_server_bruteforce_bm25_text.sh" \
+                "test_nmslib_server_bruteforce_cosine_text.sh" \
+                "test_nmslib_server_bruteforce_exper1.sh" \
+                "test_nmslib_server_bruteforce_swgraph.sh" ; do
     CMD_NAME="bruteforce testing with the script $script"
-    CMD="$script $col $TEST_SUBSET"
+    CMD="scripts/exper/$script $col $TEST_SUBSET"
     LOG_FILE="log_${script}.$col"
     run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
   done 
 
   # indexing scripts with one parameter
-  for script in "scripts/exper/test_nmslib_server_napp_bm25_text_${col}.sh" \
-                "scripts/exper/test_nmslib_server_napp_exper1_${col}.sh" ; do
+  for script in "test_nmslib_server_napp_bm25_text_${col}.sh" \
+                "test_nmslib_server_napp_exper1_${col}.sh" ; do
     CMD_NAME="indexed testing with the script $script"
-    CMD="$script $TEST_SUBSET"
+    CMD="scripts/exper/$script $TEST_SUBSET"
     LOG_FILE="log_${script}.$col"
     run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
   done
 
   # indexing scripts with two parameters
-  for script in "scripts/exper/test_nmslib_server_swgraph.sh" ; do
+  for script in "test_nmslib_server_swgraph.sh" ; do
     CMD_NAME="indexed testing with the script $script"
-    CMD="$script $col $TEST_SUBSET"
+    CMD="scripts/exper/$script $col $TEST_SUBSET"
     LOG_FILE="log_${script}.$col"
     run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
   done
