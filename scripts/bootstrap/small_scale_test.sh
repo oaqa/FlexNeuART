@@ -159,7 +159,7 @@ echo "Splitting collections into subsets is completed!"
 
 # 2.2 We want smaller subsets, so we replace CPE descriptors with descriptors that limit the number of documents processed
 
-echo "cp $KNN4QA_DIR/scripts/bootstrap/collection_processing_engines.quick/*.xml "
+run_cmd "cp $KNN4QA_DIR/scripts/bootstrap/collection_processing_engines.quick/*.xml src/main/resources/descriptors/collection_processing_engines/"
 
 echo "Replaced existing CPE descriptors with descriptors for collection samples"
 echo "IMPORTANT NOTE!!!! If something goes awfully wrong you may need to manually 'git checkout' in $CPE_DIR"
