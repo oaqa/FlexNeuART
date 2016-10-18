@@ -141,7 +141,7 @@ bash -c "$cmd"
 check "$cmd"
 
 # Let's do this one with re-ranking (similar to SW-graph)
-EXPER_DIR_BASE="results/final/$collect/$TEST_PART/nmslib/brute_force
+EXPER_DIR_BASE="results/final/$collect/$TEST_PART/nmslib/brute_force"
 EXPER_DIR=$EXPER_DIR_BASE/bm25_rerank/$HEADER_NAME
 mkdir -p $EXPER_DIR
 check "mkdir -p $EXPER_DIR"
