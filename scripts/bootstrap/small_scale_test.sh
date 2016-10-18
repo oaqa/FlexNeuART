@@ -52,8 +52,8 @@ cd $DATA_DIR ; check_simple "cd $DATA_DIR" ; DATA_DIR=$PWD ; cd - ; check_simple
 cd $RAW_DIR ; check_simple "cd $RAW_DIR" ; RAW_DIR=$PWD ; cd - ; check_simple "cd -"
 
 echo "Full installation path:       $INSTALL_DIR"
-echo "Full data path:               $INSTALL_DIR"
-echo "Full path to raw input files: $INSTALL_DIR"
+echo "Full data path:               $DATA_DIR"
+echo "Full path to raw input files: $RAW_DIR"
 
 # Let's check if you downloaded GoogleNews embeddings
 EmbedName="GoogleNews-vectors-negative300.bin"
