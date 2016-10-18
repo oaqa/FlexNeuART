@@ -76,6 +76,7 @@ if [ ! -d "$CPE_DIR" ] ; then
 fi
 
 # This function exits while trying to restore UIMA descriptor files
+# It should use only check_simple or else there will be an infinite recursion!
 function restore_desc_exit {
   exit_status=$1
   echo "Let's try to restore descriptor files in $CPE_DIR"
@@ -142,21 +143,22 @@ function split_collection {
   run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 }
 
-# 2. Annotating collections
+# 2. Splitting & annotating collections
+# 2.1 Let's first split collections randomly
 split_collection "manner" "manner.xml.bz2" "manner-v2.0" "0.60,0.05,0.15,0.20" "train,dev1,dev2,test"
 split_collection "compr" "FullOct2007.xml.bz2" "comprehensive-Oct2007" "0.048,0.0024,0.0094,0.0117,0.9285" "train,dev1,dev2,test,tran"
 split_collection "stackoverflow" "PostsNoCode2016-04-28.xml.bz2"  "StackOverflow" "0.048,0.0024,0.0094,0.0117,0.9285" "train,dev1,dev2,test,tran"
 
 echo "Splitting collections into subsets is completed!"
 
-# 2.1 We want smaller subsets, so we replace CPE descriptors with descriptors that limit the number of documents processed
+# 2.2 We want smaller subsets, so we replace CPE descriptors with descriptors that limit the number of documents processed
 
 echo "cp $KNN4QA_DIR/scripts/bootstrap/collection_processing_engines.quick/*.xml "
 
 echo "Replaced existing CPE descriptors with descriptors for collection samples"
 echo "IMPORTANT NOTE!!!! If something goes awfully wrong you may need to manually 'git checkout' in $CPE_DIR"
 
-# 2.2 An actual annotation process
+# 2.3 An actual annotation process
 
 for col in manner compr ComprMinusManner stackoverflow ; do
   CMD_NAME="annotation pipeline for $col"
@@ -219,6 +221,7 @@ for col in compr stackoverflow ; do
   CMD_NAME="generative queries for $col"
   LOG_FILE="log_queries.$col"
   CMD="scripts/nmslib/gen_nmslib_queries.sh \"$DATA_DIR\" $col"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 done
 echo "Queries are generated!"
 
@@ -250,7 +253,6 @@ for col in compr stackoverflow ; do
   # indexing scripts with one parameter
   for script in "scripts/exper/test_nmslib_server_napp_bm25_text_${col}.sh" \
                 "scripts/exper/test_nmslib_server_napp_exper1_${col}.sh" ; do
-
     CMD_NAME="indexed testing with the script $script"
     CMD="$script $TEST_SUBSET"
     LOG_FILE="log_${script}.$col"
