@@ -51,9 +51,16 @@ cd $INSTALL_DIR ; check_simple "cd $INSTALL_DIR" ; INSTALL_DIR=$PWD ; cd - ; che
 cd $DATA_DIR ; check_simple "cd $DATA_DIR" ; DATA_DIR=$PWD ; cd - ; check_simple "cd -"
 cd $RAW_DIR ; check_simple "cd $RAW_DIR" ; RAW_DIR=$PWD ; cd - ; check_simple "cd -"
 
+KNN4QA_DIR="$INSTALL_DIR/knn4qa"
+
+cd $KNN4QA_DIR ; check_simple "cd $KNN4QA_DIR"
+
+CPE_DIR="$KNN4QA_DIR/src/main/resources/descriptors/collection_processing_engines/"
+
 echo "Full installation path:       $INSTALL_DIR"
 echo "Full data path:               $DATA_DIR"
 echo "Full path to raw input files: $RAW_DIR"
+echo "Directory with Uima CPE files:$CPE_DIR"
 
 # Let's check if you downloaded GoogleNews embeddings
 EmbedName="GoogleNews-vectors-negative300.bin"
@@ -63,17 +70,16 @@ if [ ! -f "$EmbedDir/$EmbedName" ] ; then
   exit 1
 fi
 
-KNN4QA_DIR="$INSTALL_DIR/knn4qa"
-
-cd $KNN4QA_DIR ; check_simple "cd $KNN4QA_DIR"
-
-CPE_DIR="$KNN4QA_DIR/src/main/resources/descriptors/collection_processing_engines"
+if [ ! -d "$CPE_DIR" ] ; then
+  echo "Not a directory: $CPE_DIR"
+  exit 1 
+fi
 
 # This function exits while trying to restore UIMA descriptor files
 function restore_desc_exit {
   exit_status=$1
   echo "Let's try to restore descriptor files in $CPE_DIR"
-  cc $CPE_DIR ; check "cd $CPE_DIR"
+  cd $CPE_DIR ; check_simple "cd $CPE_DIR"
   git checkout * ; check_simple "git checkout *"
   exit $exit_status
 }
@@ -122,8 +128,8 @@ function split_collection {
   CMD_NAME="splitting collection $col"
   LOG_FILE="log_split.$col"
   echo "$CMD_NAME logging to $LOG_FILE"
-  scripts/data/split_input.sh -i "$RAW_DIR/inpf"  -o "$DATA_DIR/input/$col/$outf -p "$probs" -n "$subsets" >$LOG_FILE
-  check "$CMD_NAME$
+  scripts/data/split_input.sh -i "$RAW_DIR/$inpf"  -o "$DATA_DIR/input/$col/$outf" -p "$probs" -n "$subsets" &>$LOG_FILE
+  check "$CMD_NAME"
 }
 
 # 2. Annotating collections
@@ -146,7 +152,7 @@ for col in manner compr ComprMinusManner stackoverflow ; do
   CMD_NAME="annotation pipeline for $col"
   LOG_FILE="log_annot.$col"
   echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/uima/run_annot_pipeline.sh manner >$LOG_FILE
+  scripts/uima/run_annot_pipeline.sh manner &>$LOG_FILE
   check "$CMD_NAME logging to $LOG_FILE"
 done
 
@@ -158,13 +164,13 @@ for col in manner compr stackoverflow ; do
   CMD_NAME="creating Lucene index for $col"
   LOG_FILE="log_lucene_index.$col"
   echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/index/create_lucene_index.sh $col > $LOG_FILE
+  scripts/index/create_lucene_index.sh $col &> $LOG_FILE
   check "$CMD_NAME logging to $LOG_FILE"
 
   CMD_NAME="creating forward index for $col"
   LOG_FILE="log_inmemfwd_index.$col"
   echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/index/create_inmemfwd_index.sh $col > $LOG_FILE
+  scripts/index/create_inmemfwd_index.sh $col &> $LOG_FILE
   check "$CMD_NAME logging to $LOG_FILE"
 done
 
@@ -176,7 +182,7 @@ for col in ComprMinusManner compr stackoverflow ; do
     CMD_NAME="Building IBM Model 1 for $col field $field"
     LOG_FILE="log_model1.${col}_${field}"
     echo "Running $CMD_NAME logging to $LOG_FILE"
-    scripts/giza/create_tran.sh output tran $col tran $field /home/ubuntu/soft/giza-pp 0 5  > $LOG_FILE
+    scripts/giza/create_tran.sh output tran $col tran $field /home/ubuntu/soft/giza-pp 0 5  &> $LOG_FILE
     check "$CMD_NAME logging to $LOG_FILE"
   done
 done
@@ -188,7 +194,7 @@ for col in ComprMinusManner compr stackoverflow ; do
   CMD_NAME="Generative derivative data for $col"
   LOG_FILE="log_deriv.$col"
   echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/data/gen_derivative_data.sh $col
+  scripts/data/gen_derivative_data.sh $col &> $LOG_FILE
   check "$CMD_NAME logging to $LOG_FILE"
 done
 
@@ -199,7 +205,7 @@ for col in compr stackoverflow ; do
   CMD_NAME="generative pivots for $col"
   LOG_FILE="log_pivots.$col"
   echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/nmslib/gen_nmslib_pivots.sh /home/ubuntu/data $col
+  scripts/nmslib/gen_nmslib_pivots.sh /home/ubuntu/data $col &> $LOG_FILE
   check "$CMD_NAME logging to $LOG_FILE"
 done
 echo "Pivots are generated!"
@@ -208,7 +214,7 @@ for col in compr stackoverflow ; do
   CMD_NAME="generative queries for $col"
   LOG_FILE="log_queries.$col"
   echo "Running $CMD_NAME logging to $LOG_FILE"
-  scripts/nmslib/gen_nmslib_queries.sh /home/ubuntu/data $col
+  scripts/nmslib/gen_nmslib_queries.sh /home/ubuntu/data $col &> $LOG_FILE
   check "$CMD_NAME logging to $LOG_FILE"
 done
 echo "Queries are generated!"
