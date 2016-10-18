@@ -151,7 +151,7 @@ split_collection "stackoverflow" "PostsNoCode2016-04-28.xml.bz2"  "StackOverflow
 
 # Now let's compute the difference between two collections
 CMD_NAME="Computing the diff. between Comprehnsive and Manner"
-CMD="scripts/data/diff_collect.sh -i1 \"$RAW_DIR\comprehensive-Oct2007.xml.bz2\" -i2 \"$RAW_DIR\manner-v2.0.xml.bz2\" -o input/ComprMinusManner.gz"
+CMD="scripts/data/diff_collect.sh -i1 \"$RAW_DIR/comprehensive-Oct2007.xml.bz2\" -i2 \"$RAW_DIR/manner-v2.0.xml.bz2\" -o input/ComprMinusManner.gz"
 LOG_FILE="log_diff"
 run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
 
