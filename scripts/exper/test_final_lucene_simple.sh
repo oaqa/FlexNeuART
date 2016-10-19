@@ -28,7 +28,7 @@ if [ "$collect" = "" ] ; then
 fi
 
 # A very moderate expansion
-GIZA_EXPAND_QTY=20
+GIZA_EXPAND_QTY=5
 
 # Let's always retrieve at least MAX_N top records using Lucene
 MAX_N=100
