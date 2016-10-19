@@ -154,17 +154,17 @@ fi
 PIVOT_FILE_PARAM="pivotFile=nmslib/$collect/pivots/pivots_text_field_maxTermQty50K_pivotTermQty1000"
 
 PARAMS=( \
-"napp_numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=13" \
-"napp_numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=14" \
+"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=13" \
+"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=14" \
 
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=10" \
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=11" \
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=12" \
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=5" \
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=6" \
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=7" \
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=8" \
-"napp_numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=9" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=10" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=11" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=12" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=5" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=6" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=7" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=8" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=9" \
 
 )
 
