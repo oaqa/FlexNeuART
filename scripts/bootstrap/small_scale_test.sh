@@ -247,7 +247,7 @@ MAX_QUERY_QTY=10000 # The maximum number of queries is 10000 in our experiments
 for col in manner compr stackoverflow ; do
   CMD_NAME="running final experiments with Lucene as a candidate generator"  
   LOG_FILE="log_lucene.$col"
-  if [ "$col" == "manner" ] ; then
+  if [ "$col" != "manner" ] ; then
     CMD="scripts/exper/test_final_lucene_simple.sh $col $MAX_QUERY_QTY"
   else
     # We don't really limit the number of queries in the case of Manner
