@@ -105,7 +105,7 @@ echo "GIZA++ is compiled!"
 # Returning to software home dir
 cd $INSTALL_DIR ; check "cd $INSTALL_DIR"
 
-KNN4QA_BRANCH=""
+KNN4QA_BRANCH="cikm2016"
 run_cmd "git clone https://github.com/oaqa/knn4qa.git"
 if [ "$KNN4QA_BRANCH" != "" ] ; then
   cd knn4qa ; check "cd knn4qa"
