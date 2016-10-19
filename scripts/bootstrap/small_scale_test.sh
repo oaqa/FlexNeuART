@@ -262,7 +262,7 @@ for col in compr stackoverflow ; do
                 "test_nmslib_server_bruteforce_exper1.sh" \
                 "test_nmslib_server_bruteforce_swgraph.sh" ; do
     CMD_NAME="bruteforce testing with the script $script"
-    CMD="scripts/exper/$script $col $TEST_SUBSET"
+    CMD="scripts/exper/$script $col $TEST_SUBSET -max_num_query $MAX_QUERY_QTY"
     LOG_FILE="log_${script}.$col"
     run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
   done 
@@ -271,7 +271,7 @@ for col in compr stackoverflow ; do
   for script in "test_nmslib_server_napp_bm25_text_${col}.sh" \
                 "test_nmslib_server_napp_exper1_${col}.sh" ; do
     CMD_NAME="indexed testing with the script $script"
-    CMD="scripts/exper/$script $TEST_SUBSET"
+    CMD="scripts/exper/$script $TEST_SUBSET -max_num_query $MAX_QUERY_QTY"
     LOG_FILE="log_${script}.$col"
     run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
   done
@@ -279,7 +279,7 @@ for col in compr stackoverflow ; do
   # indexing scripts with two parameters
   for script in "test_nmslib_server_swgraph.sh" ; do
     CMD_NAME="indexed testing with the script $script"
-    CMD="scripts/exper/$script $col $TEST_SUBSET"
+    CMD="scripts/exper/$script $col $TEST_SUBSET -max_num_query $MAX_QUERY_QTY"
     LOG_FILE="log_${script}.$col"
     run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
   done
