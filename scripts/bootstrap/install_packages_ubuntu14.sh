@@ -109,8 +109,8 @@ KNN4QA_BRANCH="cikm2016"
 run_cmd "git clone https://github.com/oaqa/knn4qa.git"
 if [ "$KNN4QA_BRANCH" != "" ] ; then
   cd knn4qa ; check "cd knn4qa"
-  run_cmd "get fetch"
-  run_cmd "get checkout $KNN4QA_BRANCH"
+  run_cmd "git fetch"
+  run_cmd "git checkout $KNN4QA_BRANCH"
   cd .. ; check "cd .. "
 fi
 echo "knn4qa is downloaded!"
