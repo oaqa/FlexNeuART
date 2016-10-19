@@ -242,7 +242,17 @@ for col in manner compr stackoverflow ; do
 done
 echo "Test feature experiments are finished!"
 
-# 8 Main experiments
+# 8 Java-only experiments
+MAX_QUERY_QTY=10000 # The maximum number of queries is 10000 in our experiments
+for col in manner compr stackoverflow ; do
+  CMD_NAME="running final experiments with Lucene as a candidate generator"  
+  LOG_FILE="log_lucene.$col"
+  CMD="scripts/exper/test_final_lucene_simple.sh $col $MAX_QUERY_QTY"
+  run_cmd_complex "$CMD" "$CMD_NAME" "$LOG_FILE"
+done
+echo "Java-only experiments are finished!"
+
+# 9 NMSLIB experiments
 
 for col in compr stackoverflow ; do
   # all brute-force
