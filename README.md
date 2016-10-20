@@ -6,5 +6,4 @@ In particular, it includes the software for the paper [L. Boytsov, D. Novak, Y. 
 with k-NN Search*, to appear in proceedings CIKM'16](http://boytsov.info/pubs/cikm2016.pdf). It can be also used to **partially** reproduce results from the paper: [M Surdeanu, M Ciaramita, H Zaragoza. *Learning to rank answers to non-factoid questions from web collections* 
 Computational Linguistics, 2011 ](http://www.mitpressjournals.org/doi/pdfplus/10.1162/COLI_a_00051) 
 
-## The code is uploaded, but instructions are not fully ready.
 
