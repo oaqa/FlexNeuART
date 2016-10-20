@@ -201,7 +201,7 @@ do
       # Dying takes some time
       sleep 10
       kill -9 $PID 
-      sleep 5
+      sleep 15
     fi
     start_server $NMSLIB_INDEX_DIR/$index_name $index_params
     PREV_INDEX=$index_name
@@ -222,4 +222,5 @@ done
 
 # In the end, stop the query_server
 kill -9 $PID ; check "kill -9 $PID"
+sleep 15
 

@@ -200,3 +200,4 @@ done
 
 kill -9 $pid
 check "kill -9 $pid"
+sleep 15
