@@ -109,31 +109,31 @@
           <boolean>true</boolean>
         </value>
       </nameValuePair>
-      <!--<nameValuePair>
+
+      <nameValuePair>
         <name>DumpSrl</name>
         <value>
-          <boolean>true</boolean>
+          <boolean>false</boolean>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>DumpSrlLab</name>
         <value>
-          <boolean>true</boolean>
+          <boolean>false</boolean>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>DumpDep</name>
         <value>
-          <boolean>true</boolean>
+          <boolean>false</boolean>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>DumpWNSS</name>
         <value>
-          <boolean>true</boolean>
+          <boolean>false</boolean>
         </value>
       </nameValuePair>
-      -->
     </configurationParameterSettings>
     <typeSystemDescription/>
     <typePriorities/>
