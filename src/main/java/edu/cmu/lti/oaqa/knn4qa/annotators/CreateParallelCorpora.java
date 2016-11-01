@@ -220,9 +220,8 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
       }
            
       try {
-        // Potentially, we may include answers that are not best answers
-        ///if (an.getIsBest())
-          doOutput(aJCas,
+        //if (an.getIsBest())
+        doOutput(aJCas,
                    mQuestionText,
                    mQuestionTextUnlemm,
                    mQuestionBiGram,

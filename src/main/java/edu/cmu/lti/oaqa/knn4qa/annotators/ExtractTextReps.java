@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2016 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.FSArray;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import com.google.common.base.CharMatcher;
 
@@ -85,15 +87,17 @@ public class ExtractTextReps {
    * (only if mLemmatize is set to true).
    * 
    * @param jCas        input jCas
-   * @param isStrict    if true, use a stricter definition of a good term. 
+   * @param isStrict    if true, use a stricter definition of a good term.
+   * @param coverAnnot  covering annotation
+   *  
    * @return two things in a single object instance: 
    *         (1) an array of good tokens;
    *         (2) a map, where token object references are mapped to token string values.    
    */
-  public GoodTokens getGoodTokens(final JCas jCas, boolean isStrict) {
+  public GoodTokens getGoodTokens(final JCas jCas, Annotation coverAnnot, boolean isStrict) {
     GoodTokens res = new GoodTokens();
 
-    for (Token tok : JCasUtil.select(jCas, Token.class)) {
+    for (Token tok : JCasUtil.selectCovered(Token.class, coverAnnot)) {
       String text = tok.getCoveredText().toLowerCase();
       
       if (mLemmatize) {
@@ -226,13 +230,15 @@ public class ExtractTextReps {
   /**
    * Extract WordNet super senses for non-stop words.
    * 
-   * @param jCas    input jCas
+   * @param  jCas           input jCas
+   * @param  CoverAnnot     covering annotation
+   * 
    * @return a string of space-separated WNNS belonging to 
    */
-  public String getWNSS(final JCas jCas, boolean isStrict) {
+  public String getWNSS(final JCas jCas, Annotation coverAnnot, boolean isStrict) {
     StringBuffer sb = new StringBuffer();
     
-    for (WNNS wannot: JCasUtil.select(jCas, WNNS.class)) {
+    for (WNNS wannot: JCasUtil.selectCovered(WNNS.class, coverAnnot)) {
       String text = wannot.getCoveredText().toLowerCase();
       String label = wannot.getSuperSense();
       

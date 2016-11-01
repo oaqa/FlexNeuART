@@ -140,58 +140,64 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
   
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
-    Collection<Answer>   colAnsw = JCasUtil.select(aJCas, Answer.class);
-    Collection<Question> colQuest = JCasUtil.select(aJCas, Question.class);
+    Map<String, String>  fieldInfo = new HashMap<String, String>();
+        
+    GoodTokens goodToks = mTextRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_INDEXING);
+    GoodTokens goodToksUnlemm = mTextUnlemmRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_INDEXING);
     
-    if (colQuest.isEmpty()) return; // nothing to do
+    fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
+    if (mFieldTextUnlemm != null)
+      fieldInfo.put(mFieldTextUnlemm, mTextUnlemmRepExtract.getText(goodToksUnlemm));
+    if (mFieldBiGram != null)
+      fieldInfo.put(mFieldBiGram, mTextRepExtract.getBiGram(goodToks));
+    if (mFieldDepRel != null)
+      fieldInfo.put(mFieldDepRel, mTextRepExtract.getDepRel(aJCas, goodToks, false /* without labels */));
+    if (mFieldSrl != null)
+      fieldInfo.put(mFieldSrl, mTextRepExtract.getSrl(aJCas, goodToks, false /* without labels */));
+    if (mFieldSrlLab != null)
+      fieldInfo.put(mFieldSrlLab, mTextRepExtract.getSrl(aJCas, goodToks, true /* with labels */)); 
+    if (mFieldWNNS != null)
+      fieldInfo.put(mFieldWNNS, mTextRepExtract.getWNSS(aJCas, STRICTLY_GOOD_TOKENS_FOR_INDEXING));    
     
-    if (colQuest.size() != 1) {
-      Exception e = new Exception(String.format("Bug: bad CAS format, # of questions %d > 1", colQuest.size()));
-      throw new AnalysisEngineProcessException(e);      
+    Collection<Answer>     colAnsw  = JCasUtil.select(aJCas, Answer.class);
+    Collection<Question>   colQuest = JCasUtil.select(aJCas, Question.class);
+    
+    boolean bErr = false;
+    
+    if (!colAnsw.isEmpty()) {
+      if (colAnsw.size() == 1) {
+        Answer ans = colAnsw.iterator().next();
+     
+        fieldInfo.put(UtilConst.TAG_DOCNO, ans.getId());
+    
+        try {
+          doOutput(mIndexAnswerFile, fieldInfo);
+        } catch (Exception e) {
+          e.printStackTrace();
+          throw new AnalysisEngineProcessException(e);
+        }
+      } else bErr = true;    
+    } else if (!colQuest.isEmpty()) {
+      if (colQuest.size() == 1) {
+        Question quest = colQuest.iterator().next();
+        
+        fieldInfo.put(UtilConst.TAG_DOCNO, quest.getUri());
+        
+        try {
+          doOutput(mIndexQuestionFile, fieldInfo);
+        } catch (Exception e) {
+          e.printStackTrace();
+          throw new AnalysisEngineProcessException(e);
+        }
+      } else bErr = true;
+    } else {
+      bErr = true;
     }
-    
-    
-    Question quest = colQuest.iterator().next();
-    
-    Iterator<Answer> answIt = colAnsw.iterator();
-    
-    while (answIt.hasNext()) {
-      Answer ans = answIt.next();
-      
-      Map<String, String> fieldInfo = new HashMap<String, String>();
-      GoodTokens goodToks = mTextRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_INDEXING);
-      GoodTokens goodToksUnlemm = mTextUnlemmRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_INDEXING);
-      fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
-      if (mFieldTextUnlemm != null)
-        fieldInfo.put(mFieldTextUnlemm, mTextUnlemmRepExtract.getText(goodToksUnlemm));
-      if (mFieldBiGram != null)
-        fieldInfo.put(mFieldBiGram, mTextRepExtract.getBiGram(goodToks));
-      if (mFieldDepRel != null)
-        fieldInfo.put(mFieldDepRel, mTextRepExtract.getDepRel(aJCas, goodToks, false /* without labels */));
-      if (mFieldSrl != null)
-        fieldInfo.put(mFieldSrl, mTextRepExtract.getSrl(aJCas, goodToks, false /* without labels */));
-      if (mFieldSrlLab != null)
-        fieldInfo.put(mFieldSrlLab, mTextRepExtract.getSrl(aJCas, goodToks, true /* with labels */));
-      if (mFieldWNNS != null)
-        fieldInfo.put(mFieldWNNS, mTextRepExtract.getWNSS(aJCas, STRICTLY_GOOD_TOKENS_FOR_INDEXING));
-
-      fieldInfo.put(UtilConst.TAG_DOCNO, ans.getId());      
-      
-      try {
-        doOutput(mIndexAnswerFile, fieldInfo);
-      } catch (Exception e) {
-        e.printStackTrace();
-        throw new AnalysisEngineProcessException(e);
-      }
-
-      fieldInfo.put(UtilConst.TAG_DOCNO, quest.getUri());
-
-      try {
-        doOutput(mIndexQuestionFile, fieldInfo);
-      } catch (Exception e) {
-        e.printStackTrace();
-        throw new AnalysisEngineProcessException(e);
-      }        
+    if (bErr) {
+      Exception e = new Exception(
+          String.format("Bug: bad CAS format, # of questions %d # of answers %d",
+              colQuest.size(), colAnsw.size()));
+      throw new AnalysisEngineProcessException(e);
     }
   }
 
