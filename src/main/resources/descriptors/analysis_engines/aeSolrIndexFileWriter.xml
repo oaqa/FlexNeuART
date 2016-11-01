@@ -101,6 +101,7 @@
           <string>BiGram_bm25</string>
         </value>
       </nameValuePair>
+      <!--
       <nameValuePair>
         <name>FieldSrl</name>
         <value>
@@ -125,6 +126,7 @@
           <string>DepRel_bm25</string>
         </value>
       </nameValuePair>
+      -->
     <nameValuePair>
         <name>AnswerFile</name>
         <value>

@@ -52,7 +52,7 @@
       <nameValuePair>
         <name>CheckQuality</name>
         <value>
-          <boolean>false</boolean>
+          <boolean>true</boolean>
         </value>
       </nameValuePair>
       <nameValuePair>
@@ -70,7 +70,7 @@
       <nameValuePair>
         <name>IncludeNotBest</name>
         <value>
-          <boolean>false</boolean>
+          <boolean>true</boolean>
         </value>
       </nameValuePair>
     </configurationParameterSettings>

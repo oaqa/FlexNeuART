@@ -104,6 +104,12 @@
         </value>
       </nameValuePair>
       <nameValuePair>
+        <name>DumpBiGram</name>
+        <value>
+          <boolean>true</boolean>
+        </value>
+      </nameValuePair>
+      <!--<nameValuePair>
         <name>DumpSrl</name>
         <value>
           <boolean>true</boolean>
@@ -116,23 +122,18 @@
         </value>
       </nameValuePair>
       <nameValuePair>
-        <name>DumpBiGram</name>
-        <value>
-          <boolean>true</boolean>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
         <name>DumpDep</name>
         <value>
           <boolean>true</boolean>
         </value>
       </nameValuePair>
-    <nameValuePair>
+      <nameValuePair>
         <name>DumpWNSS</name>
         <value>
           <boolean>true</boolean>
         </value>
       </nameValuePair>
+      -->
     </configurationParameterSettings>
     <typeSystemDescription/>
     <typePriorities/>
