@@ -211,8 +211,10 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
       mQuestURI = qs.iterator().next().getUri();
     } else {
       Collection<Answer> qa = JCasUtil.select(aJCas, Answer.class);
+      // Yes, we can get an empty CAS, b/c we cannot drop existing one!
+      if (qa.isEmpty()) return;
       if (qa.size() != 1) throw new AnalysisEngineProcessException(new Exception(
-          String.format("Wrong # (%d) of answer annotations, should be one", qa.size())));
+          String.format("Wrong # (%d) of answer annotations, should be one or zero", qa.size())));
       Answer an = qa.iterator().next();
       if (!an.getUri().equals(mQuestURI)) {
         throw new AnalysisEngineProcessException(new Exception(

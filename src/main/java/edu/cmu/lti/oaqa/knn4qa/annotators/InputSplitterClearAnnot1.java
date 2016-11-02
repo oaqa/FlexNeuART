@@ -92,6 +92,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   JCas                          mBaseJcas;
 
   boolean                       mGood = false;
+  boolean                       mReleasedEmpty = false;
   private int                   mAnswId = -1;
 
   BasicEngine                   mClearNLPEngine;
@@ -100,6 +101,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   public void process(JCas jcas) throws AnalysisEngineProcessException {
     mBaseJcas = jcas;
     mGood = false;    
+    mReleasedEmpty = false;
     
     //logger.info("*** Process! ***");
     
@@ -188,13 +190,24 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     mAnswerAnnot.clear();
   }
   public boolean hasNext() throws AnalysisEngineProcessException {
-    return mGood && ( mAnswId < mAnswerJCas.size() );
+    return (mGood && (mAnswId < mAnswerJCas.size()))  ||
+           (!mGood && !mReleasedEmpty);
   }
 
   public AbstractCas next() throws AnalysisEngineProcessException {
     JCas jCasDst = getEmptyJCas();
     
     jCasDst.setDocumentLanguage(mBaseJcas.getDocumentLanguage());
+    
+    /**
+     * Problem is that old CAS seems to refuse to be dropped if 
+     * the new CAS is not produced.
+     */
+    if (!mGood) {
+      mReleasedEmpty = true;
+      jCasDst.setDocumentText("");
+      return jCasDst;
+    }
     
     //logger.info("*** NEXT! ***");
 

@@ -63,7 +63,9 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     for (Answer yans: JCasUtil.select(aJCas, Answer.class)) {
       try {
-        doOutput(yans.getUri(), yans.getId(), yans.getIsBest() ? 1:0);
+        //doOutput(yans.getUri(), yans.getId(), yans.getIsBest() ? 1:0);
+        // Let's consider any answer to be the best answer
+        doOutput(yans.getUri(), yans.getId(), 1);
       } catch (IOException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);

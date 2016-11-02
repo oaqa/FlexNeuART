@@ -191,12 +191,13 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
         }
       } else bErr = true;
     } else {
-      bErr = true;
+      // Yes, we can get an empty CAS, b/c we cannot drop existing one!
+      //bErr = true;
     }
     if (bErr) {
       Exception e = new Exception(
-          String.format("Bug: bad CAS format, # of questions %d # of answers %d",
-              colQuest.size(), colAnsw.size()));
+          String.format("Bug: bad CAS format, # of questions %d # of answers %d, text: %s",
+              colQuest.size(), colAnsw.size(), aJCas.getDocumentText()));
       throw new AnalysisEngineProcessException(e);
     }
   }
