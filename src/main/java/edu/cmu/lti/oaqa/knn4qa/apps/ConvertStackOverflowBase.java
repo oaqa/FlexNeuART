@@ -15,25 +15,20 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import java.util.*;
-import java.io.*;
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.parsers.*;
-import javax.xml.transform.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import org.apache.commons.cli.*;
-
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
-import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 
 import org.htmlparser.Parser;
 import org.htmlparser.Tag;
@@ -41,8 +36,15 @@ import org.htmlparser.Text;
 import org.htmlparser.util.ParserException;
 import org.htmlparser.util.Translate;
 import org.htmlparser.visitors.NodeVisitor;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+
+import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 
 class ParsedPost {
   String mId;
@@ -220,37 +222,22 @@ class PostCleaner {
   private String mText;
 }
 
-/**
- * Converting StackOverflow posts to Yahoo! Answers format. Tags are discarded,
- * contents of the code tags are processed in a special way: punctuation is replaced
- * with spaces, tokens smaller than {@link MIN_CODE_CHARS} characters are discarded.
- * 
- * @author Leonid Boytsov
- *
- */
-public class ConvertStackOverflow {
-  private static final String ROOT_POST_TAG = "row";
 
-  public static final int MIN_CODE_CHARS=3;
-
+public class ConvertStackOverflowBase {
+  public static final String ROOT_POST_TAG = "row";
+  public static final int MIN_CODE_CHARS=3;  
+  
   public static final String INPUT_PARAM = "input";
   public static final String INPUT_DESC  = "input file (the bzipped, gzipped, or uncompressed posts file from Stack Overflow)";
   
   public static final String OUTPUT_PARAM = "output";
   public static final String OUTPUT_DESC  = "output file (in the Yahoo! answers format";
-  
+
   public static final String DEBUG_PRINT_PARAM  = "debug_print";
   public static final String DEBUG_PRINT_DESC   = "Print some debug info";
   
   public static final String EXCLUDE_CODE_PARAM = "exclude_code";
-  public static final String EXCLUDE_CODE_DESC  = "Completely remove all the code sections";
-  
-  static void Usage(String err, Options opt) {
-    System.err.println("Error: " + err);
-    HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp( "ConvertStackOverflow", opt);     
-    System.exit(1);
-  }
+  public static final String EXCLUDE_CODE_DESC  = "Completely remove all the code sections";  
   
   public static ParsedPost parsePost(String postText, boolean excludeCode) throws Exception {
     Document post = XmlHelper.parseDocWithoutXMLDecl(postText);
@@ -285,147 +272,62 @@ public class ConvertStackOverflow {
                           (new PostCleaner(body, MIN_CODE_CHARS, excludeCode)).getText());
   }
   
-  public static void main(String args[]) {
-    
-    Options options = new Options();
-    
-    options.addOption(INPUT_PARAM,   null, true, INPUT_DESC);
-    options.addOption(OUTPUT_PARAM,  null, true, OUTPUT_DESC);
-    options.addOption(CommonParams.MAX_NUM_REC_PARAM, null, true, CommonParams.MAX_NUM_REC_DESC);
-    options.addOption(DEBUG_PRINT_PARAM,   null, false, DEBUG_PRINT_DESC);
-    options.addOption(EXCLUDE_CODE_PARAM,  null, false, EXCLUDE_CODE_DESC);
-    
-    CommandLineParser parser = new org.apache.commons.cli.GnuParser();
-    
-    HashMap<String, ParsedPost> hQuestions = new HashMap<String, ParsedPost>(); 
-    
-    try {
-      CommandLine cmd = parser.parse(options, args);
-      
-      String inputFile = cmd.getOptionValue(INPUT_PARAM);
-      
-      if (null == inputFile) Usage("Specify: " + INPUT_PARAM, options);
-      
-      String outputFile = cmd.getOptionValue(OUTPUT_PARAM);
-      
-      if (null == outputFile) Usage("Specify: " + OUTPUT_PARAM, options);
-      
-      InputStream input = CompressUtils.createInputStream(inputFile);
-      BufferedWriter  output = new BufferedWriter(new FileWriter(new File(outputFile)));
-      
-      int maxNumRec = Integer.MAX_VALUE;
-      
-      String tmp = cmd.getOptionValue(CommonParams.MAX_NUM_REC_PARAM);
-      
-      if (tmp !=null) maxNumRec = Integer.parseInt(tmp);
-      
-      boolean debug = cmd.hasOption(DEBUG_PRINT_PARAM);
-      
-      boolean excludeCode = cmd.hasOption(EXCLUDE_CODE_PARAM);
-      
-      System.out.println("Processing at most " + maxNumRec + " records, excluding code? " + excludeCode);
-      
-      XmlIterator xi = new XmlIterator(input, ROOT_POST_TAG);
-      
-      String elem;
-      
-      output.write("<?xml version='1.0' encoding='UTF-8'?><ystfeed>\n");
-
-      for (int num = 1; num <= maxNumRec && !(elem = xi.readNext()).isEmpty(); ++num) {
-        ParsedPost post = null;
-        try {
-          post = parsePost(elem, excludeCode);
-          
-          if (!post.mAcceptedAnswerId.isEmpty()) {
-            hQuestions.put(post.mId, post);
-          } else if (post.mpostIdType.equals("2")) {
-            String parentId =  post.mParentId;
-            String id = post.mId;
-            if (!parentId.isEmpty()) {
-              ParsedPost parentPost = hQuestions.get(parentId);
-              if (parentPost != null && parentPost.mAcceptedAnswerId.equals(id)) {
-                output.write(createYahooAnswersQuestion(parentPost, post));
-                hQuestions.remove(parentId);
-              }
-            }
-          }
-          
-        } catch (Exception e) {
-          e.printStackTrace();
-          throw new Exception("Error parsing record # " + num + ", error message: " + e);
-        }
-        if (debug) {
-          System.out.println(String.format("%s parentId=%s acceptedAnswerId=%s type=%s", 
-                             post.mId, post.mParentId, post.mAcceptedAnswerId, post.mpostIdType));
-          System.out.println("================================");
-          if (!post.mTitle.isEmpty()) {
-            System.out.println(post.mTitle);
-            System.out.println("--------------------------------");
-          }
-          System.out.println(post.mBody);
-          System.out.println("================================");
-        }
-      }      
-
-      output.write("</ystfeed>\n");
-      
-      input.close();
-      output.close();
-      
-    } catch (ParseException e) {
-      Usage("Cannot parse arguments", options);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.err.println("Terminating due to an exception: " + e);
-      System.exit(1);
-    }      
-
-  }
-
-  private static String createYahooAnswersQuestion(ParsedPost parentPost, ParsedPost post) 
+  public static String createYahooAnswersQuestion(boolean excludeCode, ParsedPost parentPost, ParsedPost post)
       throws ParserConfigurationException, TransformerException {
-    DocumentBuilderFactory    docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder           docBuilder = docFactory.newDocumentBuilder();
-    
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
     // root elements
     Document doc = docBuilder.newDocument();
-    Element  rootElement = doc.createElement("document");
-    
+    Element rootElement = doc.createElement("document");
+
     doc.appendChild(rootElement);
-    
+
     Element uri = doc.createElement("uri");
     uri.setTextContent(parentPost.mId);
     rootElement.appendChild(uri);
-    
+
     Element subject = doc.createElement("subject");
-   subject.setTextContent(parentPost.mTitle);
+    subject.setTextContent(parentPost.mTitle);
     rootElement.appendChild(subject);
-    
+
     Element content = doc.createElement("content");
     content.setTextContent(parentPost.mBody);
     rootElement.appendChild(content);
-    
+
     Element bestanswer = doc.createElement("bestanswer");
     bestanswer.setTextContent(post.mBody);
     rootElement.appendChild(bestanswer);
-    
-    Element answer_item  = doc.createElement("answer_item");
+
+    Element answer_item = doc.createElement("answer_item");
     answer_item.setTextContent(post.mBody);
     Element nbestanswers = doc.createElement("nbestanswers");
     nbestanswers.appendChild(answer_item);
     rootElement.appendChild(nbestanswers);
-    
+
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
-    Transformer        transformer = transformerFactory.newTransformer();
-    DOMSource          source = new DOMSource(doc);
-    
-    
+    Transformer transformer = transformerFactory.newTransformer();
+    DOMSource source = new DOMSource(doc);
+
     StringWriter sw = new StringWriter();
     StreamResult result = new StreamResult(sw);
-        
+
     transformer.transform(source, result);
     return "<vespaadd>" + xhlp.removeHeader(sw.toString()).replace("&", "&amp;") + "</vespaadd>\n";
   }
   
+  public static void printDebugPost(ParsedPost post) {
+    System.out.println(String.format("%s parentId=%s acceptedAnswerId=%s type=%s", 
+        post.mId, post.mParentId, post.mAcceptedAnswerId, post.mpostIdType));
+    System.out.println("================================");
+    if (!post.mTitle.isEmpty()) {
+      System.out.println(post.mTitle);
+      System.out.println("--------------------------------");
+    }
+    System.out.println(post.mBody);
+    System.out.println("================================");
+  }
+    
   private static XmlHelper xhlp = new XmlHelper();
+  
 }
