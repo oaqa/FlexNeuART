@@ -17,31 +17,14 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import java.util.*;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import javax.xml.parsers.*;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.cli.*;
 
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 
-import org.htmlparser.Parser;
-import org.htmlparser.Tag;
-import org.htmlparser.Text;
-import org.htmlparser.util.ParserException;
-import org.htmlparser.util.Translate;
-import org.htmlparser.visitors.NodeVisitor;
-import org.w3c.dom.*;
 
 
 /**
@@ -62,7 +45,7 @@ public class ConvertStackOverflowStep1 extends ConvertStackOverflowBase {
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp( "ConvertStackOverflow", opt);     
+    formatter.printHelp( "ConvertStackOverflowStep1", opt);     
     System.exit(1);
   }
   
@@ -110,7 +93,8 @@ public class ConvertStackOverflowStep1 extends ConvertStackOverflowBase {
       
       String elem;
 
-      for (int num = 1; num <= maxNumRec && !(elem = xi.readNext()).isEmpty(); ++num) {
+      int num = 1;
+      for (; num <= maxNumRec && !(elem = xi.readNext()).isEmpty(); ++num) {
         ParsedPost post = null;
         try {
           elem = elem.replace('\n', ' '); // Make sure that there's not newline, so we can use sort
@@ -137,11 +121,15 @@ public class ConvertStackOverflowStep1 extends ConvertStackOverflowBase {
           throw new Exception("Error parsing record # " + num + ", error message: " + e);
         }
         if (debug) printDebugPost(post);
+        if (num % PRINT_QTY == 0) {
+          System.out.println("Processed " + num + " input recs");
+        }
       }      
       
       input.close();
       output.close();
       
+      System.out.println("Processed " + num + " input recs");      
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
     } catch (Exception e) {

@@ -18,18 +18,10 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 import java.util.*;
 import java.io.*;
 
-import javax.xml.parsers.*;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import org.apache.commons.cli.*;
 
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
-
-import org.w3c.dom.*;
 
 
 
@@ -46,7 +38,7 @@ public class ConvertStackOverflowOnlyBest extends ConvertStackOverflowBase {
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp( "ConvertStackOverflow", opt);     
+    formatter.printHelp( "ConvertStackOverflowOnlyBest", opt);     
     System.exit(1);
   }
   
@@ -96,7 +88,8 @@ public class ConvertStackOverflowOnlyBest extends ConvertStackOverflowBase {
       
       output.write("<?xml version='1.0' encoding='UTF-8'?><ystfeed>\n");
 
-      for (int num = 1; num <= maxNumRec && !(elem = xi.readNext()).isEmpty(); ++num) {
+      int num = 1;
+      for (; num <= maxNumRec && !(elem = xi.readNext()).isEmpty(); ++num) {
         ParsedPost post = null;
         try {
           post = parsePost(elem, excludeCode);
@@ -120,12 +113,17 @@ public class ConvertStackOverflowOnlyBest extends ConvertStackOverflowBase {
           throw new Exception("Error parsing record # " + num + ", error message: " + e);
         }
         if (debug) printDebugPost(post);
+        if (num % PRINT_QTY == 0) {
+          System.out.println("Processed " + num + " input recs");
+        }
       }      
 
       output.write("</ystfeed>\n");
       
       input.close();
       output.close();
+      
+      System.out.println("Processed " + num + " input recs");
       
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);

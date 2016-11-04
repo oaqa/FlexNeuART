@@ -225,7 +225,8 @@ class PostCleaner {
 
 public class ConvertStackOverflowBase {
   public static final String ROOT_POST_TAG = "row";
-  public static final int MIN_CODE_CHARS=3;  
+  public static final int MIN_CODE_CHARS=3;
+  public static final int PRINT_QTY = 10000;
   
   public static final String INPUT_PARAM = "input";
   public static final String INPUT_DESC  = "input file (the bzipped, gzipped, or uncompressed posts file from Stack Overflow)";
