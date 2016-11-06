@@ -18,7 +18,18 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 import java.util.*;
 import java.io.*;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.apache.commons.cli.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
@@ -68,7 +79,7 @@ public class ConvertStackOverflowOnlyBest extends ConvertStackOverflowBase {
       if (null == outputFile) Usage("Specify: " + OUTPUT_PARAM, options);
       
       InputStream input = CompressUtils.createInputStream(inputFile);
-      BufferedWriter  output = new BufferedWriter(new FileWriter(new File(outputFile)));
+      BufferedWriter  output = new BufferedWriter(new OutputStreamWriter(CompressUtils.createOutputStream(outputFile)));
       
       int maxNumRec = Integer.MAX_VALUE;
       
@@ -135,4 +146,47 @@ public class ConvertStackOverflowOnlyBest extends ConvertStackOverflowBase {
 
   }
 
+  public static String createYahooAnswersQuestion(boolean excludeCode, ParsedPost parentPost, ParsedPost post)
+      throws ParserConfigurationException, TransformerException {
+    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
+    // root elements
+    Document doc = docBuilder.newDocument();
+    Element rootElement = doc.createElement("document");
+
+    doc.appendChild(rootElement);
+
+    Element uri = doc.createElement("uri");
+    uri.setTextContent(parentPost.mId);
+    rootElement.appendChild(uri);
+
+    Element subject = doc.createElement("subject");
+    subject.setTextContent(parentPost.mTitle);
+    rootElement.appendChild(subject);
+
+    Element content = doc.createElement("content");
+    content.setTextContent(parentPost.mBody);
+    rootElement.appendChild(content);
+
+    Element bestanswer = doc.createElement("bestanswer");
+    bestanswer.setTextContent(post.mBody);
+    rootElement.appendChild(bestanswer);
+
+    Element answer_item = doc.createElement("answer_item");
+    answer_item.setTextContent(post.mBody);
+    Element nbestanswers = doc.createElement("nbestanswers");
+    nbestanswers.appendChild(answer_item);
+    rootElement.appendChild(nbestanswers);
+
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    Transformer transformer = transformerFactory.newTransformer();
+    DOMSource source = new DOMSource(doc);
+
+    StringWriter sw = new StringWriter();
+    StreamResult result = new StreamResult(sw);
+
+    transformer.transform(source, result);
+    return "<vespaadd>" + xhlp.removeHeader(sw.toString()).replace("&", "&amp;") + "</vespaadd>\n";
+  }  
 }

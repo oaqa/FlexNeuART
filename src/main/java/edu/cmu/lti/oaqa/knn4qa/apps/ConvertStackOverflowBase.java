@@ -273,49 +273,6 @@ public class ConvertStackOverflowBase {
                           (new PostCleaner(body, MIN_CODE_CHARS, excludeCode)).getText());
   }
   
-  public static String createYahooAnswersQuestion(boolean excludeCode, ParsedPost parentPost, ParsedPost post)
-      throws ParserConfigurationException, TransformerException {
-    DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-
-    // root elements
-    Document doc = docBuilder.newDocument();
-    Element rootElement = doc.createElement("document");
-
-    doc.appendChild(rootElement);
-
-    Element uri = doc.createElement("uri");
-    uri.setTextContent(parentPost.mId);
-    rootElement.appendChild(uri);
-
-    Element subject = doc.createElement("subject");
-    subject.setTextContent(parentPost.mTitle);
-    rootElement.appendChild(subject);
-
-    Element content = doc.createElement("content");
-    content.setTextContent(parentPost.mBody);
-    rootElement.appendChild(content);
-
-    Element bestanswer = doc.createElement("bestanswer");
-    bestanswer.setTextContent(post.mBody);
-    rootElement.appendChild(bestanswer);
-
-    Element answer_item = doc.createElement("answer_item");
-    answer_item.setTextContent(post.mBody);
-    Element nbestanswers = doc.createElement("nbestanswers");
-    nbestanswers.appendChild(answer_item);
-    rootElement.appendChild(nbestanswers);
-
-    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-    Transformer transformer = transformerFactory.newTransformer();
-    DOMSource source = new DOMSource(doc);
-
-    StringWriter sw = new StringWriter();
-    StreamResult result = new StreamResult(sw);
-
-    transformer.transform(source, result);
-    return "<vespaadd>" + xhlp.removeHeader(sw.toString()).replace("&", "&amp;") + "</vespaadd>\n";
-  }
   
   public static void printDebugPost(ParsedPost post) {
     System.out.println(String.format("%s parentId=%s acceptedAnswerId=%s type=%s", 
@@ -329,6 +286,6 @@ public class ConvertStackOverflowBase {
     System.out.println("================================");
   }
     
-  private static XmlHelper xhlp = new XmlHelper();
+  protected static XmlHelper xhlp = new XmlHelper();
   
 }

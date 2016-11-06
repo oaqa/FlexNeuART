@@ -85,9 +85,7 @@ public class ConvertStackOverflowStep1 extends ConvertStackOverflowBase {
       
       boolean debug = cmd.hasOption(DEBUG_PRINT_PARAM);
       
-      boolean excludeCode = cmd.hasOption(EXCLUDE_CODE_PARAM);
-      
-      System.out.println("Processing at most " + maxNumRec + " records, excluding code? " + excludeCode);
+      System.out.println("Processing at most " + maxNumRec + " records");
       
       XmlIterator xi = new XmlIterator(input, ROOT_POST_TAG);
       
@@ -98,7 +96,7 @@ public class ConvertStackOverflowStep1 extends ConvertStackOverflowBase {
         ParsedPost post = null;
         try {
           elem = elem.replace('\n', ' '); // Make sure that there's not newline, so we can use sort
-          post = parsePost(elem, excludeCode);
+          post = parsePost(elem, false); // doesn't matter here if we exclude code or not, b/c we copy the orignal record anyway
           
           boolean isGood = false;
           String id = post.mId;
