@@ -240,11 +240,14 @@ public class ConvertStackOverflowStep2 extends ConvertStackOverflowBase {
     content.setTextContent(quest.mBody);
     rootElement.appendChild(content);
 
-    if (bestAnsw != null) {
-      Element bestanswer = doc.createElement("bestanswer");
+    Element bestanswer = doc.createElement("bestanswer");
+    if (bestAnsw != null) {      
       bestanswer.setTextContent(bestAnsw.mBody);
-      rootElement.appendChild(bestanswer);      
+            
+    } else {
+      bestanswer.setTextContent("");
     }
+    rootElement.appendChild(bestanswer);
     
     
     Element nbestanswers = doc.createElement("nbestanswers");
