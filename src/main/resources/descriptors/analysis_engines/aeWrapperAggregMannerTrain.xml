@@ -29,12 +29,12 @@
     <vendor/>
     <configurationParameters searchStrategy="language_fallback">
       <configurationParameter>
-        <name>QrelFile</name>
+        <name>QrelFilePrefix</name>
         <type>String</type>
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
         <overrides>
-          <parameter>aeQrelWriter/QrelFile</parameter>
+          <parameter>aeQrelWriter/QrelFilePrefix</parameter>
         </overrides>
       </configurationParameter>
       <configurationParameter>
@@ -76,9 +76,9 @@
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
-        <name>QrelFile</name>
+        <name>QrelFilePrefix</name>
         <value>
-          <string>output/manner/train/qrels.txt</string>
+          <string>output/manner/train/qrels</string>
         </value>
       </nameValuePair>
       <nameValuePair>
