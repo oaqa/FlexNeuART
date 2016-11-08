@@ -9,7 +9,7 @@
     <vendor/>
     <configurationParameters>
       <configurationParameter>
-        <name>QrelFile</name>
+        <name>QrelFilePrefix</name>
         <type>String</type>
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
@@ -17,10 +17,10 @@
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
-        <name>QrelFile</name>
+        <name>QrelFilePrefix</name>
         <value>
           <!-- triple-dot means that this value will be overridden -->
-          <string>output/.../qrels.txt</string>
+          <string>output/.../qrels</string>
         </value>
       </nameValuePair>
     </configurationParameterSettings>

@@ -36,23 +36,25 @@ import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
  * @author Leonid Boytsov
  */
 public class QrelWriter extends JCasAnnotator_ImplBase {
-  private static final String PARAM_QREL_FILE = "QrelFile";
+  private static final String PARAM_QREL_FILE_PREFIX = "QrelFilePrefix";
   
   private static int                    mIOState = 0;
-  private static BufferedWriter         mQrelFile;
+  private static BufferedWriter         mQrelFileBinary;
+  private static BufferedWriter         mQrelFileGraded;
+  private static BufferedWriter         mQrelFileOnlyBest;
   
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
     super.initialize(aContext);
     
-    String qrelFileName = (String)aContext.getConfigParameterValue(PARAM_QREL_FILE);
+    String qrelFileNamePrefix = (String)aContext.getConfigParameterValue(PARAM_QREL_FILE_PREFIX);
     
-    if (null == qrelFileName) {
+    if (null == qrelFileNamePrefix) {
       throw new ResourceInitializationException(
-          new Exception("Missing parameter value: '" + PARAM_QREL_FILE + "'"));
+          new Exception("Missing parameter value: '" + PARAM_QREL_FILE_PREFIX + "'"));
     }
     try {
-      initOutput(qrelFileName);
+      initOutput(qrelFileNamePrefix);
     } catch (IOException e) {
       e.printStackTrace();
       throw new ResourceInitializationException(e);
@@ -63,9 +65,9 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     for (Answer yans: JCasUtil.select(aJCas, Answer.class)) {
       try {
-        //doOutput(yans.getUri(), yans.getId(), yans.getIsBest() ? 1:0);
-        // Let's consider any answer to be the best answer
-        doOutput(yans.getUri(), yans.getId(), 1);
+        doOutput(mQrelFileBinary,   yans.getUri(), yans.getId(), 1);
+        doOutput(mQrelFileGraded,   yans.getUri(), yans.getId(), yans.getIsBest() ? 2:1);
+        doOutput(mQrelFileOnlyBest, yans.getUri(), yans.getId(), yans.getIsBest() ? 1:0);
       } catch (IOException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
@@ -74,16 +76,21 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
 
   }
   
-  static synchronized private void doOutput(String topicId, String docId, Integer relGrade) 
+  static synchronized private void doOutput(BufferedWriter qrelFile, String topicId, String docId, Integer relGrade) 
       throws IOException {
-    SolrEvalUtils.saveQrelOneEntry(mQrelFile, topicId, docId, relGrade);    
+    SolrEvalUtils.saveQrelOneEntry(qrelFile, topicId, docId, relGrade);    
   }
   
-  static synchronized private void initOutput(String qrelFileName) throws IOException {
+  static synchronized private void initOutput(String qrelFileNamePrefix) throws IOException {
     if (mIOState  != 0) return;
         
-    mQrelFile = new BufferedWriter(
-        new OutputStreamWriter(CompressUtils.createOutputStream(qrelFileName)));
+    mQrelFileBinary = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(qrelFileNamePrefix + "_all_binary.txt")));
+    mQrelFileGraded = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(qrelFileNamePrefix + "_all_graded.txt")));
+    mQrelFileOnlyBest = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(qrelFileNamePrefix + "_onlybest.txt")));    
+    
     
     mIOState = 1;        
   }
@@ -100,7 +107,8 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
   
   static synchronized private void finishOutput() throws IOException {
     if (mIOState != 1) return;
-    mQrelFile.close();
+    mQrelFileBinary.close();
+    mQrelFileGraded.close();
     mIOState = 2;
   }  
 }
