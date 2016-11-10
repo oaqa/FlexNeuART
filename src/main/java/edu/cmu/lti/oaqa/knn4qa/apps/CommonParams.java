@@ -23,6 +23,9 @@ public class CommonParams {
   public static final String PROVIDER_URI_DESC = "Provider URI: an index location or a query server address";
   public static final String PROVIDER_URI_PARAM = "u";
   
+  public static final String QUERY_CACHE_FILE_DESC  = "A file to cache query results";
+  public static final String QUERY_CACHE_FILE_PARAM = "query_cache_file";
+  
   public static final String QUERY_FILE_DESC = "Query file";
   public static final String QUERY_FILE_PARAM = "q";
   

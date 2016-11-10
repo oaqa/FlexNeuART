@@ -37,6 +37,7 @@ import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.BruteForceKNNCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfoCache;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneGIZACandidateProvider;
@@ -138,7 +139,15 @@ class BaseQueryAppProcessingThread extends Thread {
         // 2. Obtain results
         long start = System.currentTimeMillis();
         
-        CandidateInfo qres = candProvider.getCandidates(iq, docFields, mAppRef.mMaxCandRet);
+        CandidateInfo qres = null;
+        
+        if (mAppRef.mResultCache != null) 
+          qres = mAppRef.mResultCache.getCacheEntry(queryID);
+        if (qres == null) {            
+            qres = candProvider.getCandidates(iq, docFields, mAppRef.mMaxCandRet);
+            if (mAppRef.mResultCache != null) 
+              mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
+        }
         CandidateEntry [] resultsAll = qres.mEntries;
         
         long end = System.currentTimeMillis();
@@ -398,7 +407,7 @@ public abstract class BaseQueryApp {
    * Adds options related to candidate generation.  
    * 
    * @param onlyLucene
-   *                    if true, we don't allow to specify the provider type and only uses Lucene
+   *                    if true, we don't allow to specify the provider type and only use Lucene
    * @param multNumRetr
    *                    if true, an app generates results for top-K sets of various sizes
    * @param useQRELs
@@ -420,6 +429,7 @@ public abstract class BaseQueryApp {
       mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,      null, true, CommonParams.PROVIDER_URI_DESC);
       mOptions.addOption(CommonParams.MIN_SHOULD_MATCH_PCT_PARAM, null, true, CommonParams.MIN_SHOULD_MATCH_PCT_DESC);
     }
+    mOptions.addOption(CommonParams.QUERY_CACHE_FILE_PARAM,    null, true, CommonParams.QUERY_CACHE_FILE_DESC);
     mOptions.addOption(CommonParams.QUERY_FILE_PARAM,          null, true, CommonParams.QUERY_FILE_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_RESULTS_PARAM,     null, true, mMultNumRetr ? 
                                                                              CommonParams.MAX_NUM_RESULTS_DESC : 
@@ -512,6 +522,8 @@ public abstract class BaseQueryApp {
     
     logger.info(String.format("Candidate provider type: %s URI: %s Query file: %s Maximum # of queries: %d # of cand. records: %s", 
         mCandProviderType, mProviderURI, mQueryFile, mMaxNumQuery, tmpn));
+    mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
+    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
     
     // mMaxNumRet must be init before mMaxCandRet
     mMaxNumRet = Integer.MIN_VALUE;
@@ -712,7 +724,6 @@ public abstract class BaseQueryApp {
     } else {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
-
   }
   
   /**
@@ -794,6 +805,15 @@ public abstract class BaseQueryApp {
       // because they may some of the resources (e.g., NMSLIB needs an in-memory feature extractor)
       initProvider();
       
+      if (mResultCacheName != null) {
+        mResultCache = new CandidateInfoCache();
+        // If the cache file name is specified and it exists, read the cache!
+        if (CandidateInfoCache.cacheExists(mResultCacheName)) { 
+          mResultCache.readCache(mResultCacheName);
+          logger.info("Result cache is loaded from '" + mResultCacheName + "'");
+        }
+      }      
+      
       BufferedReader  inpText = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(mQueryFile)));
       
       String docText = XmlHelper.readNextXMLIndexEntry(inpText);        
@@ -851,6 +871,12 @@ public abstract class BaseQueryApp {
         f.close();
       }
       
+      // Overwrite cache only if it doesn't exist or is incomplete
+      if (mResultCacheName != null && !CandidateInfoCache.cacheExists(mResultCacheName)) {
+        mResultCache.writeCache(mResultCacheName);
+        logger.info("Result cache is loaded from '" + mResultCacheName + "'");        
+      }
+      
     } catch (ParseException e) {
       showUsageSpecify("Cannot parse arguments: " + e);
     } catch(Exception e) {
@@ -891,6 +917,9 @@ public abstract class BaseQueryApp {
   String       mExtrTypeInterm;
   DenseVector  mModelInterm;
   Ranker       mModelFinal;
+  
+  String             mResultCacheName = null; 
+  CandidateInfoCache mResultCache = null;
   
   InMemIndexFeatureExtractor mInMemExtrInterm;
   InMemIndexFeatureExtractor mInMemExtrFinal;
