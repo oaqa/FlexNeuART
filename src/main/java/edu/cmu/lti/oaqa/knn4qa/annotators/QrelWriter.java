@@ -109,6 +109,7 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
     if (mIOState != 1) return;
     mQrelFileBinary.close();
     mQrelFileGraded.close();
+    mQrelFileOnlyBest.close();
     mIOState = 2;
   }  
 }
