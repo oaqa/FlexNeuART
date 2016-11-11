@@ -85,12 +85,14 @@ fi
 stepQ=""
 
 if [ "$VOC_ONLY" != "1" ]  ; then
-  stepQ="$8"
+  stepQ="$9"
   if [ "$stepQ" = "" ] ; then
-    echo "Specify the number of iterations (8th arg)"
+    echo "Specify the number of iterations (9th arg)"
     exit 1
   fi
 fi
+
+echo "SUBSET: $SUBSET PART: $PART TARGET_DIR: $TARGET_SUBDIR FIELD: $FIELD VOC_ONLY=$VOC_ONLY # of iterations: $stepQ"
  
 
 export source_dir="$PIPELINE_OUT_PREFIX/$SUBSET/$PART"
