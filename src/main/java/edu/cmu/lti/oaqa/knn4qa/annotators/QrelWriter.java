@@ -38,6 +38,9 @@ import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 public class QrelWriter extends JCasAnnotator_ImplBase {
   private static final String PARAM_QREL_FILE_PREFIX = "QrelFilePrefix";
   
+  public static final int QREL_BEST_GRADE  = 4;
+  public static final int QREL_OTHER_GRADE = 3;
+  
   private static int                    mIOState = 0;
   private static BufferedWriter         mQrelFileBinary;
   private static BufferedWriter         mQrelFileGraded;
@@ -66,8 +69,8 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
     for (Answer yans: JCasUtil.select(aJCas, Answer.class)) {
       try {
         doOutput(mQrelFileBinary,   yans.getUri(), yans.getId(), 1);
-        doOutput(mQrelFileGraded,   yans.getUri(), yans.getId(), yans.getIsBest() ? 2:1);
-        doOutput(mQrelFileOnlyBest, yans.getUri(), yans.getId(), yans.getIsBest() ? 1:0);
+        doOutput(mQrelFileGraded,   yans.getUri(), yans.getId(), yans.getIsBest() ? QREL_BEST_GRADE:QREL_OTHER_GRADE);
+        doOutput(mQrelFileOnlyBest, yans.getUri(), yans.getId(), yans.getIsBest() ? QREL_BEST_GRADE:0);
       } catch (IOException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
