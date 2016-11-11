@@ -66,7 +66,7 @@ while True:
   lineAnsw=lineAnsw.strip()
   if lineQuest == '' or lineAnsw == '' : continue
   for i in range(0, len(nums)):
-    if random.randint(0, nums[i]) == 0:
+    if random.randint(0, nums[i]-1) == 0:
       fSampleQuest[i].write(lineQuest + '\n')
       fSampleAnsw[i].write(lineAnsw + '\n')
   
