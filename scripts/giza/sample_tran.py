@@ -3,6 +3,11 @@ import random
 import sys
 import os
 
+#
+# This is a script that samples QA pairs
+# (to later check how performance is affected by the amount of training data)
+#
+
 def Usage(err):
   if not err is None:
     print err
@@ -28,7 +33,7 @@ maxPower2    = int(sys.argv[4])
 
 srcDir = topLevelDir + '/' + colName + '/tran'
 
-if !os.path.isdir(srcDir):
+if not os.path.isdir(srcDir):
   Usage("Cannot find source directory: '" + srcDir + "'")
 
 nums = []
@@ -51,16 +56,17 @@ ln=0
 while true:
   ln = ln + 1
   lineQuest = fQuest.readline()
-  if lineQuest = '': break
+  if lineQuest == '' : 
+    break
   lineAnsw = fAnsw.readline()
-  if lineAnsw = '':
+  if lineAnsw == '' :
     print "The answer file finished unexpectedly in line " + str(ln)
     sys.exit(1)
   lineQuest=lineQuest.strip()
   lineAnsw=lineAnsw.strip()
-  if lineQuest = '' or lineAnsw = '' : continue
+  if lineQuest == '' or lineAnsw == '' : continue
   for i in range(0, len(nums)):
-    if random.randint(0, nums[i]) = 0:
+    if random.randint(0, nums[i]) == 0:
       fSampleQuest[i].write(lineQuest + '\n')
       fSampleAnsw[i].write(lineAnsw + '\n')
   
