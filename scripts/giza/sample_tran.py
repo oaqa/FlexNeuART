@@ -45,8 +45,8 @@ for i in range(2,maxPower2+1):
   td = srcDir + str(n)
   os.mkdir(td)
   nums.append(n)
-  fSampleQuest.append(open(quest_file_name(d, fieldName), 'w'))
-  fSampleAnsw.append(open(answ_file_name(d, fieldName), 'w'))
+  fSampleQuest.append(open(quest_file_name(td, fieldName), 'w'))
+  fSampleAnsw.append(open(answ_file_name(td, fieldName), 'w'))
 
 fQuest = open(quest_file_name(srcDir, fieldName), 'r') 
 fAnsw  = open(answ_file_name(srcDir, fieldName), 'r') 
