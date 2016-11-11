@@ -42,7 +42,7 @@ fSampleAnsw  = []
 
 for i in range(2,maxPower2+1):
   n = pow2(i) 
-  td = srcDir + n
+  td = srcDir + str(n)
   os.mkdir(td)
   nums.append(n)
   fSampleQuest.append(open(quest_file_name(d, fieldName), 'w'))
