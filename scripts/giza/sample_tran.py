@@ -53,7 +53,7 @@ fAnsw  = open(answ_file_name(srcDir, fieldName), 'r')
 
 ln=0
 
-while true:
+while True:
   ln = ln + 1
   lineQuest = fQuest.readline()
   if lineQuest == '' : 
