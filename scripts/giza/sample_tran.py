@@ -40,7 +40,7 @@ nums = []
 fSampleQuest = []
 fSampleAnsw  = []
 
-for i in range(2,maxPower2+1):
+for i in range(1,maxPower2+1):
   n = pow2(i) 
   td = srcDir + str(n)
   os.mkdir(td)
