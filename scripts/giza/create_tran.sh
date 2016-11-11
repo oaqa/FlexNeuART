@@ -49,17 +49,24 @@ if [ "$PART" = "" ] ; then
   exit 1
 fi
 
-FIELD=$5
+TARGET_SUBDIR=$5
 
-if [ "$FIELD" = "" ] ; then
-  echo "Specify a FIELD: e.g., text, text_unlemm, bigram, srl, srl_lab, dep, wnss (5th arg)"
+if [ "$TARGET_SUBDIR" = "" ] ; then
+  echo "Specify a sub-directory in the target directory: e.g., full, part2, part4, part8, ... (5th arg)"
   exit 1
 fi
 
-GIZA_DIR="$6"
+FIELD=$6
+
+if [ "$FIELD" = "" ] ; then
+  echo "Specify a FIELD: e.g., text, text_unlemm, bigram, srl, srl_lab, dep, wnss (6th arg)"
+  exit 1
+fi
+
+GIZA_DIR="$7"
 
 if [ "$GIZA_DIR" = "" ] ; then
- echo "Specify GIZA/MGIZA dir (6th arg)"
+ echo "Specify GIZA/MGIZA dir (7th arg)"
  exit 1
 fi
 
@@ -68,10 +75,10 @@ if [ ! -d "$GIZA_DIR" ] ; then
   exit 1
 fi
 
-VOC_ONLY="$7"
+VOC_ONLY="$8"
 
 if [ "$VOC_ONLY" = "" ] ; then
-  echo "Specify VOC_ONLY (1 or 0) (7th arg)"
+  echo "Specify VOC_ONLY (1 or 0) (8th arg)"
   exit 1
 fi
 
@@ -87,7 +94,7 @@ fi
  
 
 export source_dir="$PIPELINE_OUT_PREFIX/$SUBSET/$PART"
-export target_dir="$TARGET_DIR_PREFIX/$SUBSET/$PART"
+export target_dir="$TARGET_DIR_PREFIX/$SUBSET/$TARGET_SUBDIR"
 
 echo "Source dir prefix=$source_dir" 
 echo "Target dir prefix=$target_dir" 
