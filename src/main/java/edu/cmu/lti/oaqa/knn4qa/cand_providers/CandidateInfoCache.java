@@ -61,7 +61,7 @@ public class CandidateInfoCache {
       if (!(new File(incompleteName)).delete()) {
         throw new Exception("Cannot delete file: " + incompleteName);
       }
-      logger.info(String.format("Wrote %d entries from file %s",  qty, cacheName));
+      logger.info(String.format("Wrote %d entries to file %s",  qty, cacheName));
     }
   }
   

@@ -87,7 +87,7 @@ fi
  
 
 export source_dir="$PIPELINE_OUT_PREFIX/$SUBSET/$PART"
-export target_dir="$TARGET_DIR_PREFIX/$SUBSET"
+export target_dir="$TARGET_DIR_PREFIX/$SUBSET/$PART"
 
 echo "Source dir prefix=$source_dir" 
 echo "Target dir prefix=$target_dir" 
