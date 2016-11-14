@@ -41,6 +41,13 @@ else
   train_part="train"
 fi
 
+
+CACHE_DIR="cache/lucene/$collect/$train_part"
+
+if [ ! -d "$CACHE_DIR" ] ; then
+  mkdir -p "$CACHE_DIR"
+fi
+
 EXPER_DIR_BASE=$2
 if [ "$EXPER_DIR_BASE" = "" ] ; then
   echo "Specify a working directory (2d arg)!"
@@ -63,6 +70,8 @@ if [ "$MAX_QUERY_QTY" != "" ] ; then
     echo "If MAX_QUERY_QTY is specified (4th arg), it must have TWO comma-separated numbers (you specified $MAX_QUERY_QTY)"
     exit 1
   fi
+  maxQueryQtyTrain=${maxQueryQtyList[0]}
+  maxQueryQtyTest=${maxQueryQtyList[1]}
   maxQueryQtyTrainParam=" -max_num_query ${maxQueryQtyList[0]}"
   maxQueryQtyTestParam=" -max_num_query ${maxQueryQtyList[1]}"
 fi
@@ -72,6 +81,18 @@ TEST_PART="$5"
 if [ "$TEST_PART" = "" ] ; then
   echo "Specify a test part, e.g., dev1 (5th arg)"
   exit 1 
+fi
+
+if [ "$maxQueryQtyTrain" = "" ] ; then
+  CACHE_FILE_TRAIN="$CACHE_DIR/$train_part/all_queries"
+else
+  CACHE_FILE_TRAIN="$CACHE_DIR/$train_part/max_query_qty=$maxQueryQtyTrain"
+fi
+
+if [ "$maxQueryQtyTest" = "" ] ; then
+  CACHE_FILE_TEST="$CACHE_DIR/$TEST_PART/all_queries"
+else
+  CACHE_FILE_TEST="$CACHE_DIR/$TEST_PART/max_query_qty=$maxQueryQtyTrain"
 fi
 
 EXPER_DIR="$EXPER_DIR_BASE/exper"
@@ -93,6 +114,7 @@ echo "Using $TEST_PART for testing!"
 echo "Experiment directory:           $EXPER_DIR"
 echo "Directory with TREC-style runs: $TREC_RUN_DIR"
 echo "Report directory:               $REPORT_DIR"
+echo "Query cache file (for training):$CACHE_FILE"
 
 THREAD_QTY=$6
 if [ "$THREAD_QTY" = "" ] ; then
@@ -109,6 +131,7 @@ fi
 NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
 URI="lucene_index/$collect"
+
 
 OUT_PREF_TRAIN="out_${collect}_${train_part}_${EXTR_TYPE}"
 OUT_PREF_TEST="out_${collect}_${TEST_PART}_${EXTR_TYPE}"
@@ -135,8 +158,8 @@ if [ "$EXTR_TYPE" != "none" ] ; then
   HORDER_FILES="tran_embed.0,tran_embed.1,tran_embed.2,tran_embed.3,tran_embed.4"
 
   if [ "$regen_feat" = "1" ] ; then
-    scripts/query/gen_features.sh $collect $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY 2>&1
-    check "scripts/query/gen_features.sh $collect $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY 2>&1"
+    scripts/query/gen_features.sh $collect $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1
+    check "scripts/query/gen_features.sh $collect $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1"
   fi
 
   MODEL_FILE="${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.model"
@@ -151,12 +174,12 @@ if [ "$EXTR_TYPE" != "none" ] ; then
   fi
 
   if [ "$rerun_lucene" = 1 ] ; then
-    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTestParam 2>&1|tee $query_log_file
+    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTestParam -query_cache_file $CACHE_FILE_TEST 2>&1|tee $query_log_file
     check_pipe "run_query.sh"
   fi
 else
   if [ "$rerun_lucene" = 1 ] ; then
-    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -cand_prov lucene -thread_qty $THREAD_QTY $maxQueryQtyTestParam 2>&1|tee $query_log_file
+    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -cand_prov lucene -thread_qty $THREAD_QTY $maxQueryQtyTestParam -query_cache_file $CACHE_FILE_TEST 2>&1|tee $query_log_file
     check_pipe "run_query.sh"
   fi
 fi

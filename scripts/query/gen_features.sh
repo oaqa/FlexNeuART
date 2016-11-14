@@ -40,6 +40,9 @@ while [ $# -ne 0 ] ; do
       -out_pref)
         out_pref=$OPT_VALUE
         ;;
+      -query_cache_file)
+        query_cache_file_param=$OPT
+        ;;
       *)
         echo "Invalid option: $OPT_NAME" >&2
         exit 1
@@ -114,14 +117,15 @@ full_out_pref="$out_dir/$out_pref"
 echo "==============================================="
 echo "PARAMETER REVIEW"
 echo "==============================================="
-echo "Thread qty:           $thread_qty"
-echo "max_num_query_param:  $max_num_query_param"
-echo "embed_files_param:    $embed_files_param"
-echo "horder_files_param:   $horder_files_param"
-echo "extr_type_interm:     $extr_type_interm_param"
-echo "model_interm_param:   $model_interm_param"
-echo "cand_qty_param:       $cand_qty_param"
-echo "Positional arguments: ${POS_ARGS[*]}"
+echo "Thread qty:             $thread_qty"
+echo "max_num_query_param:    $max_num_query_param"
+echo "embed_files_param:      $embed_files_param"
+echo "horder_files_param:     $horder_files_param"
+echo "extr_type_interm:       $extr_type_interm_param"
+echo "model_interm_param:     $model_interm_param"
+echo "cand_qty_param:         $cand_qty_param"
+echo "query_cache_file_param: $query_cache_file_param"
+echo "Positional arguments:   ${POS_ARGS[*]}"
 echo "==============================================="
 echo "OUTPUT FILE PREFIX:"
 echo "$out_pref"
@@ -141,6 +145,7 @@ scripts/query/run_multhread_feat.sh \
 "$extr_type_interm_param" "$model_interm_param" "$cand_qty_param" \
 -thread_qty $thread_qty  \
 -embed_dir WordEmbeddings/$collect  "$embed_files_param" "$horder_files_param" \
+$query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
 if [ "${PIPESTATUS[0]}" != "0" ] ; then
   exit 1
