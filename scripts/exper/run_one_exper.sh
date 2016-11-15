@@ -166,11 +166,12 @@ if [ "$EXTR_TYPE" != "none" ] ; then
 
   if [ "$recomp_model" = "1" ] ; then
     NUM_RAND_RESTART=10
+    METRIC_TYPE="ERR@20"
     model_log_file="$EXPER_DIR/model.log"
     echo > $model_log_file
     
-    scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART 2>&1 | tee -a "$model_log_file"
-    check_pipe "scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART 2>&1 "
+    scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART $METRIC_TYPE 2>&1 | tee -a "$model_log_file"
+    check_pipe "scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART $METRIC_TYPE 2>&1 "
   fi
 
   if [ "$rerun_lucene" = 1 ] ; then
@@ -195,7 +196,7 @@ for oneN in $NTEST_LIST ; do
   echo "======================================"
   REPORT_PREF="${REPORT_DIR}/out_${oneN}"
 
-  scripts/exper/eval_output.py trec_eval-9.0.4/trec_eval "$QRELS"  "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
+  scripts/exper/eval_output.py "$QRELS"  "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
   check "eval_output.py"
 done
 
