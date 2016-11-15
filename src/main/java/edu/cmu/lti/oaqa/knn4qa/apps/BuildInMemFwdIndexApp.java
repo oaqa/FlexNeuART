@@ -114,6 +114,8 @@ public class BuildInMemFwdIndexApp {
         InMemForwardIndex indx = new InMemForwardIndex(field, fileNames, maxNumRec);
         
         indx.save(InMemIndexFeatureExtractor.indexFileName(outPrefix, fieldName));
+        indx = null;
+        System.gc();
       }
 
     } catch (ParseException e) {
