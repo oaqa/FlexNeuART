@@ -63,7 +63,7 @@ fi
 
 WORD_EMBEDDINGS="word2vec_retro_unweighted_minProb=0.001.txt"
 
-EXPER_DIR_BASE="results/final/${collect}/$QREL_TYPE/test/lucene/"
+EXPER_DIR_BASE="results/final/${collect}/$QREL_FILE/test/lucene/"
 
 # 3. Testing everything else
 

@@ -60,14 +60,14 @@ if [ "$EXPER_DIR_BASE" = "" ] ; then
   exit 1
 fi
 
-EXTR_TYPE="$3"
+EXTR_TYPE="$4"
 
 if [ "$EXTR_TYPE" = "" ] ; then
-  echo "Specify a feature extractor type (3d arg)"
+  echo "Specify a feature extractor type (4th arg)"
   exit 1
 fi
 
-MAX_QUERY_QTY="$4"
+MAX_QUERY_QTY="$5"
 
 if [ "$MAX_QUERY_QTY" != "" ] ; then
   maxQueryQtyList=(`echo $MAX_QUERY_QTY|sed 's/,/ /g'`)
@@ -82,12 +82,26 @@ if [ "$MAX_QUERY_QTY" != "" ] ; then
   maxQueryQtyTestParam=" -max_num_query ${maxQueryQtyList[1]}"
 fi
 
-TEST_PART="$5"
+TEST_PART="$6"
 
 if [ "$TEST_PART" = "" ] ; then
-  echo "Specify a test part, e.g., dev1 (5th arg)"
+  echo "Specify a test part, e.g., dev1 (6th arg)"
   exit 1 
 fi
+
+THREAD_QTY=$7
+if [ "$THREAD_QTY" = "" ] ; then
+  echo "Specify a number of threads for the feature extractor (7th arg)!"
+  exit 1
+fi
+
+NTEST_STR=$8
+if [ "$NTEST_STR" = "" ] ; then
+  echo "Specify a comma-separated list of candidate record # retrieved for testing for each query (8th arg)!"
+  exit 1
+fi
+
+NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
 if [ "$maxQueryQtyTrain" = "" ] ; then
   CACHE_FILE_TRAIN="$CACHE_DIR/$train_part/all_queries"
@@ -122,20 +136,6 @@ echo "QREL file:                      $QREL_FILE"
 echo "Directory with TREC-style runs: $TREC_RUN_DIR"
 echo "Report directory:               $REPORT_DIR"
 echo "Query cache file (for training):$CACHE_FILE"
-
-THREAD_QTY=$6
-if [ "$THREAD_QTY" = "" ] ; then
-  echo "Specify a number of threads for the feature extractor (6th arg)!"
-  exit 1
-fi
-
-NTEST_STR=$7
-if [ "$NTEST_STR" = "" ] ; then
-  echo "Specify a comma-separated list of candidate record # retrieved for testing for each query (7th arg)!"
-  exit 1
-fi
-
-NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
 URI="lucene_index/$collect"
 
