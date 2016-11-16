@@ -95,6 +95,8 @@ if [ "$NTEST_STR" = "" ] ; then
   exit 1
 fi
 
+N_TRAIN=$9
+
 NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
 EXPER_DIR="$EXPER_DIR_BASE/exper"
@@ -161,7 +163,6 @@ query_log_file=${TREC_RUN_DIR}/query.log
 check "query_log_file=${TREC_RUN_DIR}/query.log"
 
 if [ "$EXTR_TYPE" != "none" ] ; then
-  N_TRAIN=$8
   if [ "$N_TRAIN" = "" ] ; then
     echo "Specify the numbers of candidate records retrieved for the training subset for each query (8th arg)!"
     exit 1
