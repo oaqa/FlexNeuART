@@ -42,7 +42,7 @@ else
 fi
 
 
-CACHE_DIR="cache/lucene/$collect/$train_part"
+CACHE_DIR="cache/lucene/$collect/"
 
 if [ ! -d "$CACHE_DIR" ] ; then
   mkdir -p "$CACHE_DIR"
