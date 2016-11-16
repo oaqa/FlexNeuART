@@ -97,8 +97,12 @@ for qid, entry in resTrecEval.iteritems():
   numRel    = entry[NUM_REL]
   numRelRet = entry[NUM_REL_RET]
 
+  #
+  # Actually, for various reasons qrel may not have relevant answers for a given
+  # query, although, this should happen very rarely
+  #
   if numRel <= 0:
-    raise Exception("No relevant documents for qid=%s numRel=%d" % (qid, numRel))
+    print "Warning: No relevant documents for qid=%s numRel=%d" % (qid, numRel)
   #valsRecall.append(numRel/numRelRet)
 
 if len(resTrecEval) != len(resGdeval):
