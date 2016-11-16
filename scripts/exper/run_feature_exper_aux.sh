@@ -5,9 +5,15 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-EXPER_DIR=$2
+QREL_FILE=$2
+if [ "$QREL_FILE" = "" ] ; then
+  echo "Specify QREL file (2rd arg)"
+  exit 1
+fi
+
+EXPER_DIR=$3
 if [ "$EXPER_DIR" = "" ] ; then
-  echo "Specify a working directory prefix(2d arg)!"
+  echo "Specify a working directory prefix(3d arg)!"
   exit 1
 fi
 if [ ! -d "$EXPER_DIR" ] ; then
@@ -32,12 +38,6 @@ elif [ "$collect" = "stackoverflow" ] ; then
   N_TRAIN=15
 else
   echo "Unsupported collection: $collect"
-  exit 1
-fi
-
-QREL_FILE=$3
-if [ "$QREL_FILE" = "" ] ; then
-  echo "Specify QREL file (3rd arg)"
   exit 1
 fi
 
@@ -113,7 +113,7 @@ for ((i=1;i<$n;++i))
         exit 1
       fi
       # Each experiment should run in its separate directory
-      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_TYPE/$TEST_SET/$EXTR_TYPE/$EMBED_LIST"
+      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$EXTR_TYPE/$EMBED_LIST"
       if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
         mkdir -p "$EXPER_DIR_UNIQUE"
         if [ "$?" != "0" ] ; then

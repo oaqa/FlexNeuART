@@ -63,6 +63,7 @@ echo "The number of CPU cores:      $NUM_CPU_CORES"
 echo "The number of || experiments: $PARALLEL_EXPER_QTY"
 echo "The number of threads:        $THREAD_QTY"
 echo "Max # of queries to use:      $MAX_QUERY_QTY"
+echo "QREL file:                    $QREL_FILE"
 
 if [ "$THREAD_QTY" = "" ] ; then
   echo "Specify a number of threads for the feature extractor (3d arg)!"
