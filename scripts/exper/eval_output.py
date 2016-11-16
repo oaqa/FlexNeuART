@@ -106,7 +106,7 @@ for qid, entry in resTrecEval.iteritems():
   #valsRecall.append(numRel/numRelRet)
 
 if len(resTrecEval) != len(resGdeval):
-  raise Exception("The number of entries returned by trec_eval and gdeval are different!")
+  print "Warining: The number of entries returned by trec_eval and gdeval are different!"
 
 reportText=""
 reportText += "# of queries:    %d" % queryQty
