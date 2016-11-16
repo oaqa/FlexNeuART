@@ -42,23 +42,6 @@ else
 fi
 
 
-CACHE_DIR="cache/lucene/$collect/"
-
-if [ ! -d "$CACHE_DIR" ] ; then
-  mkdir -p "$CACHE_DIR"
-  check "mkdir -p $CACHE_DIR"
-fi
-
-if [ ! -d "$CACHE_DIR/$train_part" ] ; then
-  mkdir -p "$CACHE_DIR/$train_part"
-  check "mkdir -p $CACHE_DIR/$train_part"
-fi
-
-if [ ! -d "$CACHE_DIR/$test_part" ] ; then
-  mkdir -p "$CACHE_DIR/$test_part"
-  check "mkdir -p $CACHE_DIR/$test_part"
-fi
-
 QREL_FILE=$2
 if [ "$QREL_FILE" = "" ] ; then
   echo "Specify QREL file name (2d arg)!"
@@ -141,12 +124,30 @@ echo "Deleting old reports from the directory: ${REPORT_DIR}"
 rm -f ${REPORT_DIR}/*
 check "rm -f ${REPORT_DIR}/*"
 
+CACHE_DIR="cache/lucene/$collect/"
+
+if [ ! -d "$CACHE_DIR" ] ; then
+  mkdir -p "$CACHE_DIR"
+  check "mkdir -p $CACHE_DIR"
+fi
+
+if [ ! -d "$CACHE_DIR/$train_part" ] ; then
+  mkdir -p "$CACHE_DIR/$train_part"
+  check "mkdir -p $CACHE_DIR/$train_part"
+fi
+
+if [ ! -d "$CACHE_DIR/$TEST_PART" ] ; then
+  mkdir -p "$CACHE_DIR/$TEST_PART"
+  check "mkdir -p $CACHE_DIR/$TEST_PART"
+fi
+
 echo "Using $TEST_PART for testing!"
 echo "Experiment directory:           $EXPER_DIR"
 echo "QREL file:                      $QREL_FILE"
 echo "Directory with TREC-style runs: $TREC_RUN_DIR"
 echo "Report directory:               $REPORT_DIR"
-echo "Query cache file (for training):$CACHE_FILE"
+echo "Query cache file (for training):$CACHE_FILE_TRAIN"
+echo "Query cache file (for testing): $CACHE_FILE_TEST"
 
 URI="lucene_index/$collect"
 
