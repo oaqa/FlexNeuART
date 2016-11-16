@@ -97,18 +97,6 @@ fi
 
 NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
-if [ "$maxQueryQtyTrain" = "" ] ; then
-  CACHE_FILE_TRAIN="$CACHE_DIR/$train_part/all_queries"
-else
-  CACHE_FILE_TRAIN="$CACHE_DIR/$train_part/max_query_qty=$maxQueryQtyTrain"
-fi
-
-if [ "$maxQueryQtyTest" = "" ] ; then
-  CACHE_FILE_TEST="$CACHE_DIR/$TEST_PART/all_queries"
-else
-  CACHE_FILE_TEST="$CACHE_DIR/$TEST_PART/max_query_qty=$maxQueryQtyTrain"
-fi
-
 EXPER_DIR="$EXPER_DIR_BASE/exper"
 TREC_RUN_DIR="$EXPER_DIR_BASE/trec_runs"
 REPORT_DIR="$EXPER_DIR_BASE/rep"
@@ -139,6 +127,18 @@ fi
 if [ ! -d "$CACHE_DIR/$TEST_PART" ] ; then
   mkdir -p "$CACHE_DIR/$TEST_PART"
   check "mkdir -p $CACHE_DIR/$TEST_PART"
+fi
+
+if [ "$maxQueryQtyTrain" = "" ] ; then
+  CACHE_FILE_TRAIN="$CACHE_DIR/$train_part/all_queries"
+else
+  CACHE_FILE_TRAIN="$CACHE_DIR/$train_part/max_query_qty=$maxQueryQtyTrain"
+fi
+
+if [ "$maxQueryQtyTest" = "" ] ; then
+  CACHE_FILE_TEST="$CACHE_DIR/$TEST_PART/all_queries"
+else
+  CACHE_FILE_TEST="$CACHE_DIR/$TEST_PART/max_query_qty=$maxQueryQtyTrain"
 fi
 
 echo "Using $TEST_PART for testing!"
