@@ -233,8 +233,8 @@ class BaseQueryAppProcessingThread extends Thread {
         
         // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
         if (mAppRef.mInMemExtrFinal!= null) {
-          if (allDocIds.size() > maxNumRet) {
-            throw new RuntimeException("Bug: allDocIds.size()=" + allDocIds.size() + " > maxNumRet=" + maxNumRet);
+          if (allDocIds.size() != maxNumRet) {
+            throw new RuntimeException("Bug or you are using the wrong cache: allDocIds.size()=" + allDocIds.size() + " != maxNumRet=" + maxNumRet);
           }
           // Compute features once for all documents using a final re-ranker
           start = System.currentTimeMillis();
