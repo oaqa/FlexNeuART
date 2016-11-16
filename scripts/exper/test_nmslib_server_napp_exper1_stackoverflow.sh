@@ -118,8 +118,24 @@ if [ "$TEST_PART" = "" ] ; then
   exit 1 
 fi
 
+QREL_TYPE=${POS_ARGS[1]}
+QREL_FILE=""
+if [ "$QREL_TYPE" = "graded" ] ; then
+  QREL_FILE="qrels_all_graded.txt"
+elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
+  QREL_FILE="qrels_all_graded_same_score.txt"
+else
+  echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected graded or graded_same_score"
+  exit 1
+fi
+
+if [ "$QREL_FILE" = "" ] ; then
+  echo "Bug: QREL_FILE is empty for some reason!"
+  exit 1
+fi
+
 NMSLIB_HEADER_NAME="header_exper1_hash_payload"
-EXPER_DIR_BASE=results/final/$collect/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
+EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
 
 NMSLIB_INDEX_DIR="nmslib/$collect/index/test/$NMSLIB_HEADER_NAME"
 if [ ! -d "$NMSLIB_INDEX_DIR" ] ; then
@@ -213,7 +229,7 @@ do
   EXPER_DIR=$EXPER_DIR_BASE/$index_name/$query_time_params
   mkdir -p $EXPER_DIR
   check "mkdir -p $EXPER_DIR"
-  cmd="scripts/exper/test_final_model.sh $collect $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param "
+  cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param "
   bash -c "$cmd"
   check "$cmd"
 

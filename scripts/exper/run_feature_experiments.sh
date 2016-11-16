@@ -11,6 +11,9 @@ if [ "$QREL_TYPE" = "graded" ] ; then
   QREL_FILE="qrels_all_graded.txt"
 elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
   QREL_FILE="qrels_all_graded_same_score.txt"
+elif [ "$QREL_TYPE" = "" ] ; then
+  echo "Specifiy QREL type (2rd arg)"
+  exit 1
 else
   echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected graded or graded_same_score"
   exit 1
@@ -64,11 +67,6 @@ echo "The number of || experiments: $PARALLEL_EXPER_QTY"
 echo "The number of threads:        $THREAD_QTY"
 echo "Max # of queries to use:      $MAX_QUERY_QTY"
 echo "QREL file:                    $QREL_FILE"
-
-if [ "$THREAD_QTY" = "" ] ; then
-  echo "Specify a number of threads for the feature extractor (3d arg)!"
-  exit 1
-fi
 
 EXPER_DIR="results/feature_exper/"
 

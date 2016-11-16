@@ -64,7 +64,23 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-TEST_PART=${POS_ARGS[1]}
+QREL_TYPE=${POS_ARGS[1]}
+QREL_FILE=""
+if [ "$QREL_TYPE" = "graded" ] ; then
+  QREL_FILE="qrels_all_graded.txt"
+elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
+  QREL_FILE="qrels_all_graded_same_score.txt"
+else
+  echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected graded or graded_same_score"
+  exit 1
+fi
+
+if [ "$QREL_FILE" = "" ] ; then
+  echo "Bug: QREL_FILE is empty for some reason!"
+  exit 1
+fi
+
+TEST_PART=${POS_ARGS[2]}
 if [ "$TEST_PART" = "" ] ; then
   echo "Specify a test part, e.g., dev1 (2d arg)"
   exit 1 
@@ -129,13 +145,23 @@ do
   fi
 done
 
-EXPER_DIR_BASE="results/final/$collect/$TEST_PART/nmslib/brute_force"
-EXPER_DIR=$EXPER_DIR_BASE/bm25_rerank/$HEADER_NAME
+#EXPER_DIR_BASE="results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/brute_force"
+#EXPER_DIR=$EXPER_DIR_BASE/bm25_rerank/$HEADER_NAME
+#mkdir -p $EXPER_DIR
+#check "mkdir -p $EXPER_DIR"
+
+# Note that we don't delete trec_runs, can be used later to evaluate effectiveness of NAPP from the Java program!
+#cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -dont_delete_trec_runs  -extr_type_interm exper@bm25=text -model_interm nmslib/${collect}/models/one_feature.model  -cand_qty $CAND_QTY "
+#bash -c "$cmd"
+#check "$cmd"
+
+EXPER_DIR_BASE="results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/brute_force"
+EXPER_DIR=$EXPER_DIR_BASE/no_rerank/$HEADER_NAME
 mkdir -p $EXPER_DIR
 check "mkdir -p $EXPER_DIR"
 
 # Note that we don't delete trec_runs, can be used later to evaluate effectiveness of NAPP from the Java program!
-cmd="scripts/exper/test_final_model.sh $collect $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -dont_delete_trec_runs  -extr_type_interm exper@bm25=text -model_interm nmslib/${collect}/models/one_feature.model  -cand_qty $CAND_QTY "
+cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -dont_delete_trec_runs -cand_qty $CAND_QTY "
 bash -c "$cmd"
 check "$cmd"
 

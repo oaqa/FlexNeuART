@@ -33,6 +33,9 @@ if [ "$QREL_TYPE" = "graded" ] ; then
   QREL_FILE="qrels_all_graded.txt"
 elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
   QREL_FILE="qrels_all_graded_same_score.txt"
+elif [ "$QREL_TYPE" = "" ] ; then
+  echo "Specifiy QREL type (2rd arg)"
+  exit 1
 else
   echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected graded or graded_same_score"
   exit 1
