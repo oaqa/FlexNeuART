@@ -48,9 +48,15 @@ if [ ! -d "$CACHE_DIR" ] ; then
   mkdir -p "$CACHE_DIR"
 fi
 
-EXPER_DIR_BASE=$2
+QREL_FILE=$2
+if [ "$QREL_FILE" = "" ] ; then
+  echo "Specify QREL file name (2d arg)!"
+  exit 1
+fi
+
+EXPER_DIR_BASE=$3
 if [ "$EXPER_DIR_BASE" = "" ] ; then
-  echo "Specify a working directory (2d arg)!"
+  echo "Specify a working directory (3d arg)!"
   exit 1
 fi
 
@@ -112,6 +118,7 @@ check "rm -f ${REPORT_DIR}/*"
 
 echo "Using $TEST_PART for testing!"
 echo "Experiment directory:           $EXPER_DIR"
+echo "QREL file:                      $QREL_FILE"
 echo "Directory with TREC-style runs: $TREC_RUN_DIR"
 echo "Report directory:               $REPORT_DIR"
 echo "Query cache file (for training):$CACHE_FILE"
@@ -158,8 +165,8 @@ if [ "$EXTR_TYPE" != "none" ] ; then
   HORDER_FILES="tran_embed.0,tran_embed.1,tran_embed.2,tran_embed.3,tran_embed.4"
 
   if [ "$regen_feat" = "1" ] ; then
-    scripts/query/gen_features.sh $collect $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1
-    check "scripts/query/gen_features.sh $collect $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1"
+    scripts/query/gen_features.sh $collect $QREL_FILE $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1
+    check "scripts/query/gen_features.sh $collect $QREL_FILE $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1"
   fi
 
   MODEL_FILE="${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.model"
@@ -185,7 +192,7 @@ else
   fi
 fi
 
-QRELS="output/$collect/${TEST_PART}/qrels.txt"
+QRELS="output/$collect/${TEST_PART}/$QREL_FILE"
 
 
 rm -f "${REPORT_DIR}/out_*"

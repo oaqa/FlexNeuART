@@ -105,45 +105,51 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-TEST_PART=${POS_ARGS[1]}
-if [ "$TEST_PART" = "" ] ; then
-  echo "Specify a test part, e.g., dev1 (2d arg)"
-  exit 1 
-fi
-
-CAND_PROV_TYPE=${POS_ARGS[2]}
-if [ "$CAND_PROV_TYPE" = "" ] ; then
-  echo "Specify a candidate type: lucene or nmslib (3d arg)"
-  exit 1 
-fi
-
-EXPER_DIR_BASE=${POS_ARGS[3]}
-if [ "$EXPER_DIR_BASE" = "" ] ; then
-  echo "Specify a working directory (4th positional arg)!"
+qrel_file=${POS_ARGS[1]}
+if [ "$qrel_file" = "" ] ; then
+  echo "Specify QREL file (2d positional arg): e.g., qrels_all_graded.txt, qrels_all_graded_same_score.txt"
   exit 1
 fi
 
-EXTR_TYPE="${POS_ARGS[4]}"
+TEST_PART=${POS_ARGS[2]}
+if [ "$TEST_PART" = "" ] ; then
+  echo "Specify a test part, e.g., dev1 (3d arg)"
+  exit 1 
+fi
+
+CAND_PROV_TYPE=${POS_ARGS[3]}
+if [ "$CAND_PROV_TYPE" = "" ] ; then
+  echo "Specify a candidate type: lucene or nmslib (4th arg)"
+  exit 1 
+fi
+
+EXPER_DIR_BASE=${POS_ARGS[4]}
+if [ "$EXPER_DIR_BASE" = "" ] ; then
+  echo "Specify a working directory (5th positional arg)!"
+  exit 1
+fi
+
+EXTR_TYPE="${POS_ARGS[5]}"
 
 if [ "$EXTR_TYPE" = "" ] ; then
-  echo "Specify a feature extractor type (5th positional arg)"
+  echo "Specify a feature extractor type (6th positional arg)"
   exit 1
 fi
 
 
 if [ "$EXTR_TYPE" != "none" ] ; then
-  MODEL_FILE=${POS_ARGS[5]}
+  MODEL_FILE=${POS_ARGS[6]}
 
   if [ "$MODEL_FILE" = "" ] ; then
-    echo "Specify a model file (6th positional) arg)!"
+    echo "Specify a model file (7th positional) arg)!"
     exit 1
   fi
 fi
 
-NTEST_STR="${POS_ARGS[6]}"
+NTEST_STR="${POS_ARGS[7]}"
 
 if [ "$NTEST_STR" = "" ] ; then
-  echo "Specify a comma-separated list of candidate records # retrieved for testing for each query (7th positional arg)!"
+  echo "Specify a comma-separated list of candidate records # retrieved for testing for each query (8th positional arg)!"
   exit 1
 fi
 

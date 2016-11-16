@@ -69,39 +69,45 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-part=${POS_ARGS[1]}
+qrel_file=${POS_ARGS[1]}
+if [ "$qrel_file" = "" ] ; then
+  echo "Specify QREL file (2d positional arg): e.g., qrels_all_graded.txt, qrels_all_graded_same_score.txt"
+  exit 1
+fi
+
+part=${POS_ARGS[2]}
 if [ "$part" = "" ] ; then
-  echo "Specify part (2d positional arg): e.g., dev1, dev2, train, test"
+  echo "Specify part (3d positional arg): e.g., dev1, dev2, train, test"
   exit 1
 fi
 
-cand_type=${POS_ARGS[2]}
+cand_type=${POS_ARGS[3]}
 if [ "$cand_type" = "" ] ; then
-  echo "Specify the type of candidate provider (3d positional arg): e.g., nmslib, lucene"
+  echo "Specify the type of candidate provider (4th positional arg): e.g., nmslib, lucene"
   exit 1
 fi
 
-URI=${POS_ARGS[3]}
+URI=${POS_ARGS[4]}
 if [ "$URI" = "" ] ; then
-  echo "Specify the index location: Lucene index dir, nmslib TCP/IP address, etc... (4th positional arg)"
+  echo "Specify the index location: Lucene index dir, nmslib TCP/IP address, etc... (5th positional arg)"
   exit 1
 fi
 
-n=${POS_ARGS[4]}
+n=${POS_ARGS[5]}
 if [ "$n" = "" ] ; then
-  echo "Specify coma-separated numbers of candidate records (5th positional arg)"
+  echo "Specify coma-separated numbers of candidate records (6th positional arg)"
   exit
 fi
 
-extr_type_final=${POS_ARGS[5]}
+extr_type_final=${POS_ARGS[6]}
 if [ "$extr_type_final" = "" ] ; then
-  echo "Specify the type of the final feature extractor (6th positional arg) "
+  echo "Specify the type of the final feature extractor (7th positional arg) "
   exit 1
 fi
 
-out_dir=${POS_ARGS[6]}
+out_dir=${POS_ARGS[7]}
 if [ "$out_dir" = "" ] ; then
-  echo "Specify the output directory (7th positional arg)"
+  echo "Specify the output directory (8th positional arg)"
   exit 1
 fi
 
@@ -136,7 +142,7 @@ echo "==============================================="
 scripts/query/run_multhread_feat.sh \
 -u "$URI" \
 -cand_prov $cand_type \
--q output/$collect/$part/SolrQuestionFile.txt -qrel_file output/$collect/$part/qrels.txt "$max_num_query_param" \
+-q output/$collect/$part/SolrQuestionFile.txt -qrel_file output/$collect/$part/$qrel_file "$max_num_query_param" \
 -n "$n" \
 -f "$full_out_pref" \
 -memindex_dir "memfwdindex/$collect" \

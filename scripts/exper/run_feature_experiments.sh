@@ -5,9 +5,25 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-FEATURE_DESC_FILE="$2"
+QREL_TYPE=$2
+QREL_FILE=""
+if [ "QREL_TYPE" = "graded" ] ; then
+  QREL_FILE="qrels_all_graded.txt"
+elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
+  QREL_FILE="qrels_all_graded_same_score.txt"
+else
+  echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected graded or graded_same_score"
+  exit 1
+fi
+
+if [ "$QREL_FILE" = "" ] ; then
+  echo "Bug: QREL_FILE is empty for some reason!"
+  exit 1
+fi
+
+FEATURE_DESC_FILE="$3"
 if [ "$FEATURE_DESC_FILE" = "" ] ; then
-  echo "Specify a feature description file (2d arg)"
+  echo "Specify a feature description file (3d arg)"
   exit 1
 fi
 if [ ! -f "$FEATURE_DESC_FILE" ] ; then
@@ -15,13 +31,13 @@ if [ ! -f "$FEATURE_DESC_FILE" ] ; then
   exit 1
 fi
 
-PARALLEL_EXPER_QTY=$3
+PARALLEL_EXPER_QTY=$4
 if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
-  echo "Specify a number of experiments that are run in parallel (3d arg)!"
+  echo "Specify a number of experiments that are run in parallel (4th arg)!"
   exit 1
 fi
 
-MAX_QUERY_QTY="$4"
+MAX_QUERY_QTY="$5"
 
 function check {
   f="$?"
@@ -34,7 +50,7 @@ function check {
   fi
 }
 
-NUM_CPU_CORES=$5
+NUM_CPU_CORES=$6
 
 if [ "$NUM_CPU_CORES" = "" ] ; then
   NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
@@ -55,5 +71,5 @@ fi
 
 EXPER_DIR="results/feature_exper/"
 
-scripts/exper/run_feature_exper_aux.sh $collect $EXPER_DIR $FEATURE_DESC_FILE $PARALLEL_EXPER_QTY $THREAD_QTY $MAX_QUERY_QTY 
+scripts/exper/run_feature_exper_aux.sh $collect $QREL_FILE $EXPER_DIR $FEATURE_DESC_FILE $PARALLEL_EXPER_QTY $THREAD_QTY $MAX_QUERY_QTY 
 

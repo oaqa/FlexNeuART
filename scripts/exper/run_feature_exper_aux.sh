@@ -35,29 +35,35 @@ else
   exit 1
 fi
 
-EXTRACTORS_DESC=$3
+QREL_FILE=$3
+if [ "$QREL_FILE" = "" ] ; then
+  echo "Specify QREL file (3rd arg)"
+  exit 1
+fi
+
+EXTRACTORS_DESC=$4
 if [ "$EXTRACTORS_DESC" = "" ] ; then
-  "Specify a file with extractor description (3d arg)"
+  "Specify a file with extractor description (4th arg)"
   exit 1
 fi
 if [ ! -f "$EXTRACTORS_DESC" ] ; then
-  "Not a file '$EXTRACTORS_DESC' (3d arg)"
+  "Not a file '$EXTRACTORS_DESC' (4th arg)"
   exit 1
 fi
 
-PARALLEL_EXPER_QTY=$4
+PARALLEL_EXPER_QTY=$5
 if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
-  echo "Specify a number of experiments that are run in parallel (4th arg)!"
+  echo "Specify a number of experiments that are run in parallel (5th arg)!"
   exit 1
 fi
 
-THREAD_QTY=$5
+THREAD_QTY=$6
 if [ "$THREAD_QTY" = "" ] ; then
-  echo "Specify a number of threads for the feature extractor (5th arg)!"
+  echo "Specify a number of threads for the feature extractor (6th arg)!"
   exit 1
 fi
 
-MAX_QUERY_QTY="$6"
+MAX_QUERY_QTY="$7"
 
 nTotal=0
 nRunning=0
@@ -107,7 +113,7 @@ for ((i=1;i<$n;++i))
         exit 1
       fi
       # Each experiment should run in its separate directory
-      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$TEST_SET/$EXTR_TYPE/$EMBED_LIST"
+      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_TYPE/$TEST_SET/$EXTR_TYPE/$EMBED_LIST"
       if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
         mkdir -p "$EXPER_DIR_UNIQUE"
         if [ "$?" != "0" ] ; then
@@ -115,7 +121,7 @@ for ((i=1;i<$n;++i))
           exit 1
         fi
       fi
-      scripts/exper/run_one_exper.sh $collect "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN" "$EMBED_LIST" &> $EXPER_DIR_UNIQUE/exper.log &
+      scripts/exper/run_one_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN" "$EMBED_LIST" &> $EXPER_DIR_UNIQUE/exper.log &
       pid=$!
       childPIDs[$nrun]=$pid
       echo "Started a process $pid, working dir: $EXPER_DIR_UNIQUE"
