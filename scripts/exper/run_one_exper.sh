@@ -46,6 +46,17 @@ CACHE_DIR="cache/lucene/$collect/"
 
 if [ ! -d "$CACHE_DIR" ] ; then
   mkdir -p "$CACHE_DIR"
+  check "mkdir -p $CACHE_DIR"
+fi
+
+if [ ! -d "$CACHE_DIR/$train_part" ] ; then
+  mkdir -p "$CACHE_DIR/$train_part"
+  check "mkdir -p $CACHE_DIR/$train_part"
+fi
+
+if [ ! -d "$CACHE_DIR/$test_part" ] ; then
+  mkdir -p "$CACHE_DIR/$test_part"
+  check "mkdir -p $CACHE_DIR/$test_part"
 fi
 
 QREL_FILE=$2
@@ -214,3 +225,7 @@ check "rm ${TREC_RUN_DIR}/*"
 echo "Bzipping trec_eval output in the directory: ${REPORT_DIR}"
 bzip2 ${REPORT_DIR}/*.trec_eval
 check "bzip2 "${REPORT_DIR}/*.trec_eval""
+echo "Bzipping gdeval output in the directory: ${REPORT_DIR}"
+bzip2 ${REPORT_DIR}/*.gdeval
+check "bzip2 "${REPORT_DIR}/*.gdeval""
+
