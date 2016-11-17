@@ -49,7 +49,7 @@ print "Creating answer soruce from %s " % answFileName
 answerSource   = LineSentence(answFileName)
 
 questFileName=quest_file_name(srcDir, fieldName)
-print "Creating question soruce from %s " %
+print "Creating question soruce from %s " % questFileName
 questionSource = LineSentence(questFileName)
 
 
