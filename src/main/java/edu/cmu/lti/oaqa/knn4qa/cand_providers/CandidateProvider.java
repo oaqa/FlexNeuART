@@ -56,8 +56,7 @@ public abstract class CandidateProvider {
    * @throws Exception throws an exception if the label is not numeric
    */
   public static int parseRelevLabel(String label) throws Exception {
-    if (null == label) 
-      throw new Exception("Bug: null label encountered!");
+    if (null == label) return 0; // no relevance entry => not relevant
     int relVal = 0;
     try {
       relVal = Integer.parseInt(label);
