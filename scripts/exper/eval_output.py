@@ -16,6 +16,7 @@ RECIP_RANK='recip_rank'
 NUM_RET='num_ret'
 NUM_REL='num_rel'
 NUM_REL_RET='num_rel_ret'
+P20 = 'P_20'
 
 NDCG20='ndcg20'
 ERR20='err20'
@@ -68,13 +69,14 @@ if len(sys.argv) >= 4:
 outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).split('\n')
 resGdeval = parseGdevalResults(outputGdeval)
 outputTrecEval=sp.check_output([trecEvalBin, "-q", qrelFile, trecOut]).replace('\t', ' ').split('\n')
-resTrecEval=parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK]))
+resTrecEval=parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK, P20]))
 
 
 overallNumRel=resTrecEval['all'][NUM_REL]
 overallNumRelRet=resTrecEval['all'][NUM_REL_RET]
 overallRecall=float(overallNumRelRet)/overallNumRel
 overallMAP=resTrecEval['all'][MAP]
+overallP20=resTrecEval['all'][P20]
 overallRecipRank=resTrecEval['all'][RECIP_RANK]
 
 overallNDCG20=resGdeval['amean'][NDCG20]
@@ -114,6 +116,8 @@ reportText += "\n"
 reportText += "NDCG@20:         %f" % overallNDCG20
 reportText += "\n"
 reportText += "ERR@20:          %f" % overallERR20
+reportText += "\n"
+reportText += "P@20:            %f" % overallP20
 reportText += "\n"
 reportText += "MAP:             %f" % overallMAP
 reportText += "\n"
