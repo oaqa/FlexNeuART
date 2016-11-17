@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import os
 
 def Usage(err):
   if not err is None:
