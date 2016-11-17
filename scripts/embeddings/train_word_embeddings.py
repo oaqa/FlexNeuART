@@ -36,15 +36,22 @@ if not os.path.isdir(srcDir):
 from multiprocessing import cpu_count
 from gensim.models.word2vec import Word2Vec, LineSentence
 
-answerSource   = LineSentence(answ_file_name(srcDir, fieldName))
-questionSource = LineSentence(quest_file_name(srcDir, fieldName))
 
 print "Creating a model with iter=%d min_count=%d workers=%d" % (numIter, minCount, cpu_count())
 model = Word2Vec(iter=numIter, min_count=minCount, workers=cpu_count())
 if initModel != '':
   print "Loading binary model %s" % initModel
   model = Word2Vec.load_word2vec_format(initModel, binary=True)
-  print "Initial model is loaded!" 
+  print "Initial model is loaded!"
+
+answFileName = answ_file_name(srcDir, fieldName)
+print "Creating answer soruce from %s " % answFileName
+answerSource   = LineSentence(answFileName)
+
+questFileName=quest_file_name(srcDir, fieldName)
+print "Creating question soruce from %s " %
+questionSource = LineSentence(questFileName)
+
 
 print "Building vocabulary from answers"
 model.build_vocab(answerSource, update=True)
