@@ -6,7 +6,7 @@ public class CandidateEntry implements Comparable<CandidateEntry>, java.io.Seria
   public final float mOrigScore;
   public float mScore;
   
-  public boolean     mIsRelev = false;
+  public int         mRelevGrade = 0;
   public int         mOrigRank = 0;
 
 

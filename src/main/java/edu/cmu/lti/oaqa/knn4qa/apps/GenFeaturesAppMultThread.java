@@ -19,28 +19,12 @@
 import java.util.*;
 
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.sparse.SparseVector;
 
-  import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.CommandLine;
 
-import com.google.common.base.Splitter;
-
-import edu.cmu.lti.oaqa.annographix.solr.SolrRes;
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibKNNCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.SolrCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.letor.*;
-import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
   
-  class GenFeaturesAppImpl extends BaseQueryApp {    
+class GenFeaturesAppImpl extends BaseQueryApp {    
     @Override
     void addOptions() {
       boolean onlyLucene    = false;
@@ -97,7 +81,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
         throw new RuntimeException("Bug, output file is not init. for numRet=" + numRet);
 
       for (CandidateEntry e : scoredDocs) {
-        String label = e.mIsRelev ? "1" : "0";
+        String label = e.mRelevGrade + "";
         String docId = e.mDocId;
         DenseVector vect = docFeats.get(docId);
         

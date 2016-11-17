@@ -221,10 +221,9 @@ class BaseQueryAppProcessingThread extends Thread {
           for (int rank = 0; rank < resultsAll.length; ++rank) {
             CandidateEntry e = resultsAll[rank];
             String label = mAppRef.mQrels.get(queryID, e.mDocId);
-            if (CandidateProvider.isRelevLabel(label, 1)) {
-              e.mIsRelev = true;
+            e.mRelevGrade = CandidateProvider.parseRelevLabel(label);
+            if (e.mRelevGrade >= 1 && minRelevRank == Integer.MAX_VALUE) {
               minRelevRank = rank;
-              break;
             }
           }
         } else {

@@ -48,24 +48,28 @@ public abstract class CandidateProvider {
   public abstract String getName();
   
   /**
-   * Determines if a QREL label defines a relevant entry.
+   * Parses a QREL label and checks if it is a non-negative integer
    * 
    * @param label       the string label (can be null).
-   * @param minRelLevel the minimum value to be considered relevant
-   * @return true if the relevance is at least minRelLevel or false, if the
+ 
    *         the label is null.
    * @throws Exception throws an exception if the label is not numeric
    */
-  public static boolean isRelevLabel(String label, int minRelLevel) throws Exception {
-    if (null == label) return false;
+  public static int parseRelevLabel(String label) throws Exception {
+    if (null == label) 
+      throw new Exception("Bug: null label encountered!");
     int relVal = 0;
     try {
       relVal = Integer.parseInt(label);
     } catch (NumberFormatException e) {
       throw new Exception("Label '" + label + "' is not numeric!");
     }
-    return relVal >= minRelLevel;
+    if (relVal < 0) {
+      throw new Exception("Encountered a negative relevance label: " + label);
+    }
+    return relVal ;
   }
+  
   
   /**
    * Return a <b>sorted</b> list of candidate records with respective similarity scores +
