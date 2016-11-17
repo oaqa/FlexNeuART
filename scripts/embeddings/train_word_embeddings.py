@@ -34,6 +34,7 @@ if not os.path.isdir(srcDir):
 
 
 from multiprocessing import cpu_count
+from gensim import models
 from gensim.models.word2vec import Word2Vec, LineSentence
 
 
@@ -41,7 +42,7 @@ print "Creating a model with iter=%d min_count=%d workers=%d" % (numIter, minCou
 model = Word2Vec(iter=numIter, min_count=minCount, workers=cpu_count())
 if initModel != '':
   print "Loading binary model %s" % initModel
-  model = Word2Vec.load_word2vec_format(initModel, binary=True)
+  model = models.Word2Vec.load_word2vec_format(initModel, binary=True)
   print "Initial model is loaded!"
 
 answFileName = answ_file_name(srcDir, fieldName)
