@@ -1,4 +1,5 @@
 #!/bin/bash
+. scripts/config.sh
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify a collection: manner, compr2M, compr"
@@ -32,6 +33,7 @@ function check_pipe {
 regen_feat="1"
 recomp_model="1"
 rerun_lucene="1"
+test_model_results="0"
 
 
 if [ "$collect" = "manner" ] ; then
@@ -185,13 +187,19 @@ if [ "$EXTR_TYPE" != "none" ] ; then
   MODEL_FILE="${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.model"
 
   if [ "$recomp_model" = "1" ] ; then
-    NUM_RAND_RESTART=10
-    METRIC_TYPE="ERR@20"
     model_log_file="$EXPER_DIR/model.log"
     echo > $model_log_file
     
     scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART $METRIC_TYPE 2>&1 | tee -a "$model_log_file"
     check_pipe "scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART $METRIC_TYPE 2>&1 "
+
+    if [ "$test_model_results" = "1" ] ; then
+      scripts/query/run_query.sh  -u "$URI" -q output/$collect/${train_part}/SolrQuestionFile.txt  -n "$N_TRAIN" -o $TREC_RUN_DIR/run_check_train_metrics  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTrainParam -query_cache_file $CACHE_FILE_TRAIN 2>&1
+      check_pipe "run_query.sh"
+
+      scripts/exper/eval_output.py "$QRELS"  "${TREC_RUN_DIR}/run_check_train_metrics_${N_TRAIN}"
+      check "eval_output.py"
+    fi
   fi
 
   if [ "$rerun_lucene" = 1 ] ; then

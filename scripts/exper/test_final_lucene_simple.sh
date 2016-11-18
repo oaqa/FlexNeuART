@@ -41,7 +41,7 @@ elif [ "$QREL_TYPE" = "" ] ; then
   echo "Specifiy QREL type (2rd arg)"
   exit 1
 else
-  echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected graded or graded_same_score"
+  echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected binary, onlybest, graded, graded_same_score"
   exit 1
 fi
 
