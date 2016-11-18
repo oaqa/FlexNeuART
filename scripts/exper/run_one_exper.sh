@@ -195,10 +195,13 @@ if [ "$EXTR_TYPE" != "none" ] ; then
 
     if [ "$test_model_results" = "1" ] ; then
       scripts/query/run_query.sh  -u "$URI" -q output/$collect/${train_part}/SolrQuestionFile.txt  -n "$N_TRAIN" -o $TREC_RUN_DIR/run_check_train_metrics  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTrainParam -query_cache_file $CACHE_FILE_TRAIN 2>&1
-      check_pipe "run_query.sh"
+      check "run_query.sh"
 
       scripts/exper/eval_output.py "$QRELS"  "${TREC_RUN_DIR}/run_check_train_metrics_${N_TRAIN}"
       check "eval_output.py"
+
+      echo "Model tested, now exiting!"
+      exit 0
     fi
   fi
 
