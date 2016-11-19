@@ -36,9 +36,10 @@ if not os.path.isdir(srcDir):
 from multiprocessing import cpu_count
 from gensim.models.word2vec import Word2Vec, LineSentence
 
+DIM=300
 
-print "Creating a model with iter=%d min_count=%d workers=%d" % (numIter, minCount, cpu_count())
-model = Word2Vec(iter=numIter, min_count=minCount, workers=cpu_count())
+print "Creating a model with iter=%d min_count=%d workers=%d dim=%d" % (numIter, minCount, cpu_count(), DIM)
+model = Word2Vec(iter=numIter, size=DIM, min_count=minCount, workers=cpu_count())
 if initModel != '':
   print "Loading binary model %s" % initModel
   model = Word2Vec.load_word2vec_format(initModel, binary=True)
