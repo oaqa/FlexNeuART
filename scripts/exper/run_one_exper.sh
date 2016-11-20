@@ -99,6 +99,8 @@ fi
 
 N_TRAIN=$9
 
+EMBED_FILES="$10"
+
 NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
 EXPER_DIR="$EXPER_DIR_BASE/exper"
@@ -170,7 +172,6 @@ if [ "$EXTR_TYPE" != "none" ] ; then
     exit 1
   fi
 
-  EMBED_FILES="$9"
 
   if [ "$EMBED_FILES" = "" ] ; then
     echo "Specify a (quoted) list of embedding files (9th arg)"
