@@ -122,7 +122,7 @@ public class EmbeddingReaderAndRecoder {
         if (mDim != rec.mVec.length)
           throw new Exception(String.format(
               "Wrong format in line %d, # of vector elements (%d) is different from preceeding lines (%d)", 
-              rec.mVec.length, mDim));
+              lineNum, rec.mVec.length, mDim));
       }
       
       normalizeL2(rec.mVec);
