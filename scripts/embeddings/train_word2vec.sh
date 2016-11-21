@@ -79,8 +79,8 @@ check "cat $PIPELINE_OUT_PREFIX/$SUBSET/$PART/question_$FIELD  $PIPELINE_OUT_PRE
 
 echo "Training file $TRAIN_FILE is generated!"
 
-"$WORD2_VEC_DIR/word2vec/trunk/word2vec" -train "$TRAIN_FILE" -threads $THREAD_QTY -output word2vec_tran_${FIELD}.$DIM -size $DIM
-check "$WORD2_VEC_DIR/word2vec/trunk/word2vec -train $TRAIN_FILE -threads $THREAD_QTY -output word2vec_tran_${FIELD}.$DIM -size $DIM"
+"$WORD2_VEC_DIR/word2vec" -train "$TRAIN_FILE" -threads $THREAD_QTY -output word2vec_tran_${FIELD}.$DIM -size $DIM
+check "$WORD2_VEC_DIR/word2vec -train $TRAIN_FILE -threads $THREAD_QTY -output word2vec_tran_${FIELD}.$DIM -size $DIM"
 
 rm $TRAIN_FILE
 check "rm $TRAIN_FILE"
