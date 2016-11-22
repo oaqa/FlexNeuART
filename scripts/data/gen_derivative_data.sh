@@ -35,8 +35,8 @@ function check_pipe {
 
 # Task 1, let's filter translation tables
 GIZA_ITER_QTY=5
-MIN_PROB_TRAN=0.0001
-MAX_WORD_TRAN_QTY=1000000
+MIN_PROB_TRAN=0.001
+#MAX_WORD_TRAN_QTY=1000000
 
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -72,7 +72,7 @@ for field in $FIELD_LIST ; do
     check "mkdir $TRAN_DIR_TEXT"
   fi
 
-  scripts/giza/simple_filter_tran_table.sh $TRAN_DIR $field $GIZA_ITER_QTY $MIN_PROB_TRAN $MAX_WORD_TRAN_QTY
+  scripts/giza/simple_filter_tran_table.sh $TRAN_DIR $field $GIZA_ITER_QTY $MIN_PROB_TRAN 
   check "simple_filter_tran_table.sh"
 done
 
