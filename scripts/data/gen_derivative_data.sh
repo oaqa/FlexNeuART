@@ -98,7 +98,7 @@ src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.b
 check_pipe "src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.bin ... "
 
 # Task 4 retrofit
-EMBED_LIST="word2vec"
+EMBED_LIST="word2vec word2vec_tran_text_unlemm.300"
 
 MIN_RETROFIT_PROB=0.001
 scripts/embeddings/do_retrofit.sh $collect  "$EMBED_LIST"  $MIN_RETROFIT_PROB
