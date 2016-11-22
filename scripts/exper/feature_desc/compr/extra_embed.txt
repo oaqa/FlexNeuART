@@ -1,7 +1,0 @@
-exper@wmd=text_unlemm                       word2vec_retro_unweighted_minProb=0.001.txt      dev2
-exper@lcs_embed=text_unlemm                 word2vec_retro_unweighted_minProb=0.001.txt      dev2
-exper@bm25=text+wmd=text_unlemm             word2vec_retro_unweighted_minProb=0.001.txt      dev2
-exper@bm25=text+lcs_embed=text_unlemm       word2vec_retro_unweighted_minProb=0.001.txt      dev2
-
-exper@jsd_composite=text_unlemm             @                 dev2
-exper@bm25=text+jsd_composite=text_unlemm   @                 dev2
