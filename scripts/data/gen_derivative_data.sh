@@ -72,8 +72,8 @@ for field in $FIELD_LIST ; do
     check "mkdir $TRAN_DIR_TEXT"
   fi
 
-  scripts/giza/filter_tran_table_and_voc.sh $TRAN_DIR $field $GIZA_ITER_QTY memfwdindex/$collect $MIN_PROB_TRAN $MAX_WORD_TRAN_QTY
-  check "filter_tran_table_and_voc"
+  scripts/giza/simple_filter_tran_table.sh $TRAN_DIR $field $GIZA_ITER_QTY $MIN_PROB_TRAN $MAX_WORD_TRAN_QTY
+  check "simple_filter_tran_table.sh"
 done
 
 # Create filtered word embeddings (from several sources)"
