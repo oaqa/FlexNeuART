@@ -41,3 +41,14 @@ do
     check "scripts/exper/run_feature_experiments.sh $COL graded_same_score $EXPER_DESC_FILE 1 50000,10000 2>&1"
   fi
 done
+
+rm $DPREF/$FIELD
+check "rm $DPREF/$FIELD"
+cd $DPREF
+check "cd $DPREF"
+ln -s full/text
+check "ln -s full/text"
+ln -s full/text.orig
+check "ln -s full/text.orig"
+cd -
+check "cd -"
