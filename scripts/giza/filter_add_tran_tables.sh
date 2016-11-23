@@ -11,5 +11,7 @@ fi
 
 for d in  tran/$COL/tran* 
 do 
-  echo "Processing folder $d "
+  if [ -d $d ] ; then
+    echo "Processing folder $d with minimum translation probability: $MIN_PROB"
+  fi
 done
