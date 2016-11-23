@@ -50,7 +50,5 @@ cd $DPREF
 check "cd $DPREF"
 ln -s full/text
 check "ln -s full/text"
-ln -s full/text.orig
-check "ln -s full/text.orig"
 cd -
 check "cd -"
