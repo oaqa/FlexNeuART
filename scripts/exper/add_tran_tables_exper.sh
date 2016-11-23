@@ -20,7 +20,7 @@ fi
 
 FIELD="text"
 DPREF="tran/$COL"
-for n in `ls  $DPREF/|grep tran` ; do
+for n in `ls  $DPREF/|grep tran` 
 do 
   d=$DPREF/$n
   if [ -d $d ] ; then
@@ -31,7 +31,9 @@ do
     fi
     cd $DPREF
     check "cd $DPREF"
-    ln -s $d/$FIELD  
-    check "ln -s $d/$FIELD"
+    ln -s $n/$FIELD  
+    check "ln -s $n/$FIELD"
+    cd -
+    check "cd -"
   fi
 done
