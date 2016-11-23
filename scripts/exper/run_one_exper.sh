@@ -99,7 +99,7 @@ fi
 
 N_TRAIN=$9
 
-EMBED_FILES="$10"
+EMBED_FILES="${10}"
 
 NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
