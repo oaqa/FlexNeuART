@@ -20,6 +20,8 @@ fi
 
 FIELD="text"
 DPREF="tran/$COL"
+EXPER_DESC_FILE="exper.cfg"
+echo "exper@bm25=text+model1=text   @   dev1" > $EXPER_DESC_FILE
 for n in `ls  $DPREF/|grep tran` 
 do 
   d=$DPREF/$n
@@ -35,5 +37,7 @@ do
     check "ln -s $n/$FIELD"
     cd -
     check "cd -"
+    scripts/exper/run_feature_experiments.sh $COL "graded_same_score" $EXPER_DESC_FILE 1 "50000,10000" 2>&1
+    check "scripts/exper/run_feature_experiments.sh $COL graded_same_score $EXPER_DESC_FILE 1 50000,10000 2>&1"
   fi
 done

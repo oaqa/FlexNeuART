@@ -1,4 +1,16 @@
 #!/bin/bash
+
+function check {
+  f="$?"
+  name=$1
+  if [ "$f" != "0" ] ; then
+    echo "**************************************"
+    echo "* Failed: $name"
+    echo "**************************************"
+    exit 1
+  fi
+}
+
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify a collection: manner, compr (1st arg)"
@@ -45,17 +57,6 @@ if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
 fi
 
 MAX_QUERY_QTY="$5"
-
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
 
 NUM_CPU_CORES=$6
 
