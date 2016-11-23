@@ -97,8 +97,10 @@ FILT_CMD="scripts/embeddings/filter_embed.py memfwdindex/$collect/text_unlemm $M
 src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.bin | $FILT_CMD > $OUT_EMBED_DIR/word2vec.txt
 check_pipe "src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.bin ... "
 
+cat $OUT_EMBED_DIR/word2vec_tran_text_unlemm_dim=300_unfilt.txt | $FILT_CMD > $OUT_EMBED_DIR/word2vec_tran_text_unlemm_dim=300_filt.txt
+
 # Task 4 retrofit
-EMBED_LIST="word2vec word2vec_tran_text_unlemm_dim=300"
+EMBED_LIST="word2vec word2vec_tran_text_unlemm_dim=300_filt.txt"
 
 MIN_RETROFIT_PROB=0.001
 scripts/embeddings/do_retrofit.sh $collect  "$EMBED_LIST"  $MIN_RETROFIT_PROB
