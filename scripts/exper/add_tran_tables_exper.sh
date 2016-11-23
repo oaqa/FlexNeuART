@@ -39,6 +39,8 @@ do
     check "cd -"
     scripts/exper/run_feature_experiments.sh $COL "graded_same_score" $EXPER_DESC_FILE 1 "50000,10000" 2>&1
     check "scripts/exper/run_feature_experiments.sh $COL graded_same_score $EXPER_DESC_FILE 1 50000,10000 2>&1"
+    mv results results.$n
+    check "mv results results.$n"
   fi
 done
 
