@@ -105,8 +105,8 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-qrel_file=${POS_ARGS[1]}
-if [ "$qrel_file" = "" ] ; then
+QREL_FILE=${POS_ARGS[1]}
+if [ "$QREL_FILE" = "" ] ; then
   echo "Specify QREL file (2d positional arg): e.g., qrels_all_graded.txt, qrels_all_graded_same_score.txt"
   exit 1
 fi
@@ -235,9 +235,6 @@ fi
 scripts/query/run_query.sh  -u "$URI" $cand_qty_param $max_num_query_param $extr_type_interm_param $model_interm_param $nmslib_fields_param -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov $CAND_PROV_TYPE -memindex_dir memfwdindex/$collect -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" $maxQueryQtyTestParam -save_stat_file "$STAT_FILE" $EXTR_FINAL_PARAM $giza_expand_qty_param $giza_wght_expand_param  2>&1|tee $query_log_file
 check_pipe "run_query.sh"
 
-QRELS="output/$collect/${TEST_PART}/qrels.txt"
-
-
 rm -f "${REPORT_DIR}/out_*"
 
 for oneN in $NTEST_LIST ; do
@@ -246,7 +243,7 @@ for oneN in $NTEST_LIST ; do
   echo "======================================"
   REPORT_PREF="${REPORT_DIR}/out_${oneN}"
 
-  scripts/exper/eval_output.py trec_eval-9.0.4/trec_eval "$QRELS"  "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
+  scripts/exper/eval_output.py "$QREL_FILE" "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
   check "eval_output.py"
 done
 
