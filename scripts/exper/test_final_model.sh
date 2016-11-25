@@ -237,13 +237,15 @@ check_pipe "run_query.sh"
 
 rm -f "${REPORT_DIR}/out_*"
 
+QRELS="output/$collect/${TEST_PART}/$QREL_FILE"
+
 for oneN in $NTEST_LIST ; do
   echo "======================================"
   echo "N=$oneN"
   echo "======================================"
   REPORT_PREF="${REPORT_DIR}/out_${oneN}"
 
-  scripts/exper/eval_output.py "$QREL_FILE" "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
+  scripts/exper/eval_output.py "$QRELS" "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
   check "eval_output.py"
 done
 
