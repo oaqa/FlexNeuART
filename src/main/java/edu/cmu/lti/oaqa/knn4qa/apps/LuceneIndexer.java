@@ -28,6 +28,7 @@ import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -119,13 +120,23 @@ public class LuceneIndexer {
       String subDirs[] = subDirTypeList.split(",");
 
       int docNum = 0;
+      
+      // If you increase this value, you may need to modify the following line in *.sh file
+      // export MAVEN_OPTS="-Xms8192m -server"
+      double ramBufferSizeMB = 1024 * 8; // 8 GB
 
       // No English analyzer here, all language-related processing is done already,
       // here we simply white-space tokenize and index tokens verbatim.
       Analyzer analyzer = new WhitespaceAnalyzer();
-      FSDirectory indexDir = FSDirectory.open(outputDir);
-      IndexWriterConfig indexConf = new IndexWriterConfig(analyzer.getVersion(), analyzer);
-
+      FSDirectory       indexDir    = FSDirectory.open(Paths.get(outputDirName));
+      IndexWriterConfig indexConf   = new IndexWriterConfig(analyzer);
+      
+      /*
+          OpenMode.CREATE creates a new index or overwrites an existing one.
+          https://lucene.apache.org/core/6_0_0/core/org/apache/lucene/index/IndexWriterConfig.OpenMode.html#CREATE
+      */
+      indexConf.setOpenMode(OpenMode.CREATE); 
+      indexConf.setRAMBufferSizeMB(ramBufferSizeMB);
       System.out.println("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec);
       indexConf.setOpenMode(OpenMode.CREATE);
       IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      

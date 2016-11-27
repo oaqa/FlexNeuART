@@ -17,6 +17,7 @@ package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
 import java.util.*;
 import java.io.*;
+import java.nio.file.Paths;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
@@ -106,7 +107,7 @@ public class LuceneGIZACandidateProvider extends CandidateProvider {
     mTopTranQty = topTranQty;
     mUseWeights = useWeights;
     
-    mReader = DirectoryReader.open(FSDirectory.open(indexDir));
+    mReader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
     mSearcher = new IndexSearcher(mReader);
     mSearcher.setSimilarity(mSimilarity);
     

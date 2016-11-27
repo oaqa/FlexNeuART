@@ -22,7 +22,7 @@ import java.util.*;
 
 import org.apache.solr.client.solrj.*;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.DirectXmlRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
@@ -75,8 +75,8 @@ public final class SolrServerWrapper implements Closeable {
    * Opens SOLR connection, creates an object 
    * of the type {@link org.apache.solr.client.solrj.SolrServer}. 
    */
-  private SolrServer createSolrServer(String url) throws Exception {
-    SolrServer server = new HttpSolrServer(url);
+  private SolrClient createSolrServer(String url) throws Exception {
+    SolrClient server = new HttpSolrClient(url);
     // server.ping();
     return server;
   }
@@ -87,7 +87,7 @@ public final class SolrServerWrapper implements Closeable {
    * @throws Exception
    */
 
-  public SolrServer getServer() throws Exception {
+  public SolrClient getServer() throws Exception {
     return mServer;
   }
 
@@ -98,9 +98,10 @@ public final class SolrServerWrapper implements Closeable {
    * @param numRet   the maximum number of entries to return.  
    * @return a list of documents, an object of the type {@link org.apache.solr.common.SolrDocumentList}. 
    * @throws SolrServerException
+   * @throws IOException 
    */
   public SolrDocumentList runQuery(String q, int numRet)
-      throws SolrServerException {
+      throws SolrServerException, IOException {
     SolrQuery query = new SolrQuery();
     query.setQuery(q);
     query.setRows(numRet);
@@ -117,9 +118,10 @@ public final class SolrServerWrapper implements Closeable {
    *   
    * @return a list of documents, an object of the type {@link org.apache.solr.common.SolrDocumentList}. 
    * @throws SolrServerException
+   * @throws IOException 
    */
   public SolrDocumentList runQuery(SolrQuery query)
-      throws SolrServerException {
+      throws SolrServerException, IOException {
     QueryResponse rsp = mServer.query(query);
     return rsp.getResults();
   }
@@ -133,10 +135,11 @@ public final class SolrServerWrapper implements Closeable {
    * 
    * @return a list of documents, which is an object of the type {@link org.apache.solr.common.SolrDocumentList}.
    * @throws SolrServerException
+   * @throws IOException 
    */
   public SolrDocumentList runQuery(String q, 
                                   List<String> fieldList,
-                                  int results) throws SolrServerException {
+                                  int results) throws SolrServerException, IOException {
     SolrQuery query = new SolrQuery();
     query.setQuery(q);
     query.setRows(results);
@@ -156,12 +159,13 @@ public final class SolrServerWrapper implements Closeable {
    * 
    * @return a list of documents, which is an object of the type {@link org.apache.solr.common.SolrDocumentList}.
    * @throws SolrServerException
+   * @throws IOException 
    */
   public SolrDocumentList runQuery(String q, 
                                   String       defaultField,
                                   List<String> fieldList,
                                   String       filterQuery,
-                                  int results) throws SolrServerException {
+                                  int results) throws SolrServerException, IOException {
     SolrQuery query = new SolrQuery();
     query.setQuery(q);
     if (filterQuery != null) query.setParam("fq", filterQuery);
@@ -181,11 +185,12 @@ public final class SolrServerWrapper implements Closeable {
    * @return an array of field values, if the field is single-value, the array
    *         contains only one entry.
    * @throws SolrServerException
+   * @throws IOException 
    */
   public ArrayList<String> getFieldText(String docId, 
                                         String idField, 
                                         String textFieldName) 
-      throws SolrServerException {
+      throws SolrServerException, IOException {
     String q = idField + ":" + docId;
     SolrQuery query = new SolrQuery();
     query.setQuery(q);
@@ -286,5 +291,5 @@ public final class SolrServerWrapper implements Closeable {
    * A {@link org.apache.solr.client.solrj.SolrServer} variable that we
    * wrap.
    */
-  private final SolrServer mServer;
+  private final SolrClient mServer;
 }
