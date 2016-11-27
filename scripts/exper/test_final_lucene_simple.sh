@@ -61,7 +61,7 @@ else
   NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,$MAX_N"
 fi
 
-MAX_NUM_QUERY=$2
+MAX_NUM_QUERY=$3
 
 if [ "$MAX_NUM_QUERY" = "" ] ; then
   echo "Specify the maximum number of queries to be used from the test set (2d arg)!"
