@@ -74,26 +74,25 @@ EXPER_DIR_BASE="results/final/${collect}/$QREL_FILE/test/lucene/"
 
 # 3. Testing everything else
 
-QRELS="output/$collect/test/$QREL_FILE"
 
 # BM25
-cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QRELS" test lucene $EXPER_DIR_BASE/exper@bm25=text exper@bm25=text  nmslib/${collect}/models/one_feature.model  $NUM_RET_LIST $WORD_EMBEDDINGS "
+cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene $EXPER_DIR_BASE/exper@bm25=text exper@bm25=text  nmslib/${collect}/models/one_feature.model  $NUM_RET_LIST $WORD_EMBEDDINGS "
 bash -c "$cmd"
 check "$cmd"
 
 # BM25 (giza-expand) the weight for Model 1 will be ignored
-cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QRELS" test lucene_giza $EXPER_DIR_BASE/giza_expand/exper@bm25=text exper@bm25=text+simple_tran=text  nmslib/${collect}/models/1_0_feature.model  $NUM_RET_LIST $WORD_EMBEDDINGS -giza_expand_qty $GIZA_EXPAND_QTY"
+cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene_giza $EXPER_DIR_BASE/giza_expand/exper@bm25=text exper@bm25=text+simple_tran=text  nmslib/${collect}/models/1_0_feature.model  $NUM_RET_LIST $WORD_EMBEDDINGS -giza_expand_qty $GIZA_EXPAND_QTY"
 bash -c "$cmd"
 check "$cmd"
 
-cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QRELS" test lucene_giza $EXPER_DIR_BASE/giza_expand_wght/exper@bm25=text exper@bm25=text+simple_tran=text  nmslib/${collect}/models/1_0_feature.model  $NUM_RET_LIST $WORD_EMBEDDINGS -giza_expand_qty $GIZA_EXPAND_QTY -giza_wght_expand"
+cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene_giza $EXPER_DIR_BASE/giza_expand_wght/exper@bm25=text exper@bm25=text+simple_tran=text  nmslib/${collect}/models/1_0_feature.model  $NUM_RET_LIST $WORD_EMBEDDINGS -giza_expand_qty $GIZA_EXPAND_QTY -giza_wght_expand"
 bash -c "$cmd"
 check "$cmd"
 
 
 
 # BM25 + Model 1
-cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QRELS" test lucene $EXPER_DIR_BASE/exper@bm25=text+model1=text exper@bm25=text+model1=text  nmslib/${collect}/models/out_${collect}_train_exper@bm25=text+model1=text_15.model  $NUM_RET_LIST $WORD_EMBEDDINGS "
+cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene $EXPER_DIR_BASE/exper@bm25=text+model1=text exper@bm25=text+model1=text  nmslib/${collect}/models/out_${collect}_train_exper@bm25=text+model1=text_15.model  $NUM_RET_LIST $WORD_EMBEDDINGS "
 bash -c "$cmd"
 check "$cmd"
 
