@@ -22,7 +22,7 @@ function check {
 }
 
 OUTPUT_DIR="output_trectext/$collect/"
-if [ ! -d $OUTPUT_DIR ] ; 
+if [ ! -d $OUTPUT_DIR ] ; then
   mkdir -p "$OUTPUT_DIR"
   check "mkdir -p $OUTPUT_DIR"
 fi
