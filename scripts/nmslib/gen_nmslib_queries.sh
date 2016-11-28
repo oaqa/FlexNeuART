@@ -33,6 +33,9 @@ max_num_query_opt=""
 if [ "$max_num_query" != "" ] ; then 
   echo "Using at most: $max_num_query queries (in case of sampling the size of the subset from which we sample)"
   max_num_query_opt=" -max_num_query $max_num_query"
+else
+  echo "Specify the maximum number of queries (4th arg)"
+  exit 1
 fi
 
 function check {
@@ -54,26 +57,9 @@ if [ ! -d "$OUTPUT_DIR" ] ; then
 fi
 
 # Queries for each field
-# Won't use most fields, b/c only two fields are really useful.
-for field in text text_unlemm ; do
+for field in text ; do
   cmd="scripts/nmslib/run_gen_nmslib_queries.sh -knn_queries $OUTPUT_DIR/${field}_queries.txt  -memindex_dir memfwdindex/$collect/ -q output/$src_collect/$part/SolrQuestionFile.txt -nmslib_fields $field $max_num_query_opt"
-  bash -c "$cmd"
-  check "$cmd"
-
-  cmd="scripts/nmslib/run_gen_nmslib_queries.sh -knn_queries $OUTPUT_DIR/${field}_queries_sample0.25.txt  -memindex_dir memfwdindex/$collect/ -q output/$src_collect/$part/SolrQuestionFile.txt -nmslib_fields $field $max_num_query_opt -sel_prob 0.25"
   bash -c "$cmd"
   check "$cmd"
 done
 
-# Queries for 2 fields
-cmd="scripts/nmslib/run_gen_nmslib_queries.sh -knn_queries $OUTPUT_DIR/2field_queries.txt  -memindex_dir memfwdindex/$collect/ -q output/$src_collect/$part/SolrQuestionFile.txt -nmslib_fields text,text_unlemm $max_num_query_opt"
-bash -c "$cmd"
-check "$cmd"
-
-# Queries for 3 fields
-cmd="scripts/nmslib/run_gen_nmslib_queries.sh -knn_queries $OUTPUT_DIR/3field_queries.txt  -memindex_dir memfwdindex/$collect/ -q output/$src_collect/$part/SolrQuestionFile.txt -nmslib_fields text,text_unlemm,bigram $max_num_query_opt"
-bash -c "$cmd"
-
-cmd="scripts/nmslib/run_gen_nmslib_queries.sh -knn_queries $OUTPUT_DIR/3field_queries_sample0.25.txt  -memindex_dir memfwdindex/$collect/ -q output/$src_collect/$part/SolrQuestionFile.txt -nmslib_fields text,text_unlemm,bigram $max_num_query_opt  -sel_prob 0.25"
-bash -c "$cmd"
-check "$cmd"
