@@ -70,8 +70,6 @@ if [ "$COLLECT" = "compr" ] ; then
          header_exper1_hash_payload              \
          header_exper1_hash_payload              \
          header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
         )
   NUM_PIVOT_INDEX_ARR=(
                     238 \
@@ -101,9 +99,6 @@ elif [ "$COLLECT" = "stackoverflow" ] ; then
          header_bm25_text \
          header_bm25_text \
          \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
          header_exper1_hash_payload              \
          header_exper1_hash_payload              \
          header_exper1_hash_payload              \
