@@ -194,7 +194,7 @@ do
 
   # Values in $K_ARR should be in the decreasing order
   for k in ${K_ARR[*]} ; do
-    REPORT_PREF="$REPORT_DIR/K=$k/napp"
+    REPORT_PREF="$REPORT_DIR/K=$k/"
 
     if [ ! -d "$REPORT_PREF" ] ; then
       mkdir -p "$REPORT_PREF"
@@ -206,7 +206,7 @@ do
                         -q "$QUERY_FILE" -k $k \
                         -m napp_qa1 \
                         -L $INDEX_NAME \
-                        $QUERY_TIME_PARAMS -o $REPORT_PREF $ADD_FLAG  "
+                        $QUERY_TIME_PARAMS -o "$REPORT_PREF/napp" $ADD_FLAG  "
     echo "Command:"
     echo $bash_cmd
     bash -c "$bash_cmd"
