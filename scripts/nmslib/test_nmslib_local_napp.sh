@@ -183,13 +183,13 @@ do
   INDEX_NAME_COMP="${INDEX_NAME}.gz"
   if [ -f "$INDEX_NAME_COMP" ]
   then
-    echo "Let's uncompress previously created index neither $INDEX_NAME nor $INDEX_NAME_COMP"
+    echo "Let's uncompress previously created index $INDEX_NAME_COMP"
     gunzip "$INDEX_NAME_COMP"
     check "gunzip $INDEX_NAME_COMP"
   elif [ -f "$INDEX_NAME" ] ; then
-    echo "Found a previously created uncompressed index"
+    echo "Found a previously created uncompressed index $INDEX_NAME"
   else
-    echo "Cannot find a previously created index!"
+    echo "Cannot find a previously created index neither $INDEX_NAME nor $INDEX_NAME_COMP!"
     exit 1
   fi
 
