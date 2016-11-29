@@ -192,7 +192,8 @@ do
     exit 1
   fi
 
-  for k in $K_ARR ; do
+  # Values in $K_ARR should be in the decreasing order
+  for k in ${K_ARR[*]} ; do
     REPORT_PREF="$REPORT_DIR/K=$k/napp_"
 
     if [ ! -d "$REPORT_PREF" ] ; then
