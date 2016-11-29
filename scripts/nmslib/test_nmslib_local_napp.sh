@@ -16,6 +16,8 @@ function check {
 
 NUM_PIVOT=8000
 
+MAX_NUM_QUERY=5000
+
 COLLECT=$1
 
 if [ "$COLLECT" = "" ] ; then
@@ -206,6 +208,7 @@ do
                         -q "$QUERY_FILE" -k $k \
                         -m napp_qa1 \
                         -L $INDEX_NAME \
+                        --maxNumQuery $MAX_NUM_QUERY \
                         $QUERY_TIME_PARAMS -o "$REPORT_PREF/napp" $ADD_FLAG  "
     echo "Command:"
     echo $bash_cmd
