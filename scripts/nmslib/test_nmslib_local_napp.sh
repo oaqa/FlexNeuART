@@ -194,7 +194,7 @@ do
 
   # Values in $K_ARR should be in the decreasing order
   for k in ${K_ARR[*]} ; do
-    REPORT_PREF="$REPORT_DIR/K=$k/napp_"
+    REPORT_PREF="$REPORT_DIR/K=$k/napp"
 
     if [ ! -d "$REPORT_PREF" ] ; then
       mkdir -p "$REPORT_PREF"
