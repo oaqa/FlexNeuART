@@ -60,6 +60,7 @@ if [ ! -f "$QUERY_FILE" ] ; then
 fi
 
 if [ "$COLLECT" = "compr" ] ; then
+  echo "Using parameters tuned for compr!"
   HEADERS=(
          header_bm25_text \
          header_bm25_text \
@@ -94,6 +95,7 @@ if [ "$COLLECT" = "compr" ] ; then
       "-t numPivotSearch=7" \
             )
 elif [ "$COLLECT" = "stackoverflow" ] ; then
+  echo "Using parameters tuned for stackoverflow!"
   HEADERS=(
          header_bm25_text \
          header_bm25_text \
