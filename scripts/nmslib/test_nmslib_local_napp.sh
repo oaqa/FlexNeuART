@@ -178,7 +178,7 @@ do
   # Let's not delete reports automatically!
   #rm -f $REPORT_PREF*
   INDEX_PARAMS="numPivot=$NUM_PIVOT,numPivotIndex=$NUM_PIVOT_INDEX,$PIVOT_FILE_PARAM"
-  INDEX_PARAM_NO_SLASH=`echo $index_params|sed 's|/|_|g'`
+  INDEX_PARAM_NO_SLASH=`echo $INDEX_PARAMS|sed 's|/|_|g'`
   INDEX_NAME=$NMSLIB_PREFIX/index/napp_${INDEX_PARAM_NO_SLASH}
   INDEX_NAME_COMP="${INDEX_NAME}.gz"
   if [ -f "$INDEX_NAME_COMP" ]
