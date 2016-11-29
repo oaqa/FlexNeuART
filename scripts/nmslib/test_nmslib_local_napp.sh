@@ -179,11 +179,11 @@ do
   #rm -f $REPORT_PREF*
   INDEX_PARAMS="numPivot=$NUM_PIVOT,numPivotIndex=$NUM_PIVOT_INDEX,$PIVOT_FILE_PARAM"
   INDEX_PARAM_NO_SLASH=`echo $index_params|sed 's|/|_|g'`
-  INDEX_NAME=napp_${INDEX_PARAM_NO_SLASH}
+  INDEX_NAME=$NMSLIB_PREFIX/index/napp_${INDEX_PARAM_NO_SLASH}
   INDEX_NAME_COMP="${INDEX_NAME}.gz"
   if [ -f "$INDEX_NAME_COMP" ]
   then
-    echo "Let's uncompress previously created index"
+    echo "Let's uncompress previously created index neither $INDEX_NAME nor $INDEX_NAME_COMP"
     gunzip "$INDEX_NAME_COMP"
     check "gunzip $INDEX_NAME_COMP"
   elif [ -f "$INDEX_NAME" ] ; then
