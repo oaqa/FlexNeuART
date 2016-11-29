@@ -193,7 +193,7 @@ do
     exit 1
   fi
 
-  bash_cmd="../nmslib/release/experiment -s $SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$HEADER_FILE \
+  bash_cmd="../nmslib/similarity_search/release/experiment -s $SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$HEADER_FILE \
                        --threadTestQty $THREAD_QTY \
                         -q "$QUERY_FILE" -k $K \
                         -m napp_qa1 \
