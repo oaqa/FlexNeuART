@@ -154,11 +154,11 @@ do
   echo "Header: $HEADER_FILE query file: $QUERY_FILE"
 
   GS_CACHE_DIR="gs_cache/$COLLECT/$HEADER_FILE"
-  REPORT_DIR="results/local/napp/$COLLECT/$HEADER_FILE"
+  REPORT_DIR="results/local/$COLLECT/$QUERY_SET/napp/$HEADER_FILE"
   INDEX_DIR="$NMSLIB_PREFIX/index/$HEADER_FILE"
 
-  REPORT_PREF="$REPORT_DIR/napp_${QUERY_SET}"
-  GS_CACHE_PREF="$GS_CACHE_DIR/${SPACE}_${QUERY_SET}"
+  REPORT_PREF="$REPORT_DIR/napp_"
+  GS_CACHE_PREF="$GS_CACHE_DIR/$QUERY_SET/${SPACE}_"
 
   if [ ! -d "$GS_CACHE_DIR" ] ; then
     mkdir -p "$GS_CACHE_DIR"
