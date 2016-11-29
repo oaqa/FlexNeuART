@@ -27,7 +27,9 @@ fi
 QUERY_SET="test"
 
 SPACE="qa1"
-K="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
+#K="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
+# Should be in the decreasing order
+K_ARR=(100 10)
 
 THREAD_QTY=`scripts/exper/get_cpu_cores.py`
 if [ "$THREAD_QTY" = "" ] ; then
@@ -157,7 +159,6 @@ do
   REPORT_DIR="results/local/$COLLECT/$QUERY_SET/napp/$HEADER_FILE"
   INDEX_DIR="$NMSLIB_PREFIX/index/$HEADER_FILE"
 
-  REPORT_PREF="$REPORT_DIR/napp_"
   GS_CACHE_PREF="$GS_CACHE_DIR/${SPACE}"
 
   if [ ! -d "$GS_CACHE_DIR" ] ; then
@@ -175,8 +176,6 @@ do
     exit 1
   fi
 
-  # Let's not delete reports automatically!
-  #rm -f $REPORT_PREF*
   INDEX_PARAMS="numPivot=$NUM_PIVOT,numPivotIndex=$NUM_PIVOT_INDEX,$PIVOT_FILE_PARAM"
   INDEX_PARAM_NO_SLASH=`echo $INDEX_PARAMS|sed 's|/|_|g'`
   INDEX_NAME=$INDEX_DIR/napp_${INDEX_PARAM_NO_SLASH}
@@ -193,21 +192,30 @@ do
     exit 1
   fi
 
-  bash_cmd="../nmslib/similarity_search/release/experiment -s $SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$HEADER_FILE \
+  for k in $K_ARR ; do
+    REPORT_PREF="$REPORT_DIR/K=$k/napp_"
+
+    if [ ! -d "$REPORT_PREF" ] ; then
+      mkdir -p "$REPORT_PREF"
+      check "mkdir -p "$REPORT_PREF""
+    fi
+
+    bash_cmd="../nmslib/similarity_search/release/experiment -s $SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$HEADER_FILE \
                        --threadTestQty $THREAD_QTY \
-                        -q "$QUERY_FILE" -k $K \
+                        -q "$QUERY_FILE" -k $k \
                         -m napp_qa1 \
                         -L $INDEX_NAME \
                         $QUERY_TIME_PARAMS -o $REPORT_PREF $ADD_FLAG  "
+    echo "Command:"
+    echo $bash_cmd
+    bash -c "$bash_cmd"
+    check "$bash_cmd"
+  done
 
   # Next time we append to the report rather than overwrite it
   if [ "$ADD_FLAG" = "" ] ; then
     ADD_FLAG=" -a "
   fi
-  echo "Command:"
-  echo $bash_cmd
-  bash -c "$bash_cmd"
-  check "$bash_cmd"
 
   echo "Let's compress the index $INDEX_NAME"
   gzip $INDEX_NAME
