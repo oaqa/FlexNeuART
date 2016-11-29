@@ -1,7 +1,7 @@
 #/bin/bash
 
-PATH_TO_THE_SCRIPTS="${0%/*}"
-echo "A path to this script: $PATH_TO_THE_SCRIPTS"
+#PATH_TO_THE_SCRIPTS="${0%/*}"
+#echo "A path to this script: $PATH_TO_THE_SCRIPTS"
 
 function check {
   f="$?"
@@ -15,109 +15,124 @@ function check {
 }
 
 NUM_PIVOT=8000
-COLLECT_NAME="compr"
+
+COLLECT=$1
+
+if [ "$COLLECT" = "" ] ; then
+  echo "Specify the collection name: compr or stackoverflow (1st arg)"
+  exit 1
+fi
+
 #MAX_QUERY_QTY=10000
 QUERY_SET="test"
 
 SPACE="qa1"
-CHUNK_INDEX_SIZE=$((114*1024))
-K=100
+K="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
 
-GET_CPU_CORES_PATH="$PATH_TO_THE_SCRIPTS/../exper"
-if [ ! -f "$GET_CPU_CORES_PATH/get_cpu_cores.py" ] ;then
-  echo "Can't find the get_cpu_cores.py file in $GET_CPU_CORES_PATH"
-  exit 1
-fi
-THREAD_QTY=`$GET_CPU_CORES_PATH/get_cpu_cores.py`
+THREAD_QTY=`scripts/exper/get_cpu_cores.py`
 if [ "$THREAD_QTY" = "" ] ; then
   echo "Can't obtain the number of cores!"
   exit 1
 fi
 
-echo "Chunk index size: $CHUNK_INDEX_SIZE"
 echo "Will be using $THREAD_QTY threads"
 
 BEST_PIVOT_TERM_QTY=1000
 BEST_MAX_TERM_QTY_K=50
 
-HEADERS=(
-         header_bm25_text \
-         header_bm25_text \
-         header_bm25_text \
-         \
-         header_exper1              \
-         header_exper1              \
-         header_exper1              \
-         header_exper1              \
-         header_exper1              \
-         header_exper1              \
-         header_exper1              \
-        )
-QUERIES=(
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-         \
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-         text_queries_sample0.25.txt    \
-        )
-PIVOT_PREFS=(
-            pivots_text_field \
-            pivots_text_field \
-            pivots_text_field \
-            \
-            pivots_text_field \
-            pivots_text_field \
-            pivots_text_field \
-            pivots_text_field \
-            pivots_text_field \
-            pivots_text_field \
-            pivots_text_field \
-            )
+NMSLIB_PREFIX="nmslib/$COLLECT"
 
-NUM_PIVOT_INDEX_ARR=(
+
+PIVOT_FILE_NAME="${PIVOT_PREFS[$i]}_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
+PIVOT_FILE="$NMSLIB_PREFIX/pivots/pivots_text_field_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
+
+if [ ! -f "$PIVOT_FILE" ] ; then
+  echo "Cannot find the pivot file: $PIVOT_FILE"
+  exit 1
+fi
+PIVOT_FILE_PARAM="pivotFile=$PIVOT_FILE"
+
+QUERY_FILE="$NMSLIB_PREFIX/queries/$QUERY_SET/text_queries.txt"
+
+if [ ! -f "$QUERY_FILE" ] ; then
+  echo "Cannot find the query file: $QUERY_FILE"
+  exit 1
+fi
+
+if [ "$COLLECT" = "compr" ] ; then
+  HEADERS=(
+         header_bm25_text \
+         header_bm25_text \
+         header_bm25_text \
+         \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+        )
+  NUM_PIVOT_INDEX_ARR=(
                     238 \
                     228 \
                     200 \
                     \
-                     320    \
                      300    \
                      250    \
-                     220    \
-                     228    \
                      200    \
-                     210    \
+                     150    \
+                     100    \
             )
-
-QUERY_TIME_PARAM_ARR=(
+  QUERY_TIME_PARAM_ARR=(
       "-t numPivotSearch=12" \
       "-t numPivotSearch=13" \
       "-t numPivotSearch=11 -t numPivotSearch=12 -t numPivotSearch=13 -t numPivotSearch=14 -t numPivotSearch=15 -t numPivotSearch=17 -t numPivotSearch=19 " \
          \
-      "-t numPivotSearch=22" \
-      "-t numPivotSearch=22" \
-      "-t numPivotSearch=17" \
-      "-t numPivotSearch=14" \
-      "-t numPivotSearch=16" \
-      "-t numPivotSearch=13 -t numPivotSearch=14 -t numPivotSearch=15 -t numPivotSearch=18 " \
-      "-t numPivotSearch=17" \
+      "-t numPivotSearch=18 -t numPivotSearch=22 " \
+      "-t numPivotSearch=17 -t numPivotSearch=19 " \
+      "-t numPivotSearch=13 -t numPivotSearch=15 -t numPivotSearch=19 " \
+      "-t numPivotSearch=9" \
+      "-t numPivotSearch=7" \
             )
+elif [ "$COLLECT" = "stackoverflow" ] ; then
+  HEADERS=(
+         header_bm25_text \
+         header_bm25_text \
+         header_bm25_text \
+         \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+         header_exper1_hash_payload              \
+        )
+  NUM_PIVOT_INDEX_ARR=(
+                    200 \
+                    100 \
+                    \
+                     250    \
+                     200    \
+                     150    \
+                     100    \
+            )
+  QUERY_TIME_PARAM_ARR=(
+      "-t numPivotSearch=13 -t numPivotSearch=14 " \
+      "-t numPivotSearch=5 -t numPivotSearch=6 -t numPivotSearch=7 -t numPivotSearch=8 -t numPivotSearch=9 -t numPivotSearch=10 -t numPivotSearch=11  -t numPivotSearch=12 " \
+         \
+      "-t numPivotSearch=16 -t numPivotSearch=17 -t numPivotSearch=18 -t numPivotSearch=19 -t numPivotSearch=20 " \
+      "-t numPivotSearch=14 -t numPivotSearch=16 -t numPivotSearch=18 " \
+      "-t numPivotSearch=11" \
+      "-t numPivotSearch=7" \
+            )
+else
+  echo "Unsupported collection: $COLLECT"
+fi
 
 QTY=${#HEADERS[*]}
 
-if [ ${#QUERIES[*]} != "$QTY" ] ; then
-  echo "Number of QUERIES elements != # of HEADERS elements!"
-  exit 1
-fi
-if [ ${#PIVOT_PREFS[*]} != "$QTY" ] ; then
-  echo "Number of PIVOT_PREFS elements != # of HEADERS elements!"
-  exit 1
-fi
 if [ ${#NUM_PIVOT_INDEX_ARR[*]} != "$QTY" ] ; then
   echo "Number of NUM_PIVOT_INDEX_ARR elements != # of HEADERS elements!"
   exit 1
@@ -137,20 +152,17 @@ do
     ADD_FLAG=""
   fi
   PREV_HEADER=$HEADER_FILE
-  QUERY_FILE=${QUERIES[$i]}
-  FULL_QUERY_PATH="nmslib/$COLLECT_NAME/queries/$QUERY_SET/$QUERY_FILE"
   NUM_PIVOT_INDEX=${NUM_PIVOT_INDEX_ARR[$i]}
   QUERY_TIME_PARAMS=${QUERY_TIME_PARAM_ARR[$i]}
 
-  echo "Header: $HEADER_FILE full query path: $FULL_QUERY_PATH"
+  echo "Header: $HEADER_FILE query file: $QUERY_FILE"
 
-  GS_CACHE_DIR="gs_cache/$COLLECT_NAME/$HEADER_FILE"
-  REPORT_DIR="results/testing/napp/$COLLECT_NAME/$HEADER_FILE"
-  INDEX_DIR="indices/$COLLECT_NAME/$HEADER_FILE"
+  GS_CACHE_DIR="gs_cache/$COLLECT/$HEADER_FILE"
+  REPORT_DIR="results/local/napp/$COLLECT/$HEADER_FILE"
+  INDEX_DIR="$NMSLIB_PREFIX/index/$QUERY_SET/$HEADER_FILE"
 
-  REPORT_PREF="$REPORT_DIR/test_napp_${QUERY_SET}"
+  REPORT_PREF="$REPORT_DIR/napp_${QUERY_SET}"
   GS_CACHE_PREF="$GS_CACHE_DIR/${SPACE}_${QUERY_SET}"
-  INDEX_PREF="$INDEX_DIR/napp"
 
   if [ ! -d "$GS_CACHE_DIR" ] ; then
     mkdir -p "$GS_CACHE_DIR"
@@ -169,17 +181,9 @@ do
 
   # Let's not delete reports automatically!
   #rm -f $REPORT_PREF*
-
-  PIVOT_FILE_NAME="${PIVOT_PREFS[$i]}_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
-  PIVOT_FILE="nmslib/$COLLECT_NAME/pivots/$PIVOT_FILE_NAME"
-  if [ ! -f "$PIVOT_FILE" ] ; then
-    echo "Cannot find the pivot file: $PIVOT_FILE"
-    exit 1
-  fi
-  INDEX_PARAMS="chunkIndexSize=$CHUNK_INDEX_SIZE,numPivot=$NUM_PIVOT,numPivotIndex=$NUM_PIVOT_INDEX,pivotFile=$PIVOT_FILE"
-
-  INDEX_NAME="${INDEX_PREF}_numPivot=$NUM_PIVOT,numPivotIndex=${NUM_PIVOT_INDEX}_${PIVOT_FILE_NAME}"
-
+  INDEX_PARAMS="numPivot=$NUM_PIVOT,numPivotIndex=$NUM_PIVOT_INDEX,$PIVOT_FILE_PARAM"
+  INDEX_PARAM_NO_SLASH=`echo $index_params|sed 's|/|_|g'`
+  INDEX_NAME=napp_${INDEX_PARAM_NO_SLASH}
   INDEX_NAME_COMP="${INDEX_NAME}.gz"
   if [ -f "$INDEX_NAME_COMP" ]
   then
@@ -193,9 +197,9 @@ do
     exit 1
   fi
 
-  bash_cmd="release/experiment -s $SPACE -g $GS_CACHE_PREF -i nmslib/$COLLECT_NAME/headers/$HEADER_FILE \
+  bash_cmd="../nmslib/release/experiment -s $SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$HEADER_FILE \
                        --threadTestQty $THREAD_QTY \
-                        -q "$FULL_QUERY_PATH" -k $K \
+                        -q "$QUERY_FILE" -k $K \
                         -m napp_qa1 \
                         -L $INDEX_NAME \
                         $QUERY_TIME_PARAMS -o $REPORT_PREF $ADD_FLAG  "
@@ -209,10 +213,10 @@ do
   bash -c "$bash_cmd"
   check "$bash_cmd"
 
-  #echo "Let's compress the index $INDEX_NAME"
-  #gzip $INDEX_NAME
-  #check "gzip $INDEX_NAME"
-  #echo "Index is compressed!"
+  echo "Let's compress the index $INDEX_NAME"
+  gzip $INDEX_NAME
+  check "gzip $INDEX_NAME"
+  echo "Index is compressed!"
 
 done
 

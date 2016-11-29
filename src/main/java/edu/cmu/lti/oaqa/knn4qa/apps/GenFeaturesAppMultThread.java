@@ -20,8 +20,6 @@ import java.util.*;
 
 import no.uib.cipr.matrix.DenseVector;
 
-import org.apache.commons.cli.CommandLine;
-
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
   
 class GenFeaturesAppImpl extends BaseQueryApp {    
