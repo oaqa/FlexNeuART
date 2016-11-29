@@ -99,7 +99,6 @@ elif [ "$COLLECT" = "stackoverflow" ] ; then
   HEADERS=(
          header_bm25_text \
          header_bm25_text \
-         header_bm25_text \
          \
          header_exper1_hash_payload              \
          header_exper1_hash_payload              \
