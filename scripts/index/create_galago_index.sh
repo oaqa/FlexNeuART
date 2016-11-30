@@ -27,7 +27,7 @@ cat > $conf <<EOF
  "server" : true,
  "port" : 8080,
  "stemmedPostings" : false,
- "mode" : "threaded" 
+ "mode" : "local" 
 }
 EOF
 
