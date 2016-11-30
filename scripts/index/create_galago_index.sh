@@ -38,7 +38,7 @@ echo "Config file:"
 cat $conf
 echo "=========================================================================="
 
-../galago-3.10-bin/bin/galago build $conf
+scripts/index/galago build $conf
 stat=$?
 rm -f $conf
 if [ "$stat" != "0" ] ; then
