@@ -5,7 +5,7 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-IN_FILE="output_trectext/$collect/answers.txt"
+IN_DIR="output_trectext/$collect/"
 OUT_DIR="galago_index/$collect"
 
 if [ ! -d "$OUT_DIR" ] ; then
@@ -13,22 +13,36 @@ if [ ! -d "$OUT_DIR" ] ; then
   exit 1
 fi
 
-if [ ! -f "$IN_FILE" ] ; then
-  echo "Input file: $IN_FILE doesn't exist"
+if [ ! -d "$IN_DIR" ] ; then
+  echo "Input directory: $IN_DIR doesn't exist"
   exit 1
 fi
 
+conf=`mktemp`
+cat > $conf <<EOF
+{
+ "inputPath": "$IN_DIR",
+ "indexPath" : "$OUT_DIR",
+ "nonStemmedPostings" : "true",
+ "stemmedPostings" : "false",
+ "mode" : "threaded" 
+}
+EOF
+
 echo "=========================================================================="
-echo "Input file:       $IN_FILE"
+echo "Input directory:       $IN_DIR"
 echo "Output directory: $OUT_DIR"
 echo "Removing previous index (if exists)"
 rm -rf "$OUT_DIR"/*
+echo "Config file:"
+cat $conf
 echo "=========================================================================="
 
-#scripts/index/run_galago.sh build --indexPath=$OUT_DIR --inputPath+$IN_FILE --nonStemmedPostings=true --stemmedPostings=false --mode=threaded
-../galago-3.10-bin/bin/galago build --indexPath=$OUT_DIR --inputPath+$IN_FILE --nonStemmedPostings=true --stemmedPostings=false --mode=threaded
-if [ "$?" != "0" ] ; then
-  echo "FAILURE!!!"
+../galago-3.10-bin/bin/galago build $conf
+stat=$?
+rm -f $conf
+if [ "$stat" != "0" ] ; then
+  echo "Indexing failed!!!"
   exit 1
 fi
 
