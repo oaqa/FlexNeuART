@@ -95,6 +95,7 @@ public class Convert2TrecText {
           if (qty >= batchQty) {
             outFile = initOutFile(outFile, outFileName, batchNum);
             ++batchNum;
+            qty = 0;
           }
           Map<String, String> docFields = null;
           
