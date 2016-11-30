@@ -25,7 +25,8 @@ echo "Removing previous index (if exists)"
 rm -rf "$OUT_DIR"/*
 echo "=========================================================================="
 
-scripts/index/run_galago.sh build --indexPath=$OUT_DIR --inputPath+$IN_FILE --nonStemmedPostings=true --stemmedPostings=false --mode=threaded
+#scripts/index/run_galago.sh build --indexPath=$OUT_DIR --inputPath+$IN_FILE --nonStemmedPostings=true --stemmedPostings=false --mode=threaded
+../galago-3.10-bin/galago build --indexPath=$OUT_DIR --inputPath+$IN_FILE --nonStemmedPostings=true --stemmedPostings=false --mode=threaded
 if [ "$?" != "0" ] ; then
   echo "FAILURE!!!"
   exit 1
