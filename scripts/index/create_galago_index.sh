@@ -24,6 +24,7 @@ cat > $conf <<EOF
  "inputPath": "$IN_DIR",
  "indexPath" : "$OUT_DIR",
  "nonStemmedPostings" : true,
+ "server" : true,
  "stemmedPostings" : false,
  "mode" : "threaded" 
 }
