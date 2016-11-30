@@ -23,8 +23,8 @@ cat > $conf <<EOF
 {
  "inputPath": "$IN_DIR",
  "indexPath" : "$OUT_DIR",
- "nonStemmedPostings" : "true",
- "stemmedPostings" : "false",
+ "nonStemmedPostings" : true,
+ "stemmedPostings" : false,
  "mode" : "threaded" 
 }
 EOF
