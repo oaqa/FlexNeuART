@@ -27,5 +27,4 @@ if [ ! -d $OUTPUT_DIR ] ; then
   check "mkdir -p $OUTPUT_DIR"
 fi
 
-scripts/data/run_convert_to_trectext.sh $INPUT -output_file "$OUTPUT_DIR/answers.txt"
-check "scripts/data/run_convert_to_trectext.sh $INPUT -output_file $OUTPUT_DIR/answers.txt"
+scripts/data/run_convert_to_trectext.sh $INPUT -output_file "$OUTPUT_DIR/answers_split" -batch_qty 10000

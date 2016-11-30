@@ -50,6 +50,8 @@ public class Convert2TrecText {
                       "Input file names (can be several options) each of which is an XML produced by our pipeline");
     options.addOption("output_file",     null, true,
                       "Output file name (in the TREC text format)");
+    options.addOption("batch_qty",       null, true,
+                      "Number of documents in a batch");
     
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     BufferedWriter    outFile = null;
@@ -65,8 +67,20 @@ public class Convert2TrecText {
       if (null == outFileName) {
         Usage("Specify the name of an output file!", options);
       }
+      String tmpi = cmd.getOptionValue("batch_qty");
+      int    batchQty = -1;
       
-      outFile = new BufferedWriter(new FileWriter(new File(outFileName)));
+      if (null != tmpi) {
+        batchQty = Integer.parseInt(tmpi);
+      }
+      if (batchQty <= 0) {
+        Usage("Specify a positive # of documents in a batch", options);
+      }
+      
+      int batchNum = 1;
+      int qty = 0;
+      
+      outFile = initOutFile(outFile, outFileName, batchNum);
       
       String textFieldName = FeatureExtractor.mFieldsSOLR[FeatureExtractor.TEXT_FIELD_ID];
       
@@ -77,7 +91,11 @@ public class Convert2TrecText {
         String docText = XmlHelper.readNextXMLIndexEntry(inpText);
         int docNum = 0;
         for (; docText != null; docText = XmlHelper.readNextXMLIndexEntry(inpText)) {
-          ++docNum;
+          ++docNum; ++qty;
+          if (qty >= batchQty) {
+            outFile = initOutFile(outFile, outFileName, batchNum);
+            ++batchNum;
+          }
           Map<String, String> docFields = null;
           
           try {
@@ -118,6 +136,11 @@ public class Convert2TrecText {
       }
     }
     
+  }
+
+  private static BufferedWriter initOutFile(BufferedWriter outFile, String outFileName, int batchNum) throws IOException {
+    if (outFile!=null) outFile.close();
+    return new BufferedWriter(new FileWriter(new File(outFileName + "." + batchNum + ".trectext")));
   }
 
 }
