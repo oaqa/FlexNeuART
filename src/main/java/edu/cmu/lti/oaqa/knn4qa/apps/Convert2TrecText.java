@@ -141,7 +141,9 @@ public class Convert2TrecText {
 
   private static BufferedWriter initOutFile(BufferedWriter outFile, String outFileName, int batchNum) throws IOException {
     if (outFile!=null) outFile.close();
-    return new BufferedWriter(new FileWriter(new File(outFileName + "." + batchNum + ".trectext")));
+    String fn = outFileName + "." + batchNum + ".trectext";
+    System.out.println("Creating a file: " + fn);
+    return new BufferedWriter(new FileWriter(new File(fn)));
   }
 
 }
