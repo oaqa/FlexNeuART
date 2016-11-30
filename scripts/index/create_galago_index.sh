@@ -22,7 +22,7 @@ echo "==========================================================================
 echo "Input file:       $IN_FILE"
 echo "Output directory: $OUT_DIR"
 echo "Removing previous index (if exists)"
-rm -f "$OUT_DIR"/*
+rm -rf "$OUT_DIR"/*
 echo "=========================================================================="
 
 scripts/index/run_galago.sh build --indexPath=$OUT_DIR --inputPath+$IN_FILE --nonStemmedPostings=true --stemmedPostings=false --mode=threaded

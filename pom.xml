@@ -13,6 +13,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lucene.version>6.0.0</lucene.version>
+    <galago.version>3.10</galago.version>
   </properties>
 
   <licenses>
@@ -258,13 +259,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>core</artifactId>
-      <version>3.10</version>
-    </dependency>
-
-
-    <dependency>
       <groupId>org.apache.solr</groupId>
       <artifactId>solr-solrj</artifactId>
       <version>${lucene.version}</version>
@@ -281,6 +275,50 @@
         </exclusions>
     </dependency>
 
+
+
+    <!-- Galago dependencies -->
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>core</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>contrib</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>krovetz-stemmer</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>snowball-stemmers</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>tupleflow-gridengine</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>tupleflow</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>tupleflow-typebuilder</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lemurproject.galago</groupId>
+      <artifactId>utility</artifactId>
+      <version>${galago.version}</version>
+    </dependency>
+    <!-- end of Galago dependencies -->
 
 
     
