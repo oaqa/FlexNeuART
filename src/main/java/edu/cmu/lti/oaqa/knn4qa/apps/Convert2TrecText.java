@@ -93,8 +93,8 @@ public class Convert2TrecText {
         for (; docText != null; docText = XmlHelper.readNextXMLIndexEntry(inpText)) {
           ++docNum; ++qty;
           if (qty >= batchQty) {
-            outFile = initOutFile(outFile, outFileName, batchNum);
             ++batchNum;
+            outFile = initOutFile(outFile, outFileName, batchNum);
             qty = 0;
           }
           Map<String, String> docFields = null;
