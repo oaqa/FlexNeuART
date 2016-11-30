@@ -221,10 +221,11 @@ do
     ADD_FLAG=" -a "
   fi
 
-  echo "Let's compress the index $INDEX_NAME"
-  gzip $INDEX_NAME
-  check "gzip $INDEX_NAME"
-  echo "Index is compressed!"
+  # Let's not compress index unless we really need to
+  #echo "Let's compress the index $INDEX_NAME"
+  #gzip $INDEX_NAME
+  #check "gzip $INDEX_NAME"
+  #echo "Index is compressed!"
 
 done
 
