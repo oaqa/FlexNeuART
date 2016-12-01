@@ -32,7 +32,7 @@ public class GalagoCandidateProvider extends CandidateProvider {
     mParams.set("scorer", "bm25");
     mParams.set("k", FeatureExtractor.BM25_K1);
     mParams.set("b", FeatureExtractor.BM25_B);
-    mParams.set("indexPath", indexDirName);
+    mParams.set("index", indexDirName);
     
     mGalago = RetrievalFactory.create(mParams);
   }
