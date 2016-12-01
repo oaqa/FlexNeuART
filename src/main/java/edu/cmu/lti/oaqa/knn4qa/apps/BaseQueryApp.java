@@ -394,8 +394,6 @@ class BaseQueryAppProcessingThread extends Thread  {
  *
  */
 public abstract class BaseQueryApp {
-  
-  private static final boolean USE_THREAD_POOL = false;
 
   /**
    * A child class implements this function where it calls {@link #addCandGenOpts(boolean, boolean, boolean)},
@@ -512,6 +510,7 @@ public abstract class BaseQueryApp {
     mOptions.addOption(CommonParams.NMSLIB_FIELDS_PARAM,       null, true, CommonParams.NMSLIB_FIELDS_DESC);
     
     mOptions.addOption(CommonParams.SAVE_STAT_FILE_PARAM,      null, true, CommonParams.SAVE_STAT_FILE_DESC);
+    mOptions.addOption(CommonParams.USE_THREAD_POOL_PARAM,     null, false, CommonParams.USE_THREAD_POOL_DESC);
   }
   
   /**
@@ -652,6 +651,8 @@ public abstract class BaseQueryApp {
     mGalagoOp = mCmd.getOptionValue(CommonParams.GALAGO_OP_PARAM);
     mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
     String embedFilesStr = mCmd.getOptionValue(CommonParams.EMBED_FILES_PARAM);
+    
+    mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
 
     if (null != embedFilesStr) {
       mEmbedFiles = embedFilesStr.split(",");
@@ -898,7 +899,7 @@ public abstract class BaseQueryApp {
       init();
       
       
-      if (USE_THREAD_POOL) {
+      if (mUseThreadPool ) {
         ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
         
         for (int iq = 0; iq < mQueries.size(); ++iq) {
@@ -996,7 +997,8 @@ public abstract class BaseQueryApp {
   String       mExtrTypeInterm;
   DenseVector  mModelInterm;
   Ranker       mModelFinal;
-  String       mGalagoOp;
+  String       mGalagoOp;  
+  boolean      mUseThreadPool = false;
   
   String             mResultCacheName = null; 
   CandidateInfoCache mResultCache = null;
