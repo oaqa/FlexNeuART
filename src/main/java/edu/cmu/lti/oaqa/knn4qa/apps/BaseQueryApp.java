@@ -99,14 +99,220 @@ class DataPointWrapper extends DataPoint {
   float [] mFeatValues;
 }
 
-class BaseQueryAppProcessingWorker implements Runnable {
-  public static Object            mWriteLock = new Object();
-  private final int               mQueryNum;
-  private final BaseQueryApp      mAppRef;
+
+class BaseProcessingUnit {
+  public static Object              mWriteLock = new Object();
+  protected final BaseQueryApp      mAppRef;
+  
+  BaseProcessingUnit(BaseQueryApp appRef) {
+    mAppRef    = appRef;
+  }  
+  
+  public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
+    boolean addRankScores = mAppRef.mInMemExtrFinal != null && mAppRef.mInMemExtrFinal.addRankScores();
+    
+
+    Map<String, String>    docFields = null;
+    String                 docText = mAppRef.mQueries.get(queryNum);
+    
+    // 1. Parse a query
+    try {
+      docFields = XmlHelper.parseXMLIndexEntry(docText);
+    } catch (Exception e) {
+      mAppRef.logger.error("Parsing error, offending DOC:\n" + docText);
+      throw new Exception("Parsing error.");
+    }
+    
+    String queryID = docFields.get(CandidateProvider.ID_FIELD_NAME);
+            
+    // 2. Obtain results
+    long start = System.currentTimeMillis();
+    
+    CandidateInfo qres = null;
+    
+    if (mAppRef.mResultCache != null) 
+      qres = mAppRef.mResultCache.getCacheEntry(queryID);
+    if (qres == null) {            
+        qres = candProvider.getCandidates(queryNum, docFields, mAppRef.mMaxCandRet);
+        if (mAppRef.mResultCache != null) 
+          mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
+    }
+    CandidateEntry [] resultsAll = qres.mEntries;
+    
+    long end = System.currentTimeMillis();
+    long searchTimeMS = end - start;
+    
+    mAppRef.logger.info(
+        String.format("Obtained results for the query # %d queryId='%s', the search took %d ms, we asked for max %d entries got %d", 
+                      queryNum, queryID, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
+    
+    mAppRef.mQueryTimeStat.addValue(searchTimeMS);
+    mAppRef.mNumRetStat.addValue(qres.mNumFound);
+    
+    ArrayList<String>           allDocIds = new ArrayList<String>();
+                    
+    for (int rank = 0; rank < resultsAll.length; ++rank) {
+      CandidateEntry e = resultsAll[rank];
+      allDocIds.add(e.mDocId);
+      if (addRankScores) e.mOrigRank = rank;
+    }
+    
+    // allDocFeats will be first created by an intermediate re-ranker (if it exists).
+    // If there is a final re-ranker, it will overwrite previously created features.
+    Map<String, DenseVector> allDocFeats = null;
+    Integer maxNumRet = mAppRef.mMaxNumRet;
+            
+    // 3. If necessary carry out an intermediate re-ranking
+    if (mAppRef.mInMemExtrInterm != null) {
+      // Compute features once for all documents using an intermediate re-ranker
+      start = System.currentTimeMillis();
+      allDocFeats = mAppRef.mInMemExtrInterm.getFeatures(allDocIds, docFields);
+      
+      DenseVector intermModelWeights = mAppRef.mModelInterm;
+
+      for (int rank = 0; rank < resultsAll.length; ++rank) {
+        CandidateEntry e = resultsAll[rank];
+        DenseVector feat = allDocFeats.get(e.mDocId);
+        e.mScore = (float) feat.dot(intermModelWeights);
+        if (Float.isNaN(e.mScore)) {
+          if (Float.isNaN(e.mScore)) {
+            mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
+            mAppRef.logger.info("NAN scores, feature vector:");
+            mAppRef.logger.info(feat.toString());
+            mAppRef.logger.info("NAN scores, feature weights:");
+            mAppRef.logger.info(intermModelWeights.toString());
+            throw new Exception("NAN score encountered (intermediate reranker)!");
+          }
+        }
+      }
+      Arrays.sort(resultsAll);
+      // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
+      if (resultsAll.length > maxNumRet) {
+        allDocIds = new ArrayList<String>();
+        CandidateEntry resultsAllTrunc[] = Arrays.copyOf(resultsAll, maxNumRet);
+        resultsAll = resultsAllTrunc;
+        for (int rank = 0; rank < resultsAll.length; ++rank) 
+          allDocIds.add(resultsAll[rank].mDocId);            
+      }
+      end = System.currentTimeMillis();
+      long rerankIntermTimeMS = end - start;
+      mAppRef.logger.info(
+          String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' took %d ms", 
+                         queryNum, queryID, rerankIntermTimeMS));
+      mAppRef.mIntermRerankTimeStat.addValue(rerankIntermTimeMS);          
+    }
+            
+    // 4. If QRELs are specified, we need to save results only for subsets that return a relevant entry. 
+    //    Let's see what's the rank of the highest ranked entry. 
+    //    If, e.g., the rank is 10, then we discard subsets having less than top-10 entries.
+    int minRelevRank = Integer.MAX_VALUE;
+    if (mAppRef.mQrels != null) {
+      for (int rank = 0; rank < resultsAll.length; ++rank) {
+        CandidateEntry e = resultsAll[rank];
+        String label = mAppRef.mQrels.get(queryID, e.mDocId);
+        e.mRelevGrade = CandidateProvider.parseRelevLabel(label);
+        if (e.mRelevGrade >= 1 && minRelevRank == Integer.MAX_VALUE) {
+          minRelevRank = rank;
+        }
+      }
+    } else {
+      minRelevRank = 0;
+    }
+    
+    // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
+    if (mAppRef.mInMemExtrFinal!= null) {
+      if (allDocIds.size() > maxNumRet) {
+        throw new RuntimeException("Bug or you are using old/different cache: allDocIds.size()=" + allDocIds.size() + " > maxNumRet=" + maxNumRet);
+      }
+      // Compute features once for all documents using a final re-ranker
+      start = System.currentTimeMillis();
+      allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, docFields);
+      if (addRankScores) {
+        addScoresAndRanks(allDocFeats, resultsAll);
+      }
+      
+      Ranker modelFinal = mAppRef.mModelFinal;
+      
+      if (modelFinal != null) {
+        DataPointWrapper featRankLib = new DataPointWrapper();
+        for (int rank = 0; rank < resultsAll.length; ++rank) {
+          CandidateEntry e = resultsAll[rank];
+          DenseVector feat = allDocFeats.get(e.mDocId);
+          // It looks like eval is thread safe in RankLib 2.5.
+          featRankLib.assign(feat);                            
+          e.mScore = (float) modelFinal.eval(featRankLib);
+          if (Float.isNaN(e.mScore)) {
+            if (Float.isNaN(e.mScore)) {
+              mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
+              mAppRef.logger.info("NAN scores, feature vector:");
+              mAppRef.logger.info(feat.toString());
+              throw new Exception("NAN score encountered (intermediate reranker)!");
+            }
+          }
+        }            
+      }          
+      
+      end = System.currentTimeMillis();
+      long rerankFinalTimeMS = end - start;
+      mAppRef.logger.info(
+          String.format("Final-feature generation & re-ranking for the query # %d queryId='%s', final. reranking took %d ms", 
+                        queryNum, queryID, rerankFinalTimeMS));
+      mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
+    }
+    
+    /* 
+     * After computing scores based on the final model, elements need to be resorted.
+     * However, this needs to be done *SEPARATELY* for each of the subset of top-K results.
+     */
+    
+
+    for (int k = 0; k < mAppRef.mNumRetArr.size(); ++k) {
+      int numRet = mAppRef.mNumRetArr.get(k);
+      if (numRet >= minRelevRank) {
+        CandidateEntry resultsCurr[] = Arrays.copyOf(resultsAll, Math.min(numRet, resultsAll.length));
+        Arrays.sort(resultsCurr);
+        synchronized (mWriteLock) {
+          mAppRef.procResults(
+              queryID,
+              docFields,
+              resultsCurr,
+              numRet,
+              allDocFeats
+           );
+        }
+      }
+    }                
+  }
+
+  /**
+   * Adds ranks and scores obtained from a candidate provider.
+   * 
+   * @param docFeats        all features
+   * @param resultsAll      result entries
+   */
+  protected void addScoresAndRanks(Map<String, DenseVector>   docFeats, 
+                                 CandidateEntry[]           resultsAll) {
+    for (CandidateEntry  e: resultsAll) {
+      DenseVector oldVect = docFeats.get(e.mDocId);
+      int oldSize = oldVect.size();
+      DenseVector newVect = new DenseVector(oldSize + 2);
+      newVect.set(0, e.mOrigRank);
+      newVect.set(1, e.mOrigScore);
+      for (int vi = 0; vi < oldSize; ++vi)
+        newVect.set(vi + 2, oldVect.get(vi)); 
+      docFeats.replace(e.mDocId, newVect);
+    }    
+    
+  }
+}
+
+class BaseQueryAppProcessingWorker implements Runnable  {
+  private final BaseProcessingUnit mProcUnit;
+  private final int                mQueryNum;
   
   BaseQueryAppProcessingWorker(BaseQueryApp appRef,
                                int          queryId) {
-    mAppRef    = appRef;
+    mProcUnit = new BaseProcessingUnit(appRef);
     mQueryNum   = queryId;    
   }
   
@@ -133,212 +339,49 @@ class BaseQueryAppProcessingWorker implements Runnable {
   public void run() {
     
     try {
-      CandidateProvider candProvider = getCandProvider(mAppRef.mCandProviders);
+      CandidateProvider candProvider = getCandProvider(mProcUnit.mAppRef.mCandProviders);
       
-      //Thread.currentThread().getId()
-      
-      boolean addRankScores = mAppRef.mInMemExtrFinal != null && mAppRef.mInMemExtrFinal.addRankScores();
-      
-      {
-        Map<String, String>    docFields = null;
-        String                 docText = mAppRef.mQueries.get(mQueryNum);
-        
-        // 1. Parse a query
-        try {
-          docFields = XmlHelper.parseXMLIndexEntry(docText);
-        } catch (Exception e) {
-          mAppRef.logger.error("Parsing error, offending DOC:\n" + docText);
-          throw new Exception("Parsing error.");
-        }
-        
-        String queryID = docFields.get(CandidateProvider.ID_FIELD_NAME);
-                
-        // 2. Obtain results
-        long start = System.currentTimeMillis();
-        
-        CandidateInfo qres = null;
-        
-        if (mAppRef.mResultCache != null) 
-          qres = mAppRef.mResultCache.getCacheEntry(queryID);
-        if (qres == null) {            
-            qres = candProvider.getCandidates(mQueryNum, docFields, mAppRef.mMaxCandRet);
-            if (mAppRef.mResultCache != null) 
-              mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
-        }
-        CandidateEntry [] resultsAll = qres.mEntries;
-        
-        long end = System.currentTimeMillis();
-        long searchTimeMS = end - start;
-        
-        mAppRef.logger.info(
-            String.format("Obtained results for the query # %d queryId='%s', the search took %d ms, we asked for max %d entries got %d", 
-                          mQueryNum, queryID, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
-        
-        mAppRef.mQueryTimeStat.addValue(searchTimeMS);
-        mAppRef.mNumRetStat.addValue(qres.mNumFound);
-        
-        ArrayList<String>           allDocIds = new ArrayList<String>();
-                        
-        for (int rank = 0; rank < resultsAll.length; ++rank) {
-          CandidateEntry e = resultsAll[rank];
-          allDocIds.add(e.mDocId);
-          if (addRankScores) e.mOrigRank = rank;
-        }
-        
-        // allDocFeats will be first created by an intermediate re-ranker (if it exists).
-        // If there is a final re-ranker, it will overwrite previously created features.
-        Map<String, DenseVector> allDocFeats = null;
-        Integer maxNumRet = mAppRef.mMaxNumRet;
-                
-        // 3. If necessary carry out an intermediate re-ranking
-        if (mAppRef.mInMemExtrInterm != null) {
-          // Compute features once for all documents using an intermediate re-ranker
-          start = System.currentTimeMillis();
-          allDocFeats = mAppRef.mInMemExtrInterm.getFeatures(allDocIds, docFields);
-          
-          DenseVector intermModelWeights = mAppRef.mModelInterm;
-
-          for (int rank = 0; rank < resultsAll.length; ++rank) {
-            CandidateEntry e = resultsAll[rank];
-            DenseVector feat = allDocFeats.get(e.mDocId);
-            e.mScore = (float) feat.dot(intermModelWeights);
-            if (Float.isNaN(e.mScore)) {
-              if (Float.isNaN(e.mScore)) {
-                mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
-                mAppRef.logger.info("NAN scores, feature vector:");
-                mAppRef.logger.info(feat.toString());
-                mAppRef.logger.info("NAN scores, feature weights:");
-                mAppRef.logger.info(intermModelWeights.toString());
-                throw new Exception("NAN score encountered (intermediate reranker)!");
-              }
-            }
-          }
-          Arrays.sort(resultsAll);
-          // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
-          if (resultsAll.length > maxNumRet) {
-            allDocIds = new ArrayList<String>();
-            CandidateEntry resultsAllTrunc[] = Arrays.copyOf(resultsAll, maxNumRet);
-            resultsAll = resultsAllTrunc;
-            for (int rank = 0; rank < resultsAll.length; ++rank) 
-              allDocIds.add(resultsAll[rank].mDocId);            
-          }
-          end = System.currentTimeMillis();
-          long rerankIntermTimeMS = end - start;
-          mAppRef.logger.info(
-              String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' took %d ms", 
-                             mQueryNum, queryID, rerankIntermTimeMS));
-          mAppRef.mIntermRerankTimeStat.addValue(rerankIntermTimeMS);          
-        }
-                
-        // 4. If QRELs are specified, we need to save results only for subsets that return a relevant entry. 
-        //    Let's see what's the rank of the highest ranked entry. 
-        //    If, e.g., the rank is 10, then we discard subsets having less than top-10 entries.
-        int minRelevRank = Integer.MAX_VALUE;
-        if (mAppRef.mQrels != null) {
-          for (int rank = 0; rank < resultsAll.length; ++rank) {
-            CandidateEntry e = resultsAll[rank];
-            String label = mAppRef.mQrels.get(queryID, e.mDocId);
-            e.mRelevGrade = CandidateProvider.parseRelevLabel(label);
-            if (e.mRelevGrade >= 1 && minRelevRank == Integer.MAX_VALUE) {
-              minRelevRank = rank;
-            }
-          }
-        } else {
-          minRelevRank = 0;
-        }
-        
-        // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
-        if (mAppRef.mInMemExtrFinal!= null) {
-          if (allDocIds.size() > maxNumRet) {
-            throw new RuntimeException("Bug or you are using old/different cache: allDocIds.size()=" + allDocIds.size() + " > maxNumRet=" + maxNumRet);
-          }
-          // Compute features once for all documents using a final re-ranker
-          start = System.currentTimeMillis();
-          allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, docFields);
-          if (addRankScores) {
-            addScoresAndRanks(allDocFeats, resultsAll);
-          }
-          
-          Ranker modelFinal = mAppRef.mModelFinal;
-          
-          if (modelFinal != null) {
-            DataPointWrapper featRankLib = new DataPointWrapper();
-            for (int rank = 0; rank < resultsAll.length; ++rank) {
-              CandidateEntry e = resultsAll[rank];
-              DenseVector feat = allDocFeats.get(e.mDocId);
-              // It looks like eval is thread safe in RankLib 2.5.
-              featRankLib.assign(feat);                            
-              e.mScore = (float) modelFinal.eval(featRankLib);
-              if (Float.isNaN(e.mScore)) {
-                if (Float.isNaN(e.mScore)) {
-                  mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
-                  mAppRef.logger.info("NAN scores, feature vector:");
-                  mAppRef.logger.info(feat.toString());
-                  throw new Exception("NAN score encountered (intermediate reranker)!");
-                }
-              }
-            }            
-          }          
-          
-          end = System.currentTimeMillis();
-          long rerankFinalTimeMS = end - start;
-          mAppRef.logger.info(
-              String.format("Final-feature generation & re-ranking for the query # %d queryId='%s', final. reranking took %d ms", 
-                            mQueryNum, queryID, rerankFinalTimeMS));
-          mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
-        }
-        
-        /* 
-         * After computing scores based on the final model, elements need to be resorted.
-         * However, this needs to be done *SEPARATELY* for each of the subset of top-K results.
-         */
-        
-
-        for (int k = 0; k < mAppRef.mNumRetArr.size(); ++k) {
-          int numRet = mAppRef.mNumRetArr.get(k);
-          if (numRet >= minRelevRank) {
-            CandidateEntry resultsCurr[] = Arrays.copyOf(resultsAll, Math.min(numRet, resultsAll.length));
-            Arrays.sort(resultsCurr);
-            synchronized (mWriteLock) {
-              mAppRef.procResults(
-                  queryID,
-                  docFields,
-                  resultsCurr,
-                  numRet,
-                  allDocFeats
-               );
-            }
-          }
-        }                
-      }
+      mProcUnit.procQuery(candProvider, mQueryNum);
     } catch (Exception e) {
       e.printStackTrace();
       System.err.println("Unhandled exception: " + e + " ... exiting");
       System.exit(1);
     }
   }
+}
 
-  /**
-   * Adds ranks and scores obtained from a candidate provider.
-   * 
-   * @param docFeats        all features
-   * @param resultsAll      result entries
-   */
-  private void addScoresAndRanks(Map<String, DenseVector>   docFeats, 
-                                 CandidateEntry[]           resultsAll) {
-    for (CandidateEntry  e: resultsAll) {
-      DenseVector oldVect = docFeats.get(e.mDocId);
-      int oldSize = oldVect.size();
-      DenseVector newVect = new DenseVector(oldSize + 2);
-      newVect.set(0, e.mOrigRank);
-      newVect.set(1, e.mOrigScore);
-      for (int vi = 0; vi < oldSize; ++vi)
-        newVect.set(vi + 2, oldVect.get(vi)); 
-      docFeats.replace(e.mDocId, newVect);
-    }    
-    
+class BaseQueryAppProcessingThread extends Thread  {
+  private final BaseProcessingUnit mProcUnit;
+  private final int                mThreadId;
+  private final int                mThreadQty;
+  
+  BaseQueryAppProcessingThread(BaseQueryApp appRef,
+                               int          threadId,
+                               int          threadQty) {
+    mProcUnit = new BaseProcessingUnit(appRef);
+    mThreadId  = threadId;
+    mThreadQty = threadQty; 
   }
+
+  @Override
+  public void run() {
+    
+    try {
+      mProcUnit.mAppRef.logger.info("Thread id=" + mThreadId + " is created, the total # of threads " + mThreadQty);
       
+      CandidateProvider candProvider = mProcUnit.mAppRef.mCandProviders[mThreadId];
+
+      for (int iq = 0; iq < mProcUnit.mAppRef.mQueries.size(); ++iq)
+        if (iq % mThreadQty == mThreadId) 
+          mProcUnit.procQuery(candProvider, iq);
+      
+      mProcUnit.mAppRef.logger.info("Thread id=" + mThreadId + " finished!");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println("Unhandled exception: " + e + " ... exiting");
+      System.exit(1);
+    }    
+  }
 }
 
 /**
@@ -352,6 +395,8 @@ class BaseQueryAppProcessingWorker implements Runnable {
  */
 public abstract class BaseQueryApp {
   
+  private static final boolean USE_THREAD_POOL = false;
+
   /**
    * A child class implements this function where it calls {@link #addCandGenOpts(boolean, boolean, boolean)},
    * {@link #addResourceOpts(boolean)}, and {@link #addLetorOpts(boolean, boolean)} with appropriate parameters,
@@ -852,14 +897,28 @@ public abstract class BaseQueryApp {
       
       init();
       
-      ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
       
-      for (int iq = 0; iq < mQueries.size(); ++iq) {
-        executor.execute(new BaseQueryAppProcessingWorker(this, iq));
-      }                  
-     
-      executor.shutdown();
-      executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+      if (USE_THREAD_POOL) {
+        ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
+        
+        for (int iq = 0; iq < mQueries.size(); ++iq) {
+          executor.execute(new BaseQueryAppProcessingWorker(this, iq));
+        }                  
+       
+        executor.shutdown();
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+      } else {
+        BaseQueryAppProcessingThread[] workers = new BaseQueryAppProcessingThread[mThreadQty];
+        
+        for (int threadId = 0; threadId < mThreadQty; ++threadId) {               
+          workers[threadId] = new BaseQueryAppProcessingThread(this, threadId, mThreadQty);
+        }
+              
+        // Start threads
+        for (BaseQueryAppProcessingThread e : workers) e.start();
+        // Wait till they finish
+        for (BaseQueryAppProcessingThread e : workers) e.join(0);        
+      }
       
       fin();
       
