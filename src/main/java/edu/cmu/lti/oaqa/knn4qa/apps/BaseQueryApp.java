@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.*;
 
 import javax.annotation.Nullable;
 
@@ -98,34 +99,49 @@ class DataPointWrapper extends DataPoint {
   float [] mFeatValues;
 }
 
-class BaseQueryAppProcessingThread extends Thread {
+class BaseQueryAppProcessingWorker implements Runnable {
   public static Object            mWriteLock = new Object();
-  private final int               mThreadId;
-  private final int               mThreadQty;
+  private final int               mQueryNum;
   private final BaseQueryApp      mAppRef;
   
-  BaseQueryAppProcessingThread(BaseQueryApp appRef,
-                               int          threadId,
-                               int          threadQty) {
+  BaseQueryAppProcessingWorker(BaseQueryApp appRef,
+                               int          queryId) {
     mAppRef    = appRef;
-    mThreadId  = threadId;
-    mThreadQty = threadQty;    
+    mQueryNum   = queryId;    
+  }
+  
+  private static int                              mUsedProvQty = 0;
+  private static HashMap<Long,CandidateProvider>  mProvMapping = new HashMap<Long,CandidateProvider>(); 
+  
+  /*
+   * This function retrieves a candidate provider for a given thread. It assumes that the number of threads
+   * is equal to the number of provider entries.
+   */
+  private static synchronized CandidateProvider getCandProvider(CandidateProvider[] candProvList)  {
+    long threadId = Thread.currentThread().getId();
+    CandidateProvider cand = mProvMapping.get(threadId);
+    if (cand != null) return cand;
+    if (mUsedProvQty >= candProvList.length)
+      throw new RuntimeException("Probably a bug: I am out of candidate providers, did you create more threads than provider entries?");
+    cand = candProvList[mUsedProvQty];
+    mUsedProvQty++;
+    mProvMapping.put(threadId, cand);
+    return cand;
   }
   
   @Override
   public void run() {
     
     try {
-      mAppRef.logger.info("Thread id=" + mThreadId + " is created, the total # of threads " + mThreadQty);
+      CandidateProvider candProvider = getCandProvider(mAppRef.mCandProviders);
       
-      CandidateProvider candProvider = mAppRef.mCandProviders[mThreadId];
+      //Thread.currentThread().getId()
       
       boolean addRankScores = mAppRef.mInMemExtrFinal != null && mAppRef.mInMemExtrFinal.addRankScores();
       
-      for (int iq = 0; iq < mAppRef.mQueries.size(); ++iq)
-      if (iq % mThreadQty == mThreadId) {
+      {
         Map<String, String>    docFields = null;
-        String                 docText = mAppRef.mQueries.get(iq);
+        String                 docText = mAppRef.mQueries.get(mQueryNum);
         
         // 1. Parse a query
         try {
@@ -145,7 +161,7 @@ class BaseQueryAppProcessingThread extends Thread {
         if (mAppRef.mResultCache != null) 
           qres = mAppRef.mResultCache.getCacheEntry(queryID);
         if (qres == null) {            
-            qres = candProvider.getCandidates(iq, docFields, mAppRef.mMaxCandRet);
+            qres = candProvider.getCandidates(mQueryNum, docFields, mAppRef.mMaxCandRet);
             if (mAppRef.mResultCache != null) 
               mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
         }
@@ -155,8 +171,8 @@ class BaseQueryAppProcessingThread extends Thread {
         long searchTimeMS = end - start;
         
         mAppRef.logger.info(
-            String.format("Obtained results for the query # %d queryId='%s' thread ID=%d, the search took %d ms, we asked for max %d entries got %d", 
-                          iq, queryID, mThreadId, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
+            String.format("Obtained results for the query # %d queryId='%s', the search took %d ms, we asked for max %d entries got %d", 
+                          mQueryNum, queryID, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
         
         mAppRef.mQueryTimeStat.addValue(searchTimeMS);
         mAppRef.mNumRetStat.addValue(qres.mNumFound);
@@ -209,8 +225,8 @@ class BaseQueryAppProcessingThread extends Thread {
           end = System.currentTimeMillis();
           long rerankIntermTimeMS = end - start;
           mAppRef.logger.info(
-              String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' thread ID=%d, took %d ms", 
-                             iq, queryID, mThreadId, rerankIntermTimeMS));
+              String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' took %d ms", 
+                             mQueryNum, queryID, rerankIntermTimeMS));
           mAppRef.mIntermRerankTimeStat.addValue(rerankIntermTimeMS);          
         }
                 
@@ -267,8 +283,8 @@ class BaseQueryAppProcessingThread extends Thread {
           end = System.currentTimeMillis();
           long rerankFinalTimeMS = end - start;
           mAppRef.logger.info(
-              String.format("Final-feature generation & re-ranking for the query # %d queryId='%s' thread ID=%d, final. reranking took %d ms", 
-                            iq, queryID, mThreadId, rerankFinalTimeMS));
+              String.format("Final-feature generation & re-ranking for the query # %d queryId='%s', final. reranking took %d ms", 
+                            mQueryNum, queryID, rerankFinalTimeMS));
           mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
         }
         
@@ -295,9 +311,6 @@ class BaseQueryAppProcessingThread extends Thread {
           }
         }                
       }
-
-      
-      mAppRef.logger.info("Thread id=" + mThreadId + " finished!");
     } catch (Exception e) {
       e.printStackTrace();
       System.err.println("Unhandled exception: " + e + " ... exiting");
@@ -839,16 +852,11 @@ public abstract class BaseQueryApp {
       
       init();
       
-      BaseQueryAppProcessingThread[] workers = new BaseQueryAppProcessingThread[mThreadQty];
+      ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
       
-      for (int threadId = 0; threadId < mThreadQty; ++threadId) {               
-        workers[threadId] = new BaseQueryAppProcessingThread(this, threadId, mThreadQty);
-      }
-            
-      // Start threads
-      for (BaseQueryAppProcessingThread e : workers) e.start();
-      // Wait till they finish
-      for (BaseQueryAppProcessingThread e : workers) e.join(0);
+      for (int iq = 0; iq < mQueries.size(); ++iq) {
+        executor.execute(new BaseQueryAppProcessingWorker(this, iq));
+      }                  
      
       fin();
       
