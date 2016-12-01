@@ -11,11 +11,13 @@ import org.lemurproject.galago.core.retrieval.ScoredDocument;
 import org.lemurproject.galago.core.retrieval.query.Node;
 import org.lemurproject.galago.core.retrieval.query.StructuredQuery;
 import org.lemurproject.galago.utility.Parameters;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 
 public class GalagoCandidateProvider extends CandidateProvider {
+  final Logger logger = LoggerFactory.getLogger(GalagoCandidateProvider.class);
 
   @Override
   public boolean isThreadSafe() {
@@ -35,6 +37,8 @@ public class GalagoCandidateProvider extends CandidateProvider {
     
     mGalago = RetrievalFactory.create(mParams);
     mGalagoOp = galagoOp; 
+    
+    logger.info("Galago operator: " + mGalagoOp);
   }
 
   @Override
