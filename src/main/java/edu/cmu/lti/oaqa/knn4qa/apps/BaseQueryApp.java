@@ -39,6 +39,7 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfoCache;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.GalagoCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneGIZACandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibKNNCandidateProvider;
@@ -679,6 +680,10 @@ public abstract class BaseQueryApp {
       mCandProviders[0] = new LuceneCandidateProvider(mProviderURI);
       for (int ic = 1; ic < mThreadQty; ++ic) 
         mCandProviders[ic] = mCandProviders[0];
+    } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_GALAGO)) {
+      mCandProviders[0] = new GalagoCandidateProvider(mProviderURI);
+      for (int ic = 1; ic < mThreadQty; ++ic) 
+        mCandProviders[ic] = mCandProviders[0];      
     } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE_GIZA)) {
       if (mGizaExpandQty == null)
         showUsageSpecify(CommonParams.GIZA_EXPAND_QTY_DESC);

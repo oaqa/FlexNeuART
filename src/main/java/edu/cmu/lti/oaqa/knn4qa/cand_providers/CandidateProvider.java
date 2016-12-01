@@ -27,6 +27,7 @@ public abstract class CandidateProvider {
   public static final String CAND_TYPE_SOLR        = "solr";
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_LUCENE_GIZA = "lucene_giza";
+  public static final String CAND_TYPE_GALAGO      = "galago";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
   public static final String CAND_TYPE_KNN         = "knn_java";
   
