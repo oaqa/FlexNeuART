@@ -858,6 +858,9 @@ public abstract class BaseQueryApp {
         executor.execute(new BaseQueryAppProcessingWorker(this, iq));
       }                  
      
+      executor.shutdown();
+      executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+      
       fin();
       
       long end = System.currentTimeMillis();
