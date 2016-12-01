@@ -12,7 +12,6 @@ import org.lemurproject.galago.core.retrieval.query.Node;
 import org.lemurproject.galago.core.retrieval.query.StructuredQuery;
 import org.lemurproject.galago.utility.Parameters;
 
-import com.google.common.base.Splitter;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 
@@ -27,7 +26,7 @@ public class GalagoCandidateProvider extends CandidateProvider {
     return this.getClass().getName();
   }  
   
-  public GalagoCandidateProvider(String indexDirName) throws Exception {
+  public GalagoCandidateProvider(String indexDirName, String galagoOp) throws Exception {
     mParams = Parameters.create();
     mParams.set("scorer", "bm25");
     mParams.set("k", FeatureExtractor.BM25_K1);
@@ -35,6 +34,7 @@ public class GalagoCandidateProvider extends CandidateProvider {
     mParams.set("index", indexDirName);
     
     mGalago = RetrievalFactory.create(mParams);
+    mGalagoOp = galagoOp; 
   }
 
   @Override
@@ -61,7 +61,7 @@ public class GalagoCandidateProvider extends CandidateProvider {
     
     Node transformed;
     if (!text.isEmpty()) {
-      String queryText = String.format("#combine(%s)", text.trim());
+      String queryText = String.format("#%s(%s)", mGalagoOp, text.trim());
       Parameters pq = mParams.clone();
       pq.set("requested", maxQty);
       
@@ -88,6 +88,7 @@ public class GalagoCandidateProvider extends CandidateProvider {
 
   }
   
-  private Parameters mParams = null;
-  private Retrieval  mGalago = null;
+  final private Parameters mParams;
+  final private Retrieval  mGalago;
+  final private String     mGalagoOp;
 }

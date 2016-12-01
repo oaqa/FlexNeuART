@@ -141,4 +141,7 @@ public class CommonParams {
   public final static String SAVE_STAT_FILE_PARAM = "save_stat_file";
   public final static String SAVE_STAT_FILE_DESC  = "A file to save some vital query execution statistics";
   
+  public final static String GALAGO_OP_PARAM = "galago_op";
+  public final static String GALAGO_OP_DESC  = "A type of retrieval operator, eg., combine, sdm, or rm to use with Galago provider";
+  
 }
