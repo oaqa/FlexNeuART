@@ -901,6 +901,7 @@ public abstract class BaseQueryApp {
       
       if (mUseThreadPool ) {
         ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
+        logger.info(String.format("Created a fixed thread pool with %d threads", mThreadQty));
         
         for (int iq = 0; iq < mQueries.size(); ++iq) {
           executor.execute(new BaseQueryAppProcessingWorker(this, iq));
