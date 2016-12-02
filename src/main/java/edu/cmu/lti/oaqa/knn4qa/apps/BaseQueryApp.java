@@ -99,6 +99,11 @@ class DataPointWrapper extends DataPoint {
   float [] mFeatValues;
 }
 
+class RevLenComp implements Comparator<String> { 
+  public int compare(String s1, String s2) {
+   return s2.length() - s1.length();
+  }
+}
 
 class BaseProcessingUnit {
   public static Object              mWriteLock = new Object();
@@ -893,6 +898,8 @@ public abstract class BaseQueryApp {
         ++docQty;
         if (docQty % 100 == 0) logger.info("Read " + docQty + " documents");
       }
+      
+      mQueries.sort(new RevLenComp());
       
       logger.info("Read " + docQty + " documents"); 
       
