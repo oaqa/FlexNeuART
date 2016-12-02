@@ -72,7 +72,7 @@ public class GenGalagoQueries {
         text = text.trim();
         
         if (queryNum > 0) outText.write(","); else outText.write("\n");
-        outText.write(String.format("{\n\"number\" :\n \"%s\",\n \"text\" : \"#combine(%s)\"\n}"));
+        outText.write(String.format("{\n\"number\" :\n \"%s\",\n \"text\" : \"#combine(%s)\"\n}", queryID, text));
 
         queryNum++;
 
