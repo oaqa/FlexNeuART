@@ -36,7 +36,7 @@ public class GenGalagoQueries {
 
       BufferedWriter  outText = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args[1])));
       
-      outText.write("{\ncasefold : true,\nqueries :\n");
+      outText.write("{\n\"casefold\" : true,\n\"queries\" :\n\"requested\": 100\n [\n");
       
       BufferedReader  inpText = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args[0])));
 
@@ -79,7 +79,7 @@ public class GenGalagoQueries {
 
       }
       
-      outText.write("\n}");
+      outText.write("\n ]\n}");
       outText.close();
     } catch (Exception e) {
       e.printStackTrace();
