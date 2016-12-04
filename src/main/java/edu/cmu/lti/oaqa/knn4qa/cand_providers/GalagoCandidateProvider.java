@@ -32,11 +32,11 @@ public class GalagoCandidateProvider extends CandidateProvider {
   
   public GalagoCandidateProvider(String indexDirName, String galagoOp, String galagoParams) throws Exception {
     mParams = Parameters.create();
-/*
+
     mParams.set("scorer", "bm25");
     mParams.set("k", FeatureExtractor.BM25_K1);
     mParams.set("b", FeatureExtractor.BM25_B);
-*/
+
     mParams.set("index", indexDirName);
     
     mGalago = RetrievalFactory.create(mParams);
