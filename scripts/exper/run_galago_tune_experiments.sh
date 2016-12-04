@@ -82,7 +82,7 @@ for ((i=1;i<$n;++i))
         exit 1
       fi
       # Each experiment should run in its separate directory
-      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$GALAGO_PARAMS"
+      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$GALAGO_OP/$GALAGO_PARAMS"
       if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
         mkdir -p "$EXPER_DIR_UNIQUE"
         if [ "$?" != "0" ] ; then
