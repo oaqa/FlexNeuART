@@ -126,7 +126,7 @@ public class GalagoCandidateProvider extends CandidateProvider {
     Node transformed;
     if (!text.isEmpty()) {
       String queryText = String.format("#%s(%s)", mGalagoOp, text.trim());
-      logger.info(queryText);
+      //logger.info(queryText);
       Parameters pq = mParams.clone();
       pq.set("requested", maxQty);
       
