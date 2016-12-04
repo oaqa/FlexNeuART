@@ -17,6 +17,9 @@ package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
 import java.util.*;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+
 import edu.cmu.lti.oaqa.annographix.solr.SolrRes;
 
 public abstract class CandidateProvider {
@@ -84,4 +87,25 @@ public abstract class CandidateProvider {
   abstract public CandidateInfo getCandidates(int queryNum, 
                                     Map<String, String> queryData, 
                                     int maxQty)  throws Exception;
+  
+  /**
+   * Removes words from the list (case insensitive matching), assumes that the query words are separated by a single space. 
+   * It's will be inefficient for long word lists, though.
+   * 
+   * @param origQuery
+   * @param wordList
+   * @return
+   */
+  public String removeWords(String origQuery, String[] wordList) {
+     ArrayList<String> res = new ArrayList<String>();
+     for (String s : mSplitOnSpace.split(origQuery)) {
+       boolean f = true;
+       for (int k = 0; k < wordList.length; ++k)
+         if (s.equalsIgnoreCase(wordList[k])) { f = false; break; }
+       if (f) res.add(s);      
+     }
+     return mJoinOnSpace.join(res);
+  }
+  Splitter mSplitOnSpace = Splitter.on(' ');
+  Joiner   mJoinOnSpace  = Joiner.on(' ');
 }
