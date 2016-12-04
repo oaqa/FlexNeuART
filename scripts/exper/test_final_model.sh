@@ -1,25 +1,5 @@
 #!/bin/bash
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
-
-function check_pipe {
-  f="${PIPESTATUS[*]}"
-  name=$1
-  if [ "$f" != "0 0" ] ; then
-    echo "******************************************"
-    echo "* Failed (pipe): $name, exit statuses: $f "
-    echo "******************************************"
-    exit 1
-  fi
-}
+. scripts/common.sh
 
 POS_ARGS=()
 
