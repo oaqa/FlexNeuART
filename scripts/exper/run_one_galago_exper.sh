@@ -81,7 +81,7 @@ echo "QREL file:                      $QREL_FILE"
 echo "Directory with TREC-style runs: $TREC_RUN_DIR"
 echo "Report directory:               $REPORT_DIR"
 
-URI="lucene_index/$collect"
+URI="galago_index/$collect"
 
 
 OUT_PREF_TRAIN="out_${collect}_${train_part}_${EXTR_TYPE}"
