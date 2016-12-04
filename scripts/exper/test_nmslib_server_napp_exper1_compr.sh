@@ -1,26 +1,5 @@
 #!/bin/bash
-
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
-
-function check_pipe {
-  f="${PIPESTATUS[*]}"
-  name=$1
-  if [ "$f" != "0 0" ] ; then
-    echo "******************************************"
-    echo "* Failed (pipe): $name, exit statuses: $f "
-    echo "******************************************"
-    exit 1
-  fi
-}
+. scripts/common.sh
 
 PID=""
 
@@ -119,21 +98,8 @@ if [ "$TEST_PART" = "" ] ; then
 fi
 
 QREL_TYPE=${POS_ARGS[1]}
-QREL_FILE=""
-if [ "$QREL_TYPE" = "graded" ] ; then
-  QREL_FILE="qrels_all_graded.txt"
-elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
-  QREL_FILE="qrels_all_graded_same_score.txt"
-else
-  echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected graded or graded_same_score"
-  exit 1
-fi
-
-if [ "$QREL_FILE" = "" ] ; then
-  echo "Bug: QREL_FILE is empty for some reason!"
-  exit 1
-fi
-
+QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
+check ""
 
 NMSLIB_HEADER_NAME="header_exper1_hash_payload"
 EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME

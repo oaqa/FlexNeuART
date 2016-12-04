@@ -1,15 +1,5 @@
 #!/bin/bash
-
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
+. scripts/common.sh
 
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -18,27 +8,8 @@ if [ "$collect" = "" ] ; then
 fi
 
 QREL_TYPE=$2
-QREL_FILE=""
-if [ "$QREL_TYPE" = "graded" ] ; then
-  QREL_FILE="qrels_all_graded.txt"
-elif [ "$QREL_TYPE" = "binary" ] ; then
-  QREL_FILE="qrels_all_binary.txt"
-elif [ "$QREL_TYPE" = "onlybest" ] ; then
-  QREL_FILE="qrels_onlybest.txt"
-elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
-  QREL_FILE="qrels_all_graded_same_score.txt"
-elif [ "$QREL_TYPE" = "" ] ; then
-  echo "Specifiy QREL type (2rd arg)"
-  exit 1
-else
-  echo "Unsupported QREL type (2rd arg) $QREL_TYPE, expected binary, onlybest, graded, graded_same_score"
-  exit 1
-fi
-
-if [ "$QREL_FILE" = "" ] ; then
-  echo "Bug: QREL_FILE is empty for some reason!"
-  exit 1
-fi
+QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
+check ""
 
 FEATURE_DESC_FILE="$3"
 if [ "$FEATURE_DESC_FILE" = "" ] ; then

@@ -1,4 +1,5 @@
 #!/bin/bash
+. scripts/common.sh
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify a collection: manner, compr"
@@ -24,22 +25,7 @@ if [ ! -d "$EXPER_DIR" ] ; then
   fi
 fi
 
-if [ "$collect" = "manner" ] ; then
-  NUM_RET_LIST="10,15,17,36,72"
-  N_TRAIN=15
-elif [ "$collect" = "compr" ] ; then
-  #NUM_RET_LIST="50,100,200,400,600,1000,1500,2500"
-  # Not much value beoynd 400
-  #NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,100,200,400"
-  NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
-  N_TRAIN=15
-elif [ "$collect" = "stackoverflow" ] ; then
-  NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
-  N_TRAIN=15
-else
-  echo "Unsupported collection: $collect"
-  exit 1
-fi
+. scripts/num_ret_list.sh
 
 EXTRACTORS_DESC=$4
 if [ "$EXTRACTORS_DESC" = "" ] ; then
@@ -71,21 +57,6 @@ nRunning=0
 
 echo "Number of parallel experiments:                             $PARALLEL_EXPER_QTY"
 echo "Number of threads in feature extractors/query applications: $THREAD_QTY"
-
-function wait_children {
-  echo "Waiting for ${#childPIDs[*]} child processes"
-  for pid in ${childPIDs[*]} ; do
-    wait $pid
-    stat=$?
-    if [ "$stat" != "0" ] ; then
-      echo "Process with pid=$pid *FAILED*, status=$stat!"
-      nfail=$(($nfail+1))
-    else
-      echo "Process with pid=$pid finished successfully."
-    fi
-  done
-  childPIDs=()
-}
 
 n=`wc -l "$EXTRACTORS_DESC"|awk '{print $1}'`
 n=$(($n+1))
@@ -121,19 +92,20 @@ for ((i=1;i<$n;++i))
           exit 1
         fi
       fi
-      scripts/exper/run_one_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN" "$EMBED_LIST" &> $EXPER_DIR_UNIQUE/exper.log &
+      scripts/exper/run_one_lucene_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN" "$EMBED_LIST" &> $EXPER_DIR_UNIQUE/exper.log &
       pid=$!
-      childPIDs[$nrun]=$pid
+      childPIDs+=($pid)
       echo "Started a process $pid, working dir: $EXPER_DIR_UNIQUE"
       nRunning=$(($nRunning+1))
       nrun=$(($nrun+1))
     fi
     if [ "$nRunning" -ge $PARALLEL_EXPER_QTY ] ; then
-      wait_children
+      wait_children ${childPIDs[*]}
+      childPIDs=()
       nRunning=0
     fi
   done
-wait_children
+wait_children ${childPIDs[*]}
 echo "============================================"
 echo "$nrun experiments executed"
 echo "$nfail experiments failed"
