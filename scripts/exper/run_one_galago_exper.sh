@@ -98,6 +98,7 @@ else
   GALAGO_OPTS="-galago_params $GALAGO_PARAMS"
 fi
 
+echo "scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -cand_prov galago -thread_qty $THREAD_QTY -galago_op $GALAGO_OP "$GALAGO_OPTS" $maxQueryQtyParam"
 scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -cand_prov galago -thread_qty $THREAD_QTY -galago_op $GALAGO_OP "$GALAGO_OPTS" $maxQueryQtyParam 2>&1|tee $query_log_file
 check_pipe "run_query.sh"
 
