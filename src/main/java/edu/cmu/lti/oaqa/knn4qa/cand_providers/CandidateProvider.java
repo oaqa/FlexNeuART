@@ -89,14 +89,14 @@ public abstract class CandidateProvider {
                                     int maxQty)  throws Exception;
   
   /**
-   * Removes words from the list (case insensitive matching), assumes that the query words are separated by a single space. 
+   * Removes words from the list (case insensitive matching), assumes that the query words are separated by spaces. 
    * It's will be inefficient for long word lists, though.
    * 
    * @param origQuery
    * @param wordList
    * @return
    */
-  public String removeWords(String origQuery, String[] wordList) {
+  public static String removeWords(String origQuery, String[] wordList) {
      ArrayList<String> res = new ArrayList<String>();
      for (String s : mSplitOnSpace.split(origQuery)) {
        boolean f = true;
@@ -106,6 +106,6 @@ public abstract class CandidateProvider {
      }
      return mJoinOnSpace.join(res);
   }
-  Splitter mSplitOnSpace = Splitter.on(' ');
-  Joiner   mJoinOnSpace  = Joiner.on(' ');
+  static Splitter mSplitOnSpace = Splitter.on(' ');
+  static Joiner   mJoinOnSpace  = Joiner.on(' ');
 }

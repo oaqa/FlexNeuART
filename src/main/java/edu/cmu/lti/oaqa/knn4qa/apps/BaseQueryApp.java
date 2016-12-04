@@ -138,9 +138,19 @@ class BaseProcessingUnit {
     if (mAppRef.mResultCache != null) 
       qres = mAppRef.mResultCache.getCacheEntry(queryID);
     if (qres == null) {            
-        qres = candProvider.getCandidates(queryNum, docFields, mAppRef.mMaxCandRet);
-        if (mAppRef.mResultCache != null) 
-          mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
+      // This is a workaround for a pesky problem: didn't previously notice that the string
+      // n't (obtained by tokenization of can't is indexed. Querying using this word
+      // add a non-negligible overhead (although this doesn't affect overall accuracy)
+      // THIS IS FOR THE FIELD TEXT ONLY!
+      String [] addStopWords = {"n't"};
+      String text = docFields.get(CandidateProvider.TEXT_FIELD_NAME);
+      if (text != null) {
+        text = CandidateProvider.removeWords(text,  addStopWords);
+        docFields.put(CandidateProvider.TEXT_FIELD_NAME, text);
+      }
+      qres = candProvider.getCandidates(queryNum, docFields, mAppRef.mMaxCandRet);
+      if (mAppRef.mResultCache != null) 
+        mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
     }
     CandidateEntry [] resultsAll = qres.mEntries;
     
