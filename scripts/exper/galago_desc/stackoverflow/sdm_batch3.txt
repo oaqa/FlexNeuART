@@ -1,0 +1,6 @@
+sdm     uniw=0.725,odw=0.275,uww=0.0   dev1
+sdm     uniw=0.75,odw=0.25,uww=0.0    dev1
+sdm     uniw=0.775,odw=0.225,uww=0.0  dev1
+sdm     uniw=0.825,odw=0.175,uww=0.0  dev1
+sdm     uniw=0.85,odw=0.15,uww=0.0    dev1
+sdm     uniw=0.875,odw=0.125,uww=0.0  dev1
