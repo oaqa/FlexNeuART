@@ -1,0 +1,4 @@
+rm  fbDocs=5,fbTerm=100,fbOrigWeight=0.9  dev1
+rm  fbDocs=5,fbTerm=100,fbOrigWeight=0.8  dev1
+rm  fbDocs=5,fbTerm=100,fbOrigWeight=0.7  dev1
+rm  fbDocs=5,fbTerm=100,fbOrigWeight=0.6  dev1
