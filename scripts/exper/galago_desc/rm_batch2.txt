@@ -1,0 +1,16 @@
+rm  @ dev1
+rm  fbDocs=1  dev1
+rm  fbDocs=2  dev1
+rm  fbDocs=3  dev1
+rm  fbDocs=4  dev1
+rm  fbDocs=5  dev1
+rm  fbDocs=10  dev1
+rm  fbDocs=15  dev1
+rm  fbDocs=25  dev1
+rm  fbDocs=30  dev1
+rm  fbTerm=5   dev1
+rm  fbTerm=10  dev1
+rm  fbTerm=15  dev1
+rm  fbTerm=20  dev1
+rm  fbTerm=30  dev1
+rm  fbTerm=40  dev1
