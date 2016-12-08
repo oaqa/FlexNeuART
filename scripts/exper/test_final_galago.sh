@@ -44,7 +44,8 @@ fi
 . scripts/num_ret_list.sh
 
 # 2 combine runs, the first one is the warm up run!
-EXPER_DESC+=("combine @" "combine @")
+EXPER_DESC+=("combine @") 
+EXPER_DESC+=("combine @")
 
 if [ "$collect" = "compr" ] ; then
   EXPER_DESC+=("sdm uniw=0.9,odw=0.1,uww=0.0" \
