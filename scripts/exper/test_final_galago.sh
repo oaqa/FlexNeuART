@@ -20,14 +20,12 @@ if [ "$NUM_CPU_CORES" = "" ] ; then
   check "getting the number of CPU cores, do you have /proc/cpu/info?"
 fi
 
-PARALLEL_EXPER_QTY=1
-THREAD_QTY=$(($NUM_CPU_CORES/$PARALLEL_EXPER_QTY))
+THREAD_QTY=$NUM_CPU_CORES
 
 TEST_SET="test"
 EXPER_DIR="results/final/${collect}/$QREL_FILE/$TEST_SET/galago/"
 
 echo "The number of CPU cores:      $NUM_CPU_CORES"
-echo "The number of || experiments: $PARALLEL_EXPER_QTY"
 echo "The number of threads:        $THREAD_QTY"
 echo "Max # of queries to use:      $MAX_QUERY_QTY"
 echo "QREL file:                    $QREL_FILE"
@@ -43,10 +41,8 @@ fi
 
 . scripts/num_ret_list.sh
 
-# 2 combine runs, the first one is the warm up run!
-EXPER_DESC=()
-EXPER_DESC+=("combine @") 
-EXPER_DESC+=("combine @")
+# 2 combine runs
+EXPER_DESC=("combine @") 
 
 if [ "$collect" = "compr" ] ; then
   EXPER_DESC+=("sdm uniw=0.9,odw=0.1,uww=0.0" \
@@ -61,7 +57,6 @@ fi
 
 
 n=${#EXPER_DESC[*]}
-childPIDs=()
 nrun=0
 nfail=0
 
@@ -101,21 +96,11 @@ for ((i=0;i<$n;++i))
           exit 1
         fi
       fi
-      # Galago experiments currently don't use training
-      scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log &
-      pid=$!
-      childPIDs+=($pid)
-      echo "Started a process $pid, working dir: $EXPER_DIR_UNIQUE"
-      nRunning=$(($nRunning+1))
-      nrun=$(($nrun+1))
-    fi
-    if [ "$nRunning" -ge $PARALLEL_EXPER_QTY ] ; then
-      wait_children ${childPIDs[*]}
-      childPIDs=()
-      nRunning=0
+      # Galago experiments currently don't use training: the first run is a warm-up!
+      scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log 
+      scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log 
     fi
   done
-wait_children ${childPIDs[*]}
 echo "============================================"
 echo "$nrun experiments executed"
 echo "$nfail experiments failed"
