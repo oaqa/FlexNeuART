@@ -57,17 +57,24 @@ else
   exit 1
 fi
 
-echo "Experimental descriptors:"
-for desc in ${EXPER_DESC[*]} ; do
-  echo $desc
-done
-echo "====================="
 
 n=${#EXPER_DESC[*]}
 n=$(($n+1))
 childPIDs=()
 nrun=0
 nfail=0
+
+echo "Experimental descriptors:"
+for ((i=1;i<$n;++i))
+  do
+    line=${EXPER_DESC[$i]}
+    if [ "$line" !=  "" ]
+      echo $line
+    fi
+  done
+echo "====================="
+
+
 for ((i=1;i<$n;++i))
   do
     line=${EXPER_DESC[$i]}
