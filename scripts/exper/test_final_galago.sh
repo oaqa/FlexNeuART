@@ -44,6 +44,7 @@ fi
 . scripts/num_ret_list.sh
 
 # 2 combine runs, the first one is the warm up run!
+EXPER_DESC=()
 EXPER_DESC+=("combine @") 
 EXPER_DESC+=("combine @")
 
