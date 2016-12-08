@@ -11,21 +11,16 @@ QREL_TYPE=$2
 QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
 check ""
 
-PARALLEL_EXPER_QTY=$3
-if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
-  echo "Specify a number of experiments that are run in parallel (3d arg)!"
-  exit 1
-fi
+MAX_QUERY_QTY="$3"
 
-MAX_QUERY_QTY="$4"
-
-NUM_CPU_CORES=$5
+NUM_CPU_CORES=$4
 
 if [ "$NUM_CPU_CORES" = "" ] ; then
   NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
   check "getting the number of CPU cores, do you have /proc/cpu/info?"
 fi
 
+PARALLEL_EXPER_QTY=1
 THREAD_QTY=$(($NUM_CPU_CORES/$PARALLEL_EXPER_QTY))
 
 TEST_SET="test"
@@ -48,16 +43,22 @@ fi
 
 . scripts/num_ret_list.sh
 
+# 2 combine runs, the first one is the warm up run!
+EXPER_DESC+=("combine @" "combine @")
+
 if [ "$collect" = "compr" ] ; then
-  EXPER_DESC=("sdm uniw=0.9,odw=0.1,uww=0.0" \
+  EXPER_DESC+=("sdm uniw=0.9,odw=0.1,uww=0.0" \
               "rm fbDocs=5,fbTerm=100,fbOrigWeight=0.9")
 elif [ "$collect" = "stackoverflow" ] ; then
-  EXPER_DESC=("sdm uniw=0.8,odw=0.2,uww=0.0" \
+  EXPER_DESC+=("sdm uniw=0.8,odw=0.2,uww=0.0" \
               "rm fbDocs=5,fbTerm=100,fbOrigWeight=0.9")
 else
   echo "Unsupported collection: $collect"
   exit 1
 fi
+
+echo "Experimental descriptors:"
+echo ${#EXPER_DESC[*]}
 
 n=${#EXPER_DESC[*]}
 n=$(($n+1))
