@@ -58,7 +58,10 @@ else
 fi
 
 echo "Experimental descriptors:"
-echo ${EXPER_DESC[*]}
+for desc in ${EXPER_DESC[*]} ; do
+  echo $desc
+done
+echo "====================="
 
 n=${#EXPER_DESC[*]}
 n=$(($n+1))
