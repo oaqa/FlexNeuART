@@ -58,7 +58,7 @@ else
 fi
 
 echo "Experimental descriptors:"
-echo ${#EXPER_DESC[*]}
+echo ${EXPER_DESC[*]}
 
 n=${#EXPER_DESC[*]}
 n=$(($n+1))
