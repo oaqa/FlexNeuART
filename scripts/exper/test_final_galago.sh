@@ -61,13 +61,12 @@ fi
 
 
 n=${#EXPER_DESC[*]}
-n=$(($n+1))
 childPIDs=()
 nrun=0
 nfail=0
 
 echo "Experimental descriptors:"
-for ((i=1;i<$n;++i))
+for ((i=0;i<$n;++i))
   do
     line=${EXPER_DESC[$i]}
     if [ "$line" !=  "" ] ; then
@@ -77,11 +76,12 @@ for ((i=1;i<$n;++i))
 echo "====================="
 
 
-for ((i=1;i<$n;++i))
+for ((i=0;i<$n;++i))
   do
     line=${EXPER_DESC[$i]}
     if [ "$line" !=  "" ]
     then
+      echo "Description line: $line"
       GALAGO_OP=`echo $line|awk '{print $1}'`
       if [ "$GALAGO_OP" = "" ] ; then
         echo "Missing Galago operator type (1st field) in line $line, file $EXPER_DESC_FILE"
