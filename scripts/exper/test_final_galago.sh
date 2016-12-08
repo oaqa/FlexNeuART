@@ -98,8 +98,10 @@ for ((i=0;i<$n;++i))
       fi
       # Galago experiments currently don't use training: the first run is a warm-up!
       scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log 
+      check "run_one_galago_exper.sh $collect ... "
       scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log 
     fi
+      check "run_one_galago_exper.sh $collect ... "
   done
 echo "============================================"
 echo "$nrun experiments executed"
