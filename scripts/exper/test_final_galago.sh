@@ -68,7 +68,7 @@ echo "Experimental descriptors:"
 for ((i=1;i<$n;++i))
   do
     line=${EXPER_DESC[$i]}
-    if [ "$line" !=  "" ]
+    if [ "$line" !=  "" ] ; then
       echo $line
     fi
   done
