@@ -19,10 +19,13 @@ import java.io.*;
 
 import com.google.gson.*;
 
+import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
+
 public class SQuADReader {
 
   public SQuADReader(String inputFile) throws IOException {
-    final BufferedReader  input = new BufferedReader(new FileReader(inputFile));
+    final BufferedReader  input 
+        = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(inputFile)));
     
     StringBuffer sb = new StringBuffer();
     String s;
@@ -37,20 +40,26 @@ public class SQuADReader {
   }
 
   public static void main(String[] args) throws IOException {
-    SQuADReader  r = new SQuADReader(args[0]);
+    String fileName = args[0];
+    SQuADReader  r = new SQuADReader(fileName);
     
-    System.out.println(r.mData.version);
-    System.out.println(r.mData.data.length);
     int qty = 0;
+    int parQty = 0;
     for (SQuADEntry e : r.mData.data) {
       for (SQuADParagraph p : e.paragraphs) {
-        qty += p.qas.length;
+       qty += p.qas.length;
+       ++parQty;
        for (SQuADQuestionAnswers qas : p.qas) {
-          System.out.println(qas.question);
+          //System.out.println(qas.question);
         }
       }
     }
-    System.out.println("Number of questions: " + qty);
+    
+    System.out.println("File name:            " + fileName);
+    System.out.println("Version:              " + r.mData.version);    
+    System.out.println("Number of pages:      " + r.mData.data.length);
+    System.out.println("Number of paragarphs: " + parQty);
+    System.out.println("Number of questions:  " + qty);
   }
   
   public final SQuADData   mData;

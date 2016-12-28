@@ -16,7 +16,7 @@
 package edu.cmu.lti.oaqa.knn4qa.squad;
 
 public class SQuADQuestionAnswers {
-  String          id;
-  String          question;
-  SQuADAnswer[]   answers;
+  public String          id;
+  public String          question;
+  public SQuADAnswer[]   answers;
 }

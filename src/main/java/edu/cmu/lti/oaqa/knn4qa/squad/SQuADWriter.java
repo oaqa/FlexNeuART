@@ -15,16 +15,21 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.squad;
 
+import java.io.*;
 import java.util.ArrayList;
 
-public class SQuADData {
-  public SQuADEntry[]      data;
-  public String            version;
-  
-  public SQuADData(String version, ArrayList<SQuADEntry> entries) {
-    this.version = version;
-    data = new SQuADEntry[entries.size()];
-    for (int i = 0; i < entries.size(); ++i)
-      data[i] = entries.get(i);
+import com.google.gson.*;
+
+public class SQuADWriter {
+
+  public static void writeEntries(String version, ArrayList<SQuADEntry> entries, BufferedWriter out) throws IOException {
+    SQuADData data = new SQuADData(version, entries);
+
+    Gson gson = new Gson();
+       
+    String text = gson.toJson(data, SQuADData.class);
+    out.write(text);
+    out.close();
   }
+
 }

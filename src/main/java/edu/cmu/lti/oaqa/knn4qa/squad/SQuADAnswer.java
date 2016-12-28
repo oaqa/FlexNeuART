@@ -16,6 +16,6 @@
 package edu.cmu.lti.oaqa.knn4qa.squad;
 
 public class SQuADAnswer {
-  int     answer_start;
-  String  text;
+  public int     answer_start;
+  public String  text;
 }

@@ -16,6 +16,14 @@
 package edu.cmu.lti.oaqa.knn4qa.squad;
 
 public class SQuADEntry {
-  String            title;
-  SQuADParagraph[]  paragraphs;
+  public String            title;
+  public SQuADParagraph[]  paragraphs;
+  /*
+   *  This constructor creates an entry with a single paragraph.
+   */
+  public SQuADEntry(String title, SQuADParagraph onePara) {
+    this.title = title;
+    paragraphs = new SQuADParagraph[1];
+    paragraphs[0] = onePara;
+  }
 }
