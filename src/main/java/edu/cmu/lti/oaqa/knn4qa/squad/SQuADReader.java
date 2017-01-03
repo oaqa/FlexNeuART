@@ -50,7 +50,7 @@ public class SQuADReader {
        qty += p.qas.length;
        ++parQty;
        for (SQuADQuestionAnswers qas : p.qas) {
-          //System.out.println(qas.question);
+          System.out.println(qas.question);
         }
       }
     }
