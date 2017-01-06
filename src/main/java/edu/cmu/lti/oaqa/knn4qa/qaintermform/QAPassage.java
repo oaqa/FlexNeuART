@@ -19,4 +19,11 @@ public class QAPassage {
   public String           id;
   public String           text;
   public QAQuestion[]     questions;
+  
+  public QAPassage(String id, String text, int qty) {
+    this.id = id;
+    this.text = text;
+    if (qty > 0)
+      questions = new QAQuestion[qty];
+  }
 }

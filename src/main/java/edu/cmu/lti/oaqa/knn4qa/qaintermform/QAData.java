@@ -16,5 +16,8 @@
 package edu.cmu.lti.oaqa.knn4qa.qaintermform;
 
 public class QAData {
-  public QAPassage passages;
+  public QAPassage[] passages;
+  public QAData(int qty) {
+    passages = new QAPassage[qty];
+  }
 }

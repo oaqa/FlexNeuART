@@ -16,6 +16,8 @@
 package edu.cmu.lti.oaqa.knn4qa.squad;
 
 import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
 public class SQuADWikiTitlesReader {
   public final static String[] mFiles = {
@@ -34,12 +36,17 @@ public class SQuADWikiTitlesReader {
         throw new Exception("No data found in the file: '" + inputDir + "'");
       
       for (SQuADEntry e : r.mData.data) {
-        if (!mhTitles.contains(e.title)) 
-          mhTitles.add(e.title);
+        String title = decodeTitle(e.title);
+        if (!mhTitles.contains(title)) 
+          mhTitles.add(title);
       }
     }
   }
   
+  private String decodeTitle(String title) throws UnsupportedEncodingException {
+    return URLDecoder.decode(title, "utf8").replace('_', ' ');
+  }
+
   public static void main(String[] args) throws Exception {
     SQuADWikiTitlesReader tr = new SQuADWikiTitlesReader(args[0]);
     for (String t : tr.mhTitles) {
