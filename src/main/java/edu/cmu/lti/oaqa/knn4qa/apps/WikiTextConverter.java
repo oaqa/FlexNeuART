@@ -183,7 +183,7 @@ public class WikiTextConverter {
           //System.out.println("End: " + lineNum);
           break;
         } else {
-          docLines.add(s + " "); // the space will play a role of separator\
+          docLines.add(s); 
         }
       }
       
@@ -202,7 +202,7 @@ public class WikiTextConverter {
         String para = "";
         for (int currLine = 0; currLine < docLines.size(); ++currLine) {
           String cln = docLines.get(currLine);
-          if (!cln.isEmpty()) para = para + cln;
+          if (!cln.isEmpty()) para = para + " " + cln; // the space will play a role of separator
           if (cln.isEmpty() || currLine + 1 == docLines.size()) {
             if (!para.isEmpty()) {
               docParas.add(para);
