@@ -18,7 +18,7 @@ package edu.cmu.lti.oaqa.knn4qa.qaintermform;
 public class QAPassage {
   public String           id;
   public String           text;
-  public QAQuestion[]     questions;
+  public QAQuestion[]     questions; // TODO do I really need to serialize questions anywhere?
   
   public QAPassage(String id, String text, int qty) {
     this.id = id;
