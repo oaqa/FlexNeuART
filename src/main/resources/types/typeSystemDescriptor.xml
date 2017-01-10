@@ -56,5 +56,46 @@
         </featureDescription>
       </features>
     </typeDescription>
+  <typeDescription>
+      <name>edu.cmu.lti.oaqa.knn4qa.types.Passage</name>
+      <description>A passage</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>id</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion</name>
+      <description>A factoid question</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>id</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.cmu.lti.oaqa.knn4qa.types.Entity</name>
+      <description>An annotation with type &amp; label attributes (used for NERs and DBPedia entiteies</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>etype</name>
+          <description>Entity type</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>label</name>
+          <description>Entity label</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
   </types>
 </typeSystemDescription>

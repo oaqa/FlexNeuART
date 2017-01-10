@@ -10,16 +10,16 @@ import org.apache.uima.jcas.cas.TOP_Type;
 import org.apache.uima.jcas.tcas.Annotation;
 
 
-/** Word net super senses.
+/** A factoid question
  * Updated by JCasGen Tue Jan 10 12:04:19 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
-public class WNNS extends Annotation {
+public class FactoidQuestion extends Annotation {
   /** @generated
    * @ordered 
    */
   @SuppressWarnings ("hiding")
-  public final static int typeIndexID = JCasRegistry.register(WNNS.class);
+  public final static int typeIndexID = JCasRegistry.register(FactoidQuestion.class);
   /** @generated
    * @ordered 
    */
@@ -33,14 +33,14 @@ public class WNNS extends Annotation {
  
   /** Never called.  Disable default constructor
    * @generated */
-  protected WNNS() {/* intentionally empty block */}
+  protected FactoidQuestion() {/* intentionally empty block */}
     
   /** Internal - constructor used by generator 
    * @generated
    * @param addr low level Feature Structure reference
    * @param type the type of this Feature Structure 
    */
-  public WNNS(int addr, TOP_Type type) {
+  public FactoidQuestion(int addr, TOP_Type type) {
     super(addr, type);
     readObject();
   }
@@ -48,7 +48,7 @@ public class WNNS extends Annotation {
   /** @generated
    * @param jcas JCas to which this Feature Structure belongs 
    */
-  public WNNS(JCas jcas) {
+  public FactoidQuestion(JCas jcas) {
     super(jcas);
     readObject();   
   } 
@@ -58,7 +58,7 @@ public class WNNS extends Annotation {
    * @param begin offset to the begin spot in the SofA
    * @param end offset to the end spot in the SofA 
   */  
-  public WNNS(JCas jcas, int begin, int end) {
+  public FactoidQuestion(JCas jcas, int begin, int end) {
     super(jcas);
     setBegin(begin);
     setEnd(end);
@@ -77,25 +77,25 @@ public class WNNS extends Annotation {
  
     
   //*--------------*
-  //* Feature: SuperSense
+  //* Feature: id
 
-  /** getter for SuperSense - gets 
+  /** getter for id - gets 
    * @generated
    * @return value of the feature 
    */
-  public String getSuperSense() {
-    if (WNNS_Type.featOkTst && ((WNNS_Type)jcasType).casFeat_SuperSense == null)
-      jcasType.jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");
-    return jcasType.ll_cas.ll_getStringValue(addr, ((WNNS_Type)jcasType).casFeatCode_SuperSense);}
+  public String getId() {
+    if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_id == null)
+      jcasType.jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    return jcasType.ll_cas.ll_getStringValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_id);}
     
-  /** setter for SuperSense - sets  
+  /** setter for id - sets  
    * @generated
    * @param v value to set into the feature 
    */
-  public void setSuperSense(String v) {
-    if (WNNS_Type.featOkTst && ((WNNS_Type)jcasType).casFeat_SuperSense == null)
-      jcasType.jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");
-    jcasType.ll_cas.ll_setStringValue(addr, ((WNNS_Type)jcasType).casFeatCode_SuperSense, v);}    
+  public void setId(String v) {
+    if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_id == null)
+      jcasType.jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    jcasType.ll_cas.ll_setStringValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_id, v);}    
   }
 
     

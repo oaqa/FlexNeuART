@@ -10,16 +10,16 @@ import org.apache.uima.jcas.cas.TOP_Type;
 import org.apache.uima.jcas.tcas.Annotation;
 
 
-/** A description of one question.
+/** An annotation with type & label attributes (used for NERs and DBPedia entiteies
  * Updated by JCasGen Tue Jan 10 12:04:19 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
-public class Question extends Annotation {
+public class Entity extends Annotation {
   /** @generated
    * @ordered 
    */
   @SuppressWarnings ("hiding")
-  public final static int typeIndexID = JCasRegistry.register(Question.class);
+  public final static int typeIndexID = JCasRegistry.register(Entity.class);
   /** @generated
    * @ordered 
    */
@@ -33,14 +33,14 @@ public class Question extends Annotation {
  
   /** Never called.  Disable default constructor
    * @generated */
-  protected Question() {/* intentionally empty block */}
+  protected Entity() {/* intentionally empty block */}
     
   /** Internal - constructor used by generator 
    * @generated
    * @param addr low level Feature Structure reference
    * @param type the type of this Feature Structure 
    */
-  public Question(int addr, TOP_Type type) {
+  public Entity(int addr, TOP_Type type) {
     super(addr, type);
     readObject();
   }
@@ -48,7 +48,7 @@ public class Question extends Annotation {
   /** @generated
    * @param jcas JCas to which this Feature Structure belongs 
    */
-  public Question(JCas jcas) {
+  public Entity(JCas jcas) {
     super(jcas);
     readObject();   
   } 
@@ -58,7 +58,7 @@ public class Question extends Annotation {
    * @param begin offset to the begin spot in the SofA
    * @param end offset to the end spot in the SofA 
   */  
-  public Question(JCas jcas, int begin, int end) {
+  public Entity(JCas jcas, int begin, int end) {
     super(jcas);
     setBegin(begin);
     setEnd(end);
@@ -77,47 +77,47 @@ public class Question extends Annotation {
  
     
   //*--------------*
-  //* Feature: uri
+  //* Feature: etype
 
-  /** getter for uri - gets A unique question resource identifier
+  /** getter for etype - gets Entity type
    * @generated
    * @return value of the feature 
    */
-  public String getUri() {
-    if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_uri == null)
-      jcasType.jcas.throwFeatMissing("uri", "edu.cmu.lti.oaqa.knn4qa.types.Question");
-    return jcasType.ll_cas.ll_getStringValue(addr, ((Question_Type)jcasType).casFeatCode_uri);}
+  public String getEtype() {
+    if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_etype == null)
+      jcasType.jcas.throwFeatMissing("etype", "edu.cmu.lti.oaqa.knn4qa.types.Entity");
+    return jcasType.ll_cas.ll_getStringValue(addr, ((Entity_Type)jcasType).casFeatCode_etype);}
     
-  /** setter for uri - sets A unique question resource identifier 
+  /** setter for etype - sets Entity type 
    * @generated
    * @param v value to set into the feature 
    */
-  public void setUri(String v) {
-    if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_uri == null)
-      jcasType.jcas.throwFeatMissing("uri", "edu.cmu.lti.oaqa.knn4qa.types.Question");
-    jcasType.ll_cas.ll_setStringValue(addr, ((Question_Type)jcasType).casFeatCode_uri, v);}    
+  public void setEtype(String v) {
+    if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_etype == null)
+      jcasType.jcas.throwFeatMissing("etype", "edu.cmu.lti.oaqa.knn4qa.types.Entity");
+    jcasType.ll_cas.ll_setStringValue(addr, ((Entity_Type)jcasType).casFeatCode_etype, v);}    
    
     
   //*--------------*
-  //* Feature: bestAnswId
+  //* Feature: label
 
-  /** getter for bestAnswId - gets 
+  /** getter for label - gets Entity label
    * @generated
    * @return value of the feature 
    */
-  public int getBestAnswId() {
-    if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_bestAnswId == null)
-      jcasType.jcas.throwFeatMissing("bestAnswId", "edu.cmu.lti.oaqa.knn4qa.types.Question");
-    return jcasType.ll_cas.ll_getIntValue(addr, ((Question_Type)jcasType).casFeatCode_bestAnswId);}
+  public String getLabel() {
+    if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_label == null)
+      jcasType.jcas.throwFeatMissing("label", "edu.cmu.lti.oaqa.knn4qa.types.Entity");
+    return jcasType.ll_cas.ll_getStringValue(addr, ((Entity_Type)jcasType).casFeatCode_label);}
     
-  /** setter for bestAnswId - sets  
+  /** setter for label - sets Entity label 
    * @generated
    * @param v value to set into the feature 
    */
-  public void setBestAnswId(int v) {
-    if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_bestAnswId == null)
-      jcasType.jcas.throwFeatMissing("bestAnswId", "edu.cmu.lti.oaqa.knn4qa.types.Question");
-    jcasType.ll_cas.ll_setIntValue(addr, ((Question_Type)jcasType).casFeatCode_bestAnswId, v);}    
+  public void setLabel(String v) {
+    if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_label == null)
+      jcasType.jcas.throwFeatMissing("label", "edu.cmu.lti.oaqa.knn4qa.types.Entity");
+    jcasType.ll_cas.ll_setStringValue(addr, ((Entity_Type)jcasType).casFeatCode_label, v);}    
   }
 
     

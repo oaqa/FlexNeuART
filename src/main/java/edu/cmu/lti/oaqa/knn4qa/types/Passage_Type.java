@@ -13,10 +13,10 @@ import org.apache.uima.cas.impl.FeatureImpl;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.tcas.Annotation_Type;
 
-/** Word net super senses.
+/** A passage
  * Updated by JCasGen Tue Jan 10 12:04:19 EST 2017
  * @generated */
-public class WNNS_Type extends Annotation_Type {
+public class Passage_Type extends Annotation_Type {
   /** @generated 
    * @return the generator for this type
    */
@@ -26,47 +26,47 @@ public class WNNS_Type extends Annotation_Type {
   private final FSGenerator fsGenerator = 
     new FSGenerator() {
       public FeatureStructure createFS(int addr, CASImpl cas) {
-  			 if (WNNS_Type.this.useExistingInstance) {
+  			 if (Passage_Type.this.useExistingInstance) {
   			   // Return eq fs instance if already created
-  		     FeatureStructure fs = WNNS_Type.this.jcas.getJfsFromCaddr(addr);
+  		     FeatureStructure fs = Passage_Type.this.jcas.getJfsFromCaddr(addr);
   		     if (null == fs) {
-  		       fs = new WNNS(addr, WNNS_Type.this);
-  			   WNNS_Type.this.jcas.putJfsFromCaddr(addr, fs);
+  		       fs = new Passage(addr, Passage_Type.this);
+  			   Passage_Type.this.jcas.putJfsFromCaddr(addr, fs);
   			   return fs;
   		     }
   		     return fs;
-        } else return new WNNS(addr, WNNS_Type.this);
+        } else return new Passage(addr, Passage_Type.this);
   	  }
     };
   /** @generated */
   @SuppressWarnings ("hiding")
-  public final static int typeIndexID = WNNS.typeIndexID;
+  public final static int typeIndexID = Passage.typeIndexID;
   /** @generated 
      @modifiable */
   @SuppressWarnings ("hiding")
-  public final static boolean featOkTst = JCasRegistry.getFeatOkTst("edu.cmu.lti.oaqa.knn4qa.types.WNNS");
+  public final static boolean featOkTst = JCasRegistry.getFeatOkTst("edu.cmu.lti.oaqa.knn4qa.types.Passage");
  
   /** @generated */
-  final Feature casFeat_SuperSense;
+  final Feature casFeat_id;
   /** @generated */
-  final int     casFeatCode_SuperSense;
+  final int     casFeatCode_id;
   /** @generated
    * @param addr low level Feature Structure reference
    * @return the feature value 
    */ 
-  public String getSuperSense(int addr) {
-        if (featOkTst && casFeat_SuperSense == null)
-      jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");
-    return ll_cas.ll_getStringValue(addr, casFeatCode_SuperSense);
+  public String getId(int addr) {
+        if (featOkTst && casFeat_id == null)
+      jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.Passage");
+    return ll_cas.ll_getStringValue(addr, casFeatCode_id);
   }
   /** @generated
    * @param addr low level Feature Structure reference
    * @param v value to set 
    */    
-  public void setSuperSense(int addr, String v) {
-        if (featOkTst && casFeat_SuperSense == null)
-      jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");
-    ll_cas.ll_setStringValue(addr, casFeatCode_SuperSense, v);}
+  public void setId(int addr, String v) {
+        if (featOkTst && casFeat_id == null)
+      jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.Passage");
+    ll_cas.ll_setStringValue(addr, casFeatCode_id, v);}
     
   
 
@@ -77,13 +77,13 @@ public class WNNS_Type extends Annotation_Type {
 	 * @param jcas JCas
 	 * @param casType Type 
 	 */
-  public WNNS_Type(JCas jcas, Type casType) {
+  public Passage_Type(JCas jcas, Type casType) {
     super(jcas, casType);
     casImpl.getFSClassRegistry().addGeneratorForType((TypeImpl)this.casType, getFSGenerator());
 
  
-    casFeat_SuperSense = jcas.getRequiredFeatureDE(casType, "SuperSense", "uima.cas.String", featOkTst);
-    casFeatCode_SuperSense  = (null == casFeat_SuperSense) ? JCas.INVALID_FEATURE_CODE : ((FeatureImpl)casFeat_SuperSense).getCode();
+    casFeat_id = jcas.getRequiredFeatureDE(casType, "id", "uima.cas.String", featOkTst);
+    casFeatCode_id  = (null == casFeat_id) ? JCas.INVALID_FEATURE_CODE : ((FeatureImpl)casFeat_id).getCode();
 
   }
 }
