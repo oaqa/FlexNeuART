@@ -28,6 +28,7 @@
     <typeSystemDescription>
       <imports>
         <import name="types.typeSystemDescriptor"/>
+        <import name="org.apache.uima.examples.SourceDocumentInformation"/>
         <!-- Types used by YodaQA -->
         <import name="desc.type.LexicalUnits"/>
         <import name="desc.type.metadata"/>

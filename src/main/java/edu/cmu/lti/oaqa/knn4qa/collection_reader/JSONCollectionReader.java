@@ -45,7 +45,8 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
   
   Gson mGSON = new Gson();
   
-  private int             mProcQty;
+  private int             mProcCASQty;
+  private int             mProcDocQty;
   private int             mPassageQty;
   private int             mPassageIndex;
   private boolean         mEOF;
@@ -71,9 +72,10 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
     super.initialize(aContext);
     
     logger.info("Input file: " + mInputFileName);
-    logger.info("Maxim # of recs to process: " + mMaxQty);
+    logger.info("Maxim # of input documents to process: " + mMaxQty);
 
-    mProcQty = -1;
+    mProcCASQty = 0;
+    mProcDocQty = 0;
     
     mPassageQty = 0;
     mPassageIndex = 0;
@@ -88,6 +90,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
 
   @Override
   public void getNext(CAS aCAS) throws IOException, CollectionException {
+    System.out.println(mProcDocQty + " -> " + mProcCASQty);
     if (!hasNext()) 
       throw new IOException("Reading beyond EOF");
     // Here the following should hold:
@@ -143,43 +146,49 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
     Passage p = new Passage(jcas, 0, jcas.getDocumentText().length());
     p.addToIndexes();
     
-    mProcQty++;
+    mProcCASQty++;
   }
 
   @Override
   public boolean hasNext() throws IOException, CollectionException {
     if (mEOF) return false;
-    if (mPassageIndex < mPassageQty && mProcQty < mMaxQty) return true;
+    if (mPassageIndex < mPassageQty) return true;
     readNextLine();
-    if (mEOF) return false;
-    return mPassageIndex < mPassageQty && mProcQty < mMaxQty;
+    return !mEOF;
   }
 
   private void readNextLine() throws IOException {
     do {
       String line = mInput.readLine();
+
       if (line == null) {
         mEOF = true;
         mPassageQty = mPassageIndex = 0;
+        return;
       }
       mTmpData = mGSON.fromJson(line, QAData.class);
+      
       mPassageIndex = 0;
       mPassageQty = 0;
       if (mTmpData.passages != null) 
         mPassageQty = mTmpData.passages.length;
-    } while (mPassageQty != 0); // this would skip all empty records with no passages
+    } while (mPassageQty == 0); // this would skip all empty records with no passages
+    // Here mPassageQty > 0
+    if (++mProcDocQty > mMaxQty) {
+      mEOF = true;
+    }
+    
   }
 
 
   @Override
   public Progress[] getProgress() {
-    return new Progress[]{new ProgressImpl(mProcQty, -1, Progress.ENTITIES)};
+    return new Progress[]{new ProgressImpl(mProcCASQty, -1, Progress.ENTITIES)};
   }
 
   @Override
   public void close() throws IOException {
-    // TODO Auto-generated method stub
-
+    mInput.close();
   }
 
 }

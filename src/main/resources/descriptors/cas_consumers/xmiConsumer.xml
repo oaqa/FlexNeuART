@@ -19,7 +19,7 @@
       <nameValuePair>
         <name>OutputDirectory</name>
         <value>
-          <string>output</string>
+          <string>xmi</string>
         </value>
       </nameValuePair>
     </configurationParameterSettings>
