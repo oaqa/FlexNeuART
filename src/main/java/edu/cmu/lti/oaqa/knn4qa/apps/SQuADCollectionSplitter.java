@@ -22,6 +22,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.YahooAnswersReader;
+import edu.cmu.lti.oaqa.knn4qa.qaintermform.*;
 import edu.cmu.lti.oaqa.knn4qa.squad.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
 
@@ -50,6 +51,8 @@ public class SQuADCollectionSplitter extends CollectionSplitterBase {
       
       for (int i = 0; i < partQty; ++i)
         partParagrs.add(new ArrayList<SQuADEntry>());
+      
+      QAData qd = new QAData(1);
       
       for (SQuADEntry e : r.mData.data) {
         // We will split at the paragraph level

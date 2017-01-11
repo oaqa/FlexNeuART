@@ -16,6 +16,6 @@
 package edu.cmu.lti.oaqa.knn4qa.squad;
 
 public class SQuADParagraph {
-  String                  context;
-  SQuADQuestionAnswers[]  qas;
+  public String                  context;
+  public SQuADQuestionAnswers[]  qas;
 }

@@ -18,4 +18,8 @@ package edu.cmu.lti.oaqa.knn4qa.qaintermform;
 public class QAQuestion {
   public String id;
   public String text;
+  public QAQuestion(String id, String text) {
+    this.id = id;
+    this.text = text;
+  }
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,16 +20,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 public class SQuADWikiTitlesReader {
-  public final static String[] mFiles = {
-    "dev-v1.1.json.gz",
-    "train-v1.1-split_dev1.gz",
-    "train-v1.1-split_dev2.gz",
-    "train-v1.1-split_train.gz",
-    "train-v1.1-split_tran.gz"
-  };
-  
   public SQuADWikiTitlesReader(String inputDir) throws Exception {
-    for (String fn : mFiles) {
+    for (String fn : SQuADInputFiles.mInputFiles) {
       SQuADReader r = new SQuADReader(inputDir + "/" + fn);
       
       if (r.mData.data == null || r.mData.data.length == 0)
@@ -43,7 +35,7 @@ public class SQuADWikiTitlesReader {
     }
   }
   
-  private String decodeTitle(String title) throws UnsupportedEncodingException {
+  public static String decodeTitle(String title) throws UnsupportedEncodingException {
     return URLDecoder.decode(title, "utf8").replace('_', ' ');
   }
 

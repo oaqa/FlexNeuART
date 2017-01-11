@@ -462,6 +462,13 @@
       <version>2.8.0</version>
       <scope>compile</scope>
     </dependency>
+
+    <!-- YodaQA Mavenized -->
+    <dependency>
+      <groupId>edu.cmu.lti.oaqa</groupId>
+      <artifactId>yodaqa_mavenized</artifactId>
+      <version>1.6-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>

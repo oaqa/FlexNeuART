@@ -14,17 +14,7 @@
  *  limitations under the License.
  */
 
-/**
- * This class converts a textual output of Wikipedia to an intermediate JSON format.
- * <p>We assume the following:</p>
- * <ul>
- * <li>The output is produced by <a href="https://github.com/searchivarius/wikiextractor">Leo's modified version of wikiextrator</a>.
- * Leo's version retains paragraph separating empty lines.
- * <li>The SQuAD collection is split into several parts with hard-coded names, from which we can read the list of titles.
- * <li>We will ignore any wikipedia titles that are in the SQuAD collection.  
- * </ul>
- * 
- */
+
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import java.io.*;
@@ -53,7 +43,20 @@ import org.w3c.dom.Node;
 
 import com.google.gson.Gson;
 
-public class WikiTextConverter {
+/**
+ * This class converts a textual output of Wikipedia to an intermediate JSON format.
+ * <p>We assume the following:</p>
+ * <ul>
+ * <li>The output is produced by <a href="https://github.com/searchivarius/wikiextractor">Leo's modified version of wikiextrator</a>.
+ * Leo's version retains paragraph separating empty lines.
+ * <li>The SQuAD collection is split into several parts with hard-coded names, from which we can read the list of titles.
+ * <li>We will ignore any wikipedia titles that are in the SQuAD collection.  
+ * </ul>
+ * 
+ * @author Leonid Boytsov
+ *
+ */
+public class WikiText2IntermConverter {
   private static final String DOC_END = "</doc>";
   private static final String OUTPUT_FILE = "output_file";
   private static final String INPUT_SQUAD_DIR = "input_squad_dir";
@@ -65,7 +68,7 @@ public class WikiTextConverter {
   static void showUsage(String err) {
     System.err.println("Error: " + err);
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp(WikiTextConverter.class.getCanonicalName(), mOptions);      
+    formatter.printHelp(WikiText2IntermConverter.class.getCanonicalName(), mOptions);      
     System.exit(1);
   }
   
@@ -218,7 +221,8 @@ public class WikiTextConverter {
           // We skip the first "paragraph", because it is merely a title!
           for (int inPageId = 1; inPageId < docParas.size(); ++inPageId) {
             String id = pageId + "_" + inPageId;
-            data.passages[inPageId - 1] = new QAPassage(id, docParas.get(inPageId), 0 /* no questions here */);              
+            data.passages[inPageId - 1] = 
+                new QAPassage(title, id, docParas.get(inPageId), 0 /* no questions here */);              
           }
           
           String pageText = mGSON.toJson(data, QAData.class);

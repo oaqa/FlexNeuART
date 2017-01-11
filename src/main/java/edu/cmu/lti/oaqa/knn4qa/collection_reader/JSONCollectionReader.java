@@ -45,7 +45,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
   
   Gson mGSON = new Gson();
   
-  private int             mGlobIndex;
+  private int             mProcQty;
   private int             mPassageQty;
   private int             mPassageIndex;
   private boolean         mEOF;
@@ -57,16 +57,23 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
    *  potentially compressed input file.
    */
   private static final String PARAM_INPUTFILE = "InputFile";
+  private static final String PARAM_MAXQTY = "MaxQty";
   private static final String QUESTION_VIEW = "QuestionView";
   
   @ConfigurationParameter(name = PARAM_INPUTFILE, mandatory = true)
   private String mInputFileName;  
+  
+  @ConfigurationParameter(name = PARAM_MAXQTY, mandatory = false)
+  private Integer mMaxQty = Integer.MAX_VALUE;
 
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
     super.initialize(aContext);
+    
+    logger.info("Input file: " + mInputFileName);
+    logger.info("Maxim # of recs to process: " + mMaxQty);
 
-    mGlobIndex = -1;
+    mProcQty = -1;
     
     mPassageQty = 0;
     mPassageIndex = 0;
@@ -78,7 +85,6 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
       throw new ResourceInitializationException(io);
     }
   }
-  
 
   @Override
   public void getNext(CAS aCAS) throws IOException, CollectionException {
@@ -137,16 +143,16 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
     Passage p = new Passage(jcas, 0, jcas.getDocumentText().length());
     p.addToIndexes();
     
-    mGlobIndex++;
+    mProcQty++;
   }
 
   @Override
   public boolean hasNext() throws IOException, CollectionException {
     if (mEOF) return false;
-    if (mPassageIndex < mPassageQty) return true;
+    if (mPassageIndex < mPassageQty && mProcQty < mMaxQty) return true;
     readNextLine();
     if (mEOF) return false;
-    return mPassageIndex < mPassageQty;
+    return mPassageIndex < mPassageQty && mProcQty < mMaxQty;
   }
 
   private void readNextLine() throws IOException {
@@ -167,7 +173,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
 
   @Override
   public Progress[] getProgress() {
-    return new Progress[]{new ProgressImpl(mGlobIndex, -1, Progress.ENTITIES)};
+    return new Progress[]{new ProgressImpl(mProcQty, -1, Progress.ENTITIES)};
   }
 
   @Override

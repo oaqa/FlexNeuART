@@ -16,11 +16,13 @@
 package edu.cmu.lti.oaqa.knn4qa.qaintermform;
 
 public class QAPassage {
+  public String           pageTitle; // for information purposes only 
   public String           id;
   public String           text;
-  public QAQuestion[]     questions; // TODO do I really need to serialize questions anywhere?
+  public QAQuestion[]     questions; 
   
-  public QAPassage(String id, String text, int qty) {
+  public QAPassage(String pageTitle, String id, String text, int qty) {
+    this.pageTitle = pageTitle;
     this.id = id;
     this.text = text;
     if (qty > 0)

@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <collectionReaderDescription xmlns="http://uima.apache.org/resourceSpecifier">
   <frameworkImplementation>org.apache.uima.java</frameworkImplementation>
-  <implementationName>edu.cmu.lti.oaqa.knn4qa.collection_reader.YahooAnswersReader</implementationName>
+  <implementationName>edu.cmu.lti.oaqa.knn4qa.collection_reader.JSONCollectionReader</implementationName>
   <processingResourceMetaData>
-    <name>YahooAnswers</name>
+    <name>SQuAD</name>
     <description/>
     <version>1.0</version>
     <vendor/>
     <configurationParameters>
-      <configurationParameter>
-        <name>QuestFilterRegex</name>
-        <description>You can specify a regular expression to restrict a set of questions.</description>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>false</mandatory>
-      </configurationParameter>
       <configurationParameter>
         <name>InputFile</name>
         <description>Input file.</description>
@@ -22,7 +15,7 @@
         <multiValued>false</multiValued>
         <mandatory>false</mandatory>
       </configurationParameter>
-    <configurationParameter>
+      <configurationParameter>
         <name>MaxQty</name>
         <type>Integer</type>
         <multiValued>false</multiValued>
@@ -34,12 +27,16 @@
     <!-- Types used by this pipeline -->
     <typeSystemDescription>
       <imports>
-        <import name="org.apache.uima.examples.SourceDocumentInformation"/>
         <import name="types.typeSystemDescriptor"/>
+        <!-- Types used by YodaQA -->
+        <import name="desc.type.LexicalUnits"/>
         <import name="desc.type.metadata"/>
-        <import name="desc.type.POS"/>
-        <import name="desc.type.Semantics"/>
         <import name="desc.type.Dependency_customized"/>
+        <import name="desc.type.Constituency"/>
+        <import name="typesystem.QuestionTypes_TS"/>
+        <import name="desc.type.NamedEntity"/>
+        <import name="typesystem.TyCorTypes_TS"/>
+        <!-- End of types used by YodaQA -->
       </imports>
     </typeSystemDescription>
 
