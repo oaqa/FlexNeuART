@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import spacy
 import sys
-import io
 import time
 import json
+import codecs
+import gzip
+#import io
 
 if len(sys.argv) != 4:
-  sys.stderr.write("Usage: <input JSON file> <output JSON file> <# of threads>\n") 
+  sys.stderr.write("Usage: <gzipped input JSON file> <gzipped output JSON file> <# of threads>\n") 
   sys.exit(1)
 
 inpFileName=sys.argv[1]
@@ -16,8 +18,13 @@ threadQty=int(sys.argv[3])
 def custom_pipeline(nlp):
   return (nlp.tagger,nlp.entity)
 
-inpFile=io.open(inpFileName, 'r', encoding='utf-8', errors='replace')
-outFile=io.open(outFileName, 'w', encoding='utf-8')
+UTF8Reader = codecs.getreader('utf8')
+UTF8Writer = codecs.getwriter('utf8')
+
+#inpFile=io.open(inpFileName, 'r', encoding='utf-8', errors='replace')
+inpFile = UTF8Reader(gzip.open(inpFileName, 'r'))
+#outFile=io.open(outFileName, 'w', encoding='utf-8')
+outFile = UTF8Writer(gzip.open(outFileName, 'w'))
 
 nlp = spacy.load('en', create_pipeline=custom_pipeline)
 

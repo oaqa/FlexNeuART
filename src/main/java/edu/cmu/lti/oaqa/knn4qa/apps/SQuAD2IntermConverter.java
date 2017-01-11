@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.*;
 import edu.cmu.lti.oaqa.knn4qa.squad.*;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 import java.io.*;
 import java.util.HashMap;
@@ -77,34 +78,38 @@ public class SQuAD2IntermConverter {
                   
       int fileQty = SQuADInputFiles.mIntermInputFiles.length;
       
-      HashMap<String,Integer> hCurrPassageId = new HashMap<String,Integer>(); 
+      //HashMap<String,Integer> hCurrPassageId = new HashMap<String,Integer>(); 
       
       int globalPassageId = 0;
       
       for (int fileId = 0; fileId < fileQty; ++fileId) {
         
-        String inputFileName = inputSQuADDir + "/" + SQuADInputFiles.mIntermInputFiles[fileId];
+        String inputFileName = inputSQuADDir + "/" + SQuADInputFiles.mInputFiles[fileId];
+        
+        SQuADReader r = new SQuADReader(inputFileName);        
+        
+        String outFileName = inputSQuADDir + "/" + SQuADInputFiles.mIntermInputFiles[fileId];
         BufferedWriter outFile = 
-            new BufferedWriter(new FileWriter(inputFileName));
+            new BufferedWriter(new OutputStreamWriter(CompressUtils.createOutputStream(outFileName)));        
         
-        String outFilename = inputSQuADDir + "/" + SQuADInputFiles.mInputFiles[fileId];
-        SQuADReader r = new SQuADReader(outFilename);
-        
-        System.out.println("Reading: '" + inputFileName + "' writing to '" + outFilename);
+        System.out.println("Reading: '" + inputFileName + "' writing to '" + outFileName);
 
         QAData qd = new QAData(1);
         
         for (SQuADEntry e : r.mData.data) {
           for (SQuADParagraph passage : e.paragraphs) {
             String title = SQuADWikiTitlesReader.decodeTitle(e.title);
+            /*
             Integer currPassId = hCurrPassageId.get(title);
             if (currPassId == null) {
               currPassId = 0;
               hCurrPassageId.put(title, 0);
             }
+            */
             
             // this will be different from any id from the non-SQuAD Wikipedia part            
-            String passageId = "@" + globalPassageId;  
+            String passageId = "@" + globalPassageId;
+            globalPassageId++;
             
             int questQty = 0;
             
@@ -124,9 +129,10 @@ public class SQuAD2IntermConverter {
             
             outFile.write(passageJSON);
             outFile.write(NL);
-            
+            /*
             ++currPassId;
             hCurrPassageId.replace(title, currPassId);
+            */
           }
         }
                

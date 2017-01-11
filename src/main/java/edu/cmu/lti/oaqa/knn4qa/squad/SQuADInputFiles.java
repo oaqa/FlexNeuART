@@ -31,7 +31,7 @@ public class SQuADInputFiles {
    * File names for input files in the intermediate JSON format (classes QAData, QAPassage, QAQuestion).
    */
   public final static String[] mIntermInputFiles = {
-    "squad-interm_test.json.gz",
+    "squad-interm_test.gz",
     "squad-interm_dev1.gz",
     "squad-interm_dev2.gz",
     "squad-interm_train.gz",
