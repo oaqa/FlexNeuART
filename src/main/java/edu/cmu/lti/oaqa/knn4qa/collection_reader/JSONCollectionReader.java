@@ -34,8 +34,7 @@ import com.google.gson.Gson;
 
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAData;
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAPassage;
-import edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion;
-import edu.cmu.lti.oaqa.knn4qa.types.Passage;
+import edu.cmu.lti.oaqa.knn4qa.types.*;
 
 public class JSONCollectionReader extends CasCollectionReader_ImplBase {
   private static final Logger logger = LoggerFactory.getLogger(JSONCollectionReader.class);
@@ -90,7 +89,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
 
   @Override
   public void getNext(CAS aCAS) throws IOException, CollectionException {
-    System.out.println(mProcDocQty + " -> " + mProcCASQty);
+    //System.out.println(mProcDocQty + " -> " + mProcCASQty);
     if (!hasNext()) 
       throw new IOException("Reading beyond EOF");
     // Here the following should hold:

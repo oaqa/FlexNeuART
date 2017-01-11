@@ -462,8 +462,18 @@
       <version>2.8.0</version>
       <scope>compile</scope>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.json/json -->
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20160810</version>
+    </dependency>
+
 
     <!-- YodaQA Mavenized -->
+    <!-- Should be installed from 
+      https://github.com/searchivarius/yodaqa_mavenized
+    -->
     <dependency>
       <groupId>edu.cmu.lti.oaqa</groupId>
       <artifactId>yodaqa_mavenized</artifactId>
