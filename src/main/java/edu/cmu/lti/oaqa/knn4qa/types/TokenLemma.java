@@ -10,16 +10,16 @@ import org.apache.uima.jcas.cas.TOP_Type;
 import org.apache.uima.jcas.tcas.Annotation;
 
 
-/** A passage
+/** 
  * Updated by JCasGen Thu Jan 12 13:26:20 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
-public class Passage extends Annotation {
+public class TokenLemma extends Annotation {
   /** @generated
    * @ordered 
    */
   @SuppressWarnings ("hiding")
-  public final static int typeIndexID = JCasRegistry.register(Passage.class);
+  public final static int typeIndexID = JCasRegistry.register(TokenLemma.class);
   /** @generated
    * @ordered 
    */
@@ -33,14 +33,14 @@ public class Passage extends Annotation {
  
   /** Never called.  Disable default constructor
    * @generated */
-  protected Passage() {/* intentionally empty block */}
+  protected TokenLemma() {/* intentionally empty block */}
     
   /** Internal - constructor used by generator 
    * @generated
    * @param addr low level Feature Structure reference
    * @param type the type of this Feature Structure 
    */
-  public Passage(int addr, TOP_Type type) {
+  public TokenLemma(int addr, TOP_Type type) {
     super(addr, type);
     readObject();
   }
@@ -48,7 +48,7 @@ public class Passage extends Annotation {
   /** @generated
    * @param jcas JCas to which this Feature Structure belongs 
    */
-  public Passage(JCas jcas) {
+  public TokenLemma(JCas jcas) {
     super(jcas);
     readObject();   
   } 
@@ -58,7 +58,7 @@ public class Passage extends Annotation {
    * @param begin offset to the begin spot in the SofA
    * @param end offset to the end spot in the SofA 
   */  
-  public Passage(JCas jcas, int begin, int end) {
+  public TokenLemma(JCas jcas, int begin, int end) {
     super(jcas);
     setBegin(begin);
     setEnd(end);
@@ -77,25 +77,25 @@ public class Passage extends Annotation {
  
     
   //*--------------*
-  //* Feature: id
+  //* Feature: Lemma
 
-  /** getter for id - gets 
+  /** getter for Lemma - gets 
    * @generated
    * @return value of the feature 
    */
-  public String getId() {
-    if (Passage_Type.featOkTst && ((Passage_Type)jcasType).casFeat_id == null)
-      jcasType.jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.Passage");
-    return jcasType.ll_cas.ll_getStringValue(addr, ((Passage_Type)jcasType).casFeatCode_id);}
+  public String getLemma() {
+    if (TokenLemma_Type.featOkTst && ((TokenLemma_Type)jcasType).casFeat_Lemma == null)
+      jcasType.jcas.throwFeatMissing("Lemma", "edu.cmu.lti.oaqa.knn4qa.types.TokenLemma");
+    return jcasType.ll_cas.ll_getStringValue(addr, ((TokenLemma_Type)jcasType).casFeatCode_Lemma);}
     
-  /** setter for id - sets  
+  /** setter for Lemma - sets  
    * @generated
    * @param v value to set into the feature 
    */
-  public void setId(String v) {
-    if (Passage_Type.featOkTst && ((Passage_Type)jcasType).casFeat_id == null)
-      jcasType.jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.Passage");
-    jcasType.ll_cas.ll_setStringValue(addr, ((Passage_Type)jcasType).casFeatCode_id, v);}    
+  public void setLemma(String v) {
+    if (TokenLemma_Type.featOkTst && ((TokenLemma_Type)jcasType).casFeat_Lemma == null)
+      jcasType.jcas.throwFeatMissing("Lemma", "edu.cmu.lti.oaqa.knn4qa.types.TokenLemma");
+    jcasType.ll_cas.ll_setStringValue(addr, ((TokenLemma_Type)jcasType).casFeatCode_Lemma, v);}    
   }
 
     

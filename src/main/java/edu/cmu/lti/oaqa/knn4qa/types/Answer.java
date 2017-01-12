@@ -1,6 +1,6 @@
 
 
-/* First created by JCasGen Tue Jan 10 12:04:19 EST 2017 */
+/* First created by JCasGen Thu Jan 12 13:26:20 EST 2017 */
 package edu.cmu.lti.oaqa.knn4qa.types;
 
 import org.apache.uima.jcas.JCas; 
@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** One answer to a question
- * Updated by JCasGen Tue Jan 10 12:04:19 EST 2017
+ * Updated by JCasGen Thu Jan 12 13:26:20 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class Answer extends Annotation {

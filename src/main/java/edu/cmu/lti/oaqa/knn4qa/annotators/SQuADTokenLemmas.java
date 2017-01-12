@@ -21,11 +21,10 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.util.CasCopier;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
-
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.util.JCasUtil;
 
-
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
@@ -48,7 +47,27 @@ public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     // 1. Annotate the passage
-    mTokenizerEngine.process(aJCas);
+    {
+      JCas tmp = null;
+      try {
+        tmp = mTokenizerEngine.borrowJCas();
+        tmp.setDocumentLanguage(SQuADIntermCollectionReader.DOCUMENT_LANGUAGE);
+        tmp.setDocumentText(aJCas.getDocumentText());        
+        mTokenizerEngine.process(tmp);
+        for (Token tok : JCasUtil.select(tmp, Token.class)) {
+          TokenLemma dstTok = new TokenLemma(aJCas, tok.getBegin(), tok.getEnd());
+          Lemma l = tok.getLemma();
+          // For some weird reason, lemma is sometimes NULL
+          dstTok.setLemma((l!=null) ? l.getValue() : tok.getCoveredText().toLowerCase());
+          dstTok.addToIndexes();          
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw new AnalysisEngineProcessException(e);
+      } finally {
+        if (tmp != null) mTokenizerEngine.returnJCas(tmp);
+      }
+    }
     // 2. Annotate all questions
     JCas questView = null;
     try {
@@ -57,23 +76,29 @@ public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
       throw new AnalysisEngineProcessException(new Exception("No question view in the CAS!"));      
     }
     
-    for (Question q : JCasUtil.select(questView, Question.class)) {
+    for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
       JCas tmp = null;
       try {
         tmp = mTokenizerEngine.borrowJCas();
         tmp.setDocumentLanguage(SQuADIntermCollectionReader.DOCUMENT_LANGUAGE);
         tmp.setDocumentText(q.getCoveredText());
         mTokenizerEngine.process(tmp);
-        CasCopier   copier = new CasCopier(tmp.getCas(), questView.getCas());
+
         for (Token tok : JCasUtil.select(tmp, Token.class)) {
           /*
            * This is a deep copy, however, it won't adjust positions of the referenced features
            * (in our case the only one of interest is Lemma) 
            */
-          Token dstTok = (Token)copier.copyFs(tok);
-          dstTok.setBegin(tok.getBegin() + q.getBegin());
-          dstTok.setEnd(tok.getEnd() + q.getBegin());
+
+          int start = tok.getBegin() + q.getBegin();
+          int end = tok.getEnd() + q.getBegin();
+          
+          TokenLemma dstTok = new TokenLemma(questView, start, end);
+          Lemma l = tok.getLemma();
+          // For some weird reason, lemma is sometimes NULL
+          dstTok.setLemma((l!=null) ? l.getValue() : tok.getCoveredText().toLowerCase());
           dstTok.addToIndexes();
+          
         }
       } catch (Exception e) {
         e.printStackTrace();
