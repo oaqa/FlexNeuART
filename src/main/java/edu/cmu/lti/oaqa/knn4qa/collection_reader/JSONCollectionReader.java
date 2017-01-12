@@ -35,6 +35,7 @@ import com.google.gson.Gson;
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAData;
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAPassage;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 public class JSONCollectionReader extends CasCollectionReader_ImplBase {
   private static final Logger logger = LoggerFactory.getLogger(JSONCollectionReader.class);
@@ -81,7 +82,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
     mEOF = false;
     
     try {
-      mInput = new BufferedReader(new FileReader(new File(mInputFileName)));
+      mInput = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(mInputFileName)));
     } catch (IOException io) {
       throw new ResourceInitializationException(io);
     }
@@ -143,6 +144,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
     }
     
     Passage p = new Passage(jcas, 0, jcas.getDocumentText().length());
+    p.setId(currPass.id);
     p.addToIndexes();
     
     mProcCASQty++;
@@ -165,6 +167,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
         mPassageQty = mPassageIndex = 0;
         return;
       }
+      //System.out.println(line);
       mTmpData = mGSON.fromJson(line, QAData.class);
       
       mPassageIndex = 0;

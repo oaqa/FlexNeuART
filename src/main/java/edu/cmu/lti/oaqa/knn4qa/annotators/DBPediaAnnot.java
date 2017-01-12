@@ -20,7 +20,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URLEncoder;
 
 import edu.cmu.lti.oaqa.knn4qa.types.*;
@@ -33,11 +36,12 @@ import edu.cmu.lti.oaqa.knn4qa.types.*;
  *
  */
 public class DBPediaAnnot extends JCasAnnotator_ImplBase {
+  private static final String RESOURCES_KEY = "Resources";
+
   private static final Logger logger = LoggerFactory.getLogger(DBPediaAnnot.class);
   
   //Create an instance of HttpClient.
   private static HttpClient mClient = new HttpClient();
-
 
   private static final String PARAM_SERVER_ADDR  = "ServerAddr";
   private static final String PARAM_CONF_THRESH  = "ConfThresh";
@@ -74,12 +78,14 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
       
       try {
         resultJSON = new JSONObject(resp);
-        entities = resultJSON.getJSONArray("Resources");
+        if (!resultJSON.isNull(RESOURCES_KEY))
+          entities = resultJSON.getJSONArray(RESOURCES_KEY);
       } catch (JSONException e) {
         throw new AnalysisEngineProcessException(
             new Exception("Received invalid response from DBpedia Spotlight API."));
       }
       
+      if (entities != null)
       for(int i = 0; i < entities.length(); i++) {
         try {
           JSONObject entity = entities.getJSONObject(i);
@@ -108,9 +114,8 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
 
   }
   
-  // This is a slightly reworked DBPedia's AnnotationClient.request method
+  // This is a thoroughly rewritten DBPedia's AnnotationClient.request method
   public String request(HttpMethod method) throws Exception {
-
     String response = null;
 
     // Provide custom retry handler is necessary
@@ -125,13 +130,13 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
             logger.error("Method failed: " + method.getStatusLine());
         }
 
-        // Read the response body.
-        byte[] responseBody = method.getResponseBody(); //TODO Going to buffer response body of large or unknown size. Using getResponseBodyAsStream instead is recommended.
-
-        // Deal with the response.
-        // Use caution: ensure correct character encoding and is not binary data
-        response = new String(responseBody);
-
+        StringBuffer sb = new StringBuffer();
+        BufferedReader buffResp = new BufferedReader(new InputStreamReader(method.getResponseBodyAsStream()));
+        String  line;
+        while ((line = buffResp.readLine()) != null) {
+          sb.append(line);
+        }        
+        response = sb.toString();        
     } catch (HttpException e) {
         logger.error("Fatal protocol violation: " + e.getMessage());
         throw new Exception("Protocol error executing HTTP request.",e);

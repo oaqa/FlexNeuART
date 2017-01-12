@@ -5,7 +5,7 @@ import time
 import json
 import codecs
 import gzip
-#import io
+import io
 
 if len(sys.argv) != 4:
   sys.stderr.write("Usage: <gzipped input JSON file> <gzipped output JSON file> <# of threads>\n") 
@@ -22,7 +22,9 @@ UTF8Reader = codecs.getreader('utf8')
 UTF8Writer = codecs.getwriter('utf8')
 
 #inpFile=io.open(inpFileName, 'r', encoding='utf-8', errors='replace')
-inpFile = UTF8Reader(gzip.open(inpFileName, 'r'))
+#inpFile = UTF8Reader(gzip.open(inpFileName, 'r'))
+# Really beats me why gzip.open shouldn't be passed to UTF8Reader, but it doesn't work this way
+inpFile = gzip.open(inpFileName, 'r')
 #outFile=io.open(outFileName, 'w', encoding='utf-8')
 outFile = UTF8Writer(gzip.open(outFileName, 'w'))
 
