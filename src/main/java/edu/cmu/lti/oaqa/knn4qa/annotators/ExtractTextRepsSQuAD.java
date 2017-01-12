@@ -48,17 +48,19 @@ public class ExtractTextRepsSQuAD extends ExtractTextRepsBase {
    *         (1) an array of good tokens;
    *         (2) a map, where token object references are mapped to token string values.    
    */
-  public GoodTokensSQuAD getGoodTokens(final JCas jCas, AnnotationFS coverAnnot, boolean isStrict) {
+  public GoodTokensSQuAD getGoodTokens(final JCas jCas, AnnotationFS coverAnnot) {
     GoodTokensSQuAD res = new GoodTokensSQuAD();
 
-    for (TokenLemma tok : JCasUtil.selectCovered(jCas, TokenLemma.class, coverAnnot)) {
+    for (TokenLemma tok : JCasUtil.selectCovered(jCas, TokenLemma.class, coverAnnot)) {     
       String text = tok.getCoveredText().toLowerCase();
       
       if (mLemmatize) {
         text = tok.getLemma();
       }
       if (!text.isEmpty() &&
-          isGoodWord(text, isStrict) && 
+          // isGoodWord is too restrictive
+          //isGoodWord(text, isStrict) && 
+          !startsWithPunct(text) &&
           !mStopWords.contains(text)) 
       {
         res.mMap.put(tok, text);

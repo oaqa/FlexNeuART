@@ -36,10 +36,12 @@ import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAData;
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAPassage;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 
 /**
  * 
- * A collection reader that needs SQuAD-like data converted to an intermedaite format.
+ * A collection reader that needs SQuAD-like data converted to an intermediate format:
+ * note that it REMOVES DIACRITICAL signs.
  * 
  * @author Leonid Boytsov
  *
@@ -114,7 +116,7 @@ public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
     
     QAPassage currPass = mTmpData.passages[mPassageIndex++];
     
-    jcas.setDocumentText(currPass.text);
+    jcas.setDocumentText(StringUtilsLeo.removeDiacritics(currPass.text));
     jcas.setDocumentLanguage(DOCUMENT_LANGUAGE);
     
     JCas jcasQuest;
@@ -136,7 +138,7 @@ public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
       // Create multiple question annotations, including question IDs
       for (int qid = 0; qid < qlen; ++ qid) {
         qStart[qid] = len;
-        String qtext = currPass.questions[qid].text;
+        String qtext = StringUtilsLeo.removeDiacritics(currPass.questions[qid].text);
         len += 1 + qtext.length();
         qEnd[qid] = len;
         sb.append(qtext); sb.append(' ');

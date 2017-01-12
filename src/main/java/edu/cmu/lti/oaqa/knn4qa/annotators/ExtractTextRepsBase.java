@@ -16,6 +16,7 @@
 package edu.cmu.lti.oaqa.knn4qa.annotators;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 import com.google.common.base.CharMatcher;
 
@@ -70,9 +71,11 @@ public class ExtractTextRepsBase {
         return false;
       }
     }
-  
-      
+        
     return true;
   }
-
+  
+  protected static boolean startsWithPunct(String text) {
+    return Pattern.matches("^\\p{Punct}.*$", text);
+  }
 }

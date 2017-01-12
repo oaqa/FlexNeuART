@@ -15,6 +15,11 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringUtilsLeo {
   /**
    * Splits the string using the pattern, however, if the input string
@@ -66,5 +71,49 @@ public class StringUtilsLeo {
     }
 
     return -1;
+  }
+  
+  private static Pattern mReplBR = Pattern.compile("<br\\s*/?>",
+      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+  private static Pattern mReplTags = Pattern.compile("<[a-z]+[^/>]*/?>",
+      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+
+  /**
+   * Removes diacritics. Taken from
+   * http://www.drillio.com/en/software-development/java/removing-accents-diacritics-in-any-language/.
+   */
+  public static String removeDiacritics(String text) {
+    return text == null ? null : Normalizer.normalize(text, Form.NFD)
+        .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+  }
+
+  /**
+   * Cleans up a string and replaces diacritcs.
+   * 
+   * @param s
+   * @return
+   */
+  public static String cleanUp(String s) {
+    s = s.trim();
+    s = s.replaceAll("\r+", ""); // "\r" may come from a file in DOS encoding;
+    s = s.replace('’', '\''); // ugly hack for Yahoo answers
+
+    s = removeDiacritics(s);
+    s = s.replaceAll("[^\\x00-\\x7F]", " "); // remove non-ASCII
+
+    /*
+     * Repeating punctuation marks cause all kind of trouble in ClearNLP
+     * including infinite loops and stack overflow.
+     */
+    s = s.replaceAll("[?]+", "?");
+    s = s.replaceAll("[!]+", "!");
+    s = s.replaceAll("[.]+", ".");
+    s = s.replaceAll("[:]+", ":");
+
+    Matcher m1 = mReplBR.matcher(s);
+    s = m1.replaceAll("\n");
+    Matcher m2 = mReplTags.matcher(s);
+    return m2.replaceAll(" ").replaceAll("\n+", "\n");
   }  
+  
 }

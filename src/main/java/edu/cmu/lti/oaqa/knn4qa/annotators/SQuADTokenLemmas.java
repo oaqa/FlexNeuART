@@ -29,7 +29,8 @@ import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 
 /**
- * The annotator that tokenizes and lemmatizes SQuAD questions and passages. 
+ * The annotator that tokenizes and lemmatizes SQuAD questions and passages; In addition it replaces
+ * all the accented characters with their Latin equivalents.
  * 
  * @author Leonid Boytsov
  *
@@ -90,7 +91,7 @@ public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
            */
 
           int start = tok.getBegin() + q.getBegin();
-          int end = tok.getEnd() + q.getBegin();
+          int end   = tok.getEnd()   + q.getBegin();
           
           TokenLemma dstTok = new TokenLemma(questView, start, end);
           Lemma l = tok.getLemma();
