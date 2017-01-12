@@ -34,6 +34,26 @@
         </errorHandling>
         <checkpoint batch="10000" time="1000ms"/>
     </casProcessor>
+    <casProcessor deployment="integrated" name="aeSpacyNERReaderAnnot">
+        <descriptor>
+            <import location="../analysis_engines/aeSpacyNERAnnot.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>SpacyNERFile</name>
+                <value>
+                    <string>/home/leo/SourceTreeGit/knn4qa_oqaqa/input/squad/squad-spacy_ner_dev1.gz</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
     <casProcessor deployment="integrated" name="xmiConsumer">
         <descriptor>
             <import name="descriptors.cas_consumers.xmiConsumer"/>

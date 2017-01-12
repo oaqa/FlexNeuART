@@ -13,13 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+
 package edu.cmu.lti.oaqa.knn4qa.qaintermform;
 
-public class QAQuestion {
-  public String id;
-  public String text;
-  public QAQuestion(String id, String text) {
-    this.id = id;
-    this.text = text;
-  }
+public class NERAnnotation {
+  public int start, end;
+  public String type, label;
 }
