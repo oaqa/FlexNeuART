@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-import de.tudarmstadt.ukp.dkpro.core.clearnlp.*;
+//import de.tudarmstadt.ukp.dkpro.core.clearnlp.*;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.*;
 
 

@@ -37,11 +37,20 @@ import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAPassage;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
-public class JSONCollectionReader extends CasCollectionReader_ImplBase {
-  private static final Logger logger = LoggerFactory.getLogger(JSONCollectionReader.class);
-  
+/**
+ * 
+ * A collection reader that needs SQuAD-like data converted to an intermedaite format.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
+public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
+  public  static final String QUESTION_VIEW = "QuestionView";
   // TODO Can it be in other languages?
-  private static final String DOCUMENT_LANGUAGE = "en";
+  public static final String DOCUMENT_LANGUAGE = "en";
+  
+  private static final Logger logger = LoggerFactory.getLogger(SQuADIntermCollectionReader.class);
+  
   
   Gson mGSON = new Gson();
   
@@ -59,7 +68,7 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
    */
   private static final String PARAM_INPUTFILE = "InputFile";
   private static final String PARAM_MAXQTY = "MaxQty";
-  private static final String QUESTION_VIEW = "QuestionView";
+ 
   
   @ConfigurationParameter(name = PARAM_INPUTFILE, mandatory = true)
   private String mInputFileName;  
@@ -133,15 +142,16 @@ public class JSONCollectionReader extends CasCollectionReader_ImplBase {
         sb.append(qtext); sb.append(' ');
       }
       
-      jcasQuest.setDocumentLanguage(DOCUMENT_LANGUAGE);
-      jcasQuest.setDocumentText(sb.toString());
-      
       for (int qid = 0; qid < qlen; ++ qid) {
         FactoidQuestion q  = new FactoidQuestion(jcasQuest, qStart[qid], qEnd[qid]-1);
         q.setId(currPass.questions[qid].id);
         q.addToIndexes();
       }
     }
+    
+    // Fill out the question JCAS even if no questions are given
+    jcasQuest.setDocumentLanguage(DOCUMENT_LANGUAGE);
+    jcasQuest.setDocumentText(sb.toString());
     
     Passage p = new Passage(jcas, 0, jcas.getDocumentText().length());
     p.setId(currPass.id);

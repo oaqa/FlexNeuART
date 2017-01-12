@@ -58,8 +58,7 @@ public class SpacyNERReaderAnnot extends JCasAnnotator_ImplBase {
   
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
-    Passage passage = null;
-    for (Passage p : JCasUtil.select(aJCas, Passage.class)) { passage = p ; break; } // we have only one passage
+    Passage passage = JCasUtil.selectSingle(aJCas, Passage.class); // Will throw an exception of Passage is missing
     // Now retrieve all annotation entries until we find one with the id the has the same id as the passage
     
     NERData passageAnnot = null;

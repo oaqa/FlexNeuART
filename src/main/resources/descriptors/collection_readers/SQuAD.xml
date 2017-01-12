@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <collectionReaderDescription xmlns="http://uima.apache.org/resourceSpecifier">
   <frameworkImplementation>org.apache.uima.java</frameworkImplementation>
-  <implementationName>edu.cmu.lti.oaqa.knn4qa.collection_reader.JSONCollectionReader</implementationName>
+  <implementationName>edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader</implementationName>
   <processingResourceMetaData>
     <name>SQuAD</name>
     <description/>
