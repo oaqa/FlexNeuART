@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.annotators;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -23,14 +22,12 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.FSArray;
 
-import com.google.common.base.CharMatcher;
-
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemanticArgument;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemanticPredicate;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import edu.cmu.lti.oaqa.knn4qa.utils.DictNoComments;
+
 import edu.cmu.lti.oaqa.knn4qa.types.WNNS;
 
 
@@ -38,7 +35,6 @@ class GoodTokens {
   HashMap<Token, String>    mMap = new HashMap<Token, String>();
   ArrayList<Token>          mList = new ArrayList<Token>();
 }
-
 
 /**
  * 
@@ -48,11 +44,7 @@ class GoodTokens {
  * @author Leonid Boytsov
  *
  */
-public class ExtractTextReps {
-  boolean        mLemmatize = false;
-  
-  DictNoComments mStopWords;
-  
+public class ExtractTextReps extends ExtractTextRepsBase {
   /**
    * 
    * Constructor.
@@ -62,8 +54,7 @@ public class ExtractTextReps {
    * @throws Exception
    */
   ExtractTextReps(String stopWordFileName, boolean bLemmatize) throws Exception {
-    mStopWords = new DictNoComments(new File(stopWordFileName), true /* lowercasing */);
-    mLemmatize = bLemmatize;
+    super(stopWordFileName, bLemmatize);
   }
   
   /**
@@ -112,7 +103,7 @@ public class ExtractTextReps {
   }
   
   /**
-   * Extracts all the good tokens.
+   * Generate text from the list of good tokens.
    * 
    * @param goodToks    an object keeping information on all the good tokens.
    * @return a string containing space-separated tokens.
@@ -248,42 +239,6 @@ public class ExtractTextReps {
     }
     
     return strFromStrStream(sb);
-  }
-  
-  /**
-   * Obtain a string from stream, remove trailing '\n', '\r'.
-   * 
-   * @param sb  input string stream.
-   * @return resulting string.
-   */
-  private String strFromStrStream(StringBuffer sb) {
-    String tmp = sb.toString();
-    return tmp.replace('\n', ' ').replace('\r', ' ').trim();
-  }
-
-  /**
-   * 
-   * A good word should start from the letter: it may contain a letter,
-   * a dash, or an apostrophe. 
-   * 
-   * @param text        input
-   * @param isStrict    if true, use a stricter definition of a good term.    
-   * @return true if a good word.
-   */
-  private boolean isGoodWord(String text, boolean isStrict) {
-    if (text.isEmpty()) return false;
-    CharMatcher m = isStrict ? CharMatcher.JAVA_LETTER : 
-                               CharMatcher.JAVA_LETTER_OR_DIGIT;
-    if (!m.matches(text.charAt(0))) return false;
-    for (int i = 0; i < text.length(); ++i) {
-      char c = text.charAt(i);
-      if (c != '-' && c != '\'' &&  !m.matches(c)) {
-        return false;
-      }
-    }
-
-      
-    return true;
   }  
   
 }

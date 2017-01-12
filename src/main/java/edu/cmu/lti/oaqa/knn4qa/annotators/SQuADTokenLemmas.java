@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package edu.cmu.lti.oaqa.knn4qa.annotators;
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CASException;
-import org.apache.uima.util.CasCopier;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
