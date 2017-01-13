@@ -23,21 +23,19 @@
         </value>
       </nameValuePair>
     </configurationParameterSettings>
-    <typeSystemDescription>
-      </typeSystemDescription>
+    <typeSystemDescription/>
     <typePriorities/>
     <fsIndexCollection/>
     <capabilities>
       <capability>
-        <inputs>
-          </inputs>
+        <inputs/>
         <outputs/>
         <languagesSupported/>
       </capability>
     </capabilities>
   <operationalProperties>
       <modifiesCas>false</modifiesCas>
-      <multipleDeploymentAllowed>true</multipleDeploymentAllowed>
+      <multipleDeploymentAllowed>false</multipleDeploymentAllowed>
       <outputsNewCASes>false</outputsNewCASes>
     </operationalProperties>
   </processingResourceMetaData>

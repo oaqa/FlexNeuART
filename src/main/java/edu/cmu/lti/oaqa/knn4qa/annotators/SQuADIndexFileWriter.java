@@ -75,7 +75,7 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
     super.initialize(aContext);
     
     try {
-      initOutput();
+      initOutput(mIndexQuestionFileName, mIndexPassageFileName);
       
       mTextRepExtract = new ExtractTextRepsSQuAD(mStopWordFileName, true);
     } catch (Exception e) {
@@ -129,21 +129,9 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
           throw new AnalysisEngineProcessException(e);
         }
       }
-    }
-   
+    }   
   }
-  
-  private void initOutput() throws IOException {
-    if (mIOState  != 0) return;
-        
-    mIndexQuestionFile = new BufferedWriter(
-        new OutputStreamWriter(CompressUtils.createOutputStream(mIndexQuestionFileName)));
-    mIndexPassageFile = new BufferedWriter(
-        new OutputStreamWriter(CompressUtils.createOutputStream(mIndexPassageFileName)));
-        
-    mIOState = 1;        
-  }
-  
+    
   @Override
   public void collectionProcessComplete() throws AnalysisEngineProcessException {
     try {
@@ -154,14 +142,29 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
     }
   }  
   
-  private void finishOutput() throws IOException {
+  /*
+   * All I/O functions are static synchronized, because may be called by multiple threads.
+   * To prevent opening/closing twice, we use the mIOState variable.  
+   */  
+  private static synchronized void initOutput(String indexQuestionFileName, String indexPassageFileName) 
+                                                                                                    throws IOException {
+    if (mIOState  != 0) return;
+        
+    mIndexQuestionFile = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(indexQuestionFileName)));
+    mIndexPassageFile = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(indexPassageFileName)));
+        
+    mIOState = 1;        
+  }
+  private static synchronized void finishOutput() throws IOException {
     if (mIOState != 1) return;
     mIndexPassageFile.close();
     mIndexQuestionFile.close();
     mIOState = 2;
   }
   
-  private void doOutput(BufferedWriter outFile, Map<String, String>  fieldInfo) throws Exception {
+  private static synchronized void doOutput(BufferedWriter outFile, Map<String, String>  fieldInfo) throws Exception {
     outFile.write(mXmlHlp.genXMLIndexEntry(fieldInfo));
     outFile.write(NL);
   }

@@ -122,18 +122,6 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
     mFieldWNNS   = (String) aContext.getConfigParameterValue(PARAM_FIELD_WNNS);
   }
 
-  static synchronized private void initOutput(String indexQuestionFileName, String indexAnswerFileName) throws IOException {
-    if (mIOState  != 0) return;
-        
-    mIndexQuestionFile = new BufferedWriter(
-        new OutputStreamWriter(CompressUtils.createOutputStream(indexQuestionFileName)));
-    mIndexAnswerFile = new BufferedWriter(
-        new OutputStreamWriter(CompressUtils.createOutputStream(indexAnswerFileName)));
-        
-    mIOState = 1;        
-  }
-  
-  
   @Override
   public void collectionProcessComplete() throws AnalysisEngineProcessException {
     try {
@@ -143,14 +131,7 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
       throw new AnalysisEngineProcessException(e);
     }
   }  
-  
-  static synchronized private void finishOutput() throws IOException {
-    if (mIOState != 1) return;
-    mIndexAnswerFile.close();
-    mIndexQuestionFile.close();
-    mIOState = 2;
-  }      
-  
+        
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     Map<String, String>  fieldInfo = new HashMap<String, String>();
@@ -215,10 +196,33 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
     }
   }
 
-  static synchronized private void doOutput(BufferedWriter outFile, 
+  /*
+   * All I/O functions are static synchronized, because may be called by multiple threads.
+   * To prevent opening/closing twice, we use the mIOState variable.  
+   */  
+  private static synchronized void initOutput(String indexQuestionFileName, String indexAnswerFileName) throws IOException {
+    if (mIOState  != 0) return;
+        
+    mIndexQuestionFile = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(indexQuestionFileName)));
+    mIndexAnswerFile = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(indexAnswerFileName)));
+        
+    mIOState = 1;        
+  }     
+  
+  private static synchronized void finishOutput() throws IOException {
+    if (mIOState != 1) return;
+    mIndexAnswerFile.close();
+    mIndexQuestionFile.close();
+    mIOState = 2;
+  }
+  
+  private static synchronized void doOutput(BufferedWriter outFile, 
                                             Map<String, String>  fieldInfo) throws Exception {
     outFile.write(mXmlHlp.genXMLIndexEntry(fieldInfo));
     outFile.write(NL);    
   }
+   
   
 }
