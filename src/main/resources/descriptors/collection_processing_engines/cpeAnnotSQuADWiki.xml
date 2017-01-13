@@ -94,18 +94,6 @@
             </nameValuePair>
         </configurationParameterSettings>
     </casProcessor>
-    <casProcessor deployment="integrated" name="xmiConsumer">
-        <descriptor>
-            <import name="descriptors.cas_consumers.xmiConsumer"/>
-        </descriptor>
-            <deploymentParameters/>
-        <errorHandling>
-            <errorRateThreshold action="terminate" value="0/1000"/>
-            <maxConsecutiveRestarts action="terminate" value="30"/>
-            <timeout max="100000" default="-1"/>
-        </errorHandling>
-        <checkpoint batch="10000" time="1000ms"/>
-    </casProcessor>
     </casProcessors>
     <cpeConfig>
         <numToProcess>-1</numToProcess>
