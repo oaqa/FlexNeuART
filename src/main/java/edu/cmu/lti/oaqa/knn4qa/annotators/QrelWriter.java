@@ -19,16 +19,13 @@ import java.io.*;
 
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import edu.cmu.lti.oaqa.annographix.solr.SolrEvalUtils;
-import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
-import edu.cmu.lti.oaqa.knn4qa.types.*;
-
+import edu.cmu.lti.oaqa.knn4qa.types.Answer;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 /**
@@ -41,10 +38,12 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
   private static final String PARAM_QREL_FILE_PREFIX = "QrelFilePrefix";
   
   public static final int QREL_BEST_GRADE  = 4;
+  public static final int QREL_OTHER_GRADE = 3;
   
   private static int                    mIOState = 0;
   private static BufferedWriter         mQrelFileBinary;
   private static BufferedWriter         mQrelFileGraded;
+  private static BufferedWriter         mQrelFileOnlyBest;
   
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
@@ -66,24 +65,17 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
   
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
-    JCas questView = null;
-    try {
-      questView = aJCas.getView(SQuADIntermCollectionReader.QUESTION_VIEW);
-    } catch (CASException e) {
-      throw new AnalysisEngineProcessException(new Exception("No question view in the CAS!"));      
-    }
-    
-    Passage pass = JCasUtil.selectSingle(aJCas, Passage.class);
-    
-    for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
+    for (Answer yans: JCasUtil.select(aJCas, Answer.class)) {
       try {
-        doOutput(mQrelFileBinary,   pass.getId(), q.getId(), 1);
-        doOutput(mQrelFileGraded,   pass.getId(), q.getId(), QREL_BEST_GRADE);
+        doOutput(mQrelFileBinary,   yans.getUri(), yans.getId(), 1);
+        doOutput(mQrelFileGraded,   yans.getUri(), yans.getId(), yans.getIsBest() ? QREL_BEST_GRADE:QREL_OTHER_GRADE);
+        doOutput(mQrelFileOnlyBest, yans.getUri(), yans.getId(), yans.getIsBest() ? QREL_BEST_GRADE:0);
       } catch (IOException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
-      }      
+      }
     }
+
   }
   
   @Override
@@ -108,6 +100,9 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
         new OutputStreamWriter(CompressUtils.createOutputStream(qrelFileNamePrefix + "_all_binary.txt")));
     mQrelFileGraded = new BufferedWriter(
         new OutputStreamWriter(CompressUtils.createOutputStream(qrelFileNamePrefix + "_all_graded.txt")));
+    mQrelFileOnlyBest = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(qrelFileNamePrefix + "_onlybest.txt")));    
+    
     
     mIOState = 1;        
   }
@@ -116,7 +111,7 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
     if (mIOState != 1) return;
     mQrelFileBinary.close();
     mQrelFileGraded.close();
-
+    mQrelFileOnlyBest.close();
     mIOState = 2;
   }    
   
