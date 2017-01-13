@@ -12,7 +12,7 @@ for col in compr stackoverflow squad ; do
     mkdir -p output/$col/$part
   done
   if [ "$col" == "squad" ] ; then
-    mkdir -p output/$col/WikiMinusSQuAD
+    mkdir -p output/$col/wiki
   fi
 done
 

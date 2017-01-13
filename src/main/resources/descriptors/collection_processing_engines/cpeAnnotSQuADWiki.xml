@@ -9,13 +9,7 @@
                 <nameValuePair>
                     <name>InputFile</name>
                     <value>
-                        <string>input/squad/squad-interm_dev1.gz</string>
-                    </value>
-                </nameValuePair>
-                <nameValuePair>
-                    <name>MaxQty</name>
-                    <value>
-                        <integer>100</integer>
+                        <string>/home/leo/SourceTreeGit/knn4qa_oqaqa/input/squad/wiki-interm.txt.gz</string>
                     </value>
                 </nameValuePair>
             </configurationParameterSettings>
@@ -33,6 +27,14 @@
             <timeout max="100000" default="-1"/>
         </errorHandling>
         <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>ServerAddr</name>
+                <value>
+                    <string>http://localhost:2222</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
     </casProcessor>
     <casProcessor deployment="integrated" name="aeSpacyNERReaderAnnot">
         <descriptor>
@@ -49,7 +51,7 @@
             <nameValuePair>
                 <name>SpacyNERFile</name>
                 <value>
-                    <string>/home/leo/SourceTreeGit/knn4qa_oqaqa/input/squad/squad-spacy_ner_dev1.gz</string>
+                    <string>/home/leo/SourceTreeGit/knn4qa_oqaqa/input/squad/wiki-spacy_ner.txt.gz</string>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>
@@ -81,40 +83,16 @@
             <nameValuePair>
                 <name>PassageFile</name>
                 <value>
-                    <string>output/squad/dev1/SolrPassageFile.txt</string>
+                    <string>output/squad/wiki/SolrPassageFile.txt</string>
                 </value>
             </nameValuePair>
             <nameValuePair>
                 <name>QuestionFile</name>
                 <value>
-                    <string>output/squad/dev1/SolrQuestionFile.txt</string>
+                    <string>output/squad/wiki/SolrQuestionFile.txt</string>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>
-    </casProcessor>
-    <casProcessor deployment="integrated" name="aeQuestionAnalysis">
-        <descriptor>
-            <import location="../analysis_engines/aeQuestionAnalysis.xml"/>
-        </descriptor>
-            <deploymentParameters/>
-        <errorHandling>
-            <errorRateThreshold action="terminate" value="0/1000"/>
-            <maxConsecutiveRestarts action="terminate" value="30"/>
-            <timeout max="100000" default="-1"/>
-        </errorHandling>
-        <checkpoint batch="10000" time="1000ms"/>
-    </casProcessor>
-    <casProcessor deployment="integrated" name="aeFocusPhraseWriter">
-        <descriptor>
-            <import location="../analysis_engines/aeFocusPhraseWriter.xml"/>
-        </descriptor>
-            <deploymentParameters/>
-        <errorHandling>
-            <errorRateThreshold action="terminate" value="0/1000"/>
-            <maxConsecutiveRestarts action="terminate" value="30"/>
-            <timeout max="100000" default="-1"/>
-        </errorHandling>
-        <checkpoint batch="10000" time="1000ms"/>
     </casProcessor>
     <casProcessor deployment="integrated" name="xmiConsumer">
         <descriptor>
