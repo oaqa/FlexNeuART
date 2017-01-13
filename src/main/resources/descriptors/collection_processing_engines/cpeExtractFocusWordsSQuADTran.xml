@@ -55,7 +55,7 @@
             <nameValuePair>
                 <name>OutputFile</name>
                 <value>
-                    <string>input/squad/focus_words.txt</string>
+                    <string>data/squad/focus_words.txt</string>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>
