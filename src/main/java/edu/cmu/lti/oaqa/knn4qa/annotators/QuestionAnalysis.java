@@ -116,7 +116,7 @@ public class QuestionAnalysis extends JCasAnnotator_ImplBase {
         {
           mYodaEngine.process(tmpJCas);
           for (Focus f : JCasUtil.select(tmpJCas, Focus.class)) {
-            String fs = procFocus(f.getToken().getLemma().getValue());
+            String fs = procFocus(f.getToken().getLemma().getValue().toLowerCase());
             hFoci.add(fs);
           }
           for (Token t : JCasUtil.select(tmpJCas, Token.class)) {
