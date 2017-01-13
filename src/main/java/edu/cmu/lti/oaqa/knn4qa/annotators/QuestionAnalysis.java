@@ -37,17 +37,14 @@ import cz.brmlab.yodaqa.analysis.question.FocusGenerator;
 import cz.brmlab.yodaqa.analysis.question.FocusNameProxy;
 import cz.brmlab.yodaqa.provider.OpenNlpNamedEntities;
 import cz.brmlab.yodaqa.model.Question.Focus;
-
 import info.ephyra.questionanalysis.atype.AnswerType;
 import info.ephyra.questionanalysis.atype.FocusFinder;
 import info.ephyra.questionanalysis.atype.QuestionClassifier;
 import info.ephyra.questionanalysis.atype.QuestionClassifierFactory;
-
 import edu.cmu.lti.javelin.util.Language;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 import edu.cmu.lti.util.Pair;
-
 import de.tudarmstadt.ukp.dkpro.core.languagetool.LanguageToolLemmatizer;
 import de.tudarmstadt.ukp.dkpro.core.opennlp.OpenNlpSegmenter;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.StanfordParser;
@@ -101,8 +98,21 @@ public class QuestionAnalysis extends JCasAnnotator_ImplBase {
         HashSet<String> hQTypes = new HashSet<String>();
         HashSet<String> hWWords = new HashSet<String>();
   
-      
-        // 1. YodaQA analysis (extract only foci)
+        
+        // 1 Ephyra Analysis focus word/phrase
+        String focusEphyra = null;
+        { 
+          focusEphyra = FocusFinder.findFocusWord(q.getCoveredText());
+          
+          // Ephyra question types
+          for (String t1:  getAtypes(q.getCoveredText())) {
+            for (String t2 : t1.split("\\.")) {
+              hQTypes.add(t2);
+            }
+          }          
+        }
+        
+        // 2. YodaQA analysis (extract only foci)
         {
           mYodaEngine.process(tmpJCas);
           for (Focus f : JCasUtil.select(tmpJCas, Focus.class)) {
@@ -110,21 +120,12 @@ public class QuestionAnalysis extends JCasAnnotator_ImplBase {
             hFoci.add(fs);
           }
           for (Token t : JCasUtil.select(tmpJCas, Token.class)) {
+            String tokLemma = t.getLemma().getValue().toLowerCase();
             if (t.getPos().getPosValue().startsWith("W")) {
-              hWWords.add(t.getLemma().getValue().toLowerCase());
+              hWWords.add(tokLemma);
             }
-          }
-        }
-        // 2. Ephyra analysis
-        {
-          // 2.1 Focus word/phrase
-          String fs = FocusFinder.findFocusWord(q.getCoveredText());
-          if (fs != null) 
-            hFoci.add(procFocus(fs));
-          // 2.2 Question types
-          for (String t1:  getAtypes(q.getCoveredText())) {
-            for (String t2 : t1.split("\\.")) {
-              hQTypes.add(t2);
+            if (focusEphyra != null && t.getCoveredText().compareToIgnoreCase(focusEphyra) == 0) { 
+              hFoci.add(procFocus(tokLemma));              
             }
           }
         }
