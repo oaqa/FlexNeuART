@@ -38,7 +38,7 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   private static final Logger logger = LoggerFactory.getLogger(DBPediaAnnot.class);
   
   //Create an instance of HttpClient.
-  private static HttpClient mClient = new HttpClient();
+  private HttpClient mClient = new HttpClient();
 
   private static final String PARAM_SERVER_ADDR  = "ServerAddr";
   private static final String PARAM_CONF_THRESH  = "ConfThresh";

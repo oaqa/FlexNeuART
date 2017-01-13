@@ -12,16 +12,16 @@
                         <string>input/squad/squad-interm_dev1.gz</string>
                     </value>
                 </nameValuePair>
-                <nameValuePair>
+                <!--nameValuePair>
                     <name>MaxQty</name>
                     <value>
                         <integer>100</integer>
                     </value>
-                </nameValuePair>
+                </nameValuePair-->
             </configurationParameterSettings>
         </collectionIterator>
     </collectionReader>
-    <casProcessors casPoolSize="4" processingUnitThreadCount="4">
+    <casProcessors casPoolSize="4" processingUnitThreadCount="1">
     <casProcessor deployment="integrated" name="aeDBPediaAnnot">
         <descriptor>
             <import location="../analysis_engines/aeDBPediaAnnot.xml"/>
@@ -92,21 +92,9 @@
             </nameValuePair>
         </configurationParameterSettings>
     </casProcessor>
-    <casProcessor deployment="integrated" name="aeQuestionAnalysis">
+    <casProcessor deployment="integrated" name="aeSQuADQrelWriter">
         <descriptor>
-            <import location="../analysis_engines/aeQuestionAnalysis.xml"/>
-        </descriptor>
-            <deploymentParameters/>
-        <errorHandling>
-            <errorRateThreshold action="terminate" value="0/1000"/>
-            <maxConsecutiveRestarts action="terminate" value="30"/>
-            <timeout max="100000" default="-1"/>
-        </errorHandling>
-        <checkpoint batch="10000" time="1000ms"/>
-    </casProcessor>
-    <casProcessor deployment="integrated" name="aeFocusPhraseWriter">
-        <descriptor>
-            <import location="../analysis_engines/aeFocusPhraseWriter.xml"/>
+            <import location="../analysis_engines/aeSQuADQrelWriter.xml"/>
         </descriptor>
             <deploymentParameters/>
         <errorHandling>
