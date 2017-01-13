@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** An annotation with type & label attributes (used for NERs and DBPedia entiteies
- * Updated by JCasGen Thu Jan 12 13:26:20 EST 2017
+ * Updated by JCasGen Thu Jan 12 23:52:10 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class Entity extends Annotation {
@@ -65,13 +65,10 @@ public class Entity extends Annotation {
     readObject();
   }   
 
-  /** 
-   * <!-- begin-user-doc -->
+  /** <!-- begin-user-doc -->
    * Write your own initialization here
    * <!-- end-user-doc -->
-   *
-   * @generated modifiable 
-   */
+  @generated modifiable */
   private void readObject() {/*default - does nothing empty block */}
      
  
@@ -80,18 +77,14 @@ public class Entity extends Annotation {
   //* Feature: etype
 
   /** getter for etype - gets Entity type
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public String getEtype() {
     if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_etype == null)
       jcasType.jcas.throwFeatMissing("etype", "edu.cmu.lti.oaqa.knn4qa.types.Entity");
     return jcasType.ll_cas.ll_getStringValue(addr, ((Entity_Type)jcasType).casFeatCode_etype);}
     
   /** setter for etype - sets Entity type 
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setEtype(String v) {
     if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_etype == null)
       jcasType.jcas.throwFeatMissing("etype", "edu.cmu.lti.oaqa.knn4qa.types.Entity");
@@ -102,18 +95,14 @@ public class Entity extends Annotation {
   //* Feature: label
 
   /** getter for label - gets Entity label
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public String getLabel() {
     if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_label == null)
       jcasType.jcas.throwFeatMissing("label", "edu.cmu.lti.oaqa.knn4qa.types.Entity");
     return jcasType.ll_cas.ll_getStringValue(addr, ((Entity_Type)jcasType).casFeatCode_label);}
     
   /** setter for label - sets Entity label 
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setLabel(String v) {
     if (Entity_Type.featOkTst && ((Entity_Type)jcasType).casFeat_label == null)
       jcasType.jcas.throwFeatMissing("label", "edu.cmu.lti.oaqa.knn4qa.types.Entity");

@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** Word net super senses.
- * Updated by JCasGen Thu Jan 12 13:26:20 EST 2017
+ * Updated by JCasGen Thu Jan 12 23:52:10 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class WNNS extends Annotation {
@@ -65,13 +65,10 @@ public class WNNS extends Annotation {
     readObject();
   }   
 
-  /** 
-   * <!-- begin-user-doc -->
+  /** <!-- begin-user-doc -->
    * Write your own initialization here
    * <!-- end-user-doc -->
-   *
-   * @generated modifiable 
-   */
+  @generated modifiable */
   private void readObject() {/*default - does nothing empty block */}
      
  
@@ -80,18 +77,14 @@ public class WNNS extends Annotation {
   //* Feature: SuperSense
 
   /** getter for SuperSense - gets 
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public String getSuperSense() {
     if (WNNS_Type.featOkTst && ((WNNS_Type)jcasType).casFeat_SuperSense == null)
       jcasType.jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");
     return jcasType.ll_cas.ll_getStringValue(addr, ((WNNS_Type)jcasType).casFeatCode_SuperSense);}
     
   /** setter for SuperSense - sets  
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setSuperSense(String v) {
     if (WNNS_Type.featOkTst && ((WNNS_Type)jcasType).casFeat_SuperSense == null)
       jcasType.jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");

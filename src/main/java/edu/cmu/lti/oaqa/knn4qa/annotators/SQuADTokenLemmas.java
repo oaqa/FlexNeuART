@@ -37,24 +37,26 @@ import edu.cmu.lti.oaqa.knn4qa.types.*;
  */
 public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
   private BasicEngine                   mTokenizerEngine;
+  private JCasFactory                   mJCasFactory;
   
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
     super.initialize(aContext);
     
     mTokenizerEngine = new BasicEngine(aContext, false /* No POS tagging */);
+    mJCasFactory = mTokenizerEngine.createJCasFactory();
   }
 
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     // 1. Annotate the passage
     {
-      JCas tmp = null;
+      JCas tmpJCas = null;
       try {
-        tmp = mTokenizerEngine.borrowJCas();
-        tmp.setDocumentLanguage(SQuADIntermCollectionReader.DOCUMENT_LANGUAGE);
-        tmp.setDocumentText(aJCas.getDocumentText());        
-        mTokenizerEngine.process(tmp);
-        for (Token tok : JCasUtil.select(tmp, Token.class)) {
+        tmpJCas = mJCasFactory.borrowJCas();
+        tmpJCas.setDocumentLanguage(SQuADIntermCollectionReader.DOCUMENT_LANGUAGE);
+        tmpJCas.setDocumentText(aJCas.getDocumentText());        
+        mTokenizerEngine.process(tmpJCas);
+        for (Token tok : JCasUtil.select(tmpJCas, Token.class)) {
           TokenLemma dstTok = new TokenLemma(aJCas, tok.getBegin(), tok.getEnd());
           Lemma l = tok.getLemma();
           // For some weird reason, lemma is sometimes NULL
@@ -65,7 +67,7 @@ public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
       } finally {
-        if (tmp != null) mTokenizerEngine.returnJCas(tmp);
+        if (tmpJCas != null) mJCasFactory.returnJCas(tmpJCas);
       }
     }
     // 2. Annotate all questions
@@ -79,7 +81,7 @@ public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
     for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
       JCas tmp = null;
       try {
-        tmp = mTokenizerEngine.borrowJCas();
+        tmp = mJCasFactory.borrowJCas();
         tmp.setDocumentLanguage(SQuADIntermCollectionReader.DOCUMENT_LANGUAGE);
         tmp.setDocumentText(q.getCoveredText());
         mTokenizerEngine.process(tmp);
@@ -104,7 +106,7 @@ public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
       } finally {
-        if (tmp != null) mTokenizerEngine.returnJCas(tmp);
+        if (tmp != null) mJCasFactory.returnJCas(tmp);
       }
 
     }

@@ -92,6 +92,30 @@
             </nameValuePair>
         </configurationParameterSettings>
     </casProcessor>
+    <casProcessor deployment="integrated" name="aeQuestionAnalysis">
+        <descriptor>
+            <import location="../analysis_engines/aeQuestionAnalysis.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeFocusPhraseWriter">
+        <descriptor>
+            <import location="../analysis_engines/aeFocusPhraseWriter.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+    </casProcessor>
     <casProcessor deployment="integrated" name="xmiConsumer">
         <descriptor>
             <import name="descriptors.cas_consumers.xmiConsumer"/>

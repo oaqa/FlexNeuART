@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** 
- * Updated by JCasGen Thu Jan 12 13:26:20 EST 2017
+ * Updated by JCasGen Thu Jan 12 23:52:10 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class TokenLemma extends Annotation {
@@ -65,13 +65,10 @@ public class TokenLemma extends Annotation {
     readObject();
   }   
 
-  /** 
-   * <!-- begin-user-doc -->
+  /** <!-- begin-user-doc -->
    * Write your own initialization here
    * <!-- end-user-doc -->
-   *
-   * @generated modifiable 
-   */
+  @generated modifiable */
   private void readObject() {/*default - does nothing empty block */}
      
  
@@ -80,18 +77,14 @@ public class TokenLemma extends Annotation {
   //* Feature: Lemma
 
   /** getter for Lemma - gets 
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public String getLemma() {
     if (TokenLemma_Type.featOkTst && ((TokenLemma_Type)jcasType).casFeat_Lemma == null)
       jcasType.jcas.throwFeatMissing("Lemma", "edu.cmu.lti.oaqa.knn4qa.types.TokenLemma");
     return jcasType.ll_cas.ll_getStringValue(addr, ((TokenLemma_Type)jcasType).casFeatCode_Lemma);}
     
   /** setter for Lemma - sets  
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setLemma(String v) {
     if (TokenLemma_Type.featOkTst && ((TokenLemma_Type)jcasType).casFeat_Lemma == null)
       jcasType.jcas.throwFeatMissing("Lemma", "edu.cmu.lti.oaqa.knn4qa.types.TokenLemma");

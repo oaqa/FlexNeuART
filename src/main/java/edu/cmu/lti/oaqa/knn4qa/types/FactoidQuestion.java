@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** A factoid question
- * Updated by JCasGen Thu Jan 12 13:26:20 EST 2017
+ * Updated by JCasGen Thu Jan 12 23:52:10 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class FactoidQuestion extends Annotation {
@@ -65,13 +65,10 @@ public class FactoidQuestion extends Annotation {
     readObject();
   }   
 
-  /** 
-   * <!-- begin-user-doc -->
+  /** <!-- begin-user-doc -->
    * Write your own initialization here
    * <!-- end-user-doc -->
-   *
-   * @generated modifiable 
-   */
+  @generated modifiable */
   private void readObject() {/*default - does nothing empty block */}
      
  
@@ -80,18 +77,14 @@ public class FactoidQuestion extends Annotation {
   //* Feature: id
 
   /** getter for id - gets 
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public String getId() {
     if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_id == null)
       jcasType.jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
     return jcasType.ll_cas.ll_getStringValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_id);}
     
   /** setter for id - sets  
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setId(String v) {
     if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_id == null)
       jcasType.jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
