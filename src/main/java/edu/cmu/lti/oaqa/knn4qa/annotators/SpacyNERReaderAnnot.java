@@ -18,11 +18,19 @@ import edu.cmu.lti.oaqa.knn4qa.types.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 import java.io.*;
+import java.util.HashMap;
 
 /**
  * 
  * This class creates annotations by reading annotations created previously
  * by a Spacy pipeline (script: scripts/data/run_spacy_ner.py).
+ * 
+ * <p>Important note: it will load the text of annotations into memory 
+ * in the form of a hash map (on long String per document). So for Wikipedia, this should
+ * be run on a machine with about 32GB+ memory.</p>
+ * 
+ * <p>However, this annotator can be deployed in different threads, because it will
+ * keep only one copy of the annotation hash map.</p>
  * 
  * @author Leonid Boytsov
  *
@@ -37,22 +45,48 @@ public class SpacyNERReaderAnnot extends JCasAnnotator_ImplBase {
   @ConfigurationParameter(name = PARAM_SPACY_NER_FILE, mandatory = true)
   private String mSpacyNerFileName;
   
-  private BufferedReader mSpacyNer;
   
-  private static Gson    mGSON = new Gson();
+  
+  private Gson    mGSON = new Gson();
+  private static HashMap<String,String>  mNERStore = null; 
   
   @Override
   public void initialize(UimaContext aContext)
   throws ResourceInitializationException {
     super.initialize(aContext);
     
-    try {
-      mSpacyNer = 
-          new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(mSpacyNerFileName)));
-    } catch (IOException e) {
-      logger.error("Error opening file: " + mSpacyNerFileName);
-      throw new ResourceInitializationException(e);
+    synchronized (SpacyNERReaderAnnot.class) {
+      if (null == mNERStore) {
+        // We will read NER file, but only once
+        mNERStore = new HashMap<String,String>();
+      
+        BufferedReader spacyNer = null;
+        
+        try {
+          spacyNer = 
+              new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(mSpacyNerFileName)));
+          
+          logger.info("Starting reading annotations from '" + mSpacyNerFileName + "'");
+          
+          String line;
+                  
+          while ((line = spacyNer.readLine()) != null) {
+            NERData passageAnnot = mGSON.fromJson(line, NERData.class);
+            // Keeping it in the form of a String rather than
+            // in a parsed form should greatly reduce memory consumption
+            mNERStore.put(passageAnnot.id, line);
+          }
+          
+          logger.info("Read " + mNERStore.size() + " annotations from '" + mSpacyNerFileName + "'");
+  
+        } catch (Exception e) {
+          logger.error("Error opening file: " + mSpacyNerFileName);
+          throw new ResourceInitializationException(e);
+        }
+        System.gc();
+      }
     }
+    
   }
   
   
@@ -61,42 +95,26 @@ public class SpacyNERReaderAnnot extends JCasAnnotator_ImplBase {
     Passage passage = JCasUtil.selectSingle(aJCas, Passage.class); // Will throw an exception of Passage is missing
     // Now retrieve all annotation entries until we find one with the id the has the same id as the passage
     
-    NERData passageAnnot = null;
     String passId = passage.getId();
-    do {
-      String line;
-      try {
-        line = mSpacyNer.readLine();
-      } catch (IOException e) {
-        e.printStackTrace();
-        throw new AnalysisEngineProcessException(e);
-      }
-      if (line == null) {
-        throw new AnalysisEngineProcessException(
-            new Exception("Reached EOF in '" + mSpacyNerFileName + "' before finding record for passage id='" + passId)); 
-      }
-      try {
-        passageAnnot = mGSON.fromJson(line, NERData.class);
-      } catch (JsonSyntaxException e) {
-        logger.error("Cannot parse NER for line:" + line);
-        throw new AnalysisEngineProcessException(e);
-      }
-    } while (!passageAnnot.id.equals(passId));
-    /*
-     * Here we end up with the annotation record that has the same ID as the passage.
-     * If we reach EOF before finding such an annotation record, an exception is thrown.
-     * Note that the order of annotations is the same as the order of CASes.
-     * So, if there is always an annotation record for each passage, it will be found.
-     */
-    if (passageAnnot.annotations != null) {
-      for (NERAnnotation an : passageAnnot.annotations) {
-        Entity e = new Entity(aJCas, an.start, an.end);
-        e.setEtype(SPACY_NER_TYPE);
-        e.setLabel(an.label);
-        e.addToIndexes();        
-      }
-    }
 
+    // This doesn't have to be synced, b/c we don't update this hash after 
+    // the first call to initialize() is completed.
+    String tmp = mNERStore.get(passId);
+    // Parsing the same JSON twice is the price we pay to reduce memory footprint of the hash
+    NERData passageAnnot = mGSON.fromJson(tmp, NERData.class);
+    if (passageAnnot != null) {
+      if (passageAnnot.annotations != null) {
+        for (NERAnnotation an : passageAnnot.annotations) {
+          Entity e = new Entity(aJCas, an.start, an.end);
+          e.setEtype(SPACY_NER_TYPE);
+          e.setLabel(an.label);
+          e.addToIndexes();        
+        }
+      }
+    } else {
+      throw new AnalysisEngineProcessException(
+          new Exception("Can't retrieve anntotation for the passage id='" + passId + "'"));
+    }
   }
 
 }

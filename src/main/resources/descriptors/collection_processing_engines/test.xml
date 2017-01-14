@@ -15,7 +15,7 @@
                 <!--nameValuePair>
                     <name>MaxQty</name>
                     <value>
-                        <integer>100</integer>
+                        <integer>10</integer>
                     </value>
                 </nameValuePair-->
             </configurationParameterSettings>
