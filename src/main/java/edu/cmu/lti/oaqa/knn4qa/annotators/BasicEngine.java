@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.*;
  */
 public class BasicEngine {
   private static final Logger logger = LoggerFactory.getLogger(BasicEngine.class);
-  
+  private static int mThreadQty = 0;
 
   public BasicEngine(UimaContext context, boolean doPOSTagging) throws ResourceInitializationException{
     AnalysisEngineDescription aggregate = null;
@@ -67,8 +67,12 @@ public class BasicEngine {
     }
 
     mEngine = createEngine(aggregate);
-    long threadId = Thread.currentThread().getId();
-    logger.info(String.format("Created an engine, thread # %d",threadId));
+    int tqty = 0;
+    synchronized (this.getClass()) {
+      mThreadQty ++;
+      tqty = mThreadQty;
+    }
+    logger.info(String.format("Created an engine, # of threads %d", tqty));
   }
 
   public void process(JCas origJCas) throws AnalysisEngineProcessException {

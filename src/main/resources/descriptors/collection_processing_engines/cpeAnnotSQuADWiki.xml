@@ -15,7 +15,7 @@
             </configurationParameterSettings>
         </collectionIterator>
     </collectionReader>
-    <casProcessors casPoolSize="16" processingUnitThreadCount="16">
+    <casProcessors casPoolSize="36" processingUnitThreadCount="36">
     <casProcessor deployment="integrated" name="aeDBPediaAnnot">
         <descriptor>
             <import location="../analysis_engines/aeDBPediaAnnot.xml"/>
@@ -31,6 +31,9 @@
             <nameValuePair>
                 <name>ServerAddr</name>
                 <value>
+                    <!--
+                    <string>http://gold.lti.cs.cmu.edu:2222</string>
+                    -->
                     <string>http://localhost:2222</string>
                 </value>
             </nameValuePair>
