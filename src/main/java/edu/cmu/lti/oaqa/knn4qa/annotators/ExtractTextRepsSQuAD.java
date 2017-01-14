@@ -15,6 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.annotators;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -23,6 +24,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 
 import edu.cmu.lti.oaqa.knn4qa.types.*;
+import edu.cmu.lti.oaqa.knn4qa.utils.DictNoComments;
 
 class GoodTokensSQuAD {
   HashMap<TokenLemma, String>    mMap = new HashMap<TokenLemma, String>();
@@ -31,8 +33,11 @@ class GoodTokensSQuAD {
 
 public class ExtractTextRepsSQuAD extends ExtractTextRepsBase {
 
-  ExtractTextRepsSQuAD(String stopWordFileName, boolean bLemmatize) throws Exception {
+  private DictNoComments mFreqFocusWords = null;
+
+  ExtractTextRepsSQuAD(String stopWordFileName, String freqFocusWordFileName, boolean bLemmatize) throws Exception {
     super(stopWordFileName, bLemmatize);
+    mFreqFocusWords = new DictNoComments(new File(freqFocusWordFileName), true /* lowercasing */);
   }
   
   /**
@@ -91,5 +96,66 @@ public class ExtractTextRepsSQuAD extends ExtractTextRepsBase {
     }
 
     return strFromStrStream(sb);    
-  }  
+  }
+  
+  /**
+   * Generate a list of named entities from the passage annotation
+   * 
+   * @param jCas  a JCas containing entity annotations
+   * @return
+   */
+  public String getNER(final JCas jCas) {
+    StringBuffer sb = new StringBuffer();
+    
+    for (Entity e : JCasUtil.select(jCas, Entity.class)) {
+      sb.append(' ');
+      sb.append(e.getEtype() + ":" + e.getLabel());
+    }        
+    
+    return strFromStrStream(sb);
+  }
+  
+  /**
+   * Generate a list of question annotations from the respective annotated factoid question.
+   * 
+   * @param questView     Question view jCas
+   * @param coverAnnot    Covering annotation
+   * @param bWWord        Should we include question words 
+   * @param bFocusWord    Should we include common focus words?
+   * @param bEpyraQType   Should we include common feature types
+   * @return
+   */
+  public String getQuestionAnnot(final JCas questView, FactoidQuestion coverAnnot, 
+                                  boolean bWWord,
+                                  boolean bFocusWord,
+                                  boolean bEpyraQType
+                                 ) {
+    StringBuffer sb = new StringBuffer();
+    
+    if (bWWord) {
+      for (WWord ww: JCasUtil.selectCovered(questView, WWord.class, coverAnnot)) {
+         sb.append(' ');
+         sb.append(ww.getValue());
+      }
+    }
+    
+    if (bFocusWord) {
+      for (FocusPhrase fw: JCasUtil.selectCovered(questView, FocusPhrase.class, coverAnnot)) {
+         sb.append(' ');
+         String focusWord = fw.getValue().toLowerCase();
+         if (mFreqFocusWords == null || mFreqFocusWords.contains(focusWord))
+           sb.append(focusWord);
+      }
+    }
+    
+    if (bEpyraQType) {
+      for (FactoidQuestionType qt: JCasUtil.selectCovered(questView, FactoidQuestionType.class, coverAnnot)) {
+        sb.append(' ');
+        sb.append(qt.getValue());
+      }      
+    }
+    
+    return strFromStrStream(sb);
+  }
+  
 }

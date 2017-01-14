@@ -49,11 +49,13 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
   private static final String PARAM_INDEX_PASSAGE_FILE    = "PassageFile";
   private static final String PARAM_INDEX_QUESTION_FILE   = "QuestionFile";
   private static final String PARAM_STOPWORD_FILE         = "StopWordFile";
+  private static final String PARAM_FOCUSWORD_FILE        = "FreqFocusWordFile";
   
   private static final String PARAM_FIELD_TEXT            = "FieldText";
+  // Saving various question features along with annotated entities in answer
+  private static final String PARAM_FIELD_QFEATS          = "FieldQFeatures";
   
   private static final XmlHelper mXmlHlp = new XmlHelper();
-
   
   private static BufferedWriter         mIndexQuestionFile;
   private static BufferedWriter         mIndexPassageFile;
@@ -61,12 +63,18 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
 
   @ConfigurationParameter(name = PARAM_FIELD_TEXT, mandatory = true)
   private String mFieldText;
+  // Force the user to always specify this field name, there's no harm in doing so
+  @ConfigurationParameter(name = PARAM_FIELD_QFEATS, mandatory = true)
+  private String mFieldQFeatures;  
   @ConfigurationParameter(name = PARAM_INDEX_QUESTION_FILE, mandatory = true)
   private String mIndexQuestionFileName;
   @ConfigurationParameter(name = PARAM_INDEX_PASSAGE_FILE, mandatory = true)
   private String mIndexPassageFileName;
   @ConfigurationParameter(name = PARAM_STOPWORD_FILE, mandatory = true)
   private String mStopWordFileName;
+  // Let this one be mandatory, there's no harm reading a small file in every SQuAD pipeline
+  @ConfigurationParameter(name = PARAM_FOCUSWORD_FILE, mandatory = true) 
+  private String mFocusWordFile;
   
   private ExtractTextRepsSQuAD mTextRepExtract;
   
@@ -77,7 +85,7 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
     try {
       initOutput(mIndexQuestionFileName, mIndexPassageFileName);
       
-      mTextRepExtract = new ExtractTextRepsSQuAD(mStopWordFileName, true);
+      mTextRepExtract = new ExtractTextRepsSQuAD(mStopWordFileName, mFocusWordFile, true);
     } catch (Exception e) {
       e.printStackTrace();
       throw new ResourceInitializationException(e);
@@ -95,6 +103,9 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
       GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(aJCas, passage);      
       
       fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
+      if (mFieldQFeatures != null) {
+        fieldInfo.put(mFieldQFeatures, mTextRepExtract.getNER(aJCas));
+      }
       fieldInfo.put(UtilConst.TAG_DOCNO, passage.getId());
       
       try {
@@ -120,6 +131,11 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
         GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(questView, q);
         
         fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
+        if (mFieldQFeatures != null) {
+          boolean bWWord = true, bFocusWord = true, bEpyraQType = true;
+          fieldInfo.put(mFieldQFeatures, 
+              mTextRepExtract.getQuestionAnnot(questView, q, bWWord, bFocusWord, bEpyraQType));
+        }        
         fieldInfo.put(UtilConst.TAG_DOCNO, q.getId());
 
         try {

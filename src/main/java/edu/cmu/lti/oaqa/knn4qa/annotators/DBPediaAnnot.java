@@ -6,15 +6,12 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
-
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +30,7 @@ import edu.cmu.lti.oaqa.knn4qa.types.*;
  *
  */
 public class DBPediaAnnot extends JCasAnnotator_ImplBase {
+ 
   private static final String RESOURCES_KEY = "Resources";
 
   private static final Logger logger = LoggerFactory.getLogger(DBPediaAnnot.class);
@@ -78,6 +76,8 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
         if (!resultJSON.isNull(RESOURCES_KEY))
           entities = resultJSON.getJSONArray(RESOURCES_KEY);
       } catch (JSONException e) {
+        logger.info("Invalid JSON response:");
+        logger.info(resp);
         throw new AnalysisEngineProcessException(
             new Exception("Received invalid response from DBpedia Spotlight API."));
       }
