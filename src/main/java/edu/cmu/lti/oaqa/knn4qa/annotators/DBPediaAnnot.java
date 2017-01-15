@@ -113,7 +113,7 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
       
     } catch (Exception e) {
       logger.error("Exception: " + e);
-      return;
+      throw new AnalysisEngineProcessException(e);
     }
   }
   
