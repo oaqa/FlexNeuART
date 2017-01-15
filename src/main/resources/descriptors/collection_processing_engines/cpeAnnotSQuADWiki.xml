@@ -9,7 +9,7 @@
                 <nameValuePair>
                     <name>InputFile</name>
                     <value>
-                        <string>/home/leo/SourceTreeGit/knn4qa_oqaqa/input/squad/wiki-interm.txt.gz</string>
+                        <string>input/squad/wiki-interm.txt.gz</string>
                     </value>
                 </nameValuePair>
             </configurationParameterSettings>
@@ -54,7 +54,7 @@
             <nameValuePair>
                 <name>SpacyNERFile</name>
                 <value>
-                    <string>/home/leo/SourceTreeGit/knn4qa_oqaqa/input/squad/wiki-spacy_ner.txt.gz</string>
+                    <string>input/squad/wiki-spacy_ner.txt.gz</string>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>

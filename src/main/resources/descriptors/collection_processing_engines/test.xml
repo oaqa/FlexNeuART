@@ -49,7 +49,7 @@
             <nameValuePair>
                 <name>SpacyNERFile</name>
                 <value>
-                    <string>/home/leo/SourceTreeGit/knn4qa_oqaqa/input/squad/squad-spacy_ner_dev1.gz</string>
+                    <string>input/squad/squad-spacy_ner_dev1.gz</string>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>
