@@ -15,7 +15,7 @@
             </configurationParameterSettings>
         </collectionIterator>
     </collectionReader>
-    <casProcessors casPoolSize="36" processingUnitThreadCount="36">
+    <casProcessors casPoolSize="1" processingUnitThreadCount="1">
     <casProcessor deployment="integrated" name="aeSpacyNERReaderAnnot">
         <descriptor>
             <import location="../analysis_engines/aeSpacyNERAnnot.xml"/>
@@ -51,6 +51,9 @@
             <nameValuePair>
                 <name>ServerAddr</name>
                 <value>
+                    <!--
+                    <string>http://gold.lti.cs.cmu.edu:2222</string>
+                    -->
                     <string>http://localhost:2222</string>
                 </value>
             </nameValuePair>
@@ -59,6 +62,18 @@
     <casProcessor deployment="integrated" name="aeSQuADTokenLemmas">
         <descriptor>
             <import location="../analysis_engines/aeSQuADTokenLemmas.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeQuestionAnalysis">
+        <descriptor>
+            <import location="../analysis_engines/aeQuestionAnalysis.xml"/>
         </descriptor>
             <deploymentParameters/>
         <errorHandling>
