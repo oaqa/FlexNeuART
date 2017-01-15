@@ -6,9 +6,12 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,15 +28,6 @@ import edu.cmu.lti.oaqa.knn4qa.types.*;
 /**
  * 
  * Creates DBPedia annotations.
- * 
- * <p>Note that in very rare cases, DBPedia SpotLight fails for no apparent reason. For example,
- * instead of a valid response, I get an error that starts likes this:</p>
- * <pre>
- * org.dbpedia.spotlight.exceptions.OutputException: Error converting XML to JSON.Error converting XML to JSON.org.dbpedia.spotlight.web.rest.OutputManager.xml2json(OutputManager.java:235)
- * </pre>
- * <p>Because such errors are extremely infrequent, we prefer to ignore them and print the total error count in the end so
- * leaving the judgment (as to how bad this is) to the user.
- * </p>
  * 
  * @author Leonid Boytsov
  *
@@ -59,8 +53,6 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   @ConfigurationParameter(name = PARAM_CONF_THRESH, mandatory = true)
   private Float mConfThresh;  
   
-  private static int errorQty = 0;
-  
   @Override
   public void initialize(UimaContext aContext)
   throws ResourceInitializationException {
@@ -70,24 +62,18 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     String text = aJCas.getDocumentText(), resp;
-    
-    synchronized (this.getClass()) {
-      ++errorQty; // we will later decrease error counter, unless the function
-      // terminates preliminarly
-    }
-    
+        
     try {
-      GetMethod getMethod = new GetMethod(mServerAddr + "/rest/annotate/?" +
-          "confidence=" + mConfThresh
-          //+ "&support=" + SUPPORT
-          + "&text=" + URLEncoder.encode(text, "utf-8"));
-      getMethod.addRequestHeader(new Header("Accept", "application/json"));
+      PostMethod postMethod = new PostMethod(mServerAddr + "/rest/annotate/");
+      postMethod.addParameter(new NameValuePair("confidence", mConfThresh + ""));
+      postMethod.addParameter(new NameValuePair("text", URLEncoder.encode(text, "utf-8")));
+      postMethod.addRequestHeader(new Header("Accept", "application/json"));
 
       try {
-        resp = request(getMethod);
+        resp = request(postMethod);
       } catch (Exception e) {
         logger.error("Error sending a request to DBPedia SpotLight: " + e);
-        return;
+        throw new AnalysisEngineProcessException(e);
       }
       
       JSONObject resultJSON = null;
@@ -98,9 +84,8 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
         if (!resultJSON.isNull(RESOURCES_KEY))
           entities = resultJSON.getJSONArray(RESOURCES_KEY);
       } catch (JSONException e) {
-        //e.printStackTrace();
         logger.error("Received the following invalid response from DBpedia Spotlight API: '" + resp + "'");
-        return;
+        throw new AnalysisEngineProcessException(e);
       }
       
       if (entities != null)
@@ -121,9 +106,8 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
           }
           
         } catch (JSONException e) {
-          //e.printStackTrace();
           logger.error("JSON exception "+e);
-          return;
+          throw new AnalysisEngineProcessException(e);
         }
       }
       
@@ -131,11 +115,6 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
       logger.error("Exception: " + e);
       return;
     }
-    
-    synchronized (this.getClass()) {
-      --errorQty;
-    }
-
   }
   
   // This is a thoroughly rewritten DBPedia's AnnotationClient.request method
@@ -177,8 +156,7 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   
   @Override
   public void collectionProcessComplete() throws AnalysisEngineProcessException {
-    logger.info("The pipeline complete, annotator " + this.getClass().getCanonicalName() + 
-                " failed " + errorQty + " times");
+    // Nothing here yet
   }
 
 }
