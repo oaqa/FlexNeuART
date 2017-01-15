@@ -9,7 +9,7 @@
                 <nameValuePair>
                     <name>InputFile</name>
                     <value>
-                        <string>input/squad/squad-interm_dev1.gz</string>
+                        <string>input/squad/squad-interm_train.gz</string>
                     </value>
                 </nameValuePair>
             </configurationParameterSettings>
@@ -43,13 +43,13 @@
             <nameValuePair>
                 <name>PassageFile</name>
                 <value>
-                    <string>output/squad/dev1/SolrAnswerFile.txt</string>
+                    <string>output/squad/train/SolrAnswerFile.txt</string>
                 </value>
             </nameValuePair>
             <nameValuePair>
                 <name>QuestionFile</name>
                 <value>
-                    <string>output/squad/dev1/SolrQuestionFile.txt</string>
+                    <string>output/squad/train/SolrQuestionFile.txt</string>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>
@@ -81,13 +81,13 @@
             <nameValuePair>
                 <name>QuestionFilePrefix</name>
                 <value>
-                    <string>output/squad/dev1/question</string>
+                    <string>output/squad/train/question</string>
                 </value>
             </nameValuePair>
             <nameValuePair>
                 <name>PassageFilePrefix</name>
                 <value>
-                    <string>output/squad/dev1/answer</string>
+                    <string>output/squad/train/answer</string>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>
