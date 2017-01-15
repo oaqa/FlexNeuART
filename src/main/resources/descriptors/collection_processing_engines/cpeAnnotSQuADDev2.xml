@@ -16,6 +16,46 @@
         </collectionIterator>
     </collectionReader>
     <casProcessors casPoolSize="36" processingUnitThreadCount="36">
+    <casProcessor deployment="integrated" name="aeSpacyNERReaderAnnot">
+        <descriptor>
+            <import location="../analysis_engines/aeSpacyNERAnnot.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>SpacyNERFile</name>
+                <value>
+                    <string>input/squad/squad-spacy_ner_dev2.gz</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeDBPediaAnnot">
+        <descriptor>
+            <import location="../analysis_engines/aeDBPediaAnnot.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>ServerAddr</name>
+                <value>
+                    <string>http://localhost:2222</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
     <casProcessor deployment="integrated" name="aeSQuADTokenLemmas">
         <descriptor>
             <import location="../analysis_engines/aeSQuADTokenLemmas.xml"/>
@@ -65,6 +105,14 @@
             <timeout max="100000" default="-1"/>
         </errorHandling>
         <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>QrelFilePrefix</name>
+                <value>
+                    <string>output/squad/dev2/qrels</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
     </casProcessor>
     <casProcessor deployment="integrated" name="aeSQuADCreateParallelCorpora">
         <descriptor>
