@@ -1,25 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <analysisEngineDescription xmlns="http://uima.apache.org/resourceSpecifier">
   <frameworkImplementation>org.apache.uima.java</frameworkImplementation>
-  <primitive>true</primitive>  <annotatorImplementationName>edu.cmu.lti.oaqa.knn4qa.annotators.SQuADIndexFileWriter</annotatorImplementationName>
+  <primitive>true</primitive>  <annotatorImplementationName>edu.cmu.lti.oaqa.knn4qa.annotators.SQuADCreateParallelCorpora</annotatorImplementationName>
   <analysisEngineMetaData>
-    <name>aeSQuADIndexFileWriter</name>
+    <name>aeSQuADCreateParallelCorpora</name>
     <description/>
     <version>1.0</version>
     <vendor/>
     <configurationParameters>
-      <configurationParameter>
-        <name>PassageFile</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>QuestionFile</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
       <configurationParameter>
         <name>StopWordFile</name>
         <type>String</type>
@@ -27,19 +15,19 @@
         <mandatory>true</mandatory>
       </configurationParameter>
       <configurationParameter>
-        <name>FieldText</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-    <configurationParameter>
         <name>FreqFocusWordFile</name>
         <type>String</type>
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
       <configurationParameter>
-        <name>FieldQFeatures</name>
+        <name>QuestionFilePrefix</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+      </configurationParameter>
+      <configurationParameter>
+        <name>AnswerFilePrefix</name>
         <type>String</type>
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
@@ -53,33 +41,21 @@
         </value>
       </nameValuePair>
       <nameValuePair>
-        <name>QuestionFile</name>
-        <value>
-          <string>output/.../SolrQuestionFile.txt</string>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>PassageFile</name>
-        <value>
-          <string>output/.../SolrAnswerFile.txt</string>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>FieldText</name>
-        <value>
-          <string>Text_bm25</string>
-        </value>
-      </nameValuePair>
-    <nameValuePair>
         <name>FreqFocusWordFile</name>
         <value>
           <string>data/squad/freq_focus_words.txt</string>
         </value>
       </nameValuePair>
       <nameValuePair>
-        <name>FieldQFeatures</name>
+        <name>QuestionFilePrefix</name>
         <value>
-          <string>QFeatures_All</string>
+          <string>output/.../question</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>AnswerFilePrefix</name>
+        <value>
+          <string>output/.../answer</string>
         </value>
       </nameValuePair>
     </configurationParameterSettings>

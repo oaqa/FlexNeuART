@@ -31,11 +31,11 @@ class GoodTokensSQuAD {
   ArrayList<TokenLemma>          mList = new ArrayList<TokenLemma>();
 }
 
-public class ExtractTextRepsSQuAD extends ExtractTextRepsBase {
+public class SQuADExtractTextReps extends ExtractTextRepsBase {
 
   private DictNoComments mFreqFocusWords = null;
 
-  ExtractTextRepsSQuAD(String stopWordFileName, String freqFocusWordFileName, boolean bLemmatize) throws Exception {
+  SQuADExtractTextReps(String stopWordFileName, String freqFocusWordFileName, boolean bLemmatize) throws Exception {
     super(stopWordFileName, bLemmatize);
     mFreqFocusWords = new DictNoComments(new File(freqFocusWordFileName), true /* lowercasing */);
   }

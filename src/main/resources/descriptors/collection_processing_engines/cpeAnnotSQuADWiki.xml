@@ -86,7 +86,7 @@
             <nameValuePair>
                 <name>PassageFile</name>
                 <value>
-                    <string>output/squad/wiki/SolrPassageFile.txt</string>
+                    <string>output/squad/wiki/SolrAnswerFile.txt</string>
                 </value>
             </nameValuePair>
             <nameValuePair>

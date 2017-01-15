@@ -76,7 +76,7 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
   @ConfigurationParameter(name = PARAM_FOCUSWORD_FILE, mandatory = true) 
   private String mFocusWordFile;
   
-  private ExtractTextRepsSQuAD mTextRepExtract;
+  private SQuADExtractTextReps mTextRepExtract;
   
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
@@ -85,7 +85,7 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
     try {
       initOutput(mIndexQuestionFileName, mIndexPassageFileName);
       
-      mTextRepExtract = new ExtractTextRepsSQuAD(mStopWordFileName, mFocusWordFile, true);
+      mTextRepExtract = new SQuADExtractTextReps(mStopWordFileName, mFocusWordFile, true);
     } catch (Exception e) {
       e.printStackTrace();
       throw new ResourceInitializationException(e);
