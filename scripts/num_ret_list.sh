@@ -10,6 +10,9 @@ elif [ "$collect" = "compr" ] ; then
 elif [ "$collect" = "stackoverflow" ] ; then
   export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
   export N_TRAIN=15
+elif [ "$collect" = "squad" ] ; then
+  export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
+  export N_TRAIN=15
 else
   echo "Unsupported collection: $collect"
   exit 1

@@ -1,7 +1,7 @@
 #!/bin/bash
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, compr2M"
+  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow"
   exit 1
 fi
 
@@ -36,10 +36,8 @@ elif [ "$collect" = "stackoverflow" ] ; then
     echo "FAILURE!!!"
     exit 1
   fi
-elif [ "$collect" = "compr2M" ] ; then
-  # For compr2M the order of parts MUST be the same as in create_inmemfwd_index.sh !!!
-  IN_DIR="output/compr/"
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -n 2000000
+elif [ "$collect" = "squad" ] ; then
+  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran,wiki  -solr_file SolrAnswerFile.txt
   if [ "$?" != "0" ] ; then
     echo "FAILURE!!!"
     exit 1

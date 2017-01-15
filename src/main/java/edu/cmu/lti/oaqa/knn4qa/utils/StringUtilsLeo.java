@@ -86,6 +86,10 @@ public class StringUtilsLeo {
     return text == null ? null : Normalizer.normalize(text, Form.NFD)
         .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
   }
+  
+  public static String removePunct(String text) {
+    return text == null ? null : text.replaceAll("\\p{Punct}+", " ");
+  }
 
   /**
    * Cleans up a string and replaces diacritcs.

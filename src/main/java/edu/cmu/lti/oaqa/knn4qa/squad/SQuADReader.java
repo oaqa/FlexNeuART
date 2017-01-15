@@ -46,12 +46,14 @@ public class SQuADReader {
     int qty = 0;
     int parQty = 0;
     for (SQuADEntry e : r.mData.data) {
+      System.out.println("@: " + e.title);
       for (SQuADParagraph p : e.paragraphs) {
        qty += p.qas.length;
        ++parQty;
        for (SQuADQuestionAnswers qas : p.qas) {
           System.out.println(qas.question);
-        }
+       }
+       System.out.println("==================");
       }
     }
     

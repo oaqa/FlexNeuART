@@ -80,7 +80,7 @@ public class SQuAD2IntermConverter {
       
       //HashMap<String,Integer> hCurrPassageId = new HashMap<String,Integer>(); 
       
-      int globalPassageId = 0;
+      int globalPassageId = 0, globalQuestionId = 0;
       
       for (int fileId = 0; fileId < fileQty; ++fileId) {
         
@@ -120,7 +120,8 @@ public class SQuAD2IntermConverter {
             
             if (questQty > 0) {
               for (int i = 0; i < passage.qas.length; ++i) {
-                String questId = passageId + "_" + i;
+                String questId = "" + globalQuestionId;
+                ++globalQuestionId;
                 qp.questions[i] = new QAQuestion(questId, passage.qas[i].question);
               }
             }
