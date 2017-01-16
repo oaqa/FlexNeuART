@@ -1,7 +1,7 @@
 #!/bin/bash
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow"
+  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, squad"
   exit 1
 fi
 

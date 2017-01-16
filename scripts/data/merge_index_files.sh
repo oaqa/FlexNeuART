@@ -1,4 +1,5 @@
 #!/bin/bash
+. scripts/common.sh
 
 # This script runs annotation pipelines for a given collection
 collect=$1
@@ -22,10 +23,17 @@ if [ "$collect" = "squad" ] ; then
   for d in train dev1 dev2 test tran wiki  ; do
     cdir=$IN_DIR/$d
     echo "Merging in $cdir"
-    cat $cdir/SolrQuestionFile.txt $IN_DIR/$d/SolrAnswerFile.txt > $cdir/SolrQuestionAnswerFile.txt 
-    if [ "$?" != "0" ] ; then
-     echo "FAILURE!!!"
-     exit 1
+    if [ "$d" = "wiki" ] ; then
+      cd $cdir
+      check "cd $cdir"
+      # In this case, we simply create a link, because for the wiki part there are no annotated questions
+      ln -s SolrAnswerFile.txt SolrQuestionAnswerFile.txt
+      check "ln -s SolrAnswerFile.txt SolrQuestionAnswerFile.txt"
+      cd -
+      check "cd -"
+    else
+      cat $cdir/SolrQuestionFile.txt $IN_DIR/$d/SolrAnswerFile.txt > $cdir/SolrQuestionAnswerFile.txt 
+      check "$cdir/SolrQuestionFile.txt $IN_DIR/$d/SolrAnswerFile.txt > $cdir/SolrQuestionAnswerFile.txt "
     fi
   done
 else
