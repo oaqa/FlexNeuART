@@ -40,7 +40,7 @@ elif [ "$collect" = "stackoverflow" ] ; then
     exit 1
   fi
 elif [ "$collect" = "squad" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran,wiki  -solr_file SolrAnswerFile.txt -exclude_fields "bigram,srl,srl_lab,dep,wnss,text_unlemm"
+  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran,wiki  -solr_file SolrQuestionAnswerFile.txt -exclude_fields "bigram,srl,srl_lab,dep,wnss,text_unlemm"
   if [ "$?" != "0" ] ; then
     echo "FAILURE!!!"
     exit 1
