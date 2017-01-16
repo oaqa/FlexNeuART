@@ -76,8 +76,8 @@ public class SQuADQrelWriter extends JCasAnnotator_ImplBase {
     
     for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
       try {
-        doOutput(mQrelFileBinary,   pass.getId(), q.getId(), 1);
-        doOutput(mQrelFileGraded,   pass.getId(), q.getId(), QREL_BEST_GRADE);
+        doOutput(mQrelFileBinary, q.getId(), pass.getId(),  1);
+        doOutput(mQrelFileGraded, q.getId(), pass.getId(), QREL_BEST_GRADE);
       } catch (IOException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);

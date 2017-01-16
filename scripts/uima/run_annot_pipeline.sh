@@ -4,7 +4,7 @@
 # This script runs annotation pipelines for a given collection
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, ComprMinusManner, stackoverflow"
+  echo "Specify sub-collection (1st arg): manner, compr, ComprMinusManner, stackoverflow, squad"
   exit 1
 fi
 

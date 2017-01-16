@@ -52,7 +52,8 @@ public abstract class FeatureExtractor {
                                               "Srl_bm25",   
                                               "SrlLab_bm25",
                                               "DepRel_bm25",
-                                              "WNSS_bm25"
+                                              "WNSS_bm25",
+                                              "QFeatures_All"
                                               }; 
 
   public final static String[] mFieldNames = { 
@@ -62,7 +63,8 @@ public abstract class FeatureExtractor {
                                             "srl",
                                             "srl_lab",
                                             "dep",
-                                            "wnss"
+                                            "wnss",
+                                            "qfeat_all"
                                             };
   
   /*

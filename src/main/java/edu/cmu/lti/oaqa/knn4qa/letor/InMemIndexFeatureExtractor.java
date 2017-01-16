@@ -1781,6 +1781,8 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   
   InMemForwardIndex mFieldIndex[] = new InMemForwardIndex[FeatureExtractor.mFieldNames.length];
 
+  /* START OF FIELD PARAMS */
+  
   protected static boolean[] mFlippedTranTableFieldUse = {
     true,  // text
     true,  // text_unlemm
@@ -1788,7 +1790,8 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     false, // srl
     false, // srl_lab
     false, // dep
-    false  // wnss
+    false, // wnss
+    false, // qfeat_all
    };
   
   
@@ -1800,7 +1803,8 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 0.075f,  // srl
                                 0.5f,    // srl_lab 
                                 0.075f,  // dep 
-                                0.1f     // wnss 
+                                0.1f,    // wnss
+                                0.1f,    // qfeat_all
                               };
   
   protected static float[] mProbSelfTranDefault = {
@@ -1810,7 +1814,8 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 DEFAULT_PROB_SELF_TRAN, // srl
                                 DEFAULT_PROB_SELF_TRAN, // srl_lab
                                 DEFAULT_PROB_SELF_TRAN, // dep
-                                DEFAULT_PROB_SELF_TRAN  // wnss;
+                                DEFAULT_PROB_SELF_TRAN, // wnss
+                                0.001f, // qfeat_all
    };
 
   // For Model1 translation features, ignore translation probabilities smaller than this value
@@ -1822,6 +1827,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                1e-5f, // srl_lab 
                                1e-5f, // dep 
                                1e-4f, // wnss 
+                               1e-3f, // qfeat_all
                              };
 
   protected static float[] mMinJSDCompositeProbDefault =   {
@@ -1831,10 +1837,11 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                               1e-2f, // srl
                               1e-2f, // srl_lab 
                               1e-2f, // dep 
-                              1e-2f, // wnss 
+                              1e-2f, // wnss
+                              1e-2f, // qfeat_all
   };
   
- // Ignore translation probabilities smaller than this value
+ // For smiple tran feature, ignore translation probabilities smaller than this value
   protected static float[] mMinSimpleTranProbDefault = {
                                 2.5e-3f, // text
                                 2.5e-3f, // text_unlemm
@@ -1842,9 +1849,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 1e-5f,   // srl 
                                 1e-5f,   // srl_lab 
                                 1e-5f,   // dep 
-                                1e-2f,   // wnss 
+                                1e-2f,   // wnss
+                                1e-3f,   // qfeat_all
                                };
     
+  /* END OF FIELD PARAMS */
+  
   protected float maFieldProbTable[][] = new float[mFieldNames.length][];
 
   final BM25SimilarityLucene        mBM25Similarity[] = new BM25SimilarityLucene[FeatureExtractor.mFieldNames.length];
