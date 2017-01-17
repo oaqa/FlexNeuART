@@ -15,7 +15,7 @@ WDT	Wh-determiner
 WP	        Wh-pronoun,
 WP$	Possessive wh-pronoun
 WRB	Wh-adverb
- * Updated by JCasGen Thu Jan 12 23:52:10 EST 2017
+ * Updated by JCasGen Tue Jan 17 12:22:14 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class WWord extends Annotation {

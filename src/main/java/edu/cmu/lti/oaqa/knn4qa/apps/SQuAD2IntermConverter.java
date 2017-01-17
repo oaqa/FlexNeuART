@@ -122,7 +122,18 @@ public class SQuAD2IntermConverter {
               for (int i = 0; i < passage.qas.length; ++i) {
                 String questId = "" + globalQuestionId;
                 ++globalQuestionId;
-                qp.questions[i] = new QAQuestion(questId, passage.qas[i].question);
+                SQuADQuestionAnswers currPass = passage.qas[i];
+                QAQuestion qq = new QAQuestion(questId, currPass.question);
+                QAAnswer[] qansw = new QAAnswer[0];
+                if (currPass.answers != null) {
+                   qansw = new QAAnswer[currPass.answers.length];
+                   for (int aid = 0; aid < currPass.answers.length; ++aid) {
+                     SQuADAnswer sqAnsw = currPass.answers[aid];
+                     qansw[aid] = new QAAnswer(sqAnsw.answer_start, sqAnsw.answer_start + sqAnsw.text.length(), sqAnsw.text);
+                   }
+                } 
+                qq.answers = qansw;
+                qp.questions[i] = qq;
               }
             }
             

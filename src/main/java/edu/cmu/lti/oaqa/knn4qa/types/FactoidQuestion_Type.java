@@ -14,7 +14,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.tcas.Annotation_Type;
 
 /** A factoid question
- * Updated by JCasGen Thu Jan 12 23:52:10 EST 2017
+ * Updated by JCasGen Tue Jan 17 12:22:14 EST 2017
  * @generated */
 public class FactoidQuestion_Type extends Annotation_Type {
   /** @generated 
@@ -69,6 +69,43 @@ public class FactoidQuestion_Type extends Annotation_Type {
     ll_cas.ll_setStringValue(addr, casFeatCode_id, v);}
     
   
+ 
+  /** @generated */
+  final Feature casFeat_answers;
+  /** @generated */
+  final int     casFeatCode_answers;
+  /** @generated */ 
+  public int getAnswers(int addr) {
+        if (featOkTst && casFeat_answers == null)
+      jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    return ll_cas.ll_getRefValue(addr, casFeatCode_answers);
+  }
+  /** @generated */    
+  public void setAnswers(int addr, int v) {
+        if (featOkTst && casFeat_answers == null)
+      jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    ll_cas.ll_setRefValue(addr, casFeatCode_answers, v);}
+    
+   /** @generated */
+  public int getAnswers(int addr, int i) {
+        if (featOkTst && casFeat_answers == null)
+      jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    if (lowLevelTypeChecks)
+      return ll_cas.ll_getRefArrayValue(ll_cas.ll_getRefValue(addr, casFeatCode_answers), i, true);
+    jcas.checkArrayBounds(ll_cas.ll_getRefValue(addr, casFeatCode_answers), i);
+  return ll_cas.ll_getRefArrayValue(ll_cas.ll_getRefValue(addr, casFeatCode_answers), i);
+  }
+   
+  /** @generated */ 
+  public void setAnswers(int addr, int i, int v) {
+        if (featOkTst && casFeat_answers == null)
+      jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    if (lowLevelTypeChecks)
+      ll_cas.ll_setRefArrayValue(ll_cas.ll_getRefValue(addr, casFeatCode_answers), i, v, true);
+    jcas.checkArrayBounds(ll_cas.ll_getRefValue(addr, casFeatCode_answers), i);
+    ll_cas.ll_setRefArrayValue(ll_cas.ll_getRefValue(addr, casFeatCode_answers), i, v);
+  }
+ 
 
 
 
@@ -84,6 +121,10 @@ public class FactoidQuestion_Type extends Annotation_Type {
  
     casFeat_id = jcas.getRequiredFeatureDE(casType, "id", "uima.cas.String", featOkTst);
     casFeatCode_id  = (null == casFeat_id) ? JCas.INVALID_FEATURE_CODE : ((FeatureImpl)casFeat_id).getCode();
+
+ 
+    casFeat_answers = jcas.getRequiredFeatureDE(casType, "answers", "uima.cas.FSArray", featOkTst);
+    casFeatCode_answers  = (null == casFeat_answers) ? JCas.INVALID_FEATURE_CODE : ((FeatureImpl)casFeat_answers).getCode();
 
   }
 }

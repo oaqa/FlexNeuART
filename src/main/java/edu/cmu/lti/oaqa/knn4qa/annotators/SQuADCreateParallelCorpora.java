@@ -18,8 +18,7 @@ package edu.cmu.lti.oaqa.knn4qa.annotators;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -34,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
   protected static final String NL = System.getProperty("line.separator");
@@ -94,52 +94,61 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
   }  
   
   @Override
-  public void process(JCas aJCas) throws AnalysisEngineProcessException {
-    String passageText = "";
-    String passageNER = "";
-
-    // 1. Process the passage
-    {
-      Passage passage = JCasUtil.selectSingle(aJCas, Passage.class); // Will throw an exception of Passage is missing
-      
-      GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(aJCas, passage);      
-      
-      passageText = mTextRepExtract.getText(goodToks);
-      passageNER = mTextRepExtract.getNER(aJCas);
+  public void process(JCas aJCas) throws AnalysisEngineProcessException {      
+    // Process the questions and write question-answer pairs
+    JCas questView = null;
+    try {
+      questView = aJCas.getView(SQuADIntermCollectionReader.QUESTION_VIEW);
+    } catch (CASException e) {
+      throw new AnalysisEngineProcessException(new Exception("No question view in the CAS!"));      
     }
     
-    // 2. Process the questions and write question-answer pairs
-    {
-      JCas questView = null;
-      try {
-        questView = aJCas.getView(SQuADIntermCollectionReader.QUESTION_VIEW);
-      } catch (CASException e) {
-        throw new AnalysisEngineProcessException(new Exception("No question view in the CAS!"));      
-      }
+    for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
+      GoodTokensSQuAD goodToksQuest = mTextRepExtract.getGoodTokens(questView, q);
       
-      for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
-        GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(questView, q);
-        
-        String questionText = mTextRepExtract.getText(goodToks);
-        boolean bWWord = true, bFocusWord = true, bEpyraQType = true;
-        String questionQFeat = 
-            mTextRepExtract.getQuestionAnnot(questView, q, bWWord, bFocusWord, bEpyraQType);
+      String questionText = mTextRepExtract.getText(goodToksQuest);
+      boolean bWWord = true, bFocusWord = true, bEpyraQType = true;
+      String questionQFeat = 
+          mTextRepExtract.getQuestionAnnot(questView, q, bWWord, bFocusWord, bEpyraQType);
 
+      HashSet<Sentence> seenSentence = new HashSet<Sentence>();
+      
+      // We will create a QA pair for every sentence covering an answer
+      int aQty = q.getAnswers().size();
+      
+      for (int ia = 0; ia < aQty; ++ia) {   
+        FactoidAnswer a = (FactoidAnswer) q.getAnswers().get(ia);
+        /*
+         * This loop is not the most efficient way to check if an answer is covered by a sentence.
+         * However, because the number of sentence is pretty limited, it should be fine.
+         * In fact, extracting answer-type features is much more resource intensive.
+         */
+        for (Sentence answerCoveringSent : JCasUtil.select(aJCas, Sentence.class)) {
+          if (seenSentence.contains(answerCoveringSent)) break;
+          if (answerCoveringSent.getBegin() <= a.getBegin() && a.getEnd() <= answerCoveringSent.getEnd()) {
+            seenSentence.add(answerCoveringSent);
+            
+            GoodTokensSQuAD goodToksAnsw = mTextRepExtract.getGoodTokens(aJCas, answerCoveringSent);      
+            
+            try {
+              String answText = mTextRepExtract.getText(goodToksAnsw);                
 
-        try {
-          mQuestionTextWriter.write(questionText + NL);
-          mPassageTextWriter.write(passageText + NL);
-          
-          mQuestionQFeaturesAllWriter.write(questionQFeat + NL);
-          mPassageQFeaturesAllWriter.write(passageNER + NL);
-        } catch (IOException e) {
-          e.printStackTrace();
-          logger.error("Error writing parallel corpus");
-          throw new AnalysisEngineProcessException(e);
+              mQuestionTextWriter.write(questionText + NL);
+              mPassageTextWriter.write(answText + NL);
+              
+              String answNER = mTextRepExtract.getNER(aJCas, answerCoveringSent);
+              
+              mQuestionQFeaturesAllWriter.write(questionQFeat + NL);
+              mPassageQFeaturesAllWriter.write(answNER + NL);
+            } catch (IOException e) {
+              e.printStackTrace();
+              logger.error("Error writing parallel corpus");
+              throw new AnalysisEngineProcessException(e);
+            }              
+          }
         }
-      }
-    }   
-
+      }        
+    }
   }
   
   @Override

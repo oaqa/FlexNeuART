@@ -22,6 +22,7 @@ import java.util.HashMap;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.DictNoComments;
@@ -99,15 +100,17 @@ public class SQuADExtractTextReps extends ExtractTextRepsBase {
   }
   
   /**
-   * Generate a list of named entities from the passage annotation
+   * Generate a list of named entities covered by a given annotation
    * 
-   * @param jCas  a JCas containing entity annotations
+   * @param jCas          a JCas containing entity annotations
+   * @param coverAnnot    a covering annotation
+   * 
    * @return
    */
-  public String getNER(final JCas jCas) {
+  public String getNER(final JCas jCas, Annotation coverAnnot) {
     StringBuffer sb = new StringBuffer();
     
-    for (Entity e : JCasUtil.select(jCas, Entity.class)) {
+    for (Entity e : JCasUtil.selectCovered(jCas, Entity.class, coverAnnot)) {
       sb.append(' ');
       sb.append(e.getEtype() + ":" + e.getLabel());
     }        

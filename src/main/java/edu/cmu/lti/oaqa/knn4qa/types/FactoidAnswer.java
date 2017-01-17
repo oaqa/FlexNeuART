@@ -1,6 +1,6 @@
 
 
-/* First created by JCasGen Thu Jan 12 23:50:48 EST 2017 */
+/* First created by JCasGen Tue Jan 17 11:16:34 EST 2017 */
 package edu.cmu.lti.oaqa.knn4qa.types;
 
 import org.apache.uima.jcas.JCas; 
@@ -10,16 +10,16 @@ import org.apache.uima.jcas.cas.TOP_Type;
 import org.apache.uima.jcas.tcas.Annotation;
 
 
-/** A question type for the factoid question
+/** An answer to a factoid question
  * Updated by JCasGen Tue Jan 17 12:22:14 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
-public class FactoidQuestionType extends Annotation {
+public class FactoidAnswer extends Annotation {
   /** @generated
    * @ordered 
    */
   @SuppressWarnings ("hiding")
-  public final static int typeIndexID = JCasRegistry.register(FactoidQuestionType.class);
+  public final static int typeIndexID = JCasRegistry.register(FactoidAnswer.class);
   /** @generated
    * @ordered 
    */
@@ -31,23 +31,23 @@ public class FactoidQuestionType extends Annotation {
  
   /** Never called.  Disable default constructor
    * @generated */
-  protected FactoidQuestionType() {/* intentionally empty block */}
+  protected FactoidAnswer() {/* intentionally empty block */}
     
   /** Internal - constructor used by generator 
    * @generated */
-  public FactoidQuestionType(int addr, TOP_Type type) {
+  public FactoidAnswer(int addr, TOP_Type type) {
     super(addr, type);
     readObject();
   }
   
   /** @generated */
-  public FactoidQuestionType(JCas jcas) {
+  public FactoidAnswer(JCas jcas) {
     super(jcas);
     readObject();   
   } 
 
   /** @generated */  
-  public FactoidQuestionType(JCas jcas, int begin, int end) {
+  public FactoidAnswer(JCas jcas, int begin, int end) {
     super(jcas);
     setBegin(begin);
     setEnd(end);
@@ -63,21 +63,21 @@ public class FactoidQuestionType extends Annotation {
  
     
   //*--------------*
-  //* Feature: value
+  //* Feature: questionId
 
-  /** getter for value - gets 
+  /** getter for questionId - gets 
    * @generated */
-  public String getValue() {
-    if (FactoidQuestionType_Type.featOkTst && ((FactoidQuestionType_Type)jcasType).casFeat_value == null)
-      jcasType.jcas.throwFeatMissing("value", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestionType");
-    return jcasType.ll_cas.ll_getStringValue(addr, ((FactoidQuestionType_Type)jcasType).casFeatCode_value);}
+  public String getQuestionId() {
+    if (FactoidAnswer_Type.featOkTst && ((FactoidAnswer_Type)jcasType).casFeat_questionId == null)
+      jcasType.jcas.throwFeatMissing("questionId", "edu.cmu.lti.oaqa.knn4qa.types.FactoidAnswer");
+    return jcasType.ll_cas.ll_getStringValue(addr, ((FactoidAnswer_Type)jcasType).casFeatCode_questionId);}
     
-  /** setter for value - sets  
+  /** setter for questionId - sets  
    * @generated */
-  public void setValue(String v) {
-    if (FactoidQuestionType_Type.featOkTst && ((FactoidQuestionType_Type)jcasType).casFeat_value == null)
-      jcasType.jcas.throwFeatMissing("value", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestionType");
-    jcasType.ll_cas.ll_setStringValue(addr, ((FactoidQuestionType_Type)jcasType).casFeatCode_value, v);}    
+  public void setQuestionId(String v) {
+    if (FactoidAnswer_Type.featOkTst && ((FactoidAnswer_Type)jcasType).casFeat_questionId == null)
+      jcasType.jcas.throwFeatMissing("questionId", "edu.cmu.lti.oaqa.knn4qa.types.FactoidAnswer");
+    jcasType.ll_cas.ll_setStringValue(addr, ((FactoidAnswer_Type)jcasType).casFeatCode_questionId, v);}    
   }
 
     

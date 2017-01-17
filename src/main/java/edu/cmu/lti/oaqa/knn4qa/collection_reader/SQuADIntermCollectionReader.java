@@ -23,17 +23,18 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.component.CasCollectionReader_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.fit.util.FSCollectionFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Progress;
 import org.apache.uima.util.ProgressImpl;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 
-import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAData;
-import edu.cmu.lti.oaqa.knn4qa.qaintermform.QAPassage;
+import edu.cmu.lti.oaqa.knn4qa.qaintermform.*;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
@@ -145,8 +146,22 @@ public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
       }
       
       for (int qid = 0; qid < qlen; ++ qid) {
+        // Create a question annotation
         FactoidQuestion q  = new FactoidQuestion(jcasQuest, qStart[qid], qEnd[qid]-1);
-        q.setId(currPass.questions[qid].id);
+        QAQuestion jsonQuest = currPass.questions[qid];
+        q.setId(jsonQuest.id);
+        
+        // ... also annotate question answers
+        FactoidAnswer[] annotAnswArr = new FactoidAnswer[jsonQuest.answers.length];
+        logger.info("Number of answers: " + jsonQuest.answers.length);
+        int aid = 0;
+        for (QAAnswer jsonAnswer : jsonQuest.answers) {
+          FactoidAnswer a = new FactoidAnswer(jcas, jsonAnswer.start, jsonAnswer.end);
+          a.setQuestionId(jsonQuest.id);
+          a.addToIndexes();
+          annotAnswArr[aid++] = a;
+        }
+        q.setAnswers(FSCollectionFactory.createFSArray(jcas, annotAnswArr));
         q.addToIndexes();
       }
     }

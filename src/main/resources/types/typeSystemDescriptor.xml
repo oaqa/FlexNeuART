@@ -78,6 +78,12 @@
           <description/>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
+      <featureDescription>
+          <name>answers</name>
+          <description/>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.cmu.lti.oaqa.knn4qa.types.FactoidAnswer</elementType>
+        </featureDescription>
       </features>
     </typeDescription>
     <typeDescription>
@@ -144,6 +150,18 @@ WRB	Wh-adverb</description>
     <features>
         <featureDescription>
           <name>value</name>
+          <description/>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  <typeDescription>
+      <name>edu.cmu.lti.oaqa.knn4qa.types.FactoidAnswer</name>
+      <description>An answer to a factoid question</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>questionId</name>
           <description/>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>

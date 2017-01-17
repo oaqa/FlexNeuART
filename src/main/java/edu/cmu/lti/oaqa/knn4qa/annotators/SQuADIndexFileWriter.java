@@ -104,7 +104,7 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
       
       fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
       if (mFieldQFeatures != null) {
-        fieldInfo.put(mFieldQFeatures, mTextRepExtract.getNER(aJCas));
+        fieldInfo.put(mFieldQFeatures, mTextRepExtract.getNER(aJCas, passage));
       }
       fieldInfo.put(UtilConst.TAG_DOCNO, passage.getId());
       

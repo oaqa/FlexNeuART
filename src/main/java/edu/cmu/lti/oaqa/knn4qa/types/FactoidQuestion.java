@@ -7,11 +7,12 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.JCasRegistry;
 import org.apache.uima.jcas.cas.TOP_Type;
 
+import org.apache.uima.jcas.cas.FSArray;
 import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** A factoid question
- * Updated by JCasGen Thu Jan 12 23:52:10 EST 2017
+ * Updated by JCasGen Tue Jan 17 12:22:14 EST 2017
  * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class FactoidQuestion extends Annotation {
@@ -89,6 +90,40 @@ public class FactoidQuestion extends Annotation {
     if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_id == null)
       jcasType.jcas.throwFeatMissing("id", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
     jcasType.ll_cas.ll_setStringValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_id, v);}    
+   
+    
+  //*--------------*
+  //* Feature: answers
+
+  /** getter for answers - gets 
+   * @generated */
+  public FSArray getAnswers() {
+    if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_answers == null)
+      jcasType.jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    return (FSArray)(jcasType.ll_cas.ll_getFSForRef(jcasType.ll_cas.ll_getRefValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_answers)));}
+    
+  /** setter for answers - sets  
+   * @generated */
+  public void setAnswers(FSArray v) {
+    if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_answers == null)
+      jcasType.jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    jcasType.ll_cas.ll_setRefValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_answers, jcasType.ll_cas.ll_getFSRef(v));}    
+    
+  /** indexed getter for answers - gets an indexed value - 
+   * @generated */
+  public FactoidAnswer getAnswers(int i) {
+    if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_answers == null)
+      jcasType.jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    jcasType.jcas.checkArrayBounds(jcasType.ll_cas.ll_getRefValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_answers), i);
+    return (FactoidAnswer)(jcasType.ll_cas.ll_getFSForRef(jcasType.ll_cas.ll_getRefArrayValue(jcasType.ll_cas.ll_getRefValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_answers), i)));}
+
+  /** indexed setter for answers - sets an indexed value - 
+   * @generated */
+  public void setAnswers(int i, FactoidAnswer v) { 
+    if (FactoidQuestion_Type.featOkTst && ((FactoidQuestion_Type)jcasType).casFeat_answers == null)
+      jcasType.jcas.throwFeatMissing("answers", "edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion");
+    jcasType.jcas.checkArrayBounds(jcasType.ll_cas.ll_getRefValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_answers), i);
+    jcasType.ll_cas.ll_setRefArrayValue(jcasType.ll_cas.ll_getRefValue(addr, ((FactoidQuestion_Type)jcasType).casFeatCode_answers), i, jcasType.ll_cas.ll_getFSRef(v));}
   }
 
     

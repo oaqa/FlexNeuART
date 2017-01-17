@@ -23,8 +23,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.util.JCasUtil;
 
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.*;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 
@@ -62,6 +61,10 @@ public class SQuADTokenLemmas extends JCasAnnotator_ImplBase {
           // For some weird reason, lemma is sometimes NULL
           dstTok.setLemma((l!=null) ? l.getValue() : tok.getCoveredText().toLowerCase());
           dstTok.addToIndexes();          
+        }
+        for (Sentence sent : JCasUtil.select(tmpJCas, Sentence.class)) {
+          Sentence dstSent = new Sentence(aJCas, sent.getBegin(), sent.getEnd());
+          dstSent.addToIndexes();
         }
       } catch (Exception e) {
         e.printStackTrace();
