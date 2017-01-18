@@ -345,6 +345,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     }
   }
     
+  /* LIMITATION: initFieldIndex should be called in the order of increasing fieldId! */
   void initFieldIndex(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
     // First try to reuse donor's index
     for (int donorId = 0; donorId < donorExtractors.length; donorId++) {
@@ -353,9 +354,29 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
       if (null == mFieldIndex[fieldId]) 
         mFieldIndex[fieldId] = donnor.mFieldIndex[fieldId];     
     }
-    // If a donor doesn't have one, create a new one from scratch
-    if (null == mFieldIndex[fieldId])
-      mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
+    /*
+     *  If a donor doesn't have one, create a new one from scratch,
+     *  unless we have an alias.
+     */
+    if (null == mFieldIndex[fieldId]) {
+      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      // First, let's do a couple of paranoid checks
+      if (aliasOfId >= 0) {
+        if (aliasOfId >= fieldId) {
+          throw 
+            new RuntimeException("Bug: the id of the alias " + fieldId + 
+                                 " is smaller than the id of the field it mirrors!");
+        }
+        if (null == mFieldIndex[aliasOfId]) {
+          throw 
+            new RuntimeException("Bug: the field index of the alias " + aliasOfId + 
+              " is not initialized, does the code call initFieldIndex in the order of increasing fieldIndex/fieldId?");
+        }
+        // All is fine, we can reuse the field index of the aliased field
+        mFieldIndex[fieldId] = mFieldIndex[aliasOfId];
+      } else 
+        mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
+    }
   }
   
   void initHighorderModels(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
@@ -447,6 +468,38 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
    */
   public void init(InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
     logger.info(String.format("(if averaged embeddings are used at all) using non-weighted average embeddings=%b", useNonWghtAvgEmbed()));
+    
+    /*
+     * First, let's do several paranoid checks to ensure that the number of elements in all
+     * arrays describing fields is the same. As a code improvement, it makes sense to 
+     * extract all such arrays into a single class.
+     */
+    {
+      int fieldQty = FeatureExtractor.mFieldNames.length;
+      if (FeatureExtractor.mFieldsSOLR.length != fieldQty)
+        throw new RuntimeException("Bug: FeatureExtractor.mFieldsSOLR.length != fieldQty");
+      
+      if (FeatureExtractor.mAliasOfId.length != fieldQty)
+        throw new RuntimeException("Bug: FeatureExtractor.mAliasOfId.length != fieldQty");
+      
+      if (mFlippedTranTableFieldUse.length != fieldQty)
+        throw new RuntimeException("Bug: mFlippedTranTableFieldUse.length != fieldQty");
+      
+      if (mModel1LambdaDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mModel1LambdaDefault.length != fieldQty");
+      
+      if (mProbSelfTranDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mProbSelfTranDefault.length != fieldQty");
+      
+      if (mMinModel1ProbDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mMinModel1ProbDefault.length != fieldQty");
+      
+      if (mMinJSDCompositeProbDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mMinJSDCompositeProbDefault.length != fieldQty");
+      
+      if (mMinSimpleTranProbDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mMinSimpleTranProbDefault.length != fieldQty");
+    }
     
     {            
             
@@ -1792,6 +1845,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     false, // dep
     false, // wnss
     false, // qfeat_all
+    true,  // text_alias1
    };
   
   
@@ -1805,6 +1859,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 0.075f,  // dep 
                                 0.1f,    // wnss
                                 0.1f,    // qfeat_all
+                                0.1f,  // text_alias1
                               };
   
   protected static float[] mProbSelfTranDefault = {
@@ -1816,6 +1871,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 DEFAULT_PROB_SELF_TRAN, // dep
                                 DEFAULT_PROB_SELF_TRAN, // wnss
                                 0.001f, // qfeat_all
+                                0.05f, // text_alias1
    };
 
   // For Model1 translation features, ignore translation probabilities smaller than this value
@@ -1828,6 +1884,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                1e-5f, // dep 
                                1e-4f, // wnss 
                                1e-3f, // qfeat_all
+                               2.5e-3f, // text_alias1 
                              };
 
   protected static float[] mMinJSDCompositeProbDefault =   {
@@ -1839,6 +1896,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                               1e-2f, // dep 
                               1e-2f, // wnss
                               1e-2f, // qfeat_all
+                              1e-2f, // text_alias1
   };
   
  // For smiple tran feature, ignore translation probabilities smaller than this value
@@ -1851,6 +1909,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 1e-5f,   // dep 
                                 1e-2f,   // wnss
                                 1e-3f,   // qfeat_all
+                                2.5e-3f, // text_alias1
                                };
     
   /* END OF FIELD PARAMS */

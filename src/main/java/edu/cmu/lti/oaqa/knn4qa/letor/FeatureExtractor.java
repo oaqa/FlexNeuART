@@ -40,7 +40,7 @@ public abstract class FeatureExtractor {
   public abstract String getName();
 
   /*
-   * These field names are kept mostly for historical reasons.
+   * Field names in mFieldsSOLR are kept mostly for historical reasons.
    * The first candidate provider that we used was SOLR (which you can still use if you want). 
    * 1) These field names are specified in the SOLR configuration file (see solr/yahoo_answ/conf/schema.xml).
    * 2) These field names are specified in UIMA descriptors (see src/main/resources/descriptors).
@@ -53,7 +53,8 @@ public abstract class FeatureExtractor {
                                               "SrlLab_bm25",
                                               "DepRel_bm25",
                                               "WNSS_bm25",
-                                              "QFeatures_All"
+                                              "QFeatures_All",
+                                              "Text_alias1",
                                               }; 
 
   public final static String[] mFieldNames = { 
@@ -64,8 +65,26 @@ public abstract class FeatureExtractor {
                                             "srl_lab",
                                             "dep",
                                             "wnss",
-                                            "qfeat_all"
+                                            "qfeat_all",
+                                            "text_alias1"
                                             };
+  /*
+   * If a field is an alias of a certain field, the ID of the field it mirrors is given here.
+   * LIMITATION: the alias should always be initialized after the field it mirrors. In other
+   * words, an alias index/id should be larger.
+   */
+  public final static int[] mAliasOfId = {
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        TEXT_FIELD_ID
+  };
+  
   
   /*
    * OOV_PROB is taken from
