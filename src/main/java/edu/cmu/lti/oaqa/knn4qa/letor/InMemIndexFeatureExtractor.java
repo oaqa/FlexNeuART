@@ -368,12 +368,17 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
                                  " is smaller than the id of the field it mirrors!");
         }
         if (null == mFieldIndex[aliasOfId]) {
-          throw 
-            new RuntimeException("Bug: the field index of the alias " + aliasOfId + 
-              " is not initialized, does the code call initFieldIndex in the order of increasing fieldIndex/fieldId?");
+          logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
+                      " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
+              " is not initialized, initting the index from scratch!");
+          mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
+        } else {
+          // All is fine, we can reuse the field index of the aliased field
+          logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
+              " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
+      " is already initialized, so we reuse this index.");
+          mFieldIndex[fieldId] = mFieldIndex[aliasOfId];
         }
-        // All is fine, we can reuse the field index of the aliased field
-        mFieldIndex[fieldId] = mFieldIndex[aliasOfId];
       } else 
         mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
     }
