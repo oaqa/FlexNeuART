@@ -370,7 +370,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
         if (null == mFieldIndex[aliasOfId]) {
           logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
                       " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
-              " is not initialized, initting the index from scratch!");
+              " is not initialized, initializing the index from scratch!");
           // Note that the index is initialized using the name of the aliased field!
           mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[aliasOfId]));
         } else {
@@ -672,8 +672,10 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     int id = 0;
     
 
-    for (int fieldId = 0; fieldId < mFieldsSOLR.length; ++fieldId) {       
-			String query = queryData.get(mFieldsSOLR[fieldId]);
+    for (int fieldId = 0; fieldId < mFieldsSOLR.length; ++fieldId) {
+      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
+			String query = queryData.get(mFieldsSOLR[realFieldId]);
 	    String fieldName = FeatureExtractor.mFieldNames[fieldId];
 
       if (useBM25Feature(fieldId)) {
