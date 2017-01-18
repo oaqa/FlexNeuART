@@ -371,7 +371,8 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
           logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
                       " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
               " is not initialized, initting the index from scratch!");
-          mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
+          // Note that the index is initialized using the name of the aliased field!
+          mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[aliasOfId]));
         } else {
           // All is fine, we can reuse the field index of the aliased field
           logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
