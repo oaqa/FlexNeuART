@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -53,8 +53,10 @@ public abstract class FeatureExtractor {
                                               "SrlLab_bm25",
                                               "DepRel_bm25",
                                               "WNSS_bm25",
-                                              "QFeatures_All",
+                                              "Text_qfeat",
                                               "Text_alias1",
+                                              "",
+                                              
                                               }; 
 
   public final static String[] mFieldNames = { 
@@ -65,7 +67,7 @@ public abstract class FeatureExtractor {
                                             "srl_lab",
                                             "dep",
                                             "wnss",
-                                            "qfeat_all",
+                                            "text_qfeat",
                                             "text_alias1"
                                             };
   /*

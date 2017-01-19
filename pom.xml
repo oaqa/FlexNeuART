@@ -469,6 +469,13 @@
       <version>20160810</version>
     </dependency>
 
+    <!-- Jena for DBPedia ontologies reading -->
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-core</artifactId>
+      <version>3.1.1</version>
+    </dependency>
+
 
     <!-- YodaQA Mavenized -->
     <!-- Should be installed from 

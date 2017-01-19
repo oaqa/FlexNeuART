@@ -1852,7 +1852,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     false, // srl_lab
     false, // dep
     false, // wnss
-    false, // qfeat_all
+    true, // qfeat_all
     true,  // text_alias1
    };
   

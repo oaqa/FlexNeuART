@@ -18,6 +18,7 @@ package edu.cmu.lti.oaqa.knn4qa.annotators;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.JCasUtil;
@@ -135,10 +136,13 @@ public class SQuADExtractTextReps extends ExtractTextRepsBase {
                                  ) {
     StringBuffer sb = new StringBuffer();
     
+    HashSet<String> seenWWords = new HashSet<String>();
+    
     if (bWWord) {
       for (WWord ww: JCasUtil.selectCovered(questView, WWord.class, coverAnnot)) {
          sb.append(' ');
          sb.append(ww.getValue());
+         seenWWords.add(ww.getValue());
       }
     }
     
@@ -147,7 +151,8 @@ public class SQuADExtractTextReps extends ExtractTextRepsBase {
          sb.append(' ');
          String focusWord = fw.getValue().toLowerCase();
          if (mFreqFocusWords == null || mFreqFocusWords.contains(focusWord))
-           sb.append(focusWord);
+           if (!seenWWords.contains(focusWord)) // Sometimes what/who are both focus and question words: we want to use it only once
+             sb.append(focusWord);
       }
     }
     

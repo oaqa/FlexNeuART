@@ -15,26 +15,50 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.dbpedia;
 
-import com.hp.hpl.jena.rdf.model.*;
-import com.hp.hpl.jena.vocabulary.RDFS;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.util.HashSet;
+import java.io.*;
 
 public class OntologyReader {
-
-  public OntologyReader(String fileName) {
-    final Model dbpedia = ModelFactory.createDefaultModel();
-    dbpedia.read( "fileName", "RDF/XML" );
+  private static final Logger logger = LoggerFactory.getLogger(OntologyReader.class);
+  HashSet<String> mIsSubClassOf = new HashSet<String>();
+  
+  public OntologyReader(String fileName) throws FileNotFoundException {
+    Model dbpedia = ModelFactory.createDefaultModel();
+    dbpedia.read(new FileInputStream(new File(fileName)), "RDF/XML" );
     StmtIterator stmts = dbpedia.listStatements(null, RDFS.subClassOf, (RDFNode) null);
+
+    int qty = 0;
     
     while ( stmts.hasNext() ) {
       final Statement stmt = stmts.next();
-      System.out.println( stmt.getSubject() + " is a subclass of " + stmt.getObject() );
+      String subClass = stmt.getSubject().getLocalName();
+      String superClass = stmt.getObject().asResource().getLocalName();
+      mIsSubClassOf.add(combine(subClass, superClass));
+      //System.out.println( subClass + " is a subclass of " + superClass + " " + isSubClass(subClass, superClass));
+      qty++;
     }
+    logger.info("Read " + qty + " DBPedia concepts");
   }
   
+  public boolean isSubClass(String subClass, String superClass) {
+    return mIsSubClassOf.contains(combine(subClass, superClass));
+  }
+  
+  private String combine(String subClass, String superClass) {
+    return subClass + "_" + superClass;
+  }
+
   public static void main(String[] args) {
-    OntologyReader r = new OntologyReader(args[0]);
+    try {
+      OntologyReader r = new OntologyReader(args[0]);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
 }

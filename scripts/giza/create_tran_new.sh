@@ -138,15 +138,15 @@ echo "Full target dir: $full_target_dir"
 #check "cat ${source_dir}/question_${FIELD} ${source_dir}/answer_${FIELD}   > $full_target_dir/target"
 
 # Symmetric version commented out
-#cat ${source_dir}/question_${FIELD}    > "$full_target_dir/source"
-#check "cat ${source_dir}/question_${FIELD}    > $full_target_dir/source"
-#cat ${source_dir}/answer_${FIELD}  > "$full_target_dir/target"
-#check "cat ${source_dir}/answer_${FIELD}  > $full_target_dir/target"
+#cat ${source_dir}/question_${FIELD}    > "$full_target_dir/target"
+#check "cat ${source_dir}/question_${FIELD}    > $full_target_dir/target"
+#cat ${source_dir}/answer_${FIELD}  > "$full_target_dir/source"
+#check "cat ${source_dir}/answer_${FIELD}  > $full_target_dir/source"
 
 # A unified version that also filters out sentences where the difference in the number of words is too large 
 MAX_FERTILITY=9
-scripts/giza/filter_long.py ${source_dir}/answer_${FIELD}   ${source_dir}/question_${FIELD} $MAX_FERTILITY "$full_target_dir/target" "$full_target_dir/source" $SYMMETRIZE
-check "scripts/giza/filter_long.py ${source_dir}/answer_${FIELD}   ${source_dir}/question_${FIELD} $MAX_FERTILITY $full_target_dir/target $full_target_dir/source $SYMMETRIZE"
+scripts/giza/filter_long.py ${source_dir}/answer_${FIELD}   ${source_dir}/question_${FIELD} $MAX_FERTILITY "$full_target_dir/source" "$full_target_dir/target" $SYMMETRIZE
+check "scripts/giza/filter_long.py ${source_dir}/answer_${FIELD}   ${source_dir}/question_${FIELD} $MAX_FERTILITY $full_target_dir/source $full_target_dir/target $SYMMETRIZE"
 
 if [ "$VOC_ONLY" = "1" ] ; then
   scripts/giza/create_only_voc.sh "$GIZA_DIR" $dir "$full_target_dir/source" "$full_target_dir/target" $stepQ 
