@@ -1,4 +1,5 @@
 #!/bin/bash
+. scripts/common.sh
 
 # This script runs annotation pipelines for a given collection
 collect=$1
@@ -22,29 +23,35 @@ rm -f "$OUT_DIR"/*
 echo "=========================================================================="
 
 if [ "$collect" = "manner" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -exclude_fields qfeat_all
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "compr" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt -exclude_fields "srl,srl_lab,dep,wnss,qfeat_all"
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "stackoverflow" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt -exclude_fields "srl,srl_lab,dep,wnss,qfeat_all"
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
+  for field in text text_unlemm bigram srl srl_lab dep wnss ; do
+    scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field
+    check "scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field"
+  done
+elif [ "$collect" = "compr" -o  "$collect" = "stackoverflow" ] ; then
+  for field in text text_unlemm bigram ; do
+    scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field
+    check "scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field"
+  done
 elif [ "$collect" = "squad" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran,wiki  -solr_file SolrQuestionAnswerFile.txt -exclude_fields "bigram,srl,srl_lab,dep,wnss,text_unlemm"
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
+  JOINT_NAME=SolrAnswQuestFile.txt
+  for d in tran train dev1 dev2 test wiki ; do
+    cd $IN_DIR/$d
+    check "cd $OUT_DIR/$d"
+    if [ "$d" != "wiki" ] ; then
+      cat SolrAnswerFile.txt SolrQuestionFile.txt > $JOINT_NAME
+      check "cat SolrAnswerFile.txt SolrQuestionFile.txt > $JOINT_NAME"
+    else
+      rm -f $JOINT_NAME
+      ln -s SolrAnswerFile.txt $JOINT_NAME
+      check "ln -s SolrAnswerFile.txt $JOINT_NAME"
+    fi
+    cd -  
+    check "cd - "
+  done
+  for field in qfeat_only text text_qfeat ephyra_spacy ephyra_dbpedia ephyra_allent lexical_spacy lexical_dbpedia lexical_allent ; do
+    scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $JOINT_NAME -field $field
+    check "scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file $JOINT_NAME -field $field"
+  done
 else
   echo "Wrong collection name '$collect'"
   exit 1

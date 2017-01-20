@@ -73,7 +73,7 @@ public class InMemForwardIndex {
   /**
    * Constructor: Creates an index from one or more files (for a given field name).
    * 
-   * @param fieldName   the name of the field
+   * @param fieldName   the name of the field (as specified in the SOLR index-file)
    * @param fileNames   an array of files from which the index is created
    * @param maxNumRec   the maximum number of records to process
    * @throws IOException
