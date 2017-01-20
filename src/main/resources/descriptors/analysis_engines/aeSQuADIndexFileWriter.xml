@@ -27,24 +27,12 @@
         <mandatory>true</mandatory>
       </configurationParameter>
       <configurationParameter>
-        <name>FieldText</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-    <configurationParameter>
         <name>FreqFocusWordFile</name>
         <type>String</type>
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
-      <configurationParameter>
-        <name>FieldQFeatures</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-    </configurationParameters>
+      </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
         <name>StopWordFile</name>
@@ -65,24 +53,12 @@
         </value>
       </nameValuePair>
       <nameValuePair>
-        <name>FieldText</name>
-        <value>
-          <string>Text_bm25</string>
-        </value>
-      </nameValuePair>
-    <nameValuePair>
         <name>FreqFocusWordFile</name>
         <value>
           <string>data/squad/freq_focus_words.txt</string>
         </value>
       </nameValuePair>
-      <nameValuePair>
-        <name>FieldQFeatures</name>
-        <value>
-          <string>QFeatures_All</string>
-        </value>
-      </nameValuePair>
-    </configurationParameterSettings>
+      </configurationParameterSettings>
     <typeSystemDescription/>
     <typePriorities/>
     <fsIndexCollection/>

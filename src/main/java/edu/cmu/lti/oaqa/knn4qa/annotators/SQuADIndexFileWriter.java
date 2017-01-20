@@ -34,6 +34,7 @@ import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion;
 import edu.cmu.lti.oaqa.knn4qa.types.Passage;
 
@@ -50,22 +51,13 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
   private static final String PARAM_INDEX_QUESTION_FILE   = "QuestionFile";
   private static final String PARAM_STOPWORD_FILE         = "StopWordFile";
   private static final String PARAM_FOCUSWORD_FILE        = "FreqFocusWordFile";
-  
-  private static final String PARAM_FIELD_TEXT            = "FieldText";
-  // Saving various question features along with annotated entities in answer
-  private static final String PARAM_FIELD_QFEATS          = "FieldQFeatures";
-  
+    
   private static final XmlHelper mXmlHlp = new XmlHelper();
   
   private static BufferedWriter         mIndexQuestionFile;
   private static BufferedWriter         mIndexPassageFile;
   private static int                    mIOState = 0;
-
-  @ConfigurationParameter(name = PARAM_FIELD_TEXT, mandatory = true)
-  private String mFieldText;
-  // Force the user to always specify this field name, there's no harm in doing so
-  @ConfigurationParameter(name = PARAM_FIELD_QFEATS, mandatory = true)
-  private String mFieldQFeatures;  
+ 
   @ConfigurationParameter(name = PARAM_INDEX_QUESTION_FILE, mandatory = true)
   private String mIndexQuestionFileName;
   @ConfigurationParameter(name = PARAM_INDEX_PASSAGE_FILE, mandatory = true)
@@ -93,7 +85,9 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
   }  
   
   @Override
-  public void process(JCas aJCas) throws AnalysisEngineProcessException {
+  public void process(JCas aJCas) throws AnalysisEngineProcessException {    
+    String textSOLR = FeatureExtractor.mFieldsSOLR[FeatureExtractor.TEXT_FIELD_ID];
+    
     // 1. Process the passage
     {
       Map<String, String>  fieldInfo = new HashMap<String, String>();
@@ -102,11 +96,23 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
       
       GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(aJCas, passage);      
       
-      fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
-      if (mFieldQFeatures != null) {
-        fieldInfo.put(mFieldQFeatures, mTextRepExtract.getNER(aJCas, passage));
-      }
+      String text       = mTextRepExtract.getText(goodToks);
+      String allNER     = mTextRepExtract.getNER(aJCas, passage, true, true);
+      String dbpediaNER = mTextRepExtract.getNER(aJCas, passage, true, false);
+      String spacyNER   = mTextRepExtract.getNER(aJCas, passage, false, true);
+
       fieldInfo.put(UtilConst.TAG_DOCNO, passage.getId());
+       
+      fieldInfo.put(textSOLR, text);
+      fieldInfo.put(FeatureExtractor.TEXT_QFEAT, text + " " + allNER);
+      fieldInfo.put(FeatureExtractor.QFEAT_ONLY, allNER);
+      
+      fieldInfo.put(FeatureExtractor.EPHYRA_ALLENT,    allNER);
+      fieldInfo.put(FeatureExtractor.EPHYRA_DBPEDIA,   dbpediaNER);
+      fieldInfo.put(FeatureExtractor.EPHYRA_SPACY,     spacyNER);
+      fieldInfo.put(FeatureExtractor.LEXICAL_ALLENT,   allNER);
+      fieldInfo.put(FeatureExtractor.LEXICAL_DBPEDIA,  dbpediaNER);
+      fieldInfo.put(FeatureExtractor.LEXICAL_SPACY,    spacyNER);
       
       try {
         doOutput(mIndexPassageFile, fieldInfo);
@@ -129,15 +135,28 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
         Map<String, String>  fieldInfo = new HashMap<String, String>();        
         
         GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(questView, q);
+        String text = mTextRepExtract.getText(goodToks);
+        // Lexical question features: w-word and focus word/phrase
+        String qLexical = mTextRepExtract.getQuestionAnnot(questView, q, 
+                                              true /* w-word */, true /* focus word */, false /* Ephyra type */);
+        // Ephyra question type
+        String qType = mTextRepExtract.getQuestionAnnot(questView, q, 
+                                              false /* w-word */, false /* focus word */, true /* Ephyra type */);
         
-        fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
-        if (mFieldQFeatures != null) {
-          boolean bWWord = true, bFocusWord = true, bEpyraQType = true;
-          fieldInfo.put(mFieldQFeatures, 
-              mTextRepExtract.getQuestionAnnot(questView, q, bWWord, bFocusWord, bEpyraQType));
-        }        
         fieldInfo.put(UtilConst.TAG_DOCNO, q.getId());
 
+        fieldInfo.put(textSOLR, text);
+        fieldInfo.put(FeatureExtractor.TEXT_QFEAT, qLexical + " " + text + " " + qType);
+        fieldInfo.put(FeatureExtractor.QFEAT_ONLY, qLexical + " " + qType);
+        
+        fieldInfo.put(FeatureExtractor.EPHYRA_ALLENT,    qType);
+        fieldInfo.put(FeatureExtractor.EPHYRA_DBPEDIA,   qType);
+        fieldInfo.put(FeatureExtractor.EPHYRA_SPACY,     qType);
+        fieldInfo.put(FeatureExtractor.LEXICAL_ALLENT,   qLexical);
+        fieldInfo.put(FeatureExtractor.LEXICAL_DBPEDIA,  qLexical);
+        fieldInfo.put(FeatureExtractor.LEXICAL_SPACY,    qLexical);
+        
+        
         try {
           doOutput(mIndexQuestionFile, fieldInfo);
         } catch (Exception e) {

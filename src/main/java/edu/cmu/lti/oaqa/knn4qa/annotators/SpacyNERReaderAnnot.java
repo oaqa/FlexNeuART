@@ -45,8 +45,6 @@ public class SpacyNERReaderAnnot extends JCasAnnotator_ImplBase {
   @ConfigurationParameter(name = PARAM_SPACY_NER_FILE, mandatory = true)
   private String mSpacyNerFileName;
   
-  
-  
   private Gson    mGSON = new Gson();
   private static HashMap<String,String>  mNERStore = null; 
   

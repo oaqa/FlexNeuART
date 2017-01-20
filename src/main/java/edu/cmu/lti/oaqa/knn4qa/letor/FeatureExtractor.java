@@ -33,6 +33,15 @@ public abstract class FeatureExtractor {
   public static final float BM25_K1 = 1.2f;
   public static final float BM25_B = 0.75f;
   
+  public static final String QFEAT_ONLY = "qfeat_only";
+  public static final String TEXT_QFEAT = "text_qfeat";
+  public static final String EPHYRA_SPACY = "ephyra_spacy";
+  public static final String EPHYRA_DBPEDIA = "ephyra_dbpedia";
+  public static final String EPHYRA_ALLENT = "ephyra_allent";
+  public static final String LEXICAL_SPACY = "lexical_spacy";
+  public static final String LEXICAL_DBPEDIA = "lexical_dbpedia";
+  public static final String LEXICAL_ALLENT = "lexical_allent";
+  
   public boolean isSomeTextFieldId(int fieldId) {
     return fieldId == TEXT_FIELD_ID || fieldId == TEXT_UNLEMM_FIELD_ID;
   }
@@ -53,10 +62,15 @@ public abstract class FeatureExtractor {
                                               "SrlLab_bm25",
                                               "DepRel_bm25",
                                               "WNSS_bm25",
-                                              "Text_qfeat",
                                               "Text_alias1",
-                                              "",
-                                              
+                                              QFEAT_ONLY,
+                                              TEXT_QFEAT,
+                                              EPHYRA_SPACY,
+                                              EPHYRA_DBPEDIA,
+                                              EPHYRA_ALLENT,
+                                              LEXICAL_SPACY,
+                                              LEXICAL_DBPEDIA,
+                                              LEXICAL_ALLENT,
                                               }; 
 
   public final static String[] mFieldNames = { 
@@ -67,9 +81,16 @@ public abstract class FeatureExtractor {
                                             "srl_lab",
                                             "dep",
                                             "wnss",
-                                            "text_qfeat",
-                                            "text_alias1"
-                                            };
+                                            "text_alias1",
+                                            QFEAT_ONLY,
+                                            TEXT_QFEAT,
+                                            EPHYRA_SPACY,
+                                            EPHYRA_DBPEDIA,
+                                            EPHYRA_ALLENT,
+                                            LEXICAL_SPACY,
+                                            LEXICAL_DBPEDIA,
+                                            LEXICAL_ALLENT,
+                                                                                        };
   /*
    * If a field is an alias of a certain field, the ID of the field it mirrors is given here.
    * LIMITATION: the alias should always be initialized after the field it mirrors. In other
@@ -83,11 +104,17 @@ public abstract class FeatureExtractor {
                                         -1,
                                         -1,
                                         -1,
-                                        -1,
-                                        TEXT_FIELD_ID
+                                        TEXT_FIELD_ID,
+                                        -1, // QFEAT_ONLY,
+                                        -1, // TEXT_QFEAT,
+                                        -1, // EPHYRA_SPACY,
+                                        -1, // EPHYRA_DBPEDIA,
+                                        -1, // EPHYRA_ALLENT,
+                                        -1, // LEXICAL_SPACY,
+                                        -1, // LEXICAL_DBPEDIA,
+                                        -1, // LEXICAL_ALLENT,
   };
-  
-  
+
   /*
    * OOV_PROB is taken from
    * 

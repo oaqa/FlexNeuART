@@ -105,11 +105,12 @@ public class QuestionAnalysis extends JCasAnnotator_ImplBase {
           focusEphyra = FocusFinder.findFocusWord(q.getCoveredText());
           
           // Ephyra question types
-          for (String t1:  getAtypes(q.getCoveredText())) {
-            for (String t2 : t1.split("\\.")) {
-              hQTypes.add(t2);
-            }
-          }          
+          String [] types = getAtypes(q.getCoveredText());
+          if (types.length > 0) {
+            String [] subTypes = types[0].split("\\.");
+            if (subTypes.length > 0)
+              hQTypes.add(subTypes[subTypes.length - 1]); // Let's add the most specific type
+          }
         }
         
         // 2. YodaQA analysis (extract only foci)

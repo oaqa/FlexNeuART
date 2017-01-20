@@ -1852,7 +1852,6 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     false, // srl_lab
     false, // dep
     false, // wnss
-    true, // qfeat_all
     true,  // text_alias1
    };
   
@@ -1866,7 +1865,6 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 0.5f,    // srl_lab 
                                 0.075f,  // dep 
                                 0.1f,    // wnss
-                                0.1f,    // qfeat_all
                                 0.1f,  // text_alias1
                               };
   
@@ -1878,7 +1876,6 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 DEFAULT_PROB_SELF_TRAN, // srl_lab
                                 DEFAULT_PROB_SELF_TRAN, // dep
                                 DEFAULT_PROB_SELF_TRAN, // wnss
-                                0.001f, // qfeat_all
                                 0.05f, // text_alias1
    };
 
@@ -1891,7 +1888,6 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                1e-5f, // srl_lab 
                                1e-5f, // dep 
                                1e-4f, // wnss 
-                               1e-3f, // qfeat_all
                                2.5e-3f, // text_alias1 
                              };
 
@@ -1903,7 +1899,6 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                               1e-2f, // srl_lab 
                               1e-2f, // dep 
                               1e-2f, // wnss
-                              1e-2f, // qfeat_all
                               1e-2f, // text_alias1
   };
   
@@ -1916,7 +1911,6 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 1e-5f,   // srl_lab 
                                 1e-5f,   // dep 
                                 1e-2f,   // wnss
-                                1e-3f,   // qfeat_all
                                 2.5e-3f, // text_alias1
                                };
     

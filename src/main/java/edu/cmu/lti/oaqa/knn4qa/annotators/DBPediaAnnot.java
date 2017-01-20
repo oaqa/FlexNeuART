@@ -16,10 +16,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
+import java.util.*;
 
+import edu.cmu.lti.oaqa.knn4qa.dbpedia.OntologyReader;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 
 /**
@@ -49,7 +52,10 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
 
   private static final String PARAM_SERVER_ADDR  = "ServerAddr";
   private static final String PARAM_CONF_THRESH  = "ConfThresh";
-  private static final String ANNOT_PREFIX = "DBpedia:";
+  private static final String PARAM_ONTOLOGY_FILE= "OntologyFile";
+  
+  private static final String ANNOT_PREFIX       = "DBpedia:";
+   
   
   public static final String DBPEDIA_TYPE = "dbpedia";
   
@@ -58,6 +64,11 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   
   @ConfigurationParameter(name = PARAM_CONF_THRESH, mandatory = true)
   private Float mConfThresh;  
+
+  @ConfigurationParameter(name = PARAM_ONTOLOGY_FILE, mandatory = true)
+  private String mOntologyFile;    
+  
+  private OntologyReader mDBPediaOnto;
   
   private static int errorQty = 0;
   
@@ -65,6 +76,52 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   public void initialize(UimaContext aContext)
   throws ResourceInitializationException {
     super.initialize(aContext);
+    
+    try {
+      mDBPediaOnto = new OntologyReader(mOntologyFile);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+      throw new ResourceInitializationException(e);
+    }
+  }
+  
+  /**
+   * Remove annotations for which there is a child annotation in the list, e.g.,
+   * remove Person if Athlete is present.
+   * 
+   * @param annotList   an initial list of annotations
+   * @return a culled list of annotations
+   */
+  ArrayList<String> removeParents(ArrayList<String> annotList) {
+    ArrayList<String> resOld = new ArrayList<String>();        
+    ArrayList<String> resNew = new ArrayList<String>();
+
+    // Before the loop start, the new values array contains the complete list of annotations
+    for (String s: annotList) resNew.add(s);
+    
+    do {
+      // In the beginning of the loop, we copy new values (resNew array) to the resOld array
+      // Note that before loop starts, all annotation are copied to the new values array (resNew)
+      resOld.clear();
+      for (String s : resNew) resOld.add(s);
+      // Now we remove all values from the new array
+      resNew.clear();
+      // These loops have quadratic cost, but remember that 
+      // the number of elements to compare is small, so that
+      // quadratic is not slow here
+      for (int i1 = 0; i1 < resOld.size(); ++i1) {
+        boolean isSuper = false; // True, if resOld.get(i1) is a super class of another annotation
+        
+        for (int i2 = 0; i2 < resOld.size(); ++i2) 
+        if (i1 != i2 && mDBPediaOnto.isSubClass(resOld.get(i2), resOld.get(i1))) {
+          isSuper = true; break;
+        }
+        if (!isSuper) resNew.add(resOld.get(i1));
+      }
+    } while (resNew.size() < resOld.size());
+    
+    
+    return resOld;
   }
   
   @Override
@@ -112,11 +169,17 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
           int    offset = Integer.parseInt(entity.getString("@offset"));
           String surfaceForm = entity.getString("@surfaceForm");
                             
+          ArrayList<String> annotList = new ArrayList<String>();
+          
           for (String t : types.split(",")) 
           if (t.startsWith(ANNOT_PREFIX)) {
+            annotList.add(t.substring(ANNOT_PREFIX.length()));
+          }
+          
+          for (String t : removeParents(annotList)) {
             Entity e = new Entity(aJCas, offset, offset + surfaceForm.length());
             e.setEtype(DBPEDIA_TYPE);
-            e.setLabel(t.substring(ANNOT_PREFIX.length()));
+            e.setLabel(t);
             e.addToIndexes();
           }
           

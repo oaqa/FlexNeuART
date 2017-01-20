@@ -20,6 +20,12 @@
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
+    <configurationParameter>
+        <name>OntologyFile</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+      </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
@@ -32,6 +38,12 @@
         <name>ConfThresh</name>
         <value>
           <float>0.5</float>
+        </value>
+      </nameValuePair>
+    <nameValuePair>
+        <name>OntologyFile</name>
+        <value>
+          <string>data/dbpedia_2015-10.owl</string>
         </value>
       </nameValuePair>
     </configurationParameterSettings>
