@@ -123,7 +123,7 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
           mPassLexDbpediaWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.LEXICAL_DBPEDIA));
 
           mQuestLexAllentWriter =  new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.LEXICAL_ALLENT));
-          mPassEphyraAllentWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.LEXICAL_ALLENT));
+          mPassLexAllentWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.LEXICAL_ALLENT));
           
           
           mTextRepExtract = new SQuADExtractTextReps(mStopWordFileName, mFocusWordFile, true /* lowercasing */);
@@ -241,8 +241,29 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
     mQuestTextWriter.close();
     mPassTextWriter.close();
 
-    mQuestionQFeaturesAllWriter.close();
-    mPassageQFeaturesAllWriter.close();
+    mQuestTextQfeatWriter.close();
+    mPassTextQfeatWriter.close();
+
+    mQuestQfeatOnlyWriter.close();
+    mPassQfeatOnlyWriter.close();
+
+    mQuestEphyraAllentWriter.close();
+    mPassEphyraAllentWriter.close();
+
+    mQuestEphyraDbpediaWriter.close();
+    mPassEphyraDbpediaWriter.close();              
+
+    mQuestEphyraSpacyWriter.close();
+    mPassEphyraSpacyWriter.close();
+
+    mQuestLexAllentWriter.close();
+    mPassLexAllentWriter.close();
+    
+    mQuestLexDbpediaWriter.close();
+    mPassLexDbpediaWriter.close();              
+    
+    mQuestLexSpacyWriter.close();
+    mPassLexSpacyWriter.close();     
     
     mInitState = 2;
   }
