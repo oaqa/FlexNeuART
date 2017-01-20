@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
@@ -44,12 +45,29 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
   
   static private SQuADExtractTextReps mTextRepExtract;
 
-  static BufferedWriter mQuestionTextWriter;
-  static BufferedWriter mPassageTextWriter;
+  static BufferedWriter mQuestTextWriter;
+  static BufferedWriter mPassTextWriter;
   
-  static BufferedWriter mQuestionQFeaturesAllWriter;
-  static BufferedWriter mPassageQFeaturesAllWriter;   
+  static BufferedWriter mQuestQfeatOnlyWriter;
+  static BufferedWriter mPassQfeatOnlyWriter;   
 
+  static BufferedWriter mQuestTextQfeatWriter;
+  static BufferedWriter mPassTextQfeatWriter;
+  
+  static BufferedWriter mQuestEphyraSpacyWriter;
+  static BufferedWriter mPassEphyraSpacyWriter;   
+  static BufferedWriter mQuestEphyraDbpediaWriter;
+  static BufferedWriter mPassEphyraDbpediaWriter;   
+  static BufferedWriter mQuestEphyraAllentWriter;
+  static BufferedWriter mPassEphyraAllentWriter;   
+
+  static BufferedWriter mQuestLexSpacyWriter;
+  static BufferedWriter mPassLexSpacyWriter;   
+  static BufferedWriter mQuestLexDbpediaWriter;
+  static BufferedWriter mPassLexDbpediaWriter;   
+  static BufferedWriter mQuestLexAllentWriter;
+  static BufferedWriter mPassLexAllentWriter;   
+  
   private static int mInitState = 0;
   
   private static final String PARAM_STOPWORD_FILE         = "StopWordFile";
@@ -76,13 +94,38 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
     synchronized(this.getClass()) {
       if (mInitState == 0) {
         
+        String textField = FeatureExtractor.mFieldNames[FeatureExtractor.TEXT_FIELD_ID];
+        
         try {
-          mQuestionTextWriter = new BufferedWriter(new FileWriter(mQuestionPrefix + "_text"));
-          mPassageTextWriter   = new BufferedWriter(new FileWriter(mPassagePrefix   + "_text"));
+          mQuestTextWriter = new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + textField));
+          mPassTextWriter   = new BufferedWriter(new FileWriter(mPassagePrefix   + "_" + textField));
           
-          mQuestionQFeaturesAllWriter = new BufferedWriter(new FileWriter(mQuestionPrefix + "_qfeat_all"));
-          mPassageQFeaturesAllWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_qfeat_all"));
+          mQuestQfeatOnlyWriter = new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.QFEAT_ONLY));
+          mPassQfeatOnlyWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.QFEAT_ONLY));
 
+          mQuestTextQfeatWriter = new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.TEXT_QFEAT));
+          mPassTextQfeatWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.TEXT_QFEAT));
+          
+          mQuestEphyraSpacyWriter =  new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.EPHYRA_SPACY));
+          mPassEphyraSpacyWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.EPHYRA_SPACY));
+          
+          mQuestEphyraDbpediaWriter =  new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.EPHYRA_DBPEDIA));
+          mPassEphyraDbpediaWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.EPHYRA_DBPEDIA));
+
+          mQuestEphyraAllentWriter =  new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.EPHYRA_ALLENT));
+          mPassEphyraAllentWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.EPHYRA_ALLENT));
+          
+
+          mQuestLexSpacyWriter =  new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.LEXICAL_SPACY));
+          mPassLexSpacyWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.LEXICAL_SPACY));
+          
+          mQuestLexDbpediaWriter =  new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.LEXICAL_DBPEDIA));
+          mPassLexDbpediaWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.LEXICAL_DBPEDIA));
+
+          mQuestLexAllentWriter =  new BufferedWriter(new FileWriter(mQuestionPrefix + "_" + FeatureExtractor.LEXICAL_ALLENT));
+          mPassEphyraAllentWriter = new BufferedWriter(new FileWriter(mPassagePrefix + "_" + FeatureExtractor.LEXICAL_ALLENT));
+          
+          
           mTextRepExtract = new SQuADExtractTextReps(mStopWordFileName, mFocusWordFile, true /* lowercasing */);
         } catch (Exception e) {
           e.printStackTrace();
@@ -103,21 +146,27 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
       throw new AnalysisEngineProcessException(new Exception("No question view in the CAS!"));      
     }
     
-    for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
-      GoodTokensSQuAD goodToksQuest = mTextRepExtract.getGoodTokens(questView, q);
+    for (FactoidQuestion coveringQuest : JCasUtil.select(questView, FactoidQuestion.class)) {
+      GoodTokensSQuAD goodToksQuest = mTextRepExtract.getGoodTokens(questView, coveringQuest);
       
-      String questionText = mTextRepExtract.getText(goodToksQuest);
-      boolean bWWord = true, bFocusWord = true, bEpyraQType = true;
-      String questionQFeat = 
-          mTextRepExtract.getQuestionAnnot(questView, q, bWWord, bFocusWord, bEpyraQType);
-
+      String questionText = mTextRepExtract.getText(goodToksQuest);      
+      
       HashSet<Sentence> seenSentence = new HashSet<Sentence>();
       
       // We will create a QA pair for every sentence covering an answer
-      int aQty = q.getAnswers().size();
+      int aQty = coveringQuest.getAnswers().size();
       
       for (int ia = 0; ia < aQty; ++ia) {   
-        FactoidAnswer a = (FactoidAnswer) q.getAnswers().get(ia);
+        FactoidAnswer a = (FactoidAnswer) coveringQuest.getAnswers().get(ia);
+        
+        
+        // Lexical question features: w-word and focus word/phrase
+        String qLexical = mTextRepExtract.getQuestionAnnot(questView, coveringQuest, 
+                                              true /* w-word */, true /* focus word */, false /* Ephyra type */);
+        // Ephyra question type
+        String qType = mTextRepExtract.getQuestionAnnot(questView, coveringQuest, 
+                                              false /* w-word */, false /* focus word */, true /* Ephyra type */);        
+        
         /*
          * This loop is not the most efficient way to check if an answer is covered by a sentence.
          * However, because the number of sentence is pretty limited, it should be fine.
@@ -129,17 +178,39 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
             seenSentence.add(answerCoveringSent);
             
             GoodTokensSQuAD goodToksAnsw = mTextRepExtract.getGoodTokens(aJCas, answerCoveringSent);      
-            
-            try {
-              String answText = mTextRepExtract.getText(goodToksAnsw);                
 
-              mQuestionTextWriter.write(questionText + NL);
-              mPassageTextWriter.write(answText + NL);
+            String answText       = mTextRepExtract.getText(goodToksAnsw);
+            String answAllNER     = mTextRepExtract.getNER(aJCas, answerCoveringSent, true, true);
+            String answDbpediaNER = mTextRepExtract.getNER(aJCas, answerCoveringSent, true, false);
+            String answSpacyNER   = mTextRepExtract.getNER(aJCas, answerCoveringSent, false, true);
+            
+            try {                
+              mQuestTextWriter.write(questionText + NL);
+              mPassTextWriter.write(answText + NL);
+
+              mQuestTextQfeatWriter.write(qLexical + " " + questionText + " " + qType + NL);
+              mPassTextQfeatWriter.write(answText + " " + answAllNER + NL);
               
-              String answNER = mTextRepExtract.getNER(aJCas, answerCoveringSent);
+              mQuestQfeatOnlyWriter.write(qLexical + " " + qType + NL);
+              mPassQfeatOnlyWriter.write(answAllNER + NL);
               
-              mQuestionQFeaturesAllWriter.write(questionQFeat + NL);
-              mPassageQFeaturesAllWriter.write(answNER + NL);
+              mQuestEphyraAllentWriter.write(qType + NL);
+              mPassEphyraAllentWriter.write(answAllNER + NL);
+              
+              mQuestEphyraDbpediaWriter.write(qType + NL);
+              mPassEphyraDbpediaWriter.write(answDbpediaNER + NL);              
+              
+              mQuestEphyraSpacyWriter.write(qType + NL);
+              mPassEphyraSpacyWriter.write(answSpacyNER + NL);
+
+              mQuestLexAllentWriter.write(qLexical + NL);
+              mPassLexAllentWriter.write(answAllNER + NL);
+              
+              mQuestLexDbpediaWriter.write(qLexical + NL);
+              mPassLexDbpediaWriter.write(answDbpediaNER + NL);              
+              
+              mQuestLexSpacyWriter.write(qLexical + NL);
+              mPassLexSpacyWriter.write(answSpacyNER + NL);              
             } catch (IOException e) {
               e.printStackTrace();
               logger.error("Error writing parallel corpus");
@@ -167,8 +238,8 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
   static synchronized private void finishOutput() throws IOException {
     if (mInitState != 1) return;
 
-    mQuestionTextWriter.close();
-    mPassageTextWriter.close();
+    mQuestTextWriter.close();
+    mPassTextWriter.close();
 
     mQuestionQFeaturesAllWriter.close();
     mPassageQFeaturesAllWriter.close();
