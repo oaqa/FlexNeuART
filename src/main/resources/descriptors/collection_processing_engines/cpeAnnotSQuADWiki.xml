@@ -16,7 +16,7 @@
         </collectionIterator>
     </collectionReader>
     <!-- this setting is for r3.4xlarge -->
-    <casProcessors casPoolSize="32" processingUnitThreadCount="32">
+    <casProcessors casPoolSize="16" processingUnitThreadCount="16">
     <casProcessor deployment="integrated" name="aeDBPediaAnnot">
         <descriptor>
             <import location="../analysis_engines/aeDBPediaAnnot.xml"/>
