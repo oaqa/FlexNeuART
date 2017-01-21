@@ -53,6 +53,7 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   private static final String PARAM_SERVER_ADDR  = "ServerAddr";
   private static final String PARAM_CONF_THRESH  = "ConfThresh";
   private static final String PARAM_ONTOLOGY_FILE= "OntologyFile";
+  private static final String PARAM_MAX_FAILURE_QTY = "MaxFailureQty";
   
   private static final String ANNOT_PREFIX       = "DBpedia:";
    
@@ -67,10 +68,13 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
 
   @ConfigurationParameter(name = PARAM_ONTOLOGY_FILE, mandatory = true)
   private String mOntologyFile;    
+
+  @ConfigurationParameter(name = PARAM_MAX_FAILURE_QTY, mandatory = true)
+  private Integer mMaxFailureQty;    
   
   private OntologyReader mDBPediaOnto;
   
-  private static int errorQty = 0;
+  private static int mErrorQty = 0;
   
   @Override
   public void initialize(UimaContext aContext)
@@ -128,8 +132,13 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     String text = aJCas.getDocumentText(), resp;
     
+    if (mErrorQty > mMaxFailureQty) {
+      throw new AnalysisEngineProcessException(
+                new Exception("The number of failures exceeded the threshold " + mMaxFailureQty));
+    }
+    
     synchronized (this.getClass()) {
-      ++errorQty; // we will later decrease error counter, unless the function
+      ++mErrorQty; // we will later decrease error counter, unless the function
       // terminates preliminarly
     }
     
@@ -196,7 +205,7 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
     }
     
     synchronized (this.getClass()) {
-      --errorQty;
+      --mErrorQty;
     }
 
   }
@@ -241,7 +250,7 @@ public class DBPediaAnnot extends JCasAnnotator_ImplBase {
   @Override
   public void collectionProcessComplete() throws AnalysisEngineProcessException {
     logger.info("The pipeline complete, annotator " + this.getClass().getCanonicalName() + 
-                " failed " + errorQty + " times");
+                " failed " + mErrorQty + " times");
   }
 
 }

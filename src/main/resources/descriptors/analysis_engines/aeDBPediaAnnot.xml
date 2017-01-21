@@ -26,6 +26,12 @@
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
+    <configurationParameter>
+        <name>MaxFailureQty</name>
+        <type>Integer</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+      </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
@@ -44,6 +50,12 @@
         <name>OntologyFile</name>
         <value>
           <string>data/dbpedia_2015-10.owl</string>
+        </value>
+      </nameValuePair>
+    <nameValuePair>
+        <name>MaxFailureQty</name>
+        <value>
+          <integer>10000</integer>
         </value>
       </nameValuePair>
     </configurationParameterSettings>
