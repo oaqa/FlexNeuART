@@ -1,7 +1,9 @@
 #!/bin/bash
+. scripts/common.sh
+
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection: manner, compr (1st arg)"
+  echo "Specify a collection: manner, compr, squad (1st arg)"
   exit 1
 fi
 
@@ -14,23 +16,25 @@ if [ ! -f "$FEATURE_DESC_FILE" ] ; then
   echo "Not a file (2d arg)"
   exit 1
 fi
-FILT_N="$3"
+QREL_TYPE="$3"
+QREL_FILE=`get_qrel_file "$QREL_TYPE" "3rd"`
+check ""
 
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
+FILT_N="$4"
+
+if [ "$FILT_N" = "" ] ; then
+  FILT_N="*"
+fi
 
 EXPER_DIR="results/feature_exper/"
 
+echo -e "extractor_type\tembed_list\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
 
-echo -e "extractor_type\tembed_list\ttop_k\trecall\tquery_num\tnum_correct\tP@1\tMRR"
+function get_param_value {
+  f=$1
+  pname=$2
+  grep "$pname" $f|sed 's/ //g'|cut -d : -f 2
+}
 
 n=`wc -l "$FEATURE_DESC_FILE"|awk '{print $1}'`
 n=$(($n+1))
@@ -44,22 +48,26 @@ for ((i=1;i<$n;++i))
       TEST_SET=`echo $line|awk '{print $3}'`
       # Each experiment should run in its separate directory
       suffix="$EXTR_TYPE/$EMBED_LIST"
-      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$TEST_SET/$suffix"
+      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$suffix"
       if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
         echo "Directory doesn't exist: $EXPER_DIR_UNIQUE"
         exit 1
       fi
-      for f in `ls -tr $EXPER_DIR_UNIQUE/rep/*.tsv` ; do 
-        m=`wc -l $f|awk '{print $1}'`
-        m=$(($m+1))
-        for ((k=1;k<$m;++k))
-          do
-            txt=`head -$k "$f"|tail -1`
-            lineNum=`echo $txt|cut -d \  -f 1`
-            if [ "$FILT_N" = "" -o "$FILT_N" = "$lineNum" ] ; then
-              echo -e "$EXTR_TYPE\t$EMBED_LIST\t$txt"
-            fi
-          done
+      pd=$PWD
+      cd $EXPER_DIR_UNIQUE/rep
+      check "cd $EXPER_DIR_UNIQUE/rep"
+      for f in `ls -tr out_${FILT_N}.rep` ; do 
+        top_k=`echo $f|sed 's/out_//'|sed 's/.rep//'`
+        query_qty=`get_param_value $f "# of queries"`
+        ndcg20=`get_param_value $f "NDCG@20"`
+        err20=`get_param_value $f "ERR@20"`
+        p20=`get_param_value $f "P@20"`
+        map=`get_param_value $f "MAP"`
+        mrr=`get_param_value $f "Reciprocal rank"`
+        recall=`get_param_value $f "Recall"`
+        echo -e "$EXTR_TYPE\t$EMBED_LIST\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
       done
+      cd $pd
+      check "cd $pd"
     fi
   done
