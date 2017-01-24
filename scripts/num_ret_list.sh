@@ -11,8 +11,8 @@ elif [ "$collect" = "stackoverflow" ] ; then
   export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
   export N_TRAIN=15
 elif [ "$collect" = "squad" ] ; then
-  #export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
-  export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100,250,500,750,1000,1500,2000,2500,5000,10000"
+  export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
+  #export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100,250,500,750,1000"
   export N_TRAIN=20
 else
   echo "Unsupported collection: $collect"
