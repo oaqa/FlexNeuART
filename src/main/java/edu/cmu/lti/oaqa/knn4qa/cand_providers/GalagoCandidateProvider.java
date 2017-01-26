@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 
 public class GalagoCandidateProvider extends CandidateProvider {
   final Logger logger = LoggerFactory.getLogger(GalagoCandidateProvider.class);
@@ -119,7 +120,7 @@ public class GalagoCandidateProvider extends CandidateProvider {
                         TEXT_FIELD_NAME, queryNum));
     }
     
-    text = text.trim();
+    text = StringUtilsLeo.removePunct(text.trim());
 
     int    numFound = 0;
     
