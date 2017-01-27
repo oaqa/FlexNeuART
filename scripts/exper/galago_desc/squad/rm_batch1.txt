@@ -1,0 +1,15 @@
+combine @ dev0
+rm  fbOrigWeight=0.05 dev0
+rm  fbOrigWeight=0.1  dev0
+rm  fbOrigWeight=0.15 dev0
+rm  fbOrigWeight=0.2  dev0
+rm  fbOrigWeight=0.25 dev0
+rm  fbOrigWeight=0.3  dev0
+rm  fbOrigWeight=0.35 dev0
+rm  fbOrigWeight=0.4  dev0
+rm  fbOrigWeight=0.45 dev0
+rm  fbOrigWeight=0.5  dev0
+rm  fbOrigWeight=0.55 dev0
+rm  fbOrigWeight=0.6  dev0
+rm  fbOrigWeight=0.65 dev0
+rm  fbOrigWeight=0.7  dev0
