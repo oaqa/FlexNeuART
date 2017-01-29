@@ -16,6 +16,12 @@ if [ ! -f "$FEATURE_DESC_FILE" ] ; then
   echo "Not a file (2d arg)"
   exit 1
 fi
+IS_GALAGO_EXPER="0"
+echo "$FEATURE_DESC_FILE" | grep galago >/dev/null
+if [ "$?" = "0" ] ; then
+  IS_GALAGO_EXPER="0"
+fi
+
 QREL_TYPE="$3"
 QREL_FILE=`get_qrel_file "$QREL_TYPE" "3rd"`
 check ""
@@ -26,7 +32,11 @@ if [ "$FILT_N" = "" ] ; then
   FILT_N="*"
 fi
 
-EXPER_DIR="results/feature_exper/"
+if [ "$IS_GALAGO_EXPER" = "0" ] ; then 
+  EXPER_DIR="results/feature_exper/"
+else
+  EXPER_DIR="results/galago_exper/"
+fi
 
 echo -e "extractor_type\tembed_list\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
 
@@ -43,11 +53,18 @@ for ((i=1;i<$n;++i))
     line=`head -$i "$FEATURE_DESC_FILE"|tail -1`
     if [ "$line" !=  "" ]
     then
-      EXTR_TYPE=`echo $line|awk '{print $1}'`
-      EMBED_LIST=`echo $line|awk '{print $2}'`
-      TEST_SET=`echo $line|awk '{print $3}'`
       # Each experiment should run in its separate directory
-      suffix="$EXTR_TYPE/$EMBED_LIST"
+      if [ "$IS_GALAGO_EXPER" = "0" ] ; then 
+        EXTR_TYPE=`echo $line|awk '{print $1}'`
+        EMBED_LIST=`echo $line|awk '{print $2}'`
+        TEST_SET=`echo $line|awk '{print $3}'`
+        suffix="$EXTR_TYPE/$EMBED_LIST"
+      else
+        GALAGO_OP=`echo $line|awk '{print $1}'`
+        GALAGO_PARAMS=`echo $line|awk '{print $2}'`
+        TEST_SET=`echo $line|awk '{print $3}'`
+        suffix="$GALAGO_OP/$GALAGO_PARAMS"
+      fi
       EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$suffix"
       if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
         echo "Directory doesn't exist: $EXPER_DIR_UNIQUE"
