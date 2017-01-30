@@ -19,7 +19,7 @@ fi
 IS_GALAGO_EXPER="0"
 echo "$FEATURE_DESC_FILE" | grep galago >/dev/null
 if [ "$?" = "0" ] ; then
-  IS_GALAGO_EXPER="0"
+  IS_GALAGO_EXPER="1"
 fi
 
 QREL_TYPE="$3"
