@@ -82,7 +82,11 @@ for ((i=1;i<$n;++i))
         map=`get_param_value $f "MAP"`
         mrr=`get_param_value $f "Reciprocal rank"`
         recall=`get_param_value $f "Recall"`
-        echo -e "$EXTR_TYPE\t$EMBED_LIST\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
+        if [ "$IS_GALAGO_EXPER" = "0" ] ; then 
+          echo -e "$EXTR_TYPE\t$EMBED_LIST\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
+        else
+          echo -e "$GALAGO_OP\t$GALAGO_PARAMS\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
+        fi
       done
       cd $pd
       check "cd $pd"
