@@ -38,7 +38,11 @@ else
   EXPER_DIR="results/galago_exper/"
 fi
 
-echo -e "extractor_type\tembed_list\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
+if [ "$IS_GALAGO_EXPER" = "0" ] ; then 
+  echo -e "extractor_type\tembed_list\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
+else
+  echo -e "galago_op\tgalago_params\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
+fi
 
 function get_param_value {
   f=$1
