@@ -1,4 +1,5 @@
 sdm     uniw=0.8,odw=0.2,uww=0.0    dev0
 sdm     uniw=0.8,odw=0.15,uww=0.05  dev0
+sdm     uniw=0.8,odw=0.15,uww=0.1   dev0
 sdm     uniw=0.8,odw=0.5,uww=0.15   dev0
 sdm     uniw=0.8,odw=0.0,uww=0.2    dev0
