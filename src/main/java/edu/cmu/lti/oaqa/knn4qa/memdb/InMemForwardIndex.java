@@ -464,10 +464,10 @@ public class InMemForwardIndex {
           out.write(String.format("%d:%d", doc.mWordIds[i], doc.mQtys[i]));
         }
         out.newLine();
-        if (doc.mWordIdList != null) {
-          for (int i = 0; i < doc.mWordIdList.length; ++i) {
+        if (doc.mWordIdSeq != null) {
+          for (int i = 0; i < doc.mWordIdSeq.length; ++i) {
             if (i > 0) out.write(" ");
-            out.write("" + doc.mWordIdList[i]);
+            out.write("" + doc.mWordIdSeq[i]);
           }
         } else {
           out.write(DOCLEN_QTY_PREFIX + doc.mDocLen);

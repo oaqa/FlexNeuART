@@ -992,10 +992,10 @@ private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
       throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
     }
     
-    if (docEntry.mWordIdList == null) {
+    if (docEntry.mWordIdSeq == null) {
       throw new Exception("getFieldLCSScores can be used only if the sequence of document word IDs is stored in forward file (this doesn't seem to be the case)!");
     }
-    float score = DistanceFunctions.compLCS(queryEntry.mWordIdList, docEntry.mWordIdList);
+    float score = DistanceFunctions.compLCS(queryEntry.mWordIdSeq, docEntry.mWordIdSeq);
     
     DenseVector v = res.get(docId);
     if (v == null) {

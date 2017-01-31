@@ -28,9 +28,9 @@ public class DocEntry {
     mWordIds = new int [uniqQty];
     mQtys    = new int [uniqQty];
     if (bStoreWordIdSeq)
-      mWordIdList = wordIdSeq;
+      mWordIdSeq = wordIdSeq;
     else
-      mWordIdList = null;
+      mWordIdSeq = null;
     mDocLen = wordIdSeq.length;
   }
 
@@ -44,7 +44,7 @@ public class DocEntry {
       mWordIds[i] = wordIds.get(i);
       mQtys[i] = wordQtys.get(i);
     }
-    mWordIdList = null;
+    mWordIdSeq = null;
     mDocLen = docLen;
   }
 
@@ -65,18 +65,18 @@ public class DocEntry {
     }
     
     if (bStoreWordIdSeq) {
-      mWordIdList = new int [wordIdSeq.size()];
+      mWordIdSeq = new int [wordIdSeq.size()];
       for (int k = 0; k < wordIdSeq.size(); ++k) {
-        mWordIdList[k] = wordIdSeq.get(k);
+        mWordIdSeq[k] = wordIdSeq.get(k);
       }
     } else {
-      mWordIdList = null;
+      mWordIdSeq = null;
     }
     mDocLen = wordIdSeq.size();
   }
 
   public final int mWordIds[]; // unique word ids
   public final int mQtys[];    // # of word occurrences corresponding to memorized ids
-  public final int mWordIdList[]; // a sequence of word IDs (can contain repeats), this array CAN BE NULL
+  public final int mWordIdSeq[]; // a sequence of word IDs (can contain repeats), this array CAN BE NULL
   public final int mDocLen; // document length in # of words
 }

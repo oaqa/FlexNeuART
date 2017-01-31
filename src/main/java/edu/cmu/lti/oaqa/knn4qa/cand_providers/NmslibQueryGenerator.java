@@ -106,10 +106,10 @@ public class NmslibQueryGenerator {
         sb.append(oneEntry.mWordIds[k] + ":" + oneEntry.mQtys[k]);
       }
       sb.append('\n'); // The server works only on Linux so we don't need a platform-independent newline
-      if (oneEntry.mWordIdList != null) {
-        for (int k = 0; k < oneEntry.mWordIdList.length; ++k) {
+      if (oneEntry.mWordIdSeq != null) {
+        for (int k = 0; k < oneEntry.mWordIdSeq.length; ++k) {
           if (k > 0) sb.append(' ');
-          sb.append(oneEntry.mWordIdList[k]);
+          sb.append(oneEntry.mWordIdSeq[k]);
         }
       } else {
         sb.append("@ ");
