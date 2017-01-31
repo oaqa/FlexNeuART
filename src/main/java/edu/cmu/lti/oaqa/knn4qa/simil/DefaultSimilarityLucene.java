@@ -47,7 +47,7 @@ public class DefaultSimilarityLucene extends QueryDocSimilarity {
     
     int   iQuery = 0, iDoc = 0;
     
-    float docLen = doc.mWordIdSeq.length;
+    float docLen = doc.mDocLen;
     
 //    float queryNorm = 0;
     float lengthNorm = docLen > 0 ? ((float) (1.0 / Math.sqrt(docLen))) : 0;

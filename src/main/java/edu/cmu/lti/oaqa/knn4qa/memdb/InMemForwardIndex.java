@@ -67,18 +67,22 @@ class WordEntryExt implements Comparable<WordEntryExt> {
  *
  */
 public class InMemForwardIndex {  
+  public static final String DOCLEN_QTY_PREFIX = "@ ";
   public static final WordEntry UNKNOWN_WORD = new WordEntry(-1);
   public static final int MIN_WORD_ID = 1;
   
   /**
    * Constructor: Creates an index from one or more files (for a given field name).
    * 
-   * @param fieldName   the name of the field (as specified in the SOLR index-file)
-   * @param fileNames   an array of files from which the index is created
-   * @param maxNumRec   the maximum number of records to process
+   * @param fieldName         the name of the field (as specified in the SOLR index-file)
+   * @param fileNames         an array of files from which the index is created
+   * @param bStoreWordIdSeq   if true, we memorize the sequence of word IDs, otherwise only a number of words (doc. len.)
+   * @param maxNumRec         the maximum number of records to process
    * @throws IOException
    */
-  public InMemForwardIndex(String fieldName, String[] fileNames, int maxNumRec) throws IOException {    
+  public InMemForwardIndex(String fieldName, String[] fileNames, 
+                          boolean bStoreWordIdSeq, 
+                          int maxNumRec) throws IOException {    
     mDocQty       = 0;
     mTotalWordQty = 0;
     
@@ -132,7 +136,7 @@ public class InMemForwardIndex {
           }
         }
         
-        DocEntry doc = createDocEntry(words);
+        DocEntry doc = createDocEntry(words, bStoreWordIdSeq);
         
         mStr2DocEntry.put(docId, doc);        
         mDocEntInAdditionOrder.add(new DocEntryExt(docId, doc)); 
@@ -304,25 +308,43 @@ public class InMemForwardIndex {
                       lineNum, fileName));          
         }
         
-        ArrayList<Integer> wordIdSeq = new ArrayList<Integer>();
         
-        if (!line.isEmpty()) {
-          parts = line.split("\\s+");
-          int k = 0;
-          for (String s: parts) {
-            ++k;
-            try {
-              int wordId = Integer.parseInt(s);
-              wordIdSeq.add(wordId);
-            } catch (NumberFormatException e) {
-              throw new Exception(
-                  String.format(
-                          "Invalid document entry format (word ID isn't integer), line %d, file %s in the substring '%s' (part #%d)",
-                          lineNum, fileName, s, k));
-            }          
+        
+        final DocEntry doc;
+        
+        if (line.startsWith(DOCLEN_QTY_PREFIX)) {
+          final int docLen;
+          try {
+            docLen = Integer.parseInt(line.substring(DOCLEN_QTY_PREFIX.length()));
+          } catch (NumberFormatException e) {
+            throw new Exception(
+                String.format(
+                        "Document length isn't integer (line number %d, file '%s')",
+                        lineNum, fileName));               
           }
+          doc = new DocEntry(wordIds, wordQtys, docLen); 
+        } else {
+          ArrayList<Integer> wordIdSeq = new ArrayList<Integer>();
+          
+          if (!line.isEmpty()) {
+            parts = line.split("\\s+");
+            int k = 0;
+            for (String s: parts) {
+              ++k;
+              try {
+                int wordId = Integer.parseInt(s);
+                wordIdSeq.add(wordId);
+              } catch (NumberFormatException e) {
+                throw new Exception(
+                    String.format(
+                            "Invalid document entry format (word ID isn't integer), line %d, file %s in the substring '%s' (part #%d)",
+                            lineNum, fileName, s, k));
+              }          
+            }
+          }
+          doc = new DocEntry(wordIds, wordQtys, wordIdSeq, true);
         }
-        DocEntry doc = new DocEntry(wordIds, wordQtys, wordIdSeq);
+        
 
         mStr2DocEntry.put(docId, doc);
         mDocEntInAdditionOrder.add(new DocEntryExt(docId, doc));
@@ -442,9 +464,13 @@ public class InMemForwardIndex {
           out.write(String.format("%d:%d", doc.mWordIds[i], doc.mQtys[i]));
         }
         out.newLine();
-        for (int i = 0; i < doc.mWordIdSeq.length; ++i) {
-          if (i > 0) out.write(" ");
-          out.write("" + doc.mWordIdSeq[i]);
+        if (doc.mWordIdList != null) {
+          for (int i = 0; i < doc.mWordIdList.length; ++i) {
+            if (i > 0) out.write(" ");
+            out.write("" + doc.mWordIdList[i]);
+          }
+        } else {
+          out.write(DOCLEN_QTY_PREFIX + doc.mDocLen);
         }
         out.newLine();
       }
@@ -472,10 +498,12 @@ public class InMemForwardIndex {
    * This list is sorted by word IDs. Unknown words
    * have ID -1.
    * 
-   * @param words a list of document words.
+   * @param words             a list of document words.
+   * @param bStoreWordIdSeq   if true, we memorize the sequence of word IDs, otherwise only a number of words (doc. len.)
+   * 
    * @return a document entry.
    */
-  public DocEntry createDocEntry(String[] words) {
+  public DocEntry createDocEntry(String[] words, boolean bStoreWordIdSeq) {
     // TreeMap guarantees that entries are sorted by the wordId
     TreeMap<Integer, Integer> wordQtys = new TreeMap<Integer, Integer>();        
     int [] wordIdSeq = new int[words.length];
@@ -498,7 +526,7 @@ public class InMemForwardIndex {
       wordQtys.put(wordId, qty);
     }
     
-    DocEntry doc = new DocEntry(wordQtys.size(), wordIdSeq);
+    DocEntry doc = new DocEntry(wordQtys.size(), wordIdSeq, bStoreWordIdSeq);
     
     int k =0;
     

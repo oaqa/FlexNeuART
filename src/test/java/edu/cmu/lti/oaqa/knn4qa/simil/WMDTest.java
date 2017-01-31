@@ -62,7 +62,7 @@ public class WMDTest extends AbstractTest {
       arrIds.add(-1); // The test wouldn't care about IDs, only about qtys
     }    
     
-    return new DocEntry(arrIds, arrQtys, wordIdSeq);
+    return new DocEntry(arrIds, arrQtys, wordIdSeq, true);
   }
   
   /**

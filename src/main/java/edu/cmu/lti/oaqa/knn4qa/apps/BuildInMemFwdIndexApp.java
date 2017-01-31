@@ -29,7 +29,10 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 public class BuildInMemFwdIndexApp {
   
   public final static String FIELD_NAME_PARAM = "field";
-  public final static String FIELD_NAME_DESC  = "a field to be indexed (use a regular name not the one from the XML index-file)";  
+  public final static String FIELD_NAME_DESC  = "a field to be indexed (use a regular name not the one from the XML index-file)";
+  public final static String STORE_WORD_ID_SEQ_PARAM = "store_word_id_seq";
+  public final static String STORE_WORD_ID_SEQ_DESC  = "Store positional info (a sequence of word IDs) in addition to word frequencies";  
+  
   
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
@@ -47,6 +50,7 @@ public class BuildInMemFwdIndexApp {
     options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,null, true, CommonParams.SOLR_FILE_NAME_DESC);    
     options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_MINDEX_DESC);
     options.addOption(FIELD_NAME_PARAM,                 null, true, FIELD_NAME_DESC);
+    options.addOption(STORE_WORD_ID_SEQ_PARAM,          null, false, STORE_WORD_ID_SEQ_DESC);
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -116,8 +120,12 @@ public class BuildInMemFwdIndexApp {
       String [] fileNames = new String[subDirs.length];
       for (int i = 0; i < fileNames.length; ++i)
         fileNames[i] = rootDir + "/" + subDirs[i] + "/" + solrFileName;
+      
+      boolean bStoreWordIdSeq = cmd.hasOption(STORE_WORD_ID_SEQ_PARAM);
+      
+      System.out.println("Storing word id sequence?: " + bStoreWordIdSeq);
         
-      InMemForwardIndex indx = new InMemForwardIndex(fieldSOLR, fileNames, maxNumRec);
+      InMemForwardIndex indx = new InMemForwardIndex(fieldSOLR, fileNames, bStoreWordIdSeq, maxNumRec);
         
       indx.save(InMemIndexFeatureExtractor.indexFileName(outPrefix, fieldName));
     } catch (ParseException e) {

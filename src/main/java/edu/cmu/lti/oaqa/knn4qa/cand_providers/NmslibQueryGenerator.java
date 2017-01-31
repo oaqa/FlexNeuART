@@ -67,8 +67,13 @@ public class NmslibQueryGenerator {
     for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) 
     if (mFieldIndex[fieldId] != null) {
       String fieldQuery = docData.get(FeatureExtractor.mFieldsSOLR[fieldId]);
-      docEntries[fieldId] = mFieldIndex[fieldId].createDocEntry(fieldQuery.split("\\s+"));
-    }
+      docEntries[fieldId] = 
+          mFieldIndex[fieldId].createDocEntry(fieldQuery.split("\\s+"),
+                                true  /* True means we generate word ID sequence:
+                                 * in the case of queries, there's never a harm in doing so.
+                                 * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                );    
+      }
     
     return getStrObjForKNNService(docEntries);
   }
@@ -101,9 +106,14 @@ public class NmslibQueryGenerator {
         sb.append(oneEntry.mWordIds[k] + ":" + oneEntry.mQtys[k]);
       }
       sb.append('\n'); // The server works only on Linux so we don't need a platform-independent newline
-      for (int k = 0; k < oneEntry.mWordIdSeq.length; ++k) {
-        if (k > 0) sb.append(' ');
-        sb.append(oneEntry.mWordIdSeq[k]);
+      if (oneEntry.mWordIdList != null) {
+        for (int k = 0; k < oneEntry.mWordIdList.length; ++k) {
+          if (k > 0) sb.append(' ');
+          sb.append(oneEntry.mWordIdList[k]);
+        }
+      } else {
+        sb.append("@ ");
+        sb.append(oneEntry.mDocLen);
       }
       sb.append('\n'); // The server works only on Linux so we don't need a platform-independent newline
     }

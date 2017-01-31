@@ -896,7 +896,13 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+                                  true  /* True means we generate word ID sequence:
+                                   * in the case of queries, there's never a harm in doing so.
+                                   * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                  );
+
     
     
     if (PRINT_SCORES)
@@ -965,8 +971,14 @@ private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
   query = query.trim();
   if (query.isEmpty()) return;
   
-  DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
-  
+  DocEntry queryEntry = 
+      fieldIndex.createDocEntry(query.split("\\s+"),
+          true  /* True means we generate word ID sequence:
+           * in the case of queries, there's never a harm in doing so.
+           * If word ID sequence is not used, it will be used only to compute the document length. */              
+          );
+          
+          
   boolean useLCSFeature          = useLCSFeature(fieldId);
   boolean useLCSFeatureQueryNorm = useLCSFeatureQueryNorm(fieldId);
   
@@ -980,14 +992,17 @@ private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
       throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
     }
     
-    float score = DistanceFunctions.compLCS(queryEntry.mWordIdSeq, docEntry.mWordIdSeq);
+    if (docEntry.mWordIdList == null) {
+      throw new Exception("getFieldLCSScores can be used only if the sequence of document word IDs is stored in forward file (this doesn't seem to be the case)!");
+    }
+    float score = DistanceFunctions.compLCS(queryEntry.mWordIdList, docEntry.mWordIdList);
     
     DenseVector v = res.get(docId);
     if (v == null) {
       throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
     }
 
-    float normScore = score / Math.max(1, queryEntry.mWordIdSeq.length);
+    float normScore = score / Math.max(1, queryEntry.mDocLen);
     
     int fid = startFeatureId;
     
@@ -1056,7 +1071,13 @@ private void getFieldAllTranScoresDirect(InMemForwardIndex fieldIndex,
   boolean useModel1QueryNorm     = useModel1FeatureQueryNorm(fieldId);
   boolean useSimpleTranQueryNorm = useSimpleTranFeatureQueryNorm(fieldId);
   
-  DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+  DocEntry queryEntry = 
+      fieldIndex.createDocEntry(query.split("\\s+"),
+                                true  /* True means we generate word ID sequence:
+                                 * in the case of queries, there's never a harm in doing so.
+                                 * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                );
+
     
   int queryWordQty = queryEntry.mWordIds.length;
   
@@ -1196,7 +1217,7 @@ private void getFieldAllTranScoresDirect(InMemForwardIndex fieldIndex,
     }    
     
     // Math.max avoid division by zero!
-    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mWordIdSeq.length * docEntry.mWordIdSeq.length);
+    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mDocLen * docEntry.mDocLen);
   
     int fid = startFeatureId;
     if (useModel1) {
@@ -1276,8 +1297,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   boolean useModel1QueryNorm     = useModel1FeatureQueryNorm(fieldId);
   boolean useSimpleTranQueryNorm = useSimpleTranFeatureQueryNorm(fieldId);
   
-  DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
-  
+  DocEntry queryEntry = 
+      fieldIndex.createDocEntry(query.split("\\s+"),
+                                true  /* True means we generate word ID sequence:
+                                 * in the case of queries, there's never a harm in doing so.
+                                 * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                );  
   
   int queryWordQty = queryEntry.mWordIds.length;
   
@@ -1399,7 +1424,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     }    
     
     // Math.max avoid division by zero!
-    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mWordIdSeq.length * docEntry.mWordIdSeq.length);
+    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mDocLen * docEntry.mDocLen);
 
     int fid = startFeatureId;
     if (useModel1) {
@@ -1460,7 +1485,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+            true  /* True means we generate word ID sequence:
+             * in the case of queries, there's never a harm in doing so.
+             * If word ID sequence is not used, it will be used only to compute the document length. */              
+            );
     
     
     if (PRINT_SCORES)
@@ -1513,7 +1543,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+            true  /* True means we generate word ID sequence:
+             * in the case of queries, there's never a harm in doing so.
+             * If word ID sequence is not used, it will be used only to compute the document length. */              
+            );
     
     int embedQty = mWordEmbeds[fieldId].length;
     
@@ -1700,7 +1735,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+            true  /* True means we generate word ID sequence:
+             * in the case of queries, there's never a harm in doing so.
+             * If word ID sequence is not used, it will be used only to compute the document length. */              
+            );
 
     SparseVector[] queryEmbedVectorsL1Norm = new SparseVector[mHighOrderModels.size()];
 
