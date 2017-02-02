@@ -27,6 +27,12 @@ if [ "$collect" = "manner" ] ; then
     echo "FAILURE!!!"
     exit 1
   fi
+elif [ "$collect" = "gov2" ] ; then
+  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file SolrAnswerFile.txt.gz
+  if [ "$?" != "0" ] ; then
+    echo "FAILURE!!!"
+    exit 1
+  fi
 elif [ "$collect" = "compr" ] ; then
   scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt # -exclude_fields "srl,srl_lab,dep,wnss"
   if [ "$?" != "0" ] ; then
