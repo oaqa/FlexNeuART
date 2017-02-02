@@ -83,6 +83,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
         , mDoPOSTagging, mMinTokQty, mCheckQuality, mSkipAnswers, mIncludeNotBest));
     
     mClearNLPEngine = new BasicEngine(aContext, mDoPOSTagging);
+    mJCasFactory = mClearNLPEngine.createJCasFactory();
   }
   
   JCas                          mQuestJCas = null;
@@ -96,6 +97,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   private int                   mAnswId = -1;
 
   BasicEngine                   mClearNLPEngine;
+  private JCasFactory           mJCasFactory;
  
   @Override
   public void process(JCas jcas) throws AnalysisEngineProcessException {
@@ -111,7 +113,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     
     {
       try {
-        mQuestJCas = mClearNLPEngine.borrowJCas();
+        mQuestJCas = mJCasFactory.borrowJCas();
       } catch (ResourceInitializationException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
@@ -141,7 +143,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
            *  However, we might need to have multiple output CASes.
            *  Using a separate analysis engine (inside BasicEngine) provides a work around.
            */
-          answJCas = mClearNLPEngine.borrowJCas();
+          answJCas = mJCasFactory.borrowJCas();
         } catch (Exception e) {
           e.printStackTrace();
           throw new AnalysisEngineProcessException(e);
@@ -180,11 +182,11 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   
   private void releaseAll() {
     if (mQuestJCas != null) {
-      mClearNLPEngine.returnJCas(mQuestJCas);
+      mJCasFactory.returnJCas(mQuestJCas);
       mQuestJCas = null;
     }
     for (JCas jcas: mAnswerJCas) {
-      mClearNLPEngine.returnJCas(jcas);
+      mJCasFactory.returnJCas(jcas);
     }
     mAnswerJCas.clear();
     mAnswerAnnot.clear();

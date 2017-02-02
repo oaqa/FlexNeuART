@@ -1,0 +1,10 @@
+rm  fbDocs=5,fbTerm=40   dev0
+rm  fbDocs=5,fbTerm=50   dev0
+rm  fbDocs=5,fbTerm=60   dev0
+rm  fbDocs=5,fbTerm=80   dev0
+rm  fbDocs=5,fbTerm=120   dev0
+rm  fbDocs=5,fbTerm=140   dev0
+rm  fbDocs=5,fbTerm=160   dev0
+rm  fbDocs=5,fbTerm=200   dev0
+rm  fbDocs=5,fbTerm=250   dev0
+rm  fbDocs=5,fbTerm=300   dev0

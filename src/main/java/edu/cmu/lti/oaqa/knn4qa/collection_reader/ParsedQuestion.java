@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+
 /**
  * 
  * A class that represents a single parsed answer.
@@ -86,46 +88,9 @@ public class ParsedQuestion {
   }
   
   private static String cleanUpWrapper(boolean doCleanUp, String s) {
-    return doCleanUp ? cleanUp(s) : s;
+    return doCleanUp ? StringUtilsLeo.cleanUp(s) : s;
   }
   
-  private static Pattern mReplBR = Pattern.compile("<br\\s*/?>",
-      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
-  private static Pattern mReplTags = Pattern.compile("<[a-z]+[^/>]*/?>",
-      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
-
-  /**
-   * Removing accents. Taken from
-   * http://www.drillio.com/en/software-development/
-   * java/removing-accents-diacritics-in-any-language/
-   */
-  public static String removeDiacritics(String text) {
-    return text == null ? null : Normalizer.normalize(text, Form.NFD)
-        .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
-  }
-
-  public static String cleanUp(String s) {
-    s = s.trim();
-    s = s.replaceAll("\r+", ""); // "\r" may come from a file in DOS encoding;
-    s = s.replace('’', '\''); // ugly hack for Yahoo answers
-
-    s = removeDiacritics(s);
-    s = s.replaceAll("[^\\x00-\\x7F]", " "); // remove non-ASCII
-
-    /*
-     * Repeating punctuation marks cause all kind of trouble in ClearNLP
-     * including infinite loops and stack overflow.
-     */
-    s = s.replaceAll("[?]+", "?");
-    s = s.replaceAll("[!]+", "!");
-    s = s.replaceAll("[.]+", ".");
-    s = s.replaceAll("[:]+", ":");
-
-    Matcher m1 = mReplBR.matcher(s);
-    s = m1.replaceAll("\n");
-    Matcher m2 = mReplTags.matcher(s);
-    return m2.replaceAll(" ").replaceAll("\n+", "\n");
-  }  
   
   /* (non-Javadoc)
    * @see java.lang.Object#toString()

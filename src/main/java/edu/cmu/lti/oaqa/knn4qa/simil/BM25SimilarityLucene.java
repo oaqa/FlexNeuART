@@ -72,7 +72,7 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
     
     int   iQuery = 0, iDoc = 0;
     
-    float docLen = doc.mWordIdSeq.length;
+    float docLen = doc.mDocLen;
     
     while (iQuery < queryTermQty && iDoc < docTermQty) {
       final int queryWordId = query.mWordIds[iQuery];
@@ -103,7 +103,7 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
   }
 
   public float [] computeEmbed(float[][] distMatrixCosine, DocEntry query, DocEntry doc) {
-    float docLen = doc.mWordIdSeq.length;
+    float docLen = doc.mDocLen;
     float scores[] = new float[2];
     
     int queryQty = query.mWordIds.length;
@@ -175,7 +175,7 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
       if (wid >= 0) qty++;
     TrulySparseVector res = new TrulySparseVector(qty);
     
-    float docLen = e.mWordIdSeq.length;
+    float docLen = e.mDocLen;
     
     for (int i = 0, id=0; i < e.mWordIds.length; ++i) {
       int wordId = e.mWordIds[i];

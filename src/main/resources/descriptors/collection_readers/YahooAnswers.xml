@@ -30,8 +30,8 @@
       </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings/>
-    <!-- Type System of CASes returned by this Collection Reader -->
 
+    <!-- Types used by this pipeline -->
     <typeSystemDescription>
       <imports>
         <import name="org.apache.uima.examples.SourceDocumentInformation"/>

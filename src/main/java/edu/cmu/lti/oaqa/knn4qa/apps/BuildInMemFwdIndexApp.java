@@ -28,9 +28,11 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 
 public class BuildInMemFwdIndexApp {
   
-  public static final String EXCLUDE_FIELDS_PARAM = "exclude_fields";
-  public static final String EXCLUDE_FIELDS_DESC  = "a comma separate lists of fields NOT to be indexed";
-
+  public final static String FIELD_NAME_PARAM = "field";
+  public final static String FIELD_NAME_DESC  = "a field to be indexed (use a regular name not the one from the XML index-file)";
+  public final static String STORE_WORD_ID_SEQ_PARAM = "store_word_id_seq";
+  public final static String STORE_WORD_ID_SEQ_DESC  = "Store positional info (a sequence of word IDs) in addition to word frequencies";  
+  
   
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
@@ -47,7 +49,8 @@ public class BuildInMemFwdIndexApp {
     options.addOption(CommonParams.MAX_NUM_REC_PARAM,   null, true, CommonParams.MAX_NUM_REC_DESC);
     options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,null, true, CommonParams.SOLR_FILE_NAME_DESC);    
     options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_MINDEX_DESC);
-    options.addOption(EXCLUDE_FIELDS_PARAM,             null, true, EXCLUDE_FIELDS_DESC);
+    options.addOption(FIELD_NAME_PARAM,                 null, true, FIELD_NAME_DESC);
+    options.addOption(STORE_WORD_ID_SEQ_PARAM,          null, false, STORE_WORD_ID_SEQ_DESC);
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -87,37 +90,44 @@ public class BuildInMemFwdIndexApp {
         }
       }
       
-      String [] exclFields = new String[0];
-      tmp = cmd.getOptionValue(EXCLUDE_FIELDS_PARAM);
-      if (null != tmp) {
-        exclFields = tmp.split(",");
+      String fieldName = cmd.getOptionValue(FIELD_NAME_PARAM);
+      if (fieldName == null) {
+        Usage("Specify: '" + FIELD_NAME_DESC, options);
       }
       
       String [] subDirs = subDirTypeList.split(",");
       
+      int fieldId = -1;
       for (int k = 0; k < FeatureExtractor.mFieldNames.length; ++k) {
-        String field = FeatureExtractor.mFieldsSOLR[k];
-        String fieldName = FeatureExtractor.mFieldNames[k];
-        
-        boolean bOk = !StringUtilsLeo.isInArrayNoCase(fieldName, exclFields);
-        
-        if (bOk) System.out.println("Processing field: " + field);
-        else {
-          System.out.println("Skipping field: " + field);
-          continue;
+        if (FeatureExtractor.mFieldNames[k].equalsIgnoreCase(fieldName)) {
+          fieldId = k;
+          break;
         }
-        
-        String [] fileNames = new String[subDirs.length];
-        for (int i = 0; i < fileNames.length; ++i)
-          fileNames[i] = rootDir + "/" + subDirs[i] + "/" + solrFileName;
-        
-        InMemForwardIndex indx = new InMemForwardIndex(field, fileNames, maxNumRec);
-        
-        indx.save(InMemIndexFeatureExtractor.indexFileName(outPrefix, fieldName));
-        indx = null;
-        System.gc();
       }
-
+      
+      if (fieldId == -1) {
+        System.err.println("Wrong field name: '" + fieldName + "' available fields:");
+        for (int k = 0; k < FeatureExtractor.mFieldNames.length; ++k)
+          System.err.print(FeatureExtractor.mFieldNames[k] + " ");
+        Usage("Specify: '" + FIELD_NAME_DESC, options);
+      }
+        
+      String fieldSOLR = FeatureExtractor.mFieldsSOLR[fieldId];
+      
+      System.out.println("Processing field: '" + fieldName + 
+                         "' the name of the field in the SOLR index-file: '" + fieldSOLR + "'");
+        
+      String [] fileNames = new String[subDirs.length];
+      for (int i = 0; i < fileNames.length; ++i)
+        fileNames[i] = rootDir + "/" + subDirs[i] + "/" + solrFileName;
+      
+      boolean bStoreWordIdSeq = cmd.hasOption(STORE_WORD_ID_SEQ_PARAM);
+      
+      System.out.println("Storing word id sequence?: " + bStoreWordIdSeq);
+        
+      InMemForwardIndex indx = new InMemForwardIndex(fieldSOLR, fileNames, bStoreWordIdSeq, maxNumRec);
+        
+      indx.save(InMemIndexFeatureExtractor.indexFileName(outPrefix, fieldName));
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
     } catch (Exception e) {

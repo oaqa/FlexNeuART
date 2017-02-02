@@ -1,0 +1,2 @@
+rm  fbOrigWeight=0.5,fbDocs=5,fbTerm=140  dev0
+rm  fbOrigWeight=0.75,fbDocs=5,fbTerm=140  dev0

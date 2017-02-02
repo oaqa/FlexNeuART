@@ -198,8 +198,7 @@ public class ExtractDataAndQueryAsSparseVectors {
           outputVector(out, v);
         }
 
-        out.close();
-        
+        out.close();        
       }
 
       Splitter splitOnSpace = Splitter.on(' ').trimResults().omitEmptyStrings();
@@ -233,7 +232,7 @@ public class ExtractDataAndQueryAsSparseVectors {
           ArrayList<String> tmpa = new ArrayList<String>();
           for (String s: splitOnSpace.split(fieldText)) tmpa.add(s);
           
-          DocEntry e = indx.createDocEntry(tmpa.toArray(new String[tmpa.size()]));
+          DocEntry e = indx.createDocEntry(tmpa.toArray(new String[tmpa.size()]), false /* no pos. info needed */);
           
           TrulySparseVector v = bm25simil.getDocSparseVector(e, true);
           if (queryQty < testQty) {

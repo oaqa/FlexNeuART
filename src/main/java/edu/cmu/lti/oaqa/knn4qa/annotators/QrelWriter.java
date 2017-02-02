@@ -1,6 +1,5 @@
-
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -79,11 +78,21 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
 
   }
   
-  static synchronized private void doOutput(BufferedWriter qrelFile, String topicId, String docId, Integer relGrade) 
-      throws IOException {
-    SolrEvalUtils.saveQrelOneEntry(qrelFile, topicId, docId, relGrade);    
-  }
+  @Override
+  public void collectionProcessComplete() throws AnalysisEngineProcessException {
+    try {
+      finishOutput();
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new AnalysisEngineProcessException(e);
+    }
+  }  
   
+  /*
+   * All I/O functions are static synchronized, because may be called by multiple threads.
+   * To prevent opening/closing twice, we use the mIOState variable.  
+   */  
+
   static synchronized private void initOutput(String qrelFileNamePrefix) throws IOException {
     if (mIOState  != 0) return;
         
@@ -97,22 +106,17 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
     
     mIOState = 1;        
   }
-  
-  @Override
-  public void collectionProcessComplete() throws AnalysisEngineProcessException {
-    try {
-      finishOutput();
-    } catch (IOException e) {
-      e.printStackTrace();
-      throw new AnalysisEngineProcessException(e);
-    }
-  }  
-  
+    
   static synchronized private void finishOutput() throws IOException {
     if (mIOState != 1) return;
     mQrelFileBinary.close();
     mQrelFileGraded.close();
     mQrelFileOnlyBest.close();
     mIOState = 2;
+  }    
+  
+  static synchronized private void doOutput(BufferedWriter qrelFile, String topicId, String docId, Integer relGrade) 
+      throws IOException {
+    SolrEvalUtils.saveQrelOneEntry(qrelFile, topicId, docId, relGrade);    
   }  
 }

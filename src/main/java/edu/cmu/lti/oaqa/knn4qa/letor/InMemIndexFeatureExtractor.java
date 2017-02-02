@@ -345,6 +345,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     }
   }
     
+  /* LIMITATION: initFieldIndex should be called in the order of increasing fieldId! */
   void initFieldIndex(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
     // First try to reuse donor's index
     for (int donorId = 0; donorId < donorExtractors.length; donorId++) {
@@ -353,9 +354,35 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
       if (null == mFieldIndex[fieldId]) 
         mFieldIndex[fieldId] = donnor.mFieldIndex[fieldId];     
     }
-    // If a donor doesn't have one, create a new one from scratch
-    if (null == mFieldIndex[fieldId])
-      mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
+    /*
+     *  If a donor doesn't have one, create a new one from scratch,
+     *  unless we have an alias.
+     */
+    if (null == mFieldIndex[fieldId]) {
+      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      // First, let's do a couple of paranoid checks
+      if (aliasOfId >= 0) {
+        if (aliasOfId >= fieldId) {
+          throw 
+            new RuntimeException("Bug: the id of the alias " + fieldId + 
+                                 " is smaller than the id of the field it mirrors!");
+        }
+        if (null == mFieldIndex[aliasOfId]) {
+          logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
+                      " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
+              " is not initialized, initializing the index from scratch!");
+          // Note that the index is initialized using the name of the aliased field!
+          mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[aliasOfId]));
+        } else {
+          // All is fine, we can reuse the field index of the aliased field
+          logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
+              " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
+      " is already initialized, so we reuse this index.");
+          mFieldIndex[fieldId] = mFieldIndex[aliasOfId];
+        }
+      } else 
+        mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
+    }
   }
   
   void initHighorderModels(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
@@ -447,6 +474,38 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
    */
   public void init(InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
     logger.info(String.format("(if averaged embeddings are used at all) using non-weighted average embeddings=%b", useNonWghtAvgEmbed()));
+    
+    /*
+     * First, let's do several paranoid checks to ensure that the number of elements in all
+     * arrays describing fields is the same. As a code improvement, it makes sense to 
+     * extract all such arrays into a single class.
+     */
+    {
+      int fieldQty = FeatureExtractor.mFieldNames.length;
+      if (FeatureExtractor.mFieldsSOLR.length != fieldQty)
+        throw new RuntimeException("Bug: FeatureExtractor.mFieldsSOLR.length != fieldQty");
+      
+      if (FeatureExtractor.mAliasOfId.length != fieldQty)
+        throw new RuntimeException("Bug: FeatureExtractor.mAliasOfId.length != fieldQty");
+      
+      if (mFlippedTranTableFieldUse.length != fieldQty)
+        throw new RuntimeException("Bug: mFlippedTranTableFieldUse.length != fieldQty");
+      
+      if (mModel1LambdaDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mModel1LambdaDefault.length != fieldQty");
+      
+      if (mProbSelfTranDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mProbSelfTranDefault.length != fieldQty");
+      
+      if (mMinModel1ProbDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mMinModel1ProbDefault.length != fieldQty");
+      
+      if (mMinJSDCompositeProbDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mMinJSDCompositeProbDefault.length != fieldQty");
+      
+      if (mMinSimpleTranProbDefault.length != fieldQty)
+        throw new RuntimeException("Bug: mMinSimpleTranProbDefault.length != fieldQty");
+    }
     
     {            
             
@@ -613,8 +672,10 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     int id = 0;
     
 
-    for (int fieldId = 0; fieldId < mFieldsSOLR.length; ++fieldId) {       
-			String query = queryData.get(mFieldsSOLR[fieldId]);
+    for (int fieldId = 0; fieldId < mFieldsSOLR.length; ++fieldId) {
+      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
+			String query = queryData.get(mFieldsSOLR[realFieldId]);
 	    String fieldName = FeatureExtractor.mFieldNames[fieldId];
 
       if (useBM25Feature(fieldId)) {
@@ -835,7 +896,13 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+                                  true  /* True means we generate word ID sequence:
+                                   * in the case of queries, there's never a harm in doing so.
+                                   * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                  );
+
     
     
     if (PRINT_SCORES)
@@ -904,8 +971,14 @@ private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
   query = query.trim();
   if (query.isEmpty()) return;
   
-  DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
-  
+  DocEntry queryEntry = 
+      fieldIndex.createDocEntry(query.split("\\s+"),
+          true  /* True means we generate word ID sequence:
+           * in the case of queries, there's never a harm in doing so.
+           * If word ID sequence is not used, it will be used only to compute the document length. */              
+          );
+          
+          
   boolean useLCSFeature          = useLCSFeature(fieldId);
   boolean useLCSFeatureQueryNorm = useLCSFeatureQueryNorm(fieldId);
   
@@ -919,6 +992,9 @@ private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
       throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
     }
     
+    if (docEntry.mWordIdSeq == null) {
+      throw new Exception("getFieldLCSScores can be used only if the sequence of document word IDs is stored in forward file (this doesn't seem to be the case)!");
+    }
     float score = DistanceFunctions.compLCS(queryEntry.mWordIdSeq, docEntry.mWordIdSeq);
     
     DenseVector v = res.get(docId);
@@ -926,7 +1002,7 @@ private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
       throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
     }
 
-    float normScore = score / Math.max(1, queryEntry.mWordIdSeq.length);
+    float normScore = score / Math.max(1, queryEntry.mDocLen);
     
     int fid = startFeatureId;
     
@@ -995,7 +1071,13 @@ private void getFieldAllTranScoresDirect(InMemForwardIndex fieldIndex,
   boolean useModel1QueryNorm     = useModel1FeatureQueryNorm(fieldId);
   boolean useSimpleTranQueryNorm = useSimpleTranFeatureQueryNorm(fieldId);
   
-  DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+  DocEntry queryEntry = 
+      fieldIndex.createDocEntry(query.split("\\s+"),
+                                true  /* True means we generate word ID sequence:
+                                 * in the case of queries, there's never a harm in doing so.
+                                 * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                );
+
     
   int queryWordQty = queryEntry.mWordIds.length;
   
@@ -1135,7 +1217,7 @@ private void getFieldAllTranScoresDirect(InMemForwardIndex fieldIndex,
     }    
     
     // Math.max avoid division by zero!
-    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mWordIdSeq.length * docEntry.mWordIdSeq.length);
+    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mDocLen * docEntry.mDocLen);
   
     int fid = startFeatureId;
     if (useModel1) {
@@ -1215,8 +1297,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   boolean useModel1QueryNorm     = useModel1FeatureQueryNorm(fieldId);
   boolean useSimpleTranQueryNorm = useSimpleTranFeatureQueryNorm(fieldId);
   
-  DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
-  
+  DocEntry queryEntry = 
+      fieldIndex.createDocEntry(query.split("\\s+"),
+                                true  /* True means we generate word ID sequence:
+                                 * in the case of queries, there's never a harm in doing so.
+                                 * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                );  
   
   int queryWordQty = queryEntry.mWordIds.length;
   
@@ -1338,7 +1424,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     }    
     
     // Math.max avoid division by zero!
-    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mWordIdSeq.length * docEntry.mWordIdSeq.length);
+    double shareTranPairQtyNorm = shareTranPairQty / Math.max(1, queryEntry.mDocLen * docEntry.mDocLen);
 
     int fid = startFeatureId;
     if (useModel1) {
@@ -1399,7 +1485,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+            true  /* True means we generate word ID sequence:
+             * in the case of queries, there's never a harm in doing so.
+             * If word ID sequence is not used, it will be used only to compute the document length. */              
+            );
     
     
     if (PRINT_SCORES)
@@ -1452,7 +1543,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+            true  /* True means we generate word ID sequence:
+             * in the case of queries, there's never a harm in doing so.
+             * If word ID sequence is not used, it will be used only to compute the document length. */              
+            );
     
     int embedQty = mWordEmbeds[fieldId].length;
     
@@ -1639,7 +1735,12 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     query = query.trim();
     if (query.isEmpty()) return;
     
-    DocEntry queryEntry = fieldIndex.createDocEntry(query.split("\\s+"));
+    DocEntry queryEntry = 
+        fieldIndex.createDocEntry(query.split("\\s+"),
+            true  /* True means we generate word ID sequence:
+             * in the case of queries, there's never a harm in doing so.
+             * If word ID sequence is not used, it will be used only to compute the document length. */              
+            );
 
     SparseVector[] queryEmbedVectorsL1Norm = new SparseVector[mHighOrderModels.size()];
 
@@ -1781,6 +1882,8 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   
   InMemForwardIndex mFieldIndex[] = new InMemForwardIndex[FeatureExtractor.mFieldNames.length];
 
+  /* START OF FIELD PARAMS */
+  
   protected static boolean[] mFlippedTranTableFieldUse = {
     true,  // text
     true,  // text_unlemm
@@ -1788,7 +1891,16 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
     false, // srl
     false, // srl_lab
     false, // dep
-    false  // wnss
+    false, // wnss
+    true,  // text_alias1
+    true, // QFEAT_ONLY,
+    true, // TEXT_QFEAT,
+    true, // EPHYRA_SPACY,
+    true, // EPHYRA_DBPEDIA,
+    true, // EPHYRA_ALLENT,
+    true, // LEXICAL_SPACY,
+    true, // LEXICAL_DBPEDIA,
+    true, // LEXICAL_ALLENT,
    };
   
   
@@ -1800,7 +1912,16 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 0.075f,  // srl
                                 0.5f,    // srl_lab 
                                 0.075f,  // dep 
-                                0.1f     // wnss 
+                                0.1f,    // wnss
+                                0.1f,  // text_alias1
+                                0.1f, // QFEAT_ONLY,
+                                0.1f, // TEXT_QFEAT,
+                                0.1f, // EPHYRA_SPACY,
+                                0.1f, // EPHYRA_DBPEDIA,
+                                0.1f, // EPHYRA_ALLENT,
+                                0.1f, // LEXICAL_SPACY,
+                                0.1f, // LEXICAL_DBPEDIA,
+                                0.1f, // LEXICAL_ALLENT,
                               };
   
   protected static float[] mProbSelfTranDefault = {
@@ -1810,7 +1931,16 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 DEFAULT_PROB_SELF_TRAN, // srl
                                 DEFAULT_PROB_SELF_TRAN, // srl_lab
                                 DEFAULT_PROB_SELF_TRAN, // dep
-                                DEFAULT_PROB_SELF_TRAN  // wnss;
+                                DEFAULT_PROB_SELF_TRAN, // wnss
+                                0.05f, // text_alias1
+                                0.05f, // QFEAT_ONLY,
+                                0.05f, // TEXT_QFEAT,
+                                0.05f, // EPHYRA_SPACY,
+                                0.05f, // EPHYRA_DBPEDIA,
+                                0.05f, // EPHYRA_ALLENT,
+                                0.05f, // LEXICAL_SPACY,
+                                0.05f, // LEXICAL_DBPEDIA,
+                                0.05f, // LEXICAL_ALLENT,
    };
 
   // For Model1 translation features, ignore translation probabilities smaller than this value
@@ -1822,6 +1952,15 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                1e-5f, // srl_lab 
                                1e-5f, // dep 
                                1e-4f, // wnss 
+                               2.5e-3f, // text_alias1 
+                               1e-3f, // QFEAT_ONLY,
+                               1e-3f, // TEXT_QFEAT,
+                               1e-3f, // EPHYRA_SPACY,
+                               1e-3f, // EPHYRA_DBPEDIA,
+                               1e-3f, // EPHYRA_ALLENT,
+                               1e-3f, // LEXICAL_SPACY,
+                               1e-3f, // LEXICAL_DBPEDIA,
+                               1e-3f, // LEXICAL_ALLENT,
                              };
 
   protected static float[] mMinJSDCompositeProbDefault =   {
@@ -1831,10 +1970,19 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                               1e-2f, // srl
                               1e-2f, // srl_lab 
                               1e-2f, // dep 
-                              1e-2f, // wnss 
+                              1e-2f, // wnss
+                              1e-2f, // text_alias1
+                              1e-2f, // QFEAT_ONLY,
+                              1e-2f, // TEXT_QFEAT,
+                              1e-2f, // EPHYRA_SPACY,
+                              1e-2f, // EPHYRA_DBPEDIA,
+                              1e-2f, // EPHYRA_ALLENT,
+                              1e-2f, // LEXICAL_SPACY,
+                              1e-2f, // LEXICAL_DBPEDIA,
+                              1e-2f, // LEXICAL_ALLENT,
   };
   
- // Ignore translation probabilities smaller than this value
+ // For smiple tran feature, ignore translation probabilities smaller than this value
   protected static float[] mMinSimpleTranProbDefault = {
                                 2.5e-3f, // text
                                 2.5e-3f, // text_unlemm
@@ -1842,9 +1990,20 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
                                 1e-5f,   // srl 
                                 1e-5f,   // srl_lab 
                                 1e-5f,   // dep 
-                                1e-2f,   // wnss 
+                                1e-2f,   // wnss
+                                2.5e-3f, // text_alias1
+                                1e-3f, // QFEAT_ONLY,
+                                1e-3f, // TEXT_QFEAT,
+                                1e-3f, // EPHYRA_SPACY,
+                                1e-3f, // EPHYRA_DBPEDIA,
+                                1e-3f, // EPHYRA_ALLENT,
+                                1e-3f, // LEXICAL_SPACY,
+                                1e-3f, // LEXICAL_DBPEDIA,
+                                1e-3f, // LEXICAL_ALLENT,
                                };
     
+  /* END OF FIELD PARAMS */
+  
   protected float maFieldProbTable[][] = new float[mFieldNames.length][];
 
   final BM25SimilarityLucene        mBM25Similarity[] = new BM25SimilarityLucene[FeatureExtractor.mFieldNames.length];

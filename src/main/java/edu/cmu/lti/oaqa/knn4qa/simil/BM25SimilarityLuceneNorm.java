@@ -69,7 +69,7 @@ public class BM25SimilarityLuceneNorm extends QueryDocSimilarity {
     
     int   iQuery = 0, iDoc = 0;
     
-    float docLen = doc.mWordIdSeq.length;
+    float docLen = doc.mDocLen;
     
     while (iQuery < queryTermQty && iDoc < docTermQty) {
       final int queryWordId = query.mWordIds[iQuery];

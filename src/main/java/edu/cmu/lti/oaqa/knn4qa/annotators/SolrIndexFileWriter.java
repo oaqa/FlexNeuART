@@ -1,3 +1,18 @@
+/*
+ *  Copyright 2017 Carnegie Mellon University
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package edu.cmu.lti.oaqa.knn4qa.annotators;
 
 import java.io.*;
@@ -18,10 +33,8 @@ import edu.cmu.lti.oaqa.knn4qa.types.Question;
 
 /**
  * 
- * An annotator saves each answer in the ready-for-indexing format. The
- * output of this annotator can be processed by an indexing utility
- * supplied with SOLR Annographix.
- * 
+ * This annotator saves answers and questions in the ready-for-indexing format. 
+ *
  * @author Leonid Boytsov
  *
  */
@@ -109,18 +122,6 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
     mFieldWNNS   = (String) aContext.getConfigParameterValue(PARAM_FIELD_WNNS);
   }
 
-  static synchronized private void initOutput(String indexQuestionFileName, String indexAnswerFileName) throws IOException {
-    if (mIOState  != 0) return;
-        
-    mIndexQuestionFile = new BufferedWriter(
-        new OutputStreamWriter(CompressUtils.createOutputStream(indexQuestionFileName)));
-    mIndexAnswerFile = new BufferedWriter(
-        new OutputStreamWriter(CompressUtils.createOutputStream(indexAnswerFileName)));
-        
-    mIOState = 1;        
-  }
-  
-  
   @Override
   public void collectionProcessComplete() throws AnalysisEngineProcessException {
     try {
@@ -130,14 +131,7 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
       throw new AnalysisEngineProcessException(e);
     }
   }  
-  
-  static synchronized private void finishOutput() throws IOException {
-    if (mIOState != 1) return;
-    mIndexAnswerFile.close();
-    mIndexQuestionFile.close();
-    mIOState = 2;
-  }      
-  
+        
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {
     Map<String, String>  fieldInfo = new HashMap<String, String>();
@@ -202,10 +196,33 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
     }
   }
 
-  static synchronized private void doOutput(BufferedWriter outFile, 
+  /*
+   * All I/O functions are static synchronized, because may be called by multiple threads.
+   * To prevent opening/closing twice, we use the mIOState variable.  
+   */  
+  private static synchronized void initOutput(String indexQuestionFileName, String indexAnswerFileName) throws IOException {
+    if (mIOState  != 0) return;
+        
+    mIndexQuestionFile = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(indexQuestionFileName)));
+    mIndexAnswerFile = new BufferedWriter(
+        new OutputStreamWriter(CompressUtils.createOutputStream(indexAnswerFileName)));
+        
+    mIOState = 1;        
+  }     
+  
+  private static synchronized void finishOutput() throws IOException {
+    if (mIOState != 1) return;
+    mIndexAnswerFile.close();
+    mIndexQuestionFile.close();
+    mIOState = 2;
+  }
+  
+  private static synchronized void doOutput(BufferedWriter outFile, 
                                             Map<String, String>  fieldInfo) throws Exception {
     outFile.write(mXmlHlp.genXMLIndexEntry(fieldInfo));
     outFile.write(NL);    
   }
+   
   
 }

@@ -3,7 +3,7 @@
 
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection: manner, compr (1st arg)"
+  echo "Specify a collection: manner, compr, stackoverflow, squad (1st arg)"
   exit 1
 fi
 

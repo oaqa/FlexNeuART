@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <casConsumerDescription xmlns="http://uima.apache.org/resourceSpecifier">
   <frameworkImplementation>org.apache.uima.java</frameworkImplementation>
-  <implementationName>org.apache.uima.tools.components.XmiWriterCasConsumer</implementationName>
+  <implementationName>edu.cmu.lti.oaqa.knn4qa.annotators.XmiWriterSampleCasConsumer</implementationName>
   <processingResourceMetaData>
     <name>xmiConsumer</name>
     <description/>
@@ -14,30 +14,40 @@
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
+    <configurationParameter>
+        <name>SampleProb</name>
+        <type>Float</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+      </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
         <name>OutputDirectory</name>
         <value>
-          <string>output</string>
+          <string>xmi</string>
+        </value>
+      </nameValuePair>
+    <nameValuePair>
+        <name>SampleProb</name>
+        <value>
+          <float>1.0</float>
         </value>
       </nameValuePair>
     </configurationParameterSettings>
-    <typeSystemDescription>
-      </typeSystemDescription>
+    <typeSystemDescription/>
     <typePriorities/>
     <fsIndexCollection/>
     <capabilities>
       <capability>
-        <inputs>
-          </inputs>
+        <inputs/>
         <outputs/>
         <languagesSupported/>
       </capability>
     </capabilities>
   <operationalProperties>
       <modifiesCas>false</modifiesCas>
-      <multipleDeploymentAllowed>true</multipleDeploymentAllowed>
+      <multipleDeploymentAllowed>false</multipleDeploymentAllowed>
       <outputsNewCASes>false</outputsNewCASes>
     </operationalProperties>
   </processingResourceMetaData>

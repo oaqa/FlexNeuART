@@ -51,7 +51,7 @@ function get_qrel_file {
   elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
     QREL_FILE="qrels_all_graded_same_score.txt"
   elif [ "$QREL_TYPE" = "" ] ; then
-    echo "Specifiy QREL type (2rd arg)" 1>&2
+    echo "Specifiy QREL type ($ARG_NUM arg)" 1>&2
     exit 1
   else
     echo "Unsupported QREL type ($ARG_NUM arg) $QREL_TYPE, expected binary, onlybest, graded, graded_same_score" 1>&2

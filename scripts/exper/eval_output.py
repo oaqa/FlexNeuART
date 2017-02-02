@@ -132,7 +132,8 @@ if outPrefix != '':
   fRep.write(reportText)
   fRep.close()
   fTSV=open(outPrefix +'.tsv','a')
-  fTSV.write("%s\t%d\t%f\t%f\t%f\n" % (label, queryQty, overallMAP, overallRecipRank, overallRecall))
+  fTSV.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Label", "queryQty", "NDCG@20", "ERR@20", "P@20", "MAP", "MRR", "Recall"))
+  fTSV.write("%s\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n" % (label,  queryQty, overallNDCG20, overallERR20, overallP20, overallMAP, overallRecipRank, overallRecall))
   fTSV.close()
 
   fTrecEval=open(outPrefix +'.trec_eval','w')

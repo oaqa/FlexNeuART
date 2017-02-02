@@ -1,6 +1,6 @@
 
 
-/* First created by JCasGen Mon Nov 30 13:17:14 EST 2015 */
+/* First created by JCasGen Thu Jan 12 13:26:20 EST 2017 */
 package edu.cmu.lti.oaqa.knn4qa.types;
 
 import org.apache.uima.jcas.JCas; 
@@ -11,8 +11,8 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** Word net super senses.
- * Updated by JCasGen Mon Nov 30 13:17:14 EST 2015
- * XML source: /home/leo/SourceTreeGit/leo_struct_ir_qa/src/main/resources/types/typeSystemDescriptor.xml
+ * Updated by JCasGen Tue Jan 17 12:22:14 EST 2017
+ * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class WNNS extends Annotation {
   /** @generated
@@ -65,13 +65,10 @@ public class WNNS extends Annotation {
     readObject();
   }   
 
-  /** 
-   * <!-- begin-user-doc -->
+  /** <!-- begin-user-doc -->
    * Write your own initialization here
    * <!-- end-user-doc -->
-   *
-   * @generated modifiable 
-   */
+  @generated modifiable */
   private void readObject() {/*default - does nothing empty block */}
      
  
@@ -80,18 +77,14 @@ public class WNNS extends Annotation {
   //* Feature: SuperSense
 
   /** getter for SuperSense - gets 
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public String getSuperSense() {
     if (WNNS_Type.featOkTst && ((WNNS_Type)jcasType).casFeat_SuperSense == null)
       jcasType.jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");
     return jcasType.ll_cas.ll_getStringValue(addr, ((WNNS_Type)jcasType).casFeatCode_SuperSense);}
     
   /** setter for SuperSense - sets  
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setSuperSense(String v) {
     if (WNNS_Type.featOkTst && ((WNNS_Type)jcasType).casFeat_SuperSense == null)
       jcasType.jcas.throwFeatMissing("SuperSense", "edu.cmu.lti.oaqa.knn4qa.types.WNNS");

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cpeDescription xmlns="http://uima.apache.org/resourceSpecifier">
+    <collectionReader>
+        <collectionIterator>
+            <descriptor>
+                <import name="descriptors.collection_readers.SQuAD"/>
+            </descriptor>
+            <configurationParameterSettings>
+                <nameValuePair>
+                    <name>InputFile</name>
+                    <value>
+                        <string>input/squad/squad-interm_tran.gz</string>
+                    </value>
+                </nameValuePair>
+            </configurationParameterSettings>
+        </collectionIterator>
+    </collectionReader>
+    <casProcessors casPoolSize="1" processingUnitThreadCount="1">
+    <casProcessor deployment="integrated" name="aeSpacyNERReaderAnnot">
+        <descriptor>
+            <import location="../analysis_engines/aeSpacyNERAnnot.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>SpacyNERFile</name>
+                <value>
+                    <string>input/squad/squad-spacy_ner_tran.gz</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeDBPediaAnnot">
+        <descriptor>
+            <import location="../analysis_engines/aeDBPediaAnnot.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>ServerAddr</name>
+                <value>
+                    <!--
+                    <string>http://gold.lti.cs.cmu.edu:2222</string>
+                    -->
+                    <string>http://localhost:2222</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeSQuADTokenLemmas">
+        <descriptor>
+            <import location="../analysis_engines/aeSQuADTokenLemmas.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeQuestionAnalysis">
+        <descriptor>
+            <import location="../analysis_engines/aeQuestionAnalysis.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeSQuADIndexFileWriter">
+        <descriptor>
+            <import location="../analysis_engines/aeSQuADIndexFileWriter.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>PassageFile</name>
+                <value>
+                    <string>output/squad/tran/SolrAnswerFile.txt</string>
+                </value>
+            </nameValuePair>
+            <nameValuePair>
+                <name>QuestionFile</name>
+                <value>
+                    <string>output/squad/tran/SolrQuestionFile.txt</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeSQuADQrelWriter">
+        <descriptor>
+            <import location="../analysis_engines/aeSQuADQrelWriter.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>QrelFilePrefix</name>
+                <value>
+                    <string>output/squad/tran/qrels</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="aeSQuADCreateParallelCorpora">
+        <descriptor>
+            <import location="../analysis_engines/aeSQuADCreateParallelCorpora.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+                <name>QuestionFilePrefix</name>
+                <value>
+                    <string>output/squad/tran/question</string>
+                </value>
+            </nameValuePair>
+            <nameValuePair>
+                <name>PassageFilePrefix</name>
+                <value>
+                    <string>output/squad/tran/answer</string>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
+    <casProcessor deployment="integrated" name="xmiConsumer">
+        <descriptor>
+            <import location="../cas_consumers/xmiConsumer.xml"/>
+        </descriptor>
+            <deploymentParameters/>
+        <errorHandling>
+            <errorRateThreshold action="terminate" value="0/1000"/>
+            <maxConsecutiveRestarts action="terminate" value="30"/>
+            <timeout max="100000" default="-1"/>
+        </errorHandling>
+        <checkpoint batch="10000" time="1000ms"/>
+        <configurationParameterSettings>
+            <nameValuePair>
+              <name>OutputDirectory</name>
+              <value>
+                <string>xmi/tran</string>
+              </value>
+            </nameValuePair>
+            <nameValuePair>
+                <name>SampleProb</name>
+                <value>
+                    <float>0.0003</float>
+                </value>
+            </nameValuePair>
+        </configurationParameterSettings>
+    </casProcessor>
+    </casProcessors>
+    <cpeConfig>
+        <numToProcess>-1</numToProcess>
+        <deployAs>immediate</deployAs>
+        <checkpoint batch="0" time="300000ms"/>
+        <timerImpl/>
+    </cpeConfig>
+</cpeDescription>

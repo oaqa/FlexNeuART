@@ -53,6 +53,10 @@ else
 fi
 
 MAX_QUERY_QTY=5000
+if [ "$5" != "" ] ; then
+  MAX_QUERY_QTY="$5"
+fi
+
 QUERY_SET="dev1"
 QUERY_FILE="text_queries.txt"
 GS_CACHE_DIR="gs_cache/$COLLECT_NAME/$HEADER_FILE"
@@ -66,6 +70,7 @@ echo "Header file:  $HEADER_FILE"
 echo "Report dir:   $REPORT_DIR"
 echo "Index dir:    $INDEX_DIR"
 echo "GS cache dir: $GS_CACHE_DIR"
+echo "Max. query #: $MAX_QUERY_QTY"
 
 BEST_PIVOT_TERM_QTY=1000
 BEST_MAX_TERM_QTY_K=50

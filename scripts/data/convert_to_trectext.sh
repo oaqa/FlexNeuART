@@ -6,7 +6,11 @@ if [ "$collect" = "" ] ; then
 fi
 
 INPUT=""
-for part in dev1 dev2 test train tran ; do
+COL_PARTS=(dev1 dev2 test train tran)
+if [ "$collect" = "squad" ] ; then
+  COL_PARTS+=(wiki)
+fi
+for part in ${COL_PARTS[*]} ; do
   INPUT="$INPUT -input_file output/$collect/$part/SolrAnswerFile.txt"
 done
 

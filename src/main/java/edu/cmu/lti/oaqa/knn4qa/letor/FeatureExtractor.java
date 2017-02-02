@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -33,6 +33,15 @@ public abstract class FeatureExtractor {
   public static final float BM25_K1 = 1.2f;
   public static final float BM25_B = 0.75f;
   
+  public static final String QFEAT_ONLY = "qfeat_only";
+  public static final String TEXT_QFEAT = "text_qfeat";
+  public static final String EPHYRA_SPACY = "ephyra_spacy";
+  public static final String EPHYRA_DBPEDIA = "ephyra_dbpedia";
+  public static final String EPHYRA_ALLENT = "ephyra_allent";
+  public static final String LEXICAL_SPACY = "lexical_spacy";
+  public static final String LEXICAL_DBPEDIA = "lexical_dbpedia";
+  public static final String LEXICAL_ALLENT = "lexical_allent";
+  
   public boolean isSomeTextFieldId(int fieldId) {
     return fieldId == TEXT_FIELD_ID || fieldId == TEXT_UNLEMM_FIELD_ID;
   }
@@ -40,7 +49,7 @@ public abstract class FeatureExtractor {
   public abstract String getName();
 
   /*
-   * These field names are kept mostly for historical reasons.
+   * Field names in mFieldsSOLR are kept mostly for historical reasons.
    * The first candidate provider that we used was SOLR (which you can still use if you want). 
    * 1) These field names are specified in the SOLR configuration file (see solr/yahoo_answ/conf/schema.xml).
    * 2) These field names are specified in UIMA descriptors (see src/main/resources/descriptors).
@@ -52,7 +61,16 @@ public abstract class FeatureExtractor {
                                               "Srl_bm25",   
                                               "SrlLab_bm25",
                                               "DepRel_bm25",
-                                              "WNSS_bm25"
+                                              "WNSS_bm25",
+                                              "Text_alias1",
+                                              QFEAT_ONLY,
+                                              TEXT_QFEAT,
+                                              EPHYRA_SPACY,
+                                              EPHYRA_DBPEDIA,
+                                              EPHYRA_ALLENT,
+                                              LEXICAL_SPACY,
+                                              LEXICAL_DBPEDIA,
+                                              LEXICAL_ALLENT,
                                               }; 
 
   public final static String[] mFieldNames = { 
@@ -62,9 +80,41 @@ public abstract class FeatureExtractor {
                                             "srl",
                                             "srl_lab",
                                             "dep",
-                                            "wnss"
-                                            };
-  
+                                            "wnss",
+                                            "text_alias1",
+                                            QFEAT_ONLY,
+                                            TEXT_QFEAT,
+                                            EPHYRA_SPACY,
+                                            EPHYRA_DBPEDIA,
+                                            EPHYRA_ALLENT,
+                                            LEXICAL_SPACY,
+                                            LEXICAL_DBPEDIA,
+                                            LEXICAL_ALLENT,
+                                                                                        };
+  /*
+   * If a field is an alias of a certain field, the ID of the field it mirrors is given here.
+   * LIMITATION: the alias should always be initialized after the field it mirrors. In other
+   * words, an alias index/id should be larger.
+   */
+  public final static int[] mAliasOfId = {
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        -1,
+                                        TEXT_FIELD_ID,
+                                        -1, // QFEAT_ONLY,
+                                        -1, // TEXT_QFEAT,
+                                        -1, // EPHYRA_SPACY,
+                                        -1, // EPHYRA_DBPEDIA,
+                                        -1, // EPHYRA_ALLENT,
+                                        -1, // LEXICAL_SPACY,
+                                        -1, // LEXICAL_DBPEDIA,
+                                        -1, // LEXICAL_ALLENT,
+  };
+
   /*
    * OOV_PROB is taken from
    * 

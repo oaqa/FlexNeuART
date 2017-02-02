@@ -1,5 +1,5 @@
 
-/* First created by JCasGen Mon Nov 30 13:17:14 EST 2015 */
+/* First created by JCasGen Thu Jan 12 13:26:20 EST 2017 */
 package edu.cmu.lti.oaqa.knn4qa.types;
 
 import org.apache.uima.jcas.JCas;
@@ -14,7 +14,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.tcas.Annotation_Type;
 
 /** Word net super senses.
- * Updated by JCasGen Mon Nov 30 13:17:14 EST 2015
+ * Updated by JCasGen Tue Jan 17 12:22:14 EST 2017
  * @generated */
 public class WNNS_Type extends Annotation_Type {
   /** @generated 

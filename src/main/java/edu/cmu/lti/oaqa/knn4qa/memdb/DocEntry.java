@@ -24,31 +24,59 @@ import java.util.ArrayList;
  *
  */
 public class DocEntry {
-  DocEntry(int uniqQty, int [] wordIdSeq) {
+  public DocEntry(int uniqQty, int [] wordIdSeq, boolean bStoreWordIdSeq) {
     mWordIds = new int [uniqQty];
     mQtys    = new int [uniqQty];
-    mWordIdSeq = wordIdSeq;
+    if (bStoreWordIdSeq)
+      mWordIdSeq = wordIdSeq;
+    else
+      mWordIdSeq = null;
+    mDocLen = wordIdSeq.length;
   }
+
+  public DocEntry(ArrayList<Integer> wordIds, 
+                  ArrayList<Integer> wordQtys,
+                  int                docLen) {
+    mWordIds = new int [wordIds.size()];
+    mQtys    = new int [wordIds.size()];
+    
+    for (int i = 0; i < wordIds.size(); ++i) {
+      mWordIds[i] = wordIds.get(i);
+      mQtys[i] = wordQtys.get(i);
+    }
+    mWordIdSeq = null;
+    mDocLen = docLen;
+  }
+
   
   public DocEntry(ArrayList<Integer> wordIds, 
                   ArrayList<Integer> wordQtys,
-                  ArrayList<Integer> wordIdSeq) throws Exception {
+                  ArrayList<Integer> wordIdSeq,
+                  boolean bStoreWordIdSeq) throws Exception {
     if (wordIds.size() != wordQtys.size()) {
       throw new Exception("Bug: the number of word IDs is not equal to the number of word quantities.");
     }
     mWordIds = new int [wordIds.size()];
     mQtys    = new int [wordIds.size()];
-    mWordIdSeq = new int [wordIdSeq.size()];
+    
     for (int i = 0; i < wordIds.size(); ++i) {
       mWordIds[i] = wordIds.get(i);
       mQtys[i] = wordQtys.get(i);
     }
-    for (int k = 0; k < wordIdSeq.size(); ++k) {
-      mWordIdSeq[k] = wordIdSeq.get(k);
+    
+    if (bStoreWordIdSeq) {
+      mWordIdSeq = new int [wordIdSeq.size()];
+      for (int k = 0; k < wordIdSeq.size(); ++k) {
+        mWordIdSeq[k] = wordIdSeq.get(k);
+      }
+    } else {
+      mWordIdSeq = null;
     }
+    mDocLen = wordIdSeq.size();
   }
 
   public final int mWordIds[]; // unique word ids
   public final int mQtys[];    // # of word occurrences corresponding to memorized ids
-  public final int mWordIdSeq[]; // a sequence of word IDs (can contain repeats)
+  public final int mWordIdSeq[]; // a sequence of word IDs (can contain repeats), this array CAN BE NULL
+  public final int mDocLen; // document length in # of words
 }

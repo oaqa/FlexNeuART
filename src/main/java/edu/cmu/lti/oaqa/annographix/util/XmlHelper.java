@@ -18,6 +18,8 @@ package edu.cmu.lti.oaqa.annographix.util;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
@@ -322,6 +324,21 @@ public class XmlHelper {
     DocumentBuilder dbld = 
         DocumentBuilderFactory.newInstance().newDocumentBuilder();
     return dbld.parse(new InputSource(new StringReader(docText)));
+  }  
+  
+  // Gratefully reusing the solution from StackOverflow to remove 
+  // invalid XML characters: http://stackoverflow.com/a/4237934
+  // with ONE DIFFERENCE: for simplicity I exclude surrogate characters.
+  // For the ref. also see https://www.w3.org/TR/REC-xml/#charsets
+  public static Pattern xml10pattern = Pattern.compile("[^"
+      + "\u0009\r\n"
+      + "\u0020-\uD7FF"
+      + "\uE000-\uFFFD"
+      + "]"); 
+  
+  public static String removeInvaildXMLChars(String s) {
+    Matcher m = xml10pattern.matcher(s);
+    return m.replaceAll(" ");
   }  
 
   private final static String NL = System.getProperty("line.separator");
