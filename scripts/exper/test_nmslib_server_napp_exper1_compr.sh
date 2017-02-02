@@ -153,6 +153,13 @@ PARAMS=( \
 "numPivot=8000,numPivotIndex=150,$PIVOT_FILE_PARAM" "numPivotSearch=9" \
 
 "numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=7" \
+
+"numPivot=8000,numPivotIndex=50,$PIVOT_FILE_PARAM" "numPivotSearch=4" \
+"numPivot=8000,numPivotIndex=50,$PIVOT_FILE_PARAM" "numPivotSearch=5" \
+
+"numPivot=8000,numPivotIndex=25,$PIVOT_FILE_PARAM" "numPivotSearch=3" \
+"numPivot=8000,numPivotIndex=25,$PIVOT_FILE_PARAM" "numPivotSearch=4" \
+
 )
 
 
