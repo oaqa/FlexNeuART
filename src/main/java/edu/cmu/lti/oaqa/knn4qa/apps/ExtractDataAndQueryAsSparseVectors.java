@@ -72,6 +72,11 @@ public class ExtractDataAndQueryAsSparseVectors {
   
   public static String TEST_QTY_PARAM     = "test_qty";
   public static String TEST_QTY_DESC      = "the number of documents and queries for cross-validation of the extraction accuracy";
+  
+  public static String SHARE_IDF_PARAM     = "share_idf";
+  public static String SHARE_IDF_DESC      = "if specified, we multiply elements of both documents and queries by sqrt(IDF), " + 
+                                             "otherwise, document vector eleemnts are multiplied by IDF and query vector " + 
+                                             "elements are multiplied by 1" ;
    
   
   public static void main(String[] args) {
@@ -84,6 +89,7 @@ public class ExtractDataAndQueryAsSparseVectors {
         OUT_DATA_PARAM,
         TEXT_FIELD_PARAM,
         TEST_QTY_PARAM,
+        SHARE_IDF_PARAM
     };
     String optDescs[] = {
         CommonParams.MAX_NUM_QUERY_DESC,
@@ -93,7 +99,8 @@ public class ExtractDataAndQueryAsSparseVectors {
         OUT_QUERIES_DESC,
         OUT_DATA_DESC,  
         TEXT_FIELD_DESC,
-        TEST_QTY_DESC
+        TEST_QTY_DESC,
+        SHARE_IDF_DESC
     };
     boolean hasArg[] = {
         true,
@@ -103,7 +110,8 @@ public class ExtractDataAndQueryAsSparseVectors {
         true,
         true,        
         true,
-        true
+        true,
+        false
     };
     
     ParamHelper prmHlp = null;
@@ -155,6 +163,10 @@ public class ExtractDataAndQueryAsSparseVectors {
         Usage("Wrong field index, should be one of the following: " + String.join(",", FeatureExtractor.mFieldNames), opt);
       }
       
+      boolean shareIDF = cmd.hasOption(SHARE_IDF_PARAM);
+      
+      System.out.println("shareIDF: " + shareIDF);
+      
       InMemForwardIndex indx =
           new InMemForwardIndex(FeatureExtractor.indexFileName(memIndexPref, FeatureExtractor.mFieldNames[fieldId]));
       
@@ -190,7 +202,7 @@ public class ExtractDataAndQueryAsSparseVectors {
         
         for (int id = 0; id < Math.min(maxNumData, docEntries.size()); ++id) {
           DocEntry e = docEntries.get(id).mDocEntry;
-          TrulySparseVector v = bm25simil.getDocSparseVector(e, false);
+          TrulySparseVector v = bm25simil.getDocSparseVector(e, false, shareIDF);
           if (id < testQty) {
             testDocEntries.add(e);
             testDocVectors.add(v);
@@ -234,7 +246,7 @@ public class ExtractDataAndQueryAsSparseVectors {
           
           DocEntry e = indx.createDocEntry(tmpa.toArray(new String[tmpa.size()]), false /* no pos. info needed */);
           
-          TrulySparseVector v = bm25simil.getDocSparseVector(e, true);
+          TrulySparseVector v = bm25simil.getDocSparseVector(e, true, shareIDF);
           if (queryQty < testQty) {
             testQueryEntries.add(e);
             testQueryVectors.add(v);

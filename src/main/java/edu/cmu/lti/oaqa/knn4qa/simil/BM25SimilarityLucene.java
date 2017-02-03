@@ -167,9 +167,13 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
    * 
    * @param e         a query/document entry
    * @param isQuery   true if is a query entry
+   * @param shareIDF  if true, we multiply elements of both documents and queries by sqrt(IDF), 
+   *                  otherwise, document vector eleemnts are multiplied by IDF and query vector
+   *                  elements are multiplied by 1. 
+   * 
    * @return
    */
-  public TrulySparseVector getDocSparseVector(DocEntry e, boolean isQuery) {
+  public TrulySparseVector getDocSparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
     int qty = 0;
     for (int wid : e.mWordIds)
       if (wid >= 0) qty++;
@@ -186,10 +190,11 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
       float tf = e.mQtys[i];
       
       res.mIDs[id] = wordId;
-      res.mVals[id]=  (float) Math.sqrt(IDF) *(
-                        isQuery ? tf : 
-                          (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl))
-                                       );
+      if (isQuery) {
+        res.mVals[id]=  tf * (shareIDF ? (float) Math.sqrt(IDF) : 1); 
+      } else {
+        float tfScaled = (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl));
+        res.mVals[id]=  (shareIDF ? (float) Math.sqrt(IDF) : IDF) * tfScaled;
       id++;
     }
     
