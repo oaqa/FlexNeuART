@@ -70,6 +70,8 @@ public class InMemForwardIndex {
   public static final String DOCLEN_QTY_PREFIX = "@ ";
   public static final WordEntry UNKNOWN_WORD = new WordEntry(-1);
   public static final int MIN_WORD_ID = 1;
+  // When you change this constant, it also affects how many times we call System.gc()
+  private static final int PRINT_QTY = 10000;
   
   /**
    * Constructor: Creates an index from one or more files (for a given field name).
@@ -151,6 +153,10 @@ public class InMemForwardIndex {
         }
         
         ++mDocQty;
+        if (mDocQty % PRINT_QTY == 0) {
+          System.out.println("Processed " + mDocQty + " documents");
+          System.gc();
+        }
         mTotalWordQty += words.length;
         totalUniqWordQty += doc.mQtys.length;
       }
