@@ -231,5 +231,6 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
     }
     
     return res;
-  }
+  }  
+  
 }

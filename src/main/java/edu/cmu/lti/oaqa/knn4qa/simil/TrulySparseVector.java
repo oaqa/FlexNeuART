@@ -42,7 +42,11 @@ public class TrulySparseVector {
       } else if (wordId1 > wordId2) {
         i2++;
       } else {
-        if (wordId1 >=0) { // ignore OOV words if they slip through the cracks
+     /*
+      *  Ignore OOV words  (id < 0), if they slip through the cracks.
+      *  Note that if wordId1 >= 0, then wordId2 >= 0 too (because word IDs are equal at this point)       
+      */
+        if (wordId1 >=0) { 
           res += v1.mVals[i1] * v2.mVals[i2];
         }
         i1++; i2++;
@@ -51,4 +55,12 @@ public class TrulySparseVector {
     
     return res;
   }
+  
+  public void print() {
+    for (int i =0 ; i < mIDs.length; ++i) {
+      System.out.print(mIDs[i] + ":" + mVals[i] + " ");
+    }
+    System.out.println("\n==================================");    
+  }
+
 }

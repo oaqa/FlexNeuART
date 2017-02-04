@@ -270,7 +270,7 @@ public class ExtractDataAndQueryAsSparseVectors {
           DocEntry e = indx.createDocEntry(tmpa.toArray(new String[tmpa.size()]), false /* no pos. info needed */);
           
           TrulySparseVector v = bCosine ? bm25simil.getDocCosineSparseVector(e) : 
-                                          bm25simil.getDocBM25SparseVector(e, false, bShareIDF);
+                                          bm25simil.getDocBM25SparseVector(e, true, bShareIDF);
           if (queryQty < testQty) {
             testQueryEntries.add(e);
             testQueryVectors.add(v);
@@ -307,6 +307,7 @@ public class ExtractDataAndQueryAsSparseVectors {
           if (Math.abs(val1 - val2) > COMPAR_EPS) {
             System.err.println(String.format("Potential mismatch simil=%f <-> scalar product=%f", val1, val2));
             ++diffQty;
+
           }
         }
       }
