@@ -28,6 +28,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
@@ -36,11 +37,18 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntryExt;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.knn4qa.simil.CosineTextSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.ParamHelper;
 
 public class ExtractDataAndQueryAsSparseVectors {
+
+  private static final String EXT_TYPE_COSINE = "cosine";
+  private static final String EXT_TYPE_BM25_SHARE_IDF = "bm25_share_idf";
+  private static final String EXT_TYPE_BM25 = "bm25";
+
+  private static final double COMPAR_EPS = 1e-5;
 
   static void Usage(String err, Options options) {
     System.err.println("Error: " + err);
@@ -73,10 +81,11 @@ public class ExtractDataAndQueryAsSparseVectors {
   public static String TEST_QTY_PARAM     = "test_qty";
   public static String TEST_QTY_DESC      = "the number of documents and queries for cross-validation of the extraction accuracy";
   
-  public static String SHARE_IDF_PARAM     = "share_idf";
-  public static String SHARE_IDF_DESC      = "if specified, we multiply elements of both documents and queries by sqrt(IDF), " + 
-                                             "otherwise, document vector eleemnts are multiplied by IDF and query vector " + 
-                                             "elements are multiplied by 1" ;
+  public static Joiner commaJoin  = Joiner.on(',');
+  public static String extrType[] = {EXT_TYPE_BM25, EXT_TYPE_BM25_SHARE_IDF, EXT_TYPE_COSINE };
+  
+  public static String EXTRACTOR_TYPE_PARAM     = "extr_type";
+  public static String EXTRACTOR_TYPE_DESC      = "Extractor type:" + commaJoin.join(extrType);
    
   
   public static void main(String[] args) {
@@ -89,7 +98,7 @@ public class ExtractDataAndQueryAsSparseVectors {
         OUT_DATA_PARAM,
         TEXT_FIELD_PARAM,
         TEST_QTY_PARAM,
-        SHARE_IDF_PARAM
+        EXTRACTOR_TYPE_PARAM
     };
     String optDescs[] = {
         CommonParams.MAX_NUM_QUERY_DESC,
@@ -100,8 +109,9 @@ public class ExtractDataAndQueryAsSparseVectors {
         OUT_DATA_DESC,  
         TEXT_FIELD_DESC,
         TEST_QTY_DESC,
-        SHARE_IDF_DESC
+        EXTRACTOR_TYPE_DESC
     };
+    
     boolean hasArg[] = {
         true,
         true,
@@ -111,7 +121,7 @@ public class ExtractDataAndQueryAsSparseVectors {
         true,        
         true,
         true,
-        false
+        true
     };
     
     ParamHelper prmHlp = null;
@@ -163,15 +173,27 @@ public class ExtractDataAndQueryAsSparseVectors {
         Usage("Wrong field index, should be one of the following: " + String.join(",", FeatureExtractor.mFieldNames), opt);
       }
       
-      boolean shareIDF = cmd.hasOption(SHARE_IDF_PARAM);
+      String extrType = cmd.getOptionValue(EXTRACTOR_TYPE_PARAM);
       
-      System.out.println("shareIDF: " + shareIDF);
+      System.out.println("Extractor type: " + extrType);
+      
+      boolean bShareIDF = false;
+      boolean bCosine = false;
+      
+      if (extrType.equalsIgnoreCase(EXT_TYPE_COSINE)) {
+        bCosine = true;
+      } else if (extrType.equalsIgnoreCase(EXT_TYPE_BM25_SHARE_IDF)) {
+        bShareIDF = true;
+      } else if (!extrType.equalsIgnoreCase(EXT_TYPE_BM25)) {
+        Usage("Wrong extractor type: " + extrType, opt);
+      }
       
       InMemForwardIndex indx =
           new InMemForwardIndex(FeatureExtractor.indexFileName(memIndexPref, FeatureExtractor.mFieldNames[fieldId]));
       
       BM25SimilarityLucene bm25simil = 
           new BM25SimilarityLucene(FeatureExtractor.BM25_K1, FeatureExtractor.BM25_B, indx);
+      CosineTextSimilarity cosinesimil = new CosineTextSimilarity(indx);
       
       String inQueryFile = cmd.getOptionValue(IN_QUERIES_PARAM);
       String outQueryFile = cmd.getOptionValue(OUT_QUERIES_PARAM);
@@ -202,7 +224,8 @@ public class ExtractDataAndQueryAsSparseVectors {
         
         for (int id = 0; id < Math.min(maxNumData, docEntries.size()); ++id) {
           DocEntry e = docEntries.get(id).mDocEntry;
-          TrulySparseVector v = bm25simil.getDocSparseVector(e, false, shareIDF);
+          TrulySparseVector v = bCosine ? bm25simil.getDocCosineSparseVector(e) : 
+                                          bm25simil.getDocBM25SparseVector(e, false, bShareIDF);
           if (id < testQty) {
             testDocEntries.add(e);
             testDocVectors.add(v);
@@ -246,7 +269,8 @@ public class ExtractDataAndQueryAsSparseVectors {
           
           DocEntry e = indx.createDocEntry(tmpa.toArray(new String[tmpa.size()]), false /* no pos. info needed */);
           
-          TrulySparseVector v = bm25simil.getDocSparseVector(e, true, shareIDF);
+          TrulySparseVector v = bCosine ? bm25simil.getDocCosineSparseVector(e) : 
+                                          bm25simil.getDocBM25SparseVector(e, false, bShareIDF);
           if (queryQty < testQty) {
             testQueryEntries.add(e);
             testQueryVectors.add(v);
@@ -256,25 +280,41 @@ public class ExtractDataAndQueryAsSparseVectors {
                 
         out.close();
       }
-
+     
       int testedQty = 0, diffQty = 0;
       // Now let's do some testing
       for (int iq = 0; iq < testQueryEntries.size(); ++iq) {
-        DocEntry queryEntry = testQueryEntries.get(iq);
+        DocEntry          queryEntry = testQueryEntries.get(iq);
         TrulySparseVector queryVector = testQueryVectors.get(iq);
+        if (bCosine) {
+          float v = TrulySparseVector.scalarProduct(queryVector, queryVector);
+          
+          if (Math.abs(v - 1) > COMPAR_EPS) {
+            System.err.println(String.format("Potential mismatch norm =%f isn't one", v));
+            ++diffQty;
+            ++testedQty;
+          }
+        }
         for (int id = 0; id < testDocEntries.size(); ++id) {
-          DocEntry docEntry = testDocEntries.get(id);
+          DocEntry docEntry = testDocEntries.get(id); 
           TrulySparseVector docVector = testDocVectors.get(id);
-          float val1 = bm25simil.compute(queryEntry, docEntry);
+          
+          float val1 = bCosine ? cosinesimil.compute(queryEntry, docEntry) : 
+                                 bm25simil.compute(queryEntry, docEntry);
           float val2 = TrulySparseVector.scalarProduct(queryVector, docVector);
           ++testedQty;
-          if (Math.abs(val1 - val2) > 1e5) {
-            System.err.println(String.format("Potential mismatch BM25=%f <-> scalar product=%f", val1, val2));
+
+          if (Math.abs(val1 - val2) > COMPAR_EPS) {
+            System.err.println(String.format("Potential mismatch simil=%f <-> scalar product=%f", val1, val2));
             ++diffQty;
           }
         }
       }
       if (testedQty > 0) System.out.println(String.format("Tested %d Mismatched %d", testedQty, diffQty));
+      if (diffQty > 0) {
+        System.err.println("Mismatches are found, something may be wrong!");
+        System.exit(1);
+      }
       
     } catch (ParseException e) {
       Usage("Cannot parse arguments: " + e, prmHlp != null ? prmHlp.getOptions() : null);

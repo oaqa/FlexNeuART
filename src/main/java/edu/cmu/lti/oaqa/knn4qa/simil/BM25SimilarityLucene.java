@@ -173,7 +173,7 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
    * 
    * @return
    */
-  public TrulySparseVector getDocSparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
+  public TrulySparseVector getDocBM25SparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
     int qty = 0;
     for (int wid : e.mWordIds)
       if (wid >= 0) qty++;
@@ -195,7 +195,39 @@ public class BM25SimilarityLucene extends QueryDocSimilarity {
       } else {
         float tfScaled = (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl));
         res.mVals[id]=  (shareIDF ? (float) Math.sqrt(IDF) : IDF) * tfScaled;
+      }
       id++;
+    }
+    
+    return res;
+  }
+  
+  public TrulySparseVector getDocCosineSparseVector(DocEntry e) {
+    int qty = 0;
+    for (int wid : e.mWordIds)
+      if (wid >= 0) qty++;
+    TrulySparseVector res = new TrulySparseVector(qty);
+
+    float norm = 0;
+    // Getting vector values
+    for (int i = 0, id=0; i < e.mWordIds.length; ++i) {
+      int wordId = e.mWordIds[i];
+      if (wordId < 0) continue;
+      float IDF = getIDF(mFieldIndex, wordId);
+      float tf = e.mQtys[i];
+      float val = tf * IDF;
+      
+      res.mIDs[id] = wordId;
+      res.mVals[id]=  val;
+      
+      norm += val * val;
+      id++;
+    }
+    // Normalizing
+    norm = (float)(1.0/Math.sqrt(norm));
+    
+    for (int i = 0; i < res.mIDs.length; ++i) {
+      res.mVals[i] *= norm;
     }
     
     return res;
