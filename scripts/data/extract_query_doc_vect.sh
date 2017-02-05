@@ -41,7 +41,7 @@ INDEX_DIR="memfwdindex/$collect/"
 
 cmd="scripts/data/run_extr_query_doc_vect.sh -field $field  -memindex_dir memfwdindex/$collect/ -out_data ${output_prefix}_data_${etype}.txt  -extr_type $etype -test_qty $test_qty"
 for part in $query_subsets ; do
-  cmd="$cmd -in_queries output/manner/$part/SolrQuestionFile.txt -out_queries ${output_prefix}_queries_${etype}_${part}.txt "
+  cmd="$cmd -in_queries output/$collect/$part/SolrQuestionFile.txt -out_queries ${output_prefix}_queries_${etype}_${part}.txt "
 done
 
 bash -c "$cmd"
