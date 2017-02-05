@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class ExtractDataAndQueryAsSparseVectors {
     System.err.println("Error: " + err);
     if (options != null) {
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("FilterTranTable", options );
+      formatter.printHelp("ExtractDataAndQueryAsSparseVectors", options );
     }
     System.exit(1);
   }  
@@ -79,7 +79,7 @@ public class ExtractDataAndQueryAsSparseVectors {
   public static String TEXT_FIELD_DESC    = "the field name to process";
   
   public static String TEST_QTY_PARAM     = "test_qty";
-  public static String TEST_QTY_DESC      = "the number of documents and queries for cross-validation of the extraction accuracy";
+  public static String TEST_QTY_DESC      = "the number of documents and queries to verify correctness of vector generation procedure";
   
   public static Joiner commaJoin  = Joiner.on(',');
   public static String extrType[] = {EXT_TYPE_BM25, EXT_TYPE_BM25_SHARE_IDF, EXT_TYPE_COSINE };
@@ -195,10 +195,14 @@ public class ExtractDataAndQueryAsSparseVectors {
           new BM25SimilarityLucene(FeatureExtractor.BM25_K1, FeatureExtractor.BM25_B, indx);
       CosineTextSimilarity cosinesimil = new CosineTextSimilarity(indx);
       
-      String inQueryFile = cmd.getOptionValue(IN_QUERIES_PARAM);
-      String outQueryFile = cmd.getOptionValue(OUT_QUERIES_PARAM);
-      if ((inQueryFile == null) != (outQueryFile == null)) {
+      String [] inQueryFiles  = cmd.getOptionValues(IN_QUERIES_PARAM);
+      String [] outQueryFiles = cmd.getOptionValues(OUT_QUERIES_PARAM);
+      
+      if ((inQueryFiles == null) != (outQueryFiles == null)) {
         Usage("You should either specify both " + IN_QUERIES_PARAM + " and " + OUT_QUERIES_PARAM + " or none of them", opt);
+      }
+      if ((inQueryFiles != null) && inQueryFiles.length != outQueryFiles.length) {
+        Usage("The number of parameters " + IN_QUERIES_PARAM + " should be equal to the number of parameters " + OUT_QUERIES_PARAM, opt);
       }
       String outDataFile = cmd.getOptionValue(OUT_DATA_PARAM);
       
@@ -239,9 +243,10 @@ public class ExtractDataAndQueryAsSparseVectors {
       Splitter splitOnSpace = Splitter.on(' ').trimResults().omitEmptyStrings();
 
       
-      if (outQueryFile != null) {
-        BufferedReader inpText = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(inQueryFile)));
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(CompressUtils.createOutputStream(outQueryFile)));      
+      if (outQueryFiles != null)
+      for (int fid = 0; fid < outQueryFiles.length; ++fid) {
+        BufferedReader inpText = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(inQueryFiles[fid])));
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(CompressUtils.createOutputStream(outQueryFiles[fid])));      
 
         
         String queryText = XmlHelper.readNextXMLIndexEntry(inpText);        
