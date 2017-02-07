@@ -20,8 +20,11 @@ fi
 
 query_subsets=$4
 if [ "$query_subsets" = "" ] ; then
-  echo "Specify comma-separated query subsets (4th arg), e.g., \"dev1,dev2,test\""
+  echo "Specify comma-separated query subsets (4th arg), e.g., \"dev1,dev2,test\" or \"@\" for empty query set"
   exit 1
+fi
+if [ "$query_subsets" = "@" ] ; then
+  query_subsets=""
 fi
 query_subsets=`echo $query_subsets|sed 's/,/ /g'`
 

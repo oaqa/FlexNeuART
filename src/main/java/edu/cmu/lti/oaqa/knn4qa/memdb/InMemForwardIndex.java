@@ -88,7 +88,7 @@ public class InMemForwardIndex {
     mDocQty       = 0;
     mTotalWordQty = 0;
     
-    int totalUniqWordQty = 0; // sum the number of uniq words per document (over all documents)
+    long totalUniqWordQty = 0; // sum the number of uniq words per document (over all documents)
     
     System.out.println("Creating a new in-memory forward index, maximum # of docs to process: " + maxNumRec);
     
