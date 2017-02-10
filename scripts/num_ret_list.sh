@@ -14,6 +14,9 @@ elif [ "$collect" = "squad" ] ; then
   export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
   #export NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100,250,500,750,1000"
   export N_TRAIN=20
+elif [ "$collect" = "squad" ] ; then
+  export NUM_RET_LIST="10,20,30,50,60,70,80,90,100,200,300,400,500"
+  export N_TRAIN=20
 else
   echo "Unsupported collection: $collect"
   exit 1
