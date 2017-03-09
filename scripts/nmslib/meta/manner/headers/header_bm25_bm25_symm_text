@@ -1,6 +1,7 @@
 isQueryFile=0
 useHashBasedPayloads=1
 weightFile=nmslib/manner/models/one_feature.model
+simpleIndexType=bm25_symmetr
 
 fieldIndexFile=nmslib/manner/memfwdindex/text
 fieldFeatures=bm25
