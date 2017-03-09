@@ -83,22 +83,22 @@ while [ $# -ne 0 ] ; do
   fi
 done
 
-collect="compr"
-echo "Collection: $collect"
-#collect=${POS_ARGS[0]}
-#if [ "$collect" = "" ] ; then
-  #echo "Specify a collection: manner, compr (1st arg)"
-  #exit 1
-#fi
+#collect="compr"
+#echo "Collection: $collect"
+collect=${POS_ARGS[0]}
+if [ "$collect" = "" ] ; then
+  echo "Specify a collection: manner, compr (1st arg)"
+  exit 1
+fi
 
-TEST_PART=${POS_ARGS[0]}
+TEST_PART=${POS_ARGS[1]}
 if [ "$TEST_PART" = "" ] ; then
-  echo "Specify a test part, e.g., dev1 (1st arg)"
+  echo "Specify a test part, e.g., dev1 (2d arg)"
   exit 1 
 fi
 
-QREL_TYPE=${POS_ARGS[1]}
-QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
+QREL_TYPE=${POS_ARGS[2]}
+QREL_FILE=`get_qrel_file $QREL_TYPE "3d"`
 check ""
 
 NMSLIB_HEADER_NAME="header_exper1_bm25_symm_text_hash_payload"
