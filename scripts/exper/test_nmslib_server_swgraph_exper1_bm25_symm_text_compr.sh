@@ -139,14 +139,14 @@ fi
 
 
 PARAMS=( \
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=5",
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=10",
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=25",
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=50",
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=100",
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=250",
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=500",
-  "NN=50,efConstruction=100,useProxyDist=1", "efSearch=1000",
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=5" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=10" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=25" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=50" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=100" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=250" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=500" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=1000" \
 )
 
 
@@ -163,7 +163,7 @@ do
 
   index_params=${PARAMS[$ii]}
   index_params_noslash=`echo $index_params|sed 's|/|_|g'`
-  index_name="$NMSLIB_INDEX_DIR/sw-graph_${index_params_noslash}"
+  index_name="sw-graph_${index_params_noslash}"
   query_time_params=${PARAMS[$iq]}
 
   echo "Index name: $index_name"
