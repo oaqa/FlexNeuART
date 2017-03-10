@@ -60,8 +60,13 @@ elif [ "$collect" = "squad" ] ; then
     check "cd - "
   done
   for field in qfeat_only text text_qfeat ephyra_spacy ephyra_dbpedia ephyra_allent lexical_spacy lexical_dbpedia lexical_allent ; do
-    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $JOINT_NAME -field $field
-    check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file $JOINT_NAME -field $field"
+    if [ "$field" == "text" ] ; then
+      SOURCE_NAME="SolrAnswerFile.txt"
+    else
+      SOURCE_NAME="$JOINT_NAME"
+    fi
+    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $SOURCE_NAME -field $field
+    check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $SOURCE_NAME -field $field"
   done
 elif [ "$collect" = "gov2" ] ; then
   scripts/index/run_inmemfwd_index.sh -field text -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file SolrAnswerFile.txt.gz
