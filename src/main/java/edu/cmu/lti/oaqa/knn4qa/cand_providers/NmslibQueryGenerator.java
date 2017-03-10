@@ -39,14 +39,16 @@ public class NmslibQueryGenerator {
     }
     
     for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
-      String fieldName = FeatureExtractor.mFieldNames[fieldId];
+      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
+      String fieldName = FeatureExtractor.mFieldNames[realFieldId];
       if (hFieldNames.contains(fieldName)) {
         for (InMemIndexFeatureExtractor extr : donorExtractors)
-          if (extr != null && mFieldIndex[fieldId] == null) 
-            mFieldIndex[fieldId] = extr.getFieldIndex(fieldId);
-        if (null == mFieldIndex[fieldId]) { // If the donor cannot be found, re-load index contents
-          mFieldIndex[fieldId] = 
-              new InMemForwardIndex(FeatureExtractor.indexFileName(indexDir, FeatureExtractor.mFieldNames[fieldId]));
+          if (extr != null && mFieldIndex[realFieldId] == null) 
+            mFieldIndex[realFieldId] = extr.getFieldIndex(realFieldId);
+        if (null == mFieldIndex[realFieldId]) { // If the donor cannot be found, re-load index contents
+          mFieldIndex[realFieldId] = 
+              new InMemForwardIndex(FeatureExtractor.indexFileName(indexDir, FeatureExtractor.mFieldNames[realFieldId]));
         }
       }
     }
@@ -64,16 +66,20 @@ public class NmslibQueryGenerator {
   public String getStrObjForKNNService(Map<String, String> docData) {   
     DocEntry[] docEntries = new DocEntry[FeatureExtractor.mFieldNames.length];
     
-    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) 
-    if (mFieldIndex[fieldId] != null) {
-      String fieldQuery = docData.get(FeatureExtractor.mFieldsSOLR[fieldId]);
-      docEntries[fieldId] = 
-          mFieldIndex[fieldId].createDocEntry(fieldQuery.split("\\s+"),
-                                true  /* True means we generate word ID sequence:
-                                 * in the case of queries, there's never a harm in doing so.
-                                 * If word ID sequence is not used, it will be used only to compute the document length. */              
-                                );    
-      }
+    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
+
+      if (mFieldIndex[realFieldId] != null) {
+        String fieldQuery = docData.get(FeatureExtractor.mFieldsSOLR[realFieldId]);
+        docEntries[fieldId] = 
+            mFieldIndex[realFieldId].createDocEntry(fieldQuery.split("\\s+"),
+                                  true  /* True means we generate word ID sequence:
+                                   * in the case of queries, there's never a harm in doing so.
+                                   * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                  );    
+        }
+    }
     
     return getStrObjForKNNService(docEntries);
   }
@@ -81,12 +87,16 @@ public class NmslibQueryGenerator {
   public String getStrObjForKNNService(String docId) {
     DocEntry[] docEntries = new DocEntry[FeatureExtractor.mFieldNames.length];
     
-    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) 
-      if (mFieldIndex[fieldId] != null) {
-      docEntries[fieldId] = mFieldIndex[fieldId].getDocEntry(docId);
-      if (null == docEntries[fieldId]) {
-        throw new RuntimeException("There is no docEntry for docId='" + docId + "'"+
-                                   " fieldId=" + fieldId);
+    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
+
+      if (mFieldIndex[realFieldId] != null) {
+        docEntries[fieldId] = mFieldIndex[realFieldId].getDocEntry(docId);
+        if (null == docEntries[realFieldId]) {
+          throw new RuntimeException("There is no docEntry for docId='" + docId
+              + "'" + " fieldId=" + fieldId + " realFieldId=" + realFieldId);
+        }
       }
     }
     
