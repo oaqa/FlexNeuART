@@ -55,8 +55,14 @@ check "$cmd"
 
 
 
-# BM25 + Model 1
-cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene $EXPER_DIR_BASE/exper@bm25=text+model1=text exper@bm25=text+model1=text  nmslib/${collect}/models/out_${collect}_train_exper@bm25=text+model1=text_15.model  $NUM_RET_LIST $WORD_EMBEDDINGS "
+# BM25 + Model 1 (perhaps for more than one field)
+if [ "$collect" = "squad" ] ; then
+  MODEL_TYPE="model1=text+minProbModel1=text:1e-3+model1=text_alias1+minProbModel1=text_alias1:1e-3"
+else
+  MODEL_TYPE="model1=text"
+fi
+
+cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene $EXPER_DIR_BASE/exper@bm25=text+${MODEL_TYPE} exper@bm25=text+${MODEL_TYPE}  nmslib/${collect}/models/out_${collect}_train_exper@bm25=text+${MODEL_TYPE}_15.model  $NUM_RET_LIST $WORD_EMBEDDINGS "
 bash -c "$cmd"
 check "$cmd"
 

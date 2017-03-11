@@ -35,6 +35,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 
 class TranRecSortByProb implements Comparable<TranRecSortByProb> {
   public TranRecSortByProb(int mDstWorId, float mProb) {
@@ -140,7 +141,8 @@ public class LuceneGIZACandidateProvider extends CandidateProvider {
                         TEXT_FIELD_NAME, queryNum));
     }
     
-    String origQuery = text.trim();
+    String origQuery = StringUtilsLeo.removePunct(text.trim());
+    
     int    numFound = 0;
 
     if (!origQuery.isEmpty()) {    
@@ -163,9 +165,10 @@ public class LuceneGIZACandidateProvider extends CandidateProvider {
             int qty = mTopTranQty;
             for (int i = 0; i < Math.min(rec.length, qty); ++i) {
               int dstId = rec[i].mDstWorId;
-              if (dstId != we.mWordId) { 
-                queryToks.append(mFieldIndex.getWord(dstId) + 
-                    (mUseWeights ? "^" + String.format("%.3f", rec[i].mProb) : "") +" ");
+              if (dstId != we.mWordId) {
+                String sClean = StringUtilsLeo.removePunct(mFieldIndex.getWord(dstId));
+                queryToks.append(sClean + 
+                                   (mUseWeights ? "^" + String.format("%.3f", rec[i].mProb) : "") +" ");
                 ++tokQty;
               } else {
                 // If we skip a word, b/c it's the same as the query word
