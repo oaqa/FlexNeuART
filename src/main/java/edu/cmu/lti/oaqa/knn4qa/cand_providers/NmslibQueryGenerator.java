@@ -41,8 +41,9 @@ public class NmslibQueryGenerator {
     for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
       int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
       int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
-      String fieldName = FeatureExtractor.mFieldNames[realFieldId];
-      if (hFieldNames.contains(fieldName)) {
+      String realFieldName = FeatureExtractor.mFieldNames[fieldId];
+      if (hFieldNames.contains(realFieldName)) {
+        mUseFiled[fieldId] = true;
         for (InMemIndexFeatureExtractor extr : donorExtractors)
           if (extr != null && mFieldIndex[realFieldId] == null) 
             mFieldIndex[realFieldId] = extr.getFieldIndex(realFieldId);
@@ -66,7 +67,8 @@ public class NmslibQueryGenerator {
   public String getStrObjForKNNService(Map<String, String> docData) {   
     DocEntry[] docEntries = new DocEntry[FeatureExtractor.mFieldNames.length];
     
-    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) 
+    if (mUseFiled[fieldId]) {
       int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
       int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
 
@@ -87,7 +89,8 @@ public class NmslibQueryGenerator {
   public String getStrObjForKNNService(String docId) {
     DocEntry[] docEntries = new DocEntry[FeatureExtractor.mFieldNames.length];
     
-    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) 
+    if (mUseFiled[fieldId]) {
       int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
       int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
 
@@ -108,7 +111,7 @@ public class NmslibQueryGenerator {
     StringBuffer sb = new StringBuffer();
     
     for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) 
-    if (docEntries[fieldId] != null) {
+    if (mUseFiled[fieldId] && docEntries[fieldId] != null) {
       DocEntry oneEntry = docEntries[fieldId];
       
       for (int k = 0; k < oneEntry.mWordIds.length; ++k) {
@@ -133,4 +136,5 @@ public class NmslibQueryGenerator {
 
 
   InMemForwardIndex mFieldIndex[] = new InMemForwardIndex[FeatureExtractor.mFieldNames.length];
+  boolean           mUseFiled[] = new boolean[FeatureExtractor.mFieldNames.length];
 }

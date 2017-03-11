@@ -15,30 +15,16 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import java.io.*;
 import java.util.*;
 
 import no.uib.cipr.matrix.DenseVector;
-import no.uib.cipr.matrix.sparse.SparseVector;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.xml.sax.SAXException;
 
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.annographix.solr.*;
-import edu.cmu.lti.oaqa.annographix.util.*;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibQueryGenerator;
-import edu.cmu.lti.oaqa.knn4qa.letor.*;
 
-import org.apache.thrift.TException;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibQueryGenerator;
+
 /* begin: Imports related to a KNN-service */ 
 import org.apache.thrift.transport.*;
 
