@@ -57,12 +57,17 @@ check "$cmd"
 
 # BM25 + Model 1 (perhaps for more than one field)
 if [ "$collect" = "squad" ] ; then
-  MODEL_TYPE="model1=text+minProbModel1=text:1e-3+model1=text_alias1+minProbModel1=text_alias1:1e-3"
+  MODEL_TYPE_LIST=("model1=text+minProbModel1=text:1e-3+model1=text_alias1+minProbModel1=text_alias1:1e-3" \
+                   "model1=text_alias1+minProbModel1=text_alias1:1e-3" \
+                   "model1=text+minProbModel1=text:1e-3" \
+                  )
 else
-  MODEL_TYPE="model1=text"
+  MODEL_TYPE_LIST=("model1=text")
 fi
 
-cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene $EXPER_DIR_BASE/exper@bm25=text+${MODEL_TYPE} exper@bm25=text+${MODEL_TYPE}  nmslib/${collect}/models/out_${collect}_train_exper@bm25=text+${MODEL_TYPE}_15.model  $NUM_RET_LIST $WORD_EMBEDDINGS -dont_delete_trec_runs"
-bash -c "$cmd"
-check "$cmd"
+for MODEL_TYPE in ${MODEL_TYPE_LIST[*]} ; do
+  cmd="scripts/exper/test_final_model.sh  -max_num_query $MAX_NUM_QUERY ${collect} "$QREL_FILE" test lucene $EXPER_DIR_BASE/exper@bm25=text+${MODEL_TYPE} exper@bm25=text+${MODEL_TYPE}  nmslib/${collect}/models/out_${collect}_train_exper@bm25=text+${MODEL_TYPE}_15.model  $NUM_RET_LIST $WORD_EMBEDDINGS -dont_delete_trec_runs"
+  bash -c "$cmd"
+  check "$cmd"
+done
 
