@@ -67,7 +67,16 @@ else
   FIELD_CODE_PIVOT="text_field"
   FIELD_CODE_QUERY="text"
 fi
-QUERY_FILE="${FIELD_CODE_QUERY}_queries.txt"
+
+QUERY_FILE_NAME="${FIELD_CODE_QUERY}_queries.txt"
+QUERY_FILE="nmslib/$COLLECT_NAME/queries/$QUERY_SET/${QUERY_FILE_NAME}"
+
+qty=`wc -l $QUERY_FILE`
+check "qty=`wc -l $QUERY_FILE`"
+if [ "$qty" -lt "$MAX_QUERY_QTY" ] ; then
+  echo "Reducing the maximum # of queries, b/c the actual test set is smaller."
+  MAX_QUERY_QTY=$qty
+fi
 GS_CACHE_DIR="gs_cache/$COLLECT_NAME/$HEADER_FILE"
 REPORT_DIR="results/tunning/$COLLECT_NAME/$HEADER_FILE"
 INDEX_DIR="nmslib/$COLLECT_NAME/index/tuning/$HEADER_FILE"
@@ -158,7 +167,7 @@ do
 
   bash_cmd="../nmslib/similarity_search/release/experiment -s $SPACE -g $GS_CACHE_PREF -i nmslib/$COLLECT_NAME/headers/$HEADER_FILE \
                      --threadTestQty $THREAD_QTY \
-                      -q nmslib/$COLLECT_NAME/queries/$QUERY_SET/${QUERY_FILE} -Q $MAX_QUERY_QTY -k $K \
+                      -q ${QUERY_FILE} -Q $MAX_QUERY_QTY -k $K \
                       -m napp_qa1 \
                       -c $INDEX_PARAMS -S $INDEX_NAME -L $INDEX_NAME \
                       $NUM_PIVOT_SEARCH -o $REPORT_PREF -a  "
