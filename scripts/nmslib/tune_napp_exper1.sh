@@ -44,8 +44,8 @@ NUM_PIVOT_SEARCH=`for t in $NUM_PIVOT_SEARCH_ARG ; do echo -n " -t numPivotSearc
 echo "NUM_PIVOT_SEARCH=$NUM_PIVOT_SEARCH"
 
 NUM_PIVOT=8000
-HEADER_FILE_BASE="header_exper1"
-HEADER_FILE_ALTERN="header_exper1_bm25"
+HEADER_FILE_BASE="header_exper1_hash_payload"
+HEADER_FILE_ALTERN="header_exper1_bm25_hash_payload"
 
 if [ "$USE_ALTERN_PIVOT_DIST" = "1" ] ; then
   HEADER_FILE=$HEADER_FILE_ALTERN
@@ -59,11 +59,15 @@ if [ "$5" != "" ] ; then
 fi
 
 QUERY_SET="dev1"
-#FIELD_CODE="3field";
-#FIELD_CODE_PIVOT="3field"
-FIELD_CODE="text"
-FIELD_CODE_PIVOT="text_field"
-QUERY_FILE="${FIELD_CODE}_queries.txt"
+
+if [ "$COLLECT_NAME" = "squad" ] ; then
+  FIELD_CODE_PIVOT="2field"
+  FIELD_CODE_QUERY="text,text_alias1"
+else
+  FIELD_CODE_PIVOT="text_field"
+  FIELD_CODE_QUERY="text"
+fi
+QUERY_FILE="${FIELD_CODE_QUERY}_queries.txt"
 GS_CACHE_DIR="gs_cache/$COLLECT_NAME/$HEADER_FILE"
 REPORT_DIR="results/tunning/$COLLECT_NAME/$HEADER_FILE"
 INDEX_DIR="nmslib/$COLLECT_NAME/index/tuning/$HEADER_FILE"
@@ -154,7 +158,7 @@ do
 
   bash_cmd="release/experiment -s $SPACE -g $GS_CACHE_PREF -i nmslib/$COLLECT_NAME/headers/$HEADER_FILE \
                      --threadTestQty $THREAD_QTY \
-                      -q nmslib/$COLLECT_NAME/queries/$QUERY_SET/${FIELD_CODE}_queries.txt -Q $MAX_QUERY_QTY -k $K \
+                      -q nmslib/$COLLECT_NAME/queries/$QUERY_SET/${QUERY_FILE} -Q $MAX_QUERY_QTY -k $K \
                       -m napp_qa1 \
                       -c $INDEX_PARAMS -S $INDEX_NAME -L $INDEX_NAME \
                       $NUM_PIVOT_SEARCH -o $REPORT_PREF -a  "

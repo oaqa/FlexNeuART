@@ -1,5 +1,5 @@
 isQueryFile=0
-useHashBasedPayloads=0
+useHashBasedPayloads=1
 weightFile=nmslib/stackoverflow/models/out_stackoverflow_train_exper@bm25=text+model1=text_15.model
 simpleIndexType=bm25
 
