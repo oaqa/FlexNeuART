@@ -68,7 +68,7 @@ GS_CACHE_DIR="gs_cache/$COLLECT_NAME/$HEADER_FILE"
 REPORT_DIR="results/tunning/$COLLECT_NAME/$HEADER_FILE"
 INDEX_DIR="nmslib/$COLLECT_NAME/index/tuning/$HEADER_FILE"
 SPACE="qa1"
-CHUNK_INDEX_SIZE=$((114*1024))
+#CHUNK_INDEX_SIZE=$((114*1024))
 K=10
 
 echo "Header file:  $HEADER_FILE"
@@ -113,7 +113,7 @@ if [ "$THREAD_QTY" = "" ] ; then
   exit 1
 fi
 
-echo "Chunk index size: $CHUNK_INDEX_SIZE"
+#echo "Chunk index size: $CHUNK_INDEX_SIZE"
 echo "Will be using $THREAD_QTY threads"
 
 #for((numPivotIndex=220;numPivotIndex<261;numPivotIndex+=2))
@@ -122,7 +122,8 @@ echo "Will be using $THREAD_QTY threads"
 for numPivotIndex in $NUM_PIVOT_INDEX 
 do
   pivot_file_name="pivots_${FIELD_CODE_PIVOT}_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
-  INDEX_PARAMS="chunkIndexSize=$CHUNK_INDEX_SIZE,numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex,pivotFile=nmslib/$COLLECT_NAME/pivots/$pivot_file_name"
+  #INDEX_PARAMS="chunkIndexSize=$CHUNK_INDEX_SIZE,numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex,pivotFile=nmslib/$COLLECT_NAME/pivots/$pivot_file_name"
+  INDEX_PARAMS="numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex,pivotFile=nmslib/$COLLECT_NAME/pivots/$pivot_file_name"
 
   INDEX_PARAMS_NOSLASH=`echo $INDEX_PARAMS|sed 's|/|_|g'`
   INDEX_NAME="${INDEX_PREF}_${INDEX_PARAMS_NOSLASH}"

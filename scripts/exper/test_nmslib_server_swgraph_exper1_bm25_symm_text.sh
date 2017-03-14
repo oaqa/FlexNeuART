@@ -151,6 +151,7 @@ PARAMS=( \
   "NN=50,efConstruction=100,useProxyDist=1" "efSearch=250" \
   "NN=50,efConstruction=100,useProxyDist=1" "efSearch=500" \
   "NN=50,efConstruction=100,useProxyDist=1" "efSearch=1000" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=1500" \
   "NN=50,efConstruction=100,useProxyDist=1" "efSearch=2000" \
 )
 
