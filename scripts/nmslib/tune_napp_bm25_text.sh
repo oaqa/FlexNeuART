@@ -67,12 +67,6 @@ SPACE="qa1"
 K=100
 
 QUERY_FILE="nmslib/$COLLECT_NAME/queries/$QUERY_SET/$QUERY_FILE_NAME"
-qty=`wc -l $QUERY_FILE`
-check "qty=`wc -l $QUERY_FILE`"
-if [ "$qty" -lt "$MAX_QUERY_QTY" ] ; then
-  echo "Reducing the maximum # of queries, b/c the actual test set is smaller."
-  MAX_QUERY_QTY=$qty
-fi
 
 echo "Header file:  $HEADER_FILE"
 echo "Report dir:   $REPORT_DIR"
