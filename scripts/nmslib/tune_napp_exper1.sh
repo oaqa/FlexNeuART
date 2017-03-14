@@ -156,7 +156,7 @@ do
     #NUM_PIVOT_SEARCH=" -t numPivotSearch=22 -t numPivotSearch=23  -t numPivotSearch=24  -t numPivotSearch=25 -t numPivotSearch=26 -t numPivotSearch=27 -t numPivotSearch=28 -t numPivotSearch=29  -t numPivotSearch=30 -t numPivotSearch=31 -t numPivotSearch=32 "
   #fi 
 
-  bash_cmd="release/experiment -s $SPACE -g $GS_CACHE_PREF -i nmslib/$COLLECT_NAME/headers/$HEADER_FILE \
+  bash_cmd="../nmslib/similarity_search/release/experiment -s $SPACE -g $GS_CACHE_PREF -i nmslib/$COLLECT_NAME/headers/$HEADER_FILE \
                      --threadTestQty $THREAD_QTY \
                       -q nmslib/$COLLECT_NAME/queries/$QUERY_SET/${QUERY_FILE} -Q $MAX_QUERY_QTY -k $K \
                       -m napp_qa1 \
