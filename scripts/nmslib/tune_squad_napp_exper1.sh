@@ -17,9 +17,11 @@ check "scripts/nmslib/tune_napp_exper1.sh $col 50 ... "
 scripts/nmslib/tune_napp_exper1.sh $col $USE_ALTERN_PIVOT_DIST 25 "2 3 4 5 6 7 8 9" $query_qty
 check "scripts/nmslib/tune_napp_exper1.sh $col 25 ... "
 
-scripts/nmslib/tune_napp_exper1.sh $col $USE_ALTERN_PIVOT_DIST 10 "1 2 3 4 5 6 7 8" $query_qty
-check "scripts/nmslib/tune_napp_exper1.sh $col 10 ... "
+# To save compute time, let's comment out this
 
-scripts/nmslib/tune_napp_exper1.sh $col $USE_ALTERN_PIVOT_DIST 5 "1 2 3 4 5 6 7 8" $query_qty
-check "scripts/nmslib/tune_napp_exper1.sh $col 5 ... "
+#scripts/nmslib/tune_napp_exper1.sh $col $USE_ALTERN_PIVOT_DIST 10 "1 2 3 4 5 6 7 8" $query_qty
+#check "scripts/nmslib/tune_napp_exper1.sh $col 10 ... "
+
+#scripts/nmslib/tune_napp_exper1.sh $col $USE_ALTERN_PIVOT_DIST 5 "1 2 3 4 5 6 7 8" $query_qty
+#check "scripts/nmslib/tune_napp_exper1.sh $col 5 ... "
 
