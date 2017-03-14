@@ -61,7 +61,7 @@ if [ "$collect" = "squad" ] ; then
 fi
 
 # Queries for each field
-for field in text $ADD_SQUAD ; do
+for field in text $ADD_SQUAD_FIELD ; do
   cmd="scripts/nmslib/run_gen_nmslib_queries.sh -knn_queries $OUTPUT_DIR/${field}_queries.txt  -memindex_dir memfwdindex/$collect/ -q output/$src_collect/$part/SolrQuestionFile.txt -nmslib_fields $field $max_num_query_opt"
   bash -c "$cmd"
   check "$cmd"
