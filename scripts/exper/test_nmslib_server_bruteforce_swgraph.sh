@@ -85,7 +85,7 @@ if [ "$?" = "0" ] ; then
   exit 1
 fi
 
-$NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD &> server.log  &
+$NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD &> $SERVER_LOG_NAME  &
 
 pid=$!
 
@@ -104,7 +104,7 @@ do
     echo "NMSLIB query server stopped unexpectedly, check logs"
     exit 1
   fi
-  tail -1 server.log | grep 'Started a server' &>/dev/null
+  tail -1 $SERVER_LOG_NAME | grep 'Started a server' &>/dev/null
   if [ "$?" = "0" ] ; then
     echo "NMSLIB query server has started!"
     started=1
@@ -136,3 +136,5 @@ check "$cmd"
 kill -9 $pid
 check "kill -9 $pid"
 sleep 15
+
+save_server_logs

@@ -41,6 +41,7 @@ public class SQuADReader {
 
   public static void main(String[] args) throws IOException {
     String fileName = args[0];
+    boolean printAnsw = args.length == 2 && args[1].equals("1");
     SQuADReader  r = new SQuADReader(fileName);
     
     int qty = 0;
@@ -52,6 +53,11 @@ public class SQuADReader {
        ++parQty;
        for (SQuADQuestionAnswers qas : p.qas) {
           System.out.println(qas.question);
+          if (printAnsw) {
+            for (SQuADAnswer a: qas.answers) {
+              System.out.println("    " + a.text);
+            }
+          }
        }
        System.out.println("==================");
       }

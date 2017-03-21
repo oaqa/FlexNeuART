@@ -83,7 +83,7 @@ while [ $# -ne 0 ] ; do
   fi
 done
 
-collect="stackoverflow"
+collect="squad"
 echo "Collection: $collect"
 #collect=${POS_ARGS[0]}
 #if [ "$collect" = "" ] ; then
@@ -101,7 +101,7 @@ QREL_TYPE=${POS_ARGS[1]}
 QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
 check ""
 
-NMSLIB_HEADER_NAME="header_exper1_hash_payload"
+NMSLIB_HEADER_NAME="header_bm25_text"
 EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
 
 NMSLIB_INDEX_DIR="nmslib/$collect/index/test/$NMSLIB_HEADER_NAME"
@@ -109,6 +109,7 @@ if [ ! -d "$NMSLIB_INDEX_DIR" ] ; then
   mkdir -p $NMSLIB_INDEX_DIR ; 
   check "mkdir -p $NMSLIB_INDEX_DIR"
 fi
+
 
 echo "Header: $NMSLIB_HEADER_NAME"
 echo "Base exper dir: $EXPER_DIR_BASE"
@@ -122,14 +123,11 @@ EXTR_TYPE_FINAL="none"
 EXTR_MODEL_FINAL="none"
 NMSLIB_SPACE="qa1"
 NMSLIB_METHOD="napp_qa1"
-#NMSLIB_FIELDS="text,text_unlemm,bigram"
 NMSLIB_FIELDS="text"
 NMSLIB_PORT=10000
 NMSLIB_HEADER="nmslib/$collect/headers/$NMSLIB_HEADER_NAME"
 NMSLIB_PATH_SERVER=../nmslib/query_server/cpp_client_server
 WORD_EMBEDDINGS="word2vec_retro_unweighted_minProb=0.001.txt"
-#FIELD_CODE_PIVOT="3field"
-FIELD_CODE_PIVOT="text_field"
 
 echo "The number of threads:       $THREAD_QTY"
 if [ "$max_num_query_param" != "" ] ; then
@@ -139,25 +137,18 @@ fi
 PIVOT_FILE_PARAM="pivotFile=nmslib/$collect/pivots/pivots_text_field_maxTermQty50K_pivotTermQty1000"
 
 PARAMS=( \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=16" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=17" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=18" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=19" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=20" \
- 
+"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=13" \
 "numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=14" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=16" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=18" \
 
-"numPivot=8000,numPivotIndex=150,$PIVOT_FILE_PARAM" "numPivotSearch=11" \
-
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=10" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=11" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=12" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=5" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=6" \
 "numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=7" \
+"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=8" \
 "numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=9" \
 
-"numPivot=8000,numPivotIndex=50,$PIVOT_FILE_PARAM" "numPivotSearch=5" \
-
-"numPivot=8000,numPivotIndex=25,$PIVOT_FILE_PARAM" "numPivotSearch=3" \
-"numPivot=8000,numPivotIndex=25,$PIVOT_FILE_PARAM" "numPivotSearch=4" \
 )
 
 

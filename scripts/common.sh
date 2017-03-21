@@ -1,5 +1,7 @@
 # Some common function to share
 
+SERVER_LOG_NAME="server.log"
+
 function check {
   f="$?"
   name=$1
@@ -62,4 +64,9 @@ function get_qrel_file {
     exit 1
   fi
   echo $QREL_FILE
+}
+
+function save_server_logs {
+  me=`basename "$0"`
+  mv $SERVER_LOG_NAME $SERVER_LOG_NAME.$me
 }

@@ -20,7 +20,7 @@ function start_server {
     exit 1
   fi
 
-  $NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -c $INDEX_PARAMS -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> server.log  &
+  $NMSLIB_PATH_SERVER/query_server -s $NMSLIB_SPACE -i $NMSLIB_HEADER -p $NMSLIB_PORT -m $NMSLIB_METHOD -c $INDEX_PARAMS -L $NMSLIB_INDEX -S $NMSLIB_INDEX &> $SERVER_LOG_NAME  &
 
   PID=$!
 
@@ -39,7 +39,7 @@ function start_server {
       echo "NMSLIB query server stopped unexpectedly, check logs"
       exit 1
     fi
-    tail -1 server.log | grep 'Started a server' &>/dev/null
+    tail -1 $SERVER_LOG_NAME | grep 'Started a server' &>/dev/null
     if [ "$?" = "0" ] ; then
       echo "NMSLIB query server has started!"
       started=1
@@ -202,3 +202,4 @@ done
 kill -9 $PID ; check "kill -9 $PID"
 sleep 15
 
+save_server_logs
