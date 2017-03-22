@@ -84,7 +84,7 @@ while [ $# -ne 0 ] ; do
   fi
 done
 
-collect="stackoverflow"
+collect="squad"
 echo "Collection: $collect"
 #collect=${POS_ARGS[0]}
 #if [ "$collect" = "" ] ; then
