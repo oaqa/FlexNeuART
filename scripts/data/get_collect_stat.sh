@@ -7,65 +7,63 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-PARTS_Q=("train" "dev1" "dev2" "test")
-PARTS_A=(${PARTS_Q[*]})
-
-# For some collections we use fewer questions for training & testing than it was originally supposed 
-# by collection split
-TEST_QMAX=""
-TRAIN_QMAX=""
+PARTS=("train" "dev1" "dev2" "test")
 
 if [ "$collect" = "manner" ] ; then
-  NOP=
+  PARTS+=("tran")
 elif [ "$collect" = "compr" -o "$collect" = "stackoverflow" ] ; then
-  PARTS_A+=("tran")
-  TRAIN_QMAX="50000"
-  TEST_QMAX="10000"
+  PARTS+=("tran")
 elif [ "$collect" = "squad" ] ; then
-  PARTS_A+=("tran" "wiki")
-  PARTS_Q+=("tran" )
+  PARTS+=("tran" "wiki")
 else
   echo "Unknown collection: $collect"
   exit 1
 fi 
 
-echo "Question parts: ${PARTS_Q[*]}"
-echo "Answer parts: ${PARTS_A[*]}"
-
 total_qty=0
 
-# PARTS_A is supposed to contain all the parts in PARTS_Q
+h1=`echo -n "q-total\\ta-total\\t"`
+h3=`echo -n "q-tot-#terms\\ta-tot-#terms\\t"`
 
-for part in ${PARTS_A[*]}  ; do
-  echo -n "$part "
+for part in ${PARTS[*]}  ; do
+  h1=$h1`echo -n "q-$part-qty\\ta-$part-qty\\t"`
+  h3=$h3`echo -n "q-$part-#term\\ta-$part-#term\\t"`
 done
-echo " total"
 
-for part in ${PARTS_Q[*]}  ; do
-  wcr=(`wc output/$collect/$part/SolrQuestionFile.txt`)
-  qty_max=""
-  qty=${wcr[0]}
-  if [ "$part" = "test" ] ; then
-    qty_max="$TEST_QMAX"
-  fi
-  if [ "$part" = "train" ] ; then
-    qty_max="$TRAIN_QMAX"
-  fi
-  if [ "$qty_max" != "" ] ; then
-    if [ "$qty" -gt "$qty_max" ] ; then
-      qty=$qty_max
-    fi
-  fi
-  echo -n "$qty "
-  total_qty=$(($total+$qty))
-done
-echo " $total_qty"
+# We do have empty question/answers sometimes.
+# Hence total # of question/answers is inferred from Solr*File.txt
+# However, the latter cannot be used to compute average number
+# of terms because they contain tags (in addition to text).
 
+wcq1=(`wc output/manner/*/SolrQuestionFile.txt|grep total`)
+wca1=(`wc output/manner/*/SolrAnswerFile.txt|grep total`)
+h2=`echo -n "${wca1[0]}\\t${wcq1[0]}\\t"`
 
 wcq=(`wc output/manner/*/question_text|grep total`)
 wca=(`wc output/manner/*/answer_text|grep total`)
-echo "Average # of words in questions:"
-echo "${wcq[1]}/${wcq[0]}" | bc -l
-echo "Average # of words in answers:"
-echo "${wca[1]}/${wca[0]}" | bc -l
+qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
+at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
+h4=`echo -n "$qt\\t$at\\t"`
+
+for part in ${PARTS[*]}  ; do
+  c=$collect
+  if [ "$part" = "tran" -a "$collect" = "manner" ] ; then
+    c=ComprMinusManner
+  fi
+  wcq1=(`wc output/$c/$part/SolrQuestionFile.txt`)
+  wca1=(`wc output/$c/$part/SolrAnswerFile.txt`)
+  h2=$h2`echo -n "${wcq1[0]}\\t${wca1[0]}\\t"`
+
+  wcq=(`wc output/$c/$part/question_text`)
+  wca=(`wc output/$c/$part/answer_text`)
+  qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
+  at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
+  h4=$h4`echo -n "$qt\\t$at\\t"`
+done
+
+echo -e $h1
+echo -e $h2
+echo -e $h3
+echo -e $h4
+
 
