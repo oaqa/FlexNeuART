@@ -65,7 +65,11 @@ EXTR_MODEL_FINAL="none"
 NMSLIB_SPACE="qa1"
 NMSLIB_METHOD="brute_force"
 #NMSLIB_FIELDS="text,text_unlemm,bigram"
-NMSLIB_FIELDS="text"
+if [ "$collect" = "squad" ] ; then
+  NMSLIB_FIELDS="text,text_alias1"
+else
+  NMSLIB_FIELDS="text"
+fi
 NMSLIB_PORT=10000
 NMSLIB_HEADER="nmslib/$collect/headers/$HEADER_NAME"
 NMSLIB_PATH_SERVER=../nmslib/query_server/cpp_client_server
