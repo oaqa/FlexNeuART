@@ -31,7 +31,8 @@ QUERY_SET="test"
 SPACE="qa1"
 #K="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
 # Should be in the decreasing order
-K_ARR=(100 10)
+#K_ARR=(100 10)
+K_ARR=(100)
 
 THREAD_QTY=`scripts/exper/get_cpu_cores.py`
 if [ "$THREAD_QTY" = "" ] ; then

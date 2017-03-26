@@ -101,42 +101,14 @@ QREL_TYPE=${POS_ARGS[1]}
 QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
 check ""
 
-NMSLIB_HEADER_NAME="header_exper1_hash_payload"
-EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
-
-NMSLIB_INDEX_DIR="nmslib/$collect/index/test/$NMSLIB_HEADER_NAME"
-if [ ! -d "$NMSLIB_INDEX_DIR" ] ; then
-  mkdir -p $NMSLIB_INDEX_DIR ; 
-  check "mkdir -p $NMSLIB_INDEX_DIR"
-fi
-
-echo "Header: $NMSLIB_HEADER_NAME"
-echo "Base exper dir: $EXPER_DIR_BASE"
-echo "NMSLIB index dir: $NMSLIB_INDEX_DIR"
-
-CAND_PROV_TYPE="nmslib"
-NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
-#EXTR_TYPE_FINAL="complex"
-#EXTR_MODEL_FINAL="results/final/$collect/train/complex/exper/out_${collect}_train_complex_50.model"
-EXTR_TYPE_FINAL="none"
-EXTR_MODEL_FINAL="none"
-NMSLIB_SPACE="qa1"
+# START of collection specific parameters 
+INDEX_METHOD_PREFIX="napp"
 NMSLIB_METHOD="napp_qa1"
-#NMSLIB_FIELDS="text,text_unlemm,bigram"
-NMSLIB_FIELDS="text"
-NMSLIB_PORT=10000
-NMSLIB_HEADER="nmslib/$collect/headers/$NMSLIB_HEADER_NAME"
-NMSLIB_PATH_SERVER=../nmslib/query_server/cpp_client_server
-WORD_EMBEDDINGS="word2vec_retro_unweighted_minProb=0.001.txt"
-#FIELD_CODE_PIVOT="3field"
+NMSLIB_HEADER_NAME="header_exper1_hash_payload"
 FIELD_CODE_PIVOT="text_field"
+NMSLIB_FIELDS="text"
 
-echo "The number of threads:       $THREAD_QTY"
-if [ "$max_num_query_param" != "" ] ; then
-  echo "Max # of queries param:      $max_num_query_param"
-fi
-
-PIVOT_FILE_PARAM="pivotFile=nmslib/$collect/pivots/pivots_text_field_maxTermQty50K_pivotTermQty1000"
+PIVOT_FILE_PARAM="pivotFile=nmslib/$collect/pivots/pivots_${FIELD_CODE_PIVOT}_maxTermQty50K_pivotTermQty1000"
 
 PARAMS=( \
 "numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=16" \
@@ -160,6 +132,36 @@ PARAMS=( \
 "numPivot=8000,numPivotIndex=25,$PIVOT_FILE_PARAM" "numPivotSearch=4" \
 )
 
+# END of collection-specific parameters
+
+EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
+
+NMSLIB_INDEX_DIR="nmslib/$collect/index/test/$NMSLIB_HEADER_NAME"
+if [ ! -d "$NMSLIB_INDEX_DIR" ] ; then
+  mkdir -p $NMSLIB_INDEX_DIR ; 
+  check "mkdir -p $NMSLIB_INDEX_DIR"
+fi
+
+echo "Header: $NMSLIB_HEADER_NAME"
+echo "Base exper dir: $EXPER_DIR_BASE"
+echo "NMSLIB index dir: $NMSLIB_INDEX_DIR"
+
+CAND_PROV_TYPE="nmslib"
+NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
+#EXTR_TYPE_FINAL="complex"
+#EXTR_MODEL_FINAL="results/final/$collect/train/complex/exper/out_${collect}_train_complex_50.model"
+EXTR_TYPE_FINAL="none"
+EXTR_MODEL_FINAL="none"
+NMSLIB_SPACE="qa1"
+NMSLIB_PORT=10000
+NMSLIB_HEADER="nmslib/$collect/headers/$NMSLIB_HEADER_NAME"
+NMSLIB_PATH_SERVER=../nmslib/query_server/cpp_client_server
+WORD_EMBEDDINGS="word2vec_retro_unweighted_minProb=0.001.txt"
+
+echo "The number of threads:       $THREAD_QTY"
+if [ "$max_num_query_param" != "" ] ; then
+  echo "Max # of queries param:      $max_num_query_param"
+fi
 
 
 # Now let's loop over the list of query-time & index-time parameters and carry out an experiment for each setting. 
@@ -174,7 +176,7 @@ do
 
   index_params=${PARAMS[$ii]}
   index_params_noslash=`echo $index_params|sed 's|/|_|g'`
-  index_name=napp_${index_params_noslash}
+  index_name=${INDEX_METHOD_PREFIX}_${index_params_noslash}
   query_time_params=${PARAMS[$iq]}
 
   echo "Index name: $index_name"

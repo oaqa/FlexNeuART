@@ -101,7 +101,32 @@ QREL_TYPE=${POS_ARGS[2]}
 QREL_FILE=`get_qrel_file $QREL_TYPE "3d"`
 check ""
 
+# START of method or collection specific parameters 
+INDEX_METHOD_PREFIX="sw-graph"
+NMSLIB_METHOD="sw-graph"
 NMSLIB_HEADER_NAME="header_exper1_bm25_symm_text_hash_payload"
+
+PARAMS=( \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=5" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=10" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=25" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=50" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=100" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=250" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=500" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=1000" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=1500" \
+  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=2000" \
+)
+
+if [ "$collect" = "squad" ] ; then
+  NMSLIB_FIELDS="text,text_alias1"
+else
+  NMSLIB_FIELDS="text"
+fi
+
+# END of method or collection parameters
+
 EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/sw-graph/$NMSLIB_HEADER_NAME
 
 NMSLIB_INDEX_DIR="nmslib/$collect/index/test/$NMSLIB_HEADER_NAME"
@@ -122,38 +147,16 @@ NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
 EXTR_TYPE_FINAL="none"
 EXTR_MODEL_FINAL="none"
 NMSLIB_SPACE="qa1"
-NMSLIB_METHOD="sw-graph"
-#NMSLIB_FIELDS="text,text_unlemm,bigram"
-if [ "$collect" = "squad" ] ; then
-  NMSLIB_FIELDS="text,text_alias1"
-else
-  NMSLIB_FIELDS="text"
-fi
 NMSLIB_PORT=10000
 NMSLIB_HEADER="nmslib/$collect/headers/$NMSLIB_HEADER_NAME"
 NMSLIB_PATH_SERVER=../nmslib/query_server/cpp_client_server
 WORD_EMBEDDINGS="word2vec_retro_unweighted_minProb=0.001.txt"
-#FIELD_CODE_PIVOT="3field"
-FIELD_CODE_PIVOT="text_field"
 
 echo "The number of threads:       $THREAD_QTY"
 if [ "$max_num_query_param" != "" ] ; then
   echo "Max # of queries param:      $max_num_query_param"
 fi
 
-
-PARAMS=( \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=5" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=10" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=25" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=50" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=100" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=250" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=500" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=1000" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=1500" \
-  "NN=50,efConstruction=100,useProxyDist=1" "efSearch=2000" \
-)
 
 
 
@@ -169,7 +172,7 @@ do
 
   index_params=${PARAMS[$ii]}
   index_params_noslash=`echo $index_params|sed 's|/|_|g'`
-  index_name="sw-graph_${index_params_noslash}"
+  index_name="${INDEX_METHOD_PREFIX}_${index_params_noslash}"
   query_time_params=${PARAMS[$iq]}
 
   echo "Index name: $index_name"
