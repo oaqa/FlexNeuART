@@ -102,28 +102,7 @@ QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
 check ""
 
 
-# START of collection specific parameters 
-INDEX_METHOD_PREFIX="napp"
-NMSLIB_METHOD="napp_qa1"
-NMSLIB_HEADER_NAME="header_bm25_text"
-FIELD_CODE_PIVOT="text_field"
-NMSLIB_FIELDS="text"
-
-PIVOT_FILE_PARAM="pivotFile=nmslib/$collect/pivots/pivots_${FIELD_CODE_PIVOT}_maxTermQty50K_pivotTermQty1000"
-
-PARAMS=( \
-"numPivot=8000,numPivotIndex=238,$PIVOT_FILE_PARAM" "numPivotSearch=12" \
-"numPivot=8000,numPivotIndex=228,$PIVOT_FILE_PARAM" "numPivotSearch=13" \
-\
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=11" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=12" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=13" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=14" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=15" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=17" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=19" \
-)
-# END of collection-specific parameters
+. scripts/exper/params/napp_bm25_text_compr.sh
 
 EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
 

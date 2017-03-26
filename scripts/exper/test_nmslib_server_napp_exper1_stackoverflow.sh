@@ -101,38 +101,7 @@ QREL_TYPE=${POS_ARGS[1]}
 QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
 check ""
 
-# START of collection specific parameters 
-INDEX_METHOD_PREFIX="napp"
-NMSLIB_METHOD="napp_qa1"
-NMSLIB_HEADER_NAME="header_exper1_hash_payload"
-FIELD_CODE_PIVOT="text_field"
-NMSLIB_FIELDS="text"
-
-PIVOT_FILE_PARAM="pivotFile=nmslib/$collect/pivots/pivots_${FIELD_CODE_PIVOT}_maxTermQty50K_pivotTermQty1000"
-
-PARAMS=( \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=16" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=17" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=18" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=19" \
-"numPivot=8000,numPivotIndex=250,$PIVOT_FILE_PARAM" "numPivotSearch=20" \
- 
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=14" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=16" \
-"numPivot=8000,numPivotIndex=200,$PIVOT_FILE_PARAM" "numPivotSearch=18" \
-
-"numPivot=8000,numPivotIndex=150,$PIVOT_FILE_PARAM" "numPivotSearch=11" \
-
-"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=7" \
-"numPivot=8000,numPivotIndex=100,$PIVOT_FILE_PARAM" "numPivotSearch=9" \
-
-"numPivot=8000,numPivotIndex=50,$PIVOT_FILE_PARAM" "numPivotSearch=5" \
-
-"numPivot=8000,numPivotIndex=25,$PIVOT_FILE_PARAM" "numPivotSearch=3" \
-"numPivot=8000,numPivotIndex=25,$PIVOT_FILE_PARAM" "numPivotSearch=4" \
-)
-
-# END of collection-specific parameters
+. scripts/exper/params/napp_exper1_stackoverflow.sh
 
 EXPER_DIR_BASE=results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/napp/$NMSLIB_HEADER_NAME
 
