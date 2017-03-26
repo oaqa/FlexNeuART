@@ -35,12 +35,12 @@ done
 # However, the latter cannot be used to compute average number
 # of terms because they contain tags (in addition to text).
 
-wcq1=(`wc output/manner/*/SolrQuestionFile.txt|grep total`)
-wca1=(`wc output/manner/*/SolrAnswerFile.txt|grep total`)
+wcq1=(`wc output/$collect/*/SolrQuestionFile.txt|grep total`)
+wca1=(`wc output/$collect/*/SolrAnswerFile.txt|grep total`)
 h2=`echo -n "${wca1[0]}\\t${wcq1[0]}\\t"`
 
-wcq=(`wc output/manner/*/question_text|grep total`)
-wca=(`wc output/manner/*/answer_text|grep total`)
+wcq=(`wc output/$collect/*/question_text|grep total`)
+wca=(`wc output/$collect/*/answer_text|grep total`)
 qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
 at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
 h4=`echo -n "$qt\\t$at\\t"`
