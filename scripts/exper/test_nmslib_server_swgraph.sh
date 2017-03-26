@@ -1,40 +1,6 @@
 #!/bin/bash
 . scripts/common.sh
-
-NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
-check "getting the number of CPU cores, do you have /proc/cpu/info?"
-
-THREAD_QTY=$NUM_CPU_CORES
-max_num_query_param=""
-
-while [ $# -ne 0 ] ; do
-  echo $1|grep "^-" >/dev/null 
-  if [ $? = 0 ] ; then
-    OPT_NAME="$1"
-    OPT_VALUE="$2"
-    OPT="$1 $2"
-    if [ "$OPT_VALUE" = "" ] ; then  
-      echo "Option $OPT_NAME requires an argument." >&2
-      exit 1
-    fi
-    shift 2
-    case $OPT_NAME in
-      -thread_qty)
-        THREAD_QTY=$OPT_VALUE 
-        ;;
-      -max_num_query)
-        max_num_query_param=$OPT
-        ;;
-      *)
-        echo "Invalid option: $OPT_NAME" >&2
-        exit 1
-        ;;
-    esac
-  else
-    POS_ARGS=(${POS_ARGS[*]} $1)
-    shift 1
-  fi
-done
+. scripts/common_nmslib.sh
 
 collect=${POS_ARGS[0]}
 if [ "$collect" = "" ] ; then

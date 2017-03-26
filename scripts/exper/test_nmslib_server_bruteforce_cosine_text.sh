@@ -1,5 +1,6 @@
 #!/bin/bash
 . scripts/common.sh
+. scripts/common_nmslib.sh
 
 NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
 check "getting the number of CPU cores, do you have /proc/cpu/info?"
