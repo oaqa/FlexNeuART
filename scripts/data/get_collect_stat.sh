@@ -37,7 +37,7 @@ done
 
 wcq1=(`wc output/$collect/*/SolrQuestionFile.txt|grep total`)
 wca1=(`wc output/$collect/*/SolrAnswerFile.txt|grep total`)
-h2=`echo -n "${wca1[0]}\\t${wcq1[0]}\\t"`
+h2=`echo -n "${wcq1[0]}\\t${wca1[0]}\\t"`
 
 wcq=(`wc output/$collect/*/question_text|grep total`)
 wca=(`wc output/$collect/*/answer_text|grep total`)
