@@ -193,7 +193,7 @@ do
   bash_cmd="../nmslib/similarity_search/release/experiment -s $NMSLIB_SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$NMSLIB_HEADER_NAME \
                      --threadTestQty $THREAD_QTY \
                       -q "$QUERY_FILE" -k $KNN_K \
-                      --pRBO $RBO_VALS
+                      --pRBO $RBO_VALS \
                       -m $NMSLIB_METHOD \
                       -L $INDEX_NAME \
                       $MAX_NUM_QUERY_PARAM \
