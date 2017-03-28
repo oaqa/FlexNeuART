@@ -38,8 +38,7 @@ fi
 
 NMSLIB_SPACE="qa1"
 KNN_K=100
-RBO_VALS="0.899967,0.899963,0.900002,0.900016,0.899981,0.900035,0.900052,0.900057,0.899908,0.900003"
-
+RBO_VALS="0.876404,0.937225,0.957932,0.968369,0.974663,0.978859,0.981865,0.984123,0.985893,0.987293"
 
 if [ "$max_num_query" != "" ] ; then
   MAX_NUM_QUERY_PARAM=" --maxNumQuery $max_num_query "
@@ -117,7 +116,7 @@ do
     PREV_INDEX=$index_name
     PREV_INDEX_PARAM=$index_params
   fi
-  # Idiotically bash arrays cannot contain strings with spaces!
+  # Bash arrays cannot contain strings with spaces!
   PREV_QUERY_TIME_PARAMS+="_-t_${query_time_params}"
 done
 if [ "$PREV_INDEX" != "" ] ; then
@@ -154,7 +153,6 @@ do
   echo "Index name: $INDEX_NAME" 
   echo "Query time parameters: $QUERY_TIME_PARAMS"
 
-
 #  if [ ! -d "$INDEX_DIR" ] ; then
 #    echo "$INDEX_DIR doesn't exist!"
 #    exit 1
@@ -172,8 +170,8 @@ do
 #  fi
 
 #
-  GS_CACHE_DIR="gs_cache/$collect/$HEADER_FILE/$TEST_PART"
-  REPORT_DIR="results/local/$collect/$TEST_PART/$INDEX_METHOD_PREFIX/$HEADER_FILE"
+  GS_CACHE_DIR="gs_cache/$collect/$NMSLIB_HEADER_NAME/$TEST_PART"
+  REPORT_DIR="results/local/$collect/$TEST_PART/$INDEX_METHOD_PREFIX/$NMSLIB_HEADER_NAME"
 
   GS_CACHE_PREF="$GS_CACHE_DIR/${NMSLIB_SPACE}"
 
@@ -187,7 +185,7 @@ do
     check "mkdir -p "$REPORT_DIR""
   fi
 
-  REPORT_PREF="$REPORT_DIR/K=$KNN_K/"
+  REPORT_PREF="${REPORT_DIR}/K=$KNN_K"
 
   if [ ! -d "$REPORT_PREF" ] ; then
     mkdir -p "$REPORT_PREF"
@@ -200,7 +198,7 @@ do
                       -m $NMSLIB_METHOD \
                       -L $INDEX_NAME \
                       $MAX_NUM_QUERY_PARAM \
-                      $QUERY_TIME_PARAMS -o "$REPORT_PREF/$INDEX_METHOD_PREFIX"   "
+                      $QUERY_TIME_PARAMS -o \"$REPORT_PREF/${INDEX_METHOD_PREFIX}\"   "
   echo "Command:"
   echo $bash_cmd
   #bash -c "$bash_cmd"
