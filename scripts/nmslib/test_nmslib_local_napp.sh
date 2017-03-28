@@ -41,7 +41,7 @@ KNN_K=100
 RBO_VALS="0.876404,0.937225,0.957932,0.968369,0.974663,0.978859,0.981865,0.984123,0.985893,0.987293"
 
 if [ "$max_num_query_param" != "" ] ; then
-  MAX_NUM_QUERY_PARAM=" --maxNumQuery $max_num_query "
+  MAX_NUM_QUERY_PARAM=" --maxNumQuery $max_num_query_param "
 fi
 
 echo "Will be using $THREAD_QTY threads"
