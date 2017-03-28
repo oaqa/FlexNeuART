@@ -196,6 +196,7 @@ do
                       --pRBO $RBO_VALS \
                       -m $NMSLIB_METHOD \
                       -L $INDEX_NAME \
+                      $APPEND_FLAG \
                       $MAX_NUM_QUERY_PARAM \
                       $QUERY_TIME_PARAMS -o \"$REPORT_PREF/${INDEX_METHOD_PREFIX}\"   "
   echo "Command:"
@@ -208,6 +209,9 @@ do
     check "rm $INDEX_NAME"
     echo "Index is removed, because there's a compressed version!!"
   fi
+
+  # After the first execution, we append results rather than overwrite!
+  APPEND_FLAG=" -a "
 
 done
 
