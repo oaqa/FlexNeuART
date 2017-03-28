@@ -57,7 +57,11 @@ for part in ${PARTS[*]}  ; do
 
   wcq=(`cat output/$c/$part/${full_text_prefix}question_text|uniq|wc`)
   wca=(`cat output/$c/$part/${full_text_prefix}answer_text|uniq|wc`)
-  qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
+  if [ "${wcq[0]}" != "0" ] ;  then
+    qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
+  else
+    qt=0
+  fi
   at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
   h4=$h4`echo -n "$qt\\t$at\\t"`
 done
