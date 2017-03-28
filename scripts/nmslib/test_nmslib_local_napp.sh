@@ -3,166 +3,179 @@
 #PATH_TO_THE_SCRIPTS="${0%/*}"
 #echo "A path to this script: $PATH_TO_THE_SCRIPTS"
 
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
+. scripts/common.sh
+. scripts/common_nmslib.sh
 
-NUM_PIVOT=8000
-
-MAX_NUM_QUERY=5000
-
-COLLECT=$1
-
-if [ "$COLLECT" = "" ] ; then
-  echo "Specify the collection name: compr or stackoverflow (1st arg)"
+collect=${POS_ARGS[0]}
+if [ "$collect" = "" ] ; then
+  echo "Specify a collection: manner, compr (1st arg)"
   exit 1
 fi
 
-#MAX_QUERY_QTY=10000
-QUERY_SET="test"
-
-SPACE="qa1"
-#K="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
-# Should be in the decreasing order
-#K_ARR=(100 10)
-K_ARR=(100)
-
-THREAD_QTY=`scripts/exper/get_cpu_cores.py`
-if [ "$THREAD_QTY" = "" ] ; then
-  echo "Can't obtain the number of cores!"
+METHOD_NAME=${POS_ARGS[1]}
+if [ "$METHOD_NAME" != "sw-graph" -a "$METHOD_NAME" != "napp" ] ; then
+  echo "Specify a method name: napp or sw-graph (2d arg)"
   exit 1
+fi
+
+TEST_PART=${POS_ARGS[2]}
+if [ "$TEST_PART" = "" ] ; then
+  echo "Specify a test part, e.g., dev1 (3d arg)"
+  exit 1 
+fi
+
+QREL_TYPE=${POS_ARGS[3]}
+QREL_FILE=`get_qrel_file $QREL_TYPE "4th"`
+check ""
+
+if [ "$METHOD_NAME" = "napp" ] ; then
+  HEAD_TYPE=${POS_ARGS[4]}
+  if [ "$HEAD_TYPE" != "bm25_text" -a "$HEAD_TYPE" != "exper1" -a "$HEAD_TYPE" != "exper1_bm25" ] ; then
+    echo "Specify a type of the header for $METHOD_NAME: bm25_text, exper1, or exper1_bm25 (5th argument)"
+    exit 1
+  fi
+fi
+
+NMSLIB_SPACE="qa1"
+KNN_K=100
+RBO_VALS="0.899967,0.899963,0.900002,0.900016,0.899981,0.900035,0.900052,0.900057,0.899908,0.900003"
+
+
+if [ "$max_num_query" != "" ] ; then
+  MAX_NUM_QUERY_PARAM=" --maxNumQuery $max_num_query "
 fi
 
 echo "Will be using $THREAD_QTY threads"
+echo "Max # query parameter: $MAX_NUM_QUERY_PARAM"
 
-BEST_PIVOT_TERM_QTY=1000
-BEST_MAX_TERM_QTY_K=50
+NMSLIB_PREFIX="nmslib/$collect"
 
-NMSLIB_PREFIX="nmslib/$COLLECT"
-
-
-PIVOT_FILE_NAME="${PIVOT_PREFS[$i]}_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
-PIVOT_FILE="$NMSLIB_PREFIX/pivots/pivots_text_field_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
-
-if [ ! -f "$PIVOT_FILE" ] ; then
-  echo "Cannot find the pivot file: $PIVOT_FILE"
-  exit 1
+if [ "$METHOD_NAME" = "sw-graph" ] ; then
+  source scripts/exper/params/swgraph_exper1_bm25_symm_text.sh
+  check "source scripts/exper/params/swgraph_exper1_bm25_symm_text.sh"
+else 
+  if [ "$collect" = "compr" ] ; then
+    NOP=x
+  elif [ "$collect" = "stackoverflow" ] ; then
+    NOP=x
+  elif [ "$squad" = "squad" ] ; then
+    NOP=x
+  else
+    echo "Unsupported collection: $collect for method $METHOD_NAME"
+  fi
+  param_file=scripts/exper/params/${METHOD_NAME}_${HEAD_TYPE}_${collect}.sh
+  if [ ! -f "$param_file" ] ; then
+    echo "Something is wrong, the parameter file: $param_file isn't found!"
+    exit 1
+  fi
+  echo "Running a parameter file: $param_file"
+  source $param_file
+  check "source $param_file"
 fi
-PIVOT_FILE_PARAM="pivotFile=$PIVOT_FILE"
 
-QUERY_FILE="$NMSLIB_PREFIX/queries/$QUERY_SET/text_queries.txt"
+QUERY_FILE="$NMSLIB_PREFIX/queries/$TEST_PART/${NMSLIB_FIELDS}_queries.txt"
+INDEX_DIR="$NMSLIB_PREFIX/index/test/$NMSLIB_HEADER_NAME"
+
+echo "Header file: $NMSLIB_HEADER_NAME"
+echo "Query file: $QUERY_FILE"
 
 if [ ! -f "$QUERY_FILE" ] ; then
   echo "Cannot find the query file: $QUERY_FILE"
   exit 1
 fi
 
-if [ "$COLLECT" = "compr" ] ; then
-  echo "Using parameters tuned for compr!"
-  HEADERS=(
-         header_bm25_text \
-         header_bm25_text \
-         header_bm25_text \
-         \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-        )
-  NUM_PIVOT_INDEX_ARR=(
-                    238 \
-                    228 \
-                    200 \
-                    \
-                     300    \
-                     250    \
-                     200    \
-                     150    \
-                     100    \
-            )
-  QUERY_TIME_PARAM_ARR=(
-      "-t numPivotSearch=12" \
-      "-t numPivotSearch=13" \
-      "-t numPivotSearch=11 -t numPivotSearch=12 -t numPivotSearch=13 -t numPivotSearch=14 -t numPivotSearch=15 -t numPivotSearch=17 -t numPivotSearch=19 " \
-         \
-      "-t numPivotSearch=18 -t numPivotSearch=22 " \
-      "-t numPivotSearch=17 -t numPivotSearch=19 " \
-      "-t numPivotSearch=13 -t numPivotSearch=15 -t numPivotSearch=19 " \
-      "-t numPivotSearch=9" \
-      "-t numPivotSearch=7" \
-            )
-elif [ "$COLLECT" = "stackoverflow" ] ; then
-  echo "Using parameters tuned for stackoverflow!"
-  HEADERS=(
-         header_bm25_text \
-         header_bm25_text \
-         \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-         header_exper1_hash_payload              \
-        )
-  NUM_PIVOT_INDEX_ARR=(
-                    200 \
-                    100 \
-                    \
-                     250    \
-                     200    \
-                     150    \
-                     100    \
-            )
-  QUERY_TIME_PARAM_ARR=(
-      "-t numPivotSearch=13 -t numPivotSearch=14 " \
-      "-t numPivotSearch=5 -t numPivotSearch=6 -t numPivotSearch=7 -t numPivotSearch=8 -t numPivotSearch=9 -t numPivotSearch=10 -t numPivotSearch=11  -t numPivotSearch=12 " \
-         \
-      "-t numPivotSearch=16 -t numPivotSearch=17 -t numPivotSearch=18 -t numPivotSearch=19 -t numPivotSearch=20 " \
-      "-t numPivotSearch=14 -t numPivotSearch=16 -t numPivotSearch=18 " \
-      "-t numPivotSearch=11" \
-      "-t numPivotSearch=7" \
-            )
-else
-  echo "Unsupported collection: $COLLECT"
-fi
+PREV_INDEX=""
+PREV_INDEX_PARAM=""
+PREV_QUERY_TIME_PARAMS=""
 
-QTY=${#HEADERS[*]}
+INDEX_NAME_ARR=()
+INDEX_PARAM_ARR=()
+QUERY_TIME_PARAM_ARR=()
 
-if [ ${#NUM_PIVOT_INDEX_ARR[*]} != "$QTY" ] ; then
-  echo "Number of NUM_PIVOT_INDEX_ARR elements != # of HEADERS elements!"
-  exit 1
-fi
-if [ ${#QUERY_TIME_PARAM_ARR[*]} != "$QTY" ] ; then
-  echo "Number of QUERY_TIME_PARAM_ARR elements != # of HEADERS elements!"
-  exit 1
-fi
-
-ADD_FLAG=""
-PREV_HEADER=""
-
-for ((i=0;i<$QTY;i++))
+pnum=$((${#PARAMS[*]}/2))
+for ((i=0;i<$pnum;++i))
 do
-  HEADER_FILE=${HEADERS[$i]}
-  if [ "$PREV_HEADER" != "$HEADER_FILE" ] ; then
-    ADD_FLAG=""
+  ii=$((2*$i))
+  iq=$((2*$i+1))
+  in=$((2*$i+2))
+
+  index_params=${PARAMS[$ii]}
+  index_params_noslash=`echo $index_params|sed 's|/|_|g'`
+  index_name=${INDEX_METHOD_PREFIX}_${index_params_noslash}
+  query_time_params=${PARAMS[$iq]}
+
+  echo "Index name: $index_name"
+  echo "Query time parameters: $query_time_params"
+
+  if [ "$PREV_INDEX" != "$index_name" ] ; then
+    if [ "$PREV_INDEX" != "" ] ; then
+      INDEX_NAME_ARR+=($PREV_INDEX)
+      INDEX_PARAM_ARR+=($PREV_INDEX_PARAM)
+      QUERY_TIME_PARAM_ARR+=($PREV_QUERY_TIME_PARAMS)
+    fi
+    PREV_QUERY_TIME_PARAMS=""
+    PREV_INDEX=$index_name
+    PREV_INDEX_PARAM=$index_params
   fi
-  PREV_HEADER=$HEADER_FILE
-  NUM_PIVOT_INDEX=${NUM_PIVOT_INDEX_ARR[$i]}
-  QUERY_TIME_PARAMS=${QUERY_TIME_PARAM_ARR[$i]}
+  # Idiotically bash arrays cannot contain strings with spaces!
+  PREV_QUERY_TIME_PARAMS+="_-t_${query_time_params}"
+done
+if [ "$PREV_INDEX" != "" ] ; then
+  INDEX_NAME_ARR+=($PREV_INDEX)
+  INDEX_PARAM_ARR+=($PREV_INDEX_PARAM)
+  QUERY_TIME_PARAM_ARR+=("$PREV_QUERY_TIME_PARAMS")
+fi
 
-  echo "Header: $HEADER_FILE query file: $QUERY_FILE"
+echo "================================="
+echo "All index names:"
+for t in ${INDEX_NAME_ARR[*]} ; do
+  echo $t 
+done
+echo "================================="
+echo "All index parameters:"
+for t in ${INDEX_PARAM_ARR[*]} ; do
+  echo $t
+done
+echo "================================="
+echo "All query-time parameters:"
+for t in ${QUERY_TIME_PARAM_ARR[*]} ; do
+  echo $t
+done
+echo "================================="
 
-  GS_CACHE_DIR="gs_cache/$COLLECT/$HEADER_FILE/$QUERY_SET"
-  REPORT_DIR="results/local/$COLLECT/$QUERY_SET/napp/$HEADER_FILE"
-  INDEX_DIR="$NMSLIB_PREFIX/index/$HEADER_FILE"
+qty=${#INDEX_NAME_ARR[*]}
 
-  GS_CACHE_PREF="$GS_CACHE_DIR/${SPACE}"
+for ((i=0;i<$qty;i++))
+do
+  QUERY_TIME_PARAMS=`echo ${QUERY_TIME_PARAM_ARR[$i]}|sed 's/_/ /g'`
+  
+  INDEX_NAME=$INDEX_DIR/${INDEX_NAME_ARR[$i]}
+
+  echo "Index name: $INDEX_NAME" 
+  echo "Query time parameters: $QUERY_TIME_PARAMS"
+
+
+#  if [ ! -d "$INDEX_DIR" ] ; then
+#    echo "$INDEX_DIR doesn't exist!"
+#    exit 1
+#  fi
+#  if [ -f "$INDEX_NAME_COMP" ]
+#  then
+#    echo "Let's uncompress previously created index $INDEX_NAME_COMP"
+#    gunzip "$INDEX_NAME_COMP"
+#    check "gunzip $INDEX_NAME_COMP"
+#  elif [ -f "$INDEX_NAME" ] ; then
+#    echo "Found a previously created uncompressed index $INDEX_NAME"
+#  else
+#    echo "Cannot find a previously created index neither $INDEX_NAME nor $INDEX_NAME_COMP!"
+#    exit 1
+#  fi
+
+#
+  GS_CACHE_DIR="gs_cache/$collect/$HEADER_FILE/$TEST_PART"
+  REPORT_DIR="results/local/$collect/$TEST_PART/$INDEX_METHOD_PREFIX/$HEADER_FILE"
+
+  GS_CACHE_PREF="$GS_CACHE_DIR/${NMSLIB_SPACE}"
 
   if [ ! -d "$GS_CACHE_DIR" ] ; then
     mkdir -p "$GS_CACHE_DIR"
@@ -174,55 +187,25 @@ do
     check "mkdir -p "$REPORT_DIR""
   fi
 
-  if [ ! -d "$INDEX_DIR" ] ; then
-    echo "$INDEX_DIR doesn't exist!"
-    exit 1
+  REPORT_PREF="$REPORT_DIR/K=$KNN_K/"
+
+  if [ ! -d "$REPORT_PREF" ] ; then
+    mkdir -p "$REPORT_PREF"
+    check "mkdir -p "$REPORT_PREF""
   fi
+  bash_cmd="../nmslib/similarity_search/release/experiment -s $NMSLIB_SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$NMSLIB_HEADER_NAME \
+                     --threadTestQty $THREAD_QTY \
+                      -q "$QUERY_FILE" -k $KNN_K \
+                      --pRBO $RBO_VALS
+                      -m $NMSLIB_METHOD \
+                      -L $INDEX_NAME \
+                      $MAX_NUM_QUERY_PARAM \
+                      $QUERY_TIME_PARAMS -o "$REPORT_PREF/$INDEX_METHOD_PREFIX"   "
+  echo "Command:"
+  echo $bash_cmd
+  #bash -c "$bash_cmd"
+  check "$bash_cmd"
 
-  INDEX_PARAMS="numPivot=$NUM_PIVOT,numPivotIndex=$NUM_PIVOT_INDEX,$PIVOT_FILE_PARAM"
-  INDEX_PARAM_NO_SLASH=`echo $INDEX_PARAMS|sed 's|/|_|g'`
-  INDEX_NAME=$INDEX_DIR/napp_${INDEX_PARAM_NO_SLASH}
-  INDEX_NAME_COMP="${INDEX_NAME}.gz"
-  if [ -f "$INDEX_NAME_COMP" ]
-  then
-    echo "Let's uncompress previously created index $INDEX_NAME_COMP"
-    gunzip "$INDEX_NAME_COMP"
-    check "gunzip $INDEX_NAME_COMP"
-  elif [ -f "$INDEX_NAME" ] ; then
-    echo "Found a previously created uncompressed index $INDEX_NAME"
-  else
-    echo "Cannot find a previously created index neither $INDEX_NAME nor $INDEX_NAME_COMP!"
-    exit 1
-  fi
-
-  # Values in $K_ARR should be in the decreasing order
-  for k in ${K_ARR[*]} ; do
-    REPORT_PREF="$REPORT_DIR/K=$k/"
-
-    if [ ! -d "$REPORT_PREF" ] ; then
-      mkdir -p "$REPORT_PREF"
-      check "mkdir -p "$REPORT_PREF""
-    fi
-
-    bash_cmd="../nmslib/similarity_search/release/experiment -s $SPACE -g $GS_CACHE_PREF -i $NMSLIB_PREFIX/headers/$HEADER_FILE \
-                       --threadTestQty $THREAD_QTY \
-                        -q "$QUERY_FILE" -k $k \
-                        -m napp_qa1 \
-                        -L $INDEX_NAME \
-                        --maxNumQuery $MAX_NUM_QUERY \
-                        $QUERY_TIME_PARAMS -o "$REPORT_PREF/napp" $ADD_FLAG  "
-    echo "Command:"
-    echo $bash_cmd
-    bash -c "$bash_cmd"
-    check "$bash_cmd"
-  done
-
-  # Next time we append to the report rather than overwrite it
-  if [ "$ADD_FLAG" = "" ] ; then
-    ADD_FLAG=" -a "
-  fi
-
-  # Let's not compress index unless we really need to
   #echo "Let's compress the index $INDEX_NAME"
   #gzip $INDEX_NAME
   #check "gzip $INDEX_NAME"
