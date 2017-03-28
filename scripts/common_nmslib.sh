@@ -4,6 +4,7 @@ check "getting the number of CPU cores, do you have /proc/cpu/info?"
 
 THREAD_QTY=$NUM_CPU_CORES
 max_num_query_param=""
+max_num_query=""
 
 while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
@@ -22,6 +23,7 @@ while [ $# -ne 0 ] ; do
         ;;
       -max_num_query)
         max_num_query_param=$OPT
+        max_num_query=$OPT_VALUE
         ;;
       *)
         echo "Invalid option: $OPT_NAME" >&2
