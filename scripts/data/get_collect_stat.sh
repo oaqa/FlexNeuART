@@ -15,6 +15,7 @@ elif [ "$collect" = "compr" -o "$collect" = "stackoverflow" ] ; then
   PARTS+=("tran")
 elif [ "$collect" = "squad" ] ; then
   PARTS+=("tran" "wiki")
+  full_text_prefix="full_"
 else
   echo "Unknown collection: $collect"
   exit 1
@@ -39,8 +40,8 @@ wcq1=(`wc output/$collect/*/SolrQuestionFile.txt|grep total`)
 wca1=(`wc output/$collect/*/SolrAnswerFile.txt|grep total`)
 h2=`echo -n "${wcq1[0]}\\t${wca1[0]}\\t"`
 
-wcq=(`cat output/$collect/*/question_text|uniq|wc`)
-wca=(`cat output/$collect/*/answer_text|uniq|wc`)
+wcq=(`cat output/$collect/*/${full_text_prefix}question_text|uniq|wc`)
+wca=(`cat output/$collect/*/${full_text_prefix}answer_text|uniq|wc`)
 qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
 at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
 h4=`echo -n "$qt\\t$at\\t"`
@@ -54,8 +55,8 @@ for part in ${PARTS[*]}  ; do
   wca1=(`wc output/$c/$part/SolrAnswerFile.txt`)
   h2=$h2`echo -n "${wcq1[0]}\\t${wca1[0]}\\t"`
 
-  wcq=(`cat output/$c/$part/question_text|uniq|wc`)
-  wca=(`cat output/$c/$part/answer_text|uniq|wc`)
+  wcq=(`cat output/$c/$part/${full_text_prefix}question_text|uniq|wc`)
+  wca=(`cat output/$c/$part/${full_text_prefix}answer_text|uniq|wc`)
   qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
   at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
   h4=$h4`echo -n "$qt\\t$at\\t"`
