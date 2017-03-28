@@ -39,8 +39,8 @@ wcq1=(`wc output/$collect/*/SolrQuestionFile.txt|grep total`)
 wca1=(`wc output/$collect/*/SolrAnswerFile.txt|grep total`)
 h2=`echo -n "${wcq1[0]}\\t${wca1[0]}\\t"`
 
-wcq=(`wc output/$collect/*/question_text|grep total`)
-wca=(`wc output/$collect/*/answer_text|grep total`)
+wcq=(`cat output/$collect/*/question_text|uniq|wc`)
+wca=(`cat output/$collect/*/answer_text|uniq|wc`)
 qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
 at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
 h4=`echo -n "$qt\\t$at\\t"`
@@ -54,8 +54,8 @@ for part in ${PARTS[*]}  ; do
   wca1=(`wc output/$c/$part/SolrAnswerFile.txt`)
   h2=$h2`echo -n "${wcq1[0]}\\t${wca1[0]}\\t"`
 
-  wcq=(`wc output/$c/$part/question_text`)
-  wca=(`wc output/$c/$part/answer_text`)
+  wcq=(`cat output/$c/$part/question_text|uniq|wc`)
+  wca=(`cat output/$c/$part/answer_text|uniq|wc`)
   qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
   at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
   h4=$h4`echo -n "$qt\\t$at\\t"`
