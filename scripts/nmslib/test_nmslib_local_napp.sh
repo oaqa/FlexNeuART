@@ -149,27 +149,26 @@ do
   QUERY_TIME_PARAMS=`echo ${QUERY_TIME_PARAM_ARR[$i]}|sed 's/_/ /g'`
   
   INDEX_NAME=$INDEX_DIR/${INDEX_NAME_ARR[$i]}
+  INDEX_NAME_COMP="${INDEX_NAME}.gz"
 
   echo "Index name: $INDEX_NAME" 
   echo "Query time parameters: $QUERY_TIME_PARAMS"
 
-#  if [ ! -d "$INDEX_DIR" ] ; then
-#    echo "$INDEX_DIR doesn't exist!"
-#    exit 1
-#  fi
-#  if [ -f "$INDEX_NAME_COMP" ]
-#  then
-#    echo "Let's uncompress previously created index $INDEX_NAME_COMP"
-#    gunzip "$INDEX_NAME_COMP"
-#    check "gunzip $INDEX_NAME_COMP"
-#  elif [ -f "$INDEX_NAME" ] ; then
-#    echo "Found a previously created uncompressed index $INDEX_NAME"
-#  else
-#    echo "Cannot find a previously created index neither $INDEX_NAME nor $INDEX_NAME_COMP!"
-#    exit 1
-#  fi
+  if [ ! -d "$INDEX_DIR" ] ; then
+    echo "$INDEX_DIR doesn't exist!"
+    exit 1
+  fi
+  if [ -f "$INDEX_NAME_COMP" ] ; then
+    echo "Let's uncompress previously created index $INDEX_NAME_COMP"
+    zcat "$INDEX_NAME_COMP" > "$INDEX_NAME"
+    check "zcat $INDEX_NAME_COMP > $INDEX_NAME"
+  elif [ -f "$INDEX_NAME" ] ; then
+    echo "Found a previously created uncompressed index $INDEX_NAME"
+  else
+    echo "Cannot find a previously created index neither $INDEX_NAME nor $INDEX_NAME_COMP!"
+    exit 1
+  fi
 
-#
   GS_CACHE_DIR="gs_cache/$collect/$NMSLIB_HEADER_NAME/$TEST_PART"
   REPORT_DIR="results/local/$collect/$TEST_PART/$INDEX_METHOD_PREFIX/$NMSLIB_HEADER_NAME"
 
@@ -201,13 +200,14 @@ do
                       $QUERY_TIME_PARAMS -o \"$REPORT_PREF/${INDEX_METHOD_PREFIX}\"   "
   echo "Command:"
   echo $bash_cmd
-  #bash -c "$bash_cmd"
+  bash -c "$bash_cmd"
   check "$bash_cmd"
 
-  #echo "Let's compress the index $INDEX_NAME"
-  #gzip $INDEX_NAME
-  #check "gzip $INDEX_NAME"
-  #echo "Index is compressed!"
+  if [ -f "$INDEX_NAME_COMP" ] ; then
+    rm "$INDEX_NAME"
+    check "rm $INDEX_NAME"
+    echo "Index is removed, because there's a compressed version!!"
+  fi
 
 done
 
