@@ -24,12 +24,8 @@ if [ "$TEST_PART" = "" ] ; then
   exit 1 
 fi
 
-QREL_TYPE=${POS_ARGS[3]}
-QREL_FILE=`get_qrel_file $QREL_TYPE "4th"`
-check ""
-
 if [ "$METHOD_NAME" = "napp" ] ; then
-  HEAD_TYPE=${POS_ARGS[4]}
+  HEAD_TYPE=${POS_ARGS[3]}
   if [ "$HEAD_TYPE" != "bm25_text" -a "$HEAD_TYPE" != "exper1" -a "$HEAD_TYPE" != "exper1_bm25" ] ; then
     echo "Specify a type of the header for $METHOD_NAME: bm25_text, exper1, or exper1_bm25 (5th argument)"
     exit 1
