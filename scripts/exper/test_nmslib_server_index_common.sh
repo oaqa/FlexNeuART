@@ -60,12 +60,12 @@ do
       sleep 15
     fi
     NMSLIB_INDEX="$NMSLIB_INDEX_DIR/$index_name"
-    start_server "$NMSLIB_INDEX" $index_params
     if [ "$PREV_INDEX_COMP" != "" -a -f "$PREV_INDEX_COMP" ] ; then
       echo "Removing uncompressed index $PREV_INDEX, because compressed exists!"
       rm "$PREV_INDEX"
       check "rm $PREV_INDEX"
     fi
+    start_server "$NMSLIB_INDEX" $index_params
     prev_index_name=$index_name
     PREV_INDEX=$NMSLIB_INDEX
     PREV_INDEX_COMP="${NMSLIB_INDEX}.gz"

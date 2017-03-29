@@ -46,7 +46,7 @@ function start_server {
   NMSLIB_INDEX_COMP="${NMSLIB_INDEX}.gz"
 
   if [ -f "$NMSLIB_INDEX_COMP" ] ; then
-    echo "Let's uncompress previously created index $NMSLIB_INDEX_COMP"
+    echo "Let's uncompress (zcat) a previously created index $NMSLIB_INDEX_COMP"
     zcat "$NMSLIB_INDEX_COMP" > "$NMSLIB_INDEX"
     check "zcat \"$NMSLIB_INDEX_COMP\" > \"$NMSLIB_INDEX\""
   fi
