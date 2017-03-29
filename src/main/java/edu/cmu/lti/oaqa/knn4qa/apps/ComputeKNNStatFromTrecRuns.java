@@ -65,17 +65,18 @@ public class ComputeKNNStatFromTrecRuns {
       HashMap<String, ArrayList<CandidateEntry>> exactRuns = EvalUtils.readTrecResults(exactFileName);
       HashMap<String, ArrayList<CandidateEntry>> approxRuns = EvalUtils.readTrecResults(approxFileName);
       
-      float qty = 0, totOverlap = 0;
+      float qty = 0, totOverlap = 0, recall1 = 0;
       
       for (String topicId :  exactRuns.keySet()) {
         float r = computeRecall(exactRuns.get(topicId), approxRuns.get(topicId));
+        recall1 += computeRecall1(exactRuns.get(topicId), approxRuns.get(topicId));
         System.out.println(topicId + " " + r);
         totOverlap += r;
         ++qty;        
       }
       
       System.out.println("=========================");
-      System.out.println(String.format("# of topics %d, recall %f", (int)qty, totOverlap/qty));
+      System.out.println(String.format("# of topics %d, recall %f recall@1 %f", (int)qty, totOverlap/qty, recall1/qty));
       
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
@@ -86,6 +87,17 @@ public class ComputeKNNStatFromTrecRuns {
     
   }
 
+  private static float computeRecall1(ArrayList<CandidateEntry> exactRun,
+                                      ArrayList<CandidateEntry> approxRun) {
+    if (approxRun == null) return 0;
+    if (approxRun.isEmpty()) return exactRun.isEmpty() ? 1 : 0;
+    String did = exactRun.get(0).mDocId;
+    for (CandidateEntry e : approxRun) {
+      if (e.mDocId.equals(did)) return 1;
+    }
+    return 0;
+}  
+  
   private static float computeRecall(ArrayList<CandidateEntry> exactRun,
                                      ArrayList<CandidateEntry> approxRun) {
     if (approxRun == null) return 0;
