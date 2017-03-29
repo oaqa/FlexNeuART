@@ -43,8 +43,16 @@ function start_server {
   INDEX_PARAMS=$2
   PROG_NAME="query_server"
 
+  NMSLIB_INDEX_COMP="${NMSLIB_INDEX}.gz"
+
+  if [ -f "$NMSLIB_INDEX_COMP" ] ; then
+    echo "Let's uncompress previously created index $NMSLIB_INDEX_COMP"
+    zcat "$NMSLIB_INDEX_COMP" > "$NMSLIB_INDEX"
+    check "zcat \"$NMSLIB_INDEX_COMP\" > \"$NMSLIB_INDEX\""
+  fi
+
   if [ ! -f "$NMSLIB_INDEX" ] ; then
-    echo "Warning: Can't find index file: $NMSLIB_INDEX"
+    echo "Warning: Can't find index file: $NMSLIB_INDEX or its compressed variant $NMSLIB_INDEX_COMP"
   fi
 
   # We assume that there would be only one instance of the query server running on the experimentation server!

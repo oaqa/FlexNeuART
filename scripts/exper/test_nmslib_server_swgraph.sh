@@ -118,28 +118,28 @@ do
   EXPER_DIR=$EXPER_DIR_BASE/no_rerank/$param
   mkdir -p $EXPER_DIR
   check "mkdir -p $EXPER_DIR"
-  cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param "
+  cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -dont_delete_trec_runs"
   bash -c "$cmd"
   check "$cmd"
 
   #EXPER_DIR=$EXPER_DIR_BASE/bm25_rerank/$param
   #mkdir -p $EXPER_DIR
   #check "mkdir -p $EXPER_DIR"
-  #cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -extr_type_interm exper@bm25=text -model_interm nmslib/${collect}/models/one_feature.model  -cand_qty $CAND_QTY "
+  #cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -extr_type_interm exper@bm25=text -model_interm nmslib/${collect}/models/one_feature.model  -cand_qty $CAND_QTY -dont_delete_trec_runs"
   #bash -c "$cmd"
   #check "$cmd"
 
   #EXPER_DIR=$EXPER_DIR_BASE/basic_interm_rerank/$param
   #mkdir -p $EXPER_DIR
   #check "mkdir -p $EXPER_DIR"
-  #cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -extr_type_interm exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram -model_interm nmslib/${collect}/models/out_${collect}_train_exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram_15.model    -cand_qty $CAND_QTY "
+  #cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param -extr_type_interm exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram -model_interm nmslib/${collect}/models/out_${collect}_train_exper@bm25=text,text_unlemm,bigram+overall_match=text,text_unlemm,bigram_15.model    -cand_qty $CAND_QTY -dont_delete_trec_runs"
   #bash -c "$cmd"
   #check "$cmd"
 
   #EXPER_DIR=$EXPER_DIR_BASE/tran_interm_rerank/$param
   #mkdir -p $EXPER_DIR
   #check "mkdir -p $EXPER_DIR"
-  #cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param  -extr_type_interm exper@bm25=text,text_unlemm,bigram+model1=text+simple_tran=text -model_interm nmslib/${collect}/models/out_${collect}_train_exper@bm25=text,text_unlemm,bigram+model1=text+simple_tran=text_15.model  -cand_qty $CAND_QTY"
+  #cmd="scripts/exper/test_final_model.sh $collect $QREL_FILE $TEST_PART nmslib -nmslib_addr localhost:$NMSLIB_PORT -nmslib_fields $NMSLIB_FIELDS "$EXPER_DIR" $EXTR_TYPE_FINAL $EXTR_MODEL_FINAL $NUM_RET_LIST $WORD_EMBEDDINGS -thread_qty $THREAD_QTY $max_num_query_param  -extr_type_interm exper@bm25=text,text_unlemm,bigram+model1=text+simple_tran=text -model_interm nmslib/${collect}/models/out_${collect}_train_exper@bm25=text,text_unlemm,bigram+model1=text+simple_tran=text_15.model  -cand_qty $CAND_QTY -dont_delete_trec_runs"
   #bash -c "$cmd"
   #check "$cmd"
 
