@@ -90,14 +90,14 @@ public class ComputeKNNStatFromTrecRuns {
                                      ArrayList<CandidateEntry> approxRun) {
     if (approxRun == null) return 0;
     if (approxRun.isEmpty()) return exactRun.isEmpty() ? 1 : 0;
-    HashSet<String> ekey = new HashSet(), akey = new HashSet();
+    HashSet<String> ekey = new HashSet<String>(), akey = new HashSet<String>();
     for (CandidateEntry e : exactRun) ekey.add(e.mDocId);
     for (CandidateEntry e : approxRun) akey.add(e.mDocId);
     
     float origQty = akey.size();
     
-    ekey.removeAll(akey);
+    akey.removeAll(ekey);
     
-    return (origQty - ekey.size())/origQty;
+    return (origQty - akey.size())/origQty;
   }
 }
