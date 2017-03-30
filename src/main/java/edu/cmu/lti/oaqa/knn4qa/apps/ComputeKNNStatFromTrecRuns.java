@@ -38,7 +38,7 @@ public class ComputeKNNStatFromTrecRuns {
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp( "LuceneIndexer", opt);      
+    formatter.printHelp( "ComputeKNNStatFromTrecRuns", opt);      
     System.exit(1);
   }  
   
