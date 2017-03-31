@@ -14,5 +14,5 @@ echo -e "# of answers:\t${wca[0]}"
 qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
 echo -e "# of terms per question:\t$qt"
 at=`awk "BEGIN{printf(\"%.1f\", ${wca[1]}/${wca[0]})}"`
-echo -e "# of terms per answer:\t$qt"
+echo -e "# of terms per answer:\t$at"
 
