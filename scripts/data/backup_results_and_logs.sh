@@ -18,5 +18,8 @@ check "dt ..."
 tar cvfj results_${KNN4QA_COLLECT}_${dt}.bz2 results*
 check "tar cvfj results_${KNN4QA_COLLECT}_${dt}.bz2 results*"
 
-tar cvfj logs_${KNN4QA_COLLECT}_${dt}.bz2 ~/data/logs/$KNN4QA_COLLECT/*"
+tar cvfj logs_${KNN4QA_COLLECT}_${dt}.bz2 ~/data/logs/$KNN4QA_COLLECT/*
 check "tar cvfj logs_${KNN4QA_COLLECT}_${dt}.bz2 ~/data/logs/$KNN4QA_COLLECT*"
+
+tar cvfj gs_cache_${KNN4QA_COLLECT}_${dt}.bz2 gs_cache/*
+check "tar cvfj gs_cache_${KNN4QA_COLLECT}_${dt}.bz2 gs_cache/*"
