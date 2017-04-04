@@ -6,10 +6,10 @@ if [ "$KNN4QA_COLLECT" = "" ] ; then
   exit 1
 fi
 
-cp logs.* ~/data/logs/$KNN4QA_COLLECT
-check "cp logs.* ~/data/logs/$KNN4QA_COLLECT"
+cp log.* ~/data/logs/$KNN4QA_COLLECT
+check "cp log.* ~/data/logs/$KNN4QA_COLLECT"
 
-cp server.logs.* ~/data/logs/$KNN4QA_COLLECT
+cp server.log.* ~/data/logs/$KNN4QA_COLLECT
 check "cp server.logs.* ~/data/logs/$KNN4QA_COLLECT"
 
 dt=`date +%Y-%m-%d` 
