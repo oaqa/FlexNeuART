@@ -100,7 +100,7 @@ fi
 
 STAT_FILE="$REPORT_DIR/stat_file"
 
-scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -cand_prov galago -thread_qty $THREAD_QTY -galago_op $GALAGO_OP "$GALAGO_OPTS" $maxQueryQtyParam -save_stat_file "$STAT_FILE" -dont_delete_trec_runs 2>&1|tee $query_log_file
+scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -cand_prov galago -thread_qty $THREAD_QTY -galago_op $GALAGO_OP "$GALAGO_OPTS" $maxQueryQtyParam -save_stat_file "$STAT_FILE" 2>&1|tee $query_log_file
 check_pipe "run_query.sh"
 
 . scripts/exper/common_eval.sh
