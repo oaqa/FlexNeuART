@@ -25,11 +25,14 @@ THREAD_QTY=$NUM_CPU_CORES
 TEST_SET="test"
 EXPER_DIR="results/final/${collect}/$QREL_FILE/$TEST_SET/galago/"
 
+DO_WARMUP="0"
+
 echo "The number of CPU cores:      $NUM_CPU_CORES"
 echo "The number of threads:        $THREAD_QTY"
 echo "Max # of queries to use:      $MAX_QUERY_QTY"
 echo "QREL file:                    $QREL_FILE"
 echo "Experimentation directory:    $EXPER_DIR"
+echo "Warm-up run?:                 $DO_WARMUP"
 
 if [ ! -d "$EXPER_DIR" ] ; then
   mkdir -p $EXPER_DIR
@@ -99,11 +102,13 @@ for ((i=0;i<$n;++i))
           exit 1
         fi
       fi
-      # Galago experiments currently don't use training: the first run is a warm-up!
-      echo "Warmup run"
-      scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log 
-      check "run_one_galago_exper.sh $collect ... "
-      echo "Real test run"
+      if [ "$DO_WARMUP" = "1" ] ; then
+        # Galago experiments currently don't use training: the first run is a warm-up!
+        echo "Warmup run"
+        scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log 
+        check "run_one_galago_exper.sh $collect ... "
+        echo "Real test run"
+      fi
       scripts/exper/run_one_galago_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$GALAGO_OP" "$GALAGO_PARAMS" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" &> $EXPER_DIR_UNIQUE/exper.log 
     fi
       check "run_one_galago_exper.sh $collect ... "
