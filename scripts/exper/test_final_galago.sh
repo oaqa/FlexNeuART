@@ -50,6 +50,9 @@ if [ "$collect" = "compr" ] ; then
 elif [ "$collect" = "stackoverflow" ] ; then
   EXPER_DESC+=("sdm uniw=0.8,odw=0.2,uww=0.0" \
               "rm fbDocs=5,fbTerm=100,fbOrigWeight=0.9")
+elif [ "$collect" = "squad" ] ; then
+  EXPER_DESC+=("sdm uniw=0.8,odw=0.15,uww=0.1" \
+              "rm fbOrigWeight=0.75,fbDocs=5,fbTerm=140")
 else
   echo "Unsupported collection: $collect"
   exit 1
