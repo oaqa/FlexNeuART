@@ -1,0 +1,1 @@
+rm  scorer=default,fbDocs=5,fbTerm=100,fbOrigWeight=0.9 dev0
