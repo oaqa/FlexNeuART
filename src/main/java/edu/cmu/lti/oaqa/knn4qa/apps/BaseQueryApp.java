@@ -515,7 +515,6 @@ public abstract class BaseQueryApp {
       mOptions.addOption(CommonParams.THREAD_QTY_PARAM,        null, true, CommonParams.THREAD_QTY_DESC);
     mOptions.addOption(CommonParams.KNN_THREAD_QTY_PARAM,      null, true, CommonParams.KNN_THREAD_QTY_DESC);
     mOptions.addOption(CommonParams.KNN_WEIGHTS_FILE_PARAM,    null, true, CommonParams.KNN_WEIGHTS_FILE_DESC);
-    mOptions.addOption(CommonParams.MAX_NUM_QUERY_PARAM,       null, true, CommonParams.MAX_NUM_QUERY_DESC);
     
     mOptions.addOption(CommonParams.GIZA_EXPAND_QTY_PARAM,          null, true,  CommonParams.GIZA_EXPAND_QTY_DESC);
     mOptions.addOption(CommonParams.GIZA_EXPAND_USE_WEIGHTS_PARAM,  null, false, CommonParams.GIZA_EXPAND_USE_WEIGHTS_DESC);
