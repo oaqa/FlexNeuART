@@ -34,9 +34,25 @@ public class GalagoCandidateProvider extends CandidateProvider {
   public GalagoCandidateProvider(String indexDirName, String galagoOp, String galagoParams) throws Exception {
     mParams = Parameters.create();
 
-    mParams.set("scorer", "bm25");
-    mParams.set("k", FeatureExtractor.BM25_K1);
-    mParams.set("b", FeatureExtractor.BM25_B);
+    if (galagoParams == null) galagoParams = "";
+    Properties prop = new Properties();
+    prop.load(new StringReader(galagoParams.replace(',', '\n')));
+
+    String scorer = prop.getProperty("scorer");
+    
+    if (scorer == null) scorer = "";
+    
+    if (scorer.equalsIgnoreCase("bm25") || scorer.isEmpty()) {
+      mParams.set("scorer", "bm25");
+      mParams.set("k", FeatureExtractor.BM25_K1);
+      mParams.set("b", FeatureExtractor.BM25_B);
+      logger.info("Using BM25 scorer!");
+    } else if (scorer.equals("default")) {
+      // do nothing
+      logger.info("Using the default scorer!");
+    } else {
+      throw new Exception("Unknonwn scorer: '" + scorer + "'");
+    }
 
     mParams.set("index", indexDirName);
     
@@ -45,10 +61,6 @@ public class GalagoCandidateProvider extends CandidateProvider {
     
     logger.info("Galago operator: " + mGalagoOp);
     
-    if (galagoParams == null) galagoParams = "";
-    Properties prop = new Properties();
-    prop.load(new StringReader(galagoParams.replace(',', '\n')));
-
     // Copy some of the known parameters
 
     String paramsDouble[] = {// SDM parameters
