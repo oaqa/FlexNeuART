@@ -55,7 +55,8 @@ elif [ "$collect" = "stackoverflow" ] ; then
               "rm fbDocs=5,fbTerm=100,fbOrigWeight=0.9")
 elif [ "$collect" = "squad" ] ; then
   EXPER_DESC+=("sdm scorer=default,uniw=0.8,odw=0.15,uww=0.1" \
-              "sdm @" \
+              "sdm scorer" \
+              "sdm scorer=default @" \
               "rm scorer=default,fbOrigWeight=0.75,fbDocs=5,fbTerm=140" \
               )
 else
