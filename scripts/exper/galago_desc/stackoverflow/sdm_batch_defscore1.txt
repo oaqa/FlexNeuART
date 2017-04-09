@@ -1,0 +1,3 @@
+sdm   @                                         dev1
+sdm   scorer=default                            dev1
+sdm   uniw=0.825,odw=0.175,uww=0.0              dev1
