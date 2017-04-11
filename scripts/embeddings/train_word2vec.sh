@@ -74,8 +74,20 @@ TRAIN_FILE=$WORD_EMBED_DIR/word2vec_train_$FIELD
 THREAD_QTY=`scripts/exper/get_cpu_cores.py`
 check "THREAD_QTY=`scripts/exper/get_cpu_cores.py`"
 
-cat $PIPELINE_OUT_PREFIX/$SUBSET/$PART/question_$FIELD  $PIPELINE_OUT_PREFIX/$SUBSET/$PART/question_$FIELD  > $TRAIN_FILE
-check "cat $PIPELINE_OUT_PREFIX/$SUBSET/$PART/question_$FIELD  $PIPELINE_OUT_PREFIX/$SUBSET/$PART/question_$FIELD  > $TRAIN_FILE"
+fq="$PIPELINE_OUT_PREFIX/$SUBSET/$PART/question_$FIELD"
+fa="$PIPELINE_OUT_PREFIX/$SUBSET/$PART/answer_$FIELD"
+
+if [ -f "$fq" -a -f "$fa" ] ; then
+  cat $fq $fa > $TRAIN_FILE
+  check "cat $fq $fa > $TRAIN_FILE"
+else
+  if [ ! -f "$fa" ] ; then
+    echo "Expecting that the answer file exists!"
+    exit 1
+  fi
+  rm -f $TRAIN_FILE
+  ln -s $fa $TRAIN_FILE
+fi
 
 echo "Training file $TRAIN_FILE is generated!"
 
