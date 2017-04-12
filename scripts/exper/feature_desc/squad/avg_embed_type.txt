@@ -1,0 +1,2 @@
+exper@avg_embed=text_unlemm word2vec_tran_text.300 dev1
+

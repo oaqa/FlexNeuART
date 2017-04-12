@@ -80,6 +80,7 @@ fa="$PIPELINE_OUT_PREFIX/$SUBSET/$PART/answer_$FIELD"
 if [ -f "$fq" -a -f "$fa" ] ; then
   cat $fq $fa > $TRAIN_FILE
   check "cat $fq $fa > $TRAIN_FILE"
+  echo "Training file $TRAIN_FILE is generated from questions and answers!"
 else
   if [ ! -f "$fa" ] ; then
     echo "Expecting that the answer file exists!"
@@ -87,9 +88,10 @@ else
   fi
   rm -f $TRAIN_FILE
   ln -s $fa $TRAIN_FILE
+  check "ln -s $fa $TRAIN_FILE"
+  echo "Training file $TRAIN_FILE is now a link to the answers file $fa"
 fi
 
-echo "Training file $TRAIN_FILE is generated!"
 
 "$WORD2_VEC_DIR/word2vec" -train "$TRAIN_FILE" -threads $THREAD_QTY -output $WORD_EMBED_DIR/word2vec_tran_${FIELD}.$DIM -size $DIM
 check "$WORD2_VEC_DIR/word2vec -train $TRAIN_FILE -threads $THREAD_QTY -output $WORD_EMBED_DIR/word2vec_tran_${FIELD}.$DIM -size $DIM"
