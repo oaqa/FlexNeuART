@@ -26,9 +26,9 @@ if [ "$col" != "squad" ] ; then
   done
 else
   echo "BM25+Model1 (SQuAD):"
-  one_set results/feature_exper/squad/qrels_all_graded.txt/dev1/exper@bm25\=text+model1\=text/
+  one_set "results/feature_exper/squad/qrels_all_graded.txt/dev1/exper@bm25=text+model1=text"
   echo "BM25+Model1 (Compr):"
-  one_set results/feature_exper/squad/qrels_all_graded.txt/dev1/exper@bm25\=text+model1\=text_alias1/
+  one_set "results/feature_exper/squad/qrels_all_graded.txt/dev1/exper@bm25=text+model1=text_alias1"
   echo "BM25+Model1 (SQuAD+Compr):"
-  one_set results/feature_exper/squad/qrels_all_graded.txt/dev1/exper@bm25\=text+model1\=text+model\=text_alias1/
+  one_set "results/feature_exper/squad/qrels_all_graded.txt/dev1/exper@bm25=text+model1=text+model1=text_alias1"
 fi
