@@ -1,0 +1,7 @@
+exper@bm25=text+model1=text	          @   dev1
+exper@bm25=text_unlemm+model1=text	  @   dev1
+exper@bm25=text+model1=bigram	        @   dev1
+exper@bm25=text+model1=dep	          @   dev1
+exper@bm25=text+model1=srl	          @   dev1
+exper@bm25=text+model1=srl_lab	      @   dev1
+exper@bm25=text+model1=wnss	          @   dev1
