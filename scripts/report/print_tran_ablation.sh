@@ -19,5 +19,5 @@ one_set results.tune/feature_exper/$col/qrels_all_graded_same_score.txt/dev1//ex
 
 echo "BM25+Model1:"
 for f in 2 4 8 16 32 64 128 256 ; do  
-  one_set results.tran$f/feature_exper/compr/qrels_all_graded_same_score.txt/dev1/exper@bm25\=text+model1=text/
+  one_set results.tran$f/feature_exper/$col/qrels_all_graded_same_score.txt/dev1/exper@bm25\=text+model1=text/
 done
