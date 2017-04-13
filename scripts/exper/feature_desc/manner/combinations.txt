@@ -1,0 +1,15 @@
+exper@bm25=text+overall_match=text            @    dev2
+exper@bm25=text+overall_match=text_unlemm     @    dev2
+exper@bm25=text+overall_match=bigram          @    dev2
+exper@bm25=text+overall_match=dep             @    dev2
+exper@bm25=text+overall_match=srl             @    dev2
+exper@bm25=text+overall_match=srl_lab         @    dev2
+exper@bm25=text+overall_match=wnss            @    dev2
+
+exper@bm25=text+model1=text+overall_match=text            @    dev2
+exper@bm25=text+model1=text+overall_match=text_unlemm     @    dev2
+exper@bm25=text+model1=text+overall_match=bigram          @    dev2
+exper@bm25=text+model1=text+overall_match=dep             @    dev2
+exper@bm25=text+model1=text+overall_match=srl             @    dev2
+exper@bm25=text+model1=text+overall_match=srl_lab         @    dev2
+exper@bm25=text+model1=text+overall_match=wnss            @    dev2
