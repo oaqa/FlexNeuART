@@ -44,12 +44,19 @@ public class SQuADReader {
     boolean printAnsw = args.length == 2 && args[1].equals("1");
     SQuADReader  r = new SQuADReader(fileName);
     
+    String shortPass = null;
+    
     int qty = 0;
     int parQty = 0;
     for (SQuADEntry e : r.mData.data) {
       System.out.println("@: " + e.title);
       for (SQuADParagraph p : e.paragraphs) {
        qty += p.qas.length;
+       System.out.println("-----------------");
+       System.out.println(p.context);
+       System.out.println("-----------------");
+       if (shortPass == null || p.context.length() < shortPass.length())
+         shortPass = p.context;
        ++parQty;
        for (SQuADQuestionAnswers qas : p.qas) {
           System.out.println(qas.question);
@@ -68,6 +75,9 @@ public class SQuADReader {
     System.out.println("Number of pages:      " + r.mData.data.length);
     System.out.println("Number of paragarphs: " + parQty);
     System.out.println("Number of questions:  " + qty);
+    
+    System.out.println("Shortest passage: ");
+    System.out.println(shortPass);
   }
   
   public final SQuADData   mData;
