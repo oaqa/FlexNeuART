@@ -1,5 +1,6 @@
 #!/bin/bash
 . scripts/common.sh
+. scripts/report/report_common.sh
 
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -26,6 +27,7 @@ if [ ! -f "$FEATURE_DESC_FILE" ] ; then
   echo "Not a file (3d arg)"
   exit 1
 fi
+
 IS_GALAGO_EXPER="0"
 echo "$FEATURE_DESC_FILE" | grep galago >/dev/null
 if [ "$?" = "0" ] ; then
@@ -37,7 +39,6 @@ QREL_FILE=`get_qrel_file "$QREL_TYPE" "4th"`
 check ""
 
 FILT_N="$5"
-
 if [ "$FILT_N" = "" ] ; then
   FILT_N="*"
 fi
@@ -54,7 +55,6 @@ else
   echo -e "galago_op\tgalago_params\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
 fi
 
-. scripts/report/report_common.sh
 
 n=`wc -l "$FEATURE_DESC_FILE"|awk '{print $1}'`
 n=$(($n+1))
