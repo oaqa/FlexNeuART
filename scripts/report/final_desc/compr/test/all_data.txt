@@ -34,3 +34,18 @@ sw-graph-8 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_N
 lucene_bm25_text                  lucene/exper@bm25=text                   test 
 lucene_bm25_text_giza_expand      lucene/giza_expand/exper@bm25=text       test 
 lucene_bm25_text_giza_expand_wght lucene/giza_expand_wght/exper@bm25=text  test 
+
+
+# Only BM25 scorer works well for this data set
+galago_combine                     galago/combine/@                         test
+#galago_combine_bm25               galago/combine/@                         test
+#galago_combine_dir                galago/combine/scorer=default            test
+
+# Using galago_sdm, b/c it the most accurate
+galago_sdm                   galago/sdm/@                           test 
+#galago_sdm_bm25                   galago/sdm/@                           test 
+#galago_sdm_dir                    galago/sdm/scorer=default              test
+#galago_sdm_opt                    galago/sdm/uniw=0.9,odw=0.1,uww=0.0    test
+
+#galago_rm_bm25                    galago/rm/fbDocs=5,fbTerm=100,fbOrigWeight=0.9      test
+galago_rm                    galago/rm/fbDocs=5,fbTerm=100,fbOrigWeight=0.9      test

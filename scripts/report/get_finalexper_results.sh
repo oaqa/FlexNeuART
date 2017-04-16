@@ -50,6 +50,7 @@ n=$(($n+1))
 for ((i=1;i<$n;++i))
   do
     line=`head -$i "$RUN_DESC_FILE"|tail -1`
+    line=`echo $line|sed 's/#.*$//'|sed 's/^\s.*//'`
     if [ "$line" !=  "" ]
     then
       METHOD_LABEL=`echo $line|awk '{print $1}'`
