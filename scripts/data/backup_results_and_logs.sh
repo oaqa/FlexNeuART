@@ -26,8 +26,8 @@ check "cp server.logs.* $DATA_DIR/logs/$KNN4QA_COLLECT"
 dt=`date +%Y-%m-%d` 
 check "dt ..."
 
-tar cvfj --exclude=results_* results_${KNN4QA_COLLECT}_${dt}.bz2 results*
-check "tar cvfj results_${KNN4QA_COLLECT}_${dt}.bz2 results*"
+tar --exclude=results_* cvfj  results_${KNN4QA_COLLECT}_${dt}.bz2 results*
+check "tar --exclude=results_* cvfj  results_${KNN4QA_COLLECT}_${dt}.bz2 results*"
 
 tar cvfj logs_${KNN4QA_COLLECT}_${dt}.bz2 $DATA_DIR/logs/$KNN4QA_COLLECT/*
 check "tar cvfj logs_${KNN4QA_COLLECT}_${dt}.bz2 $DATA_DIR/logs/$KNN4QA_COLLECT*"
