@@ -82,6 +82,8 @@ for ((i=1;i<$n;++i))
         fi
       fi
       echo > $TMP_FILE
+      ls -tr out_${FILT_N}.rep >/dev/null
+      check "ls -tr out_${FILT_N}.rep for line: $line"
       for f in `ls -tr out_${FILT_N}.rep` ; do 
         top_k=`echo $f|sed 's/out_//'|sed 's/.rep//'`
         query_qty=`get_metric_value $f "# of queries"`

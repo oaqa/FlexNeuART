@@ -1,0 +1,72 @@
+nmslib_exper1_brute_force               nmslib/brute_force/header_exper1_hash_payload                             test
+
+napp_exper1-1 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=200,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=11 test
+napp_exper1-2 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=200,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=13 test
+napp_exper1-3 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=200,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=15 test
+napp_exper1-4 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=200,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=19 test
+napp_exper1-5 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=7 test
+napp_exper1-6 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=9 test
+napp_exper1-7 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=4 test
+napp_exper1-8 nmslib/napp/header_exper1_hash_payload/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_2field_maxTermQty50K_pivotTermQty1000/numPivotSearch=5 test
+
+nmslib_bm25_text_brute_force            nmslib/brute_force/header_bm25_text                                       test
+
+napp_bm25_text-1 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=200,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=13 test
+napp_bm25_text-2 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=200,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=14 test
+napp_bm25_text-3 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=10 test
+napp_bm25_text-4 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=11 test
+napp_bm25_text-5 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=12 test
+napp_bm25_text-6 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=5 test
+napp_bm25_text-7 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=6 test
+napp_bm25_text-8 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=7 test
+napp_bm25_text-9 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=8 test
+napp_bm25_text-10 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=100,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=9 test
+napp_bm25_text-11 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=3 test
+napp_bm25_text-12 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=4 test
+napp_bm25_text-13 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=5 test
+napp_bm25_text-14 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=6 test
+napp_bm25_text-15 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=7 test
+napp_bm25_text-16 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=50,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=8 test
+napp_bm25_text-17 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=25,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=3 test
+napp_bm25_text-18 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=25,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=4 test
+napp_bm25_text-19 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=25,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=5 test
+napp_bm25_text-20 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=25,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=6 test
+napp_bm25_text-21 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=25,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=7 test
+napp_bm25_text-22 nmslib/napp/header_bm25_text/napp_numPivot=8000,numPivotIndex=25,pivotFile=nmslib_squad_pivots_pivots_text_field_maxTermQty50K_pivotTermQty1000/numPivotSearch=8 test
+
+sw-graph-1 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=2000 test
+sw-graph-2 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=1500 test
+sw-graph-3 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=1000 test
+sw-graph-4 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=500 test
+sw-graph-5 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=250 test
+sw-graph-6 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=100 test
+sw-graph-7 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=50 test
+sw-graph-8 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=25 test
+sw-graph-9 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=10 test
+sw-graph-10 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=5 test
+
+
+lucene_bm25_text                  lucene/exper@bm25=text                   test 
+lucene_bm25_text_giza_expand      lucene/giza_expand/exper@bm25=text       test 
+lucene_bm25_text_giza_expand_wght lucene/giza_expand_wght/exper@bm25=text  test
+
+lucene_bm25_model1 lucene/exper@bm25=text+model1=text+minProbModel1=text:1e-3+model1=text_alias1+minProbModel1=text_alias1:1e-3/    test
+
+
+simple_invindx_bm25_text          nmslib/simple_invindx/header_bm25_text   test
+
+# Only BM25 scorer works well for this data set
+galago_combine                    galago/combine/@                         test
+#galago_combine_bm25              galago/combine/@                         test
+galago_combine_dir                galago/combine/scorer=default            test
+
+galago_sdm                        galago/sdm/uniw=0.8,odw=0.15,uww=0.1                 test
+
+#galago_sdm_bm25                  galago/sdm/@                                         test 
+#galago_sdm_dir                   galago/sdm/scorer=default                            test
+#galago_sdm_opt1                  galago/sdm/scorer=default,uniw=0.8,odw=0.15,uww=0.1  test
+#galago_sdm_opt2                  galago/sdm/uniw=0.8,odw=0.15,uww=0.1                 test
+
+galago_rm                         galago/rm/fbOrigWeight=0.75,fbDocs=5,fbTerm=140                   test 
+#galago_rm_1                      galago/rm/fbOrigWeight=0.75,fbDocs=5,fbTerm=140                   test 
+#galago_rm_2                      galago/rm/scorer=default,fbOrigWeight=0.75,fbDocs=5,fbTerm=140    test
