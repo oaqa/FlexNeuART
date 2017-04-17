@@ -36,7 +36,8 @@ sw-graph-7 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_N
 sw-graph-8 nmslib/sw-graph//header_exper1_bm25_symm_text_hash_payload/sw-graph_NN=50,efConstruction=100,useProxyDist=1/efSearch=5 test
 
 lucene_bm25_text                  lucene/exper@bm25=text                   test 
-lucene_bm25_text_giza_expand      lucene/giza_expand/exper@bm25=text       test 
+# Non-weighted version is equivalent in speed and accuracy
+#lucene_bm25_text_giza_expand      lucene/giza_expand/exper@bm25=text       test 
 lucene_bm25_text_giza_expand_wght lucene/giza_expand_wght/exper@bm25=text  test
 lucene_bm25_model1                lucene/exper@bm25=text+model1=text       test
 
