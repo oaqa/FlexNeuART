@@ -182,8 +182,8 @@ public class LuceneGIZACandidateProvider extends CandidateProvider {
       }
       
       synchronized (lock) { // this is a static lock, it will block all instance of this class
-        if (tokQty > BooleanQuery.getMaxClauseCount()) {
-          BooleanQuery.setMaxClauseCount(tokQty);        
+        if (2*tokQty > BooleanQuery.getMaxClauseCount()) {
+          BooleanQuery.setMaxClauseCount(2*tokQty);        
         }
       }
       
