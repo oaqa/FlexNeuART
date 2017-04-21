@@ -113,7 +113,7 @@ public class QuestionAnalysis extends JCasAnnotator_ImplBase {
           }
         }
         
-        // 2. YodaQA analysis (extract only foci)
+        // 2. YodaQA analysis (extract only foci & question words)
         {
           mYodaEngine.process(tmpJCas);
           for (Focus f : JCasUtil.select(tmpJCas, Focus.class)) {
