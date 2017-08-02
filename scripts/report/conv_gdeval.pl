@@ -14,7 +14,7 @@
 sub Usage {
     my $msg = shift;
     print STDERR "$msg\n";
-    print STDERR "Usage $0 <metric type: e.g., map> <input file register: the list of input files> <output file> <optional: compute median?>\n"; 
+    print STDERR "Usage $0 <metric type: err, ndcg> <input file register: the list of input files> <output file> <optional: compute median?>\n"; 
     die();
 };
 
@@ -59,17 +59,42 @@ sub ProcFile {
 
     open F, "<$InpFile" or die("Cannot open $InpFile");
 
+    my $head = <F>;
+    chomp $head;
+    $head or die("Cannot read the header from $InpFile");
+
+
+    my $DataCol;
+    my $TopicCol;
+    my @HeadArr = split(/,/, $head);
+    my $HeadQty = scalar(@HeadArr);
+
+    for(my $i = 0; $i < $HeadQty; ++$i) {
+        if ($HeadArr[$i] eq "topic") {
+            $TopicCol = $i;
+        }
+        if (lc($HeadArr[$i]) eq lc($metric)) {
+            $DataCol = $i;
+            last;
+        }
+    }
+
+    defined($DataCol) or die("Format error: metric $metric is not present in file $InpFile");
+    defined($TopicCol) or die("Format error: the column 'topic' is not present in the header of the file $InpFile");
+
     my @Data;
 
     while(<F>) {
         my $line = $_;
         next if ($line =~ /^\s*$/); 
         chomp $line;
-        my @DataArr = split(/\s+/, $line);
-        next if ($DataArr[0] ne $metric);
-        next if ($DataArr[1] eq "all");
+        my @DataArr = split(/,/, $line);
+        if (@DataArr != $HeadQty) {
+            die("Format error: wrong number of columns, line:".($nc + 2).", file $InpFile");
+        }
+        next if ($DataArr[$TopicCol] eq "mean");
         ++$nc;
-        push(@Data, $DataArr[2]);
+        push(@Data, $DataArr[$DataCol]);
     }
 
     close F or die("Cannot close $InpFile");

@@ -56,6 +56,8 @@ if [ "$SKIP_RUN_GEN" != "1" ] ; then
   for ((i=1;i<$n;++i))
     do
       line=`head -$i "$RUN_DESC_FILE"|tail -1`
+      line=`echo $line|sed 's/#.*$//'|sed 's/^\s.*//'`
+    
       if [ "$line" !=  "" ]
       then
         METHOD_LABEL=`echo $line|awk '{print $1}'`
@@ -67,42 +69,67 @@ if [ "$SKIP_RUN_GEN" != "1" ] ; then
           echo "Directory doesn't exist: $EXPER_DIR_UNIQUE"
           exit 1
         fi
-        frep="$EXPER_DIR_UNIQUE/rep/out_${FILT_N}.trec_eval.bz2"
-        if [ ! -f $frep ] ; then
-          echo "Missing file $frep"
-        fi
-        TREC_EVAL_FNAME="$REPORT_DIR/$METHOD_LABEL.trec_eval_mod"
-        # This line simply computes P_1, which is not present in the original data
-        bzcat $frep|awk '{if ($2 != "all") {if ($1 != "recip_rank") print $0;else {v=0;if ($3>=1) v=1; print "P_1\t"$2"\t"v;}}}' > $TREC_EVAL_FNAME
-        REGISTRY_FILE="$REPORT_DIR/$METHOD_LABEL.registry"
-        echo $TREC_EVAL_FNAME > $REGISTRY_FILE
+
+        echo "Working with the directory: $EXPER_DIR_UNIQUE"
+
         RUN_ROW="$REPORT_DIR/$METHOD_LABEL.row"
-        for metric in NDCG@20 ERR@20 Recall ; do
-          scripts/report/conv_treceval.pl $metric $REGISTRY_FILE $RUN_ROW.$metric
-          check "scripts/report/conv_treceval.pl $metric $REGISTRY_FILE $RUN_ROW.$metric"
-        done
+        REGISTRY_FILE="$REPORT_DIR/$METHOD_LABEL.registry"
+
+          frep="$EXPER_DIR_UNIQUE/rep/out_${FILT_N}.trec_eval.bz2"
+          if [ ! -f $frep ] ; then
+            echo "Missing file $frep"
+          fi
+          TREC_EVAL_FNAME="$REPORT_DIR/$METHOD_LABEL.trec_eval_mod"
+          bzcat $frep > $TREC_EVAL_FNAME
+          echo $TREC_EVAL_FNAME > $REGISTRY_FILE
+          for metric in "Recall" ; do
+            scripts/report/conv_treceval.pl $metric $REGISTRY_FILE $RUN_ROW.$metric
+            check "scripts/report/conv_treceval.pl $metric $REGISTRY_FILE $RUN_ROW.$metric"
+          done
+
+          frep="$EXPER_DIR_UNIQUE/rep/out_${FILT_N}.gdeval"
+          if [ ! -f $frep ] ; then
+            frep="$EXPER_DIR_UNIQUE/rep/out_${FILT_N}.gdeval.bz2"
+            if [ ! -f $frep ] ; then
+             echo "Missing file $frep"
+            fi
+            TREC_EVAL_FNAME="$REPORT_DIR/$METHOD_LABEL.gdeval_copy"
+            bzcat $frep > $TREC_EVAL_FNAME
+          else
+            TREC_EVAL_FNAME=$frep
+          fi
+          echo $TREC_EVAL_FNAME > $REGISTRY_FILE
+          for metric in "ndcg@20" "err@20" ; do
+            scripts/report/conv_gdeval.pl $metric $REGISTRY_FILE $RUN_ROW.$metric
+            check "scripts/report/conv_gdeval.pl $metric $REGISTRY_FILE $RUN_ROW.$metric"
+          done
       fi
     done
 else
   echo "Skipping run-data generation!"
 fi
 
-BM25_LABEL="nmslib_bm25_text_brute_force"
-for metric in NDCG@20 ERR@20 Recall ; do
-  echo "Metric $metric"
-  echo "========================================"
-  for ((i=1;i<$n;++i))
-    do
-      line=`head -$i "$RUN_DESC_FILE"|tail -1`
-      if [ "$line" !=  "" ]
-      then
-        METHOD_LABEL=`echo $line|awk '{print $1}'`
-        BM25_ROW="$REPORT_DIR/$BM25_LABEL.row.$metric"
-        RUN_ROW="$REPORT_DIR/$METHOD_LABEL.row.$metric"
+for BASELINE_LABEL in "nmslib_bm25_text_brute_force" "lucene_bm25_model1" ; do
+  echo "Baseline: $BASELINE_LABEL"
 
-        scripts/report/t-test.R "$RUN_ROW" "$BM25_ROW" "$RUN_QTY"
-        check "scripts/report/t-test.R ..."
-      fi
+  for metric in "ndcg@20" "err@20" "Recall" ; do
+    echo "Metric $metric"
+    echo "========================================"
+    for ((i=1;i<$n;++i))
+      do
+        line=`head -$i "$RUN_DESC_FILE"|tail -1`
+        line=`echo $line|sed 's/#.*$//'|sed 's/^\s.*//'`
+        if [ "$line" !=  "" ]
+        then
+          METHOD_LABEL=`echo $line|awk '{print $1}'`
+          BASELINE_ROW="$REPORT_DIR/$BASELINE_LABEL.row.$metric"
+          RUN_ROW="$REPORT_DIR/$METHOD_LABEL.row.$metric"
+
+          scripts/report/t-test.R "$RUN_ROW" "$BASELINE_ROW" "$RUN_QTY" 0.01
+          check "scripts/report/t-test.R ..."
+        fi
+    done
+    echo "========================================"
+
   done
-  echo "========================================"
 done
