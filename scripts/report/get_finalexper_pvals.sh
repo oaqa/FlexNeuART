@@ -78,9 +78,10 @@ if [ "$SKIP_RUN_GEN" != "1" ] ; then
           frep="$EXPER_DIR_UNIQUE/rep/out_${FILT_N}.trec_eval.bz2"
           if [ ! -f $frep ] ; then
             echo "Missing file $frep"
+            exit 1
           fi
           TREC_EVAL_FNAME="$REPORT_DIR/$METHOD_LABEL.trec_eval_mod"
-          bzcat $frep > $TREC_EVAL_FNAME
+          bzcat $frep|awk '{if ($2 != "all") {print $0;if ($1 == "num_rel") num_rel=$3;if ($1 == "num_rel_ret") {v=$3/num_rel;print "Recall\t"$2"\t"v;}}}' > $TREC_EVAL_FNAME
           echo $TREC_EVAL_FNAME > $REGISTRY_FILE
           for metric in "Recall" ; do
             scripts/report/conv_treceval.pl $metric $REGISTRY_FILE $RUN_ROW.$metric
@@ -91,7 +92,8 @@ if [ "$SKIP_RUN_GEN" != "1" ] ; then
           if [ ! -f $frep ] ; then
             frep="$EXPER_DIR_UNIQUE/rep/out_${FILT_N}.gdeval.bz2"
             if [ ! -f $frep ] ; then
-             echo "Missing file $frep"
+              echo "Missing file $frep"
+              exit 1
             fi
             TREC_EVAL_FNAME="$REPORT_DIR/$METHOD_LABEL.gdeval_copy"
             bzcat $frep > $TREC_EVAL_FNAME
@@ -105,9 +107,12 @@ if [ "$SKIP_RUN_GEN" != "1" ] ; then
           done
       fi
     done
+  echo "Runs are generated!"
 else
   echo "Skipping run-data generation!"
 fi
+
+echo "Computing p-values!"
 
 for BASELINE_LABEL in "nmslib_bm25_text_brute_force" "lucene_bm25_model1" ; do
   echo "Baseline: $BASELINE_LABEL"
@@ -119,17 +124,49 @@ for BASELINE_LABEL in "nmslib_bm25_text_brute_force" "lucene_bm25_model1" ; do
       do
         line=`head -$i "$RUN_DESC_FILE"|tail -1`
         line=`echo $line|sed 's/#.*$//'|sed 's/^\s.*//'`
-        if [ "$line" !=  "" ]
+
+        METHOD_LABEL=`echo $line|awk '{print $1}'`
+
+        if [ "$line" !=  "" -a "$METHOD_LABEL" != "$BASELINE_LABEL" ]
         then
-          METHOD_LABEL=`echo $line|awk '{print $1}'`
           BASELINE_ROW="$REPORT_DIR/$BASELINE_LABEL.row.$metric"
           RUN_ROW="$REPORT_DIR/$METHOD_LABEL.row.$metric"
 
+          SUFFIX=`echo $line|awk '{print $2}'`
+          TEST_SET=`echo $line|awk '{print $3}'`
+
+
+          EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_TYPE/$TEST_SET/$SUFFIX"
+          if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
+            echo "Directory doesn't exist: $EXPER_DIR_UNIQUE"
+            exit 1
+          fi
+
+          # Let's read timings
+          query_time="N/A"
+          stat_file="$EXPER_DIR_UNIQUE/rep/stat_file"
+          if [ -f "$stat_file" ] ; then 
+            fn=`head -1 $stat_file|cut -f 1`
+            if [ "$fn" != "QueryTime" ] ; then
+              "Wrong format of the file (expecting that the first field is QueryTime, but got: '$fn'): $stat_file"
+              exit 1
+            fi
+            query_time=`head -2 $stat_file|tail -1|cut -f 1`
+            if [ "$query_time" = "" ] ; then
+              "Cannot retrieve QueryTime from line 2 in the file: $stat_file"
+              exit 1
+            fi
+          fi
+      
+
           scripts/report/t-test.R "$RUN_ROW" "$BASELINE_ROW" "$RUN_QTY" 0.01
-          check "scripts/report/t-test.R ..."
+          check "scripts/report/t-test.R \"$RUN_ROW\" \"$BASELINE_ROW\" \"$RUN_QTY\" 0.01"
+          echo "Query time: $query_time"
         fi
     done
     echo "========================================"
 
   done
 done
+
+echo "P-values are computed!"
