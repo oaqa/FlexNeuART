@@ -159,9 +159,10 @@ for BASELINE_LABEL in "nmslib_bm25_text_brute_force" "lucene_bm25_model1" ; do
           fi
       
 
-          scripts/report/t-test.R "$RUN_ROW" "$BASELINE_ROW" "$RUN_QTY" 0.01
-          check "scripts/report/t-test.R \"$RUN_ROW\" \"$BASELINE_ROW\" \"$RUN_QTY\" 0.01"
+          scripts/report/t-test.R "$RUN_ROW" "$BASELINE_ROW" "$RUN_QTY" 0.01 "$metric/$BASELINE_LABEL"
+          check "scripts/report/t-test.R \"$RUN_ROW\" \"$BASELINE_ROW\" \"$RUN_QTY\" 0.01" "$metric/$BASELINE_LABEL"
           echo "Query time: $query_time"
+          echo "----------------------------"
         fi
     done
     echo "========================================"
