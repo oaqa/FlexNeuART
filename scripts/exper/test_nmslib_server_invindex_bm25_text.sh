@@ -18,12 +18,19 @@ if [ "$TEST_PART" = "" ] ; then
   exit 1 
 fi
 
-HEADER_NAME="header_bm25_text"
-EXPER_DIR_BASE="results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/simple_invindx/$HEADER_NAME"
+NUM_RET_SINGLE=${POS_ARGS[3]}
+if [ "$NUM_RET_SINGLE" != "" ] ; then
+  NUM_RET_LIST="$NUM_RET_SINGLE"
+  NUM_RET_EXPER_SUFFIX="_N=$NUM_RET_SINGLE"
+else
+  NUM_RET_EXPER_SUFFIX=""
+  NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
+fi
 
+HEADER_NAME="header_bm25_text"
+EXPER_DIR_BASE="results/final/$collect/$QREL_FILE/$TEST_PART/nmslib/simple_invindx${NUM_RET_EXPER_SUFFIX}/$HEADER_NAME"
 
 CAND_PROV_TYPE="nmslib"
-NUM_RET_LIST="1,2,3,4,5,10,15,20,25,30,35,45,50,60,70,80,90,100"
 #EXTR_TYPE_FINAL="complex"
 #EXTR_MODEL_FINAL="results/final/$collect/train/complex/exper/out_${collect}_train_complex_50.model"
 EXTR_TYPE_FINAL="none"
