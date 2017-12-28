@@ -63,7 +63,7 @@ outPrefix=''
 label=''
 if len(sys.argv) >= 4: 
   outPrefix = sys.argv[3]
-  if len(sys.argv) != 5: Usage("Specify the 6th arg")
+  if len(sys.argv) != 5: Usage("Specify the 4th arg")
   label=sys.argv[4]
 
 outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).split('\n')
