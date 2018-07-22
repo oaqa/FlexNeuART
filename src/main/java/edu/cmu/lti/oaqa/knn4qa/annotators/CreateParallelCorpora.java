@@ -46,11 +46,6 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
   
   String mQuestionText;
   String mQuestionTextUnlemm;
-  String mQuestionSrl;
-  String mQuestionSrlLab;
-  String mQuestionDep;
-  String mQuestionBiGram;
-  String mQuestionWNSS;
   
   String mQuestURI;
   static private ExtractTextReps mTextRepExtract;
@@ -60,17 +55,6 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
   static BufferedWriter mAnswerTextWriter;
   static BufferedWriter mQuestionTextUnlemmWriter;
   static BufferedWriter mAnswerTextUnlemmWriter;  
-  static BufferedWriter mQuestionSrlWriter;
-  static BufferedWriter mAnswerSrlWriter;
-  static BufferedWriter mQuestionSrlLabWriter;
-  static BufferedWriter mAnswerSrlLabWriter;
-  static BufferedWriter mQuestionDepWriter;
-  static BufferedWriter mAnswerDepWriter;
-  static BufferedWriter mQuestionBiGramWriter;
-  static BufferedWriter mAnswerBiGramWriter;
-  static BufferedWriter mQuestionWNSSWriter;
-  static BufferedWriter mAnswerWNSSWriter;
-  
   
   private static final String PARAM_STOPWORD_FILE = "StopWordFile";
   
@@ -79,19 +63,9 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
   
   private static final String PARAM_DUMP_TEXT         = "DumpText";
   private static final String PARAM_DUMP_TEXT_UNLEMM  = "DumpTextUnlemm";
-  private static final String PARAM_DUMP_BIGRAM       = "DumpBiGram";  
-  private static final String PARAM_DUMP_SRL          = "DumpSrl";
-  private static final String PARAM_DUMP_SRL_L        = "DumpSrlLab";
-  private static final String PARAM_DUMP_DEP          = "DumpDep";
-  private static final String PARAM_DUMP_WNSS         = "DumpWNSS";
   
   private static boolean mDumpText      = false;
   private static boolean mDumpTextUnlemm= false;
-  private static boolean mDumpSrl       = false;
-  private static boolean mDumpSrlLab    = false;
-  private static boolean mDumpDep       = false;
-  private static boolean mDumpBiGram    = false;
-  private static boolean mDumpWNSS      = false;
 
   private static int mIOState = 0;
 
@@ -112,22 +86,7 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
     
     tmpb = (Boolean)aContext.getConfigParameterValue(PARAM_DUMP_TEXT_UNLEMM);
     if (null != tmpb) mDumpTextUnlemm = tmpb;
-    
-    tmpb = (Boolean)aContext.getConfigParameterValue(PARAM_DUMP_SRL);
-    if (null != tmpb) mDumpSrl = tmpb;
-    
-    tmpb = (Boolean)aContext.getConfigParameterValue(PARAM_DUMP_SRL_L);
-    if (null != tmpb) mDumpSrlLab = tmpb;
-    
-    tmpb = (Boolean)aContext.getConfigParameterValue(PARAM_DUMP_DEP);
-    if (null != tmpb) mDumpDep = tmpb;
-    
-    tmpb = (Boolean)aContext.getConfigParameterValue(PARAM_DUMP_BIGRAM);
-    if (null != tmpb) mDumpBiGram = tmpb;
-    
-    tmpb = (Boolean)aContext.getConfigParameterValue(PARAM_DUMP_WNSS);
-    if (null != tmpb) mDumpWNSS = tmpb;    
-    
+  
     try {
       initOutput(questionPrefix, answerPrefix);
       
@@ -155,34 +114,17 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
   
   static synchronized private void initOutput(String questionPrefix, String answerPrefix) throws IOException {
     if (mIOState  != 0) return;
+    
     if (mDumpText) {
       mQuestionTextWriter = new BufferedWriter(new FileWriter(questionPrefix + "_text"));
       mAnswerTextWriter   = new BufferedWriter(new FileWriter(answerPrefix   + "_text"));
     }
+    
     if (mDumpTextUnlemm) {
       mQuestionTextUnlemmWriter = new BufferedWriter(new FileWriter(questionPrefix + "_text_unlemm"));
       mAnswerTextUnlemmWriter   = new BufferedWriter(new FileWriter(answerPrefix   + "_text_unlemm"));
     }    
-    if (mDumpSrl) {
-      mQuestionSrlWriter = new BufferedWriter(new FileWriter(questionPrefix + "_srl"));
-      mAnswerSrlWriter   = new BufferedWriter(new FileWriter(answerPrefix   + "_srl"));
-    }
-    if (mDumpSrlLab) {
-      mQuestionSrlLabWriter = new BufferedWriter(new FileWriter(questionPrefix + "_srl_lab"));
-      mAnswerSrlLabWriter   = new BufferedWriter(new FileWriter(answerPrefix   + "_srl_lab"));
-    }
-    if (mDumpDep) {
-      mQuestionDepWriter = new BufferedWriter(new FileWriter(questionPrefix + "_dep"));
-      mAnswerDepWriter   = new BufferedWriter(new FileWriter(answerPrefix   + "_dep"));
-    }
-    if (mDumpBiGram) {
-      mQuestionBiGramWriter = new BufferedWriter(new FileWriter(questionPrefix + "_bigram"));
-      mAnswerBiGramWriter   = new BufferedWriter(new FileWriter(answerPrefix   + "_bigram"));
-    }
-    if (mDumpWNSS) {
-      mQuestionWNSSWriter = new BufferedWriter(new FileWriter(questionPrefix + "_wnss"));
-      mAnswerWNSSWriter   = new BufferedWriter(new FileWriter(answerPrefix   + "_wnss"));
-    }    
+   
     mIOState = 1;
   }
 
@@ -202,13 +144,9 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
       
       if (mDumpText)        mQuestionText   = mTextRepExtract.getText(goodToks);
       if (mDumpTextUnlemm)  mQuestionTextUnlemm=mTextUnlemmRepExtract.getText(goodToksUnlemm);
-      if (mDumpBiGram)      mQuestionBiGram = mTextRepExtract.getBiGram(goodToks);
-      if (mDumpSrl)         mQuestionSrl    = mTextRepExtract.getSrl(aJCas, goodToks, false);
-      if (mDumpSrlLab)      mQuestionSrlLab = mTextRepExtract.getSrl(aJCas, goodToks, true);
-      if (mDumpDep)         mQuestionDep    = mTextRepExtract.getDepRel(aJCas, goodToks, false);
-      if (mDumpWNSS)        mQuestionWNSS   = mTextRepExtract.getWNSS(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
       
       mQuestURI = qs.iterator().next().getUri();
+      
     } else {
       Collection<Answer> qa = JCasUtil.select(aJCas, Answer.class);
       // Yes, we can get an empty CAS, b/c we cannot drop existing one!
@@ -225,12 +163,7 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
         //if (an.getIsBest())
         doOutput(aJCas,
                    mQuestionText,
-                   mQuestionTextUnlemm,
-                   mQuestionBiGram,
-                   mQuestionSrl,
-                   mQuestionSrlLab,
-                   mQuestionDep,
-                   mQuestionWNSS);
+                   mQuestionTextUnlemm);
       } catch (IOException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
@@ -241,12 +174,7 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
 
   static synchronized private void doOutput(JCas aJCas,
                                             String questionText,
-                                            String questionTextUnlemm,
-                                            String questionBiGram,
-                                            String questionSrl,
-                                            String questionSrlLab,
-                                            String questionDep,
-                                            String questionWNSS) throws IOException {
+                                            String questionTextUnlemm) throws IOException {
     GoodTokens goodToks = mTextRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
     GoodTokens goodToksUnlemm = mTextUnlemmRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
     
@@ -264,41 +192,7 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
         mAnswerTextUnlemmWriter.write(answerTextUnlemm + NL);
       }
     }    
-    if (mDumpBiGram) {
-      String answerBiGram = mTextRepExtract.getBiGram(goodToks);
-      if (!questionBiGram.isEmpty() && !answerBiGram.isEmpty()) {
-        mQuestionBiGramWriter.write(questionBiGram + NL);
-        mAnswerBiGramWriter.write(answerBiGram + NL);
-      }
-    }
-    if (mDumpSrl) {
-      String answerSrl = mTextRepExtract.getSrl(aJCas, goodToks, false);
-      if (!questionSrl.isEmpty() && !answerSrl.isEmpty()) {
-        mQuestionSrlWriter.write(questionSrl + NL);
-        mAnswerSrlWriter.write(answerSrl + NL);
-      }
-    }
-    if (mDumpSrlLab) {
-      String answerSrlLab = mTextRepExtract.getSrl(aJCas, goodToks, true);
-      if (!questionSrlLab.isEmpty() && !answerSrlLab.isEmpty()) {
-        mQuestionSrlLabWriter.write(questionSrlLab + NL);
-        mAnswerSrlLabWriter.write(answerSrlLab + NL);
-      }
-    }        
-    if (mDumpDep) {
-      String answerDep = mTextRepExtract.getDepRel(aJCas, goodToks, false);
-      if (!questionDep.isEmpty() && !answerDep.isEmpty()) {
-        mQuestionDepWriter.write(questionDep + NL);
-        mAnswerDepWriter.write(answerDep + NL);
-      }          
-    }
-    if (mDumpWNSS) {
-      String answerWNSS = mTextRepExtract.getWNSS(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
-      if (!questionWNSS.isEmpty() && !answerWNSS.isEmpty()) {
-        mQuestionWNSSWriter.write(questionWNSS + NL);
-        mAnswerWNSSWriter.write(answerWNSS + NL);        
-      }
-    }
+
   }
   
   @Override
@@ -316,34 +210,17 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
 
   static synchronized private void finishOutput() throws IOException {
     if (mIOState != 1) return;
+    
     if (mDumpText) {
       mQuestionTextWriter.close();
       mAnswerTextWriter.close();
     }
+    
     if (mDumpTextUnlemm) {
       mQuestionTextUnlemmWriter.close();
       mAnswerTextUnlemmWriter.close();
     }
-    if (mDumpSrl) {
-      mQuestionSrlWriter.close();
-      mAnswerSrlWriter.close();
-    }
-    if (mDumpSrlLab) {
-      mQuestionSrlLabWriter.close();
-      mAnswerSrlLabWriter.close();
-    }
-    if (mDumpDep) {
-      mQuestionDepWriter.close();
-      mAnswerDepWriter.close();
-    }
-    if (mDumpBiGram) {
-      mQuestionBiGramWriter.close();
-      mAnswerBiGramWriter.close();
-    }
-    if (mDumpWNSS) {
-      mQuestionWNSSWriter.close();
-      mAnswerWNSSWriter.close();
-    }
+    
     mIOState = 2;
   }
   

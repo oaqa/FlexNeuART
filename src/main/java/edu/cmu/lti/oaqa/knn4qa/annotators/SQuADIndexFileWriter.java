@@ -50,7 +50,6 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
   private static final String PARAM_INDEX_PASSAGE_FILE    = "PassageFile";
   private static final String PARAM_INDEX_QUESTION_FILE   = "QuestionFile";
   private static final String PARAM_STOPWORD_FILE         = "StopWordFile";
-  private static final String PARAM_FOCUSWORD_FILE        = "FreqFocusWordFile";
     
   private static final XmlHelper mXmlHlp = new XmlHelper();
   
@@ -64,11 +63,9 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
   private String mIndexPassageFileName;
   @ConfigurationParameter(name = PARAM_STOPWORD_FILE, mandatory = true)
   private String mStopWordFileName;
-  // Let this one be mandatory, there's no harm reading a small file in every SQuAD pipeline
-  @ConfigurationParameter(name = PARAM_FOCUSWORD_FILE, mandatory = true) 
-  private String mFocusWordFile;
   
-  private SQuADExtractTextReps mTextRepExtract;
+  private SQuADExtractTextReps mTextRepExtract,
+                               mTextUnlemmRepExtract;
   
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
@@ -77,7 +74,9 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
     try {
       initOutput(mIndexQuestionFileName, mIndexPassageFileName);
       
-      mTextRepExtract = new SQuADExtractTextReps(mStopWordFileName, mFocusWordFile, true);
+      mTextRepExtract = new SQuADExtractTextReps(mStopWordFileName, true /* lemmatize */);
+      mTextUnlemmRepExtract = new SQuADExtractTextReps(mStopWordFileName, false);
+      
     } catch (Exception e) {
       e.printStackTrace();
       throw new ResourceInitializationException(e);
@@ -86,7 +85,9 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
   
   @Override
   public void process(JCas aJCas) throws AnalysisEngineProcessException {    
-    String textSOLR = FeatureExtractor.mFieldsSOLR[FeatureExtractor.TEXT_FIELD_ID];
+    String textField = FeatureExtractor.mFieldNames[FeatureExtractor.TEXT_FIELD_ID];
+    String textFieldUnlemm = FeatureExtractor.mFieldNames[FeatureExtractor.TEXT_UNLEMM_FIELD_ID];
+
     
     // 1. Process the passage
     {
@@ -94,25 +95,13 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
       
       Passage passage = JCasUtil.selectSingle(aJCas, Passage.class); // Will throw an exception of Passage is missing
       
-      GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(aJCas, passage);      
-      
-      String text       = mTextRepExtract.getText(goodToks);
-      String allNER     = mTextRepExtract.getNER(aJCas, passage, true, true);
-      String dbpediaNER = mTextRepExtract.getNER(aJCas, passage, true, false);
-      String spacyNER   = mTextRepExtract.getNER(aJCas, passage, false, true);
-
+      String text = mTextRepExtract.getText(mTextRepExtract.getGoodTokens(aJCas, passage));      
+      String textUnlemm = mTextUnlemmRepExtract.getText(mTextUnlemmRepExtract.getGoodTokens(aJCas, passage));
+ 
       fieldInfo.put(UtilConst.TAG_DOCNO, passage.getId());
        
-      fieldInfo.put(textSOLR, text);
-      fieldInfo.put(FeatureExtractor.TEXT_QFEAT, text + " " + allNER);
-      fieldInfo.put(FeatureExtractor.QFEAT_ONLY, allNER);
-      
-      fieldInfo.put(FeatureExtractor.EPHYRA_ALLENT,    allNER);
-      fieldInfo.put(FeatureExtractor.EPHYRA_DBPEDIA,   dbpediaNER);
-      fieldInfo.put(FeatureExtractor.EPHYRA_SPACY,     spacyNER);
-      fieldInfo.put(FeatureExtractor.LEXICAL_ALLENT,   allNER);
-      fieldInfo.put(FeatureExtractor.LEXICAL_DBPEDIA,  dbpediaNER);
-      fieldInfo.put(FeatureExtractor.LEXICAL_SPACY,    spacyNER);
+      fieldInfo.put(textField, text);
+      fieldInfo.put(textFieldUnlemm, textUnlemm);
       
       try {
         doOutput(mIndexPassageFile, fieldInfo);
@@ -133,29 +122,14 @@ public class SQuADIndexFileWriter extends JCasAnnotator_ImplBase {
       
       for (FactoidQuestion q : JCasUtil.select(questView, FactoidQuestion.class)) {
         Map<String, String>  fieldInfo = new HashMap<String, String>();        
-        
-        GoodTokensSQuAD goodToks = mTextRepExtract.getGoodTokens(questView, q);
-        String text = mTextRepExtract.getText(goodToks);
-        // Lexical question features: w-word and focus word/phrase
-        String qLexical = mTextRepExtract.getQuestionAnnot(questView, q, 
-                                              true /* w-word */, true /* focus word */, false /* Ephyra type */);
-        // Ephyra question type
-        String qType = mTextRepExtract.getQuestionAnnot(questView, q, 
-                                              false /* w-word */, false /* focus word */, true /* Ephyra type */);
+
+        String text = mTextRepExtract.getText(mTextRepExtract.getGoodTokens(questView, q));
+        String textUnlemm = mTextUnlemmRepExtract.getText(mTextUnlemmRepExtract.getGoodTokens(questView, q));
         
         fieldInfo.put(UtilConst.TAG_DOCNO, q.getId());
 
-        fieldInfo.put(textSOLR, text);
-        fieldInfo.put(FeatureExtractor.TEXT_QFEAT, qLexical + " " + text + " " + qType);
-        fieldInfo.put(FeatureExtractor.QFEAT_ONLY, qLexical + " " + qType);
-        
-        fieldInfo.put(FeatureExtractor.EPHYRA_ALLENT,    qType);
-        fieldInfo.put(FeatureExtractor.EPHYRA_DBPEDIA,   qType);
-        fieldInfo.put(FeatureExtractor.EPHYRA_SPACY,     qType);
-        fieldInfo.put(FeatureExtractor.LEXICAL_ALLENT,   qLexical);
-        fieldInfo.put(FeatureExtractor.LEXICAL_DBPEDIA,  qLexical);
-        fieldInfo.put(FeatureExtractor.LEXICAL_SPACY,    qLexical);
-        
+        fieldInfo.put(textField, text);
+        fieldInfo.put(textFieldUnlemm, textUnlemm);
         
         try {
           doOutput(mIndexQuestionFile, fieldInfo);

@@ -13,7 +13,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lucene.version>6.0.0</lucene.version>
-    <galago.version>3.10</galago.version>
     <uima.version>2.6.0</uima.version>
   </properties>
 
@@ -276,53 +275,6 @@
         </exclusions>
     </dependency>
 
-
-
-    <!-- Galago dependencies -->
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>core</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>contrib</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>krovetz-stemmer</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>snowball-stemmers</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>tupleflow-gridengine</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>tupleflow</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>tupleflow-typebuilder</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>utility</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <!-- end of Galago dependencies -->
-
-
-    
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.clearnlp-asl</artifactId>
@@ -476,22 +428,6 @@
       <version>3.1.1</version>
     </dependency>
 
-
-    <!-- YodaQA Mavenized -->
-    <!-- Should be installed from 
-      https://github.com/searchivarius/yodaqa_mavenized
-    -->
-    <dependency>
-      <groupId>edu.cmu.lti.oaqa</groupId>
-      <artifactId>yodaqa_mavenized</artifactId>
-      <version>1.6-SNAPSHOT</version>
-    </dependency>
-    <!-- Ephyra QA module -->
-    <dependency>
-      <groupId>edu.cmu.lti.oaqa</groupId>
-      <artifactId>ephyra_qanalysis</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
   </dependencies>
 
   <build>

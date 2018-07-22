@@ -40,7 +40,6 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfoCache;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.GalagoCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneGIZACandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibKNNCandidateProvider;
@@ -519,9 +518,6 @@ public abstract class BaseQueryApp {
     mOptions.addOption(CommonParams.GIZA_EXPAND_QTY_PARAM,          null, true,  CommonParams.GIZA_EXPAND_QTY_DESC);
     mOptions.addOption(CommonParams.GIZA_EXPAND_USE_WEIGHTS_PARAM,  null, false, CommonParams.GIZA_EXPAND_USE_WEIGHTS_DESC);
     
-    mOptions.addOption(CommonParams.GALAGO_OP_PARAM,          null, true, CommonParams.GALAGO_OP_DESC);
-    mOptions.addOption(CommonParams.GALAGO_PARAMS_PARAM,      null, true, CommonParams.GALAGO_PARAMS_DESC);
-
     mOptions.addOption(CommonParams.NMSLIB_FIELDS_PARAM,       null, true, CommonParams.NMSLIB_FIELDS_DESC);
     
     mOptions.addOption(CommonParams.SAVE_STAT_FILE_PARAM,      null, true, CommonParams.SAVE_STAT_FILE_DESC);
@@ -663,8 +659,6 @@ public abstract class BaseQueryApp {
         showUsage("Number of GIZA iterations isn't integer: '" + tmpn + "'");
       }
     }
-    mGalagoOp = mCmd.getOptionValue(CommonParams.GALAGO_OP_PARAM);
-    mGalagoParams = mCmd.getOptionValue(CommonParams.GALAGO_PARAMS_PARAM);
     
     mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
     String embedFilesStr = mCmd.getOptionValue(CommonParams.EMBED_FILES_PARAM);
@@ -759,12 +753,6 @@ public abstract class BaseQueryApp {
       mCandProviders[0] = new LuceneCandidateProvider(mProviderURI);
       for (int ic = 1; ic < mThreadQty; ++ic) 
         mCandProviders[ic] = mCandProviders[0];
-    } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_GALAGO)) {
-      if (mGalagoOp == null)
-        showUsageSpecify(CommonParams.GALAGO_OP_DESC);
-      mCandProviders[0] = new GalagoCandidateProvider(mProviderURI, mGalagoOp, mGalagoParams);
-      for (int ic = 1; ic < mThreadQty; ++ic) 
-        mCandProviders[ic] = mCandProviders[0];      
     } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE_GIZA)) {
       if (mGizaExpandQty == null)
         showUsageSpecify(CommonParams.GIZA_EXPAND_QTY_DESC);

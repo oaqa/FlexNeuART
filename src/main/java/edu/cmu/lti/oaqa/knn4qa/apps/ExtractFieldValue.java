@@ -73,8 +73,7 @@ public class ExtractFieldValue {
       
       if (tmp != null) {
         for (int i = 0; i < FeatureExtractor.mFieldNames.length; ++i) {
-          if (0 == tmp.compareToIgnoreCase(FeatureExtractor.mFieldNames[i]) ||
-              0 == tmp.compareToIgnoreCase(FeatureExtractor.mFieldsSOLR[i])) {
+          if (0 == tmp.compareToIgnoreCase(FeatureExtractor.mFieldNames[i])) {
             fieldId = i;
             break;
           }          
@@ -85,13 +84,13 @@ public class ExtractFieldValue {
         Usage("Unknown field: " + tmp, options);
       }
 
-      String fieldNameSOLR = FeatureExtractor.mFieldsSOLR[fieldId];
+      String fieldName = FeatureExtractor.mFieldNames[fieldId];
       
       BufferedReader inpText = new BufferedReader(new InputStreamReader(
           CompressUtils.createInputStream(inputFileName)));
       String docText = XmlHelper.readNextXMLIndexEntry(inpText);
       
-      System.out.println("SOLR field: " + fieldNameSOLR);
+      System.out.println("Indexing field: " + fieldName);
       
       BufferedWriter outFile = new BufferedWriter(new FileWriter(new File(outputFileName)));
       
@@ -105,7 +104,7 @@ public class ExtractFieldValue {
           System.exit(1);
         }
 
-        String val = docFields.get(fieldNameSOLR);
+        String val = docFields.get(fieldName);
         val = val == null ? "" : val;
         
         outFile.write(val); outFile.newLine();

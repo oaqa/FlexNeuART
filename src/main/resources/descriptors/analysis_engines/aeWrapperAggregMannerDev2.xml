@@ -9,9 +9,6 @@
     <delegateAnalysisEngine key="aeLexStat">
       <import name="descriptors.analysis_engines.aeLexStat"/>
     </delegateAnalysisEngine>
-    <delegateAnalysisEngine key="xmiConsumer">
-      <import name="descriptors.cas_consumers.xmiConsumer"/>
-    </delegateAnalysisEngine>
     <delegateAnalysisEngine key="aeCreateParallelCorpora">
       <import name="descriptors.analysis_engines.aeCreateParallelCorpora"/>
     </delegateAnalysisEngine>

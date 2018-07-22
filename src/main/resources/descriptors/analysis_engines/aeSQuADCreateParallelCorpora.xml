@@ -15,12 +15,6 @@
         <mandatory>true</mandatory>
       </configurationParameter>
       <configurationParameter>
-        <name>FreqFocusWordFile</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-      <configurationParameter>
         <name>QuestionFilePrefix</name>
         <type>String</type>
         <multiValued>false</multiValued>
@@ -38,12 +32,6 @@
         <name>StopWordFile</name>
         <value>
           <string>data/stopwords.txt</string>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>FreqFocusWordFile</name>
-        <value>
-          <string>data/squad/freq_focus_words.txt</string>
         </value>
       </nameValuePair>
       <nameValuePair>

@@ -111,11 +111,8 @@ public class BuildInMemFwdIndexApp {
           System.err.print(FeatureExtractor.mFieldNames[k] + " ");
         Usage("Specify: '" + FIELD_NAME_DESC, options);
       }
-        
-      String fieldSOLR = FeatureExtractor.mFieldsSOLR[fieldId];
       
-      System.out.println("Processing field: '" + fieldName + 
-                         "' the name of the field in the SOLR index-file: '" + fieldSOLR + "'");
+      System.out.println("Processing field: '" + fieldName + "'");
         
       String [] fileNames = new String[subDirs.length];
       for (int i = 0; i < fileNames.length; ++i)
@@ -125,7 +122,7 @@ public class BuildInMemFwdIndexApp {
       
       System.out.println("Storing word id sequence?: " + bStoreWordIdSeq);
         
-      InMemForwardIndex indx = new InMemForwardIndex(fieldSOLR, fileNames, bStoreWordIdSeq, maxNumRec);
+      InMemForwardIndex indx = new InMemForwardIndex(fieldName, fileNames, bStoreWordIdSeq, maxNumRec);
         
       indx.save(InMemIndexFeatureExtractor.indexFileName(outPrefix, fieldName));
     } catch (ParseException e) {

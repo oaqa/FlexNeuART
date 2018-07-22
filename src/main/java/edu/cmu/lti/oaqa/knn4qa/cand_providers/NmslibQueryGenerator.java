@@ -73,7 +73,7 @@ public class NmslibQueryGenerator {
       int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
 
       if (mFieldIndex[realFieldId] != null) {
-        String fieldQuery = docData.get(FeatureExtractor.mFieldsSOLR[realFieldId]);
+        String fieldQuery = docData.get(FeatureExtractor.mFieldNames[realFieldId]);
         docEntries[fieldId] = 
             mFieldIndex[realFieldId].createDocEntry(fieldQuery.split("\\s+"),
                                   true  /* True means we generate word ID sequence:

@@ -33,36 +33,6 @@
         <mandatory>false</mandatory>
       </configurationParameter>
       <configurationParameter>
-        <name>FieldBiGram</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>false</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>FieldDepRel</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>false</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>FieldSrl</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>false</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>FieldSrlLab</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>false</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>FieldWNSS</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>false</mandatory>
-      </configurationParameter>
-    <configurationParameter>
         <name>AnswerFile</name>
         <type>String</type>
         <multiValued>false</multiValued>
@@ -86,48 +56,16 @@
       <nameValuePair>
         <name>FieldText</name>
         <value>
-          <string>Text_bm25</string>
+          <string>text</string>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>FieldTextUnlemm</name>
         <value>
-          <string>TextUnlemm_bm25</string>
+          <string>text_unlemm</string>
         </value>
       </nameValuePair>
       <nameValuePair>
-        <name>FieldBiGram</name>
-        <value>
-          <string>BiGram_bm25</string>
-        </value>
-      </nameValuePair>
-      <!--
-      <nameValuePair>
-        <name>FieldSrl</name>
-        <value>
-          <string>Srl_bm25</string>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>FieldSrlLab</name>
-        <value>
-          <string>SrlLab_bm25</string>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>FieldWNSS</name>
-        <value>
-          <string>WNSS_bm25</string>
-        </value>
-      </nameValuePair>
-    <nameValuePair>
-        <name>FieldDepRel</name>
-        <value>
-          <string>DepRel_bm25</string>
-        </value>
-      </nameValuePair>
-      -->
-    <nameValuePair>
         <name>AnswerFile</name>
         <value>
           <!-- triple-dot means that this value will be overridden -->

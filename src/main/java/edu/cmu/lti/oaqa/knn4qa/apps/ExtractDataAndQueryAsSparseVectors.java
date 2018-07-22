@@ -263,7 +263,7 @@ public class ExtractDataAndQueryAsSparseVectors {
             throw new Exception("Parsing error.");
           }
           
-          String fieldText = queryFields.get(FeatureExtractor.mFieldsSOLR[fieldId]);
+          String fieldText = queryFields.get(FeatureExtractor.mFieldNames[fieldId]);
           
           if (fieldText == null) {
             fieldText = "";

@@ -50,7 +50,6 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     Joiner joiner = Joiner.on(',');
     
     String fls [] = {
-        InMemIndexFeatureExtractorComplex.CODE,
         InMemIndexFeatureExtractorExper.CODE,
     };
     
@@ -76,56 +75,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
                     embedDir,
                     embedFiles,
                     highOrderModelFiles);              
-    } else if (extractorType.equals(InMemIndexFeatureExtractorComplex.CODE)) {
-      return 
-          new InMemIndexFeatureExtractorComplex(
-                    gizaRootDir, 
-                    gizaIterQty, 
-                    memIndxPref,
-                    embedDir,
-                    embedFiles,
-                    highOrderModelFiles);
-    } else if (extractorType.equals(InMemIndexFeatureExtractorComplexNoMajorEmbed.CODE)) {
-      return 
-          new InMemIndexFeatureExtractorComplexNoMajorEmbed(
-                    gizaRootDir, 
-                    gizaIterQty, 
-                    memIndxPref,
-                    embedDir,
-                    embedFiles,
-                    highOrderModelFiles);
-    } else if (extractorType.equals(InMemIndexFeatureExtractorComplexNoJSDComposite.CODE)) {
-      return 
-          new InMemIndexFeatureExtractorComplexNoJSDComposite(
-                    gizaRootDir, 
-                    gizaIterQty, 
-                    memIndxPref,
-                    embedDir,
-                    embedFiles,
-                    highOrderModelFiles);
-    } else if (extractorType.equals(InMemIndexFeatureExtractorComplexNoWMD.CODE)) {
-      return 
-          new InMemIndexFeatureExtractorComplexNoWMD(
-                    gizaRootDir, 
-                    gizaIterQty, 
-                    memIndxPref,
-                    embedDir,
-                    embedFiles,
-                    highOrderModelFiles);
-    } else if (extractorType.equals(InMemIndexFeatureExtractorComplexNoLCSEmbed.CODE)) {
-      return 
-          new InMemIndexFeatureExtractorComplexNoLCSEmbed(
-                    gizaRootDir, 
-                    gizaIterQty, 
-                    memIndxPref,
-                    embedDir,
-                    embedFiles,
-                    highOrderModelFiles);
-    } 
-
-
-
- 
+    }
 
     return null;
   }
@@ -482,8 +432,6 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
      */
     {
       int fieldQty = FeatureExtractor.mFieldNames.length;
-      if (FeatureExtractor.mFieldsSOLR.length != fieldQty)
-        throw new RuntimeException("Bug: FeatureExtractor.mFieldsSOLR.length != fieldQty");
       
       if (FeatureExtractor.mAliasOfId.length != fieldQty)
         throw new RuntimeException("Bug: FeatureExtractor.mAliasOfId.length != fieldQty");
@@ -672,11 +620,11 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     int id = 0;
     
 
-    for (int fieldId = 0; fieldId < mFieldsSOLR.length; ++fieldId) {
+    for (int fieldId = 0; fieldId < mFieldNames.length; ++fieldId) {
       int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
       int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
-			String query = queryData.get(mFieldsSOLR[realFieldId]);
-	    String fieldName = FeatureExtractor.mFieldNames[fieldId];
+	  String query = queryData.get(mFieldNames[realFieldId]);
+	  String fieldName = FeatureExtractor.mFieldNames[fieldId];
 
       if (useBM25Feature(fieldId)) {
 	      getFieldScores(mFieldIndex[fieldId], mBM25Similarity[fieldId],

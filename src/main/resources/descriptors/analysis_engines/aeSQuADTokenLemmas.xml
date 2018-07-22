@@ -19,7 +19,7 @@
         <languagesSupported/>
       </capability>
     </capabilities>
-  <operationalProperties>
+    <operationalProperties>
       <modifiesCas>true</modifiesCas>
       <multipleDeploymentAllowed>true</multipleDeploymentAllowed>
       <outputsNewCASes>false</outputsNewCASes>

@@ -26,13 +26,7 @@
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
-      <configurationParameter>
-        <name>FreqFocusWordFile</name>
-        <type>String</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-      </configurationParameters>
+    </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
         <name>StopWordFile</name>
@@ -52,13 +46,7 @@
           <string>output/.../SolrAnswerFile.txt</string>
         </value>
       </nameValuePair>
-      <nameValuePair>
-        <name>FreqFocusWordFile</name>
-        <value>
-          <string>data/squad/freq_focus_words.txt</string>
-        </value>
-      </nameValuePair>
-      </configurationParameterSettings>
+    </configurationParameterSettings>
     <typeSystemDescription/>
     <typePriorities/>
     <fsIndexCollection/>

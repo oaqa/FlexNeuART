@@ -17,49 +17,6 @@
     </collectionReader>
     <!-- this setting is for r3.4xlarge -->
     <casProcessors casPoolSize="16" processingUnitThreadCount="16">
-    <casProcessor deployment="integrated" name="aeDBPediaAnnot">
-        <descriptor>
-            <import location="../analysis_engines/aeDBPediaAnnot.xml"/>
-        </descriptor>
-            <deploymentParameters/>
-        <errorHandling>
-            <errorRateThreshold action="terminate" value="0/1000"/>
-            <maxConsecutiveRestarts action="terminate" value="30"/>
-            <timeout max="100000" default="-1"/>
-        </errorHandling>
-        <checkpoint batch="10000" time="1000ms"/>
-        <configurationParameterSettings>
-            <nameValuePair>
-                <name>ServerAddr</name>
-                <value>
-                    <!--
-                    <string>http://gold.lti.cs.cmu.edu:2222</string>
-                    -->
-                    <string>http://localhost:2222</string>
-                </value>
-            </nameValuePair>
-        </configurationParameterSettings>
-    </casProcessor>
-    <casProcessor deployment="integrated" name="aeSpacyNERReaderAnnot">
-        <descriptor>
-            <import location="../analysis_engines/aeSpacyNERAnnot.xml"/>
-        </descriptor>
-            <deploymentParameters/>
-        <errorHandling>
-            <errorRateThreshold action="terminate" value="0/1000"/>
-            <maxConsecutiveRestarts action="terminate" value="30"/>
-            <timeout max="100000" default="-1"/>
-        </errorHandling>
-        <checkpoint batch="10000" time="1000ms"/>
-        <configurationParameterSettings>
-            <nameValuePair>
-                <name>SpacyNERFile</name>
-                <value>
-                    <string>input/squad/wiki-spacy_ner.txt.gz</string>
-                </value>
-            </nameValuePair>
-        </configurationParameterSettings>
-    </casProcessor>
     <casProcessor deployment="integrated" name="aeSQuADTokenLemmas">
         <descriptor>
             <import location="../analysis_engines/aeSQuADTokenLemmas.xml"/>
@@ -94,32 +51,6 @@
                 <name>QuestionFile</name>
                 <value>
                     <string>output/squad/wiki/SolrQuestionFile.txt</string>
-                </value>
-            </nameValuePair>
-        </configurationParameterSettings>
-    </casProcessor>
-    <casProcessor deployment="integrated" name="xmiConsumer">
-        <descriptor>
-            <import location="../cas_consumers/xmiConsumer.xml"/>
-        </descriptor>
-            <deploymentParameters/>
-        <errorHandling>
-            <errorRateThreshold action="terminate" value="0/1000"/>
-            <maxConsecutiveRestarts action="terminate" value="30"/>
-            <timeout max="100000" default="-1"/>
-        </errorHandling>
-        <checkpoint batch="10000" time="1000ms"/>
-        <configurationParameterSettings>
-            <nameValuePair>
-              <name>OutputDirectory</name>
-              <value>
-                <string>xmi/wiki</string>
-              </value>
-            </nameValuePair>
-            <nameValuePair>
-                <name>SampleProb</name>
-                <value>
-                    <float>0.0001</float>
                 </value>
             </nameValuePair>
         </configurationParameterSettings>

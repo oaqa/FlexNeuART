@@ -48,12 +48,6 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
   
   private static final String PARAM_FIELD_TEXT        = "FieldText";   
   private static final String PARAM_FIELD_TEXT_UNLEMM = "FieldTextUnlemm";
-  private static final String PARAM_FIELD_BIGRAM      = "FieldBiGram"; 
-  private static final String PARAM_FIELD_DEP_REL     = "FieldDepRel"; 
-  private static final String PARAM_FIELD_SRL         = "FieldSrl";    
-  private static final String PARAM_FIELD_SRL_LAB     = "FieldSrlLab"; 
-  private static final String PARAM_FIELD_WNNS        = "FieldWNSS"; // Can be omitted
-  
   
   private static final XmlHelper mXmlHlp = new XmlHelper();
 
@@ -65,11 +59,6 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
   
   private String mFieldText;
   private String mFieldTextUnlemm;
-  private String mFieldBiGram;
-  private String mFieldDepRel;
-  private String mFieldSrl;
-  private String mFieldSrlLab;
-  private String mFieldWNNS;
   
   private ExtractTextReps mTextRepExtract;
   private ExtractTextReps mTextUnlemmRepExtract;
@@ -115,11 +104,6 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
           new Exception("Missing parameter '" + PARAM_FIELD_TEXT + "'"));      
     }
     mFieldTextUnlemm=(String)aContext.getConfigParameterValue(PARAM_FIELD_TEXT_UNLEMM);
-    mFieldBiGram = (String) aContext.getConfigParameterValue(PARAM_FIELD_BIGRAM);
-    mFieldDepRel = (String) aContext.getConfigParameterValue(PARAM_FIELD_DEP_REL);
-    mFieldSrl    = (String) aContext.getConfigParameterValue(PARAM_FIELD_SRL);
-    mFieldSrlLab = (String) aContext.getConfigParameterValue(PARAM_FIELD_SRL_LAB);
-    mFieldWNNS   = (String) aContext.getConfigParameterValue(PARAM_FIELD_WNNS);
   }
 
   @Override
@@ -142,16 +126,6 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
     fieldInfo.put(mFieldText, mTextRepExtract.getText(goodToks));
     if (mFieldTextUnlemm != null)
       fieldInfo.put(mFieldTextUnlemm, mTextUnlemmRepExtract.getText(goodToksUnlemm));
-    if (mFieldBiGram != null)
-      fieldInfo.put(mFieldBiGram, mTextRepExtract.getBiGram(goodToks));
-    if (mFieldDepRel != null)
-      fieldInfo.put(mFieldDepRel, mTextRepExtract.getDepRel(aJCas, goodToks, false /* without labels */));
-    if (mFieldSrl != null)
-      fieldInfo.put(mFieldSrl, mTextRepExtract.getSrl(aJCas, goodToks, false /* without labels */));
-    if (mFieldSrlLab != null)
-      fieldInfo.put(mFieldSrlLab, mTextRepExtract.getSrl(aJCas, goodToks, true /* with labels */)); 
-    if (mFieldWNNS != null)
-      fieldInfo.put(mFieldWNNS, mTextRepExtract.getWNSS(aJCas, STRICTLY_GOOD_TOKENS_FOR_INDEXING));    
     
     Collection<Answer>     colAnsw  = JCasUtil.select(aJCas, Answer.class);
     Collection<Question>   colQuest = JCasUtil.select(aJCas, Question.class);

@@ -35,11 +35,9 @@ class GoodTokensSQuAD {
 
 public class SQuADExtractTextReps extends ExtractTextRepsBase {
 
-  private DictNoComments mFreqFocusWords = null;
 
-  SQuADExtractTextReps(String stopWordFileName, String freqFocusWordFileName, boolean bLemmatize) throws Exception {
+  SQuADExtractTextReps(String stopWordFileName, boolean bLemmatize) throws Exception {
     super(stopWordFileName, bLemmatize);
-    mFreqFocusWords = new DictNoComments(new File(freqFocusWordFileName), true /* lowercasing */);
   }
   
   /**
@@ -105,7 +103,6 @@ public class SQuADExtractTextReps extends ExtractTextRepsBase {
    * 
    * @param jCas          a JCas containing entity annotations
    * @param coverAnnot    a covering annotation
-   * @param useDbpedia    include dbpedia annotations
    * @param useSpacy      include Spacy annotations
    * 
    * @return
@@ -117,73 +114,8 @@ public class SQuADExtractTextReps extends ExtractTextRepsBase {
     for (Entity e : JCasUtil.selectCovered(jCas, Entity.class, coverAnnot)) {
       sb.append(' ');
       String type = e.getEtype();
-      boolean f = true;
-      if (useSpacy && type.equalsIgnoreCase(SpacyNERReaderAnnot.SPACY_NER_TYPE)) {
-        // If we have a DBPedia entity that is inside Spacy's annotation,
-        // we prefer a more specific DBPedia annotation
-        for (Entity ec : JCasUtil.selectCovered(jCas, Entity.class, e)) 
-        if (ec.getEtype().equalsIgnoreCase(DBPediaAnnot.DBPEDIA_TYPE)) {
-          f = false;
-          break;
-        }
-      } else if (useDbpedia && type.equalsIgnoreCase(DBPediaAnnot.DBPEDIA_TYPE)) { 
-        // do nothing, f is true before the checks
-      } else {
-        f = false;
-      }
-        
-      if (f) {
-        sb.append(type + ":" + e.getLabel());
-      }
+      sb.append(type + ":" + e.getLabel());
     }        
-    
-    return strFromStrStream(sb);
-  }
-  
-  /**
-   * Generate a list of question annotations from the respective annotated factoid question.
-   * 
-   * @param questView     Question view jCas
-   * @param coverAnnot    Covering annotation
-   * @param bWWord        Should we include question words 
-   * @param bFocusWord    Should we include common focus words?
-   * @param bEpyraQType   Should we include common feature types
-   * @return
-   */
-  public String getQuestionAnnot(final JCas questView, FactoidQuestion coverAnnot, 
-                                  boolean bWWord,
-                                  boolean bFocusWord,
-                                  boolean bEpyraQType
-                                 ) {
-    StringBuffer sb = new StringBuffer();
-    
-    HashSet<String> seenWWords = new HashSet<String>();
-    
-    if (bWWord) {
-      for (WWord ww: JCasUtil.selectCovered(questView, WWord.class, coverAnnot)) {
-         sb.append(' ');
-         sb.append(ww.getValue());
-         seenWWords.add(ww.getValue());
-      }
-    }
-    
-    if (bFocusWord) {
-      for (FocusPhrase fw: JCasUtil.selectCovered(questView, FocusPhrase.class, coverAnnot)) {
-         sb.append(' ');
-         String focusWord = fw.getValue().toLowerCase();
-         if (mFreqFocusWords == null || mFreqFocusWords.contains(focusWord))
-           // Sometimes what/who are both focus and question words: we want to use it only once
-           if (!seenWWords.contains(focusWord))
-             sb.append(focusWord);
-      }
-    }
-    
-    if (bEpyraQType) {
-      for (FactoidQuestionType qt: JCasUtil.selectCovered(questView, FactoidQuestionType.class, coverAnnot)) {
-        sb.append(' ');
-        sb.append(qt.getValue());
-      }      
-    }
     
     return strFromStrStream(sb);
   }

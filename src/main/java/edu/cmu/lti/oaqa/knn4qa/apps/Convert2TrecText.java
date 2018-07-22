@@ -82,7 +82,7 @@ public class Convert2TrecText {
       
       outFile = initOutFile(outFile, outFileName, batchNum);
       
-      String textFieldName = FeatureExtractor.mFieldsSOLR[FeatureExtractor.TEXT_FIELD_ID];
+      String textFieldName = FeatureExtractor.mFieldNames[FeatureExtractor.TEXT_FIELD_ID];
       
       for (String inpFileName : inpFileNames) {
         System.out.println("Started to process file: " + inpFileName);
