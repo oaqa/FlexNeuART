@@ -29,15 +29,10 @@
       <imports>
         <import name="types.typeSystemDescriptor"/>
         <import name="org.apache.uima.examples.SourceDocumentInformation"/>
-        <!-- Types used by YodaQA -->
-        <import name="desc.type.LexicalUnits"/>
         <import name="desc.type.metadata"/>
+        <import name="desc.type.POS"/>
+        <import name="desc.type.Semantics"/>
         <import name="desc.type.Dependency_customized"/>
-        <import name="desc.type.Constituency"/>
-        <import name="typesystem.QuestionTypes_TS"/>
-        <import name="desc.type.NamedEntity"/>
-        <import name="typesystem.TyCorTypes_TS"/>
-        <!-- End of types used by YodaQA -->
       </imports>
     </typeSystemDescription>
 
