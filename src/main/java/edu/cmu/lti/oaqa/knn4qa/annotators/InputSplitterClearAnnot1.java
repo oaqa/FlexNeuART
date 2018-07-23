@@ -55,7 +55,6 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   private static final String PARAM_INCLUDE_NOT_BEST = "IncludeNotBest";
   private static final String PARAM_DO_POS_TAGGING    = "DoPOSTagging";
   
-  
   private int       mMinTokQty    = 0;
   private boolean   mCheckQuality = false;
   private boolean   mSkipAnswers  = false;
