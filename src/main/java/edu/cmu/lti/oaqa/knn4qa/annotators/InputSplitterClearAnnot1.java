@@ -85,9 +85,11 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     mJCasFactory = mClearNLPEngine.createJCasFactory();
   }
   
-  JCas                          mQuestJCas = null;
-  ArrayList<JCas>               mAnswerJCas = new ArrayList<JCas>();
+  ArrayList<JCas>               mBorrowedJCas = new ArrayList<JCas>();
   ArrayList<Answer>             mAnswerAnnot = new ArrayList<Answer>();
+  
+  JCas                          mQuestJCas;
+  ArrayList<JCas>               mAnswerJCas = new ArrayList<JCas>();
 
   JCas                          mBaseJcas;
 
@@ -106,13 +108,17 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     
     //logger.info("*** Process! ***");
     
-    releaseAll();
+    mAnswerJCas.clear();
+    mAnswerAnnot.clear();
+    mQuestJCas = null;
+    
+    releaseAllJCas();
     
     Question yaq = null;
     
     {
       try {
-        mQuestJCas = mJCasFactory.borrowJCas();
+        mQuestJCas = allocateJCas();
       } catch (ResourceInitializationException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
@@ -142,7 +148,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
            *  However, we might need to have multiple output CASes.
            *  Using a separate analysis engine (inside BasicEngine) provides a work around.
            */
-          answJCas = mJCasFactory.borrowJCas();
+          answJCas = allocateJCas();
         } catch (Exception e) {
           e.printStackTrace();
           throw new AnalysisEngineProcessException(e);
@@ -179,17 +185,25 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     mGood  = true;
   }
   
-  private void releaseAll() {
-    if (mQuestJCas != null) {
-      mJCasFactory.returnJCas(mQuestJCas);
-      mQuestJCas = null;
-    }
-    for (JCas jcas: mAnswerJCas) {
+  @Override
+  public void destroy() {
+    releaseAllJCas();
+    mJCasFactory.destroy();
+  }
+  
+  private JCas allocateJCas() throws ResourceInitializationException {
+    JCas res = mJCasFactory.borrowJCas();
+    mBorrowedJCas.add(res);
+    return res;
+  }
+  
+  private void releaseAllJCas() {
+    for (JCas jcas: mBorrowedJCas) {
       mJCasFactory.returnJCas(jcas);
     }
-    mAnswerJCas.clear();
-    mAnswerAnnot.clear();
+    mBorrowedJCas.clear();
   }
+  
   public boolean hasNext() throws AnalysisEngineProcessException {
     return (mGood && (mAnswId < mAnswerJCas.size()))  ||
            (!mGood && !mReleasedEmpty);

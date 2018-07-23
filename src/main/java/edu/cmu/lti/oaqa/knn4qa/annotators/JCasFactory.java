@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class works as a JCAS factory.
@@ -34,6 +36,8 @@ import org.apache.uima.resource.ResourceInitializationException;
  *
  */
 public class JCasFactory {
+  private static final Logger logger = LoggerFactory.getLogger(JCasFactory.class);
+  
   public JCasFactory(AnalysisEngine engine) { mEngine = engine; }
   
   public JCas borrowJCas() throws ResourceInitializationException {
@@ -45,6 +49,8 @@ public class JCasFactory {
         res.reset();      
         return res;
       }
+      ++mCasAllocQty;
+      logger.info("Total number of allocations: " + mCasAllocQty);
       return mEngine.newJCas();
     }
   }
@@ -55,6 +61,11 @@ public class JCasFactory {
     }
   }
   
+  public void destroy() {
+    mEngine.destroy();
+  }
+  
+  private long             mCasAllocQty = 0;
   private AnalysisEngine   mEngine;
   private ArrayList<JCas>  mJCasList = new ArrayList<JCas>();     
 }
