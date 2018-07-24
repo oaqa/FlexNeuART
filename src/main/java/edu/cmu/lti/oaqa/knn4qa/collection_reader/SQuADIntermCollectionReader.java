@@ -54,7 +54,6 @@ public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
   
   private static final Logger logger = LoggerFactory.getLogger(SQuADIntermCollectionReader.class);
   
-  
   Gson mGSON = new Gson();
   
   private int             mProcCASQty;
@@ -71,7 +70,6 @@ public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
    */
   private static final String PARAM_INPUTFILE = "InputFile";
   private static final String PARAM_MAXQTY = "MaxQty";
- 
   
   @ConfigurationParameter(name = PARAM_INPUTFILE, mandatory = true)
   private String mInputFileName;  

@@ -55,6 +55,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   private static final String PARAM_INCLUDE_NOT_BEST = "IncludeNotBest";
   private static final String PARAM_DO_POS_TAGGING    = "DoPOSTagging";
   
+  
   private int       mMinTokQty    = 0;
   private boolean   mCheckQuality = false;
   private boolean   mSkipAnswers  = false;
@@ -85,17 +86,16 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     mJCasFactory = mClearNLPEngine.createJCasFactory();
   }
   
-  ArrayList<JCas>               mBorrowedJCas = new ArrayList<JCas>();
-  ArrayList<Answer>             mAnswerAnnot = new ArrayList<Answer>();
-  
-  JCas                          mQuestJCas;
+  JCas                          mQuestJCas = null;
   ArrayList<JCas>               mAnswerJCas = new ArrayList<JCas>();
+  ArrayList<Answer>             mAnswerAnnot = new ArrayList<Answer>();
 
   JCas                          mBaseJcas;
 
   boolean                       mGood = false;
   boolean                       mReleasedEmpty = false;
   private int                   mAnswId = -1;
+  private int                   mMaxAnswerQty = 0;
 
   BasicEngine                   mClearNLPEngine;
   private JCasFactory           mJCasFactory;
@@ -106,19 +106,15 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     mGood = false;    
     mReleasedEmpty = false;
     
-    //logger.info("*** Process! ***");
+    //logger.info("@@@ Process() @@@");
     
-    mAnswerJCas.clear();
-    mAnswerAnnot.clear();
-    mQuestJCas = null;
-    
-    releaseAllJCas();
+    releaseAll();
     
     Question yaq = null;
     
     {
       try {
-        mQuestJCas = allocateJCas();
+        mQuestJCas = mJCasFactory.borrowJCas();
       } catch (ResourceInitializationException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
@@ -148,7 +144,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
            *  However, we might need to have multiple output CASes.
            *  Using a separate analysis engine (inside BasicEngine) provides a work around.
            */
-          answJCas = allocateJCas();
+          answJCas = mJCasFactory.borrowJCas();
         } catch (Exception e) {
           e.printStackTrace();
           throw new AnalysisEngineProcessException(e);
@@ -163,6 +159,9 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
           if (mCheckQuality && !SimpleTextQualityChecker.checkCAS(answJCas, mMinTokQty)) {
             logger.info(String.format("Dropping answer %s, text '%s'", 
                 yan.getId(), yan.getCoveredText()));
+            mJCasFactory.returnJCas(answJCas); // Returning the JCas here, b/c
+            // it will not be saved to an answer array and hence it won't be 
+            // freed by the function releaseAll()
             continue;
           }
         } catch (Exception e) {
@@ -180,36 +179,36 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
         return; // No answer passed the check
       }
     }
+    
+    if (mAnswerAnnot.size() > mMaxAnswerQty) {
+      mMaxAnswerQty = mAnswerAnnot.size();
+      logger.info("New max # of answ: " + mMaxAnswerQty);
+    }
 
     mAnswId = -1;    
     mGood  = true;
   }
   
-  @Override
-  public void destroy() {
-    releaseAllJCas();
-    mJCasFactory.destroy();
-  }
-  
-  private JCas allocateJCas() throws ResourceInitializationException {
-    JCas res = mJCasFactory.borrowJCas();
-    mBorrowedJCas.add(res);
-    return res;
-  }
-  
-  private void releaseAllJCas() {
-    for (JCas jcas: mBorrowedJCas) {
+  private void releaseAll() {
+    if (mQuestJCas != null) {
+      mJCasFactory.returnJCas(mQuestJCas);
+      mQuestJCas = null;
+    }
+    for (JCas jcas: mAnswerJCas) {
       mJCasFactory.returnJCas(jcas);
     }
-    mBorrowedJCas.clear();
+    mAnswerJCas.clear();
+    mAnswerAnnot.clear();
   }
-  
   public boolean hasNext() throws AnalysisEngineProcessException {
-    return (mGood && (mAnswId < mAnswerJCas.size()))  ||
-           (!mGood && !mReleasedEmpty);
+    boolean f = (mGood && (mAnswId < mAnswerJCas.size()))  ||
+                (!mGood && !mReleasedEmpty);
+    //logger.info("@@@ hasNext() @@@" + (f ? 1 : 0));
+    return f;
   }
 
   public AbstractCas next() throws AnalysisEngineProcessException {
+    //logger.info("@@@ next() @@@");
     JCas jCasDst = getEmptyJCas();
     
     jCasDst.setDocumentLanguage(mBaseJcas.getDocumentLanguage());

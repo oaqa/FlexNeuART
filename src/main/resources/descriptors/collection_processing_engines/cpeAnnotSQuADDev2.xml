@@ -15,7 +15,7 @@
             </configurationParameterSettings>
         </collectionIterator>
     </collectionReader>
-    <casProcessors casPoolSize="4" processingUnitThreadCount="4">
+    <casProcessors casPoolSize="4" processingUnitThreadCount="3">
     <casProcessor deployment="integrated" name="aeSQuADTokenLemmas">
         <descriptor>
             <import location="../analysis_engines/aeSQuADTokenLemmas.xml"/>

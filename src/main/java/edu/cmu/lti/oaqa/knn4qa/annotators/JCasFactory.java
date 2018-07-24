@@ -38,7 +38,9 @@ import org.slf4j.LoggerFactory;
 public class JCasFactory {
   private static final Logger logger = LoggerFactory.getLogger(JCasFactory.class);
   
-  public JCasFactory(AnalysisEngine engine) { mEngine = engine; }
+  public JCasFactory(AnalysisEngine engine) { 
+    mEngine = engine; 
+  }
   
   public JCas borrowJCas() throws ResourceInitializationException {
     synchronized (this) {
@@ -46,6 +48,8 @@ public class JCasFactory {
         int last = mJCasList.size() - 1;
         JCas res = mJCasList.get(last);
         mJCasList.remove(last);
+        // Reset here just in case, but it is also reset
+        // in the returnJCas function
         res.reset();      
         return res;
       }
@@ -57,6 +61,7 @@ public class JCasFactory {
   
   public void returnJCas(JCas jcas) {
     synchronized (this) {
+      jcas.reset();
       mJCasList.add(jcas);
     }
   }
