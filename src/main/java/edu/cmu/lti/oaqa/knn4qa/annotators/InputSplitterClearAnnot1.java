@@ -138,6 +138,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
      for (Answer yan : JCasUtil.select(jcas, Answer.class)) 
      if (yan.getIsBest() || mIncludeNotBest) {
         JCas answJCas = null;
+        
         try {
           /*
            *  By default, a CAS Multiplier is only allowed to hold one output CAS instance at a time.
@@ -145,26 +146,27 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
            *  Using a separate analysis engine (inside BasicEngine) provides a work around.
            */
           answJCas = mJCasFactory.borrowJCas();
-        } catch (Exception e) {
-          e.printStackTrace();
-          throw new AnalysisEngineProcessException(e);
-        }
-  
-        answJCas.setDocumentText(yan.getCoveredText());
-        answJCas.setDocumentLanguage(mBaseJcas.getDocumentLanguage());
-        
-        mClearNLPEngine.process(answJCas);
-  
-        try {
+
+          answJCas.setDocumentText(yan.getCoveredText());
+          answJCas.setDocumentLanguage(mBaseJcas.getDocumentLanguage());
+          
+          mClearNLPEngine.process(answJCas);
+          
           if (mCheckQuality && !SimpleTextQualityChecker.checkCAS(answJCas, mMinTokQty)) {
             logger.info(String.format("Dropping answer %s, text '%s'", 
                 yan.getId(), yan.getCoveredText()));
-            mJCasFactory.returnJCas(answJCas); // Returning the JCas here, b/c
+            if (answJCas != null)
+              mJCasFactory.returnJCas(answJCas); // Returning the JCas here, b/c
             // it will not be saved to an answer array and hence it won't be 
             // freed by the function releaseAll()
             continue;
           }
         } catch (Exception e) {
+          if (answJCas != null)
+            mJCasFactory.returnJCas(answJCas); // Returning the JCas here, b/c
+          // it will not be saved to an answer array and hence it won't be 
+          // freed by the function releaseAll()
+          
           e.printStackTrace();
           throw new AnalysisEngineProcessException(e); 
         }
