@@ -11,7 +11,7 @@ fi
 OS=`uname|awk '{print $1}'`
 if [ "$OS" = "Linux" ] ; then
   MEM_SIZE_MX_KB=`free|grep Mem|awk '{print $2}'`
-  MEM_SIZE_MIN_KB=$((3*$MEM_SIZE_MX_KB/4))
+  MEM_SIZE_MIN_KB=$((4*$MEM_SIZE_MX_KB/5))
   export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MX_KB}k -server"
 elif [ "$OS" = "Darwin" ] ; then
   # Assuming Macbook pro
