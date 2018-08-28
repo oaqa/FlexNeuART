@@ -70,3 +70,22 @@ function save_server_logs {
   me=`basename "$0"`
   mv $SERVER_LOG_NAME $SERVER_LOG_NAME.$me
 }
+
+function setJavaMem {
+  F1="$1"
+  F2="$2"
+  OS=`uname|awk '{print $1}'`
+  if [ "$OS" = "Linux" ] ; then
+    MEM_SIZE_MX_KB=`free|grep Mem|awk '{print $2}'`
+  elif [ "$OS" = "Darwin" ] ; then
+    # Assuming Macbook pro
+    MEM_SIZE_MX_KB=$((16384*1024))
+  else
+    echo "Unsupported OS: $OS"
+    exit 1
+  fi
+  # No mx
+  MEM_SIZE_MIN_KB=$(($F1*$MEM_SIZE_MX_KB/$F2))
+  export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -server"
+  echo "MAVEN_OPTS=$MAVEN_OPTS"
+}
