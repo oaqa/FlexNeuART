@@ -42,12 +42,6 @@ elif [ "$collect" = "squad" ] ; then
     echo "FAILURE!!!"
     exit 1
   fi
-elif [ "$collect" = "gov2" ] ; then
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs all  -solr_file SolrAnswerFile.txt.gz
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
 else
   echo "Wrong collection name '$collect'"
   exit 1

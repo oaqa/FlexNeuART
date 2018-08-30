@@ -33,13 +33,12 @@ rm -f "$OUT_DIR"/*
 echo "=========================================================================="
 
 if [ "$collect" = "manner" ] ; then
-  for field in text text_unlemm bigram srl srl_lab dep wnss ; do
-  #for field in text ; do
+  for field in text text_unlemm ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field
     check "scripts/index/run_inmemfwd_index.sh  $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field"
   done
 elif [ "$collect" = "compr" -o  "$collect" = "stackoverflow" ] ; then
-  for field in text text_unlemm bigram ; do
+  for field in text text_unlemm ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field
     check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field"
   done
@@ -59,7 +58,7 @@ elif [ "$collect" = "squad" ] ; then
     cd -  
     check "cd - "
   done
-  for field in qfeat_only text text_qfeat ephyra_spacy ephyra_dbpedia ephyra_allent lexical_spacy lexical_dbpedia lexical_allent ; do
+  for field in text text_unlemm ; do
     if [ "$field" == "text" ] ; then
       SOURCE_NAME="SolrAnswerFile.txt"
     else
@@ -68,12 +67,6 @@ elif [ "$collect" = "squad" ] ; then
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $SOURCE_NAME -field $field
     check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $SOURCE_NAME -field $field"
   done
-elif [ "$collect" = "gov2" ] ; then
-  scripts/index/run_inmemfwd_index.sh -field text -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file SolrAnswerFile.txt.gz
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
 else
   echo "Wrong collection name '$collect'"
   exit 1

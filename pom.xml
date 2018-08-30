@@ -398,7 +398,7 @@
     <dependency>
     	<groupId>umass</groupId>
     	<artifactId>RankLib</artifactId>
-    	<version>2.5</version>
+    	<version>2.7</version>
     </dependency>
 
     <dependency>
