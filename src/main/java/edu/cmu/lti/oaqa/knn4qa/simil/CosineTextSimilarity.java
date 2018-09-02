@@ -10,7 +10,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  * @author Leonid Boytsov
  *
  */
-public class CosineTextSimilarity extends QueryDocSimilarity {
+public class CosineTextSimilarity extends TFIDFSimilarity {
   public CosineTextSimilarity(InMemForwardIndex fieldIndex) {
     mFieldIndex = fieldIndex;
   }

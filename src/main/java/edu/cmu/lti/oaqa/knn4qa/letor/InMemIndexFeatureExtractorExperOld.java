@@ -42,8 +42,8 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
  * @author Leonid Boytsov
  *
  */
-public class InMemIndexFeatureExtractorExper extends InMemIndexFeatureExtractor {
-  public static final String CODE = "exper";
+public class InMemIndexFeatureExtractorExperOld extends InMemIndexFeatureExtractorOld {
+  public static final String CODE = "experOld";
   
   public static final String USE_ONLY_WEIGHTED_AVG_EMBED = "onlyWghtAvgEmbed";
  
@@ -59,7 +59,7 @@ public class InMemIndexFeatureExtractorExper extends InMemIndexFeatureExtractor 
   public float getProbSelfTran(int fieldId) { return mProbSelfTran[fieldId]; }
 
   
-  public InMemIndexFeatureExtractorExper(
+  public InMemIndexFeatureExtractorExperOld(
       String  params,
       String  dirTranPrefix, 
       int     gizaIterQty,

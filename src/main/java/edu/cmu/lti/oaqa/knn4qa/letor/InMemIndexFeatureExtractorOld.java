@@ -43,19 +43,62 @@ import no.uib.cipr.matrix.sparse.SparseVector;
  * @author Leonid Boytsov
  *
  */
-public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
-  private static final Logger logger = LoggerFactory.getLogger(InMemIndexFeatureExtractor.class);
+public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
+  public static final float BM25_K1 = BM25SimilarityLucene.DEFAULT_BM25_K1;
+  public static final float BM25_B = BM25SimilarityLucene.DEFAULT_BM25_B;
+  
+  public static final int TEXT_FIELD_ID        = 0;
+  public static final int TEXT_UNLEMM_FIELD_ID = 1;
+
+  public boolean isSomeTextFieldId(int fieldId) {
+    return fieldId == TEXT_FIELD_ID || fieldId == TEXT_UNLEMM_FIELD_ID;
+  }
+
+  public final static String[] mFieldNames = { 
+                                            "text",
+                                            "text_unlemm",                                
+                                            "text_alias1"
+                                            };
+  /*
+   * If a field is an alias of a certain field, the ID of the field it mirrors is given here.
+   * LIMITATION: the alias should always be initialized after the field it mirrors. In other
+   * words, an alias index/id should be larger.
+   */
+  public final static int[] mAliasOfId = {
+                                        -1,
+                                        -1,
+                                        TEXT_FIELD_ID
+  };
+
+  /*
+   * OOV_PROB is taken from
+   * 
+   * Learning to Rank Answers to Non-Factoid Questions from Web Collections
+   * by Mihai Surdeanu et al.
+   * 
+   */
+  public static final double OOV_PROB = 1e-9;
+  public static final float DEFAULT_PROB_SELF_TRAN = 0.5f;
+    
+  
+  public static String indexFileName(String prefixDir, String fileName) {
+    return prefixDir + "/" + fileName;
+  }  
+  
+  
+  
+  private static final Logger logger = LoggerFactory.getLogger(InMemIndexFeatureExtractorOld.class);
   
   public static String getExtractorListDesc() {
     Joiner joiner = Joiner.on(',');
     
     String fls [] = {
-        InMemIndexFeatureExtractorExper.CODE,
+        InMemIndexFeatureExtractorExperOld.CODE,
     };
     
     return joiner.join(fls);
   }
-  public static InMemIndexFeatureExtractor createExtractor(
+  public static InMemIndexFeatureExtractorOld createExtractor(
       String    extractorType, 
       String    gizaRootDir, 
       int       gizaIterQty,
@@ -64,20 +107,20 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
       @Nullable String[] embedFiles,
       @Nullable String[]  highOrderModelFiles) throws Exception {
 
-    if (extractorType.startsWith(InMemIndexFeatureExtractorExper.CODE + "@")) {
+    if (extractorType.startsWith(InMemIndexFeatureExtractorExperOld.CODE + "@")) {
      // This is a special extractor that can use parameters specified after the colon
       return 
-          new InMemIndexFeatureExtractorExper(
-                    extractorType.substring(InMemIndexFeatureExtractorExper.CODE.length() + 1),
+          new InMemIndexFeatureExtractorExperOld(
+                    extractorType.substring(InMemIndexFeatureExtractorExperOld.CODE.length() + 1),
                     gizaRootDir, 
                     gizaIterQty, 
                     memIndxPref,
                     embedDir,
                     embedFiles,
                     highOrderModelFiles);              
+    } else {
+      throw new Exception("Unsupported extractor type: " + extractorType);
     }
-
-    return null;
   }
   
 	/*
@@ -194,7 +237,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
   
   /* Capabilities functions (to check which resources are needed) */
   public boolean needsGIZA() {
-    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+    for (int fieldId = 0; fieldId < mFieldNames.length; ++fieldId) {
       if (useModel1Feature(fieldId) ||
           useModel1FeatureQueryNorm(fieldId) ||
           useSimpleTranFeature(fieldId) ||
@@ -208,7 +251,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
   }
   
   public boolean needsDenseEmbed() {
-    for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+    for (int fieldId = 0; fieldId < mFieldNames.length; ++fieldId) {
       if (useWMDFeatures(fieldId) ||
           useLCSEmbedFeatures(fieldId) ||
           useAveragedEmbedFeatures(fieldId) ||
@@ -248,7 +291,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     return maAnswToQuestTran[fieldId];
   }
   
-  public QueryDocSimilarity getBM25NormSimil(int fieldId) {
+  public TFIDFSimilarity getBM25NormSimil(int fieldId) {
     return mBM25SimilarityNorm[fieldId];
   }
   
@@ -276,7 +319,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
    *                       
    * @throws Exception
    */
-  public InMemIndexFeatureExtractor(String dirTranPrefix, 
+  public InMemIndexFeatureExtractorOld(String dirTranPrefix, 
                                     int gizaIterQty, 
                                     String indexDir,
                                     @Nullable String    embedDir,
@@ -296,10 +339,10 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
   }
     
   /* LIMITATION: initFieldIndex should be called in the order of increasing fieldId! */
-  void initFieldIndex(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
+  void initFieldIndex(int fieldId, InMemIndexFeatureExtractorOld ... donorExtractors) throws Exception {
     // First try to reuse donor's index
     for (int donorId = 0; donorId < donorExtractors.length; donorId++) {
-      InMemIndexFeatureExtractor donnor = donorExtractors[donorId];
+      InMemIndexFeatureExtractorOld donnor = donorExtractors[donorId];
       if (null == donnor) continue;   
       if (null == mFieldIndex[fieldId]) 
         mFieldIndex[fieldId] = donnor.mFieldIndex[fieldId];     
@@ -309,7 +352,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
      *  unless we have an alias.
      */
     if (null == mFieldIndex[fieldId]) {
-      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      int aliasOfId = mAliasOfId[fieldId];
       // First, let's do a couple of paranoid checks
       if (aliasOfId >= 0) {
         if (aliasOfId >= fieldId) {
@@ -318,27 +361,27 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
                                  " is smaller than the id of the field it mirrors!");
         }
         if (null == mFieldIndex[aliasOfId]) {
-          logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
-                      " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
+          logger.info("Field " + mFieldNames[fieldId] +
+                      " : the field index of the alias " + mFieldNames[aliasOfId] + 
               " is not initialized, initializing the index from scratch!");
           // Note that the index is initialized using the name of the aliased field!
-          mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[aliasOfId]));
+          mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, mFieldNames[aliasOfId]));
         } else {
           // All is fine, we can reuse the field index of the aliased field
-          logger.info("Field " + FeatureExtractor.mFieldNames[fieldId] +
-              " : the field index of the alias " + FeatureExtractor.mFieldNames[aliasOfId] + 
+          logger.info("Field " + mFieldNames[fieldId] +
+              " : the field index of the alias " + mFieldNames[aliasOfId] + 
       " is already initialized, so we reuse this index.");
           mFieldIndex[fieldId] = mFieldIndex[aliasOfId];
         }
       } else 
-        mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, FeatureExtractor.mFieldNames[fieldId]));
+        mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, mFieldNames[fieldId]));
     }
   }
   
-  void initHighorderModels(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
+  void initHighorderModels(int fieldId, InMemIndexFeatureExtractorOld ... donorExtractors) throws Exception {
     // First try to reuse donor's models
     for (int donorId = 0; donorId < donorExtractors.length; donorId++) {
-      InMemIndexFeatureExtractor donnor = donorExtractors[donorId];
+      InMemIndexFeatureExtractorOld donnor = donorExtractors[donorId];
       if (null == donnor) continue;
       if (null == mHighOrderModels.get(fieldId)) 
         mHighOrderModels.set(fieldId, donnor.mHighOrderModels.get(fieldId));
@@ -358,10 +401,10 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
 
   }
   
-  void initAnswToQuestTran(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
+  void initAnswToQuestTran(int fieldId, InMemIndexFeatureExtractorOld ... donorExtractors) throws Exception {
     // First try to reuse donor's translation models
     for (int donorId = 0; donorId < donorExtractors.length; donorId++) {
-      InMemIndexFeatureExtractor donnor = donorExtractors[donorId];
+      InMemIndexFeatureExtractorOld donnor = donorExtractors[donorId];
       if (null == donnor) continue;
       if (null == maAnswToQuestTran[fieldId]) { 
         maAnswToQuestTran[fieldId] = donnor.maAnswToQuestTran[fieldId];
@@ -374,7 +417,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
       InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(mFieldIndex[fieldId]);
   
       
-      String prefix = mDirTranPrefix + "/" + FeatureExtractor.mFieldNames[fieldId] + "/";
+      String prefix = mDirTranPrefix + "/" + mFieldNames[fieldId] + "/";
       GizaVocabularyReader answVoc  = new GizaVocabularyReader(prefix + "source.vcb", filterAndRecoder);
       GizaVocabularyReader questVoc = new GizaVocabularyReader(prefix + "target.vcb", filterAndRecoder);
   
@@ -394,10 +437,10 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     }
   }  
   
-  void initWordEmbeds(int fieldId, InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
+  void initWordEmbeds(int fieldId, InMemIndexFeatureExtractorOld ... donorExtractors) throws Exception {
     // First try to reuse donor's embeddings
     for (int donorId = 0; donorId < donorExtractors.length; donorId++) {
-      InMemIndexFeatureExtractor donnor = donorExtractors[donorId];
+      InMemIndexFeatureExtractorOld donnor = donorExtractors[donorId];
       if (null == donnor) continue;
       if (null == mWordEmbeds[fieldId])
         mWordEmbeds[fieldId] = donnor.mWordEmbeds[fieldId];     
@@ -422,7 +465,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
    * 
    * @throws Exception
    */
-  public void init(InMemIndexFeatureExtractor ... donorExtractors) throws Exception {
+  public void init(InMemIndexFeatureExtractorOld ... donorExtractors) throws Exception {
     logger.info(String.format("(if averaged embeddings are used at all) using non-weighted average embeddings=%b", useNonWghtAvgEmbed()));
     
     /*
@@ -431,9 +474,9 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
      * extract all such arrays into a single class.
      */
     {
-      int fieldQty = FeatureExtractor.mFieldNames.length;
+      int fieldQty = mFieldNames.length;
       
-      if (FeatureExtractor.mAliasOfId.length != fieldQty)
+      if (mAliasOfId.length != fieldQty)
         throw new RuntimeException("Bug: FeatureExtractor.mAliasOfId.length != fieldQty");
       
       if (mFlippedTranTableFieldUse.length != fieldQty)
@@ -472,8 +515,8 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
 		       ) {
 		      initFieldIndex(fieldId, donorExtractors);
 		        
-	        mBM25Similarity[fieldId]        = new BM25SimilarityLucene(BM25_K1, BM25_B, mFieldIndex[fieldId]);
-	        mDefaultSimilarity[fieldId]     = new DefaultSimilarityLucene(mFieldIndex[fieldId]);
+	      mBM25Similarity[fieldId]        = new BM25SimilarityLucene(BM25_K1, BM25_B, mFieldIndex[fieldId]);
+	      mDefaultSimilarity[fieldId]     = new DefaultSimilarityLucene(mFieldIndex[fieldId]);
           mBM25SimilarityNorm[fieldId]    = new BM25SimilarityLuceneNorm(BM25_K1, BM25_B, mFieldIndex[fieldId]);
           mDefaultSimilarityNorm[fieldId] = new DefaultSimilarityLuceneNorm(mFieldIndex[fieldId]);
           mCosineTextSimilarity[fieldId]  = new CosineTextSimilarity(mFieldIndex[fieldId]);
@@ -522,12 +565,12 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
       int qty_model1_tran = 0, qty_simple_tran = 0;
       int qty_jsd_comp = 0;
       
-      if (FeatureExtractor.mFieldNames.length != mFieldIndex.length) {
+      if (mFieldNames.length != mFieldIndex.length) {
       	throw new RuntimeException("Bug: the number of translation directions isn't the same as the number of fields!");
       }
       
 
-      for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+      for (int fieldId = 0; fieldId < mFieldNames.length; ++fieldId) {
         boolean useModel1         = useModel1Feature(fieldId);
         boolean useSimpleTran     = useSimpleTranFeature(fieldId);
         boolean useJSDComp        = useJSDCompositeFeatures(fieldId);
@@ -573,7 +616,7 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     {
       int qty_averaged_embed = 0, qty_averaged_embedbm25 = 0, qty_wmd = 0, qty_lcs_embed = 0;
 
-      for (int fieldId = 0; fieldId < FeatureExtractor.mFieldNames.length; ++fieldId) {
+      for (int fieldId = 0; fieldId < mFieldNames.length; ++fieldId) {
         logger.info(String.format("field=%s useWMDFeatures=%b useLCSEmbedFeatures=%b useAveragedEmbedFeatures=%b useAveragedEmbedBM25Features",
             mFieldNames[fieldId], useWMDFeatures(fieldId), useLCSEmbedFeatures(fieldId), useAveragedEmbedFeatures(fieldId), useAveragedEmbedBM25Features(fieldId)));
         
@@ -621,10 +664,10 @@ public abstract class InMemIndexFeatureExtractor extends FeatureExtractor {
     
 
     for (int fieldId = 0; fieldId < mFieldNames.length; ++fieldId) {
-      int aliasOfId = FeatureExtractor.mAliasOfId[fieldId];
+      int aliasOfId = mAliasOfId[fieldId];
       int realFieldId = aliasOfId >= 0 ? aliasOfId : fieldId;
 	  String query = queryData.get(mFieldNames[realFieldId]);
-	  String fieldName = FeatureExtractor.mFieldNames[fieldId];
+	  String fieldName = mFieldNames[fieldId];
 
       if (useBM25Feature(fieldId)) {
 	      getFieldScores(mFieldIndex[fieldId], mBM25Similarity[fieldId],
@@ -1423,7 +1466,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
    * @throws Exception
    */
   private void getFieldScores(InMemForwardIndex fieldIndex,
-                          QueryDocSimilarity    similObj,
+                          TFIDFSimilarity    similObj,
                           ArrayList<String> arrDocIds, 
                           String fieldName,
                           int featureId,
@@ -1828,7 +1871,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   }
    
   
-  InMemForwardIndex mFieldIndex[] = new InMemForwardIndex[FeatureExtractor.mFieldNames.length];
+  InMemForwardIndex mFieldIndex[] = new InMemForwardIndex[mFieldNames.length];
 
   /* START OF FIELD PARAMS */
   
@@ -1954,11 +1997,11 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   
   protected float maFieldProbTable[][] = new float[mFieldNames.length][];
 
-  final BM25SimilarityLucene        mBM25Similarity[] = new BM25SimilarityLucene[FeatureExtractor.mFieldNames.length];
-  final DefaultSimilarityLucene     mDefaultSimilarity[] = new DefaultSimilarityLucene[FeatureExtractor.mFieldNames.length];
-  final BM25SimilarityLuceneNorm    mBM25SimilarityNorm[] = new BM25SimilarityLuceneNorm[FeatureExtractor.mFieldNames.length];
-  final DefaultSimilarityLuceneNorm mDefaultSimilarityNorm[] = new DefaultSimilarityLuceneNorm[FeatureExtractor.mFieldNames.length];
-  final CosineTextSimilarity        mCosineTextSimilarity[] = new CosineTextSimilarity[FeatureExtractor.mFieldNames.length];
+  final BM25SimilarityLucene        mBM25Similarity[] = new BM25SimilarityLucene[mFieldNames.length];
+  final DefaultSimilarityLucene     mDefaultSimilarity[] = new DefaultSimilarityLucene[mFieldNames.length];
+  final BM25SimilarityLuceneNorm    mBM25SimilarityNorm[] = new BM25SimilarityLuceneNorm[mFieldNames.length];
+  final DefaultSimilarityLuceneNorm mDefaultSimilarityNorm[] = new DefaultSimilarityLuceneNorm[mFieldNames.length];
+  final CosineTextSimilarity        mCosineTextSimilarity[] = new CosineTextSimilarity[mFieldNames.length];
   
   GizaTranTableReaderAndRecoder   [] maAnswToQuestTran = new GizaTranTableReaderAndRecoder[mFieldNames.length];
 
@@ -1984,7 +2027,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   protected int                           mLCSEmbedFeatQty = 0;
   protected int                           mWMDFeatQty = 0;
     
-  protected final EmbeddingReaderAndRecoder[][] mWordEmbeds = new EmbeddingReaderAndRecoder[FeatureExtractor.mFieldNames.length][];
+  protected final EmbeddingReaderAndRecoder[][] mWordEmbeds = new EmbeddingReaderAndRecoder[mFieldNames.length][];
 
   private HashIntObjMap<SparseVector>  mTranWordEmbedCache =       
                                                           HashIntObjMaps.<SparseVector>newMutableMap(INIT_VOCABULARY_SIZE);

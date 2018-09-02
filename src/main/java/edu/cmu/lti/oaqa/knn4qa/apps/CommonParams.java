@@ -15,7 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 
 public class CommonParams {
   
@@ -65,11 +65,11 @@ public class CommonParams {
 
   public final static String EXTRACTOR_TYPE_FINAL_PARAM = "extr_type_final";
   public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type: " + 
-                                                  InMemIndexFeatureExtractor.getExtractorListDesc();
+                                                  InMemIndexFeatureExtractorOld.getExtractorListDesc();
                                   ;
   public final static String EXTRACTOR_TYPE_INTERM_PARAM = "extr_type_interm";  
   public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type: " + 
-                                                  InMemIndexFeatureExtractor.getExtractorListDesc();
+                                                  InMemIndexFeatureExtractorOld.getExtractorListDesc();
   
   public final static String MAX_CAND_QTY_PARAM    = "cand_qty";
   public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. " +

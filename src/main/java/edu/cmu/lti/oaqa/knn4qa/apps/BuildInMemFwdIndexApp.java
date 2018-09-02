@@ -22,7 +22,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 
@@ -96,22 +96,7 @@ public class BuildInMemFwdIndexApp {
       }
       
       String [] subDirs = subDirTypeList.split(",");
-      
-      int fieldId = -1;
-      for (int k = 0; k < FeatureExtractor.mFieldNames.length; ++k) {
-        if (FeatureExtractor.mFieldNames[k].equalsIgnoreCase(fieldName)) {
-          fieldId = k;
-          break;
-        }
-      }
-      
-      if (fieldId == -1) {
-        System.err.println("Wrong field name: '" + fieldName + "' available fields:");
-        for (int k = 0; k < FeatureExtractor.mFieldNames.length; ++k)
-          System.err.print(FeatureExtractor.mFieldNames[k] + " ");
-        Usage("Specify: '" + FIELD_NAME_DESC, options);
-      }
-      
+
       System.out.println("Processing field: '" + fieldName + "'");
         
       String [] fileNames = new String[subDirs.length];
@@ -124,7 +109,7 @@ public class BuildInMemFwdIndexApp {
         
       InMemForwardIndex indx = new InMemForwardIndex(fieldName, fileNames, bStoreWordIdSeq, maxNumRec);
         
-      indx.save(InMemIndexFeatureExtractor.indexFileName(outPrefix, fieldName));
+      indx.save(InMemIndexFeatureExtractorOld.indexFileName(outPrefix, fieldName));
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
     } catch (Exception e) {

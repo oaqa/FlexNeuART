@@ -19,7 +19,7 @@ import no.uib.cipr.matrix.DenseVector;
 
 import java.util.*;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntryExt;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
 
@@ -62,7 +62,7 @@ class SearchEntry implements Comparable<SearchEntry> {
 class BruteForceKNNThread extends Thread {
   private final int                           mTopK;
   private final int                           mThreadId;
-  private final InMemIndexFeatureExtractor    mFeatExtr;
+  private final InMemIndexFeatureExtractorOld    mFeatExtr;
   private final DenseVector                   mWeights;
   private final int                           mThreadQty;
   private final Map<String, String>           mQueryData;
@@ -74,7 +74,7 @@ class BruteForceKNNThread extends Thread {
   
   public BruteForceKNNThread(Map<String, String> queryData,
                       int topK,
-                      InMemIndexFeatureExtractor featExtr,
+                      InMemIndexFeatureExtractorOld featExtr,
                       int threadId,
                       int threadQty,
                       DenseVector weights) {
@@ -134,7 +134,7 @@ class BruteForceKNNThread extends Thread {
  *
  */
 public class BruteForceKNNCandidateProvider extends CandidateProvider {
-  private InMemIndexFeatureExtractor    mFeatExtr;
+  private InMemIndexFeatureExtractorOld    mFeatExtr;
   private DenseVector                   mWeights;
   private int                           mThreadQty;
 
@@ -142,7 +142,7 @@ public class BruteForceKNNCandidateProvider extends CandidateProvider {
    * @throws Exception 
    */
   public BruteForceKNNCandidateProvider(
-      InMemIndexFeatureExtractor featExtr,
+      InMemIndexFeatureExtractorOld featExtr,
       DenseVector       weights,
       int               threadQty
       ) throws Exception {

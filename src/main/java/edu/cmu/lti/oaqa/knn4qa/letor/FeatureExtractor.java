@@ -25,63 +25,19 @@ import java.util.*;
 
 import no.uib.cipr.matrix.DenseVector;
 
-public abstract class FeatureExtractor {
-  public static final int TEXT_FIELD_ID        = 0;
-  public static final int TEXT_UNLEMM_FIELD_ID = 1;
-    
-  public static final float BM25_K1 = 1.2f;
-  public static final float BM25_B = 0.75f;
-
-  public boolean isSomeTextFieldId(int fieldId) {
-    return fieldId == TEXT_FIELD_ID || fieldId == TEXT_UNLEMM_FIELD_ID;
-  }
-  
+public abstract class FeatureExtractor {  
   public abstract String getName();
-
-
-
-  public final static String[] mFieldNames = { 
-                                            "text",
-                                            "text_unlemm",                                
-                                            "text_alias1"
-                                            };
-  /*
-   * If a field is an alias of a certain field, the ID of the field it mirrors is given here.
-   * LIMITATION: the alias should always be initialized after the field it mirrors. In other
-   * words, an alias index/id should be larger.
-   */
-  public final static int[] mAliasOfId = {
-                                        -1,
-                                        -1,
-                                        TEXT_FIELD_ID
-  };
-
-  /*
-   * OOV_PROB is taken from
-   * 
-   * Learning to Rank Answers to Non-Factoid Questions from Web Collections
-   * by Mihai Surdeanu et al.
-   * 
-   */
-  public static final double OOV_PROB = 1e-9;
-  public static final float DEFAULT_PROB_SELF_TRAN = 0.5f;
-    
-  
-  public static String indexFileName(String prefixDir, String fileName) {
-    return prefixDir + "/" + fileName;
-  }  
   
   /**
    * Obtains features for a set of documents, this function should be <b>thread-safe!</b>.
    * 
    * @param     arrDocIds    an array of document IDs
-   * @param     queryData    several pieces of input data, one is typically a bag-of-words query. 
+   * @param     queryData    a multifield representation of the query (map keys are field names). 
 
    * @return a map docId -> sparse feature vector
    */
   public abstract Map<String,DenseVector> getFeatures(ArrayList<String>    arrDocIds, 
-                                                       Map<String, String>  queryData) throws Exception;
-  
+                                                      Map<String, String>  queryData) throws Exception;
   
   /**
    * @return the total number of features (some may be missing, though).
@@ -195,5 +151,15 @@ public abstract class FeatureExtractor {
         }
       }
     }
+  }
+
+  public static HashMap<String, DenseVector> initResultSet(ArrayList<String> arrDocIds, int featureQty) {
+    HashMap<String, DenseVector> res = new HashMap<String,DenseVector>();
+
+    for (String docId : arrDocIds) {
+      res.put(docId, new DenseVector(featureQty));
+    }
+    
+    return res;
   }
 }

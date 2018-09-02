@@ -21,6 +21,7 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.cmu.lti.oaqa.knn4qa.apps.CommonParams;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
@@ -52,7 +53,7 @@ public class FeatExtrResourceManager {
   private final String mRootEmbedDir;
   private final String mRootFwdIndexDir;
   
-  FeatExtrResourceManager(String rootFwdIndexDir,
+  public FeatExtrResourceManager(String rootFwdIndexDir,
                           String rootModel1TranDir,
                           String rootEmbedDir) {
     mRootFwdIndexDir = rootFwdIndexDir;
@@ -69,6 +70,10 @@ public class FeatExtrResourceManager {
    * @throws Exception
    */
   public InMemForwardIndex getFwdIndex(String fieldName) throws Exception {
+    if (mRootFwdIndexDir == null) {
+      throw new Exception("There is no forward index directory, likely, you need to specify " + 
+          CommonParams.MEMINDEX_PARAM + " in the calling app");
+    }
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
     synchronized (this) {
       if (!mFwdIndices.containsKey(fieldName)) {
@@ -80,6 +85,9 @@ public class FeatExtrResourceManager {
   }
   
   public EmbeddingReaderAndRecoder getWordEmbed(String fieldName, String fileName) throws Exception {
+    if (mRootEmbedDir == null)
+      throw new Exception("There is no forward index directory, likely, you need to specify " + 
+          CommonParams.EMBED_DIR_PARAM + " in the calling app");
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
     synchronized (this) {
       String embedKey = fieldName + "_" + fileName;
@@ -96,6 +104,9 @@ public class FeatExtrResourceManager {
   public Model1Data getModel1Tran(String fieldName, boolean flipTranTable, 
                                   int gizaIterQty, 
                                   float probSelfTran, float minProb) throws Exception {
+    if (mRootModel1TranDir == null)
+      throw new Exception("There is no forward index directory, likely, you need to specify " + 
+          CommonParams.GIZA_ROOT_DIR_PARAM + " in the calling app");
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
     String key = fieldName + "_" + flipTranTable + "_" + gizaIterQty;
     synchronized (this) {

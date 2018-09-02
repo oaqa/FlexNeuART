@@ -34,7 +34,10 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  * @author Leonid Boytsov
  *
  */
-public class BM25SimilarityLucene extends QueryDocSimilarity {
+public class BM25SimilarityLucene extends TFIDFSimilarity {
+  public static final float DEFAULT_BM25_K1 = 1.2f;
+  public static final float DEFAULT_BM25_B = 0.75f; 
+  
   public BM25SimilarityLucene(float k1, float b, InMemForwardIndex fieldIndex) {
     mBM25_k1 = k1;
     mBM25_b = b;

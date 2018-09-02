@@ -66,26 +66,9 @@ public class ExtractFieldValue {
       
       String outputFileName = cmd.getOptionValue(OUTPUT_FILE_PARAM);
       if (null == outputFileName) Usage("Specify: " + OUTPUT_FILE_PARAM, options);
-      
-      int fieldId = -1;
-      
-      String tmp = cmd.getOptionValue(FIELD_NAME_PARAM);
-      
-      if (tmp != null) {
-        for (int i = 0; i < FeatureExtractor.mFieldNames.length; ++i) {
-          if (0 == tmp.compareToIgnoreCase(FeatureExtractor.mFieldNames[i])) {
-            fieldId = i;
-            break;
-          }          
-        }        
-      } else Usage("Specify: " + FIELD_NAME_PARAM, options);
-      
-      if (fieldId == -1) {
-        Usage("Unknown field: " + tmp, options);
-      }
 
-      String fieldName = FeatureExtractor.mFieldNames[fieldId];
-      
+      String fieldName = cmd.getOptionValue(FIELD_NAME_PARAM);
+  
       BufferedReader inpText = new BufferedReader(new InputStreamReader(
           CompressUtils.createInputStream(inputFileName)));
       String docText = XmlHelper.readNextXMLIndexEntry(inpText);

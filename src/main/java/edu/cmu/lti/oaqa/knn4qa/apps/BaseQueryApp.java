@@ -36,17 +36,13 @@ import com.google.common.base.Splitter;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.BruteForceKNNCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfoCache;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneGIZACandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibKNNCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibQueryGenerator;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.SolrCandidateProvider;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.*;
+import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorExperOld;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
+import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 import ciir.umass.edu.learning.*;
 
@@ -113,9 +109,6 @@ class BaseProcessingUnit {
   }  
   
   public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
-    boolean addRankScores = mAppRef.mInMemExtrFinal != null && mAppRef.mInMemExtrFinal.addRankScores();
-    
-
     Map<String, String>    docFields = null;
     String                 docText = mAppRef.mQueries.get(queryNum);
     
@@ -168,7 +161,6 @@ class BaseProcessingUnit {
     for (int rank = 0; rank < resultsAll.length; ++rank) {
       CandidateEntry e = resultsAll[rank];
       allDocIds.add(e.mDocId);
-      if (addRankScores) e.mOrigRank = rank;
     }
     
     // allDocFeats will be first created by an intermediate re-ranker (if it exists).
@@ -241,9 +233,6 @@ class BaseProcessingUnit {
       // Compute features once for all documents using a final re-ranker
       start = System.currentTimeMillis();
       allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, docFields);
-      if (addRankScores) {
-        addScoresAndRanks(allDocFeats, resultsAll);
-      }
       
       Ranker modelFinal = mAppRef.mModelFinal;
       
@@ -728,10 +717,40 @@ public abstract class BaseQueryApp {
    * @throws Exception 
    */
   void initExtractors() throws Exception {
-    if (mExtrTypeFinal != null)
-      mInMemExtrFinal  = createOneExtractor(mExtrTypeFinal);
-    if (mExtrTypeInterm != null)
-      mInMemExtrInterm = createOneExtractor(mExtrTypeInterm, mInMemExtrFinal /* try to reuse existing resources from another extractor */);
+    boolean bOldExtr = false;
+    
+    if (mExtrTypeFinal != null) {
+      if (mExtrTypeFinal.startsWith(InMemIndexFeatureExtractorExperOld.CODE)) {
+        bOldExtr = true;
+        
+        if (mExtrTypeInterm != null) {
+          if (!mExtrTypeInterm.startsWith(InMemIndexFeatureExtractorExperOld.CODE)) {
+            throw new Exception("Either both or none of the extractors should be old-style:"
+                                +"however the final one is old style, but intermediate one is not!");
+          }
+        
+        }
+      }
+    } else {
+      // Here the final extractor type is null
+      bOldExtr = mExtrTypeInterm != null &&
+                 mExtrTypeInterm.startsWith(InMemIndexFeatureExtractorExperOld.CODE);
+    }
+    
+    if (bOldExtr) {
+      InMemIndexFeatureExtractorOld extr1 = createOneExtractorOld(mExtrTypeFinal);
+      mInMemExtrFinal  = extr1;
+      if (mExtrTypeInterm != null) {
+        mInMemExtrInterm = createOneExtractorOld(mExtrTypeInterm, 
+                                                 extr1 /* try to reuse existing resources from another extractor */);        
+      }
+    } else if (mExtrTypeFinal != null || mExtrTypeInterm != null) {
+      mResourceManager = new FeatExtrResourceManager(mMemIndexPref, mGizaRootDir, mEmbedDir);
+      if (mExtrTypeFinal != null)
+        mInMemExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
+      if (mExtrTypeInterm != null)
+        mInMemExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
+    }
   }
   
   /**
@@ -750,57 +769,33 @@ public abstract class BaseQueryApp {
       for (int ic = 1; ic < mThreadQty; ++ic) 
         mCandProviders[ic] = mCandProviders[0];
     } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
-      mCandProviders[0] = new LuceneCandidateProvider(mProviderURI);
+      mCandProviders[0] = new LuceneCandidateProvider(mProviderURI,
+                                                      BM25SimilarityLucene.DEFAULT_BM25_K1, 
+                                                      BM25SimilarityLucene.DEFAULT_BM25_B);
       for (int ic = 1; ic < mThreadQty; ++ic) 
         mCandProviders[ic] = mCandProviders[0];
-    } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE_GIZA)) {
-      if (mGizaExpandQty == null)
-        showUsageSpecify(CommonParams.GIZA_EXPAND_QTY_DESC);
-      if (mGizaRootDir == null) {
-        showUsageSpecify(CommonParams.GIZA_ROOT_DIR_DESC);
-      }
-      if (mGizaIterQty <= 0) {
-        showUsageSpecify(CommonParams.GIZA_ITER_QTY_DESC);
-      }
-      
-      mCandProviders[0] = new LuceneGIZACandidateProvider(mProviderURI, mGizaExpandQty, mGizaExpandUseWeights,
-                                                          mGizaRootDir, mGizaIterQty, 
-                                                          mMemIndexPref,
-                                                          mInMemExtrFinal, mInMemExtrInterm);
-      for (int ic = 1; ic < mThreadQty; ++ic) 
-        mCandProviders[ic] = mCandProviders[0];        
-    } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_KNN)) {
-      if (null != mInMemExtrInterm)
-        showUsage("One shouldn't use an intermeditate re-ranker together with the brute-force Java provider!");
-      if (null == mKnnWeights)
-        showUsageSpecify(CommonParams.KNN_WEIGHTS_FILE_DESC);
-      if (null == mInMemExtrInterm)
-        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_FINAL_DESC);
-      mCandProviders[0] = new BruteForceKNNCandidateProvider(mInMemExtrFinal,
-                                                             mKnnWeights,
-                                                             mKnnThreadQty
-                                                            );      
-      for (int ic = 1; ic < mThreadQty; ++ic) 
-        mCandProviders[ic] = mCandProviders[0];        
     } else if (mCandProviderType.equals(CandidateProvider.CAND_TYPE_NMSLIB)) {
       /*
        * NmslibKNNCandidateProvider isn't really thread-safe,
        * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
        * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
        */
+      // TODO need to fix this one
+      /*
       if (null == mNmslibFields) showUsageSpecify(CommonParams.NMSLIB_FIELDS_PARAM);
       NmslibQueryGenerator queryGen = 
           new NmslibQueryGenerator(mNmslibFields, mMemIndexPref, mInMemExtrInterm, mInMemExtrFinal); 
       for (int ic = 0; ic < mThreadQty; ++ic) {
         mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, queryGen);
-      }                
+      }
+      */                
     } else {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
   }
   
   /**
-   * Creates one in-memory feature extractor.
+   * Creates one old-style in-memory feature extractor.
    * 
    * @param extrType            
    *              an extractor type
@@ -809,13 +804,13 @@ public abstract class BaseQueryApp {
    * @return
    * @throws Exception
    */
-  InMemIndexFeatureExtractor createOneExtractor(String extrType, InMemIndexFeatureExtractor... donnorExtractors)
+  InMemIndexFeatureExtractorOld createOneExtractorOld(String extrType, InMemIndexFeatureExtractorOld... donnorExtractors)
       throws Exception {
     if (null == mMemIndexPref)
       showUsageSpecify(CommonParams.MEMINDEX_DESC);
 
-    InMemIndexFeatureExtractor inMemExtractor = 
-        InMemIndexFeatureExtractor.createExtractor(extrType, 
+    InMemIndexFeatureExtractorOld inMemExtractor = 
+        InMemIndexFeatureExtractorOld.createExtractor(extrType, 
                                                    mGizaRootDir, mGizaIterQty, 
                                                    mMemIndexPref, 
                                                    mEmbedDir, mEmbedFiles, mHighOrderFiles);
@@ -1008,12 +1003,13 @@ public abstract class BaseQueryApp {
   String       mGalagoOp;
   String       mGalagoParams;
   boolean      mUseThreadPool = false;
+  FeatExtrResourceManager mResourceManager;
   
   String             mResultCacheName = null; 
   CandidateInfoCache mResultCache = null;
   
-  InMemIndexFeatureExtractor mInMemExtrInterm;
-  InMemIndexFeatureExtractor mInMemExtrFinal;
+  FeatureExtractor mInMemExtrInterm;
+  FeatureExtractor mInMemExtrFinal;
   
   String   mAppName;
   Options  mOptions = new Options();

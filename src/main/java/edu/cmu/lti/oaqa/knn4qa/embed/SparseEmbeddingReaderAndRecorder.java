@@ -41,7 +41,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
-import edu.cmu.lti.oaqa.knn4qa.simil.QueryDocSimilarity;
+import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 
@@ -281,7 +281,7 @@ public class SparseEmbeddingReaderAndRecorder {
                                                float minProb, 
                                                float[] fieldProbTable,
                                                GizaTranTableReaderAndRecoder answToQuestTran,                                               
-                                               QueryDocSimilarity            similObj,
+                                               TFIDFSimilarity            similObj,
                                                DocEntry                      entry,
                                                boolean                       bMultByTF,
                                                boolean                       bMultByProb,
@@ -356,7 +356,7 @@ public class SparseEmbeddingReaderAndRecorder {
                                                float minProb, 
                                                float[] fieldProbTable,
                                                GizaTranTableReaderAndRecoder answToQuestTran,                                               
-                                               QueryDocSimilarity            similObj,
+                                               TFIDFSimilarity            similObj,
                                                DocEntry                      entry) {
     ArrayList<WordIdVals>   data = new ArrayList<WordIdVals>();
     

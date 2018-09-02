@@ -15,7 +15,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  * @author Leonid Boytsov
  *
  */
-public class DefaultSimilarityLuceneNorm extends QueryDocSimilarity {
+public class DefaultSimilarityLuceneNorm extends TFIDFSimilarity {
   public DefaultSimilarityLuceneNorm(InMemForwardIndex fieldIndex) {
     mFieldIndex = fieldIndex;
   }

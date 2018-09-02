@@ -201,7 +201,7 @@ public class EmbeddingReaderAndRecoder {
    * @return    a respective average vector.
    */  
   public float[] getDocAverage(DocEntry             doc,
-                               QueryDocSimilarity   simil,
+                               TFIDFSimilarity   simil,
                                InMemForwardIndex    fieldIndex, 
                                boolean              weightByIDF,
                                boolean              normalizeL2) {

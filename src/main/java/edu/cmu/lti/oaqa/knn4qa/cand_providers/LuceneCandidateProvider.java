@@ -35,13 +35,16 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 import com.google.common.base.Splitter;
 
 public class LuceneCandidateProvider extends CandidateProvider {
+
   @Override
   public String getName() {
     return this.getClass().getName();
   }  
   
-  public LuceneCandidateProvider(String indexDirName) throws Exception {
+  public LuceneCandidateProvider(String indexDirName,
+                                 float k1, float b) throws Exception {
     File indexDir = new File(indexDirName);
+    mSimilarity = new BM25Similarity(k1, b);
     
     if (!indexDir.exists()) {
       throw new Exception(String.format("Directory '%s' doesn't exist", indexDirName)); 
@@ -120,7 +123,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
   
   private IndexReader   mReader = null;
   private IndexSearcher mSearcher = null;
-  private Similarity    mSimilarity = new BM25Similarity(FeatureExtractor.BM25_K1, FeatureExtractor.BM25_B);
+  private final Similarity mSimilarity;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
 
   private static Splitter mSpaceSplit = Splitter.on(' ').omitEmptyStrings().trimResults();

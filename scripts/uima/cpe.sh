@@ -1,7 +1,6 @@
 #!/bin/bash
 . scripts/common.sh
 setJavaMem 3 4
-exit 0
 DescPath=$1
 if [ "$DescPath" = "" ] ; then
   echo "Specify a descriptor!"

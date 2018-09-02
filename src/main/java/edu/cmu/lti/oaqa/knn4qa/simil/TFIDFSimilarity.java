@@ -6,7 +6,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 
-public abstract class QueryDocSimilarity {
+public abstract class TFIDFSimilarity {
   public abstract String getName();
   /**
    * Computes the similarity between the query (represented by
