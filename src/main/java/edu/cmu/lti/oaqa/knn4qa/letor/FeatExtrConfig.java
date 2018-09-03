@@ -18,21 +18,43 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.github.andrewoma.dexx.collection.HashMap;
 import com.google.gson.Gson;
+
 import edu.cmu.lti.oaqa.annographix.util.MiscHelper;
 
 class OneFeatExtrConf {
   String                  type;
   Map<String, String>     params;
   
-  String getRequiredParam(String name) throws Exception {
+  String getReqParamStr(String name) throws Exception {
     String val = params.get(name);
     if (val == null)
       throw new Exception(String.format("Mandatory parameter %s is undefined for the extractor %s",
           name, type));
     return val;
   }
+  float getReqParamFloat(String name) throws Exception {
+    String val = params.get(name);
+    if (val == null)
+      throw new Exception(String.format("Mandatory parameter %s is undefined for the extractor %s",
+          name, type));
+    return Float.parseFloat(val);
+  } 
+  int getReqParamInt(String name) throws Exception {
+    String val = params.get(name);
+    if (val == null)
+      throw new Exception(String.format("Mandatory parameter %s is undefined for the extractor %s",
+          name, type));
+    return Integer.parseInt(val);
+  }
+  int getReqParamBool(String name) throws Exception {
+    String val = params.get(name);
+    if (val == null)
+      throw new Exception(String.format("Mandatory parameter %s is undefined for the extractor %s",
+          name, type));
+    return Boolean.parseBoolean(val);
+  } 
+  
   String getParam(String name, String defaultValue) {
     String val = params.get(name);
     return val != null ? val : defaultValue;
@@ -44,7 +66,11 @@ class OneFeatExtrConf {
   int getParam(String name, int defaultValue) {
     String val = params.get(name);
     return val != null ? Integer.parseInt(val) : defaultValue;
-  }  
+  }
+  boolean getParam(String name, boolean defaultValue) {
+    String val = params.get(name);
+    return val != null ? Boolean.parseBoolean(val) : defaultValue;
+  }
 }
 
 public class FeatExtrConfig {

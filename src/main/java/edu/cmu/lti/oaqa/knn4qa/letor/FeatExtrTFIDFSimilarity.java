@@ -18,10 +18,9 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
   
   FeatExtrTFIDFSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     // getParam throws an exception if the parameter is not defined
-    String fieldName = conf.getRequiredParam(FeatExtrConfig.FIELD_NAME);
-    String similType = conf.getRequiredParam(FeatExtrConfig.SIMIL_TYPE);
-    
-    mFieldName = fieldName;
+    mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
+    String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
+
     mFieldIndex = resMngr.getFwdIndex(mFieldName);
 
     if (similType.equalsIgnoreCase(BM25_SIMIL))
@@ -82,6 +81,6 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
   }
 
   final String              mFieldName;
-  final TFIDFSimilarity  mSimilObj;
+  final TFIDFSimilarity     mSimilObj;
   final InMemForwardIndex   mFieldIndex;
 }
