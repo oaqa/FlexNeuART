@@ -47,7 +47,7 @@ class OneFeatExtrConf {
           name, type));
     return Integer.parseInt(val);
   }
-  int getReqParamBool(String name) throws Exception {
+  boolean getReqParamBool(String name) throws Exception {
     String val = params.get(name);
     if (val == null)
       throw new Exception(String.format("Mandatory parameter %s is undefined for the extractor %s",

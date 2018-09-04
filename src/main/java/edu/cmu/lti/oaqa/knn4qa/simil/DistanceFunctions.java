@@ -70,7 +70,32 @@ public class DistanceFunctions {
    * @return        cosine distance
    */  
   public static float compCosine(float[] vec1, float[] vec2)  {
-    return 1 - compNormScalar(vec1, vec2);
+    //return 1 - compNormScalar(vec1, vec2);
+    return 1 - compScalar(vec1, vec2);
+  }
+  
+  /**
+   * Computes an unnormalized scalar product.
+   * 
+   * @param vec1    the first vector
+   * @param vec2    the second vector
+   * @return        a regular (unnormalized) inner/scalar product
+   */
+  public static float compScalar(float[] vec1, float[] vec2)  {    
+    float sum = 0;
+
+    int N = vec1.length;
+    if (N != vec2.length) 
+      throw new RuntimeException(String.format("Bug: different vector lengths: %d vs %d",
+                                        vec1.length, vec2.length));
+    if (N == 0)
+      throw new RuntimeException("Bug: zero-length vectors are not acceptable!");
+
+    for (int i = 0; i < N; i++) {
+      sum += vec1[i] * vec2[i];
+    }
+    
+    return sum;
   }
   
   /**

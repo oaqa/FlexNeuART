@@ -22,6 +22,10 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
       String extrType = oneExtrConf.type;
       if (extrType.equalsIgnoreCase(FeatExtrTFIDFSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrTFIDFSimilarity(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(FeatExtrModel1Similarity.EXTR_TYPE)) {
+        fe = new FeatExtrModel1Similarity(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(WordEmbedSimilarity.EXTR_TYPE)) {
+        fe = new WordEmbedSimilarity(resMngr, oneExtrConf);
       } else 
         throw new Exception("Unsupported extractor type: " + extrType);
       compList.add(fe);

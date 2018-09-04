@@ -101,7 +101,8 @@ public class FeatExtrResourceManager {
     }
   }
   
-  public Model1Data getModel1Tran(String fieldName, boolean flipTranTable, 
+  public Model1Data getModel1Tran(String fieldName, 
+                                  String model1SubDir, boolean flipTranTable, 
                                   int gizaIterQty, 
                                   float probSelfTran, float minProb) throws Exception {
     if (mRootModel1TranDir == null)
@@ -116,7 +117,7 @@ public class FeatExtrResourceManager {
         InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(fwdIndx);
         
         
-        String prefix = mRootModel1TranDir + FS + fieldName + FS;
+        String prefix = mRootModel1TranDir + FS + model1SubDir + FS;
         GizaVocabularyReader answVoc  = new GizaVocabularyReader(prefix + "source.vcb", filterAndRecoder);
         GizaVocabularyReader questVoc = new GizaVocabularyReader(prefix + "target.vcb", filterAndRecoder);
     

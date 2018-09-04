@@ -1876,121 +1876,41 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   /* START OF FIELD PARAMS */
   
   protected static boolean[] mFlippedTranTableFieldUse = {
-    true,  // text
+    false,  // text
     true,  // text_unlemm
-    false, // bigram
-    false, // srl
-    false, // srl_lab
-    false, // dep
-    false, // wnss
     true,  // text_alias1
-    true, // QFEAT_ONLY,
-    true, // TEXT_QFEAT,
-    true, // EPHYRA_SPACY,
-    true, // EPHYRA_DBPEDIA,
-    true, // EPHYRA_ALLENT,
-    true, // LEXICAL_SPACY,
-    true, // LEXICAL_DBPEDIA,
-    true, // LEXICAL_ALLENT,
    };
-  
-  
   
   protected static float[] mModel1LambdaDefault = {
                                 0.1f, // text 
                                 0.1f, // text_unlemm
-                                0.4f,    // bigram 
-                                0.075f,  // srl
-                                0.5f,    // srl_lab 
-                                0.075f,  // dep 
-                                0.1f,    // wnss
                                 0.1f,  // text_alias1
-                                0.1f, // QFEAT_ONLY,
-                                0.1f, // TEXT_QFEAT,
-                                0.1f, // EPHYRA_SPACY,
-                                0.1f, // EPHYRA_DBPEDIA,
-                                0.1f, // EPHYRA_ALLENT,
-                                0.1f, // LEXICAL_SPACY,
-                                0.1f, // LEXICAL_DBPEDIA,
-                                0.1f, // LEXICAL_ALLENT,
                               };
   
   protected static float[] mProbSelfTranDefault = {
                                 0.05f, // text
                                 0.01f, // text_unlemm
-                                DEFAULT_PROB_SELF_TRAN, // bigram
-                                DEFAULT_PROB_SELF_TRAN, // srl
-                                DEFAULT_PROB_SELF_TRAN, // srl_lab
-                                DEFAULT_PROB_SELF_TRAN, // dep
-                                DEFAULT_PROB_SELF_TRAN, // wnss
                                 0.05f, // text_alias1
-                                0.05f, // QFEAT_ONLY,
-                                0.05f, // TEXT_QFEAT,
-                                0.05f, // EPHYRA_SPACY,
-                                0.05f, // EPHYRA_DBPEDIA,
-                                0.05f, // EPHYRA_ALLENT,
-                                0.05f, // LEXICAL_SPACY,
-                                0.05f, // LEXICAL_DBPEDIA,
-                                0.05f, // LEXICAL_ALLENT,
-   };
+  };
 
   // For Model1 translation features, ignore translation probabilities smaller than this value
   protected static float[] mMinModel1ProbDefault = {
                                2.5e-3f, // text 
-                               2.5e-3f, // text_unlemm
-                               1e-5f, // bigram 
-                               1e-5f, // srl
-                               1e-5f, // srl_lab 
-                               1e-5f, // dep 
-                               1e-4f, // wnss 
+                               2.5e-3f, // text_unlemm 
                                2.5e-3f, // text_alias1 
-                               1e-3f, // QFEAT_ONLY,
-                               1e-3f, // TEXT_QFEAT,
-                               1e-3f, // EPHYRA_SPACY,
-                               1e-3f, // EPHYRA_DBPEDIA,
-                               1e-3f, // EPHYRA_ALLENT,
-                               1e-3f, // LEXICAL_SPACY,
-                               1e-3f, // LEXICAL_DBPEDIA,
-                               1e-3f, // LEXICAL_ALLENT,
                              };
 
   protected static float[] mMinJSDCompositeProbDefault =   {
                               1e-2f, // text
                               1e-2f, // text_unlemm
-                              1e-2f, // bigram 
-                              1e-2f, // srl
-                              1e-2f, // srl_lab 
-                              1e-2f, // dep 
-                              1e-2f, // wnss
                               1e-2f, // text_alias1
-                              1e-2f, // QFEAT_ONLY,
-                              1e-2f, // TEXT_QFEAT,
-                              1e-2f, // EPHYRA_SPACY,
-                              1e-2f, // EPHYRA_DBPEDIA,
-                              1e-2f, // EPHYRA_ALLENT,
-                              1e-2f, // LEXICAL_SPACY,
-                              1e-2f, // LEXICAL_DBPEDIA,
-                              1e-2f, // LEXICAL_ALLENT,
   };
   
  // For smiple tran feature, ignore translation probabilities smaller than this value
   protected static float[] mMinSimpleTranProbDefault = {
                                 2.5e-3f, // text
                                 2.5e-3f, // text_unlemm
-                                1e-5f,   // bigram 
-                                1e-5f,   // srl 
-                                1e-5f,   // srl_lab 
-                                1e-5f,   // dep 
-                                1e-2f,   // wnss
                                 2.5e-3f, // text_alias1
-                                1e-3f, // QFEAT_ONLY,
-                                1e-3f, // TEXT_QFEAT,
-                                1e-3f, // EPHYRA_SPACY,
-                                1e-3f, // EPHYRA_DBPEDIA,
-                                1e-3f, // EPHYRA_ALLENT,
-                                1e-3f, // LEXICAL_SPACY,
-                                1e-3f, // LEXICAL_DBPEDIA,
-                                1e-3f, // LEXICAL_ALLENT,
                                };
     
   /* END OF FIELD PARAMS */
