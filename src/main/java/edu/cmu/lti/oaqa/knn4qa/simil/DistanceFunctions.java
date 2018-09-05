@@ -70,8 +70,7 @@ public class DistanceFunctions {
    * @return        cosine distance
    */  
   public static float compCosine(float[] vec1, float[] vec2)  {
-    //return 1 - compNormScalar(vec1, vec2);
-    return 1 - compScalar(vec1, vec2);
+    return 1 - compNormScalar(vec1, vec2);
   }
   
   /**
@@ -129,7 +128,9 @@ public class DistanceFunctions {
      * Sometimes due to rounding errors, we get values > 1 or < -1.
      * This throws off other functions that use scalar product, e.g., acos
      */
-    float normMul =  (float)Math.max(FLOAT_EPS, Math.sqrt(norm1 * norm2));
+    float normMul = norm1 * norm2;
+    normMul =  (float) Math.sqrt(Math.max(FLOAT_EPS, normMul));
+
     float normSum = (float) (sum / normMul);
 
     float res = Math.max(-1f, Math.min(1.f, normSum));
