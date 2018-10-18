@@ -10,6 +10,6 @@ This work is covered [in the following blog post.](http://searchivarius.org/blog
 This software can be also used to **partially** reproduce results from the paper: [M Surdeanu, M Ciaramita, H Zaragoza. *Learning to rank answers to non-factoid questions from web collections* 
 Computational Linguistics, 2011 ](http://www.mitpressjournals.org/doi/pdfplus/10.1162/COLI_a_00051) 
 
-The project is supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
+The project was supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
 
 
