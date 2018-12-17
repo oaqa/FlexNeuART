@@ -83,8 +83,13 @@ for ((i=1;i<$n;++i))
         echo "Missing test set (e.g., dev1) (3d field) in line $line, file $EXTRACTORS_DESC"
         exit 1
       fi
-      # Each experiment should run in its separate directory
-      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$EXTR_TYPE/$EMBED_LIST"
+      EXPER_SUBDIR=`echo $line|awk '{print $4}'`
+      if [ "$TEST_SET" = "" ] ; then
+        echo "Missing experimental sub-dir (4th field) in line $line, file $EXTRACTORS_DESC"
+        exit 1
+      fi
+      # Each experiment should run in its separate sub-directory
+      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$EXPER_SUBDIR"
       if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
         mkdir -p "$EXPER_DIR_UNIQUE"
         if [ "$?" != "0" ] ; then
@@ -109,5 +114,8 @@ wait_children ${childPIDs[*]}
 echo "============================================"
 echo "$nrun experiments executed"
 echo "$nfail experiments failed"
+if [ "$nfail" -gt "0" ] ; then
+  echo "Check the log in working directories!!!"
+fi
 echo "============================================"
 

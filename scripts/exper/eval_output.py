@@ -7,8 +7,8 @@ import subprocess as sp
 
 def Usage(err):
   if not err is None:
-    print err
-  print "Usage: <qrel file> <trec-format output file> <optional prefix of report files> <optional label (mandatory if the report prefix is specified>"
+    print(err)
+  print("Usage: <qrel file> <trec-format output file> <optional prefix of report files> <optional label (mandatory if the report prefix is specified>")
   sys.exit(1)
 
 MAP='map'
@@ -66,9 +66,9 @@ if len(sys.argv) >= 4:
   if len(sys.argv) != 5: Usage("Specify the 4th arg")
   label=sys.argv[4]
 
-outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).split('\n')
+outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8').split('\n')
 resGdeval = parseGdevalResults(outputGdeval)
-outputTrecEval=sp.check_output([trecEvalBin, "-q", qrelFile, trecOut]).replace('\t', ' ').split('\n')
+outputTrecEval=sp.check_output([trecEvalBin, "-q", qrelFile, trecOut]).decode('utf-8').replace('\t', ' ').split('\n')
 resTrecEval=parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK, P20]))
 
 
@@ -90,7 +90,7 @@ queryQty=0
 
 # May actually delete it at some point, it doesn't do much
 # Previously it was used to compute percentiles
-for qid, entry in resTrecEval.iteritems():
+for qid, entry in resTrecEval.items():
   if qid == 'all': continue
   queryQty+=1
   #valsMAP.append(entry[MAP])
@@ -104,11 +104,11 @@ for qid, entry in resTrecEval.iteritems():
   # query, although, this should happen very rarely
   #
   if numRel <= 0:
-    print "Warning: No relevant documents for qid=%s numRel=%d" % (qid, numRel)
+    print("Warning: No relevant documents for qid=%s numRel=%d" % (qid, numRel))
   #valsRecall.append(numRel/numRelRet)
 
 if len(resTrecEval) != len(resGdeval):
-  print "Warining: The number of entries returned by trec_eval and gdeval are different!"
+  print("Warning: The number of entries returned by trec_eval and gdeval are different!")
 
 reportText=""
 reportText += "# of queries:    %d" % queryQty
