@@ -70,7 +70,6 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
   private static int mIOState = 0;
 
   public static final boolean STRICTLY_GOOD_TOKENS_FOR_TRANSLATION = false;
-  
 
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
@@ -175,10 +174,9 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
   static synchronized private void doOutput(JCas aJCas,
                                             String questionText,
                                             String questionTextUnlemm) throws IOException {
-    GoodTokens goodToks = mTextRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
-    GoodTokens goodToksUnlemm = mTextUnlemmRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
-    
+     
     if (mDumpText) {
+      GoodTokens goodToks = mTextRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
       String answerText = mTextRepExtract.getText(goodToks);
       if (!questionText.isEmpty() && !answerText.isEmpty()) {
         mQuestionTextWriter.write(questionText + NL);
@@ -186,6 +184,7 @@ public class CreateParallelCorpora extends JCasAnnotator_ImplBase {
       }
     }
     if (mDumpTextUnlemm) {
+      GoodTokens goodToksUnlemm = mTextUnlemmRepExtract.getGoodTokens(aJCas, STRICTLY_GOOD_TOKENS_FOR_TRANSLATION);
       String answerTextUnlemm = mTextUnlemmRepExtract.getText(goodToksUnlemm);
       if (!questionTextUnlemm.isEmpty() && !answerTextUnlemm.isEmpty()) {
         mQuestionTextUnlemmWriter.write(questionTextUnlemm + NL);

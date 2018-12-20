@@ -26,6 +26,18 @@
         <multiValued>false</multiValued>
         <mandatory>false</mandatory>
       </configurationParameter>
+      <configurationParameter>
+        <name>DumpText</name>
+        <type>Boolean</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+      </configurationParameter>
+      <configurationParameter>
+        <name>DumpTextUnlemm</name>
+        <type>Boolean</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+      </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
@@ -37,13 +49,27 @@
       <nameValuePair>
         <name>QuestionFilePrefix</name>
         <value>
+          <!-- triple-dot means that this value will be overridden -->
           <string>output/.../question</string>
         </value>
       </nameValuePair>
       <nameValuePair>
         <name>PassageFilePrefix</name>
         <value>
+          <!-- triple-dot means that this value will be overridden -->
           <string>output/.../answer</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>DumpText</name>
+        <value>
+          <boolean>true</boolean>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>DumpTextUnlemm</name>
+        <value>
+          <boolean>true</boolean>
         </value>
       </nameValuePair>
     </configurationParameterSettings>

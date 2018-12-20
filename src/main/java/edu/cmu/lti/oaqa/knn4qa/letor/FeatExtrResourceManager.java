@@ -106,7 +106,7 @@ public class FeatExtrResourceManager {
                                   int gizaIterQty, 
                                   float probSelfTran, float minProb) throws Exception {
     if (mRootModel1TranDir == null)
-      throw new Exception("There is no forward index directory, likely, you need to specify " + 
+      throw new Exception("There is no giza files directory, likely, you need to specify " + 
           CommonParams.GIZA_ROOT_DIR_PARAM + " in the calling app");
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
     String key = fieldName + "_" + flipTranTable + "_" + gizaIterQty;

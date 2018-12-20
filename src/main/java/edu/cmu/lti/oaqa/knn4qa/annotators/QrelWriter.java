@@ -68,7 +68,8 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
     for (Answer yans: JCasUtil.select(aJCas, Answer.class)) {
       try {
         doOutput(mQrelFileBinary,   yans.getUri(), yans.getId(), 1);
-        doOutput(mQrelFileGraded,   yans.getUri(), yans.getId(), yans.getIsBest() ? QREL_BEST_GRADE:QREL_OTHER_GRADE);
+        //doOutput(mQrelFileGraded,   yans.getUri(), yans.getId(), yans.getIsBest() ? QREL_BEST_GRADE:QREL_OTHER_GRADE);
+        doOutput(mQrelFileGraded,   yans.getUri(), yans.getId(), QREL_BEST_GRADE);
         doOutput(mQrelFileOnlyBest, yans.getUri(), yans.getId(), yans.getIsBest() ? QREL_BEST_GRADE:0);
       } catch (IOException e) {
         e.printStackTrace();

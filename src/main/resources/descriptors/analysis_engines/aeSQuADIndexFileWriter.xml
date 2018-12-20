@@ -26,6 +26,18 @@
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
+      <configurationParameter>
+        <name>FieldText</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>true</mandatory>
+      </configurationParameter>
+      <configurationParameter>
+        <name>FieldTextUnlemm</name>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>false</mandatory>
+      </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
@@ -44,6 +56,18 @@
         <name>PassageFile</name>
         <value>
           <string>output/.../SolrAnswerFile.txt</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>FieldText</name>
+        <value>
+          <string>text</string>
+        </value>
+      </nameValuePair>
+      <nameValuePair>
+        <name>FieldTextUnlemm</name>
+        <value>
+          <string>text_unlemm</string>
         </value>
       </nameValuePair>
     </configurationParameterSettings>
