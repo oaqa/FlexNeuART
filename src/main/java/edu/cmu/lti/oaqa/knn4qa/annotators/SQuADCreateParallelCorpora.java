@@ -55,7 +55,7 @@ public class SQuADCreateParallelCorpora extends JCasAnnotator_ImplBase {
   private static final String PARAM_STOPWORD_FILE = "StopWordFile";
   
   private static final String PARAM_QUESTION_PREFIX = "QuestionFilePrefix";
-  private static final String PARAM_ANSWER_PREFIX   = "AnswerFilePrefix";
+  private static final String PARAM_ANSWER_PREFIX   = "PassageFilePrefix";
   
   private static final String PARAM_DUMP_TEXT         = "DumpText";
   private static final String PARAM_DUMP_TEXT_UNLEMM  = "DumpTextUnlemm";
