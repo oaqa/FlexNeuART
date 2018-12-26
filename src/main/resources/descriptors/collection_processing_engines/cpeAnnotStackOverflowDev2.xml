@@ -23,7 +23,10 @@
             </configurationParameterSettings>
         </collectionIterator>
     </collectionReader>
+    <!--
     <casProcessors casPoolSize="4" processingUnitThreadCount="3">
+    -->
+    <casProcessors casPoolSize="8" processingUnitThreadCount="7">
     <casProcessor deployment="integrated" name="aeWrapperAggreg">
         <descriptor>
             <import name="descriptors.analysis_engines.aeWrapperAggregStackOverflowDev2"/>
