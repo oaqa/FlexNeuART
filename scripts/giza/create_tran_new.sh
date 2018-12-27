@@ -152,7 +152,7 @@ if [ "$VOC_ONLY" = "1" ] ; then
   scripts/giza/create_only_voc.sh "$GIZA_DIR" $dir "$full_target_dir/source" "$full_target_dir/target" $stepQ 
   check "create_only_voc.sh"
 else
-  scripts/giza/run_giza.sh "$GIZA_DIR" $dir "$full_target_dir/source" "$full_target_dir/target" $stepQ 
+  scripts/giza/run_mgiza.sh "$GIZA_DIR" $dir "$full_target_dir/source" "$full_target_dir/target" $stepQ 
   check "run_giza.sh"
   rm `ls $dir/*|grep -v output.t1.$stepQ|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
 fi
