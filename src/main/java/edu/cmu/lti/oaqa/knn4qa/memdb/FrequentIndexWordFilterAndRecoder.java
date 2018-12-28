@@ -124,10 +124,10 @@ public class FrequentIndexWordFilterAndRecoder extends VocabularyFilterAndRecode
                       "Invalid dictionary entry format (an ID or count isn't integer), line %d, file %s",
                       lineNum, fileName));
         }
-        if (wordId < InMemForwardIndex.MIN_WORD_ID) {
+        if (wordId < ForwardIndex.MIN_WORD_ID) {
           throw new Exception(
                       String.format("Inconsistent data, wordId %d is too small, should be>= %d", 
-                                    wordId, InMemForwardIndex.MIN_WORD_ID));
+                                    wordId, ForwardIndex.MIN_WORD_ID));
         }
         words.add(new WordEntryStr(wordId, docQty, w));
       }

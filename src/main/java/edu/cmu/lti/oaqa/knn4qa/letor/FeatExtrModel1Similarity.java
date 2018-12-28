@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import no.uib.cipr.matrix.DenseVector;
 
 public class FeatExtrModel1Similarity extends FeatureExtractor {
@@ -114,7 +114,7 @@ public class FeatExtrModel1Similarity extends FeatureExtractor {
     return 1;
   }
 
-  final InMemForwardIndex mFieldIndex;
+  final ForwardIndex mFieldIndex;
   final String          mFieldName;
   final String          mModel1SubDir;
   final Model1Data      mModel1Data;

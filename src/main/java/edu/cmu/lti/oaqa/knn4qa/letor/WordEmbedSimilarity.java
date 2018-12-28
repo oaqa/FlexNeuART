@@ -6,7 +6,7 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil.AbstractDistance;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLuceneNorm;
@@ -84,7 +84,7 @@ public class WordEmbedSimilarity extends FeatureExtractor {
     return 1;
   }
   
-  final InMemForwardIndex   mFieldIndex;
+  final ForwardIndex   mFieldIndex;
   final String              mFieldName;
   final TFIDFSimilarity     mSimilObj;
   final boolean             mUseIDFWeight;

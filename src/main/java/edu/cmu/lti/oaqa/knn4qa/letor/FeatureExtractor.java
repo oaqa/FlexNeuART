@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.*;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import no.uib.cipr.matrix.DenseVector;
 
 public abstract class FeatureExtractor {  
@@ -165,7 +165,7 @@ public abstract class FeatureExtractor {
     return res;
   }
   
-  public static DocEntry getQueryEntry(String fieldName, InMemForwardIndex fieldIndex, Map<String, String> queryData) {
+  public static DocEntry getQueryEntry(String fieldName, ForwardIndex fieldIndex, Map<String, String> queryData) {
     String query = queryData.get(fieldName);
     if (null == query) return null;
     query = query.trim();

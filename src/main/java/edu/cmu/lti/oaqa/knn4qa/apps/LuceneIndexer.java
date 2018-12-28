@@ -26,6 +26,7 @@ import org.apache.lucene.store.*;
 import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -120,10 +121,6 @@ public class LuceneIndexer {
       String subDirs[] = subDirTypeList.split(",");
 
       int docNum = 0;
-      
-      // If you increase this value, you may need to modify the following line in *.sh file
-      // export MAVEN_OPTS="-Xms8192m -server"
-      double ramBufferSizeMB = 1024 * 8; // 8 GB
 
       // No English analyzer here, all language-related processing is done already,
       // here we simply white-space tokenize and index tokens verbatim.
@@ -136,7 +133,7 @@ public class LuceneIndexer {
           https://lucene.apache.org/core/6_0_0/core/org/apache/lucene/index/IndexWriterConfig.OpenMode.html#CREATE
       */
       indexConf.setOpenMode(OpenMode.CREATE); 
-      indexConf.setRAMBufferSizeMB(ramBufferSizeMB);
+      indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.RAM_BUFFER_SIZE);
       System.out.println("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec);
       indexConf.setOpenMode(OpenMode.CREATE);
       IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      

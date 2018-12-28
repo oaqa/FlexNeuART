@@ -23,10 +23,13 @@ import org.apache.commons.cli.ParseException;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexText;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 
 public class BuildInMemFwdIndexApp {
+  
+  public final static boolean TEXT_INDEX = false;
   
   public final static String FIELD_NAME_PARAM = "field";
   public final static String FIELD_NAME_DESC  = "a field to be indexed (use a regular name not the one from the XML index-file)";
@@ -107,9 +110,11 @@ public class BuildInMemFwdIndexApp {
       
       System.out.println("Storing word id sequence?: " + bStoreWordIdSeq);
         
-      InMemForwardIndex indx = new InMemForwardIndex(fieldName, fileNames, bStoreWordIdSeq, maxNumRec);
-        
-      indx.save(InMemIndexFeatureExtractorOld.indexFileName(outPrefix, fieldName));
+      ForwardIndex indx = ForwardIndex.createWriteInstance(
+          InMemIndexFeatureExtractorOld.indexFilePrefix(outPrefix, fieldName), TEXT_INDEX);
+      indx.createIndex(fieldName, fileNames, bStoreWordIdSeq, maxNumRec);
+      indx.saveIndex();
+      
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
     } catch (Exception e) {

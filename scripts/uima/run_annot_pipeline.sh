@@ -16,21 +16,21 @@ if [ "$collect" = "manner" ] ; then
     check_pipe "UIMA pipeline with CPE descriptor $uima_desc"
   done
 elif [ "$collect" = "compr" ] ; then
-  for d in Dev1 Dev2 Train Tran Test ; do 
+  for d in Dev1 Dev2 Train Test Tran ; do 
     echo $d 
     uima_desc="src/main/resources/descriptors/collection_processing_engines/cpeAnnotCompr${d}.xml"
     scripts/uima/cpe.sh "$uima_desc"  2>&1|tee log_$d
     check_pipe "UIMA pipeline with CPE descriptor $uima_desc"
   done
 elif [ "$collect" = "stackoverflow" ] ; then
-  for d in Dev1 Dev2 Train Tran Test ; do 
+  for d in Dev1 Dev2 Train Test Tran ; do 
     echo $d 
     uima_desc="src/main/resources/descriptors/collection_processing_engines/cpeAnnotStackOverflow${d}.xml"
     scripts/uima/cpe.sh "$uima_desc"  2>&1|tee log_$d
     check_pipe "UIMA pipeline with CPE descriptor $uima_desc"
   done
 elif [ "$collect" = "squad" ] ; then
-  for d in Wiki Dev1 Dev2 Train Tran Test ; do 
+  for d in Wiki Dev1 Dev2 Train Test Tran ; do 
     echo $d 
     uima_desc="src/main/resources/descriptors/collection_processing_engines/cpeAnnotSQuAD${d}.xml"
     scripts/uima/cpe.sh "$uima_desc"  2>&1|tee log_$d

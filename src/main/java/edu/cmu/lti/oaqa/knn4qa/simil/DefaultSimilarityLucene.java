@@ -3,7 +3,7 @@ package edu.cmu.lti.oaqa.knn4qa.simil;
 import java.util.*;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 
 /**
@@ -17,7 +17,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  *
  */
 public class DefaultSimilarityLucene extends TFIDFSimilarity {
-  public DefaultSimilarityLucene(InMemForwardIndex fieldIndex) {
+  public DefaultSimilarityLucene(ForwardIndex fieldIndex) {
     mFieldIndex = fieldIndex;
   }
   
@@ -27,7 +27,7 @@ public class DefaultSimilarityLucene extends TFIDFSimilarity {
     return (float)(Math.log(docQty/(double)(n + 1)) + 1.0);
   }
 
-  final InMemForwardIndex mFieldIndex;
+  final ForwardIndex mFieldIndex;
   
   
   /**

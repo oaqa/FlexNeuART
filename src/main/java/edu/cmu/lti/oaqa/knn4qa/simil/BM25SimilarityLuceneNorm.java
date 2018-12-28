@@ -3,7 +3,7 @@ package edu.cmu.lti.oaqa.knn4qa.simil;
 import java.util.*;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 
 /**
@@ -23,7 +23,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  *
  */
 public class BM25SimilarityLuceneNorm extends TFIDFSimilarity {
-  public BM25SimilarityLuceneNorm(float k1, float b, InMemForwardIndex fieldIndex) {
+  public BM25SimilarityLuceneNorm(float k1, float b, ForwardIndex fieldIndex) {
     mBM25_k1 = k1;
     mBM25_b = b;
     // Division is slow, so it's worth pre-computing the inverse value
@@ -41,7 +41,7 @@ public class BM25SimilarityLuceneNorm extends TFIDFSimilarity {
   final float mBM25_b;
   
   final float mInvAvgDl;
-  final InMemForwardIndex mFieldIndex;
+  final ForwardIndex mFieldIndex;
   
   /**
    * Computes the similarity between the query (represented by

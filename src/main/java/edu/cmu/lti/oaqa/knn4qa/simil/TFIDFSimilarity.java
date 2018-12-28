@@ -3,7 +3,7 @@ package edu.cmu.lti.oaqa.knn4qa.simil;
 import java.util.HashMap;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 
 public abstract class TFIDFSimilarity {
@@ -30,7 +30,7 @@ public abstract class TFIDFSimilarity {
    * @param wordId  the word ID
    * @return the IDF value
    */  
-  public synchronized Float getIDF(InMemForwardIndex fieldIndex, int wordId) {
+  public synchronized Float getIDF(ForwardIndex fieldIndex, int wordId) {
     Float res = mIDFCache.get(wordId);
     if (null == res) {
       WordEntry e = fieldIndex.getWordEntry(wordId);

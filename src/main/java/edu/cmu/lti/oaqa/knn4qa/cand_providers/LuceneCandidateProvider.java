@@ -35,7 +35,11 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 import com.google.common.base.Splitter;
 
 public class LuceneCandidateProvider extends CandidateProvider {
-
+  // 8 GB is quite reasonable, but if you increase this value, 
+  // you may need to modify the following line in *.sh files
+  // export MAVEN_OPTS="-Xms8192m -server"
+  public static double RAM_BUFFER_SIZE = 1024 * 8; // 8 GB
+  
   @Override
   public String getName() {
     return this.getClass().getName();

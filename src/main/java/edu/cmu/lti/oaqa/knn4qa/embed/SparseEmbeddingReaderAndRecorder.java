@@ -39,7 +39,7 @@ import edu.cmu.lti.oaqa.knn4qa.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.FrequentIndexWordFilterAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
@@ -91,7 +91,7 @@ public class SparseEmbeddingReaderAndRecorder {
    *          the maximum # of digits to print
    * @throws IOException
    */
-  public static void saveDict(InMemForwardIndex           fieldIndex,
+  public static void saveDict(ForwardIndex           fieldIndex,
                               String                      fileName, 
                               HashIntObjMap<SparseVector> dict,
                               int                         maxDigit) throws IOException {
@@ -114,7 +114,7 @@ public class SparseEmbeddingReaderAndRecorder {
     out.close();    
   }
   
-  public static HashIntObjMap<SparseVector> readDict(InMemForwardIndex    fieldIndex,
+  public static HashIntObjMap<SparseVector> readDict(ForwardIndex    fieldIndex,
                                                      String               fileName) throws Exception {
     BufferedReader in = new BufferedReader(
                                 new InputStreamReader(CompressUtils.createInputStream(fileName)));
@@ -153,7 +153,7 @@ public class SparseEmbeddingReaderAndRecorder {
     return res;
   }
   
-  public static HashIntObjMap<SparseVector> createTranVecDict(InMemForwardIndex                 fieldIndex,
+  public static HashIntObjMap<SparseVector> createTranVecDict(ForwardIndex                 fieldIndex,
                                                               FrequentIndexWordFilterAndRecoder filter, 
                                                               float                             minProb, 
                                                               GizaTranTableReaderAndRecoder     answToQuestTran) throws Exception {
@@ -170,7 +170,7 @@ public class SparseEmbeddingReaderAndRecorder {
   // TODO his would certainly work for a symmetric computation of translation tables
   // but otherwise I am not sure if source/target are used here correctly. 
   public static HashIntObjMap<SparseVector> nextOrderDict(HashIntObjMap<SparseVector>   dict, 
-                                                          InMemForwardIndex             fieldIndex,
+                                                          ForwardIndex             fieldIndex,
                                                           float                         minProb, 
                                                           GizaTranTableReaderAndRecoder answToQuestTran) throws Exception {
     HashIntObjMap<SparseVector> res = HashIntObjMaps.<SparseVector>newMutableMap(fieldIndex.getMaxWordId() + 1);
@@ -219,7 +219,7 @@ public class SparseEmbeddingReaderAndRecorder {
    *            
    * @throws Exception
    */
-  public static SparseVector createOneTranVector(InMemForwardIndex             fieldIndex,
+  public static SparseVector createOneTranVector(ForwardIndex             fieldIndex,
                                                  float                         minProb, 
                                                  GizaTranTableReaderAndRecoder answToQuestTran,
                                                  int srcWordId) throws Exception {
@@ -277,7 +277,7 @@ public class SparseEmbeddingReaderAndRecorder {
    * 
    * @return
    */
-  public static SparseVector createTranBasedCompositeWordEmbed(InMemForwardIndex             fieldIndex,
+  public static SparseVector createTranBasedCompositeWordEmbed(ForwardIndex             fieldIndex,
                                                float minProb, 
                                                float[] fieldProbTable,
                                                GizaTranTableReaderAndRecoder answToQuestTran,                                               
@@ -352,7 +352,7 @@ public class SparseEmbeddingReaderAndRecorder {
    * 
    * @return
    */
-  public static TranBasedWordEbmeddings createTranBasedCompositeWordEmbedings(InMemForwardIndex             fieldIndex,
+  public static TranBasedWordEbmeddings createTranBasedCompositeWordEmbedings(ForwardIndex             fieldIndex,
                                                float minProb, 
                                                float[] fieldProbTable,
                                                GizaTranTableReaderAndRecoder answToQuestTran,                                               
@@ -420,7 +420,7 @@ public class SparseEmbeddingReaderAndRecorder {
    * @param entry           a document/query entry.
    * @return
    */
-  public static SparseVector createCompositeWordEmbed(InMemForwardIndex             fieldIndex,
+  public static SparseVector createCompositeWordEmbed(ForwardIndex             fieldIndex,
                                                       HashIntObjMap<SparseVector>   model, 
                                                       DocEntry                      entry) {
 

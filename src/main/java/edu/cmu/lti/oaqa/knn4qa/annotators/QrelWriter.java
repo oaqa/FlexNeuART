@@ -29,8 +29,7 @@ import edu.cmu.lti.oaqa.knn4qa.types.Answer;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 /**
- * Creates a file with QRELs: the best answer is considered to be the only
- * relevant one. This class is thread-safe.
+ * Creates a file with QRELs. This class is thread-safe.
  * 
  * @author Leonid Boytsov
  */
@@ -38,7 +37,7 @@ public class QrelWriter extends JCasAnnotator_ImplBase {
   private static final String PARAM_QREL_FILE_PREFIX = "QrelFilePrefix";
   
   public static final int QREL_BEST_GRADE  = 4;
-  public static final int QREL_OTHER_GRADE = 3;
+  //public static final int QREL_OTHER_GRADE = 3;
   
   private static int                    mIOState = 0;
   private static BufferedWriter         mQrelFileBinary;

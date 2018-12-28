@@ -80,12 +80,10 @@ public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
   public static final double OOV_PROB = 1e-9;
   public static final float DEFAULT_PROB_SELF_TRAN = 0.5f;
     
-  
-  public static String indexFileName(String prefixDir, String fileName) {
-    return prefixDir + "/" + fileName;
+  public static String indexFilePrefix(String prefixDir, String filePrefix) {
+    return prefixDir + "/" + filePrefix;
   }  
-  
-  
+ 
   
   private static final Logger logger = LoggerFactory.getLogger(InMemIndexFeatureExtractorOld.class);
   
@@ -276,14 +274,14 @@ public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
   /**
    * @return    the in-memory index for the text field.
    */
-  public InMemForwardIndex getTextFieldIndex() {
+  public ForwardIndex getTextFieldIndex() {
     return mFieldIndex[TEXT_FIELD_ID];
   }
   
   /**
    * @return    the in-memory index for a given field field.
    */
-  public InMemForwardIndex getFieldIndex(int fieldId) {
+  public ForwardIndex getFieldIndex(int fieldId) {
     return mFieldIndex[fieldId];
   }
   
@@ -365,7 +363,7 @@ public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
                       " : the field index of the alias " + mFieldNames[aliasOfId] + 
               " is not initialized, initializing the index from scratch!");
           // Note that the index is initialized using the name of the aliased field!
-          mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, mFieldNames[aliasOfId]));
+          mFieldIndex[fieldId] = ForwardIndex.createReadInstance(indexFilePrefix(mIndexDir, mFieldNames[aliasOfId]));
         } else {
           // All is fine, we can reuse the field index of the aliased field
           logger.info("Field " + mFieldNames[fieldId] +
@@ -374,7 +372,7 @@ public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
           mFieldIndex[fieldId] = mFieldIndex[aliasOfId];
         }
       } else 
-        mFieldIndex[fieldId] = new InMemForwardIndex(indexFileName(mIndexDir, mFieldNames[fieldId]));
+        mFieldIndex[fieldId] = ForwardIndex.createReadInstance(indexFilePrefix(mIndexDir, mFieldNames[fieldId]));
     }
   }
   
@@ -877,7 +875,7 @@ public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
    * @param res             a result set to be updated.   * 
    * @throws Exception
    */
-  private void getFieldOverallMatchScores(InMemForwardIndex fieldIndex, int fieldId,
+  private void getFieldOverallMatchScores(ForwardIndex fieldIndex, int fieldId,
                           ArrayList<String> arrDocIds, 
                           String fieldName,
                           int startFeatureId,
@@ -952,7 +950,7 @@ public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
  * @param res             a result set to be updated.   * 
  * @throws Exception
  */
-private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
+private void getFieldLCSScores(ForwardIndex fieldIndex, int fieldId,
                         ArrayList<String> arrDocIds, 
                         String fieldName,
                         int startFeatureId,
@@ -1039,7 +1037,7 @@ private void getFieldLCSScores(InMemForwardIndex fieldIndex, int fieldId,
  * @param res               a result set to be updated.    
  * @throws Exception
  */
-private void getFieldAllTranScoresDirect(InMemForwardIndex fieldIndex,
+private void getFieldAllTranScoresDirect(ForwardIndex fieldIndex,
 											  int fieldId,
                         float[] fieldProbTable,
                         ArrayList<String> arrDocIds, 
@@ -1267,7 +1265,7 @@ private void getFieldAllTranScoresDirect(InMemForwardIndex fieldIndex,
  * @param res               a result set to be updated.    
  * @throws Exception
  */
-private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
+private void getFieldAllTranScoresFlipped(ForwardIndex fieldIndex,
                         int fieldId,
                         float[] fieldProbTable,
                         ArrayList<String> arrDocIds, 
@@ -1465,7 +1463,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
    * @param res             a result set to be updated.   * 
    * @throws Exception
    */
-  private void getFieldScores(InMemForwardIndex fieldIndex,
+  private void getFieldScores(ForwardIndex fieldIndex,
                           TFIDFSimilarity    similObj,
                           ArrayList<String> arrDocIds, 
                           String fieldName,
@@ -1521,7 +1519,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
    * @throws Exception
    */  
   
-  private void getFieldEmbedScores(InMemForwardIndex fieldIndex,
+  private void getFieldEmbedScores(ForwardIndex fieldIndex,
                                  int fieldId,
                                  BM25SimilarityLucene similObj,
                                  ArrayList<String> arrDocIds, 
@@ -1712,7 +1710,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
    * @param res               a result set to be updated.    
    * @throws Exception
    */
-  private void getFieldJSDCompositeScores(InMemForwardIndex fieldIndex,
+  private void getFieldJSDCompositeScores(ForwardIndex fieldIndex,
                           int fieldId,
                           float[] fieldProbTable,
                           ArrayList<String> arrDocIds, 
@@ -1796,7 +1794,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
    * 
    * @return a simple frequency vector (not normalized) from a document entry.
    */
-  public SparseVector createFreqVector(InMemForwardIndex fieldIndex, DocEntry e) {
+  public SparseVector createFreqVector(ForwardIndex fieldIndex, DocEntry e) {
     int qty =0;
     for (int i = 0; i < e.mQtys.length; ++i) {
       int wordId = e.mWordIds[i];
@@ -1829,7 +1827,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
    * @param wordId            a word ID
    * @return
    */
-  public synchronized SparseVector createTranBasedWordEmbedding(InMemForwardIndex             fieldIndex,
+  public synchronized SparseVector createTranBasedWordEmbedding(ForwardIndex             fieldIndex,
                                                                 float                         minProb, 
                                                                 float[]                       fieldProbTable,
                                                                 GizaTranTableReaderAndRecoder answToQuestTran,                                               
@@ -1871,7 +1869,7 @@ private void getFieldAllTranScoresFlipped(InMemForwardIndex fieldIndex,
   }
    
   
-  InMemForwardIndex mFieldIndex[] = new InMemForwardIndex[mFieldNames.length];
+  ForwardIndex mFieldIndex[] = new ForwardIndex[mFieldNames.length];
 
   /* START OF FIELD PARAMS */
   

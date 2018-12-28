@@ -107,6 +107,8 @@
       <fixedFlow>
         <node>aeAnnotAggreg</node>
         <node>aeLexStat</node>
+        <node>aeCreateParallelCorpora</node>
+        <node>aeQrelWriter</node>
         <node>aeSolrIndexFileWriter</node>
       </fixedFlow>
     </flowConstraints>

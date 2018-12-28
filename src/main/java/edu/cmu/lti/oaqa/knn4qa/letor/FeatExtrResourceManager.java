@@ -25,7 +25,8 @@ import edu.cmu.lti.oaqa.knn4qa.apps.CommonParams;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexText;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexFilterAndRecoder;
 
 class Model1Data {
@@ -69,7 +70,7 @@ public class FeatExtrResourceManager {
    * @return
    * @throws Exception
    */
-  public InMemForwardIndex getFwdIndex(String fieldName) throws Exception {
+  public ForwardIndex getFwdIndex(String fieldName) throws Exception {
     if (mRootFwdIndexDir == null) {
       throw new Exception("There is no forward index directory, likely, you need to specify " + 
           CommonParams.MEMINDEX_PARAM + " in the calling app");
@@ -77,7 +78,7 @@ public class FeatExtrResourceManager {
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
     synchronized (this) {
       if (!mFwdIndices.containsKey(fieldName)) {
-        InMemForwardIndex fwdIndex = new InMemForwardIndex(fwdIndexFileName(mRootFwdIndexDir, fieldName));
+        ForwardIndex fwdIndex = ForwardIndex.createReadInstance(fwdIndexFileName(mRootFwdIndexDir, fieldName));
         mFwdIndices.put(fieldName, fwdIndex);
       }
       return mFwdIndices.get(fieldName);
@@ -92,7 +93,7 @@ public class FeatExtrResourceManager {
     synchronized (this) {
       String embedKey = fieldName + "_" + fileName;
       if (!mWordEmbeds.containsKey(embedKey)) {
-        InMemForwardIndex fwdIndx = getFwdIndex(fieldName);
+        ForwardIndex fwdIndx = getFwdIndex(fieldName);
         InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(fwdIndx);
         mWordEmbeds.put(embedKey, 
             new EmbeddingReaderAndRecoder(mRootEmbedDir +FS + fileName, filterAndRecoder));
@@ -112,7 +113,7 @@ public class FeatExtrResourceManager {
     String key = fieldName + "_" + flipTranTable + "_" + gizaIterQty;
     synchronized (this) {
       if (!mModel1Data.containsKey(key)) {
-        InMemForwardIndex fwdIndx = getFwdIndex(fieldName);
+        ForwardIndex fwdIndx = getFwdIndex(fieldName);
         
         InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(fwdIndx);
         
@@ -144,7 +145,7 @@ public class FeatExtrResourceManager {
     return prefixDir + FS + fieldName;
   }  
   
-  private HashMap<String, InMemForwardIndex>          mFwdIndices = new HashMap<String, InMemForwardIndex>();
+  private HashMap<String, ForwardIndex>               mFwdIndices = new HashMap<String, ForwardIndex>();
   private HashMap<String, EmbeddingReaderAndRecoder>  mWordEmbeds = new HashMap<String, EmbeddingReaderAndRecoder>();
   private HashMap<String, Model1Data>                 mModel1Data = new HashMap<String, Model1Data>();
 }

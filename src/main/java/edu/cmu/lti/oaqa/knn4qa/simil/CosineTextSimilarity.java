@@ -1,7 +1,7 @@
 package edu.cmu.lti.oaqa.knn4qa.simil;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 
 /**
@@ -11,7 +11,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  *
  */
 public class CosineTextSimilarity extends TFIDFSimilarity {
-  public CosineTextSimilarity(InMemForwardIndex fieldIndex) {
+  public CosineTextSimilarity(ForwardIndex fieldIndex) {
     mFieldIndex = fieldIndex;
   }
   
@@ -21,7 +21,7 @@ public class CosineTextSimilarity extends TFIDFSimilarity {
     return (float)Math.log(1 + (docQty - n + 0.5D)/(n + 0.5D));
   }
 
-  final InMemForwardIndex mFieldIndex;
+  final ForwardIndex mFieldIndex;
   
   
   /**

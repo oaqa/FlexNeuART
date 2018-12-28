@@ -24,8 +24,8 @@ import edu.cmu.lti.oaqa.annographix.solr.SolrRes;
 
 public abstract class CandidateProvider {
   public final static String ID_FIELD_NAME     = "DOCNO";
-  // TODO the field shouldn't be hardcoded!
-  public final static String TEXT_FIELD_NAME   = "text";
+  // TODO the field shouldn't be hard-coded!
+  public final static String TEXT_FIELD_NAME = "text";
       
   public static final String CAND_TYPE_QRELS       = "qrels";
   public static final String CAND_TYPE_SOLR        = "solr";
@@ -33,14 +33,12 @@ public abstract class CandidateProvider {
   public static final String CAND_TYPE_LUCENE_GIZA = "lucene_giza";
   public static final String CAND_TYPE_GALAGO      = "galago";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
-  public static final String CAND_TYPE_KNN         = "knn_java";
   
 
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
       CandidateProvider.CAND_TYPE_QRELS + ", " + 
       CandidateProvider.CAND_TYPE_SOLR + ", " + 
-      CandidateProvider.CAND_TYPE_KNN + ", " + 
       CandidateProvider.CAND_TYPE_NMSLIB;
   
   /**

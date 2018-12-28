@@ -1,7 +1,7 @@
 package edu.cmu.lti.oaqa.knn4qa.simil;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 
 /**
@@ -16,7 +16,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  *
  */
 public class DefaultSimilarityLuceneNorm extends TFIDFSimilarity {
-  public DefaultSimilarityLuceneNorm(InMemForwardIndex fieldIndex) {
+  public DefaultSimilarityLuceneNorm(ForwardIndex fieldIndex) {
     mFieldIndex = fieldIndex;
   }
   
@@ -26,7 +26,7 @@ public class DefaultSimilarityLuceneNorm extends TFIDFSimilarity {
     return (float)(Math.log(docQty/(double)(n + 1)) + 1.0);
   }
 
-  final InMemForwardIndex mFieldIndex;
+  final ForwardIndex mFieldIndex;
   
   
   /**

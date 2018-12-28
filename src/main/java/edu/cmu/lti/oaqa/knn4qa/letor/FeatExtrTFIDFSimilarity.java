@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
@@ -74,5 +74,5 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
 
   final String              mFieldName;
   final TFIDFSimilarity     mSimilObj;
-  final InMemForwardIndex   mFieldIndex;
+  final ForwardIndex   mFieldIndex;
 }
