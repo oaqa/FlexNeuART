@@ -97,7 +97,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
       BooleanQuery.setMaxClauseCount(2 * toks.size());
     }
 
-    int    numFound = 0;
+    long    numFound = 0;
 
     if (!query.isEmpty()) {    
       // QueryParser cannot be shared among threads!

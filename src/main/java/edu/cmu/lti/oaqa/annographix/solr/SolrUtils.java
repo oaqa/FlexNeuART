@@ -57,7 +57,7 @@ public class SolrUtils {
       SolrInputField field = new SolrInputField(key);
       try {
 
-        doc.addField(field.getName(), value, 1.0f);
+        doc.addField(field.getName(), value);
 
       } catch (Exception e) {
         e.printStackTrace();

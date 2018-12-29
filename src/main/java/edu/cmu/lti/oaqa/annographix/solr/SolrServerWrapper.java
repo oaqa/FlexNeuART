@@ -73,12 +73,14 @@ public final class SolrServerWrapper implements Closeable {
 
   /** 
    * Opens SOLR connection, creates an object 
-   * of the type {@link org.apache.solr.client.solrj.SolrServer}. 
+   * of the type {@link org.apache.solr.client.solrj.SolrServer}.
+   * TODO: this function wasn't tested with SOLR 7.x and later. 
    */
   private SolrClient createSolrServer(String url) throws Exception {
-    SolrClient server = new HttpSolrClient(url);
-    // server.ping();
-    return server;
+    HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
+    builder.withBaseSolrUrl(url);
+
+    return builder.build();
   }
 
   /** 

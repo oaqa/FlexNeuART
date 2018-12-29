@@ -12,7 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <lucene.version>6.0.0</lucene.version>
+    <lucene.version>7.6.0</lucene.version>
     <uima.version>2.6.0</uima.version>
   </properties>
 
@@ -373,19 +373,6 @@
       <version>1.0.2</version>
     </dependency>
     <!-- end of linear algebra --> 
-
-    <!-- logging libs -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.10</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>1.7.10</version>
-    </dependency>
 
     <!-- Apache Thrift libraries -->
 

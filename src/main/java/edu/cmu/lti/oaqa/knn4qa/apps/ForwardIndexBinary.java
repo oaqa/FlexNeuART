@@ -82,12 +82,10 @@ public class ForwardIndexBinary extends ForwardIndex {
     mIndexWriter = new IndexWriter(indexDir, indexConf);  
   }
   
-
   @Override
   protected void sortDocEntries() {
     Collections.sort(mDocIds);
   }
-
 
   @Override
   public DocEntry getDocEntry(String docId) throws Exception {

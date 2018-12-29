@@ -17,10 +17,10 @@ package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
 public class CandidateInfo implements java.io.Serializable {
   private static final long serialVersionUID = 1L;
-  public final int               mNumFound;
+  public final long              mNumFound;
   public final CandidateEntry[]  mEntries;
   
-  CandidateInfo(int numFound, CandidateEntry[] entries) {
+  CandidateInfo(long numFound, CandidateEntry[] entries) {
     mNumFound = numFound;
     mEntries = entries;
   }
