@@ -15,7 +15,7 @@ fi
 echo "=========================================================================="
 echo "Output directory: $OUT_DIR"
 echo "Removing previous index (if exists)"
-rm -f "$OUT_DIR"/*
+rm -rf "$OUT_DIR"/*
 echo "=========================================================================="
 
 if [ "$collect" = "manner" ] ; then
