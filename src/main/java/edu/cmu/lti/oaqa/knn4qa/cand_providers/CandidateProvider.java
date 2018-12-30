@@ -39,6 +39,7 @@ public abstract class CandidateProvider {
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
       CandidateProvider.CAND_TYPE_QRELS + ", " + 
       CandidateProvider.CAND_TYPE_SOLR + ", " + 
+      CandidateProvider.CAND_TYPE_GALAGO + "," + 
       CandidateProvider.CAND_TYPE_NMSLIB;
   
   /**

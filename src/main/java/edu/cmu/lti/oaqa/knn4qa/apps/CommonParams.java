@@ -144,4 +144,9 @@ public class CommonParams {
   public final static String USE_THREAD_POOL_PARAM = "use_thread_pool";
   public final static String USE_THREAD_POOL_DESC = "Use a thread pool instead of a round-robin division of queries among threads";
   
+  public final static String GALAGO_OP_PARAM = "galago_op";
+  public final static String GALAGO_OP_DESC  = "A type of retrieval operator, eg., combine, sdm, or rm to use with Galago provider";
+
+  public final static String GALAGO_PARAMS_PARAM = "galago_params";
+  public final static String GALAGO_PARAMS_DESC  = "galago_params_desc";
 }

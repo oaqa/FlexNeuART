@@ -2,6 +2,8 @@
 import random
 import sys
 import os
+import shutil
+import random
 
 #
 # This is a script that samples QA pairs
@@ -10,70 +12,84 @@ import os
 
 def Usage(err):
   if not err is None:
-    print err
-  print "Usage: <top level output directory> <collection name: e,g., compr, stackoverflow> <field name> <max power of 2 (we select roughly 2^{-k} QA pairs, where 2 <= k <= this parameter value)>"
+    print(err)
+  print("Usage: <top level output directory> <collection name: e,g., compr, stackoverflow>  <field name> " +
+        "<src sub-dir name, e.g., tran> <dst sub-dir name, e.g., tran.sample> <# of entries to sample>")
   sys.exit(1)
 
-def pow2(n):
-  return 1<<n
+def questFileName(dirName, fieldName):
+  return os.path.join(dirName, 'question_' + fieldName)
 
-def quest_file_name(d, fieldName):
-  return d + '/question_' + fieldName
+def answFileName(dirName, fieldName):
+  return os.path.join(dirName, 'answer_' + fieldName)
 
-def answ_file_name(d, fieldName):
-  return d + '/answer_' + fieldName
-
-if len(sys.argv) != 5:
+if len(sys.argv) != 7:
   Usage(None)
 
 topLevelDir = sys.argv[1]
 colName     = sys.argv[2]
 fieldName   = sys.argv[3]
-maxPower2    = int(sys.argv[4])
+srcSubDir   = sys.argv[4]
+dstSubDir   = sys.argv[5]
+sampleQty   = int(sys.argv[6])
 
-srcDir = topLevelDir + '/' + colName + '/tran'
+srcDir = os.path.join(topLevelDir, colName, srcSubDir)
 
 if not os.path.isdir(srcDir):
   Usage("Cannot find source directory: '" + srcDir + "'")
 
-nums = []
-fSampleQuest = []
-fSampleAnsw  = []
+dstDir = os.path.join(topLevelDir, colName, dstSubDir)
 
-for i in range(1,maxPower2+1):
-  n = pow2(i) 
-  td = srcDir + str(n)
-  os.mkdir(td)
-  nums.append(n)
-  fSampleQuest.append(open(quest_file_name(td, fieldName), 'w'))
-  fSampleAnsw.append(open(answ_file_name(td, fieldName), 'w'))
+if os.path.exists(dstDir):
+  shutil.rmtree(dstDir)
 
-fQuest = open(quest_file_name(srcDir, fieldName), 'r') 
-fAnsw  = open(answ_file_name(srcDir, fieldName), 'r') 
+os.mkdir(dstDir)
 
-ln=0
+fQuest = open(questFileName(dstDir, fieldName), 'w')
+fAnsw = open(answFileName(dstDir, fieldName), 'w')
+
+sampleQuest = []
+sampleAnsw = []
+
+readQty=0
 
 while True:
-  ln = ln + 1
+
   lineQuest = fQuest.readline()
   if lineQuest == '' : 
     break
+
   lineAnsw = fAnsw.readline()
   if lineAnsw == '' :
-    print "The answer file finished unexpectedly in line " + str(ln)
+    print("The answer file finished unexpectedly in line " + str(readQty))
     sys.exit(1)
+
   lineQuest=lineQuest.strip()
   lineAnsw=lineAnsw.strip()
   if lineQuest == '' or lineAnsw == '' : continue
-  for i in range(0, len(nums)):
-    if random.randint(0, nums[i]-1) == 0:
-      fSampleQuest[i].write(lineQuest + '\n')
-      fSampleAnsw[i].write(lineAnsw + '\n')
-  
 
-for i in range(0, len(nums)):
-  fSampleQuest[i].close()
-  fSampleAnsw[i].close()
+  readQty = readQty + 1
+
+  if readQty <= sampleQty:  
+    sampleQuest.append(lineQuest)
+    sampleAnsw.append(lineAnsw)
+  else:
+    # randint is bounday-inclusive
+    # a probability to include the last element is sampleQty / readQty
+    x = random.randint(0, readQty - 1) == 0
+    if x < sampleQty:
+      sampleQuest[x] = lineQuest
+      sampleAnsw[x] = lineAnsw
+
+fSampleQuest = open(questFileName(dstDir, fieldName), 'w')
+for lineQuest in sampleQuest:
+  fSampleQuest.write(lineQuest + '\n')
+fSampleQuest.close()
+
+fSampleAnsw  = open(answFileName(dstDir, fieldName), 'w')
+for lineAnsw in sampleAnsw:
+  fSampleAnsw.write(lineAnsw + '\n')
+fSampleAnsw.close()
 
 
 
