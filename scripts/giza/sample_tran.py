@@ -45,8 +45,8 @@ if os.path.exists(dstDir):
 
 os.mkdir(dstDir)
 
-fQuest = open(questFileName(dstDir, fieldName), 'w')
-fAnsw = open(answFileName(dstDir, fieldName), 'w')
+fQuest = open(questFileName(srcDir, fieldName), 'r')
+fAnsw = open(answFileName(srcDir, fieldName), 'r')
 
 sampleQuest = []
 sampleAnsw = []
