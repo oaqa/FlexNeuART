@@ -2,7 +2,6 @@
 import random
 import sys
 import os
-import shutil
 import random
 
 #
@@ -40,10 +39,8 @@ if not os.path.isdir(srcDir):
 
 dstDir = os.path.join(topLevelDir, colName, dstSubDir)
 
-if os.path.exists(dstDir):
-  shutil.rmtree(dstDir)
-
-os.mkdir(dstDir)
+if not os.path.exists(dstDir):
+  os.mkdir(dstDir)
 
 fQuest = open(questFileName(srcDir, fieldName), 'r')
 fAnsw = open(answFileName(srcDir, fieldName), 'r')
