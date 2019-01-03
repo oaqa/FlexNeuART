@@ -1,20 +1,22 @@
 #!/bin/bash
-collect=$1
-if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow"
+IN_DIR="$1"
+if [ "$IN_DIR" = "" ] ; then
+  echo "Specify input dir (1st arg)"
+  exit 1
+fi
+if [ ! -d "$IN_DIR" ] ; then
+  echo "Input directory: $IN_DIR doesn't exist"
   exit 1
 fi
 
-IN_DIR="output_trectext/$collect/"
-OUT_DIR="galago_index/$collect"
+OUT_DIR="$2"
+if [ "$OUT_DIR" = "" ] ; then
+  echo "Specify output dir (2d arg)"
+  exit 1
+fi
 
 if [ ! -d "$OUT_DIR" ] ; then
   echo "Directory (or a link to a directory) $OUT_DIR doesn't exist"
-  exit 1
-fi
-
-if [ ! -d "$IN_DIR" ] ; then
-  echo "Input directory: $IN_DIR doesn't exist"
   exit 1
 fi
 
@@ -23,10 +25,11 @@ cat > $conf <<EOF
 {
  "inputPath": "$IN_DIR",
  "indexPath" : "$OUT_DIR",
- "nonStemmedPostings" : true,
+ "nonStemmedPostings" : false,
  "server" : true,
+ "stemmer": "krovetz",
  "port" : 8080,
- "stemmedPostings" : false,
+ "stemmedPostings" : true,
  "mode" : "local" 
 }
 EOF
