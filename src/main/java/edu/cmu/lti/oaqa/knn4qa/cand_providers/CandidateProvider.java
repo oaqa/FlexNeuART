@@ -24,8 +24,9 @@ import edu.cmu.lti.oaqa.annographix.solr.SolrRes;
 
 public abstract class CandidateProvider {
   public final static String ID_FIELD_NAME     = "DOCNO";
-  // TODO the field shouldn't be hard-coded!
+
   public final static String TEXT_FIELD_NAME = "text";
+  public final static String TEXT_UNLEMM_FIELD_NAME = "text_unlemm";
       
   public static final String CAND_TYPE_QRELS       = "qrels";
   public static final String CAND_TYPE_SOLR        = "solr";

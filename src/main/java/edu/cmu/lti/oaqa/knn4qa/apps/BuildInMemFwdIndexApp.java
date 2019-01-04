@@ -21,11 +21,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexText;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 
 public class BuildInMemFwdIndexApp {
   
