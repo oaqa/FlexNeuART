@@ -61,7 +61,8 @@ public class ConvertClueWeb09 {
   private static final Boolean LOWERCASE = true;
   
   private static final String TITLE_FIELD_NAME = "title";
-  private static final String TITLE_UNLEMM_FIELD_NAME = "title_unlemm";
+  //private static final String TITLE_UNLEMM_FIELD_NAME = "title_unlemm";
+  private static final String LINK_TEXT_FIELD_NAME = "linkText";
   
   protected static final String NL = System.getProperty("line.separator");
   
@@ -81,7 +82,8 @@ public class ConvertClueWeb09 {
     
     for (String tok : text.split(SPACE_REGEXP_SEP)) {
       if (LOWERCASE) tok = tok.toLowerCase();
-      if (!mStopWords.contains(tok) || mCommonWords.contains(tok)) {
+      
+      if (!mStopWords.contains(tok) && mCommonWords.contains(tok)) {
         res.add(tok);
       }
     }
@@ -92,7 +94,8 @@ public class ConvertClueWeb09 {
     String toks[] = text.split(SPACE_REGEXP_SEP);
  
     for (int i = 0; i < toks.length; ++i) {
-      toks[i] = mStemmer.stem(toks[i]);
+      String s = mStemmer.stem(toks[i]);
+      toks[i] = s;
     }
     return String.join(" ", toks);
   }
@@ -160,12 +163,15 @@ public class ConvertClueWeb09 {
       String stopWordFile = cmd.getOptionValue(STOP_WORD_FILE);
       if (null == stopWordFile)  Usage("Specify: " + STOP_WORD_FILE, options);
       
-      mStopWords = new DictNoComments(stopWordFile, LOWERCASE);
+      mStopWords = new DictNoComments(new File(stopWordFile), LOWERCASE);
       
-      String commonWordFIle = cmd.getOptionValue(COMMON_WORD_FILE);
-      if (null == commonWordFIle) Usage("Specify: " + COMMON_WORD_FILE, options);
+      String commonWordFile = cmd.getOptionValue(COMMON_WORD_FILE);
+      if (null == commonWordFile) Usage("Specify: " + COMMON_WORD_FILE, options);
       
-      mCommonWords = new DictNoComments(commonWordFIle, LOWERCASE);
+      mCommonWords = new DictNoComments(new File(commonWordFile), LOWERCASE);
+      
+      System.out.println("# of common words to use:" + mCommonWords.getQty());
+      System.out.println("# of stop words to use:" + mStopWords.getQty());
       
       outFile = new BufferedWriter(new OutputStreamWriter(CompressUtils.createOutputStream(solrFileName)));
       
@@ -183,7 +189,7 @@ public class ConvertClueWeb09 {
           continue;
         }
         if (firstPart.startsWith(REC_START)) {
-          String warcRecFileName = firstPart.substring(REC_START.length());
+          String warcRecFileName = clueWebDir + "/ClueWeb09_English_1/" + firstPart.substring(REC_START.length());
           System.out.println("Started processing file: " + warcRecFileName + " expecting: " + expQty + " records");
           
           DataInputStream inpWarc = new DataInputStream(CompressUtils.createInputStream(warcRecFileName));
@@ -202,22 +208,24 @@ public class ConvertClueWeb09 {
              
                 HtmlDocData htmlData = LeoHTMLParser.parse(ENCODING, baseHref, html);
 
-                procQty ++;
                 Map<String, String>  fieldInfo = new HashMap<String, String>();
-                
-                String allTextUnlemm = filterText(htmlData.mAllText);
-                String allText = stemText(allTextUnlemm);
+
                 
                 String titleUnlemm = filterText(htmlData.mTitle);
                 String title = stemText(titleUnlemm);
-                /*
-                 * Let's not use this for now
-                 * 
+                
                 String bodyTextUnlemm = filterText(htmlData.mBodyText);
-                String body = stemText(bodyTextUnlemm);
+                String bodyText = stemText(bodyTextUnlemm);
                 
                 String linkTextUnlemm = filterText(htmlData.mLinkText);
                 String linkText = stemText(linkTextUnlemm);
+                
+                /*
+                 * Let's not use this for now
+                 * 
+                                
+                String allTextUnlemm = filterText(htmlData.mAllText);
+                String allText = stemText(allTextUnlemm);
                 
                  * 
                  */
@@ -225,10 +233,12 @@ public class ConvertClueWeb09 {
                 fieldInfo.put(UtilConst.TAG_DOCNO, id);
                 
                 fieldInfo.put(TITLE_FIELD_NAME, title);
-                fieldInfo.put(TITLE_UNLEMM_FIELD_NAME, titleUnlemm);
+                //fieldInfo.put(TITLE_UNLEMM_FIELD_NAME, titleUnlemm);
                 
-                fieldInfo.put(CandidateProvider.TEXT_FIELD_NAME, allText);
-                fieldInfo.put(CandidateProvider.TEXT_UNLEMM_FIELD_NAME, allTextUnlemm);
+                fieldInfo.put(CandidateProvider.TEXT_FIELD_NAME, bodyText);
+                //fieldInfo.put(CandidateProvider.TEXT_UNLEMM_FIELD_NAME, allTextUnlemm);
+                
+                fieldInfo.put(LINK_TEXT_FIELD_NAME, linkText);
                 
                 outFile.write(xmlHlp.genXMLIndexEntry(fieldInfo));
                 outFile.write(NL);
@@ -241,6 +251,9 @@ public class ConvertClueWeb09 {
           System.out.println("Finished processing file: " + warcRecFileName + 
                               " expected: " + expQty + " recs" + 
                               " processed: " + procQty + " recs");
+          if (procQty != expQty) {
+            System.out.println("Record # mismatch: the number of processed records != the number of declared records!");
+          }
         } else {
           System.err.println(String.format("Invalid line %s in file %s", line, recFileName));
           System.exit(1);

@@ -42,6 +42,14 @@ public class DictNoComments {
     return mDict.contains(key);
   }
   
+  /***
+   * 
+   * @return The number of entries.
+   */
+  public int getQty() {
+    return mDict.size();
+  }
+  
   /**
    * Reads dictionary from a file.
    * 
@@ -62,12 +70,15 @@ public class DictNoComments {
    * @param text        a text content of the dictionary file (with newlines).
    * @param toLower     should we lowercase?  
    */
+  /*
+   * This function is a trap let's not use it.
   public DictNoComments(String text, boolean toLower) {
     mToLower = toLower;
     for (String s: text.split("[\n\r]+")) {
       processLine(s);
     }      
   }
+  */
   
   private void processLine(String s) {
     s = s.trim();
