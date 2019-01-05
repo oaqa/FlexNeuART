@@ -41,7 +41,12 @@ public class LeoHTMLParser {
       Parser HtmlParser = Parser.createParser(html, encoding);  
 
       LeoCleanerUtil res = new LeoCleanerUtil(baseHref);      
-      HtmlParser.visitAllNodesWith(res);
+      
+      try {
+        HtmlParser.visitAllNodesWith(res);
+      } catch (StackOverflowError e) {
+        System.out.println("Ouch HtmlParser has overflown the Stack!");
+      }
 
       title = res.GetTitleText();
       bodyText = res.GetBodyText();
