@@ -10,6 +10,10 @@ fi
 
 store_word_id_seq=$2
 store_word_id_seq_param=""
+if [ "$store_word_id_seq" = "" ] ; then
+  echo "Specify the flag to store word sequence (2d arg): 1 or 0"
+  exit 1
+fi
 if [ "$store_word_id_seq" = "1" ] ; then
   store_word_id_seq_param=" -store_word_id_seq "
 fi
@@ -42,6 +46,11 @@ elif [ "$collect" = "compr" -o  "$collect" = "stackoverflow" ] ; then
   for field in text text_unlemm ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field
     check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field"
+  done
+elif [ "$collect" = "clueweb09" ] ; then
+  for field in title linkText text ; do
+  #for field in text ; do
+    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file ClueWeb09Proc.xml.gz -field $field
   done
 elif [ "$collect" = "squad" ] ; then
   JOINT_NAME=SolrAnswQuestFile.txt
