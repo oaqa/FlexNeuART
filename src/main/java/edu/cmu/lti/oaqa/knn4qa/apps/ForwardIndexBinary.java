@@ -42,6 +42,8 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
  *
  */
 public class ForwardIndexBinary extends ForwardIndex {
+  
+  public static final int COMMIT_INTERV = 50000;
 
   public ForwardIndexBinary(String filePrefix) throws IOException {
     this.mFilePrefix  = filePrefix;
@@ -158,6 +160,11 @@ public class ForwardIndexBinary extends ForwardIndex {
   protected void addDocEntry(String docId, DocEntry doc) throws IOException {   
     mDocIds.add(docId);
     Document luceneDoc = new Document();
+    
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      System.out.println("Committing");
+      mIndexWriter.commit();
+    }
     
     luceneDoc.add(new StringField(UtilConst.TAG_DOCNO, docId, Field.Store.YES));
     luceneDoc.add(new StoredField(UtilConst.TAG_DOC_ENTRY, doc.toString()));

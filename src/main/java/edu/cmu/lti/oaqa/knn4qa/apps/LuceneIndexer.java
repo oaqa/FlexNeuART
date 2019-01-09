@@ -47,6 +47,8 @@ import java.util.*;
  */
 
 public class LuceneIndexer {
+  public static final int COMMIT_INTERV = 50000;
+  
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
     HelpFormatter formatter = new HelpFormatter();
@@ -174,8 +176,13 @@ public class LuceneIndexer {
               luceneDoc.add(new TextField(e.getKey(), e.getValue(), Field.Store.YES));
             }
           indexWriter.addDocument(luceneDoc);
-          if (docNum % 1000 == 0)
+          if (docNum % 1000 == 0) {
             System.out.println("Indexed " + docNum + " docs");
+          }
+          if (docNum % COMMIT_INTERV == 0) {
+            System.out.println("Committing");
+            indexWriter.commit();
+          }
         }
         System.out.println("Indexed " + docNum + " docs");
       }
