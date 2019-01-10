@@ -9,8 +9,15 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
+/**
+ * A TFxIDF similarity feature extractor that currently supports only BM25.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
 public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
   public static String EXTR_TYPE = "TFIDFSimilarity";
   
@@ -33,6 +40,13 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
     else
       throw new Exception("Unsupported field similarity: " + similType);
  
+  }
+  
+  @Override
+  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
+    res.add(new VectorWrapper(mSimilObj.getBM25SparseVector(e, isQuery, true /* share IDF */)));
+    return res;
   }
 
   @Override
@@ -72,7 +86,7 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
     return 1;
   }
 
-  final String              mFieldName;
-  final TFIDFSimilarity     mSimilObj;
-  final ForwardIndex   mFieldIndex;
+  final String                       mFieldName;
+  final BM25SimilarityLuceneNorm     mSimilObj;
+  final ForwardIndex                 mFieldIndex;
 }

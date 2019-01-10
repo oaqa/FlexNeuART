@@ -22,26 +22,11 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
  * @author Leonid Boytsov
  *
  */
-public class BM25SimilarityLuceneNorm extends TFIDFSimilarity {
+public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
+  
   public BM25SimilarityLuceneNorm(float k1, float b, ForwardIndex fieldIndex) {
-    mBM25_k1 = k1;
-    mBM25_b = b;
-    // Division is slow, so it's worth pre-computing the inverse value
-    mInvAvgDl = 1.0f/ ((float) fieldIndex.getAvgDocLen());
-    mFieldIndex = fieldIndex;
+    super(k1, b, fieldIndex);
   }
-  
-  @Override
-  protected float computeIDF(float docQty, WordEntry e) {
-    float n = e.mWordFreq;
-    return (float)Math.log(1 + (docQty - n + 0.5D)/(n + 0.5D));
-  }
-  
-  final float mBM25_k1;
-  final float mBM25_b;
-  
-  final float mInvAvgDl;
-  final ForwardIndex mFieldIndex;
   
   /**
    * Computes the similarity between the query (represented by

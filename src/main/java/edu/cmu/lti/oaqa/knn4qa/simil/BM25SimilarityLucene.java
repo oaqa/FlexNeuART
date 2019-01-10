@@ -176,7 +176,7 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
    * 
    * @return
    */
-  public TrulySparseVector getDocBM25SparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
+  public TrulySparseVector getBM25SparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
     int qty = 0;
     for (int wid : e.mWordIds)
       if (wid >= 0) qty++;

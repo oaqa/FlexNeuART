@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.thrift.TMultiplexedProcessor;
+
+import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 
@@ -30,8 +34,8 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
         throw new Exception("Unsupported extractor type: " + extrType);
       compList.add(fe);
     }
-    init(compList)
-;  }
+    init(compList);
+  }
   
   void init(ArrayList<FeatureExtractor> componentExtractors) {
     int fqty = 0;
@@ -73,6 +77,16 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
   @Override
   public int getFeatureQty() {
     return mFeatureQty;
+  }
+  
+  @Override
+  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
+    for (FeatureExtractor featExtr : mCompExtr) {
+      ArrayList<VectorWrapper> tmpRes = featExtr.getFeatureVectorsForInnerProd(e, isQuery);
+      res.addAll(tmpRes);
+    }
+    return res;
   }
   
   private int mFeatureQty;

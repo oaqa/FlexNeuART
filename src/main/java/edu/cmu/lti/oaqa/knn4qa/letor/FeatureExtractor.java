@@ -55,11 +55,11 @@ public abstract class FeatureExtractor {
    * @param e a DocEntry object
    * @param isQuery true for queries and false for documents.
    * 
-   * @return a vector wrapper object or null if the function is not
-   *         supported by this feature extractor.
+   * @return a possibly empty array of vector wrapper objects.
    */
-  public static VectorWrapper getDocVector(DocEntry e, boolean isQuery) {
-    return null;
+  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
+    return res;
   }
   
   /**

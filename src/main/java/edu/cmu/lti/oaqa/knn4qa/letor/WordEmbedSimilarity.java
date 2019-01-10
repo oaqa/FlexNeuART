@@ -11,6 +11,7 @@ import edu.cmu.lti.oaqa.knn4qa.simil.AbstractDistance;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 public class WordEmbedSimilarity extends FeatureExtractor {
@@ -47,6 +48,21 @@ public class WordEmbedSimilarity extends FeatureExtractor {
   @Override
   public String getName() {
     return this.getClass().getName();
+  }
+  
+  @Override
+  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
+  
+    if (isQuery) {
+      res.add(new VectorWrapper(mQueryEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
+                                                         mUseIDFWeight, mUseL2Norm)));
+    } else {
+      res.add(new VectorWrapper(mDocEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
+                                                        mUseIDFWeight, mUseL2Norm)));
+    }
+    
+    return res;
   }
   
   @Override
