@@ -14,6 +14,8 @@ recomp_model="1"
 rerun_lucene="1"
 test_model_results="0"
 
+EMBED_ROOT_DIR="WordEmbeddings"
+
 
 if [ "$collect" = "manner" ] ; then
   train_part="train"
@@ -174,7 +176,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
     check_pipe "scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART $METRIC_TYPE 2>&1 "
 
     if [ "$test_model_results" = "1" ] ; then
-      scripts/query/run_query.sh  -u "$URI" -q output/$collect/${train_part}/SolrQuestionFile.txt  -n "$N_TRAIN" -o $TREC_RUN_DIR/run_check_train_metrics  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTrainParam -query_cache_file $CACHE_FILE_TRAIN 2>&1
+      scripts/query/run_query.sh  -u "$URI" -q output/$collect/${train_part}/SolrQuestionFile.txt  -n "$N_TRAIN" -o $TREC_RUN_DIR/run_check_train_metrics  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir $EMBED_ROOT_DIR/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTrainParam -query_cache_file $CACHE_FILE_TRAIN 2>&1
       check "run_query.sh"
 
       scripts/exper/eval_output.py "output/$collect/${train_part}/$QREL_FILE" "${TREC_RUN_DIR}/run_check_train_metrics_${N_TRAIN}"
@@ -186,7 +188,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
   fi
 
   if [ "$rerun_lucene" = 1 ] ; then
-    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTestParam -query_cache_file $CACHE_FILE_TEST 2>&1|tee $query_log_file
+    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir $EMBED_ROOT_DIR/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTestParam -query_cache_file $CACHE_FILE_TEST 2>&1|tee $query_log_file
     check_pipe "run_query.sh"
   fi
 else

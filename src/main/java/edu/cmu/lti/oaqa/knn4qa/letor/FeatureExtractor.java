@@ -25,6 +25,7 @@ import java.util.*;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 public abstract class FeatureExtractor {  
@@ -46,6 +47,21 @@ public abstract class FeatureExtractor {
    */
   public abstract int getFeatureQty();
    
+  /**
+   * For features that can be computed as an inner product of 
+   * document and query vectors, this function produces
+   * a corresponding vector from a DocEntry object.
+   * 
+   * @param e a DocEntry object
+   * @param isQuery true for queries and false for documents.
+   * 
+   * @return a vector wrapper object or null if the function is not
+   *         supported by this feature extractor.
+   */
+  public static VectorWrapper getDocVector(DocEntry e, boolean isQuery) {
+    return null;
+  }
+  
   /**
    * Saves features (in the form of a sparse vector) to a file.
    * 

@@ -37,8 +37,7 @@ rm -rf "$OUT_DIR"/*
 echo "=========================================================================="
 
 if [ "$collect" = "manner" ] ; then
-  #for field in text text_unlemm ; do
-  for field in text ; do
+  for field in text text_unlemm ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field
     check "scripts/index/run_inmemfwd_index.sh  $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field"
   done
