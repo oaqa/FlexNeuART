@@ -184,6 +184,18 @@ public class InMemForwardIndexText extends ForwardIndex {
   @Override
   protected void initIndex() throws IOException {
     // We do nothing here
+  }
+
+  // NOTE this function was never tested
+  @Override
+  public String[] getAllDocIds() {
+    String res[] = new String[mDocEntSortById.length];
+    
+    for (int i = 0; i < mDocEntSortById.length; ++i) {
+      res[i] = mDocEntSortById[i].mId; 
+    }
+    
+    return res;
   }  
 
 

@@ -149,4 +149,6 @@ public class CommonParams {
 
   public final static String GALAGO_PARAMS_PARAM = "galago_params";
   public final static String GALAGO_PARAMS_DESC  = "galago_params_desc";
+  
+  public static final int USAGE_WIDTH = 90;
 }

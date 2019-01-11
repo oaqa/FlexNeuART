@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.cmu.lti.oaqa.knn4qa.apps;
+package edu.cmu.lti.oaqa.knn4qa.memdb;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,8 +34,6 @@ import org.apache.lucene.store.FSDirectory;
 
 import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 
 /**
  * @author Leonid Boytsov
@@ -204,4 +202,15 @@ public class ForwardIndexBinary extends ForwardIndex {
   private DirectoryReader mReader;
   private IndexSearcher mSearcher;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
+
+  @Override
+  public String[] getAllDocIds() {
+    String res[] = new String[mDocIds.size()];
+    
+    for (int i = 0; i < mDocIds.size(); ++i) {
+      res[i] = mDocIds.get(i);
+    }
+    
+    return res;
+  }
 }

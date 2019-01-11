@@ -14,7 +14,6 @@ import java.util.TreeMap;
 import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
-import edu.cmu.lti.oaqa.knn4qa.apps.ForwardIndexBinary;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 
 /**
@@ -85,6 +84,8 @@ public abstract class ForwardIndex {
     res.readIndex();
     return res;
   }
+  
+  abstract public String[] getAllDocIds();
    
   /**
    * Retrieves a previously stored index.

@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.thrift.TMultiplexedProcessor;
-
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
