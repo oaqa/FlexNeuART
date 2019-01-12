@@ -86,6 +86,7 @@ function setJavaMem {
   fi
   # No mx
   MEM_SIZE_MIN_KB=$(($F1*$MEM_SIZE_MX_KB/$F2))
-  export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MX_KB} -server"
+  MEM_SIZE_MAX_KB=$((5*$MEM_SIZE_MX_KB/6))
+  export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB} -server"
   echo "MAVEN_OPTS=$MAVEN_OPTS"
 }
