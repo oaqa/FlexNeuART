@@ -50,7 +50,7 @@ public class ExportToNMSLIBDenseSparseFusion {
     @Option(name = "-main_field_name", required = true, usage = "The name of the main field, e.g., text")
     String mMainFieldName;
     
-    ADD OPTION for IS_QUERY
+    //ADD OPTION for IS_QUERY
   }
   
   
@@ -77,7 +77,7 @@ public class ExportToNMSLIBDenseSparseFusion {
       ForwardIndex mainIndex = resourceManager.getFwdIndex(args.mMainFieldName);
       
       for (String docId : mainIndex.getAllDocIds()) {
-        featExtr.getFeatureVectorsForInnerProd();
+        //featExtr.getFeatureVectorsForInnerProd();
       }
       
     } catch (Exception e) {
