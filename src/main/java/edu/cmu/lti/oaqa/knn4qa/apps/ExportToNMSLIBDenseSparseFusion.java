@@ -15,7 +15,10 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import org.apache.uima.resource.ResourceManager;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -23,7 +26,10 @@ import org.kohsuke.args4j.ParserProperties;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 
 /**
  * A class that exports a number of query and/or document feature vectors to the NMSLIB dense/sparse
@@ -44,45 +50,79 @@ public class ExportToNMSLIBDenseSparseFusion {
     @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
     String mEmbedDir;
     
-    @Option(name = "-extr_son",  usage = "A JSON file with a descripton of the extractors")
+    @Option(name = "-extr_json",  usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
     @Option(name = "-main_field_name", required = true, usage = "The name of the main field, e.g., text")
     String mMainFieldName;
     
-    //ADD OPTION for IS_QUERY
+    @Option(name = "-is_query", usage = "If specified, we generate queries rather than documents.")
+    boolean mIsQuery;
+
+    @Option(name = "-out_file", required = true, usage = "Binary output file")
+    String mOutFile;
   }
   
-  
-  
-  public static void main(String argv) {
+  public static void main(String argv[]) {
     
     Args args = new Args();
-    CmdLineParser parser = new CmdLineParser(args, ParserProperties.defaults().withUsageWidth(CommonParams.USAGE_WIDTH));
+    CmdLineParser parser = null;
     
     try {
-    
+ 
+      parser = new CmdLineParser(args, ParserProperties.defaults().withUsageWidth(CommonParams.USAGE_WIDTH));
       parser.parseArgument(argv);
     
     } catch (CmdLineException e) {
-      
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
+      System.exit(1);
     }
+    
+    BufferedOutputStream out = null;
     
     try {
       
-      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
+      out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
+      
+      FeatExtrResourceManager resourceManager = 
+          new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
       
       CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);
       
+      FeatureExtractor compExtr[] = featExtr.getCompExtr();
+      
       ForwardIndex mainIndex = resourceManager.getFwdIndex(args.mMainFieldName);
       
-      for (String docId : mainIndex.getAllDocIds()) {
-        //featExtr.getFeatureVectorsForInnerProd();
+      String[] allDocIds = mainIndex.getAllDocIds();
+      
+      out.write(BinWriteUtils.intToBytes(allDocIds.length));
+      out.write(BinWriteUtils.intToBytes(compExtr.length));
+      
+      for (FeatureExtractor oneComp : compExtr) {
+        out.write(BinWriteUtils.intToBytes(oneComp.isSparse() ? 1 : 0));
+        out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
+      }
+      
+      for (String docId : allDocIds) {
+        for (VectorWrapper featVect : featExtr.getFeatureVectorsForInnerProd(mainIndex.getDocEntry(docId), args.mIsQuery)) {
+          featVect.write(out);
+        }
       }
       
     } catch (Exception e) {
+      e.printStackTrace();
       System.err.println("Exception while processing: " + e);
       System.exit(1);
+    } finally {
+      if (out != null) {
+        try {
+          out.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+          System.exit(1);
+        }
+      }
     }
   }
 }

@@ -62,6 +62,10 @@ public abstract class FeatureExtractor {
     return res;
   }
   
+  public abstract boolean isSparse();
+  
+  public abstract int getDim();
+  
   /**
    * Saves features (in the form of a sparse vector) to a file.
    * 
