@@ -39,11 +39,11 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
  * @author Leonid Boytsov
  *
  */
-public class ForwardIndexBinary extends ForwardIndex {
+public class ForwardIndexBinaryLucene extends ForwardIndex {
   
   public static final int COMMIT_INTERV = 500000;
 
-  public ForwardIndexBinary(String filePrefix) throws IOException {
+  public ForwardIndexBinaryLucene(String filePrefix) throws IOException {
     this.mFilePrefix  = filePrefix;
   }
   
@@ -51,7 +51,7 @@ public class ForwardIndexBinary extends ForwardIndex {
   protected void initIndex() throws IOException {
     mDocIds = new ArrayList<String>();
     
-    String outputDirName = getBinaryDirName(mFilePrefix);
+    String outputDirName = getBinaryDirOrFileName(mFilePrefix);
     File outputDir = new File(outputDirName);
     if (!outputDir.exists()) {
       if (!outputDir.mkdirs()) {
@@ -142,7 +142,7 @@ public class ForwardIndexBinary extends ForwardIndex {
       
       postIndexComp();
       
-      String indexDirName = getBinaryDirName(mFilePrefix);
+      String indexDirName = getBinaryDirOrFileName(mFilePrefix);
       
       mReader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
       mSearcher = new IndexSearcher(mReader);

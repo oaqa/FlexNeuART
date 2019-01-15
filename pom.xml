@@ -278,6 +278,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.mapdb</groupId>
+      <artifactId>mapdb</artifactId>
+      <version>3.0.7</version>
+    </dependency>
+
+    <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.clearnlp-asl</artifactId>
     </dependency>

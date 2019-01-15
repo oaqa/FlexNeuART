@@ -48,7 +48,8 @@ public abstract class ForwardIndex {
   public static final WordEntry UNKNOWN_WORD = new WordEntry(-1);
   public static final int MIN_WORD_ID = 1;
   protected static final int PRINT_QTY = 10000;
-  protected static final String BINARY_DIR_SUFFIX = ".bin";
+  protected static final String BINARY_DIR_OR_FILE_SUFFIX = ".bin";
+  protected static final boolean USE_MEM_DB = true;
   protected HashMap<String, WordEntry> mStr2WordEntry = new HashMap<String, WordEntry>();
 
   /**
@@ -64,22 +65,28 @@ public abstract class ForwardIndex {
     if (isText) {
       res = new InMemForwardIndexText(filePrefix);
     } else {
-      res = new ForwardIndexBinary(filePrefix); 
+      res = USE_MEM_DB ? 
+          new ForwardIndexBinaryMapDb(filePrefix) : 
+          new ForwardIndexBinaryLucene(filePrefix); 
     }
     return res;
   }
   
   public static ForwardIndex createReadInstance(String filePrefix) throws Exception {
-    String indexDirName = getBinaryDirName(filePrefix);
-    File indexDir = new File(indexDirName);
+    String indexDirOrFileName = getBinaryDirOrFileName(filePrefix);
+    File indexDirOrFile = new File(indexDirOrFileName);
     ForwardIndex res = null;
-    if (!indexDir.exists()) {
+    if (!indexDirOrFile.exists()) {
       res = new InMemForwardIndexText(filePrefix);
     } else {
-      if (!indexDir.isDirectory()) {
-        throw new Exception("File: " + indexDirName + " is not a directory!");
+      if (USE_MEM_DB) {
+        res = new ForwardIndexBinaryMapDb(filePrefix);
+      } else {
+        if (!indexDirOrFile.isDirectory()) {
+          throw new Exception("File: " + indexDirOrFileName + " is not a directory!");
+        }
+        res = new ForwardIndexBinaryLucene(filePrefix);
       }
-      res = new ForwardIndexBinary(filePrefix);
     }
     res.readIndex();
     return res;
@@ -201,8 +208,8 @@ public abstract class ForwardIndex {
   
   protected abstract void sortDocEntries();
   
-  protected static String getBinaryDirName(String filePrefix) {
-    return filePrefix + BINARY_DIR_SUFFIX;
+  protected static String getBinaryDirOrFileName(String filePrefix) {
+    return filePrefix + BINARY_DIR_OR_FILE_SUFFIX;
   }
   
   /**
