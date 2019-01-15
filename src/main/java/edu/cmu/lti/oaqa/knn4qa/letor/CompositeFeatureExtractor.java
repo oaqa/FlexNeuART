@@ -26,8 +26,8 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
         fe = new FeatExtrTFIDFSimilarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtrModel1Similarity.EXTR_TYPE)) {
         fe = new FeatExtrModel1Similarity(resMngr, oneExtrConf);
-      } else if (extrType.equalsIgnoreCase(WordEmbedSimilarity.EXTR_TYPE)) {
-        fe = new WordEmbedSimilarity(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(FeatExtrWordEmbedSimilarity.EXTR_TYPE)) {
+        fe = new FeatExtrWordEmbedSimilarity(resMngr, oneExtrConf);
       } else 
         throw new Exception("Unsupported extractor type: " + extrType);
       compList.add(fe);
@@ -77,8 +77,15 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
     return mFeatureQty;
   }
   
+  public FeatureExtractor[] getCompExtr() {
+    return mCompExtr;
+  }
+  
   @Override
   public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+    if (e == null) {
+      throw new RuntimeException("Bug: got null DocEntry");
+    }
     ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
     for (FeatureExtractor featExtr : mCompExtr) {
       ArrayList<VectorWrapper> tmpRes = featExtr.getFeatureVectorsForInnerProd(e, isQuery);
@@ -86,8 +93,19 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
     }
     return res;
   }
+ 
+  @Override
+  public boolean isSparse() {
+    throw new RuntimeException("isSparse shouldn't be invoked on a composite feature extractor!");
+  }
+
+  @Override
+  public int getDim() {
+    throw new RuntimeException("getDim shouldn't be invoked on a composite feature extractor!");
+  }
   
   private int mFeatureQty;
   private FeatureExtractor[] mCompExtr;
+
 
 }

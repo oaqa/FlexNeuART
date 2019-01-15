@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.management.RuntimeErrorException;
+
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
@@ -14,7 +16,7 @@ import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
-public class WordEmbedSimilarity extends FeatureExtractor {
+public class FeatExtrWordEmbedSimilarity extends FeatureExtractor {
   public static String EXTR_TYPE = "avgWordEmbed";
   
   public static String QUERY_EMBED_FILE = "queryEmbedFile";
@@ -23,7 +25,7 @@ public class WordEmbedSimilarity extends FeatureExtractor {
   public static String USE_L2_NORM = "useL2Norm";
   public static String DIST_TYPE = "distType";
   
-  WordEmbedSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  FeatExtrWordEmbedSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
     mFieldIndex = resMngr.getFwdIndex(mFieldName);
  
@@ -38,6 +40,10 @@ public class WordEmbedSimilarity extends FeatureExtractor {
       mQueryEmbed = mDocEmbed;
     } else {
       mQueryEmbed = resMngr.getWordEmbed(mFieldName, queryEmbedFile);
+      if (mQueryEmbed.getDim() != mDocEmbed.getDim()) {
+        throw new 
+          Exception("Dimension mismatch btween query and document embeddings for field: " + mFieldName);
+      }
     }
     mUseIDFWeight = conf.getReqParamBool(USE_TFIDF_WEIGHT);
     mUseL2Norm = conf.getReqParamBool(USE_L2_NORM);
@@ -63,6 +69,17 @@ public class WordEmbedSimilarity extends FeatureExtractor {
     }
     
     return res;
+  }
+  
+
+  @Override
+  public boolean isSparse() {
+    return false;
+  }
+
+  @Override
+  public int getDim() {
+    return mDocEmbed.getDim();
   }
   
   @Override
@@ -100,7 +117,7 @@ public class WordEmbedSimilarity extends FeatureExtractor {
     return 1;
   }
   
-  final ForwardIndex   mFieldIndex;
+  final ForwardIndex        mFieldIndex;
   final String              mFieldName;
   final TFIDFSimilarity     mSimilObj;
   final boolean             mUseIDFWeight;
@@ -108,4 +125,5 @@ public class WordEmbedSimilarity extends FeatureExtractor {
   final EmbeddingReaderAndRecoder mDocEmbed;
   final EmbeddingReaderAndRecoder mQueryEmbed;
   final AbstractDistance    mDist;
+
 }

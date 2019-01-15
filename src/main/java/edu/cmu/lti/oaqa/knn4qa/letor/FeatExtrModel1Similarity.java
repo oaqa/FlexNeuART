@@ -123,4 +123,16 @@ public class FeatExtrModel1Similarity extends FeatureExtractor {
   final float           mMinModel1Prob;
   final float           mLambda;
   final float           mProbOOV;
+
+  @Override
+  public boolean isSparse() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public int getDim() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
 }

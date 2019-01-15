@@ -80,6 +80,16 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
     
     return res;
   }
+  
+  @Override
+  public boolean isSparse() {
+    return true;
+  }
+
+  @Override
+  public int getDim() {
+    return 0;
+  }
 
   @Override
   public int getFeatureQty() {
@@ -89,4 +99,5 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor {
   final String                       mFieldName;
   final BM25SimilarityLuceneNorm     mSimilObj;
   final ForwardIndex                 mFieldIndex;
+
 }
