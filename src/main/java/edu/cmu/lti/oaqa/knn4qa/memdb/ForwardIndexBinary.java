@@ -41,7 +41,7 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
  */
 public class ForwardIndexBinary extends ForwardIndex {
   
-  public static final int COMMIT_INTERV = 50000;
+  public static final int COMMIT_INTERV = 500000;
 
   public ForwardIndexBinary(String filePrefix) throws IOException {
     this.mFilePrefix  = filePrefix;

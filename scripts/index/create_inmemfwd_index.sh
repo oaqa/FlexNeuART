@@ -32,8 +32,8 @@ fi
 
 echo "=========================================================================="
 echo "Output directory: $OUT_DIR"
-echo "Removing previous index (if exists)"
-rm -rf "$OUT_DIR"/*
+#echo "Removing previous index (if exists)"
+#rm -rf "$OUT_DIR"/*
 echo "=========================================================================="
 
 if [ "$collect" = "manner" ] ; then
@@ -47,8 +47,8 @@ elif [ "$collect" = "compr" -o  "$collect" = "stackoverflow" ] ; then
     check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field"
   done
 elif [ "$collect" = "clueweb09" ] ; then
-  for field in title linkText text ; do
-  #for field in text ; do
+  #for field in title linkText text ; do
+  for field in linkText ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file ClueWeb09Proc.xml.gz -field $field
   done
 elif [ "$collect" = "squad" ] ; then
