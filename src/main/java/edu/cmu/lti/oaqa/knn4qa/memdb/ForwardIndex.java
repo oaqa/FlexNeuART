@@ -49,7 +49,7 @@ public abstract class ForwardIndex {
   public static final int MIN_WORD_ID = 1;
   protected static final int PRINT_QTY = 10000;
   protected static final String BINARY_DIR_OR_FILE_SUFFIX = ".bin";
-  protected static final boolean USE_MEM_DB = true;
+  protected static final boolean USE_MEM_DB = false;
   protected HashMap<String, WordEntry> mStr2WordEntry = new HashMap<String, WordEntry>();
 
   /**
