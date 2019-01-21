@@ -80,8 +80,6 @@ fi
 
 N_TRAIN=$9
 
-EMBED_FILES="${10}"
-
 NTEST_LIST=`echo $NTEST_STR|sed 's/,/ /g'`
 
 EXPER_DIR="$EXPER_DIR_BASE/exper"
@@ -154,16 +152,9 @@ if [ "$EXTR_TYPE" != "none" ] ; then
   fi
 
 
-  if [ "$EMBED_FILES" = "" ] ; then
-    echo "Specify a (quoted) list of embedding files (9th arg)"
-    exit 1
-  fi
-
-  HORDER_FILES="tran_embed.0,tran_embed.1,tran_embed.2,tran_embed.3,tran_embed.4"
-
   if [ "$regen_feat" = "1" ] ; then
-    scripts/query/gen_features.sh $collect $QREL_FILE $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1
-    check "scripts/query/gen_features.sh $collect $QREL_FILE $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -embed_files "$EMBED_FILES" -horder_files "$HORDER_FILES" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1"
+    scripts/query/gen_features.sh $collect $QREL_FILE $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1
+    check "scripts/query/gen_features.sh $collect $QREL_FILE $train_part lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1"
   fi
 
   MODEL_FILE="${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.model"
@@ -176,7 +167,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
     check_pipe "scripts/letor/ranklib_train_coordasc.sh "${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.feat" "$MODEL_FILE" $NUM_RAND_RESTART $METRIC_TYPE 2>&1 "
 
     if [ "$test_model_results" = "1" ] ; then
-      scripts/query/run_query.sh  -u "$URI" -q output/$collect/${train_part}/SolrQuestionFile.txt  -n "$N_TRAIN" -o $TREC_RUN_DIR/run_check_train_metrics  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir $EMBED_ROOT_DIR/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTrainParam -query_cache_file $CACHE_FILE_TRAIN 2>&1
+      scripts/query/run_query.sh  -u "$URI" -q output/$collect/${train_part}/SolrQuestionFile.txt  -n "$N_TRAIN" -o $TREC_RUN_DIR/run_check_train_metrics  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir $EMBED_ROOT_DIR/$collect  -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -model_final "$MODEL_FILE" $maxQueryQtyTrainParam -query_cache_file $CACHE_FILE_TRAIN 2>&1
       check "run_query.sh"
 
       scripts/exper/eval_output.py "output/$collect/${train_part}/$QREL_FILE" "${TREC_RUN_DIR}/run_check_train_metrics_${N_TRAIN}"
@@ -188,7 +179,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
   fi
 
   if [ "$rerun_lucene" = 1 ] ; then
-    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir $EMBED_ROOT_DIR/$collect  -embed_files  "$EMBED_FILES" -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" -model_final "$MODEL_FILE" $maxQueryQtyTestParam -query_cache_file $CACHE_FILE_TEST 2>&1|tee $query_log_file
+    scripts/query/run_query.sh  -u "$URI" -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir $EMBED_ROOT_DIR/$collect  -cand_prov lucene -memindex_dir memfwdindex/$collect -extr_type_final "$EXTR_TYPE" -thread_qty $THREAD_QTY -model_final "$MODEL_FILE" $maxQueryQtyTestParam -query_cache_file $CACHE_FILE_TEST 2>&1|tee $query_log_file
     check_pipe "run_query.sh"
   fi
 else

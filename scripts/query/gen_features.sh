@@ -19,12 +19,6 @@ while [ $# -ne 0 ] ; do
       -max_num_query)
         max_num_query_param=$OPT
         ;;
-      -embed_files)
-        embed_files_param=$OPT
-        ;;
-      -horder_files)
-        horder_files_param=$OPT
-        ;;
       -extr_type_interm)
         extr_type_interm_param=$OPT
         extr_type_interm=$OPT_VALUE
@@ -125,8 +119,6 @@ echo "PARAMETER REVIEW"
 echo "==============================================="
 echo "Thread qty:             $thread_qty"
 echo "max_num_query_param:    $max_num_query_param"
-echo "embed_files_param:      $embed_files_param"
-echo "horder_files_param:     $horder_files_param"
 echo "extr_type_interm:       $extr_type_interm_param"
 echo "model_interm_param:     $model_interm_param"
 echo "cand_qty_param:         $cand_qty_param"
@@ -150,7 +142,7 @@ scripts/query/run_multhread_feat.sh \
 -extr_type_final $extr_type_final \
 "$extr_type_interm_param" "$model_interm_param" "$cand_qty_param" \
 -thread_qty $thread_qty  \
--embed_dir WordEmbeddings/$collect  "$embed_files_param" "$horder_files_param" \
+-embed_dir WordEmbeddings/$collect \
 $query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
 if [ "${PIPESTATUS[0]}" != "0" ] ; then

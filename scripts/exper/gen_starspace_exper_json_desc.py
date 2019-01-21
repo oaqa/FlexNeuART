@@ -10,7 +10,7 @@ import os, sys, json
 # outRootDir / colName / starspace.desc
 
 # Relative output location for experimental files:
-# colName / starspace / <specific suffix> 
+# starspace / <specific suffix> 
 
 embedRootDir = sys.argv[1]
 colName      = sys.argv[2]
@@ -32,10 +32,11 @@ embedDir = os.path.join(embedRootDir, colName, 'starspace')
 with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
   for fn in os.listdir(embedDir):
     if fn.endswith('.query'):  
-      fid = fn[0:-len('.query')]
-      print(fid)
+      fid0 = fn[0:-len('.query')]
 
       for distType in ['l2', 'cosine']:
+        fid = distType + '_' + fid0    
+        print(fid)
         jsonDesc = {
                   "extractors" : [
                   {
@@ -51,8 +52,8 @@ with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
                     "type" : "avgWordEmbed",
                     "params" : {
                       "fieldName" : "text_unlemm",
-                      "queryEmbedFile" : "starspace/%s.query" % fid,
-                      "docEmbedFile"   : "starspace/%s.answer" % fid,
+                      "queryEmbedFile" : "starspace/%s.query" % fid0,
+                      "docEmbedFile"   : "starspace/%s.answer" % fid0,
                       "useIDFWeight"   : "True",
                       "useL2Norm"      : "True",
                       "distType"       : distType 
@@ -60,9 +61,9 @@ with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
                   }
                   ]
                   }
-        jsonFileName = distType +  '_' + fid + '.json'
+        jsonFileName = fid + '.json'
         jsonPath = os.path.join(outJsonDir, jsonFileName)
-        of.write('%s @ dev1 %s\n' % (jsonPath, os.path.join(colName, 'starspace', fid)))
+        of.write('%s dev1 %s\n' % (jsonPath, os.path.join('starspace', fid)))
         
         with open(jsonPath, 'w') as f:
           json.dump(jsonDesc, f)
