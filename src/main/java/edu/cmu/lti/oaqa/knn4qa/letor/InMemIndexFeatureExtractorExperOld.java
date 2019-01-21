@@ -285,13 +285,5 @@ public class InMemIndexFeatureExtractorExperOld extends InMemIndexFeatureExtract
   public boolean useLCSFeature(int fieldId) {
     return false;
   }
-  @Override
-  public boolean isSparse() {
-    throw new RuntimeException("isSparse shouldn't be invoked on a InMemIndexFeatureExtractorExperOld feature extractor!");
-  }
 
-  @Override
-  public int getDim() {
-    throw new RuntimeException("getDim shouldn't be invoked on a InMemIndexFeatureExtractorExperOld feature extractor!");
-  }
 }

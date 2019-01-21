@@ -15,6 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 
 import javax.print.Doc;
@@ -96,8 +97,10 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
 
   @Override
   public CandidateInfo getCandidates(int queryNum, Map<String, String> queryData, int maxQty) throws Exception {
-    doc = mMainFwdIndex.createDocEntry()
-    String queryObjStr = mQueryGen.getStrObjForKNNService(queryData);
+    //String queryField = "some field"; // TODO fill it out
+    //doc = mMainFwdIndex.createDocEntry(queryData.get(),false);
+    
+    ByteBuffer queryObj = ByteBuffer.allocate(100); // TODO add query-generation from a document
 
     // queyrObj MUST be byteBuffer
     List<ReplyEntry> clientRepl = mKNNClient.knnQuery(maxQty, queryObj, true, false);
