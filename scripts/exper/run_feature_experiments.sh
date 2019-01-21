@@ -32,8 +32,7 @@ MAX_QUERY_QTY="$5"
 NUM_CPU_CORES=$6
 
 if [ "$NUM_CPU_CORES" = "" ] ; then
-  NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
-  check "getting the number of CPU cores, do you have /proc/cpu/info?"
+  NUM_CPU_CORES=`getNumCpuCores`
 fi
 
 THREAD_QTY=$(($NUM_CPU_CORES/$PARALLEL_EXPER_QTY))

@@ -73,19 +73,14 @@ for ((i=1;i<$n;++i))
         echo "Missing extractor type (1st field) in line $line, file $EXTRACTORS_DESC"
         exit 1
       fi
-      EMBED_LIST=`echo $line|awk '{print $2}'`
-      if [ "$EMBED_LIST" = "" ] ; then
-        echo "Missing embedding list (2d field) in line $line, file $EXTRACTORS_DESC"
+      TEST_SET=`echo $line|awk '{print $2}'`
+      if [ "$TEST_SET" = "" ] ; then
+        echo "Missing test set (e.g., dev1) (2d field) in line $line, file $EXTRACTORS_DESC"
         exit 1
       fi
-      TEST_SET=`echo $line|awk '{print $3}'`
+      EXPER_SUBDIR=`echo $line|awk '{print $3}'`
       if [ "$TEST_SET" = "" ] ; then
-        echo "Missing test set (e.g., dev1) (3d field) in line $line, file $EXTRACTORS_DESC"
-        exit 1
-      fi
-      EXPER_SUBDIR=`echo $line|awk '{print $4}'`
-      if [ "$TEST_SET" = "" ] ; then
-        echo "Missing experimental sub-dir (4th field) in line $line, file $EXTRACTORS_DESC"
+        echo "Missing experimental sub-dir (3d field) in line $line, file $EXTRACTORS_DESC"
         exit 1
       fi
       # Each experiment should run in its separate sub-directory
@@ -97,7 +92,7 @@ for ((i=1;i<$n;++i))
           exit 1
         fi
       fi
-      scripts/exper/run_one_lucene_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN" "$EMBED_LIST" &> $EXPER_DIR_UNIQUE/exper.log &
+      scripts/exper/run_one_lucene_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN"  &> $EXPER_DIR_UNIQUE/exper.log &
       pid=$!
       childPIDs+=($pid)
       echo "Started a process $pid, working dir: $EXPER_DIR_UNIQUE"

@@ -71,18 +71,22 @@ function save_server_logs {
   mv $SERVER_LOG_NAME $SERVER_LOG_NAME.$me
 }
 
+function getOS {
+  uname|awk '{print $1}'
+}
+
 function setJavaMem {
   echo "HEEERE!"
   F1="$1"
   F2="$2"
-  OS=`uname|awk '{print $1}'`
+  OS=$(getOS)
   if [ "$OS" = "Linux" ] ; then
     MEM_SIZE_MX_KB=`free|grep Mem|awk '{print $2}'`
   elif [ "$OS" = "Darwin" ] ; then
     # Assuming Macbook pro
     MEM_SIZE_MX_KB=$((16384*1024))
   else
-    echo "Unsupported OS: $OS"
+    echo "Unsupported OS: $OS" 1>&2
     exit 1
   fi
   # No mx
@@ -90,4 +94,18 @@ function setJavaMem {
   MEM_SIZE_MAX_KB=$((7*$MEM_SIZE_MX_KB/8))
   export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
   echo "MAVEN_OPTS=$MAVEN_OPTS"
+}
+
+function getNumCpuCores {
+  OS=$(getOS)
+  if [ "$OS" = "Linux" ] ; then
+    NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
+    check "getting the number of CPU cores, do you have /proc/cpu/info?"
+  elif [ "$OS" = "Darwin" ] ; then
+    NUM_CPU_CORES=4
+  else
+    echo "Unsupported OS: $OS" 1>&2
+    exit 1
+  fi
+  echo $NUM_CPU_CORES
 }
