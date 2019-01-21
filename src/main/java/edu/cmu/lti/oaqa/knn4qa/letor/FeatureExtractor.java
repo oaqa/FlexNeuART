@@ -47,24 +47,6 @@ public abstract class FeatureExtractor {
    */
   public abstract int getFeatureQty();
    
-  /**
-   * For features that can be computed as an inner product of 
-   * document and query vectors, this function produces
-   * a corresponding vector from a DocEntry object.
-   * 
-   * @param e a DocEntry object
-   * @param isQuery true for queries and false for documents.
-   * 
-   * @return a possibly empty array of vector wrapper objects.
-   */
-  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
-    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
-    return res;
-  }
-  
-  public abstract boolean isSparse();
-  
-  public abstract int getDim();
   
   /**
    * Saves features (in the form of a sparse vector) to a file.

@@ -38,8 +38,7 @@ fi
 
 EXPER_DIR="$RESULTS_DIR/feature_exper/"
 
-echo -e "extractor_type\tembed_list\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
-
+echo -e "extractor_type\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
 
 n=`wc -l "$FEATURE_DESC_FILE"|awk '{print $1}'`
 n=$(($n+1))
@@ -63,14 +62,14 @@ for ((i=1;i<$n;++i))
       check "cd $EXPER_DIR_UNIQUE/rep"
       for f in `ls -tr out_${FILT_N}.rep` ; do 
         top_k=`echo $f|sed 's/out_//'|sed 's/.rep//'`
-        query_qty=`get_metric_value $f "# of queries"`
-        ndcg20=`get_metric_value $f "NDCG@20"`
-        err20=`get_metric_value $f "ERR@20"`
-        p20=`get_metric_value $f "P@20"`
-        map=`get_metric_value $f "MAP"`
-        mrr=`get_metric_value $f "Reciprocal rank"`
-        recall=`get_metric_value $f "Recall"`
-        echo -e "$EXTR_TYPE\t$EMBED_LIST\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
+        query_qty=`get_metric_value "$f" "# of queries"`
+        ndcg20=`get_metric_value "$f" "NDCG@20"`
+        err20=`get_metric_value "$f" "ERR@20"`
+        p20=`get_metric_value "$f" "P@20"`
+        map=`get_metric_value "$f" "MAP"`
+        mrr=`get_metric_value "$f" "Reciprocal rank"`
+        recall=`get_metric_value "$f" "Recall"`
+        echo -e "$EXTR_TYPE\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
       done
       cd $pd
       check "cd $pd"

@@ -1,16 +1,16 @@
 #!/usr/bin/env python
-import os, sys, json
+import os, sys, json, re
 
 # Input location:
 # inpRootDir / colName / starspace / <file names>
 
 # Output location for descriptor files:
 # Individual extractor files
-# outRootDir / colName / starspace / <specific suffix>.json
+# outRootDir / colName / starspace / <experiment-specific suffix>.json
 # outRootDir / colName / starspace.desc
 
 # Relative output location for experimental files:
-# starspace / <specific suffix> 
+# starspace / <experiment-specific suffix> 
 
 embedRootDir = sys.argv[1]
 colName      = sys.argv[2]
@@ -29,12 +29,22 @@ if not os.path.exists(outJsonDir):
 
 embedDir = os.path.join(embedRootDir, colName, 'starspace') 
 
-with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
-  for fn in os.listdir(embedDir):
-    if fn.endswith('.query'):  
-      fid0 = fn[0:-len('.query')]
+for distType in ['l2', 'cosine']:
+  with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
+    lst = []
+    for fn in os.listdir(embedDir):
+      fns = re.sub(r"[^0-9]", " ", fn)
+      sortKey = []
+      for  s in fns.split():
+        sortKey.append(int(s))
+      lst.append( (tuple(sortKey), fn) )
 
-      for distType in ['l2', 'cosine']:
+    lst.sort()
+      
+
+    for _, fn in lst:
+      if fn.endswith('.query'):  
+        fid0 = fn[0:-len('.query')]
         fid = distType + '_' + fid0    
         print(fid)
         jsonDesc = {

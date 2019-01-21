@@ -27,6 +27,7 @@ import org.kohsuke.args4j.ParserProperties;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtracture;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
@@ -52,9 +53,6 @@ public class ExportToNMSLIBDenseSparseFusion {
     
     @Option(name = "-extr_json",  usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
-    
-    @Option(name = "-main_field_name", required = true, usage = "The name of the main field, e.g., text")
-    String mMainFieldName;
     
     @Option(name = "-is_query", usage = "If specified, we generate queries rather than documents.")
     boolean mIsQuery;
@@ -90,22 +88,39 @@ public class ExportToNMSLIBDenseSparseFusion {
       
       CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);
       
-      FeatureExtractor compExtr[] = featExtr.getCompExtr();
+      /*
+       * We will later try to cast this feature extractor reference to a specific
+       * feature extractor type (only this type can support export to NMSLIB). 
+       */
+      FeatureExtractor[]        uncastFeatExtrRef = featExtr.getCompExtr();
+      int featExtrQty = uncastFeatExtrRef.length;
+      SingleFieldFeatExtracture compExtractors[] = new SingleFieldFeatExtracture[featExtrQty];
+      ForwardIndex              compIndices[] = new ForwardIndex[featExtrQty];
       
-      ForwardIndex mainIndex = resourceManager.getFwdIndex(args.mMainFieldName);
+      for (int i = 0; i < featExtrQty; ++i) {
+        compExtractors[i] = (SingleFieldFeatExtracture)uncastFeatExtrRef[i];
+        compIndices[i] = resourceManager.getFwdIndex(compExtractors[i].getFieldName());
+      }
       
-      String[] allDocIds = mainIndex.getAllDocIds();
+      String[] allDocIds = compIndices[0].getAllDocIds();
       
       out.write(BinWriteUtils.intToBytes(allDocIds.length));
-      out.write(BinWriteUtils.intToBytes(compExtr.length));
+      out.write(BinWriteUtils.intToBytes(featExtrQty));
       
-      for (FeatureExtractor oneComp : compExtr) {
+      for (SingleFieldFeatExtracture oneComp : compExtractors) {
         out.write(BinWriteUtils.intToBytes(oneComp.isSparse() ? 1 : 0));
         out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
       }
       
       for (String docId : allDocIds) {
-        for (VectorWrapper featVect : featExtr.getFeatureVectorsForInnerProd(mainIndex.getDocEntry(docId), args.mIsQuery)) {
+        for (int i = 0; i < featExtrQty; ++i) {
+          SingleFieldFeatExtracture extr = compExtractors[i];
+          ForwardIndex indx = compIndices[i];
+          VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(indx.getDocEntry(docId), args.mIsQuery);
+          if (null == featVect) {
+            throw new Exception("Inner product representation is not available for extractor: " + 
+                                uncastFeatExtrRef[i].getName());
+          }
           featVect.write(out);
         }
       }
