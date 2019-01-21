@@ -1,6 +1,5 @@
 #!/bin/bash
 . scripts/common.sh
-. scripts/report/report_common.sh
 
 collect=$1
 if [ "$collect" = "" ] ; then

@@ -72,7 +72,6 @@ function save_server_logs {
 }
 
 function setJavaMem {
-  echo "HEEERE!"
   F1="$1"
   F2="$2"
   OS=`uname|awk '{print $1}'`
@@ -90,4 +89,10 @@ function setJavaMem {
   MEM_SIZE_MAX_KB=$((7*$MEM_SIZE_MX_KB/8))
   export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
   echo "MAVEN_OPTS=$MAVEN_OPTS"
+}
+
+function get_metric_value {
+  fileName=$1
+  metrName=$2
+  grep "^$metrName: " $fileName | awk "{print $2}"
 }
