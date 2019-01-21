@@ -61,9 +61,10 @@ with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
                   ]
                   }
         jsonFileName = distType +  '_' + fid + '.json'
-        of.write('%s @ dev1 %s\n' % (jsonFileName, os.path.join(colName, 'starspace', fid)))
+        jsonPath = os.path.join(outJsonDir, jsonFileName)
+        of.write('%s @ dev1 %s\n' % (jsonPath, os.path.join(colName, 'starspace', fid)))
         
-        with open(os.path.join(outJsonDir, jsonFileName), 'w') as f:
+        with open(jsonPath, 'w') as f:
           json.dump(jsonDesc, f)
 
 
