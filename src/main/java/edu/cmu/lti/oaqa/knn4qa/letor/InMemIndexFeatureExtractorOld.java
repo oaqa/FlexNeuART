@@ -105,11 +105,11 @@ public abstract class InMemIndexFeatureExtractorOld extends FeatureExtractor {
       @Nullable String[] embedFiles,
       @Nullable String[]  highOrderModelFiles) throws Exception {
 
-    if (extractorType.startsWith(InMemIndexFeatureExtractorExperOld.CODE + "@")) {
+    if (extractorType.startsWith(InMemIndexFeatureExtractorExperOld.CODE)) {
      // This is a special extractor that can use parameters specified after the colon
       return 
           new InMemIndexFeatureExtractorExperOld(
-                    extractorType.substring(InMemIndexFeatureExtractorExperOld.CODE.length() + 1),
+                    extractorType.substring(InMemIndexFeatureExtractorExperOld.CODE.length()),
                     gizaRootDir, 
                     gizaIterQty, 
                     memIndxPref,

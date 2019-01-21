@@ -43,7 +43,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
  *
  */
 public class InMemIndexFeatureExtractorExperOld extends InMemIndexFeatureExtractorOld {
-  public static final String CODE = "exper";
+  public static final String CODE = "exper@";
   
   public static final String USE_ONLY_WEIGHTED_AVG_EMBED = "onlyWghtAvgEmbed";
  
