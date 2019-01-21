@@ -72,6 +72,7 @@ function save_server_logs {
 }
 
 function setJavaMem {
+  echo "HEEERE!"
   F1="$1"
   F2="$2"
   OS=`uname|awk '{print $1}'`

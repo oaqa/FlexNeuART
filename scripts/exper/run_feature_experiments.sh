@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 . scripts/common.sh
 
 collect=$1

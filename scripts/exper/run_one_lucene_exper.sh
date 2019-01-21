@@ -139,8 +139,8 @@ echo "Query cache file (for testing): $CACHE_FILE_TEST"
 URI="lucene_index/$collect"
 
 
-OUT_PREF_TRAIN="out_${collect}_${train_part}_${EXTR_TYPE}"
-OUT_PREF_TEST="out_${collect}_${TEST_PART}_${EXTR_TYPE}"
+OUT_PREF_TRAIN="out_${collect}_${train_part}"
+OUT_PREF_TEST="out_${collect}_${TEST_PART}"
 FULL_OUT_PREF_TRAIN="$EXPER_DIR/$OUT_PREF_TRAIN"
 FULL_OUT_PREF_TEST="$EXPER_DIR/$OUT_PREF_TEST"
 
