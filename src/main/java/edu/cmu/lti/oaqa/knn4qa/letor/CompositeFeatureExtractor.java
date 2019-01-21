@@ -26,16 +26,16 @@ import no.uib.cipr.matrix.DenseVector;
 
 /**
  * A composite feature extractor simply combines features from several 
- * component-extractors.
+ * field-specific component-extractors.
  */
 public class CompositeFeatureExtractor extends FeatureExtractor {
 
   public CompositeFeatureExtractor(FeatExtrResourceManager resMngr, String configFile) throws Exception {
     FeatExtrConfig fullConf = FeatExtrConfig.readConfig(configFile);
-    ArrayList<FeatureExtractor> compList = new ArrayList<FeatureExtractor>();
+    ArrayList<SingleFieldFeatExtractor> compList = new ArrayList<SingleFieldFeatExtractor>();
     
     for (OneFeatExtrConf oneExtrConf : fullConf.extractors) {
-      FeatureExtractor fe = null;
+      SingleFieldFeatExtractor fe = null;
       String extrType = oneExtrConf.type;
       if (extrType.equalsIgnoreCase(FeatExtrTFIDFSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrTFIDFSimilarity(resMngr, oneExtrConf);
@@ -50,11 +50,11 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
     init(compList);
   }
   
-  void init(ArrayList<FeatureExtractor> componentExtractors) {
+  private void init(ArrayList<SingleFieldFeatExtractor> componentExtractors) {
     int fqty = 0;
-    mCompExtr = new FeatureExtractor[componentExtractors.size()];
+    mCompExtr = new SingleFieldFeatExtractor[componentExtractors.size()];
     for (int i = 0; i < mCompExtr.length; ++i) {
-      FeatureExtractor fe = componentExtractors.get(i);
+      SingleFieldFeatExtractor fe = componentExtractors.get(i);
       mCompExtr[i] = fe;
       fqty += fe.getFeatureQty();
     }
@@ -72,7 +72,7 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
     HashMap<String,DenseVector> res = FeatureExtractor.initResultSet(arrDocIds, getFeatureQty());
     
     int startFeatId = 0;
-    for (FeatureExtractor featExtr : mCompExtr) {
+    for (SingleFieldFeatExtractor featExtr : mCompExtr) {
       Map<String,DenseVector> subRes = featExtr.getFeatures(arrDocIds, queryData);
       int compQty = featExtr.getFeatureQty();
       for (String docId : arrDocIds) {
@@ -92,35 +92,24 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
     return mFeatureQty;
   }
   
-  public FeatureExtractor[] getCompExtr() {
+  public SingleFieldFeatExtractor[] getCompExtr() {
     return mCompExtr;
   }
   
-  @Override
   public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
     if (e == null) {
       throw new RuntimeException("Bug: got null DocEntry");
     }
     ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
-    for (FeatureExtractor featExtr : mCompExtr) {
-      ArrayList<VectorWrapper> tmpRes = featExtr.getFeatureVectorsForInnerProd(e, isQuery);
-      res.addAll(tmpRes);
+    for (SingleFieldFeatExtractor featExtr : mCompExtr) {
+      VectorWrapper tmpRes = featExtr.getFeatureVectorsForInnerProd(e, isQuery);
+      res.add(tmpRes);
     }
     return res;
   }
  
-  @Override
-  public boolean isSparse() {
-    throw new RuntimeException("isSparse shouldn't be invoked on a composite feature extractor!");
-  }
-
-  @Override
-  public int getDim() {
-    throw new RuntimeException("getDim shouldn't be invoked on a composite feature extractor!");
-  }
-  
   private int mFeatureQty;
-  private FeatureExtractor[] mCompExtr;
+  private SingleFieldFeatExtractor[] mCompExtr;
 
 
 }

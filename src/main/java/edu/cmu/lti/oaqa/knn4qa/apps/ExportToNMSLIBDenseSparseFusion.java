@@ -27,7 +27,7 @@ import org.kohsuke.args4j.ParserProperties;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtracture;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
@@ -94,11 +94,11 @@ public class ExportToNMSLIBDenseSparseFusion {
        */
       FeatureExtractor[]        uncastFeatExtrRef = featExtr.getCompExtr();
       int featExtrQty = uncastFeatExtrRef.length;
-      SingleFieldFeatExtracture compExtractors[] = new SingleFieldFeatExtracture[featExtrQty];
+      SingleFieldFeatExtractor compExtractors[] = new SingleFieldFeatExtractor[featExtrQty];
       ForwardIndex              compIndices[] = new ForwardIndex[featExtrQty];
       
       for (int i = 0; i < featExtrQty; ++i) {
-        compExtractors[i] = (SingleFieldFeatExtracture)uncastFeatExtrRef[i];
+        compExtractors[i] = (SingleFieldFeatExtractor)uncastFeatExtrRef[i];
         compIndices[i] = resourceManager.getFwdIndex(compExtractors[i].getFieldName());
       }
       
@@ -107,14 +107,14 @@ public class ExportToNMSLIBDenseSparseFusion {
       out.write(BinWriteUtils.intToBytes(allDocIds.length));
       out.write(BinWriteUtils.intToBytes(featExtrQty));
       
-      for (SingleFieldFeatExtracture oneComp : compExtractors) {
+      for (SingleFieldFeatExtractor oneComp : compExtractors) {
         out.write(BinWriteUtils.intToBytes(oneComp.isSparse() ? 1 : 0));
         out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
       }
       
       for (String docId : allDocIds) {
         for (int i = 0; i < featExtrQty; ++i) {
-          SingleFieldFeatExtracture extr = compExtractors[i];
+          SingleFieldFeatExtractor extr = compExtractors[i];
           ForwardIndex indx = compIndices[i];
           VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(indx.getDocEntry(docId), args.mIsQuery);
           if (null == featVect) {

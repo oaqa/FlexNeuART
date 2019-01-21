@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.management.RuntimeErrorException;
 
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
@@ -16,7 +15,7 @@ import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
-public class FeatExtrWordEmbedSimilarity extends FeatureExtractor {
+public class FeatExtrWordEmbedSimilarity extends SingleFieldFeatExtractor {
   public static String EXTR_TYPE = "avgWordEmbed";
   
   public static String QUERY_EMBED_FILE = "queryEmbedFile";
@@ -57,18 +56,15 @@ public class FeatExtrWordEmbedSimilarity extends FeatureExtractor {
   }
   
   @Override
-  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
-    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
-  
+  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+
     if (isQuery) {
-      res.add(new VectorWrapper(mQueryEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
-                                                         mUseIDFWeight, mUseL2Norm)));
+      return new VectorWrapper(mQueryEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
+                                                         mUseIDFWeight, mUseL2Norm));
     } else {
-      res.add(new VectorWrapper(mDocEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
-                                                        mUseIDFWeight, mUseL2Norm)));
+      return new VectorWrapper(mDocEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
+                                                        mUseIDFWeight, mUseL2Norm));
     }
-    
-    return res;
   }
   
 
@@ -125,5 +121,11 @@ public class FeatExtrWordEmbedSimilarity extends FeatureExtractor {
   final EmbeddingReaderAndRecoder mDocEmbed;
   final EmbeddingReaderAndRecoder mQueryEmbed;
   final AbstractDistance    mDist;
+
+  @Override
+  public String getFieldName() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
 }

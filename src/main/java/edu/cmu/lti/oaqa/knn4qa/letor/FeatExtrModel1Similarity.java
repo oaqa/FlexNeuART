@@ -6,9 +6,10 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
-public class FeatExtrModel1Similarity extends FeatureExtractor {
+public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
   public static String EXTR_TYPE = "Model1Similarity";
   
   public static String GIZA_ITER_QTY = "gizaIterQty";
@@ -21,6 +22,11 @@ public class FeatExtrModel1Similarity extends FeatureExtractor {
   @Override
   public String getName() {
     return this.getClass().getName();
+  }
+  
+  @Override
+  public String getFieldName() {
+    return mFieldName;
   }
   
   public FeatExtrModel1Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
@@ -124,6 +130,11 @@ public class FeatExtrModel1Similarity extends FeatureExtractor {
   final float           mLambda;
   final float           mProbOOV;
 
+  /**
+   * isSparce, getDim, and getFeatureVectorsForInnerProd
+   * need to be fixed.
+   * 
+   */
   @Override
   public boolean isSparse() {
     // TODO Auto-generated method stub
@@ -134,5 +145,11 @@ public class FeatExtrModel1Similarity extends FeatureExtractor {
   public int getDim() {
     // TODO Auto-generated method stub
     return 0;
+  }
+
+  @Override
+  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

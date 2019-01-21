@@ -32,7 +32,7 @@ import no.uib.cipr.matrix.DenseVector;
  * @author Leonid Boytsov
  *
  */
-public class FeatExtrTFIDFSimilarity extends FeatureExtractor implements SingleFieldFeatExtracture {
+public class FeatExtrTFIDFSimilarity extends SingleFieldFeatExtractor  {
   public static String EXTR_TYPE = "TFIDFSimilarity";
   
   public static String BM25_SIMIL = "bm25";
@@ -56,11 +56,15 @@ public class FeatExtrTFIDFSimilarity extends FeatureExtractor implements SingleF
  
   }
   
+
   @Override
-  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
-    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
-    res.add(new VectorWrapper(mSimilObj.getBM25SparseVector(e, isQuery, true /* share IDF */)));
-    return res;
+  public String getFieldName() {
+    return mFieldName;
+  }
+  
+  @Override
+  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+    return new VectorWrapper(mSimilObj.getBM25SparseVector(e, isQuery, true /* share IDF */));
   }
 
   @Override
