@@ -29,8 +29,8 @@ if not os.path.exists(outJsonDir):
 
 embedDir = os.path.join(embedRootDir, colName, 'starspace') 
 
-for distType in ['l2', 'cosine']:
-  with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
+with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
+  for distType in ['l2', 'cosine']:
     lst = []
     for fn in os.listdir(embedDir):
       fns = re.sub(r"[^0-9]", " ", fn)
