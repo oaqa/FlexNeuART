@@ -1,0 +1,22 @@
+{
+    "extractors": [
+        {
+            "params": {
+                "b": "0.75",
+                "fieldName": "text",
+                "k1": "1.2",
+                "similType": "bm25"
+            },
+            "type": "TFIDFSimilarity"
+        },
+        {
+            "params": {
+                "b": "0.75",
+                "fieldName": "text_unlemm",
+                "k1": "1.2",
+                "similType": "bm25"
+            },
+            "type": "TFIDFSimilarity"
+        }
+    ]
+}
