@@ -29,10 +29,14 @@ fi
 
 MAX_QUERY_QTY="$5"
 
-NUM_CPU_CORES=$6
+NUM_CPU_CORES="$6"
 
 if [ "$NUM_CPU_CORES" = "" ] ; then
   NUM_CPU_CORES=`getNumCpuCores`
+fi
+if [ "$NUM_CPU_CORES" = "" ] ; then
+  echo "Bug: NUM_CPU_CORES is unset!"
+  exit 1
 fi
 
 THREAD_QTY=$(($NUM_CPU_CORES/$PARALLEL_EXPER_QTY))
