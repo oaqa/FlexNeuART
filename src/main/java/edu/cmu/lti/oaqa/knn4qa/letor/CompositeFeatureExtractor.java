@@ -44,6 +44,7 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
       } else if (extrType.equalsIgnoreCase(FeatExtrWordEmbedSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrWordEmbedSimilarity(resMngr, oneExtrConf);
       } else 
+        // TODO need to inform about the set of supported extractors
         throw new Exception("Unsupported extractor type: " + extrType);
       compList.add(fe);
     }
@@ -110,6 +111,5 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
  
   private int mFeatureQty;
   private SingleFieldFeatExtractor[] mCompExtr;
-
-
+  
 }

@@ -28,6 +28,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
@@ -92,13 +93,12 @@ public class ExportToNMSLIBDenseSparseFusion {
        * We will later try to cast this feature extractor reference to a specific
        * feature extractor type (only this type can support export to NMSLIB). 
        */
-      FeatureExtractor[]        uncastFeatExtrRef = featExtr.getCompExtr();
-      int featExtrQty = uncastFeatExtrRef.length;
-      SingleFieldFeatExtractor compExtractors[] = new SingleFieldFeatExtractor[featExtrQty];
+      SingleFieldFeatExtractor[] compExtractors = featExtr.getCompExtr();
+      int featExtrQty = compExtractors.length;
+
       ForwardIndex              compIndices[] = new ForwardIndex[featExtrQty];
       
       for (int i = 0; i < featExtrQty; ++i) {
-        compExtractors[i] = (SingleFieldFeatExtractor)uncastFeatExtrRef[i];
         compIndices[i] = resourceManager.getFwdIndex(compExtractors[i].getFieldName());
       }
       
@@ -113,16 +113,7 @@ public class ExportToNMSLIBDenseSparseFusion {
       }
       
       for (String docId : allDocIds) {
-        for (int i = 0; i < featExtrQty; ++i) {
-          SingleFieldFeatExtractor extr = compExtractors[i];
-          ForwardIndex indx = compIndices[i];
-          VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(indx.getDocEntry(docId), args.mIsQuery);
-          if (null == featVect) {
-            throw new Exception("Inner product representation is not available for extractor: " + 
-                                uncastFeatExtrRef[i].getName());
-          }
-          featVect.write(out);
-        }
+        VectorWrapper.writeAllFeatureVectorsToStream(docId, args.mIsQuery, compIndices, compExtractors, out);
       }
       
     } catch (Exception e) {

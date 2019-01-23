@@ -15,12 +15,8 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.letor;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
-import no.uib.cipr.matrix.DenseVector;
 
 /**
  * A single-field feature extractor interface (enforcing 

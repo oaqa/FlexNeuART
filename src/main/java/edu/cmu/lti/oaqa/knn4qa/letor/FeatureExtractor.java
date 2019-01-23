@@ -25,7 +25,6 @@ import java.util.*;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 public abstract class FeatureExtractor {  

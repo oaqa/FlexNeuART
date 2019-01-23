@@ -23,11 +23,13 @@ if not os.path.exists(outJsonDir):
 outDescDir = outRootDir
 
 with open(os.path.join(outDescDir, 'bm25tune.desc'), 'w') as of:
-  for k1i in range(7):
-    for bi in range(7):
-      b = 0.3 + 0.15 * k1i
-      k1 = 0.4 + 0.2 * bi
-      fid = 'bm25_k1=%g_b=%g' % (k1, b)
+  for bi in range(7):
+    for k1i in range(7):
+      b = 0.3 + 0.15 * bi
+      k1 = 0.4 + 0.2 * k1i
+      bstr = '%g' % b
+      k1str = '%g' % k1
+      fid = 'bm25_k1=%s_b=%s' % (k1str, bstr)
       print(fid)
       jsonDesc = {
                   "extractors" : [
@@ -36,8 +38,8 @@ with open(os.path.join(outDescDir, 'bm25tune.desc'), 'w') as of:
                     "params" : {
                       "fieldName" : "text",
                       "similType" : "bm25",
-                      "k1"        : "1.2",
-                      "b"         : "0.75"
+                      "k1"        : k1str,
+                      "b"         : bstr 
                     }
                   }
                   ]

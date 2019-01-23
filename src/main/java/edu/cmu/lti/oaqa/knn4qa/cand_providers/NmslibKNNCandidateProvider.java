@@ -18,15 +18,13 @@ package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import javax.print.Doc;
-
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.similarity.QueryService;
 import edu.cmu.lti.oaqa.similarity.QueryService.Client;
@@ -40,12 +38,14 @@ import edu.cmu.lti.oaqa.similarity.ReplyEntry;
  */
 public class NmslibKNNCandidateProvider  extends CandidateProvider {
   Splitter splitOnColon = Splitter.on(':');	
-  final private FeatureExtractor 	  mFeatureExtr;
-  final private Client 			      mKNNClient;
-  private ForwardIndex                mMainFwdIndex;
+  final private CompositeFeatureExtractor 	  mCompFeatureExtr;
+  final private Client 			              mKNNClient;
+  private ForwardIndex                        mMainFwdIndex;
 
-  public NmslibKNNCandidateProvider(String knnServiceURL, ForwardIndex mainFwdIndex, FeatureExtractor featExtr) throws Exception {
-    mFeatureExtr = featExtr;
+  public NmslibKNNCandidateProvider(String knnServiceURL, 
+                                    ForwardIndex mainFwdIndex, 
+                                    CompositeFeatureExtractor featExtr) throws Exception {
+    mCompFeatureExtr = featExtr;
     mMainFwdIndex = mainFwdIndex;
     String host = null;
     int    port = -1;

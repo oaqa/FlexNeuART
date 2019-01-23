@@ -16,8 +16,12 @@
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.OutputStream;
+
 import java.io.IOException;
 
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
 
 public class VectorWrapper {
@@ -41,6 +45,29 @@ public class VectorWrapper {
   
   public VectorWrapper(TrulySparseVector vec) {
     mSparseVector = vec;
+  }
+  
+  
+  public static void writeAllFeatureVectorsToStream(String docId, boolean isQuery,
+                                            ForwardIndex[] compIndices, SingleFieldFeatExtractor[] compExtractors,
+                                            OutputStream out) throws Exception  {
+    int featExtrQty = compIndices.length;
+    
+    if (featExtrQty != compExtractors.length) {
+      throw new RuntimeException("Bug: number of forward indices (" + featExtrQty + ") != number of extractors (" + compExtractors.length + ")");
+    }
+    
+    for (int i = 0; i < featExtrQty; ++i) {
+      SingleFieldFeatExtractor extr = compExtractors[i];
+      ForwardIndex indx = compIndices[i];
+      DocEntry docEntry = indx.getDocEntry(docId);
+      VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(docEntry,isQuery);
+      if (null == featVect) {
+        throw new RuntimeException("Inner product representation is not available for extractor: " + 
+                                  compExtractors[i].getName());
+      }
+      featVect.write(out);
+    }
   }
 
   
