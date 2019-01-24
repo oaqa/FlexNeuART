@@ -2,18 +2,18 @@
     "extractors": [
         {
             "params": {
-                "b": "0.75",
+                "k1": "0.4",
+                "b":  "0.3",
                 "fieldName": "text",
-                "k1": "1.2",
                 "similType": "bm25"
             },
             "type": "TFIDFSimilarity"
         },
         {
             "params": {
-                "b": "0.75",
+                "k1": "0.4",
+                "b":  "0.3",
                 "fieldName": "text_unlemm",
-                "k1": "1.2",
                 "similType": "bm25"
             },
             "type": "TFIDFSimilarity"
