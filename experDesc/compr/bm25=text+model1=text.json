@@ -3,10 +3,10 @@
  {
   "type" : "TFIDFSimilarity",
   "params" : {
+    "k1"        : "0.4",
+    "b"         : "0.6",
     "fieldName" : "text",
-    "similType" : "bm25",
-    "k1"        : "1.2",
-    "b"         : "0.75"
+    "similType" : "bm25"
   }
  },
  {

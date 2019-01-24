@@ -4,7 +4,7 @@
   "type" : "TFIDFSimilarity",
   "params" : {
     "k1"        : "0.4",
-    "b"         : "0.6",
+    "b"         : "0.9",
     "fieldName" : "text",
     "similType" : "bm25"
   }
@@ -12,7 +12,7 @@
  {
  "type" : "Model1Similarity", 
   "params" : {
-    "fieldName" : "text_unlemm",
+    "fieldName" : "text",
     "gizaIterQty" : "5",
     "probSelfTran" : "0.05f",
     "lambda" : "0.1f",
