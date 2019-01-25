@@ -4,3 +4,4 @@ experDesc/squad/bm25=text+bm25=text_unlemm.json dev2 bm25=text+bm25=text_unlemm
 experDesc/squad/bm25=text+model1=text.json dev2 bm25=text+model1=text
 experDesc/squad/bm25=text+model1=text_unlemm.json dev2 bm25=text+model1=text_unlemm
 
+experDesc/squad/bm25=text+compr:model1=text_unlemm.json dev2 bm25=text+compr1:model1=text_unlemm
