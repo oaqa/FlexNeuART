@@ -85,7 +85,7 @@ for isFusion in [0, 1]:
           jsonDesc = {"extractors" : extrList}
           jsonFileName = fid + '.json'
           jsonPath = os.path.join(outJsonDir, jsonFileName)
-          of.write('%s dev1 %s\n' % (jsonPath, os.path.join('starspace', fid)))
+          of.write('%s dev2 %s\n' % (jsonPath, os.path.join('starspace', fid)))
 
           with open(jsonPath, 'w') as f:
             json.dump(jsonDesc, f)
