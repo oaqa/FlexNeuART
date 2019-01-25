@@ -14,7 +14,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lucene.version>7.6.0</lucene.version>
     <uima.version>2.6.0</uima.version>
-    <galago.version>3.15</galago.version>
   </properties>
 
   <licenses>
@@ -421,48 +420,6 @@
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
       <version>3.1.1</version>
-    </dependency>
-
-    <!-- Galago dependencies -->
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>core</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>contrib</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>krovetz-stemmer</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>snowball-stemmers</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>tupleflow-gridengine</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>tupleflow</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>tupleflow-typebuilder</artifactId>
-      <version>${galago.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.lemurproject.galago</groupId>
-      <artifactId>utility</artifactId>
-      <version>${galago.version}</version>
     </dependency>
     <dependency>
       <groupId>args4j</groupId>
