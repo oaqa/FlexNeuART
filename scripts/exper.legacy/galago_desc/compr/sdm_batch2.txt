@@ -1,4 +1,0 @@
-sdm     uniw=0.9,odw=0.1,uww=0.0    dev1
-sdm     uniw=0.7,odw=0.3,uww=0.0    dev1
-sdm     uniw=0.6,odw=0.4,uww=0.0    dev1
-sdm     uniw=0.5,odw=0.5,uww=0.0    dev1

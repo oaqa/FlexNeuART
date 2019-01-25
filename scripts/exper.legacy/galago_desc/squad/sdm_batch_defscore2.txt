@@ -1,2 +1,0 @@
-sdm     scorer=default,uniw=0.7,odw=0.15,uww=0.1    dev0
-sdm     scorer=default,uniw=0.6,odw=0.15,uww=0.1    dev0

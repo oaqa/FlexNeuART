@@ -1,2 +1,0 @@
-rm  scorer=default,fbDocs=5,fbTerm=140   dev0
-rm  scorer=default,fbOrigWeight=0.75,fbDocs=5,fbTerm=140   dev0

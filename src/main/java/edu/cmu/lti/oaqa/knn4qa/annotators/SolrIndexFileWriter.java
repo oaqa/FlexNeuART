@@ -66,9 +66,7 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
   @Override
   public void initialize(UimaContext aContext) throws ResourceInitializationException {
     super.initialize(aContext);
-    
-    Boolean tmpb = null;
-    
+
     String indexQuestionFileName = (String)aContext.getConfigParameterValue(PARAM_INDEX_QUESTION_FILE);
     
     if (null == indexQuestionFileName) {
