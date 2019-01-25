@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 import os, sys, json, re
 
+sys.path.append('scritps/exper')
+
+from optimBM25 import bestBM25
+
 # Input location:
 # inpRootDir / colName / starspace / <file names>
 
@@ -16,6 +20,10 @@ embedRootDir = sys.argv[1]
 colName      = sys.argv[2]
 outRootDir   = sys.argv[3]
 
+if not colName in bestBM25:
+  print('No BM25 settings in the file scripts.exper.optimBM25 for collection: %s' % colName)
+  sys.exit(1)
+
 outDescDir = os.path.join(outRootDir, colName)
 outJsonDir = os.path.join(outRootDir, colName, 'starspace')
 
@@ -29,53 +37,57 @@ if not os.path.exists(outJsonDir):
 
 embedDir = os.path.join(embedRootDir, colName, 'starspace') 
 
-with open(os.path.join(outDescDir, 'starspace.desc'), 'w') as of:
-  for distType in ['l2', 'cosine']:
-    lst = []
-    for fn in os.listdir(embedDir):
-      fns = re.sub(r"[^0-9]", " ", fn)
-      sortKey = []
-      for  s in fns.split():
-        sortKey.append(int(s))
-      lst.append( (tuple(sortKey), fn) )
+for isFusion in [0, 1]:
+  with open(os.path.join(outDescDir, 'starspace_fusion=%d.desc' % isFusion), 'w') as of:
+    for distType in ['l2', 'cosine']:
+      lst = []
+      for fn in os.listdir(embedDir):
+        fns = re.sub(r"[^0-9]", " ", fn)
+        sortKey = []
+        for  s in fns.split():
+          sortKey.append(int(s))
+        lst.append( (tuple(sortKey), fn) )
 
-    lst.sort()
-      
+      lst.sort()
 
-    for _, fn in lst:
-      if fn.endswith('.query'):  
-        fid0 = fn[0:-len('.query')]
-        fid = distType + '_' + fid0    
-        print(fid)
-        jsonDesc = {
-                  "extractors" : [
-                  {
-                    "type" : "TFIDFSimilarity",
-                    "params" : {
-                      "fieldName" : "text",
-                      "similType" : "bm25",
-                      "k1"        : "1.2",
-                      "b"         : "0.75"
-                    }
-                  },
-                  {
-                    "type" : "avgWordEmbed",
-                    "params" : {
-                      "fieldName" : "text_unlemm",
-                      "queryEmbedFile" : "starspace/%s.query" % fid0,
-                      "docEmbedFile"   : "starspace/%s.answer" % fid0,
-                      "useIDFWeight"   : "True",
-                      "useL2Norm"      : "True",
-                      "distType"       : distType 
-                    }
-                  }
-                  ]
-                  }
-        jsonFileName = fid + '.json'
-        jsonPath = os.path.join(outJsonDir, jsonFileName)
-        of.write('%s dev1 %s\n' % (jsonPath, os.path.join('starspace', fid)))
-        
-        with open(jsonPath, 'w') as f:
-          json.dump(jsonDesc, f)
+      for _, fn in lst:
+        if fn.endswith('.query'):
+          fid0 = fn[0:-len('.query')]
+          if isFusion:
+            fid = distType + '_fusion_' + fid0
+          else:
+            fid = distType + '_embonly_' + fid0
+          print(fid)
+          extrList = [{
+                        "type" : "avgWordEmbed",
+                        "params" : {
+                          "fieldName" : "text_unlemm",
+                          "queryEmbedFile" : "starspace/%s.query" % fid0,
+                          "docEmbedFile"   : "starspace/%s.answer" % fid0,
+                          "useIDFWeight"   : "True",
+                          "useL2Norm"      : "True",
+                          "distType"       : distType
+                        }
+                      }
+                      ]
+
+          if isFusion:
+            extrList.append({
+                          "type" : "TFIDFSimilarity",
+                          "params" : {
+                            "fieldName" : "text",
+                            "similType" : "bm25",
+                            "k1"        : bestBM25[colName]['k1'],
+                            "b"         : bestBM25[colName]['b']
+                          }
+                        })
+
+          jsonDesc = {"extractors" : extrList}
+          jsonFileName = fid + '.json'
+          jsonPath = os.path.join(outJsonDir, jsonFileName)
+          of.write('%s dev1 %s\n' % (jsonPath, os.path.join('starspace', fid)))
+
+          with open(jsonPath, 'w') as f:
+            json.dump(jsonDesc, f)
 
 
