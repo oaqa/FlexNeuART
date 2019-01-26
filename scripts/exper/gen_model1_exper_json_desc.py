@@ -52,78 +52,76 @@ with open(os.path.join(outDescDir, '%s.desc' % confSubDir), 'w') as of:
 
   for probSelfTran, lamb in paramArr:
 
-      fid = 'bm25=text+model1=text_unlemm+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
+    fid = 'bm25=text+model1=text_unlemm+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
 
-      print(fid)
-      extrList = [{
-                    "type": "Model1Similarity",
-                    "params": {
-                      "fieldName": "text_unlemm",
-                      "gizaIterQty": "5",
-                      "probSelfTran": probSelfTran,
-                      "lambda": lamb,
-                      "minModel1Prob": "2.5e-3f"
-                    }
+    print(fid)
+    extrList = [{
+                  "type": "Model1Similarity",
+                  "params": {
+                    "fieldName": "text_unlemm",
+                    "gizaIterQty": "5",
+                    "probSelfTran": probSelfTran,
+                    "lambda": lamb,
+                    "minModel1Prob": "2.5e-3f"
                   }
-                  ]
+                }
+                ]
 
-      extrList.append({
-                      "type" : "TFIDFSimilarity",
-                      "params" : {
-                        "fieldName" : "text",
-                        "similType" : "bm25",
-                        "k1"        : bestBM25[colName]['k1'],
-                        "b"         : bestBM25[colName]['b']
-                      }
-                    })
+    extrList.append({
+                    "type" : "TFIDFSimilarity",
+                    "params" : {
+                      "fieldName" : "text",
+                      "similType" : "bm25",
+                      "k1"        : bestBM25[colName]['k1'],
+                      "b"         : bestBM25[colName]['b']
+                    }
+                  })
 
-      jsonDesc = {"extractors" : extrList}
-      jsonFileName = fid + '.json'
-      jsonPath = os.path.join(outJsonDir, jsonFileName)
-      of.write('%s dev2 %s\n' % (jsonPath, os.path.join(confSubDir, fid)))
-
-
-      paramArr = []
-      paramArr.append((0.9, 0.0, 1e-3))
-      paramArr.append((0.9, 0.0, 5e-4))
-      paramArr.append((0.9, 0.0, 2.5e-4))
-      paramArr.append((0.9, 0.0, 1e-4))
-
-      for probSelfTran, lamb, minModel1Prob in paramArr:
-        fid = 'bm25=text+model1=text_unlemm+lambda=%g+probSelfTran=%g+minTranProb=%g' % (
-        lamb, probSelfTran, minModel1Prob)
-
-        print(fid)
-        extrList = [{
-          "type": "Model1Similarity",
-          "params": {
-            "fieldName": "text_unlemm",
-            "gizaIterQty": "5",
-            "probSelfTran": str(probSelfTran) + "f",  # for float in Java
-            "lambda": lamb,
-            "minModel1Prob": minModel1Prob
-          }
-        }
-        ]
-
-        extrList.append({
-          "type": "TFIDFSimilarity",
-          "params": {
-            "fieldName": "text",
-            "similType": "bm25",
-            "k1": bestBM25[colName]['k1'],
-            "b": bestBM25[colName]['b']
-          }
-        })
-
-        jsonDesc = {"extractors": extrList}
-        jsonFileName = fid + '.json'
-        jsonPath = os.path.join(outJsonDir, jsonFileName)
-        of.write('%s dev2 %s\n' % (jsonPath, os.path.join(confSubDir, fid)))
+    jsonDesc = {"extractors" : extrList}
+    jsonFileName = fid + '.json'
+    jsonPath = os.path.join(outJsonDir, jsonFileName)
+    of.write('%s dev2 %s\n' % (jsonPath, os.path.join(confSubDir, fid)))
 
 
+  paramArr = []
+  paramArr.append((0.9, 0.0, 1e-3))
+  paramArr.append((0.9, 0.0, 5e-4))
+  paramArr.append((0.9, 0.0, 2.5e-4))
+  paramArr.append((0.9, 0.0, 1e-4))
 
-      with open(jsonPath, 'w') as f:
-        json.dump(jsonDesc, f)
+  for probSelfTran, lamb, minModel1Prob in paramArr:
+    fid = 'bm25=text+model1=text_unlemm+lambda=%g+probSelfTran=%g+minTranProb=%g' % (
+    lamb, probSelfTran, minModel1Prob)
+
+    print(fid)
+    extrList = [{
+      "type": "Model1Similarity",
+      "params": {
+        "fieldName": "text_unlemm",
+        "gizaIterQty": "5",
+        "probSelfTran": str(probSelfTran) + "f",  # for float in Java
+        "lambda": lamb,
+        "minModel1Prob": minModel1Prob
+      }
+    }
+    ]
+
+    extrList.append({
+      "type": "TFIDFSimilarity",
+      "params": {
+        "fieldName": "text",
+        "similType": "bm25",
+        "k1": bestBM25[colName]['k1'],
+        "b": bestBM25[colName]['b']
+      }
+    })
+
+    jsonDesc = {"extractors": extrList}
+    jsonFileName = fid + '.json'
+    jsonPath = os.path.join(outJsonDir, jsonFileName)
+    of.write('%s dev2 %s\n' % (jsonPath, os.path.join(confSubDir, fid)))
+
+    with open(jsonPath, 'w') as f:
+      json.dump(jsonDesc, f)
 
 

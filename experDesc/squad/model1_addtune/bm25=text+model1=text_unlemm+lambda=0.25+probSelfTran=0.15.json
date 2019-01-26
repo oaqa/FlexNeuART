@@ -1,1 +1,0 @@
-{"extractors": [{"type": "Model1Similarity", "params": {"fieldName": "text_unlemm", "gizaIterQty": "5", "probSelfTran": "0.15f", "lambda": 0.25, "minModel1Prob": 0.0025}}, {"type": "TFIDFSimilarity", "params": {"fieldName": "text", "similType": "bm25", "k1": 0.4, "b": 0.3}}]}
