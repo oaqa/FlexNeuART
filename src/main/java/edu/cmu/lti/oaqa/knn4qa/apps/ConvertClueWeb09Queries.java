@@ -51,10 +51,7 @@ public class ConvertClueWeb09Queries {
     
     @Option(name = "-in_file", required = true, usage = "Input file")
     String mInFile;
-    
-    @Option(name = "-out_file", required = true, usage = "Input file")
-    String mOutFile;
-    
+
     @Option(name = "-" + ConvertClueWeb09.STOP_WORD_FILE, required = true, usage = ConvertClueWeb09.STOP_WORD_FILE_DESC)
     String mStopWordFile;
     
@@ -86,7 +83,7 @@ public class ConvertClueWeb09Queries {
                                                          ConvertClueWeb09.LOWERCASE);
       
       inQueryFile = new BufferedReader(new InputStreamReader(new FileInputStream(args.mInFile)));
-      outQueryFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args.mOutFile)));   
+      outQueryFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args.mSolrFileName)));   
       
       String line;
       while ((line = inQueryFile.readLine()) != null) {

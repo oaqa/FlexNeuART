@@ -35,8 +35,18 @@ if not os.path.exists(outJsonDir):
 
 with open(os.path.join(outDescDir, '%s.desc' % confSubDir), 'w') as of:
 
+  paramArr = []
+
   for probSelfTran in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5]:
     for lamb in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5]:
+      paramArr.append( (probSelfTran, lamb))
+
+  paramArr.append( (0.6, 0.05) )
+  paramArr.append( (0.7, 0.05) )
+  paramArr.append( (0.8, 0.05) )
+  paramArr.append( (0.9, 0.05) )
+
+  for probSelfTran, lamb in paramArr:
 
       fid = 'bm25=text+model1=text_unlemm+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
 

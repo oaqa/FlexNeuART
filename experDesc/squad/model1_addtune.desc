@@ -62,3 +62,7 @@ experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.3+probSelfT
 experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.35+probSelfTran=0.5.json dev2 model1_addtune/bm25=text+model1=text_unlemm+lambda=0.35+probSelfTran=0.5
 experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.45+probSelfTran=0.5.json dev2 model1_addtune/bm25=text+model1=text_unlemm+lambda=0.45+probSelfTran=0.5
 experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.5+probSelfTran=0.5.json dev2 model1_addtune/bm25=text+model1=text_unlemm+lambda=0.5+probSelfTran=0.5
+experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.6.json dev2 model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.6
+experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.7.json dev2 model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.7
+experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.8.json dev2 model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.8
+experDesc/squad/model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.9.json dev2 model1_addtune/bm25=text+model1=text_unlemm+lambda=0.05+probSelfTran=0.9
