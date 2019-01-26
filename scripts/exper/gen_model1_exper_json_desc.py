@@ -46,6 +46,10 @@ with open(os.path.join(outDescDir, '%s.desc' % confSubDir), 'w') as of:
   paramArr.append( (0.8, 0.05) )
   paramArr.append( (0.9, 0.05) )
 
+  paramArr.append((0.9, 0.01))
+  paramArr.append((0.9, 0.001))
+  paramArr.append((0.9, 0.0))
+
   for probSelfTran, lamb in paramArr:
 
       fid = 'bm25=text+model1=text_unlemm+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
