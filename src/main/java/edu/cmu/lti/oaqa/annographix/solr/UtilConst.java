@@ -141,6 +141,8 @@ public class UtilConst {
   public static final String TAG_DOC_ENTRY = "DOC";
   public static final String TAG_DOCNO     = "DOCNO";
   
+  public static final String NL = System.getProperty("line.separator");
+  
   public static final String USER_AGENT = "Mozilla/4.0";
   
   /** These are all ASCII punctuation chars except the apostrophe! */

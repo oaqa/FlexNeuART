@@ -15,10 +15,24 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
+
+import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
+import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+
 
 /**
  * A class that converts ClueWeb09 queries to our internal XML format. 
@@ -28,6 +42,8 @@ import org.kohsuke.args4j.ParserProperties;
  *
  */
 public class ConvertClueWeb09Queries {
+  
+  private static final XmlHelper mXmlHlp = new XmlHelper();
 
   public static final class Args {
     @Option(name = "-" + CommonParams.SOLR_FILE_NAME_PARAM, required = true, usage = CommonParams.SOLR_FILE_NAME_DESC)
@@ -61,7 +77,54 @@ public class ConvertClueWeb09Queries {
       System.exit(1);
     }
     
+    BufferedReader inQueryFile = null;
+    BufferedWriter outQueryFile = null;
     
+    try {
+      ClueWeb09TextProc textProc = new ClueWeb09TextProc(args.mStopWordFile, 
+                                                         args.mCommonWordFile, 
+                                                         ConvertClueWeb09.LOWERCASE);
+      
+      inQueryFile = new BufferedReader(new InputStreamReader(new FileInputStream(args.mInFile)));
+      outQueryFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(args.mOutFile)));   
+      
+      String line;
+      while ((line = inQueryFile.readLine()) != null) {
+        if (line.isEmpty()) {
+          continue;
+        }
+        int icol = line.indexOf(':');
+        if (icol < 0) {
+          System.out.println("Malformed query: " + line);
+          System.exit(1);
+        }
+        String qid = line.substring(0, icol);
+        String qtext = textProc.stemText(textProc.filterText(line.substring(icol + 1)));
+        
+        Map<String, String>  fieldInfo = new HashMap<String, String>();
+        
+        fieldInfo.put(UtilConst.TAG_DOCNO, qid);
+        for (String fn : ConvertClueWeb09.getStemmedFieldNames()) {
+          fieldInfo.put(fn, qtext);
+        }
+        
+        outQueryFile.write(mXmlHlp.genXMLIndexEntry(fieldInfo));
+        outQueryFile.write(UtilConst.NL);    
+      }
+      
+    } catch (Exception e) {
+      System.err.println("Terminating due to an exception: " + e);
+      System.exit(1);
+    } finally {
+      try {
+        inQueryFile.close();
+        outQueryFile.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.exit(1);
+      }
+     
+    }  
 
   }
 

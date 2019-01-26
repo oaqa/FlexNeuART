@@ -39,9 +39,7 @@ import edu.cmu.lti.oaqa.knn4qa.types.Question;
  *
  */
 
-public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
-  protected static final String NL = System.getProperty("line.separator");
-  
+public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {  
   private static final String PARAM_INDEX_ANSWER_FILE     = "AnswerFile";
   private static final String PARAM_INDEX_QUESTION_FILE   = "QuestionFile";
   private static final String PARAM_STOPWORD_FILE   = "StopWordFile";
@@ -193,7 +191,7 @@ public class SolrIndexFileWriter extends JCasAnnotator_ImplBase {
   private static synchronized void doOutput(BufferedWriter outFile, 
                                             Map<String, String>  fieldInfo) throws Exception {
     outFile.write(mXmlHlp.genXMLIndexEntry(fieldInfo));
-    outFile.write(NL);    
+    outFile.write(UtilConst.NL);    
   }
    
   
