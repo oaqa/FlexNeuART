@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import subprocess as sp
 seen_core=set()
-output=sp.check_output(["cat", "/proc/cpuinfo"]).replace('\t', ' ').split('\n')
+output=sp.check_output(["cat", "/proc/cpuinfo"]).decode("utf-8").replace('\t', ' ').split('\n')
 start=0
 output.append('') # There would always a trailing empty line
 numCores=0
