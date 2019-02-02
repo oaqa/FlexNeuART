@@ -43,7 +43,7 @@ public class CommonParams {
   public static final String FEATURE_FILE_DESC  = "An output file for features in the SVM-rank format";
   
   public static final String TREC_STYLE_OUT_FILE_PARAM = "o";
-  public static final String TREC_STYLE_OUT_FILE_DESC = "A TREC-style (QRELs) output file";
+  public static final String TREC_STYLE_OUT_FILE_DESC = "A TREC-style output file";
   
   public final static String THREAD_QTY_DESC   = "The number of threads";
   public final static String THREAD_QTY_PARAM  = "thread_qty";

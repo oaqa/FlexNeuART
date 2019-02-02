@@ -36,5 +36,5 @@ scripts/data/extract_nonoverlap_queries_with_qrels_for1MQ.py  "$COL_DIR"
 # in a top-level directory.
 
 for  subDir in output/train output/test ; do
-  scripts/data/run_convert_clueweb09_queries.sh  -common_word_file "$CLUEWEB09_COMMWORD_FILE" -in_file "$COL_DIR/$subDir/queries.txt" -solr_file "$COL_DIR/$subDir/SolrAnswerFile.txt" -stop_word_file data/stopwords.txt 
+  scripts/data/run_convert_clueweb09_queries.sh  -common_word_file "$CLUEWEB09_COMMWORD_FILE" -in_file "$COL_DIR/$subDir/queries.txt" -solr_file "$COL_DIR/$subDir/SolrQuestionFile.txt" -stop_word_file data/stopwords.txt 
 done

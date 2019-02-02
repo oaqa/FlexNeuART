@@ -900,8 +900,7 @@ public abstract class BaseQueryApp {
       logger.info("Read " + docQty + " documents"); 
       
       init();
-      
-      
+          
       if (mUseThreadPool ) {
         ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
         logger.info(String.format("Created a fixed thread pool with %d threads", mThreadQty));
