@@ -64,7 +64,15 @@ def readQueries(inpFile):
 
   return res
 
-def normQuery(q):
+def writeQueries(outFile, tupleArr):
+
+  with open(outFile, 'w') as of:
+  
+    for qid, text in tupleArr:
+    
+      of.write(qid + ':' + text + '\n')
+
+def normQueryText(q):
   return q.strip().lower()
 
 # Expecting everything to be in a root dir.
@@ -89,19 +97,21 @@ for year in range(2009, 2013):
   readQRELs(os.path.join(rootDir, 'qrels.all', 'qrels%d.txt' % year), qrelsWeb)
 
   for qid, qtext in readQueries(os.path.join(rootDir, 'queries.all', 'queries%d.txt' % year)):
-    qnorm = normQuery(qtext)
+    qnorm = normQueryText(qtext)
     usedQueries.add(qnorm)
     trecWebQueries.append( (qid, qnorm) )
 
 
 writeQRELs(os.path.join(rootDir, 'output', 'test', 'qrels_all_graded.txt'), qrelsWeb)
 
+writeQueries(os.path.join(rootDir, 'output', 'test', 'queries.txt'), trecWebQueries)
+
 trec1MQQueries = []
 
 queryQty = 0
 
 for qid, qtext in readQueries(os.path.join(rootDir, 'queries.all', 'queries1MQ.txt')):
-  qnorm = normQuery(qtext)
+  qnorm = normQueryText(qtext)
   if qnorm in usedQueries:
     print('Ignoring query %s:%s b/c it is present in the regular Web Trec' % (qid, qtext))
 
@@ -115,6 +125,8 @@ for qid, qtext in readQueries(os.path.join(rootDir, 'queries.all', 'queries1MQ.t
     continue
 
   trec1MQQueries.append( (qid, qnorm) )
+
+writeQueries(os.path.join(rootDir, 'output', 'train', 'queries.txt'), trec1MQQueries)
 
 print(queryQty)
 

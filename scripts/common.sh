@@ -13,6 +13,15 @@ function check {
   fi
 }
 
+function checkVarNonEmpty {
+  val="$1"
+  name="$2"
+  if [ "$val" = "" ] ; then
+    echo "Variable $name is not set!"
+    exit 1
+  fi
+}
+
 function check_pipe {
   f="${PIPESTATUS[*]}"
   name=$1
