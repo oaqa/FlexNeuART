@@ -85,18 +85,19 @@ public class StemParallelCorpus {
       
       String lineQuestion = null, lineAnswer = null;
 
-      while ( (lineQuestion = questionReader.readLine()) != null &&
-              (lineAnswer = answerReader.readLine()) != null) {
+      while (true) {
+        lineQuestion = questionReader.readLine();
+        lineAnswer = answerReader.readLine();
+        if (lineQuestion == null || lineAnswer == null)
+          break;
         questionWriter.write(textProc.stemText(textProc.filterText(lineQuestion)) + UtilConst.NL);
         answerWriter.write(textProc.stemText(textProc.filterText(lineAnswer)) + UtilConst.NL);
       }
       if (lineAnswer != null) {
-        System.err.println("Error: Answer file has more entries!");
-        System.exit(1);
+        throw new Exception("Error: Answer file has more entries!");
       }
       if (lineQuestion != null) {
-        System.err.println("Error: Question file has more entries!");
-        System.exit(1);
+        throw new Exception("Error: Question file has more entries!");
       }
       
       
