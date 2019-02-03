@@ -57,6 +57,17 @@ public class LuceneIndexer {
 
   }  
   
+  
+  public static final FieldType FIELD_TYPE = new FieldType();
+  
+  /* Indexed, tokenized, not stored. */
+  static {
+    FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+    FIELD_TYPE.setTokenized(true);
+    FIELD_TYPE.freeze();
+    FIELD_TYPE.setStored(false);
+  }
+  
   public static void main(String [] args) {
     Options options = new Options();
     
@@ -173,7 +184,7 @@ public class LuceneIndexer {
 
           for (Map.Entry<String, String> e : docFields.entrySet())
             if (!e.getKey().equals(UtilConst.TAG_DOCNO)) {
-              luceneDoc.add(new TextField(e.getKey(), e.getValue(), Field.Store.YES));
+              luceneDoc.add(new Field(e.getKey(), e.getValue(), FIELD_TYPE));
             }
           indexWriter.addDocument(luceneDoc);
           if (docNum % 1000 == 0) {
