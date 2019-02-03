@@ -64,8 +64,8 @@ public class LuceneIndexer {
   static {
     FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
     FIELD_TYPE.setTokenized(true);
-    FIELD_TYPE.freeze();
     FIELD_TYPE.setStored(false);
+    FIELD_TYPE.freeze();
   }
   
   public static void main(String [] args) {
