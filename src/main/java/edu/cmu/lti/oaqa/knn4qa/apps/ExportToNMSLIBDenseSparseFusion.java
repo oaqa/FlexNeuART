@@ -16,19 +16,27 @@
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Map;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
+import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
+import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
+import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 
 /**
@@ -53,8 +61,8 @@ public class ExportToNMSLIBDenseSparseFusion {
     @Option(name = "-extr_json",  usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
-    @Option(name = "-is_query", usage = "If specified, we generate queries rather than documents.")
-    boolean mIsQuery;
+    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, usage = "If specified, we generate queries rather than documents.")
+    String mQueryFile;
 
     @Option(name = "-out_file", required = true, usage = "Binary output file")
     String mOutFile;
@@ -80,6 +88,24 @@ public class ExportToNMSLIBDenseSparseFusion {
     
     try {
       
+      BufferedReader inpQueryBuffer = null;
+      ArrayList<String> queries = null;
+      
+      if (args.mQueryFile != null) {
+        inpQueryBuffer = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args.mQueryFile)));
+      
+        queries = new ArrayList<String>();
+        
+        String queryText = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer);        
+        
+        for (; queryText!= null; 
+            queryText = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer)) {
+          queries.add(queryText);
+        }
+        
+        inpQueryBuffer.close();
+      }
+      
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
       
       FeatExtrResourceManager resourceManager = 
@@ -102,7 +128,11 @@ public class ExportToNMSLIBDenseSparseFusion {
       
       String[] allDocIds = compIndices[0].getAllDocIds();
       
-      out.write(BinWriteUtils.intToBytes(allDocIds.length));
+      int entryQty = queries == null ?  allDocIds.length  : queries.size();
+      
+      System.out.println("Writing the number of entreis (" + entryQty + ") to the output file");
+      
+      out.write(BinWriteUtils.intToBytes(entryQty));
       out.write(BinWriteUtils.intToBytes(featExtrQty));
       
       for (SingleFieldFeatExtractor oneComp : compExtractors) {
@@ -110,8 +140,32 @@ public class ExportToNMSLIBDenseSparseFusion {
         out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
       }
       
-      for (String docId : allDocIds) {
-        VectorWrapper.writeAllFeatureVectorsToStream(docId, args.mIsQuery, compIndices, compExtractors, out);
+      if (queries == null) {        
+        for (String docId : allDocIds) {
+          writeStringId(docId, out);
+          VectorWrapper.writeAllFeatureVectorsToStream(docId, null, compIndices, compExtractors, out);
+        }
+      } else {
+        for (String queryText : queries) {
+          Map<String, String> queryFields = null;
+          // Parse a query
+          try {
+            queryFields = XmlHelper.parseXMLIndexEntry(queryText);
+          } catch (Exception e) {
+            System.err.println("Parsing error, offending DOC:\n" + queryText);
+            System.exit(1);
+          }
+          
+          String queryId = queryFields.get(UtilConst.TAG_DOCNO);
+          
+          if (queryId == null) {
+            System.err.println("No query ID: Parsing error, offending DOC:\n" + queryText);
+            System.exit(1);
+          }
+          
+          writeStringId(queryId, out);
+          VectorWrapper.writeAllFeatureVectorsToStream(queryId, queryFields, compIndices, compExtractors, out);
+        }
       }
       
     } catch (Exception e) {
@@ -128,5 +182,15 @@ public class ExportToNMSLIBDenseSparseFusion {
         }
       }
     }
+  }
+
+  private static void writeStringId(String id, BufferedOutputStream out) throws Exception {
+    
+    // Here we make a fat assumption that the string doesn't contain any non-ascii characters
+    if (StringUtilsLeo.hasNonAscii(id)) {
+      throw new Exception("Invalid id, contains non-ASCII chars: " + id);
+    }
+    out.write(BinWriteUtils.intToBytes(id.length()));
+    out.write(id.getBytes());
   }
 }

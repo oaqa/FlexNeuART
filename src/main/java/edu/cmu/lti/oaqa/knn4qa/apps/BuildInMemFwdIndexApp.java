@@ -109,6 +109,7 @@ public class BuildInMemFwdIndexApp {
         
       ForwardIndex indx = ForwardIndex.createWriteInstance(
           InMemIndexFeatureExtractorOld.indexFilePrefix(outPrefix, fieldName), TEXT_INDEX);
+      
       indx.createIndex(fieldName, fileNames, bStoreWordIdSeq, maxNumRec);
       indx.saveIndex();
       

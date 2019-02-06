@@ -115,6 +115,10 @@ public class UtilConst {
     return PATTERN_WHITESPACE.matcher(str).replaceAll(" ");
   }
   
+  public static String[] splitOnWhiteSpace(String str) {
+    return PATTERN_WHITESPACE.split(str);
+  }
+  
   /**
    *  A configuration parameter that defines a current UIMA view
    *  for an annotator.

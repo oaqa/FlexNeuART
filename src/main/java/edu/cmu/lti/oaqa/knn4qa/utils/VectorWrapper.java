@@ -16,22 +16,27 @@
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.OutputStream;
+import java.util.Map;
 
 import java.io.IOException;
 
+import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
+import net.jpountz.util.Utils;
 
 public class VectorWrapper {
   
   public void write(OutputStream out) throws IOException {
     byte[] buf = null;
     if (mDenseVec != null) {
+      out.write(BinWriteUtils.intToBytes(mDenseVec.length));
       buf = BinWriteUtils.denseVectorToBytes(mDenseVec); 
     }
     if (mSparseVector != null) {
+      out.write(BinWriteUtils.intToBytes(mSparseVector.mIDs.length));
       buf = BinWriteUtils.sparseVectorToBytes(mSparseVector);
     }
     if (buf !=null) {
@@ -48,7 +53,7 @@ public class VectorWrapper {
   }
   
   
-  public static void writeAllFeatureVectorsToStream(String docId, boolean isQuery,
+  public static void writeAllFeatureVectorsToStream(String docId, Map<String, String> queryData,
                                             ForwardIndex[] compIndices, SingleFieldFeatExtractor[] compExtractors,
                                             OutputStream out) throws Exception  {
     int featExtrQty = compIndices.length;
@@ -59,9 +64,20 @@ public class VectorWrapper {
     
     for (int i = 0; i < featExtrQty; ++i) {
       SingleFieldFeatExtractor extr = compExtractors[i];
+      DocEntry docEntry = null;
       ForwardIndex indx = compIndices[i];
-      DocEntry docEntry = indx.getDocEntry(docId);
-      VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(docEntry,isQuery);
+      if (queryData == null) {
+        docEntry = indx.getDocEntry(docId);
+      } else {
+        String fieldName = extr.getFieldName();
+
+        String text = queryData.get(fieldName);
+        if (text == null) {
+          throw new Exception("No query information for field: " + fieldName);
+        }
+        docEntry = indx.createDocEntry(UtilConst.splitOnWhiteSpace(text), true); // true means including positions
+      }
+      VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(docEntry, false);
       if (null == featVect) {
         throw new RuntimeException("Inner product representation is not available for extractor: " + 
                                   compExtractors[i].getName());
@@ -69,6 +85,8 @@ public class VectorWrapper {
       featVect.write(out);
     }
   }
+  
+  
 
   
   private float[] mDenseVec;
