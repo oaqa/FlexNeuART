@@ -87,7 +87,7 @@ public class FeatExtrResourceManager {
   
   public EmbeddingReaderAndRecoder getWordEmbed(String fieldName, String fileName) throws Exception {
     if (mRootEmbedDir == null)
-      throw new Exception("There is no forward index directory, likely, you need to specify " + 
+      throw new Exception("There is no work embedding root directory, likely, you need to specify " + 
           CommonParams.EMBED_DIR_PARAM + " in the calling app");
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
     synchronized (this) {

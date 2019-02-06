@@ -118,6 +118,21 @@ public class StringUtilsLeo {
     s = m1.replaceAll("\n");
     Matcher m2 = mReplTags.matcher(s);
     return m2.replaceAll(" ").replaceAll("\n+", "\n");
+  }
+
+  /**
+   * Checks if the string has non-ASCII charaters.
+   * 
+   * @param id
+   * @return
+   */
+  public static boolean hasNonAscii(String id) {
+    for (int i = 0; i < id.length(); ++i) {
+      if (id.codePointAt(i) > 127) {
+        return true;
+      }
+    }
+    return false;
   }  
   
 }
