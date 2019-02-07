@@ -501,13 +501,9 @@ public abstract class BaseQueryApp {
 
     if (useThreadQty)
       mOptions.addOption(CommonParams.THREAD_QTY_PARAM,        null, true, CommonParams.THREAD_QTY_DESC);
-    mOptions.addOption(CommonParams.KNN_THREAD_QTY_PARAM,      null, true, CommonParams.KNN_THREAD_QTY_DESC);
-    mOptions.addOption(CommonParams.KNN_WEIGHTS_FILE_PARAM,    null, true, CommonParams.KNN_WEIGHTS_FILE_DESC);
     
     mOptions.addOption(CommonParams.GIZA_EXPAND_QTY_PARAM,          null, true,  CommonParams.GIZA_EXPAND_QTY_DESC);
     mOptions.addOption(CommonParams.GIZA_EXPAND_USE_WEIGHTS_PARAM,  null, false, CommonParams.GIZA_EXPAND_USE_WEIGHTS_DESC);
-
-    mOptions.addOption(CommonParams.NMSLIB_FIELDS_PARAM,       null, true, CommonParams.NMSLIB_FIELDS_DESC);
     
     mOptions.addOption(CommonParams.SAVE_STAT_FILE_PARAM,      null, true, CommonParams.SAVE_STAT_FILE_DESC);
     mOptions.addOption(CommonParams.USE_THREAD_POOL_PARAM,     null, false, CommonParams.USE_THREAD_POOL_DESC);
@@ -560,10 +556,6 @@ public abstract class BaseQueryApp {
       if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_DESC);
     }
     
-    String tmps = mCmd.getOptionValue(CommonParams.NMSLIB_FIELDS_PARAM);
-    if (null != tmps) {
-      mNmslibFields = tmps.split(",");
-    }
     mProviderURI = mCmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
     if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_DESC);              
     mQueryFile = mCmd.getOptionValue(CommonParams.QUERY_FILE_PARAM);
@@ -618,14 +610,7 @@ public abstract class BaseQueryApp {
       }
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
-    tmpn = mCmd.getOptionValue(CommonParams.KNN_THREAD_QTY_PARAM);
-    if (null != tmpn) {
-      try {
-        mKnnThreadQty = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Number of threads for brute-force KNN-provider isn't integer: '" + tmpn + "'");
-      }
-    }
+
     String knnWeightFileName = mCmd.getOptionValue(CommonParams.KNN_WEIGHTS_FILE_PARAM);
     if (null != knnWeightFileName) {
       mKnnWeights = FeatureExtractor.readFeatureWeights(knnWeightFileName);
@@ -781,15 +766,19 @@ public abstract class BaseQueryApp {
        * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
        * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
        */
-      // TODO need to fix this one for the new option
-      /*
-      if (null == mNmslibFields) showUsageSpecify(CommonParams.NMSLIB_FIELDS_PARAM);
-      NmslibQueryGenerator queryGen = 
-          new NmslibQueryGenerator(mNmslibFields, mMemIndexPref, mInMemExtrInterm, mInMemExtrFinal); 
-      for (int ic = 0; ic < mThreadQty; ++ic) {
-        mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, queryGen);
+      
+      if (!(mInMemExtrFinal instanceof CompositeFeatureExtractor)) {
+        throw new Exception("NMSLIB needs to be used only with a composite feature extractor!");
       }
-      */                
+      CompositeFeatureExtractor compExtractor = (CompositeFeatureExtractor)mInMemExtrFinal;
+
+      for (int ic = 0; ic < mThreadQty; ++ic) {
+        mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, 
+                                                            mResourceManager,
+                                                            compExtractor
+                                                            );
+      }
+             
     } else {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
@@ -984,8 +973,6 @@ public abstract class BaseQueryApp {
   String       mQrelFile;
   QrelReader   mQrels;
   int          mThreadQty = 1;
-  int          mKnnThreadQty = 1;
-  String       mNmslibFields[];
   String       mSaveStatFile;
   DenseVector  mKnnWeights;        
   Integer      mGizaExpandQty;

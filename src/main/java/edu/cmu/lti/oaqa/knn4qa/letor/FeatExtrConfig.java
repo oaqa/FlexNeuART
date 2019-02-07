@@ -47,6 +47,7 @@ class OneFeatExtrConf {
           name, type));
     return Integer.parseInt(val);
   }
+  
   boolean getReqParamBool(String name) throws Exception {
     String val = params.get(name);
     if (val == null)
@@ -54,6 +55,12 @@ class OneFeatExtrConf {
           name, type));
     return Boolean.parseBoolean(val);
   } 
+  
+  boolean getParamBool(String name) throws Exception {
+    String val = params.get(name);
+    if (val == null) return false;
+    return Boolean.parseBoolean(val);
+  }
   
   String getParam(String name, String defaultValue) {
     String val = params.get(name);

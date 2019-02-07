@@ -18,6 +18,7 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
   public static String MODEL1_SUBDIR = "model1SubDir";
   public static String LAMBDA = "lambda";
   public static String OOV_PROB = "ProbOOV";
+  public static String FLIP_DOC_QUERY = "flipDocQuery";
  
   @Override
   public String getName() {
@@ -39,6 +40,8 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
     mLambda = conf.getReqParamFloat(LAMBDA);
     mProbOOV = conf.getParam(OOV_PROB, 1e-9f); 
     
+    mFlipDocQuery = conf.getParamBool(FLIP_DOC_QUERY);
+    
     mModel1Data = resMngr.getModel1Tran(mFieldName, 
                                         mModel1SubDir,
                                         false /* no translation table flip */, 
@@ -55,64 +58,68 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
 
     for (String docId : arrDocIds) {
       DocEntry docEntry = mFieldIndex.getDocEntry(docId);
-      
       if (docEntry == null) {
         throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
-      }
+      }  
       
-      double logScore = 0;
+      double score = mFlipDocQuery ? computeScore(docEntry, queryEntry) : computeScore(queryEntry, docEntry);
       
-      float [] aSourceWordProb = new float[docEntry.mWordIds.length];        
-      float sum = 0;    
-      for (int ia=0; ia < docEntry.mWordIds.length; ++ia) 
-        sum += docEntry.mQtys[ia];
-      
-      float invSum = 1/Math.max(1, sum);   
-      
-      for (int ia=0; ia < docEntry.mWordIds.length; ++ia) {
-        aSourceWordProb[ia] = docEntry.mQtys[ia] * invSum;
-      }
-
-      int queryWordQty = queryEntry.mWordIds.length;
-      
-      for (int iq=0; iq < queryWordQty;++iq) {
-        float totTranProb = 0;
-        
-        int queryWordId = queryEntry.mWordIds[iq];
-        int queryRepQty = queryEntry.mQtys[iq];
-        
-        if (queryWordId >= 0) {          
-          for (int ia = 0; ia < docEntry.mWordIds.length; ++ia) {
-            int answWordId = docEntry.mWordIds[ia];
-            
-            float oneTranProb = mModel1Data.mRecorder.getTranProb(answWordId, queryWordId);
-            if (answWordId == queryWordId && mProbSelfTran - oneTranProb > Float.MIN_NORMAL) {
-              throw new Exception("Bug in re-scaling translation tables: no self-tran probability for: id=" + answWordId + "!");
-            }                
-            if (oneTranProb >= mMinModel1Prob) {
-              totTranProb += oneTranProb * aSourceWordProb[ia];
-            }
-          }
-        }
-  
-        double collectProb = queryWordId >= 0 ? Math.max(mProbOOV, mModel1Data.mFieldProbTable[queryWordId]) : mProbOOV;
-                                                      
-        logScore += queryRepQty * Math.log((1-mLambda)*totTranProb +mLambda*collectProb);
-      }
-            
       DenseVector v = res.get(docId);
       if (v == null) {
         throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
       }    
-      
-      float queryNorm = Math.max(1, queryWordQty);
-      double logScoreQueryNorm = logScore / queryNorm;
-      
-      //v.set(0, logScore);
-      v.set(0, logScoreQueryNorm);
+
+      v.set(0, score);
     }  
     
     return res;
+  }
+
+  private double computeScore(DocEntry queryEntry, DocEntry docEntry) throws Exception { 
+    double logScore = 0;
+    
+    float [] aSourceWordProb = new float[docEntry.mWordIds.length];        
+    float sum = 0;    
+    for (int ia=0; ia < docEntry.mWordIds.length; ++ia) 
+      sum += docEntry.mQtys[ia];
+    
+    float invSum = 1/Math.max(1, sum);   
+    
+    for (int ia=0; ia < docEntry.mWordIds.length; ++ia) {
+      aSourceWordProb[ia] = docEntry.mQtys[ia] * invSum;
+    }
+
+    int queryWordQty = queryEntry.mWordIds.length;
+    
+    for (int iq=0; iq < queryWordQty;++iq) {
+      float totTranProb = 0;
+      
+      int queryWordId = queryEntry.mWordIds[iq];
+      int queryRepQty = queryEntry.mQtys[iq];
+      
+      if (queryWordId >= 0) {          
+        for (int ia = 0; ia < docEntry.mWordIds.length; ++ia) {
+          int answWordId = docEntry.mWordIds[ia];
+          
+          float oneTranProb = mModel1Data.mRecorder.getTranProb(answWordId, queryWordId);
+          if (answWordId == queryWordId && mProbSelfTran - oneTranProb > Float.MIN_NORMAL) {
+            throw new Exception("Bug in re-scaling translation tables: no self-tran probability for: id=" + answWordId + "!");
+          }                
+          if (oneTranProb >= mMinModel1Prob) {
+            totTranProb += oneTranProb * aSourceWordProb[ia];
+          }
+        }
+      }
+ 
+      double collectProb = queryWordId >= 0 ? Math.max(mProbOOV, mModel1Data.mFieldProbTable[queryWordId]) : mProbOOV;
+                                                    
+      logScore += queryRepQty * Math.log((1-mLambda)*totTranProb +mLambda*collectProb);
+    }
+
+    float queryNorm = Math.max(1, queryWordQty);
+    double logScoreQueryNorm = logScore / queryNorm;
+    
+    return logScoreQueryNorm;
   }
 
   @Override
@@ -129,6 +136,7 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
   final float           mMinModel1Prob;
   final float           mLambda;
   final float           mProbOOV;
+  final boolean         mFlipDocQuery;
 
   /**
    * isSparce, getDim, and getFeatureVectorsForInnerProd

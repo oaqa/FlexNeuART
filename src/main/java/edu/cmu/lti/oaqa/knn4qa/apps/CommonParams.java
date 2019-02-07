@@ -48,9 +48,6 @@ public class CommonParams {
   public final static String THREAD_QTY_DESC   = "The number of threads";
   public final static String THREAD_QTY_PARAM  = "thread_qty";
   
-  public final static String KNN_THREAD_QTY_DESC   = "The number of threads of knn brute-force candidate provider";
-  public final static String KNN_THREAD_QTY_PARAM  = "knn_thread_qty";
-  
   public final static String MEMINDEX_DESC = "A directory for in-memory index";
   public final static String MEMINDEX_PARAM = "memindex_dir";
     

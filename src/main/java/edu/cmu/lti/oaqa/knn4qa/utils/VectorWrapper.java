@@ -25,7 +25,6 @@ import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
-import net.jpountz.util.Utils;
 
 public class VectorWrapper {
   

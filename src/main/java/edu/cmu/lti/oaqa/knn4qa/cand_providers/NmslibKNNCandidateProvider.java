@@ -15,6 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -24,8 +25,12 @@ import org.apache.thrift.transport.TTransport;
 
 import com.google.common.base.Splitter;
 
+import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.similarity.QueryService;
 import edu.cmu.lti.oaqa.similarity.QueryService.Client;
 import edu.cmu.lti.oaqa.similarity.ReplyEntry;
@@ -40,15 +45,27 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   Splitter splitOnColon = Splitter.on(':');	
   final private CompositeFeatureExtractor 	  mCompFeatureExtr;
   final private Client 			              mKNNClient;
-  private ForwardIndex                        mMainFwdIndex;
+  final private FeatExtrResourceManager       mResourceManager;
+  final private SingleFieldFeatExtractor      mCompExtractors[];
+  final private ForwardIndex                  mCompIndices[];
+  final int                                   mFeatExtrQty;
 
   public NmslibKNNCandidateProvider(String knnServiceURL, 
-                                    ForwardIndex mainFwdIndex, 
+                                    FeatExtrResourceManager resourceManager, 
                                     CompositeFeatureExtractor featExtr) throws Exception {
     mCompFeatureExtr = featExtr;
-    mMainFwdIndex = mainFwdIndex;
+    mResourceManager = resourceManager;
     String host = null;
     int    port = -1;
+    
+   mCompExtractors = mCompFeatureExtr.getCompExtr();
+   mFeatExtrQty = mCompExtractors.length;
+    
+   mCompIndices  = new ForwardIndex[mFeatExtrQty];
+   
+   for (int i = 0; i < mFeatExtrQty; ++i) {
+     mCompIndices[i] = mResourceManager.getFwdIndex(mCompExtractors[i].getFieldName());
+   }
 
     int part = 0;
     for (String s : splitOnColon.split(knnServiceURL)) {
@@ -97,10 +114,23 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
 
   @Override
   public CandidateInfo getCandidates(int queryNum, Map<String, String> queryData, int maxQty) throws Exception {
-    //String queryField = "some field"; // TODO fill it out
-    //doc = mMainFwdIndex.createDocEntry(queryData.get(),false);
     
-    ByteBuffer queryObj = ByteBuffer.allocate(100); // TODO add query-generation from a document
+    
+    String queryId = queryData.get(UtilConst.TAG_DOCNO);
+    
+    if (queryId == null) {
+      throw new Exception("No query ID");
+    }
+    
+    ByteArrayOutputStream  out = new ByteArrayOutputStream();
+    
+    VectorWrapper.writeAllFeatureVectorsToStream(queryId, 
+                                                  queryData, 
+                                                  mCompIndices, 
+                                                  mCompExtractors, 
+                                                  out);
+   
+    java.nio.ByteBuffer  queryObj = java.nio.ByteBuffer.wrap(out.toByteArray());
 
     // queyrObj MUST be byteBuffer
     List<ReplyEntry> clientRepl = mKNNClient.knnQuery(maxQty, queryObj, true, false);
