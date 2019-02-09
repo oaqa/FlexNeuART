@@ -379,6 +379,35 @@ public abstract class ForwardIndex {
    */
   public abstract DocEntry getDocEntry(String docId) throws Exception;
 
+  /**
+   * Retrieves an existing document entry and constructs a textual representation.
+   * This function needs a positional index.
+   * 
+   * @param docId document id.
+   * @return the document text or null,
+   *         if there is no document with the specified document ID.
+   */
+  public String getDocEntryText(String docId) throws Exception {
+    DocEntry e = getDocEntry(docId);
+    if (e == null) {
+      return null;
+    }
+    StringBuffer sb = new StringBuffer();
+    
+    for (int i = 0; i < e.mWordIdSeq.length; ++i) {
+      if (i > 0) {
+        sb.append(' ');
+      }
+      int wid = e.mWordIdSeq[i];
+      String w = getWord(wid);
+      if (w == null) {
+        throw new Exception("Looks like bug or inconsistent data, no word for word id: " + wid);
+      }
+      sb.append(w);
+    }
+    
+    return sb.toString();
+  }
 
   /**
    * Creates a document entry: a sequence of word IDs,

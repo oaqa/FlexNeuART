@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016 Carnegie Mellon University
+ *  Copyright 2019 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -611,10 +611,6 @@ public abstract class BaseQueryApp {
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
 
-    String knnWeightFileName = mCmd.getOptionValue(CommonParams.KNN_WEIGHTS_FILE_PARAM);
-    if (null != knnWeightFileName) {
-      mKnnWeights = FeatureExtractor.readFeatureWeights(knnWeightFileName);
-    }
     tmpn = mCmd.getOptionValue(CommonParams.GIZA_EXPAND_QTY_PARAM);
     if (tmpn != null) {
       try {
@@ -881,12 +877,12 @@ public abstract class BaseQueryApp {
         
         mQueries.add(docText);
         ++docQty;
-        if (docQty % 100 == 0) logger.info("Read " + docQty + " documents");
+        if (docQty % 100 == 0) logger.info("Read " + docQty + " documents from " + mQueryFile);
       }
       
       mQueries.sort(new RevLenComp());
       
-      logger.info("Read " + docQty + " documents"); 
+      logger.info("Read " + docQty + " documents from " + mQueryFile);
       
       init();
           
@@ -973,8 +969,7 @@ public abstract class BaseQueryApp {
   String       mQrelFile;
   QrelReader   mQrels;
   int          mThreadQty = 1;
-  String       mSaveStatFile;
-  DenseVector  mKnnWeights;        
+  String       mSaveStatFile;     
   Integer      mGizaExpandQty;
   boolean      mGizaExpandUseWeights = false;
   String       mGizaRootDir;

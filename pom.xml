@@ -428,7 +428,12 @@
       <type>jar</type>
       <scope>compile</scope>
     </dependency>
-    <!-- end of Galago dependencies -->
+
+    <dependency> 
+      <groupId>com.opencsv</groupId> 
+      <artifactId>opencsv</artifactId> 
+      <version>4.1</version> 
+    </dependency> 
 
 
   </dependencies>

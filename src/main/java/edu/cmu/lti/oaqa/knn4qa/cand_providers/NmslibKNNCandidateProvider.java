@@ -51,21 +51,22 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   final int                                   mFeatExtrQty;
 
   public NmslibKNNCandidateProvider(String knnServiceURL, 
-                                    FeatExtrResourceManager resourceManager, 
-                                    CompositeFeatureExtractor featExtr) throws Exception {
-    mCompFeatureExtr = featExtr;
-    mResourceManager = resourceManager;
+      FeatExtrResourceManager resourceManager, 
+      CompositeFeatureExtractor featExtr) throws Exception {
+
     String host = null;
     int    port = -1;
-    
-   mCompExtractors = mCompFeatureExtr.getCompExtr();
-   mFeatExtrQty = mCompExtractors.length;
-    
-   mCompIndices  = new ForwardIndex[mFeatExtrQty];
-   
-   for (int i = 0; i < mFeatExtrQty; ++i) {
-     mCompIndices[i] = mResourceManager.getFwdIndex(mCompExtractors[i].getFieldName());
-   }
+
+    mCompFeatureExtr = featExtr;
+    mResourceManager = resourceManager;     
+    mCompExtractors = mCompFeatureExtr.getCompExtr();
+    mFeatExtrQty = mCompExtractors.length;
+
+    mCompIndices  = new ForwardIndex[mFeatExtrQty];
+
+    for (int i = 0; i < mFeatExtrQty; ++i) {
+      mCompIndices[i] = mResourceManager.getFwdIndex(mCompExtractors[i].getFieldName());
+    }
 
     int part = 0;
     for (String s : splitOnColon.split(knnServiceURL)) {

@@ -20,6 +20,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 public class CommonParams {
   
   public final static String LUCENE_INDEX_LOCATION_DESC = "Location of a Lucene index";
+  
   public static final String PROVIDER_URI_DESC = "Provider URI: an index location or a query server address";
   public static final String PROVIDER_URI_PARAM = "u";
   
@@ -69,8 +70,7 @@ public class CommonParams {
                                                   InMemIndexFeatureExtractorOld.getExtractorListDesc();
   
   public final static String MAX_CAND_QTY_PARAM    = "cand_qty";
-  public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. " +
-                                                     "This is used only in conjunction with an intermediate re-ranker.";
+  public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. ";
   
   public final static String MAX_NUM_RESULTS_PARAM = "n";
   public final static String MAX_NUM_RESULTS_DESC  = "A comma-separated list of numbers of candidate records (per-query).";
@@ -95,19 +95,13 @@ public class CommonParams {
   
   public static final String HIHG_ORDER_FILES_PARAM = "horder_files";
   public static final String HIHG_ORDER_FILES_DESC  = "a comma-separated list of sparse (high-order models) word embedding file names";
-  
-  public final static String KNN_WEIGHTS_FILE_DESC = "a file with the weights for knn-search";
-  public final static String KNN_WEIGHTS_FILE_PARAM = "knn_weights";
-  
+ 
   public final static String KNN_QUERIES_DESC  = "a file to save knn-queries in the format that can be processed by NMSLIB";
   public final static String KNN_QUERIES_PARAM = "knn_queries";    
   
   public final static String KNN_SERVICE_PARAM = "nmslib_addr";
   public final static String KNN_SERVICE_DESC  = "the address (in the format host:port) of the NMSLIB server";
-  
-  public final static String NMSLIB_FIELDS_PARAM = "nmslib_fields";
-  public final static String NMSLIB_FIELDS_DESC  = "A comma-separated list of fields used by an NMSLIB provider, it must correspond exactly to what is specified in respective NMSLIB header file";
-  
+
   public final static String ROOT_DIR_DESC = "A root dir for the pipeline output";
   public final static String ROOT_DIR_PARAM = "root_dir";
     
@@ -141,11 +135,14 @@ public class CommonParams {
   public final static String USE_THREAD_POOL_PARAM = "use_thread_pool";
   public final static String USE_THREAD_POOL_DESC = "Use a thread pool instead of a round-robin division of queries among threads";
   
-  public final static String GALAGO_OP_PARAM = "galago_op";
-  public final static String GALAGO_OP_DESC  = "A type of retrieval operator, eg., combine, sdm, or rm to use with Galago provider";
-
-  public final static String GALAGO_PARAMS_PARAM = "galago_params";
-  public final static String GALAGO_PARAMS_DESC  = "galago_params_desc";
+  public final static String FIELD_NAME_PARAM = "field_name";
+  public final static String FIELD_NAME_DESC = "Field name";
+ 
+  // A general-purpose output file parameter
+  public static final String OUTPUT_FILE_PARAM = "out_file";
+  public static final String OUTPUT_FILE_DESC = "Output file";
   
   public static final int USAGE_WIDTH = 90;
+  
+
 }
