@@ -33,7 +33,6 @@ public abstract class CandidateProvider {
   public static final String CAND_TYPE_SOLR        = "solr";
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_LUCENE_GIZA = "lucene_giza";
-  public static final String CAND_TYPE_GALAGO      = "galago";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
   
 
@@ -41,7 +40,6 @@ public abstract class CandidateProvider {
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
       CandidateProvider.CAND_TYPE_QRELS + ", " + 
       CandidateProvider.CAND_TYPE_SOLR + ", " + 
-      CandidateProvider.CAND_TYPE_GALAGO + "," + 
       CandidateProvider.CAND_TYPE_NMSLIB;
   
   /**
@@ -108,6 +106,18 @@ public abstract class CandidateProvider {
      }
      return mJoinOnSpace.join(res);
   }
+  public static String removeAddStopwords(String text) {
+    if (text != null) {
+      text = removeWords(text,  mAddStopWords);
+    }
+    return text;
+  }
+  
   static Splitter mSplitOnSpace = Splitter.on(' ');
   static Joiner   mJoinOnSpace  = Joiner.on(' ');
+  static String[] mAddStopWords = {UtilConst.PESKY_STOP_WORD};
 }
+
+
+  
+

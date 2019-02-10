@@ -30,6 +30,7 @@ import org.apache.commons.cli.ParseException;
 import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
@@ -37,7 +38,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 
 class Worker extends Thread  {
   
-  public Worker(ExportTextBase exporter) {
+  public Worker(ExportTrainDataBase exporter) {
     mExporter = exporter;
   }
   
@@ -68,13 +69,14 @@ class Worker extends Thread  {
   ArrayList<String> mQueryText = new ArrayList<String>();
   ArrayList<Integer> mQueryNum = new ArrayList<Integer>();
   
-  private ExportTextBase mExporter; 
+  private ExportTrainDataBase mExporter; 
   private boolean mFail = false;
 }
 
-public class ExportTextPairsForTrain {
+public class ExportTrainPairs {
 
   private static final String EXPORT_FMT = "export_fmt";
+  private static final String QUERY_FIELD_PARAM = "query_field";
   
   static void showUsage(String err) {
     System.err.println("Error: " + err);
@@ -95,6 +97,9 @@ public class ExportTextPairsForTrain {
     mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,     null, true, CommonParams.LUCENE_INDEX_LOCATION_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_QUERY_PARAM,    null, true, CommonParams.MAX_NUM_QUERY_DESC);
     mOptions.addOption(CommonParams.THREAD_QTY_PARAM,       null, true, CommonParams.THREAD_QTY_DESC);
+    mOptions.addOption(CommonParams.QREL_FILE_PARAM,        null, true, CommonParams.QREL_FILE_DESC);
+    mOptions.addOption(QUERY_FIELD_PARAM,                   null, true, "The name of the field used for querying to find negative examples");    
+    ExportTrainDataBase.addAllOptionDesc(mOptions);
     
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -182,11 +187,14 @@ public class ExportTextPairsForTrain {
           System.err.println("Undefined query ID in query # " + queryQty);
           System.exit(1);
         }
-        String text = docFields.get(fieldName);
+        String text = docFields.get(CandidateProvider.TEXT_FIELD_NAME);
+
         if (text == null) text = "";
+        text = CandidateProvider.removeAddStopwords(text);
+        
         if (text.isEmpty()) {
           System.out.println(String.format("Warning: empty field '%s' for query '%s'",
-                                           fieldName, qid));
+                                          CandidateProvider.TEXT_FIELD_NAME, qid));
         }
         queryIds.add(qid);
         queryTexts.add(text);
@@ -202,14 +210,18 @@ public class ExportTextPairsForTrain {
       
       FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(fwdIndex, null, null);
  
-      ExportTextBase oneExport = ExportTextBase.getAll(candProv, 
-                                                      resourceManager.getFwdIndex(fieldName), 
-                                                      qrels).get(exportType);
+      ExportTrainDataBase oneExport = 
+          ExportTrainDataBase.createExporter(exportType, candProv, 
+                                             resourceManager.getFwdIndex(fieldName), 
+                                             qrels);
       if (null == oneExport) {
         showUsage("Undefined outupt format: '" + exportType + "'");
       }
       
-      oneExport.readAddOptions(cmd);
+      String err = oneExport.readAddOptions(cmd);
+      if (!err.isEmpty()) {
+        showUsage(err);
+      }
       oneExport.startOutput();
       
       Worker[] workers = new Worker[threadQty];

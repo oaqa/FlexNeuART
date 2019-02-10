@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 
+import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.*;
@@ -130,15 +131,14 @@ class BaseProcessingUnit {
     if (mAppRef.mResultCache != null) 
       qres = mAppRef.mResultCache.getCacheEntry(queryID);
     if (qres == null) {            
-      // This is a workaround for a pesky problem: didn't previously notice that the string
-      // n't (obtained by tokenization of can't is indexed. Querying using this word
-      // add a non-negligible overhead (although this doesn't affect overall accuracy)
-      // THIS IS FOR THE FIELD TEXT ONLY!
-      String [] addStopWords = {"n't"};
+
       String text = docFields.get(CandidateProvider.TEXT_FIELD_NAME);
       if (text != null) {
-        text = CandidateProvider.removeWords(text,  addStopWords);
-        docFields.put(CandidateProvider.TEXT_FIELD_NAME, text);
+        // This is a workaround for a pesky problem: didn't previously notice that the string
+        // n't (obtained by tokenization of can't is indexed. Querying using this word
+        // add a non-negligible overhead (although this doesn't affect overall accuracy)
+        // THIS IS FOR THE FIELD TEXT ONLY
+        docFields.put(CandidateProvider.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
       }
       qres = candProvider.getCandidates(queryNum, docFields, mAppRef.mMaxCandRet);
       if (mAppRef.mResultCache != null) 

@@ -152,6 +152,7 @@ public class UtilConst {
   /** These are all ASCII punctuation chars except the apostrophe! */
   public static final String NON_INDEXABLE_PUNCT = 
                                     "!\"#$%&()*+,-./:;<=>?@\\[\\]^_`{¦}~\\\\";
+  public static final String PESKY_STOP_WORD = "n't";
   
   /**
    *  Replaces bad Unicode characters, but doesn't change the string length!
