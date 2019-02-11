@@ -54,11 +54,13 @@ public abstract class ExportTrainDataBase {
   }
   // Supposed to return an error message, if some options are missing or poorly formatted
   abstract String readAddOptions(CommandLine cmd);
-  // This function must be thread safe, so make sure
-  // it syncs output to the file.
+  // 1. This function must be thread safe, so make sure it syncs output to the file.
+  // 2. There are potentially two different variants of the query coming from, e.g.
+  //    lemmatized and non-lemmatized text fields
   abstract void exportQuery(int queryNum, 
                             String queryId,
-                            String queryText) throws Exception;
+                            String queryQueryText,
+                            String queryFieldText) throws Exception;
   abstract void startOutput() throws Exception;
   abstract void finishOutput() throws Exception;
 
@@ -70,7 +72,6 @@ public abstract class ExportTrainDataBase {
     mQrels = qrels;
     
   }
-  
 
   protected LuceneCandidateProvider   mCandProv;
   protected ForwardIndex              mFwdIndex;
@@ -79,8 +80,7 @@ public abstract class ExportTrainDataBase {
 }
 
 class ExportTextMatchZoo extends ExportTrainDataBase {
-  private static final String SAMPLE_PAIR_QTY = "sample_pair_qty";
-  private static final int SAMPLE_ATTEMPT_QTY = 100; // The number of sampling attempts before we give up
+  private static final String SAMPLE_NEG_QTY = "sample_neg_qty";
   
   protected ExportTextMatchZoo(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, QrelReader qrels) {
     super(candProv, fwdIndex, qrels);
@@ -89,7 +89,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
   static void addOptionDesc(Options opts) {
     opts.addOption(CommonParams.OUTPUT_FILE_PARAM, null, true, CommonParams.OUTPUT_FILE_DESC); 
     opts.addOption(CommonParams.MAX_CAND_QTY_PARAM, null, true, CommonParams.MAX_CAND_QTY_DESC);
-    opts.addOption(SAMPLE_PAIR_QTY, null, true, "A number of additional (except QREL) negative samples per query");
+    opts.addOption(SAMPLE_NEG_QTY, null, true, "A number of negative samples per query");
   }
 
   @Override
@@ -100,15 +100,16 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     if (null == mOutFileName) {
       return "Specify option: " + CommonParams.OUTPUT_FILE_PARAM;
     }
-    String tmpn = cmd.getOptionValue(SAMPLE_PAIR_QTY);
+    String tmpn = cmd.getOptionValue(SAMPLE_NEG_QTY);
     if (null == tmpn) {
-      return "Specify option: " + SAMPLE_PAIR_QTY;
+      return "Specify option: " + SAMPLE_NEG_QTY;
     }
     try {
-      mSamplePairQty = Integer.parseInt(tmpn);
+      mSampleNegQty = Integer.parseInt(tmpn);
     } catch (NumberFormatException e) {
-      return SAMPLE_PAIR_QTY + " isn't integer: '" + tmpn + "'";
+      return SAMPLE_NEG_QTY + " isn't integer: '" + tmpn + "'";
     }
+    
     tmpn = cmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
     if (null == tmpn) {
       return "Specify option: " + CommonParams.MAX_CAND_QTY_PARAM;
@@ -121,11 +122,11 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     return "";
   }
   
-  // This function assumes that idLeft/textLeft is always more relevant than idRight/textRight
   synchronized void writeField(String idLeft, String textLeft,
-                               String idRight, String textRight) throws Exception {
+                               String idRight, String textRight,
+                               int relFlag) throws Exception {
     
-    String lineFields[] = { "" + mOutNum, idLeft, textLeft, idRight, textRight, "1"};
+    String lineFields[] = { "" + mOutNum, idLeft, textLeft, idRight, textRight, "" + relFlag};
     mOut.writeNext(lineFields);
     mOutNum++; 
     
@@ -153,16 +154,14 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
   }
 
   @Override
-  void exportQuery(int queryNum, String queryId, String queryText) throws Exception {
+  void exportQuery(int queryNum, String queryId, 
+                   String queryQueryText, String queryFieldText) throws Exception {
 
     HashSet<String> relDocIds = new HashSet<String>();
     HashSet<String> othDocIds = new HashSet<String>();
     HashMap<String, String> queryData = new HashMap<String, String>();
 
     HashMap<String, String> qq = mQrels.getQueryQrels(queryId);
-    
-    relDocIds.clear();
-    othDocIds.clear();
     
     // First just read QRELs
     for (Entry<String, String> e : qq.entrySet()) {
@@ -177,62 +176,56 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     }
     
     queryData.put(CandidateProvider.TEXT_FIELD_NAME, 
-                  CandidateProvider.removeAddStopwords(queryText));
+                  CandidateProvider.removeAddStopwords(queryQueryText));
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
     CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandQty);
 
     for (CandidateEntry e : cands.mEntries) {
+      
       if (relDocIds.contains(e.mDocId) || othDocIds.contains(e.mDocId)) {
         continue;
       }
-
       othDocIds.add(e.mDocId);
+      
     }
     
     String relDocIdsArr [] = relDocIds.toArray(new String[0]);
     String othDocIdsArr[] = othDocIds.toArray(new String[0]);
-    
-    int relDocIdNum = 0;
 
-    HashSet<String> usedIds = new HashSet<String>();
     
-    
-    if (relDocIdsArr.length > 0 && othDocIdsArr.length > 0) {
+    // First save *ALL* the relevant documents
+    for (String docId : relDocIdsArr) {
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId));
       
-      // This method may produce fewer than mSamplePairQty entries in some rare cases
-      for (int k = 0; k < SAMPLE_ATTEMPT_QTY * mSamplePairQty; ++k) {
-        
-        String nonRelDocId = othDocIdsArr[Math.abs(mRandGen.nextInt()) % othDocIdsArr.length];
-        String relDocId = relDocIdsArr[relDocIdNum];
-        
-        String compositeKey = relDocId + "-#-" + nonRelDocId; 
-        
-        if (usedIds.contains(compositeKey)) {
-          //System.out.println("Ignoring repeating combination of keys: " + compositeKey);
-          
-        } else {
-          String relText = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(relDocId));
-          String nonRelText = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(nonRelDocId));
-          if (!relText.isEmpty() && !nonRelText.isEmpty()) {
-            writeField(relDocId, relText, nonRelDocId, nonRelText);
-            usedIds.add(compositeKey);
-            if (usedIds.size() >= mSamplePairQty)
-              break;
-          }
-        }
-        
-        // To make sure we use as many relevant documents as possible
-        // we loop over the array of relevant documents (possibly multiple times)
-        relDocIdNum = (relDocIdNum + 1) % relDocIdsArr.length;
-      }
+      writeField(queryId, queryFieldText, docId, text, 1);
+      
     }
+    
+    // Shuffle randomly
+    for (int i = othDocIdsArr.length - 1; i >= 1; --i) {
+      int k = mRandGen.nextInt(i); // i exclusive
+      String tmp = othDocIdsArr[k];
+      othDocIdsArr[k] = othDocIdsArr[i];
+      othDocIdsArr[i] = tmp;
+    }
+    
+    // Second sample non-relevant ones
+    for (int i = 0; i < Math.min(mSampleNegQty, othDocIdsArr.length); ++i) {
+      
+      String docId = othDocIdsArr[i];
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId));
+      
+      writeField(queryId, queryFieldText, docId, text, 0);
+      
+    }
+    
   }
   
   CSVWriter             mOut;
   int                   mOutNum;
 
   int                    mCandQty;
-  int                    mSamplePairQty;
+  int                    mSampleNegQty;
   String                 mOutFileName;
   Random                 mRandGen = new Random(0);
 

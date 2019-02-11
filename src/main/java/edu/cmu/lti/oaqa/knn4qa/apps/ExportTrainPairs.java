@@ -42,17 +42,20 @@ class Worker extends Thread  {
     mExporter = exporter;
   }
   
-  public void addQuery(int queryNum, String queryId, String queryText) {
+  public void addQuery(int queryNum, String queryId, 
+                       String queryQueryText, String queryFieldText) {
     mQueryNum.add(queryNum);
     mQueryId.add(queryId);
-    mQueryText.add(queryText);
+    mQueryQueryText.add(queryQueryText);
+    mQueryFieldText.add(queryFieldText);
   }
 
   @Override
   public void run() {
     for (int i = 0; i < mQueryId.size(); ++i) {
       try {
-        mExporter.exportQuery(mQueryNum.get(i), mQueryId.get(i), mQueryText.get(i));
+        mExporter.exportQuery(mQueryNum.get(i), mQueryId.get(i), 
+                              mQueryQueryText.get(i), mQueryFieldText.get(i));
       } catch (Exception e) {
         mFail = true;
         e.printStackTrace();
@@ -66,7 +69,9 @@ class Worker extends Thread  {
   }
   
   ArrayList<String> mQueryId = new ArrayList<String>();
-  ArrayList<String> mQueryText = new ArrayList<String>();
+  // mQueryQueryText and mQueryFieldText may come from different fields.
+  ArrayList<String> mQueryQueryText = new ArrayList<String>();
+  ArrayList<String> mQueryFieldText = new ArrayList<String>();
   ArrayList<Integer> mQueryNum = new ArrayList<Integer>();
   
   private ExportTrainDataBase mExporter; 
@@ -156,7 +161,8 @@ public class ExportTrainPairs {
         showUsageSpecify(CommonParams.QUERY_FILE_PARAM);
       }
       
-      ArrayList<String> queryTexts = new ArrayList<String>();
+      ArrayList<String> queryQueryTexts = new ArrayList<String>();
+      ArrayList<String> queryFieldTexts = new ArrayList<String>();
       ArrayList<String> queryIds = new ArrayList<String>();
       
       BufferedReader inp = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(queryFile)));
@@ -187,17 +193,27 @@ public class ExportTrainPairs {
           System.err.println("Undefined query ID in query # " + queryQty);
           System.exit(1);
         }
-        String text = docFields.get(CandidateProvider.TEXT_FIELD_NAME);
+        String queryText = CandidateProvider.removeAddStopwords(docFields.get(CandidateProvider.TEXT_FIELD_NAME));
+        String fieldText = CandidateProvider.removeAddStopwords(docFields.get(fieldName));
 
-        if (text == null) text = "";
-        text = CandidateProvider.removeAddStopwords(text);
+        if (queryText == null) queryText = "";
+        if (fieldText == null) fieldText = "";
         
-        if (text.isEmpty()) {
-          System.out.println(String.format("Warning: empty field '%s' for query '%s'",
+        if (queryText.isEmpty()) {
+          System.out.println(String.format("Ignoring query with empty field '%s' for query '%s'",
                                           CandidateProvider.TEXT_FIELD_NAME, qid));
+          continue;
         }
+        if (fieldText.isEmpty()) {
+          System.out.println(String.format("Ignoring query with empty field '%s' for query '%s'",
+                                          fieldName, qid));
+          continue;
+        }
+        
         queryIds.add(qid);
-        queryTexts.add(text);
+        queryQueryTexts.add(queryText);
+        queryFieldTexts.add(fieldText);
+        
       }
 
       String providerURI = cmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
@@ -232,7 +248,8 @@ public class ExportTrainPairs {
       
       int threadId = 0;
       for (int i = 0; i < queryIds.size(); ++i) {
-        workers[threadId].addQuery(i, queryIds.get(i), queryTexts.get(i));
+        workers[threadId].addQuery(i, queryIds.get(i), 
+                                  queryQueryTexts.get(i), queryFieldTexts.get(i));
         threadId = (threadId + 1) % threadQty;
       }
       
