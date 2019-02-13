@@ -97,7 +97,7 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
     return mCompExtr;
   }
   
-  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception {
     if (e == null) {
       throw new RuntimeException("Bug: got null DocEntry");
     }

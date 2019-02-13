@@ -317,7 +317,12 @@ public class GizaTranTableReaderAndRecoder {
    * @param id2     id of the target string
    * 
    * @return    a scaled translation probability, which is zero if there is no
-   *            translation entry in the source table.
+   *            translation entry in the source table unless we ask for translation
+   *            of a word into itself. In such a case, we return mProbSelfTran
+   *            if there's no translation entry. If such a translation entry
+   *            exists (i.e., Model 1 has come up with some self-translation probability)
+   *            that self-translation probability is summed up with mProbSelfTran
+   *            when we load translation table into memory.
    */
    public float getTranProb(int id1, int id2) {
      float minProb = id1 == id2 ? mProbSelfTran : 0;

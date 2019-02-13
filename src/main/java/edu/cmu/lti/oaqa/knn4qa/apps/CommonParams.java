@@ -62,12 +62,13 @@ public class CommonParams {
   public final static String MIN_SHOULD_MATCH_PCT_DESC  = "a percentage of query word (an integer from 0 to 100) that must match a document word";
 
   public final static String EXTRACTOR_TYPE_FINAL_PARAM = "extr_type_final";
-  public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type: " + 
-                                                  InMemIndexFeatureExtractorOld.getExtractorListDesc();
+  public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type/json"; 
+  
+  public final static String EXTRACTOR_TYPE_NMSLIBL_PARAM = "extr_type_nmslib";
+  public final static String EXTRACTOR_TYPE_NMSLIBL_DESC = "Extrator type/json to generate NMSLIB query vectors"; 
                                   ;
   public final static String EXTRACTOR_TYPE_INTERM_PARAM = "extr_type_interm";  
-  public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type: " + 
-                                                  InMemIndexFeatureExtractorOld.getExtractorListDesc();
+  public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type/json";
   
   public final static String MAX_CAND_QTY_PARAM    = "cand_qty";
   public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. ";

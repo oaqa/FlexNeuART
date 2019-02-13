@@ -56,7 +56,8 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
    * 
    * @return a possibly empty array of vector wrapper objects or null
    *         if the inner-product representation is not possible.
+   * @throws Exception 
    */
-  public abstract VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery);
+  public abstract VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception;
   
 }

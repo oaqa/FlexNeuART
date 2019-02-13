@@ -15,24 +15,18 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.giza;
 
-/**
- * A helper intermediate class to store partial (no source ID) translation
- * entries.
- * 
- * @author Leonid Boytsov
- *
- */
-class TranRecNoSrcId implements Comparable<TranRecNoSrcId> {
-  public final int      mDstId;
-  public float          mProb;
-
-  TranRecNoSrcId(int dstId, float prob) {;
-    mDstId = dstId;
-    mProb  = prob;
+public class TranRecSortByProb implements Comparable<TranRecSortByProb> {
+  public TranRecSortByProb(int mDstWorId, float mProb) {
+    super();
+    this.mDstWorId = mDstWorId;
+    this.mProb = mProb;
   }
-
+  final public int     mDstWorId;
+  final public float   mProb;
   @Override
-  public int compareTo(TranRecNoSrcId o) {
-    return mDstId - o.mDstId;
+  public int compareTo(TranRecSortByProb o) {
+    // If mProb > o.mProb, we return -1
+    // that is higher-probability entries will go first
+    return (int) Math.signum(o.mProb - mProb);
   }
 }

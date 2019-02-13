@@ -529,10 +529,14 @@ public abstract class BaseQueryApp {
    * Adds options related to LETOR (learning-to-rank).
    */
   void addLetorOpts(boolean useIntermModel, boolean useFinalModel) {
+    
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM,     null, true,  CommonParams.EXTRACTOR_TYPE_FINAL_DESC);
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM,    null, true,  CommonParams.EXTRACTOR_TYPE_INTERM_DESC);
+    mOptions.addOption(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM,   null, true,  CommonParams.EXTRACTOR_TYPE_NMSLIBL_DESC);
+    
     mUseIntermModel = useIntermModel;
     mUseFinalModel = useFinalModel;
+    
     if (mUseIntermModel) {
       mOptions.addOption(CommonParams.MODEL_FILE_INTERM_PARAM, null, true, CommonParams.MODEL_FILE_INTERM_DESC);
       mOptions.addOption(CommonParams.MAX_CAND_QTY_PARAM,      null, true, CommonParams.MAX_CAND_QTY_DESC);
@@ -676,6 +680,7 @@ public abstract class BaseQueryApp {
         logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
       }
     }
+    mExtrTypeNmslib = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM);
     mSaveStatFile = mCmd.getOptionValue(CommonParams.SAVE_STAT_FILE_PARAM);
     if (mSaveStatFile != null)
       logger.info("Saving some vital stats to '" + mSaveStatFile);
@@ -725,12 +730,14 @@ public abstract class BaseQueryApp {
         mInMemExtrInterm = createOneExtractorOld(mExtrTypeInterm, 
                                                  extr1 /* try to reuse existing resources from another extractor */);        
       }
-    } else if (mExtrTypeFinal != null || mExtrTypeInterm != null) {
+    } else if (mExtrTypeFinal != null || mExtrTypeInterm != null || mExtrTypeNmslib != null) {
       mResourceManager = new FeatExtrResourceManager(mMemIndexPref, mGizaRootDir, mEmbedDir);
       if (mExtrTypeFinal != null)
         mInMemExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
       if (mExtrTypeInterm != null)
         mInMemExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
+      if (mExtrTypeNmslib != null)
+        mInMemExtrNmslib = new CompositeFeatureExtractor(mResourceManager, mExtrTypeNmslib);
     }
   }
   
@@ -762,11 +769,14 @@ public abstract class BaseQueryApp {
        * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
        * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
        */
+      if (mInMemExtrNmslib == null) {
+        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM);
+      }
       
-      if (!(mInMemExtrFinal instanceof CompositeFeatureExtractor)) {
+      if (!(mInMemExtrNmslib instanceof CompositeFeatureExtractor)) {
         throw new Exception("NMSLIB needs to be used only with a composite feature extractor!");
       }
-      CompositeFeatureExtractor compExtractor = (CompositeFeatureExtractor)mInMemExtrFinal;
+      CompositeFeatureExtractor compExtractor = (CompositeFeatureExtractor)mInMemExtrNmslib;
 
       for (int ic = 0; ic < mThreadQty; ++ic) {
         mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, 
@@ -980,6 +990,7 @@ public abstract class BaseQueryApp {
   String       mMemIndexPref;
   String       mExtrTypeFinal;
   String       mExtrTypeInterm;
+  String       mExtrTypeNmslib;
   DenseVector  mModelInterm;
   Ranker       mModelFinal;
   boolean      mUseThreadPool = false;
@@ -990,6 +1001,7 @@ public abstract class BaseQueryApp {
   
   FeatureExtractor mInMemExtrInterm;
   FeatureExtractor mInMemExtrFinal;
+  FeatureExtractor mInMemExtrNmslib;
   
   String   mAppName;
   Options  mOptions = new Options();
