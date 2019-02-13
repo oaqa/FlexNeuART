@@ -153,6 +153,7 @@ public class UtilConst {
   public static final String NON_INDEXABLE_PUNCT = 
                                     "!\"#$%&()*+,-./:;<=>?@\\[\\]^_`{¦}~\\\\";
   public static final String PESKY_STOP_WORD = "n't";
+  public static final int PROGRESS_REPORT_QTY = 10000;
   
   /**
    *  Replaces bad Unicode characters, but doesn't change the string length!

@@ -140,11 +140,17 @@ public class ExportToNMSLIBDenseSparseFusion {
         out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
       }
       
-      if (queries == null) {        
+      if (queries == null) {    
+        int docNum = 0;
         for (String docId : allDocIds) {
           writeStringId(docId, out);
           VectorWrapper.writeAllFeatureVectorsToStream(docId, null, compIndices, compExtractors, out);
+          ++docNum;
+          if (docNum % UtilConst.PROGRESS_REPORT_QTY == 0) {
+            System.out.println("Exported " + docNum + " docs");
+          }
         }
+        System.out.println("Exported " + docNum + " docs");
       } else {
         for (String queryText : queries) {
           Map<String, String> queryFields = null;
@@ -166,6 +172,7 @@ public class ExportToNMSLIBDenseSparseFusion {
           writeStringId(queryId, out);
           VectorWrapper.writeAllFeatureVectorsToStream(queryId, queryFields, compIndices, compExtractors, out);
         }
+        System.out.println("Exported " + queries.size() + " queries");
       }
       
     } catch (Exception e) {

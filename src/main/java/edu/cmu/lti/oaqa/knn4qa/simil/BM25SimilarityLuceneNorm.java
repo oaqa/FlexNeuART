@@ -43,15 +43,8 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
     int   docTermQty = doc.mWordIds.length;
     int   queryTermQty = query.mWordIds.length;
 
-    float normIDF = 0;
-    for (int i = 0; i < queryTermQty; ++i) {
-      final int queryWordId = query.mWordIds[i];
-      if (queryWordId >= 0) {
-        float idf = getIDF(mFieldIndex, queryWordId);
-        normIDF += idf; // IDF normalization
-      }
-    }
-    
+    float normIDF = getNormIDF(query);
+
     int   iQuery = 0, iDoc = 0;
     
     float docLen = doc.mDocLen;
@@ -80,8 +73,39 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
     return score;
   }
   
+  private float getNormIDF(DocEntry query) {
+    float normIDF = 0;
+    int   queryTermQty = query.mWordIds.length;
+    for (int i = 0; i < queryTermQty; ++i) {
+      final int queryWordId = query.mWordIds[i];
+      if (queryWordId >= 0) {
+        float idf = getIDF(mFieldIndex, queryWordId);
+        normIDF += idf; // IDF normalization
+      }
+    }
+    return normIDF;
+  }
+  
+  @Override
+  public TrulySparseVector getBM25SparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
+    TrulySparseVector res = getBM25SparseVectorNoNorm(e, isQuery, shareIDF);
+    
+    if (isQuery) {
+      float normIDF = getNormIDF(e);
+      if (normIDF > 0) {
+        float inv = 1.0f / normIDF;
+        
+        for (int i = 0; i < res.mIDs.length; ++i) {
+          res.mVals[i] *= inv;
+        }
+      }
+    }
+    
+    return res;
+  }
+  
   @Override
   public String getName() {
-    return "BM25";
+    return "BM25 query-norm";
   }  
 }

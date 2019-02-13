@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.*;

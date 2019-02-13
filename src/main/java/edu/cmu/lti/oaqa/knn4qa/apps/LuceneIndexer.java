@@ -182,12 +182,14 @@ public class LuceneIndexer {
 
           luceneDoc.add(new StringField(UtilConst.TAG_DOCNO, id, Field.Store.YES));
 
-          for (Map.Entry<String, String> e : docFields.entrySet())
+          for (Map.Entry<String, String> e : docFields.entrySet()) {
             if (!e.getKey().equals(UtilConst.TAG_DOCNO)) {
               luceneDoc.add(new Field(e.getKey(), e.getValue(), FIELD_TYPE));
             }
+          }
+          
           indexWriter.addDocument(luceneDoc);
-          if (docNum % 1000 == 0) {
+          if (docNum % UtilConst.PROGRESS_REPORT_QTY == 0) {
             System.out.println("Indexed " + docNum + " docs");
           }
           if (docNum % COMMIT_INTERV == 0) {
