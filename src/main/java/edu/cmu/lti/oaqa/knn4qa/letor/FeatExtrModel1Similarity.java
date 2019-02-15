@@ -18,7 +18,7 @@ import net.openhft.koloboke.collect.map.hash.HashIntObjMaps;
 import net.openhft.koloboke.collect.set.hash.HashIntSet;
 import net.openhft.koloboke.collect.set.hash.HashIntSets;
 
-public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
+public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtractor {
   public static String EXTR_TYPE = "Model1Similarity";
   
   public static String GIZA_ITER_QTY = "gizaIterQty";
@@ -46,7 +46,7 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
     mGizaIterQty = conf.getReqParamInt(GIZA_ITER_QTY);
     mProbSelfTran = conf.getReqParamFloat(PROB_SELF_TRAN);
     mMinModel1Prob = conf.getReqParamFloat(MIN_MODEL1_PROB);
-    mTopTranQty = conf.getParam(TOP_TRANQTY, 5);
+    mTopTranQty = conf.getParam(TOP_TRANQTY, Integer.MAX_VALUE);
 
     mLambda = conf.getReqParamFloat(LAMBDA);
     mProbOOV = conf.getParam(OOV_PROB, 1e-9f); 
@@ -125,7 +125,7 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
  
       double collectProb = queryWordId >= 0 ? Math.max(mProbOOV, mModel1Data.mFieldProbTable[queryWordId]) : mProbOOV;
                                                     
-      res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb);
+      res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb) - Math.log(mLambda*collectProb);
     }
     
     return res;
@@ -135,11 +135,28 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
     double logScore = 0;
     
     double queryWordScores[] = computeWordScores(queryEntry.mWordIds, docEntry);
-    
+
     int queryWordQty = queryEntry.mWordIds.length;
-    
-    for (int iq=0; iq < queryWordQty;++iq) {                                        
-      logScore += queryEntry.mQtys[iq] * queryWordScores[iq];
+
+    if (mTopTranQty == Integer.MAX_VALUE) {
+      // Computing unpruned scores
+      for (int iq=0; iq < queryWordQty;++iq) {                                        
+        logScore += queryEntry.mQtys[iq] * queryWordScores[iq];
+      }
+    } else {
+      HashIntSet   allAddWordIdsHash = HashIntSets.newMutableSet();
+      // Using only words with mTopTranQty highest translation probabilities
+      for (int wordId : docEntry.mWordIds) {
+        for (int dstWordId : getTopWordIds(wordId)) {
+          allAddWordIdsHash.add(dstWordId);
+        }
+      }
+      
+      for (int iq=0; iq < queryWordQty;++iq) {  
+        if (allAddWordIdsHash.contains(queryEntry.mWordIds[iq])) {
+          logScore += queryEntry.mQtys[iq] * queryWordScores[iq];
+        }
+      }
     }
 
     float queryNorm = Math.max(1, queryWordQty);
@@ -184,8 +201,9 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
         res = new Integer[resQty];
         for (int i = 0; i < resQty; ++i) {
           res[i] = tranRecSortedByProb[i].mDstWorId; 
+          //System.out.println(tranRecSortedByProb[i].mProb);
         }
-        
+        //System.out.println("============");
       }
       
       mTopTranCache.put(wordId, res);
@@ -193,11 +211,6 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
     }
     
     return mTopTranCache.get(wordId);
-  }
-
-  @Override
-  public int getFeatureQty() {
-    return 1;
   }
 
   /**
@@ -221,6 +234,9 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
   @Override
   public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception {
 
+    if (mFlipDocQuery) {
+      isQuery = !isQuery;
+    }
     if (isQuery) {
       return getQueryFeatureVectorsForInnerProd(e);
     } else {
@@ -249,7 +265,7 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
     Arrays.sort(res.mIDs);
     
     double scores[] = computeWordScores(res.mIDs, e);
-    
+
     // 2. Compute their respective translation scores
     for (k = 0; k < wqty; ++k) {
       res.mVals[k] = (float)scores[k];
@@ -260,17 +276,18 @@ public class FeatExtrModel1Similarity extends SingleFieldFeatExtractor {
 
   private VectorWrapper getQueryFeatureVectorsForInnerProd(DocEntry e) {
     int queryWordQty = e.mWordIds.length; 
+    
     int nonzWordQty = 0;
-    int totFreq = 0;
+
     for (int k = 0; k < e.mWordIds.length; ++k) {
       if (e.mWordIds[k] >= 0) {
         nonzWordQty++;
-        totFreq += e.mQtys[k];
       }
     }
     TrulySparseVector res = new TrulySparseVector(nonzWordQty);
     
-    float inv = 1.0f/Math.max(1, totFreq);
+    float inv = 1.0f/Math.max(1, queryWordQty);
+    
     int idx = 0;
     for (int k = 0; k < queryWordQty; ++k) {
       int wordId = e.mWordIds[k];

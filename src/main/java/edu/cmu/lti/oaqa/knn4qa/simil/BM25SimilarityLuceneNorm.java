@@ -4,7 +4,6 @@ import java.util.*;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 
 /**
  * A re-implementation of the Lucene/SOLR BM25 similarity,
@@ -94,7 +93,6 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
       float normIDF = getNormIDF(e);
       if (normIDF > 0) {
         float inv = 1.0f / normIDF;
-        
         for (int i = 0; i < res.mIDs.length; ++i) {
           res.mVals[i] *= inv;
         }

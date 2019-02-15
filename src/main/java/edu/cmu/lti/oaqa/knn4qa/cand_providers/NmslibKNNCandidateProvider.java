@@ -16,7 +16,6 @@
 package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -29,6 +28,7 @@ import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.similarity.QueryService;
@@ -43,10 +43,9 @@ import edu.cmu.lti.oaqa.similarity.ReplyEntry;
  */
 public class NmslibKNNCandidateProvider  extends CandidateProvider {
   Splitter splitOnColon = Splitter.on(':');	
-  final private CompositeFeatureExtractor 	  mCompFeatureExtr;
   final private Client 			              mKNNClient;
   final private FeatExtrResourceManager       mResourceManager;
-  final private SingleFieldFeatExtractor      mCompExtractors[];
+  final private SingleFieldSingleScoreFeatExtractor  mCompExtractors[];
   final private ForwardIndex                  mCompIndices[];
   final int                                   mFeatExtrQty;
 
@@ -56,11 +55,22 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
 
     String host = null;
     int    port = -1;
-
-    mCompFeatureExtr = featExtr;
+    
     mResourceManager = resourceManager;     
-    mCompExtractors = mCompFeatureExtr.getCompExtr();
-    mFeatExtrQty = mCompExtractors.length;
+
+    SingleFieldFeatExtractor[] allExtractors = featExtr.getCompExtr();
+    mFeatExtrQty = allExtractors.length;
+    
+    int featExtrQty = allExtractors.length;
+    mCompExtractors = new SingleFieldSingleScoreFeatExtractor[featExtrQty];
+    
+    for (int i = 0; i < featExtrQty; ++i) {
+      if (!(allExtractors[i] instanceof SingleFieldSingleScoreFeatExtractor)) {
+        throw new Exception("Sub-extractor # " + (i+1) + " (" + allExtractors[i].getName() 
+                            +") doesn't support export to NMSLIB");
+      }
+      mCompExtractors[i] = (SingleFieldSingleScoreFeatExtractor)allExtractors[i];
+    }
 
     mCompIndices  = new ForwardIndex[mFeatExtrQty];
 
@@ -115,8 +125,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
 
   @Override
   public CandidateInfo getCandidates(int queryNum, Map<String, String> queryData, int maxQty) throws Exception {
-    
-    
+       
     String queryId = queryData.get(UtilConst.TAG_DOCNO);
     
     if (queryId == null) {
@@ -125,11 +134,11 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     
     ByteArrayOutputStream  out = new ByteArrayOutputStream();
     
-    VectorWrapper.writeAllFeatureVectorsToStream(queryId, 
-                                                  queryData, 
-                                                  mCompIndices, 
-                                                  mCompExtractors, 
-                                                  out);
+    VectorWrapper.writeAllFeatureVectorsToStream(null, 
+                                                queryData, 
+                                                mCompIndices, 
+                                                mCompExtractors, 
+                                                out);
    
     java.nio.ByteBuffer  queryObj = java.nio.ByteBuffer.wrap(out.toByteArray());
 

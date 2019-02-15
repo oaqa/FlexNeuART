@@ -34,6 +34,7 @@ import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
@@ -58,7 +59,7 @@ public class ExportToNMSLIBDenseSparseFusion {
     @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
     String mEmbedDir;
     
-    @Option(name = "-extr_json",  usage = "A JSON file with a descripton of the extractors")
+    @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
     @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, usage = "If specified, we generate queries rather than documents.")
@@ -111,14 +112,20 @@ public class ExportToNMSLIBDenseSparseFusion {
       FeatExtrResourceManager resourceManager = 
           new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
       
-      CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);
+      CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);   
+
+      SingleFieldFeatExtractor[] allExtractors = featExtr.getCompExtr();    
+      int featExtrQty = allExtractors.length;
+      SingleFieldSingleScoreFeatExtractor compExtractors[] = new SingleFieldSingleScoreFeatExtractor[featExtrQty];
       
-      /*
-       * We will later try to cast this feature extractor reference to a specific
-       * feature extractor type (only this type can support export to NMSLIB). 
-       */
-      SingleFieldFeatExtractor[] compExtractors = featExtr.getCompExtr();
-      int featExtrQty = compExtractors.length;
+      for (int i = 0; i < featExtrQty; ++i) {
+        if (!(allExtractors[i] instanceof SingleFieldSingleScoreFeatExtractor)) {
+          System.err.println("Sub-extractor # " + (i+1) + " (" + allExtractors[i].getName() 
+              +") doesn't support export to NMSLIB");
+          System.exit(1);
+        }
+        compExtractors[i] = (SingleFieldSingleScoreFeatExtractor)allExtractors[i];
+      }
 
       ForwardIndex              compIndices[] = new ForwardIndex[featExtrQty];
       

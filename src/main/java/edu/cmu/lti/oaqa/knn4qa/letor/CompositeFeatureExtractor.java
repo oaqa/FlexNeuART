@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 
@@ -44,7 +42,7 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
       } else if (extrType.equalsIgnoreCase(FeatExtrWordEmbedSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrWordEmbedSimilarity(resMngr, oneExtrConf);
       } else 
-        // TODO need to inform about the set of supported extractors
+        // TODO ideally need to inform about the set of supported extractors
         throw new Exception("Unsupported extractor type: " + extrType);
       compList.add(fe);
     }
@@ -95,18 +93,6 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
   
   public SingleFieldFeatExtractor[] getCompExtr() {
     return mCompExtr;
-  }
-  
-  public ArrayList<VectorWrapper> getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception {
-    if (e == null) {
-      throw new RuntimeException("Bug: got null DocEntry");
-    }
-    ArrayList<VectorWrapper> res = new ArrayList<VectorWrapper>();
-    for (SingleFieldFeatExtractor featExtr : mCompExtr) {
-      VectorWrapper tmpRes = featExtr.getFeatureVectorsForInnerProd(e, isQuery);
-      res.add(tmpRes);
-    }
-    return res;
   }
  
   private int mFeatureQty;

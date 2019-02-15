@@ -21,9 +21,10 @@ import java.util.Map;
 import java.io.IOException;
 
 import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
-import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.simil.DistanceFunctions;
 import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
 
 public class VectorWrapper {
@@ -43,17 +44,34 @@ public class VectorWrapper {
     }
   }
   
+  public boolean isSparse() {
+    return mDenseVec == null;
+  }
+  
   public VectorWrapper(float [] vec) {
     mDenseVec = vec;
+    mSparseVector = null;
   }
   
   public VectorWrapper(TrulySparseVector vec) {
     mSparseVector = vec;
+    mDenseVec = null;
   }
   
+  public static float scalarProduct(VectorWrapper vec1, VectorWrapper vec2) throws Exception {
+    if (vec1.isSparse() != vec2.isSparse()) {
+      throw new Exception("Computing scalar product between vectors of incompatible sparsity type!");
+    }
+    if (vec1.isSparse()) {
+      return TrulySparseVector.scalarProduct(vec1.mSparseVector, vec2.mSparseVector);
+    } else {
+      return DistanceFunctions.compScalar(vec1.mDenseVec, vec2.mDenseVec);
+    }
+  }
   
   public static void writeAllFeatureVectorsToStream(String docId, Map<String, String> queryData,
-                                            ForwardIndex[] compIndices, SingleFieldFeatExtractor[] compExtractors,
+                                            ForwardIndex[] compIndices, 
+                                            SingleFieldSingleScoreFeatExtractor[] compExtractors,
                                             OutputStream out) throws Exception  {
     int featExtrQty = compIndices.length;
     
@@ -62,12 +80,11 @@ public class VectorWrapper {
     }
     
     for (int i = 0; i < featExtrQty; ++i) {
-      SingleFieldFeatExtractor extr = compExtractors[i];
+      SingleFieldSingleScoreFeatExtractor extr = compExtractors[i];
       DocEntry docEntry = null;
       ForwardIndex indx = compIndices[i];
-      if (queryData == null) {
-        docEntry = indx.getDocEntry(docId);
-      } else {
+      boolean isQuery = queryData != null;
+      if (isQuery) {
         String fieldName = extr.getFieldName();
 
         String text = queryData.get(fieldName);
@@ -75,8 +92,10 @@ public class VectorWrapper {
           throw new Exception("No query information for field: " + fieldName);
         }
         docEntry = indx.createDocEntry(UtilConst.splitOnWhiteSpace(text), true); // true means including positions
+      } else {
+        docEntry = indx.getDocEntry(docId);
       }
-      VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(docEntry, false);
+      VectorWrapper featVect = extr.getFeatureVectorsForInnerProd(docEntry, isQuery);
       if (null == featVect) {
         throw new RuntimeException("Inner product representation is not available for extractor: " + 
                                   compExtractors[i].getName());
@@ -85,9 +104,6 @@ public class VectorWrapper {
     }
   }
   
-  
-
-  
-  private float[] mDenseVec;
-  private TrulySparseVector mSparseVector;
+  private final float[] mDenseVec;
+  private final TrulySparseVector mSparseVector;
 }

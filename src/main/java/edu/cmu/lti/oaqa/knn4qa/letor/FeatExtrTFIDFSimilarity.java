@@ -32,7 +32,7 @@ import no.uib.cipr.matrix.DenseVector;
  * @author Leonid Boytsov
  *
  */
-public class FeatExtrTFIDFSimilarity extends SingleFieldFeatExtractor  {
+public class FeatExtrTFIDFSimilarity extends SingleFieldSingleScoreFeatExtractor  {
   public static String EXTR_TYPE = "TFIDFSimilarity";
   
   public static String BM25_SIMIL = "bm25";
@@ -107,11 +107,6 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldFeatExtractor  {
   @Override
   public int getDim() {
     return 0;
-  }
-
-  @Override
-  public int getFeatureQty() {
-    return 1;
   }
 
   final String                       mFieldName;

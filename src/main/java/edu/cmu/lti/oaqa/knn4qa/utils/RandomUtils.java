@@ -13,35 +13,28 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.letor;
+package edu.cmu.lti.oaqa.knn4qa.utils;
+
+import java.util.ArrayList;
+import java.util.Random;
 
 
-/**
- * A single-field feature extractor interface (enforcing 
- * implementation of some common functions).
- * 
- * @author Leonid Boytsov
- *
- */
-public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
-
-  /**
-   * @return true if generates a sparse feature vector.
-   */
-  public abstract boolean isSparse();
+public class RandomUtils {
+  public static <ElemType> ArrayList<ElemType> reservoirSampling(ElemType [] inp, int n) {
+    ArrayList<ElemType> res = new ArrayList<ElemType>();
+    
+    for (int i = 0; i < Math.min(n, inp.length); ++i) {
+      res.add(inp[i]);
+    }
+    for (int i = n; i < inp.length; ++i) {
+      int replId = mRandGen.nextInt(i + 1);
+      if (replId < n) {
+        res.set(replId,inp[i]);
+      }
+    }
+    
+    return res;
+  }
   
-  /**
-   * Dimensionality of a dense feature vector.
-   * 
-   * @return number of dimensions.
-   */
-  public abstract int getDim();
-  
-  /**
-   * 
-   * @return the name of the feature field.
-   */
-  public abstract String getFieldName();
-
-  
+  private final static Random mRandGen = new Random(0);
 }
