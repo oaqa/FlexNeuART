@@ -32,6 +32,12 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtra
                                              BM25SimilarityLucene.DEFAULT_BM25_B, 
                                              mFieldIndex);
     
+    mUseIDFWeight = conf.getReqParamBool(USE_TFIDF_WEIGHT);
+    mUseL2Norm = conf.getReqParamBool(USE_L2_NORM);
+    String distType = conf.getReqParamStr(DIST_TYPE);
+    mDist = AbstractDistance.create(distType);
+    mIsCosine = distType.compareToIgnoreCase(AbstractDistance.COSINE) == 0;
+    
     String docEmbedFile = conf.getReqParamStr(DOC_EMBED_FILE);
     mDocEmbed = resMngr.getWordEmbed(mFieldName, docEmbedFile);
     String queryEmbedFile = conf.getParam(QUERY_EMBED_FILE, null);
@@ -44,10 +50,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtra
           Exception("Dimension mismatch btween query and document embeddings for field: " + mFieldName);
       }
     }
-    mUseIDFWeight = conf.getReqParamBool(USE_TFIDF_WEIGHT);
-    mUseL2Norm = conf.getReqParamBool(USE_L2_NORM);
-    
-    mDist = AbstractDistance.create(conf.getReqParamStr(DIST_TYPE));
+
   }
 
   @Override
@@ -56,14 +59,18 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtra
   }
   
   @Override
-  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
-
+  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception {
+    if (!mIsCosine) {
+      throw new Exception("Inner-product representation is available only for the cosine similarity!");
+    }
     if (isQuery) {
       return new VectorWrapper(mQueryEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
-                                                         mUseIDFWeight, mUseL2Norm));
+                                                         mUseIDFWeight, 
+                                                         true /* normalize vectors!!!*/ ));
     } else {
       return new VectorWrapper(mDocEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
-                                                        mUseIDFWeight, mUseL2Norm));
+                                                        mUseIDFWeight, 
+                                                        true /* normalize vectors!!!*/ ));
     }
   }
   
@@ -77,7 +84,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtra
   public int getDim() {
     return mDocEmbed.getDim();
   }
-  
+    
   @Override
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
       throws Exception {
@@ -102,7 +109,10 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtra
       if (v == null) {
         throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
       }
-      v.set(0, -mDist.compute(queryVect, docVec));
+      // For cosine distance, we add one to convert it into the cosine *SIMILARITY*
+      // In such a case, it will be equal to the inner product of the exported normalized
+      // dense vectors.
+      v.set(0, (mIsCosine ? 1:0) - mDist.compute(queryVect, docVec));
     }
     
     return res;
@@ -116,6 +126,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtra
   final EmbeddingReaderAndRecoder mDocEmbed;
   final EmbeddingReaderAndRecoder mQueryEmbed;
   final AbstractDistance    mDist;
+  final boolean             mIsCosine;
 
   @Override
   public String getFieldName() {

@@ -24,6 +24,10 @@ package edu.cmu.lti.oaqa.knn4qa.simil;
  *
  */
 public abstract class AbstractDistance {
+  public static final String L2 = "l2";
+  private static final String EUCLIDEAN = "euclidean";
+  public static final String COSINE = "cosine";
+
   public abstract float compute(float [] vec1, float [] vec2);
   
   /**
@@ -33,9 +37,9 @@ public abstract class AbstractDistance {
   
   public static AbstractDistance create(String name) throws Exception {
     name = name.toLowerCase().trim();
-    if (name.equals("l2") || name.equals("euclidean"))
+    if (name.equals(L2) || name.equals(EUCLIDEAN))
       return new EuclideanDistance();
-    if (name.equals("cosine"))
+    if (name.equals(COSINE))
       return new CosineDistance();
     
     throw new Exception("Unknown distance: " + name);
