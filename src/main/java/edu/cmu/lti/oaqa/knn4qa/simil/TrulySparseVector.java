@@ -15,6 +15,10 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.simil;
 
+import java.util.ArrayList;
+
+import edu.cmu.lti.oaqa.knn4qa.utils.IdValPair;
+
 public class TrulySparseVector {
   
 
@@ -24,6 +28,20 @@ public class TrulySparseVector {
   public TrulySparseVector(int qty) {
     this.mIDs  = new int[qty];
     this.mVals = new float[qty];
+  }
+  
+  public TrulySparseVector(ArrayList<IdValPair> elems) {
+    int qty = elems.size();
+    this.mIDs  = new int[qty];
+    this.mVals = new float[qty];   
+    for (int i = 0; i < qty; ++i) {
+      mIDs[i] = elems.get(i).mId;
+      mVals[i] = elems.get(i).mVal;
+    }
+  }
+  
+  public int size() {
+    return mIDs.length;
   }
   
   public static float scalarProduct(TrulySparseVector v1, TrulySparseVector v2) {

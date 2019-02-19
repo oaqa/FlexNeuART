@@ -46,7 +46,6 @@ import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 
 import ciir.umass.edu.learning.*;
 
-
 /**
  * This class converts a dense vector to DataPoint format of the RankLib library
  * version 2.5.
@@ -486,6 +485,7 @@ public abstract class BaseQueryApp {
       mOptions.addOption(CommonParams.CAND_PROVID_PARAM,       null, true, CandidateProvider.CAND_PROVID_DESC);
       mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,      null, true, CommonParams.PROVIDER_URI_DESC);
       mOptions.addOption(CommonParams.MIN_SHOULD_MATCH_PCT_PARAM, null, true, CommonParams.MIN_SHOULD_MATCH_PCT_DESC);
+      mOptions.addOption(CommonParams.KNN_INTERLEAVE_PARAM,     null, false, CommonParams.KNN_INTERLEAVE_DESC);
     }
     mOptions.addOption(CommonParams.QUERY_CACHE_FILE_PARAM,    null, true, CommonParams.QUERY_CACHE_FILE_DESC);
     mOptions.addOption(CommonParams.QUERY_FILE_PARAM,          null, true, CommonParams.QUERY_FILE_DESC);
@@ -500,9 +500,6 @@ public abstract class BaseQueryApp {
 
     if (useThreadQty)
       mOptions.addOption(CommonParams.THREAD_QTY_PARAM,        null, true, CommonParams.THREAD_QTY_DESC);
-    
-    mOptions.addOption(CommonParams.GIZA_EXPAND_QTY_PARAM,          null, true,  CommonParams.GIZA_EXPAND_QTY_DESC);
-    mOptions.addOption(CommonParams.GIZA_EXPAND_USE_WEIGHTS_PARAM,  null, false, CommonParams.GIZA_EXPAND_USE_WEIGHTS_DESC);
     
     mOptions.addOption(CommonParams.SAVE_STAT_FILE_PARAM,      null, true, CommonParams.SAVE_STAT_FILE_DESC);
     mOptions.addOption(CommonParams.USE_THREAD_POOL_PARAM,     null, false, CommonParams.USE_THREAD_POOL_DESC);
@@ -614,15 +611,6 @@ public abstract class BaseQueryApp {
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
 
-    tmpn = mCmd.getOptionValue(CommonParams.GIZA_EXPAND_QTY_PARAM);
-    if (tmpn != null) {
-      try {
-        mGizaExpandQty = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Number of GIZA-based query-extension terms is not integer: '" + tmpn + "'");
-      }
-    }
-    mGizaExpandUseWeights = mCmd.hasOption(CommonParams.GIZA_EXPAND_USE_WEIGHTS_PARAM);
     mGizaRootDir = mCmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
     tmpn = mCmd.getOptionValue(CommonParams.GIZA_ITER_QTY_PARAM);
     if (null != tmpn) {
@@ -637,6 +625,7 @@ public abstract class BaseQueryApp {
     String embedFilesStr = mCmd.getOptionValue(CommonParams.EMBED_FILES_PARAM);
     
     mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
+    mKnnInterleave = mCmd.hasOption(CommonParams.KNN_INTERLEAVE_PARAM);
 
     if (null != embedFilesStr) {
       mEmbedFiles = embedFilesStr.split(",");
@@ -780,7 +769,8 @@ public abstract class BaseQueryApp {
       for (int ic = 0; ic < mThreadQty; ++ic) {
         mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, 
                                                             mResourceManager,
-                                                            compExtractor
+                                                            compExtractor,
+                                                            mKnnInterleave
                                                             );
       }
              
@@ -979,8 +969,6 @@ public abstract class BaseQueryApp {
   QrelReader   mQrels;
   int          mThreadQty = 1;
   String       mSaveStatFile;     
-  Integer      mGizaExpandQty;
-  boolean      mGizaExpandUseWeights = false;
   String       mGizaRootDir;
   int          mGizaIterQty = -1;
   String       mEmbedDir;
@@ -992,6 +980,7 @@ public abstract class BaseQueryApp {
   String       mExtrTypeNmslib;
   DenseVector  mModelInterm;
   Ranker       mModelFinal;
+  boolean      mKnnInterleave = false;
   boolean      mUseThreadPool = false;
   FeatExtrResourceManager mResourceManager;
   

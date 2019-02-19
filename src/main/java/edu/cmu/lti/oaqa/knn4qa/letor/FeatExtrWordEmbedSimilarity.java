@@ -59,7 +59,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtra
   }
   
   @Override
-  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception {
+  public VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception {
     if (!mIsCosine) {
       throw new Exception("Inner-product representation is available only for the cosine similarity!");
     }

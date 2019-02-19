@@ -81,13 +81,7 @@ public class CommonParams {
     
   public static final String GIZA_ITER_QTY_PARAM = "giza_iter_qty";
   public static final String GIZA_ITER_QTY_DESC = "a number of GIZA iterations";
-
-  public static final String GIZA_EXPAND_QTY_PARAM = "giza_expand_qty";
-  public static final String GIZA_EXPAND_QTY_DESC  = "A number of GIZA-based query-expansion terms";
-  
-  public static final String GIZA_EXPAND_USE_WEIGHTS_PARAM = "giza_wght_expand";
-  public static final String GIZA_EXPAND_USE_WEIGHTS_DESC = "Use translation probabilities as weights during expansion";  
-  
+ 
   public static final String EMBED_DIR_PARAM = "embed_dir";
   public static final String EMBED_DIR_DESC = "a root dir for word embeddings";
   
@@ -97,11 +91,8 @@ public class CommonParams {
   public static final String HIHG_ORDER_FILES_PARAM = "horder_files";
   public static final String HIHG_ORDER_FILES_DESC  = "a comma-separated list of sparse (high-order models) word embedding file names";
  
-  public final static String KNN_QUERIES_DESC  = "a file to save knn-queries in the format that can be processed by NMSLIB";
-  public final static String KNN_QUERIES_PARAM = "knn_queries";    
-  
-  public final static String KNN_SERVICE_PARAM = "nmslib_addr";
-  public final static String KNN_SERVICE_DESC  = "the address (in the format host:port) of the NMSLIB server";
+  public final static String KNN_INTERLEAVE_DESC  = "Used sparse interlleaved vectors for NMSLIB";
+  public final static String KNN_INTERLEAVE_PARAM = "knn_interleave";    
 
   public final static String ROOT_DIR_DESC = "A root dir for the pipeline output";
   public final static String ROOT_DIR_PARAM = "root_dir";

@@ -46,7 +46,7 @@ public abstract class SingleFieldSingleScoreFeatExtractor extends SingleFieldFea
    *         if the inner-product representation is not possible.
    * @throws Exception 
    */
-  public abstract VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception;
+  public abstract VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception;
 
   public int getFeatureQty() {
     return 1;

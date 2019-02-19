@@ -15,17 +15,25 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+
 import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
 
+/**
+ * A few helper functions to write data in the binary format.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
 public class BinWriteUtils {
   
   public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; // we'll do everything on Intel Linux/Mac
   
   /**
-   * Converts an integer to a sequence of bytes in a given order.
+   * Converts a 32-bit integer to a sequence of bytes in a given order.
    * 
    * @param v
    * @return
@@ -34,6 +42,20 @@ public class BinWriteUtils {
     ByteBuffer out = ByteBuffer.allocate(4);
     out.order(BYTE_ORDER);
     out.putInt(v);
+    // The array should be fully filled up
+    return out.array();
+  }
+  
+  /**
+   * Converts a 64-bit integer to a sequence of bytes in a given order.
+   * 
+   * @param v
+   * @return
+   */
+  public static byte[] longToBytes(long v) {
+    ByteBuffer out = ByteBuffer.allocate(8);
+    out.order(BYTE_ORDER);
+    out.putLong(v);
     // The array should be fully filled up
     return out.array();
   }
@@ -57,6 +79,26 @@ public class BinWriteUtils {
     }
     // The array should be fully filled up
     return out.array();
+  }
+  
+  /**
+   * Write a string ID to the stream. To simplify things,
+   * we don't permit non-ASCII characters here for the fear
+   * that non-ASCII characters will not be preserved correctly
+   * by NMSLIB quqery server.
+   * 
+   * @param id      input string
+   * @param out     output stream
+   * @throws Exception
+   */
+  public static void writeStringId(String id, 
+                                   OutputStream out) throws Exception {
+    // Here we make a fat assumption that the string doesn't contain any non-ascii characters
+    if (StringUtilsLeo.hasNonAscii(id)) {
+      throw new Exception("Invalid id, contains non-ASCII chars: " + id);
+    }
+    out.write(BinWriteUtils.intToBytes(id.length()));
+    out.write(id.getBytes());
   }
   
 }

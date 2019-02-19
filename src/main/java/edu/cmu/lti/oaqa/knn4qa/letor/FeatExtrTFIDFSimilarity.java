@@ -63,7 +63,7 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldSingleScoreFeatExtractor
   }
   
   @Override
-  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) {
+  public VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) {
     return new VectorWrapper(mSimilObj.getBM25SparseVector(e, isQuery, true /* share IDF */));
   }
 

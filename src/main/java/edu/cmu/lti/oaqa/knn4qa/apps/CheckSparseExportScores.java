@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -29,25 +30,29 @@ import org.kohsuke.args4j.ParserProperties;
 import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
 import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
+
 import no.uib.cipr.matrix.DenseVector;
 
 /**
- * A class to help check that the inner product of vectors exported NMSLIB dense/sparse
- * fusion space (sparse_dense_fusion) reproduce the original features scores (or 
- * are very close). This checker works only for *SINGLE-FEATURE* extractor.
+ * A class to help check that the inner product of vectors exported NMSLIB 
+ * binary sparse space reproduces the original features scores (or 
+ * are very close).
  * 
  * @author Leonid Boytsov
  *
  */
-public class CheckDenseSparseExportScores {
+public class CheckSparseExportScores {
   public static final class Args {
     
     public final static String MAX_NUM_DOC_DESC  = "maximum number of documents to use";
@@ -75,8 +80,14 @@ public class CheckDenseSparseExportScores {
     @Option(name = "-" + MAX_NUM_DOC_PARAM, required = true, usage = MAX_NUM_DOC_DESC)
     int mMaxNumDoc;
     
+    @Option(name = "-model_file", required = true, usage = "Linear-model file used to compute a fusion score.")
+    String mLinModelFile;
+    
     @Option(name = "-eps_diff", required = true, usage = "The maximum score difference considered to be substantial.")
     float mEpsDiff;
+    
+    @Option(name = "-verbose", usage = "Print some extra debug info")
+    boolean mVerbose;
   }
   
   public static void main(String argv[]) {
@@ -99,16 +110,20 @@ public class CheckDenseSparseExportScores {
     
     try {
 
-      int compQty = 0, diffQty = 0;
-      
       FeatExtrResourceManager resourceManager = 
           new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
+      
+      DenseVector compWeights = FeatureExtractor.readFeatureWeights(args.mLinModelFile);
+      
+      System.out.println("Weights: " + VectorUtils.toString(compWeights));
       
       CompositeFeatureExtractor compositeFeatureExtractor = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);
       
       SingleFieldFeatExtractor[] allExtractors = compositeFeatureExtractor.getCompExtr();    
       int featExtrQty = allExtractors.length;
       SingleFieldSingleScoreFeatExtractor compExtractors[] = new SingleFieldSingleScoreFeatExtractor[featExtrQty];
+      
+      DenseVector unitWeights = VectorUtils.fill(1, featExtrQty);
       
       for (int i = 0; i < featExtrQty; ++i) {
         if (!(allExtractors[i] instanceof SingleFieldSingleScoreFeatExtractor)) {
@@ -134,6 +149,8 @@ public class CheckDenseSparseExportScores {
       inpQueryBuffer = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args.mQueryFile)));
         
       String queryXML = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer);        
+      
+      int diffQty = 0, compQty = 0;
         
       for (int queryNo = 0; queryXML!= null && queryNo < args.mMaxNumQuery; 
             queryXML = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer), ++queryNo) {
@@ -148,59 +165,44 @@ public class CheckDenseSparseExportScores {
         }
         
         String queryId = queryFields.get(UtilConst.TAG_DOCNO);
-        
-        for (int k = 0; k < featExtrQty; ++k) {
-          SingleFieldSingleScoreFeatExtractor oneExtr = compExtractors[k];
-          ForwardIndex                        oneIndx = compIndices[k];
-          String                              fieldName = oneExtr.getFieldName();
+       
+        Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(docIdSample, queryFields);
+
+        for (int i = 0; i < docIdSample.size(); ++i) {
+          String docId = docIdSample.get(i);
           
-          Map<String, DenseVector> res = oneExtr.getFeatures(docIdSample, queryFields);
           
-          String queryText = queryFields.get(fieldName);
+          TrulySparseVector queryVect = VectorWrapper.createAnInterleavedFeatureVect(null, queryFields, 
+                                                                                    compIndices, compExtractors, 
+                                                                                    compWeights);
           
-          if (queryText == null) {
-            System.out.println("No query text, query ID:" + queryId + " field: "+ fieldName);
-            queryText = "";
-          }
-         
-          DocEntry queryEntry = oneIndx.createDocEntry(UtilConst.splitOnWhiteSpace(queryText), true); // true means including positions
+          TrulySparseVector docVect = VectorWrapper.createAnInterleavedFeatureVect(docId, null, 
+                                                                                   compIndices, compExtractors, 
+                                                                                   unitWeights);
           
-          for (int i = 0; i < docIdSample.size(); ++i) {
-            String docId = docIdSample.get(i);
-            DocEntry docEntry = oneIndx.getDocEntry(docId);
-            
-            VectorWrapper docVect = oneExtr.getFeatInnerProdVector(docEntry, false);         
-            VectorWrapper queryVect = oneExtr.getFeatInnerProdVector(queryEntry, true);
-            
-            float innerProdVal = VectorWrapper.scalarProduct(docVect, queryVect);
-            DenseVector oneFeatVecScore = res.get(docId);
-            if (oneFeatVecScore == null) {
-              throw new Exception("Bug: no score for " + docId + " extractor: " + oneExtr.getName() + 
-                                 " field: " + oneExtr.getFieldName());
-            }
-            if (oneFeatVecScore.size() != 1) {
-              throw new Exception("Bug: feature vector for " + docId + " extractor: " + oneExtr.getName() + 
-                  " field: " + oneExtr.getFieldName() + " has size " + oneFeatVecScore.size() + " but we expect size one!");
-            }
-            float featureVal = (float) oneFeatVecScore.get(0);
-            
-            boolean isDiff = Math.abs(innerProdVal - featureVal) > args.mEpsDiff;  
-            compQty++;
-            diffQty += isDiff ? 1 : 0;
-            
-            System.out.println(String.format("Query id: %s Doc id: %s field name: %s feature val: %g inner product val: %g extractor: %s %s",
-                                            queryId, docId, fieldName, featureVal, innerProdVal, oneExtr.getName(),
+          float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);    
+          DenseVector featVect = res.get(docId);
+          float featBasedVal = (float)compWeights.dot(featVect);
+          
+          boolean isDiff = Math.abs(innerProdVal - featBasedVal) > args.mEpsDiff;  
+          compQty++;
+          diffQty += isDiff ? 1 : 0;
+          
+
+          
+          System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
+                                            queryId, docId, featBasedVal, innerProdVal,
                                             isDiff ? "SIGN. DIFF." : ""));
-         }
+          
+          if (args.mVerbose) {
+            System.out.println("Weights: "+ VectorUtils.toString(compWeights));
+            System.out.println("Features: "+ VectorUtils.toString(featVect));
+          }
           
         }
-        
-        System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));
-        
       }
-
-      System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));
       
+      System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));
       if (diffQty != 0) {
         System.err.print("Check failed!");
         System.exit(1);

@@ -30,13 +30,20 @@ import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.similarity.QueryService;
 import edu.cmu.lti.oaqa.similarity.QueryService.Client;
 import edu.cmu.lti.oaqa.similarity.ReplyEntry;
+import no.uib.cipr.matrix.DenseVector;
 
 /**
- * NMSLIB-based KNN to return k-closest entries.
+ * NMSLIB-based KNN to return k-closest entries. It currently supports
+ * only two types of spaces, which exist only the branch 
+ * https://github.com/nmslib/nmslib/tree/nmslib4a_postdoc: 
+ * 
+ * 1) a dense-sparse fusion space, which stores a mix of sparse and dense vectors.
+ * 2) a sparse space, where all dense and sparse vector components are interleaved.
  * 
  * @author Leonid Boytsov
  *
@@ -48,18 +55,33 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   final private SingleFieldSingleScoreFeatExtractor  mCompExtractors[];
   final private ForwardIndex                  mCompIndices[];
   final int                                   mFeatExtrQty;
+  final DenseVector                           mCompQueryWeights;
 
+  /**
+   * Constructor.
+   * 
+   * @param knnServiceURL       an address/port for the NMSLIB server.
+   * @param resourceManager     a resource manager.
+   * @param featExtr            a composite feature extractor.
+   * @param sparseInterleave    Use the interleaved representation for the query
+   *                            instead of a sparse-dense fusion space representation.
+   * 
+   * @throws Exception
+   */
   public NmslibKNNCandidateProvider(String knnServiceURL, 
-      FeatExtrResourceManager resourceManager, 
-      CompositeFeatureExtractor featExtr) throws Exception {
+                                    FeatExtrResourceManager resourceManager, 
+                                    CompositeFeatureExtractor featExtr,
+                                    boolean sparseInterleave) throws Exception {
 
     String host = null;
     int    port = -1;
     
-    mResourceManager = resourceManager;     
-
+    mResourceManager = resourceManager;   
+    
     SingleFieldFeatExtractor[] allExtractors = featExtr.getCompExtr();
     mFeatExtrQty = allExtractors.length;
+    
+    mCompQueryWeights = sparseInterleave ? VectorUtils.fill(1, mFeatExtrQty) : null;
     
     int featExtrQty = allExtractors.length;
     mCompExtractors = new SingleFieldSingleScoreFeatExtractor[featExtrQty];
@@ -134,12 +156,21 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     
     ByteArrayOutputStream  out = new ByteArrayOutputStream();
     
-    VectorWrapper.writeAllFeatureVectorsToStream(null, 
-                                                queryData, 
-                                                mCompIndices, 
-                                                mCompExtractors, 
-                                                out);
-   
+    if (null == mCompQueryWeights) {
+      VectorWrapper.writeAllVectorsToNMSLIBStream(null, 
+                                                  queryData, 
+                                                  mCompIndices, 
+                                                  mCompExtractors, 
+                                                  out);
+    } else {
+      VectorWrapper.writeAllVectorsInterleavedToNMSLIBStream(null, 
+                                                            queryData, 
+                                                            mCompIndices, 
+                                                            mCompExtractors, 
+                                                            mCompQueryWeights, 
+                                                            out);
+    }
+     
     java.nio.ByteBuffer  queryObj = java.nio.ByteBuffer.wrap(out.toByteArray());
 
     // queyrObj MUST be byteBuffer

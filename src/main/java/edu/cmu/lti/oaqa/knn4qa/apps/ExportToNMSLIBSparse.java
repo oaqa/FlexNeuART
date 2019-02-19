@@ -33,21 +33,23 @@ import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
+import no.uib.cipr.matrix.DenseVector;
 
 /**
- * A class that exports a number of query and/or document feature vectors to the NMSLIB dense/sparse
- * fusion space (sparse_dense_fusion)
+ * A class that exports a number of query and/or document feature vectors to the 
+ * NMSLIB (binary) sparse space. 
  * 
  * @author Leonid Boytsov
  *
  */
-public class ExportToNMSLIBDenseSparseFusion {
+public class ExportToNMSLIBSparse {
   public static final class Args {
     
     @Option(name = "-" + CommonParams.MEMINDEX_PARAM, required = true, usage = CommonParams.MEMINDEX_DESC)
@@ -67,6 +69,9 @@ public class ExportToNMSLIBDenseSparseFusion {
 
     @Option(name = "-out_file", required = true, usage = "Binary output file")
     String mOutFile;
+    
+    @Option(name = "-model_file", usage = "Linear-model file used to compute a fusion score (we don't need it for queries).")
+    String mLinModelFile;
   }
   
   public static void main(String argv[]) {
@@ -91,6 +96,7 @@ public class ExportToNMSLIBDenseSparseFusion {
       
       BufferedReader inpQueryBuffer = null;
       ArrayList<String> queries = null;
+      DenseVector compWeights = null;
       
       if (args.mQueryFile != null) {
         inpQueryBuffer = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args.mQueryFile)));
@@ -105,9 +111,20 @@ public class ExportToNMSLIBDenseSparseFusion {
         }
         
         inpQueryBuffer.close();
+        
+      } else {
+        
+        if (args.mLinModelFile == null) {
+          System.err.println("Document generation requires the model file");
+          parser.printUsage(System.err);
+          System.exit(1);
+        }
+        compWeights = FeatureExtractor.readFeatureWeights(args.mLinModelFile);
       }
       
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
+      
+      
       
       FeatExtrResourceManager resourceManager = 
           new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
@@ -117,6 +134,8 @@ public class ExportToNMSLIBDenseSparseFusion {
       SingleFieldFeatExtractor[] allExtractors = featExtr.getCompExtr();    
       int featExtrQty = allExtractors.length;
       SingleFieldSingleScoreFeatExtractor compExtractors[] = new SingleFieldSingleScoreFeatExtractor[featExtrQty];
+      
+      DenseVector unitWeights = VectorUtils.fill(1, featExtrQty);
       
       for (int i = 0; i < featExtrQty; ++i) {
         if (!(allExtractors[i] instanceof SingleFieldSingleScoreFeatExtractor)) {
@@ -140,18 +159,13 @@ public class ExportToNMSLIBDenseSparseFusion {
       System.out.println("Writing the number of entreis (" + entryQty + ") to the output file");
       
       out.write(BinWriteUtils.intToBytes(entryQty));
-      out.write(BinWriteUtils.intToBytes(featExtrQty));
-      
-      for (SingleFieldFeatExtractor oneComp : compExtractors) {
-        out.write(BinWriteUtils.intToBytes(oneComp.isSparse() ? 1 : 0));
-        out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
-      }
+
       
       if (queries == null) {    
         int docNum = 0;
         for (String docId : allDocIds) {
-          writeStringId(docId, out);
-          VectorWrapper.writeAllVectorsToNMSLIBStream(docId, null, compIndices, compExtractors, out);
+          BinWriteUtils.writeStringId(docId, out);
+          VectorWrapper.writeAllVectorsInterleavedToNMSLIBStream(docId, null, compIndices, compExtractors, compWeights, out);
           ++docNum;
           if (docNum % UtilConst.PROGRESS_REPORT_QTY == 0) {
             System.out.println("Exported " + docNum + " docs");
@@ -176,8 +190,10 @@ public class ExportToNMSLIBDenseSparseFusion {
             System.exit(1);
           }
           
-          writeStringId(queryId, out);
-          VectorWrapper.writeAllVectorsToNMSLIBStream(queryId, queryFields, compIndices, compExtractors, out);
+          BinWriteUtils.writeStringId(queryId, out);
+          VectorWrapper.writeAllVectorsInterleavedToNMSLIBStream(queryId, queryFields, 
+                                                                 compIndices, compExtractors, 
+                                                                 unitWeights, out);
         }
         System.out.println("Exported " + queries.size() + " queries");
       }
@@ -198,13 +214,5 @@ public class ExportToNMSLIBDenseSparseFusion {
     }
   }
 
-  private static void writeStringId(String id, BufferedOutputStream out) throws Exception {
-    
-    // Here we make a fat assumption that the string doesn't contain any non-ascii characters
-    if (StringUtilsLeo.hasNonAscii(id)) {
-      throw new Exception("Invalid id, contains non-ASCII chars: " + id);
-    }
-    out.write(BinWriteUtils.intToBytes(id.length()));
-    out.write(id.getBytes());
-  }
+
 }

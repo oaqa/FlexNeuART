@@ -232,7 +232,7 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
   }
 
   @Override
-  public VectorWrapper getFeatureVectorsForInnerProd(DocEntry e, boolean isQuery) throws Exception {
+  public VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception {
 
     if (mFlipDocQuery) {
       isQuery = !isQuery;
