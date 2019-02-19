@@ -27,7 +27,7 @@ import com.google.common.base.Joiner;
 import edu.cmu.lti.oaqa.knn4qa.embed.*;
 import edu.cmu.lti.oaqa.knn4qa.giza.*;
 import edu.cmu.lti.oaqa.knn4qa.memdb.*;
-import edu.cmu.lti.oaqa.knn4qa.simil.*;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.*;
 import net.openhft.koloboke.collect.map.hash.HashIntObjMap;
 import net.openhft.koloboke.collect.map.hash.HashIntObjMaps;
 import no.uib.cipr.matrix.DenseVector;

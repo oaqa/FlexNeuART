@@ -9,7 +9,7 @@ import edu.cmu.lti.oaqa.knn4qa.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.knn4qa.giza.TranRecSortByProb;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 

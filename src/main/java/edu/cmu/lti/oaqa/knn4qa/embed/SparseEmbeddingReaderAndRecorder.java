@@ -41,7 +41,7 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
-import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 

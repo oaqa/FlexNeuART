@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.simil.*;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 import net.openhft.koloboke.collect.map.hash.*;

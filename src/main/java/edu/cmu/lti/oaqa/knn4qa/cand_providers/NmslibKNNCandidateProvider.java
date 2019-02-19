@@ -32,9 +32,9 @@ import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
-import edu.cmu.lti.oaqa.similarity.QueryService;
-import edu.cmu.lti.oaqa.similarity.QueryService.Client;
-import edu.cmu.lti.oaqa.similarity.ReplyEntry;
+import edu.cmu.lti.oaqa.nmslib.QueryService;
+import edu.cmu.lti.oaqa.nmslib.ReplyEntry;
+import edu.cmu.lti.oaqa.nmslib.QueryService.Client;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

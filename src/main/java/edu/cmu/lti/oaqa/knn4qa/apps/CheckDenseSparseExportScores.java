@@ -195,8 +195,6 @@ public class CheckDenseSparseExportScores {
           
         }
         
-        System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));
-        
       }
 
       System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));

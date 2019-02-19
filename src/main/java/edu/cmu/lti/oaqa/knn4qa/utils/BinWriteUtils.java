@@ -19,8 +19,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-
-import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 
 /**
  * A few helper functions to write data in the binary format.

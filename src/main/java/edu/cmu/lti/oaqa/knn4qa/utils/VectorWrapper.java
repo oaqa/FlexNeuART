@@ -25,9 +25,8 @@ import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.simil.DistanceFunctions;
-import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
-
+import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

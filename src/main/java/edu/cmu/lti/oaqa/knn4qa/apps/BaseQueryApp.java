@@ -41,7 +41,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorExperOld;
 import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
-import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 
 import ciir.umass.edu.learning.*;

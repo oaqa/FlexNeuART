@@ -37,7 +37,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.simil.TrulySparseVector;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
@@ -200,6 +200,7 @@ public class CheckSparseExportScores {
           }
           
         }
+      
       }
       
       System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));

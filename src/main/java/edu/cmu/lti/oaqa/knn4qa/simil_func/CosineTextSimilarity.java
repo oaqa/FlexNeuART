@@ -1,4 +1,4 @@
-package edu.cmu.lti.oaqa.knn4qa.simil;
+package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;

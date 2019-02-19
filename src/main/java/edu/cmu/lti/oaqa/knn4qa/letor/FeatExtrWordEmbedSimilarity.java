@@ -8,10 +8,10 @@ import java.util.Map;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.simil.AbstractDistance;
-import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLucene;
-import edu.cmu.lti.oaqa.knn4qa.simil.BM25SimilarityLuceneNorm;
-import edu.cmu.lti.oaqa.knn4qa.simil.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.AbstractDistance;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
