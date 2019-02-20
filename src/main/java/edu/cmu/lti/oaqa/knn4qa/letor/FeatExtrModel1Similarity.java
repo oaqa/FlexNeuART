@@ -154,13 +154,7 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
 
     int queryWordQty = queryEntry.mWordIds.length;
 
-    if (false && mTopTranScoresPerDocWordQty == Integer.MAX_VALUE) {
-      // Computing unpruned score
-      // TODO for some weird reason this produces different results
-      // compared to the other branch with all pruning settings
-      // set to their default values (i.e. Integer.MAX_VALUE for top 
-      // score/translation variant numbers and zero for minimum
-      // translation score.
+    if ( mTopTranScoresPerDocWordQty == Integer.MAX_VALUE) {
       double queryWordScores[] = computeWordScores(queryEntry.mWordIds, docEntry);
       
       for (int iq=0; iq < queryWordQty;++iq) {                                        
