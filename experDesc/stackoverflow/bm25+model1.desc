@@ -5,9 +5,12 @@ experDesc/stackoverflow/bm25=text+model1=text.json dev2 bm25=text+model1=text
 experDesc/stackoverflow/bm25=text+model1=text_unlemm.json dev2 bm25=text+model1=text_unlemm
 
 experDesc/stackoverflow/bm25=text+model1=text_unlemm_topTranQty=4.json dev2 bm25=text+model1=text_unlemm_topTranQty=4
+experDesc/stackoverflow/bm25=text+model1=text_unlemm_topTranQty=6.json dev2 bm25=text+model1=text_unlemm_topTranQty=6
 experDesc/stackoverflow/bm25=text+model1=text_unlemm_topTranQty=8.json dev2 bm25=text+model1=text_unlemm_topTranQty=8
 experDesc/stackoverflow/bm25=text+bm25=text_unlemm+model1=text_unlemm_topTranQty=8.json dev2 bm25=text+bm25=text_unlemm+model1=text_unlemm_topTranQty=8 
 
+experDesc/stackoverflow/bm25=text+model1=text_topTranQty=4.json dev2 bm25=text+model1=text_topTranQty=4
+experDesc/stackoverflow/bm25=text+model1=text_topTranQty=6.json dev2 bm25=text+model1=text_topTranQty=6
 experDesc/stackoverflow/bm25=text+model1=text_topTranQty=8.json dev2 bm25=text+model1=text_topTranQty=8
 experDesc/stackoverflow/bm25=text+model1=text_topTranQty=10.json dev2 bm25=text+model1=text_topTranQty=10
 experDesc/stackoverflow/bm25=text+model1=text_topTranQty=12.json dev2 bm25=text+model1=text_topTranQty=12
