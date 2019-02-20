@@ -156,7 +156,7 @@ public class ExportToNMSLIBSparse {
       
       int entryQty = queries == null ?  allDocIds.length  : queries.size();
       
-      System.out.println("Writing the number of entreis (" + entryQty + ") to the output file");
+      System.out.println("Writing the number of entries (" + entryQty + ") to the output file");
       
       out.write(BinWriteUtils.intToBytes(entryQty));
 

@@ -17,7 +17,9 @@
     "probSelfTran" : "0.05f",
     "lambda" : "0.1f",
     "minModel1Prob" : "2.5e-3f",
-    "topTranQty" : 10
+    "topTranScoresPerDocWordQty" : 10,
+    "topTranCandWordQty" : 20,
+    "minTranScorePerDocWord" : 0.01
   }
  }
 ]

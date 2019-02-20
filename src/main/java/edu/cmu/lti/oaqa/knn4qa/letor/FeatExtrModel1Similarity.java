@@ -2,6 +2,7 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,9 +11,13 @@ import edu.cmu.lti.oaqa.knn4qa.giza.TranRecSortByProb;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
+import edu.cmu.lti.oaqa.knn4qa.utils.IdValPair;
+import edu.cmu.lti.oaqa.knn4qa.utils.IdValParamByValDesc;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
-import no.uib.cipr.matrix.DenseVector;
 
+import no.uib.cipr.matrix.DenseVector;
+import net.openhft.koloboke.collect.map.hash.HashIntIntMap;
+import net.openhft.koloboke.collect.map.hash.HashIntIntMaps;
 import net.openhft.koloboke.collect.map.hash.HashIntObjMap;
 import net.openhft.koloboke.collect.map.hash.HashIntObjMaps;
 import net.openhft.koloboke.collect.set.hash.HashIntSet;
@@ -28,7 +33,9 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
   public static String LAMBDA = "lambda";
   public static String OOV_PROB = "ProbOOV";
   public static String FLIP_DOC_QUERY = "flipDocQuery";
-  public static String TOP_TRANQTY = "topTranQty";
+  public static String TOP_TRAN_SCORES_PER_DOCWORD_QTY = "topTranScoresPerDocWordQty";
+  public static String TOP_TRAN_CANDWORD_QTY = "topTranCandWordQty";
+  public static String MIN_TRAN_SCORE_PERDOCWORD = "minTranScorePerDocWord";
  
   @Override
   public String getName() {
@@ -46,8 +53,18 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
     mGizaIterQty = conf.getReqParamInt(GIZA_ITER_QTY);
     mProbSelfTran = conf.getReqParamFloat(PROB_SELF_TRAN);
     mMinModel1Prob = conf.getReqParamFloat(MIN_MODEL1_PROB);
-    mTopTranQty = conf.getParam(TOP_TRANQTY, Integer.MAX_VALUE);
+    
+    // If these guys aren't default, they can't be set too high, e.g., > 1e6
+    // There might be an integer overflow then
+    mTopTranScoresPerDocWordQty = conf.getParam(TOP_TRAN_SCORES_PER_DOCWORD_QTY, Integer.MAX_VALUE);
+    mTopTranCandWordQty = conf.getParam(TOP_TRAN_CANDWORD_QTY, Integer.MAX_VALUE);
+   // This default is a bit adhoc, but typically we are not interested in tran scores that are these small
+    mMinTranScorePerDocWord = conf.getParam(MIN_TRAN_SCORE_PERDOCWORD, 1e-6f); 
 
+    System.out.println("Computing " + mTopTranScoresPerDocWordQty + 
+                        " top per doc-word scores from top " + mTopTranCandWordQty + 
+                        " translations per document word, ignoring scores < " + mMinTranScorePerDocWord);
+    
     mLambda = conf.getReqParamFloat(LAMBDA);
     mProbOOV = conf.getParam(OOV_PROB, 1e-9f); 
     
@@ -133,28 +150,33 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
   
   private double computeOverallScore(DocEntry queryEntry, DocEntry docEntry) throws Exception { 
     double logScore = 0;
-    
-    double queryWordScores[] = computeWordScores(queryEntry.mWordIds, docEntry);
+
 
     int queryWordQty = queryEntry.mWordIds.length;
 
-    if (mTopTranQty == Integer.MAX_VALUE) {
-      // Computing unpruned scores
+    if (false && mTopTranScoresPerDocWordQty == Integer.MAX_VALUE) {
+      // Computing unpruned score
+      // TODO for some weird reason this produces different results
+      // compared to the other branch with all pruning settings
+      // set to their default values (i.e. Integer.MAX_VALUE for top 
+      // score/translation variant numbers and zero for minimum
+      // translation score.
+      double queryWordScores[] = computeWordScores(queryEntry.mWordIds, docEntry);
+      
       for (int iq=0; iq < queryWordQty;++iq) {                                        
         logScore += queryEntry.mQtys[iq] * queryWordScores[iq];
       }
     } else {
-      HashIntSet   allAddWordIdsHash = HashIntSets.newMutableSet();
-      // Using only words with mTopTranQty highest translation probabilities
-      for (int wordId : docEntry.mWordIds) {
-        for (int dstWordId : getTopWordIds(wordId)) {
-          allAddWordIdsHash.add(dstWordId);
-        }
+      // Map query IDs to QTYs
+      HashIntIntMap queryWordIdQtys = HashIntIntMaps.newMutableMap();
+      for (int iq=0; iq < queryWordQty;++iq) {   
+        queryWordIdQtys.put(queryEntry.mWordIds[iq], queryEntry.mQtys[iq]);
       }
       
-      for (int iq=0; iq < queryWordQty;++iq) {  
-        if (allAddWordIdsHash.contains(queryEntry.mWordIds[iq])) {
-          logScore += queryEntry.mQtys[iq] * queryWordScores[iq];
+      for (IdValPair topIdScore : getTopWordIdsAndScores(docEntry)) {
+        int wid = topIdScore.mId;
+        if (queryWordIdQtys.containsKey(wid)) {
+          logScore +=  queryWordIdQtys.get(wid) * topIdScore.mVal;
         }
       }
     }
@@ -164,14 +186,58 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
     return logScore / queryNorm;
   }
   
+  private ArrayList<IdValPair> getTopWordIdsAndScores(DocEntry doc) throws Exception {
+    HashIntSet   wordIdsHash = HashIntSets.newMutableSet();
+    
+    for (int wid : doc.mWordIds) {
+      for (int dstWordId : getTopCandWordIds(wid)) {
+        wordIdsHash.add(dstWordId);
+      }
+    }
+    
+    int topCandWordIds[] = wordIdsHash.toIntArray();
+    double topCandWorIdsScores[] = computeWordScores(topCandWordIds, doc);
+    
+    ArrayList<IdValPair> res = new ArrayList<IdValPair>();
+    
+    for (int i = 0; i < topCandWordIds.length; ++i) {
+      double score = topCandWorIdsScores[i];
+      if (score > mMinTranScorePerDocWord) {
+        res.add(new IdValPair(topCandWordIds[i], (float)score));
+      }
+    }
+    
+    res.sort(mDescByValComp);
+
+    if (mTopTranScoresPerDocWordQty < Integer.MAX_VALUE) {
+    
+      int maxQty = doc.mWordIds.length * mTopTranScoresPerDocWordQty;
+      while (res.size() > maxQty) {
+        res.remove(res.size()-1);
+      }
+      
+    }
+    /*
+    for (int i = 0; i < res.size(); ++i) {
+      System.out.println(res.get(i).toString());
+    }
+    System.out.println("=============");
+    */
+    
+    return res;
+   
+  }
+  
   /**
-   * Return words with highest translation scores +
-   * the word itself.
+   * Return words with highest translation scores + the word itself (with respect to a specific word).
+   * The result size is at most {@link mTopTranCandWordQty}.
+   * This function caches results in a thread-safe fashion.
    * 
-   * @param wordId  a word ID
+   * @param wordId       a word ID
+   * 
    * @return an integer array of word IDs.
    */
-  private synchronized Integer[] getTopWordIds(int wordId) {
+  private synchronized Integer[] getTopCandWordIds(int wordId) {
     
     if (!mTopTranCache.containsKey(wordId)) {
       
@@ -197,13 +263,12 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
         }
         Arrays.sort(tranRecSortedByProb); // Descending by probability
         
-        int resQty = Math.min(mTopTranQty, tranRecSortedByProb.length);
+        int resQty = Math.min(mTopTranCandWordQty, tranRecSortedByProb.length);
         res = new Integer[resQty];
         for (int i = 0; i < resQty; ++i) {
           res[i] = tranRecSortedByProb[i].mDstWorId; 
-          //System.out.println(tranRecSortedByProb[i].mProb);
         }
-        //System.out.println("============");
+
       }
       
       mTopTranCache.put(wordId, res);
@@ -245,30 +310,22 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
  
   }
 
-  private VectorWrapper getDocFeatureVectorsForInnerProd(DocEntry e) throws Exception {
-    // 1. Get terms with sufficiently high translation probability
-    HashIntSet   allAddWordIdsHash = HashIntSets.newMutableSet();
+  private VectorWrapper getDocFeatureVectorsForInnerProd(DocEntry doc) throws Exception {
+    // 1. Get terms with sufficiently high translation probability with
+    //    respect to the document
+    ArrayList<IdValPair> topIdsScores = getTopWordIdsAndScores(doc);
     
-    for (int wordId : e.mWordIds) {
-      for (int dstWordId : getTopWordIds(wordId)) {
-        allAddWordIdsHash.add(dstWordId);
-      }
-    }
+    Collections.sort(topIdsScores); // ascending by ID
     
-    int wqty = allAddWordIdsHash.size();
+    int wqty = topIdsScores.size();
+    
     TrulySparseVector res = new TrulySparseVector(wqty);
+    
     int k = 0;
-    for (int wordId : allAddWordIdsHash) {
-      res.mIDs[k++] = wordId;
-    }
-    
-    Arrays.sort(res.mIDs);
-    
-    double scores[] = computeWordScores(res.mIDs, e);
-
-    // 2. Compute their respective translation scores
-    for (k = 0; k < wqty; ++k) {
-      res.mVals[k] = (float)scores[k];
+    for (IdValPair e : topIdsScores) {
+      res.mIDs[k] = e.mId;
+      res.mVals[k] = e.mVal;
+      k++;
     }
     
     return new VectorWrapper(res);
@@ -311,6 +368,12 @@ public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtracto
   final float           mLambda;
   final float           mProbOOV;
   final boolean         mFlipDocQuery;
-  final int             mTopTranQty;
+  
+  final int             mTopTranScoresPerDocWordQty;
+  final int             mTopTranCandWordQty;
+  final float           mMinTranScorePerDocWord;
+  
+  final IdValParamByValDesc mDescByValComp = new IdValParamByValDesc();
+  
   final HashIntObjMap<Integer []> mTopTranCache;
 }

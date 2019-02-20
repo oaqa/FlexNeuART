@@ -15,6 +15,12 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
+/**
+ * A an id-value pair class.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
 public class IdValPair implements Comparable<IdValPair> {
   
   public final int mId;
@@ -24,7 +30,13 @@ public class IdValPair implements Comparable<IdValPair> {
     this.mId = mId;
     this.mVal = mVal;
   }
+  
+  @Override
+  public String toString() {
+    return mId + ":" + mVal;
+  }
 
+  // Smaller ID go first
   @Override
   public int compareTo(IdValPair o) {
     return mId - o.mId;

@@ -13,19 +13,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.giza;
+package edu.cmu.lti.oaqa.knn4qa.utils;
 
-public class TranRecSortByProb implements Comparable<TranRecSortByProb> {
-  public TranRecSortByProb(int mDstWorId, float mProb) {
-    this.mDstWorId = mDstWorId;
-    this.mProb = mProb;
-  }
-  final public int     mDstWorId;
-  final public float   mProb;
+import java.util.Comparator;
+
+public class IdValParamByValDesc implements Comparator<IdValPair> {
+
   @Override
-  public int compareTo(TranRecSortByProb o) {
-    // If mProb > o.mProb, we return -1
-    // that is higher-probability entries will go first
-    return (int) Math.signum(o.mProb - mProb);
+  public int compare(IdValPair e1, IdValPair e2) {
+    
+    // If e1.mVal > e2.mVal, we return -1
+    // that is larger-value entries will go first
+    return (int) Math.signum(e2.mVal - e1.mVal);
   }
+
 }
