@@ -18,7 +18,7 @@
     "lambda" : "0.1f",
     "minModel1Prob" : "1e-3f",
     "topTranScoresPerDocWordQty" : 6,
-    "topTranCandWordQty" : 8,
+    "topTranCandWordQty" : 12,
     "minTranScorePerDocWord" : 0.01
   }
  }
