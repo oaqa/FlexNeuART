@@ -4,13 +4,12 @@ experDesc/compr/bm25=text+bm25=text_unlemm.json dev2 bm25=text+bm25=text_unlemm
 experDesc/compr/bm25=text+model1=text.json dev2 bm25=text+model1=text
 experDesc/compr/bm25=text+model1=text_unlemm.json dev2 bm25=text+model1=text_unlemm
 
+experDesc/compr/bm25=text+model1=text_topTranQty=4.json dev2 bm25=text+model1=text_topTranQty=4
+experDesc/compr/bm25=text+model1=text_topTranQty=6.json dev2 bm25=text+model1=text_topTranQty=6
+experDesc/compr/bm25=text+model1=text_topTranQty=8.json dev2 bm25=text+model1=text_topTranQty=8
+experDesc/compr/bm25=text+model1=text_topTranQty=10.json dev2 bm25=text+model1=text_topTranQty=10
 
-experDesc/compr/bm25=text+model1=text_topTranQty=4.json dev2 bm25=text+model1=text_topTranQty=4.json
-experDesc/compr/bm25=text+model1=text_topTranQty=6.json dev2 bm25=text+model1=text_topTranQty=6.json
-experDesc/compr/bm25=text+model1=text_topTranQty=8.json dev2 bm25=text+model1=text_topTranQty=8.json
-experDesc/compr/bm25=text+model1=text_topTranQty=10.json dev2 bm25=text+model1=text_topTranQty=10.json
-
-experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=4.json dev2 bm25=text+model1=text_unlemm_topTranQty=4.json
-experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=6.json dev2 bm25=text+model1=text_unlemm_topTranQty=6.json
-experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=8.json dev2 bm25=text+model1=text_unlemm_topTranQty=8.json
-experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=10.json dev2 bm25=text+model1=text_unlemm_topTranQty=10.json
+experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=4.json dev2 bm25=text+model1=text_unlemm_topTranQty=4
+experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=6.json dev2 bm25=text+model1=text_unlemm_topTranQty=6
+experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=8.json dev2 bm25=text+model1=text_unlemm_topTranQty=8
+experDesc/compr/bm25=text+model1=text_unlemm_topTranQty=10.json dev2 bm25=text+model1=text_unlemm_topTranQty=10
