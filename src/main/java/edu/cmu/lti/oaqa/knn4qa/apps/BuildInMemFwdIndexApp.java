@@ -26,8 +26,6 @@ import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 
 public class BuildInMemFwdIndexApp {
   
-  public final static boolean TEXT_INDEX = false;
-  
   public final static String FIELD_NAME_PARAM = "field";
   public final static String FIELD_NAME_DESC  = "a field to be indexed (use a regular name not the one from the XML index-file)";
   public final static String STORE_WORD_ID_SEQ_PARAM = "store_word_id_seq";
@@ -44,13 +42,14 @@ public class BuildInMemFwdIndexApp {
   public static void main(String[] args) {
     Options options = new Options();
     
-    options.addOption(CommonParams.ROOT_DIR_PARAM,      null, true, CommonParams.ROOT_DIR_DESC);
-    options.addOption(CommonParams.SUB_DIR_TYPE_PARAM,  null, true, CommonParams.SUB_DIR_TYPE_DESC);
-    options.addOption(CommonParams.MAX_NUM_REC_PARAM,   null, true, CommonParams.MAX_NUM_REC_DESC);
-    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,null, true, CommonParams.SOLR_FILE_NAME_DESC);    
-    options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_MINDEX_DESC);
-    options.addOption(FIELD_NAME_PARAM,                 null, true, FIELD_NAME_DESC);
-    options.addOption(STORE_WORD_ID_SEQ_PARAM,          null, false, STORE_WORD_ID_SEQ_DESC);
+    options.addOption(CommonParams.ROOT_DIR_PARAM,               null, true, CommonParams.ROOT_DIR_DESC);
+    options.addOption(CommonParams.SUB_DIR_TYPE_PARAM,           null, true, CommonParams.SUB_DIR_TYPE_DESC);
+    options.addOption(CommonParams.MAX_NUM_REC_PARAM,            null, true, CommonParams.MAX_NUM_REC_DESC);
+    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,         null, true, CommonParams.SOLR_FILE_NAME_DESC);    
+    options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_MINDEX_DESC);
+    options.addOption(FIELD_NAME_PARAM,                          null, true, FIELD_NAME_DESC);
+    options.addOption(STORE_WORD_ID_SEQ_PARAM,                   null, false, STORE_WORD_ID_SEQ_DESC);
+    options.addOption(CommonParams.USE_INMEM_FOWARD_INDEX_PARAM, null, false, CommonParams.USE_INMEM_FOWARD_INDEX_DESC);
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -104,11 +103,13 @@ public class BuildInMemFwdIndexApp {
         fileNames[i] = rootDir + "/" + subDirs[i] + "/" + solrFileName;
       
       boolean bStoreWordIdSeq = cmd.hasOption(STORE_WORD_ID_SEQ_PARAM);
+      boolean bUseTextInMem = cmd.hasOption(CommonParams.USE_INMEM_FOWARD_INDEX_PARAM);
       
+      System.out.println("Use in-memory (text only loadable) forward index?: " + bUseTextInMem);
       System.out.println("Storing word id sequence?: " + bStoreWordIdSeq);
         
       ForwardIndex indx = ForwardIndex.createWriteInstance(
-          InMemIndexFeatureExtractorOld.indexFilePrefix(outPrefix, fieldName), TEXT_INDEX);
+          InMemIndexFeatureExtractorOld.indexFilePrefix(outPrefix, fieldName), bUseTextInMem);
       
       indx.createIndex(fieldName, fileNames, bStoreWordIdSeq, maxNumRec);
       indx.saveIndex();
