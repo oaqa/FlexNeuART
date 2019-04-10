@@ -14,6 +14,9 @@ if [ "$collect" = "manner" ] ; then
 elif [ "$collect" = "compr" -o "$collect" = "stackoverflow" ] ; then
   PARTS+=("tran")
 elif [ "$collect" = "squad" ] ; then
+  PARTS+=("tran")
+  full_text_prefix="full_"
+elif [ "$collect" = "wiki_squad" ] ; then
   PARTS+=("tran" "wiki")
   full_text_prefix="full_"
 else

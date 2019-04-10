@@ -2,7 +2,7 @@
 . scripts/common.sh
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, squad"
+  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, squad, wiki_squad, ..."
   exit 1
 fi
 

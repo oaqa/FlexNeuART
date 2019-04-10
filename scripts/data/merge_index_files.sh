@@ -1,12 +1,8 @@
 #!/bin/bash
 . scripts/common.sh
 
-# This script runs annotation pipelines for a given collection
-collect=$1
-if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg) squad"
-  exit 1
-fi
+# This script merges some annotation resutls for the SQuAD collection
+collect=squad
 
 IN_DIR="output/$collect/"
 

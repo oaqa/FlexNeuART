@@ -4,7 +4,7 @@
 # This script runs annotation pipelines for a given collection
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, squad"
+  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, wiki_squad, squad"
   exit 1
 fi
 
@@ -39,33 +39,33 @@ echo "==========================================================================
 if [ "$collect" = "manner" ] ; then
   for field in text text_unlemm ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field
-    check "scripts/index/run_inmemfwd_index.sh  $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field"
   done
 elif [ "$collect" = "compr" -o  "$collect" = "stackoverflow" ] ; then
   for field in text text_unlemm ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field
-    check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field"
   done
 elif [ "$collect" = "clueweb09" ] ; then
   #for field in title linkText text ; do
   for field in linkText ; do
     scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file ClueWeb09Proc.xml.gz -field $field
   done
-elif [ "$collect" = "squad" ] ; then
+elif [ "$collect" = "squad" -o "$collect" = "wiki_squad" ] ; then
   JOINT_NAME=SolrAnswQuestFile.txt
-  for d in tran train dev1 dev2 test wiki ; do
+  if [ "$collect" = "wiki_squad" ] ; then
+    wiki_part="wiki"
+    part_list="train,dev1,dev2,test,tran,wiki"
+  else
+    part_list="train,dev1,dev2,test,tran"
+  fi
+  for d in tran train dev1 dev2 test $wiki_part ; do
     cd $IN_DIR/$d
-    check "cd $OUT_DIR/$d"
     if [ "$d" != "wiki" ] ; then
       cat SolrAnswerFile.txt SolrQuestionFile.txt > $JOINT_NAME
-      check "cat SolrAnswerFile.txt SolrQuestionFile.txt > $JOINT_NAME"
     else
       rm -f $JOINT_NAME
       ln -s SolrAnswerFile.txt $JOINT_NAME
-      check "ln -s SolrAnswerFile.txt $JOINT_NAME"
     fi
     cd -  
-    check "cd - "
   done
   for field in text text_unlemm ; do
     if [ "$field" == "text" ] ; then
@@ -73,8 +73,7 @@ elif [ "$collect" = "squad" ] ; then
     else
       SOURCE_NAME="$JOINT_NAME"
     fi
-    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $SOURCE_NAME -field $field
-    check "scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran,wiki -solr_file $SOURCE_NAME -field $field"
+    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs $part_list -solr_file $SOURCE_NAME -field $field
   done
 else
   echo "Wrong collection name '$collect'"

@@ -7,7 +7,7 @@ fi
 
 INPUT=""
 COL_PARTS=(dev1 dev2 test train tran)
-if [ "$collect" = "squad" ] ; then
+if [ "$collect" = "wiki_squad" ] ; then
   COL_PARTS+=(wiki)
 fi
 for part in ${COL_PARTS[*]} ; do
