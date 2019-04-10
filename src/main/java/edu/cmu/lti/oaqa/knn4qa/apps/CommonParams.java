@@ -129,6 +129,9 @@ public class CommonParams {
   
   public final static String FIELD_NAME_PARAM = "field_name";
   public final static String FIELD_NAME_DESC = "Field name";
+  
+  public final static String USE_INMEM_FOWARD_INDEX_PARAM = "inmem_index";
+  public final static String USE_INMEM_FOWARD_INDEX_DESC = "Create a text-only fully in-memory forward index";
  
   // A general-purpose output file parameter
   public static final String OUTPUT_FILE_PARAM = "out_file";

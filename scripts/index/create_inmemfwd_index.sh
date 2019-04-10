@@ -17,6 +17,17 @@ fi
 if [ "$store_word_id_seq" = "1" ] ; then
   store_word_id_seq_param=" -store_word_id_seq "
 fi
+inmem_text_indx=$3
+inmem_text_indx_param=""
+if [ "$inmem_text_indx" = "" ] ; then
+  echo "Specify in-memory (text-only) index flag (3d arg): 1 or 0"
+  exit 1
+fi
+if [ "$inmem_text_indx" = "1" ] ; then
+  inmem_text_indx_param=" -inmem_index "
+fi
+
+
 
 OUT_DIR="memfwdindex/$collect/"
 IN_DIR="output/$collect/"
@@ -24,6 +35,7 @@ IN_DIR="output/$collect/"
 echo "IN_DIR:   $IN_DIR"
 echo "OUT_DIR:  $OUT_DIR"
 echo "Storing word id seq param: $store_word_id_seq_param"
+echo "In-mem index param param: $inmem_text_indx_param"
 
 if [ ! -d "$OUT_DIR" ] ; then
   echo "The output directory '$OUT_DIR' doesn't exist!"
@@ -38,16 +50,15 @@ echo "==========================================================================
 
 if [ "$collect" = "manner" ] ; then
   for field in text text_unlemm ; do
-    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field
+    scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt -field $field
   done
 elif [ "$collect" = "compr" -o  "$collect" = "stackoverflow" ] ; then
   for field in text text_unlemm ; do
-    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field
+    scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -field $field
   done
 elif [ "$collect" = "clueweb09" ] ; then
-  #for field in title linkText text ; do
-  for field in linkText ; do
-    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file ClueWeb09Proc.xml.gz -field $field
+  for field in text ; do
+    scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file ClueWeb09Proc.xml.gz -field $field
   done
 elif [ "$collect" = "squad" -o "$collect" = "wiki_squad" ] ; then
   JOINT_NAME=SolrAnswQuestFile.txt
@@ -73,7 +84,7 @@ elif [ "$collect" = "squad" -o "$collect" = "wiki_squad" ] ; then
     else
       SOURCE_NAME="$JOINT_NAME"
     fi
-    scripts/index/run_inmemfwd_index.sh $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs $part_list -solr_file $SOURCE_NAME -field $field
+    scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs $part_list -solr_file $SOURCE_NAME -field $field
   done
 else
   echo "Wrong collection name '$collect'"
