@@ -61,30 +61,14 @@ elif [ "$collect" = "clueweb09" ] ; then
     scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs all -solr_file ClueWeb09Proc.xml.gz -field $field
   done
 elif [ "$collect" = "squad" -o "$collect" = "wiki_squad" ] ; then
-  JOINT_NAME=SolrAnswQuestFile.txt
   if [ "$collect" = "wiki_squad" ] ; then
     wiki_part="wiki"
     part_list="train,dev1,dev2,test,tran,wiki"
   else
     part_list="train,dev1,dev2,test,tran"
   fi
-  for d in tran train dev1 dev2 test $wiki_part ; do
-    cd $IN_DIR/$d
-    if [ "$d" != "wiki" ] ; then
-      cat SolrAnswerFile.txt SolrQuestionFile.txt > $JOINT_NAME
-    else
-      rm -f $JOINT_NAME
-      ln -s SolrAnswerFile.txt $JOINT_NAME
-    fi
-    cd -  
-  done
   for field in text text_unlemm ; do
-    if [ "$field" == "text" ] ; then
-      SOURCE_NAME="SolrAnswerFile.txt"
-    else
-      SOURCE_NAME="$JOINT_NAME"
-    fi
-    scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs $part_list -solr_file $SOURCE_NAME -field $field
+    scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs $part_list -solr_file SolrAnswerFile.txt -field $field
   done
 else
   echo "Wrong collection name '$collect'"
