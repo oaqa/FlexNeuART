@@ -17,7 +17,9 @@ import no.uib.cipr.matrix.DenseVector;
  */
 public abstract class SingleFieldSingleScoreFeatExtractor extends SingleFieldFeatExtractor {
 
-  @Override
+  /**
+   * @return true if generates a sparse feature vector.
+   */
   public abstract boolean isSparse();
 
   @Override

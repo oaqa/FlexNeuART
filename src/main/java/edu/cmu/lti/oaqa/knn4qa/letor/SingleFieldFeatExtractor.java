@@ -24,11 +24,6 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
  *
  */
 public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
-
-  /**
-   * @return true if generates a sparse feature vector.
-   */
-  public abstract boolean isSparse();
   
   /**
    * Dimensionality of a dense feature vector.

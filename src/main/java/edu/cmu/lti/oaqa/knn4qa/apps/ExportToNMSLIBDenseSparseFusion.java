@@ -142,7 +142,7 @@ public class ExportToNMSLIBDenseSparseFusion {
       out.write(BinWriteUtils.intToBytes(entryQty));
       out.write(BinWriteUtils.intToBytes(featExtrQty));
       
-      for (SingleFieldFeatExtractor oneComp : compExtractors) {
+      for (SingleFieldSingleScoreFeatExtractor oneComp : compExtractors) {
         out.write(BinWriteUtils.intToBytes(oneComp.isSparse() ? 1 : 0));
         out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
       }
