@@ -15,7 +15,7 @@ import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
-public class FeatExtrWordEmbedSimilarity extends SingleFieldSingleScoreFeatExtractor {
+public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtractor {
   public static String EXTR_TYPE = "avgWordEmbed";
   
   public static String QUERY_EMBED_FILE = "queryEmbedFile";

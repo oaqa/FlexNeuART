@@ -239,7 +239,12 @@ class getScores_result(object):
                     (_ktype15, _vtype16, _size14) = iprot.readMapBegin()
                     for _i18 in range(_size14):
                         _key19 = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
-                        _val20 = iprot.readDouble()
+                        _val20 = []
+                        (_etype24, _size21) = iprot.readListBegin()
+                        for _i25 in range(_size21):
+                            _elem26 = iprot.readDouble()
+                            _val20.append(_elem26)
+                        iprot.readListEnd()
                         self.success[_key19] = _val20
                     iprot.readMapEnd()
                 else:
@@ -262,10 +267,13 @@ class getScores_result(object):
         oprot.writeStructBegin('getScores_result')
         if self.success is not None:
             oprot.writeFieldBegin('success', TType.MAP, 0)
-            oprot.writeMapBegin(TType.STRING, TType.DOUBLE, len(self.success))
-            for kiter21, viter22 in self.success.items():
-                oprot.writeString(kiter21.encode('utf-8') if sys.version_info[0] == 2 else kiter21)
-                oprot.writeDouble(viter22)
+            oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.success))
+            for kiter27, viter28 in self.success.items():
+                oprot.writeString(kiter27.encode('utf-8') if sys.version_info[0] == 2 else kiter27)
+                oprot.writeListBegin(TType.DOUBLE, len(viter28))
+                for iter29 in viter28:
+                    oprot.writeDouble(iter29)
+                oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.err is not None:
@@ -290,7 +298,7 @@ class getScores_result(object):
         return not (self == other)
 all_structs.append(getScores_result)
 getScores_result.thrift_spec = (
-    (0, TType.MAP, 'success', (TType.STRING, 'UTF8', TType.DOUBLE, None, False), None, ),  # 0
+    (0, TType.MAP, 'success', (TType.STRING, 'UTF8', TType.LIST, (TType.DOUBLE, None, False), False), None, ),  # 0
     (1, TType.STRUCT, 'err', [ScoringException, None], None, ),  # 1
 )
 fix_spec(all_structs)

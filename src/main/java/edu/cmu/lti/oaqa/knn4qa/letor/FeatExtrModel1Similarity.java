@@ -23,7 +23,7 @@ import net.openhft.koloboke.collect.map.hash.HashIntObjMaps;
 import net.openhft.koloboke.collect.set.hash.HashIntSet;
 import net.openhft.koloboke.collect.set.hash.HashIntSets;
 
-public class FeatExtrModel1Similarity extends SingleFieldSingleScoreFeatExtractor {
+public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor {
   public static String EXTR_TYPE = "Model1Similarity";
   
   public static String GIZA_ITER_QTY = "gizaIterQty";

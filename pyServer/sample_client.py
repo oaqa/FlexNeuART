@@ -12,8 +12,10 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
+from BaseServer import *
+
 # Make socket
-transport = TSocket.TSocket('localhost', 8080)
+transport = TSocket.TSocket(SAMPLE_HOST, SAMPLE_PORT)
 
 # Buffering is critical. Raw sockets are very slow
 transport = TTransport.TBufferedTransport(transport)
@@ -29,6 +31,8 @@ transport.open()
 
 query = TextEntryInfo("query_id", [])
 docs = []
+for did in ['1', '2', '3']:
+  docs.append(TextEntryInfo(did, []))
 
 print(client.getScores(query, docs))
 

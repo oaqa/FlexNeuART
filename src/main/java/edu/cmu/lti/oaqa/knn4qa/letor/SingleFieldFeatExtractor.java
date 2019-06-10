@@ -26,13 +26,6 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
   
   /**
-   * Dimensionality of a dense feature vector.
-   * 
-   * @return number of dimensions.
-   */
-  public abstract int getDim();
-  
-  /**
    * 
    * @return the name of the feature field.
    */

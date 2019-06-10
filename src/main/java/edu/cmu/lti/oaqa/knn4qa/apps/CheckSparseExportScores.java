@@ -35,7 +35,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
@@ -121,17 +121,17 @@ public class CheckSparseExportScores {
       
       SingleFieldFeatExtractor[] allExtractors = compositeFeatureExtractor.getCompExtr();    
       int featExtrQty = allExtractors.length;
-      SingleFieldSingleScoreFeatExtractor compExtractors[] = new SingleFieldSingleScoreFeatExtractor[featExtrQty];
+      SingleFieldInnerProdFeatExtractor compExtractors[] = new SingleFieldInnerProdFeatExtractor[featExtrQty];
       
       DenseVector unitWeights = VectorUtils.fill(1, featExtrQty);
       
       for (int i = 0; i < featExtrQty; ++i) {
-        if (!(allExtractors[i] instanceof SingleFieldSingleScoreFeatExtractor)) {
+        if (!(allExtractors[i] instanceof SingleFieldInnerProdFeatExtractor)) {
           System.err.println("Sub-extractor # " + (i+1) + " (" + allExtractors[i].getName() 
               +") doesn't support export to NMSLIB");
           System.exit(1);
         }
-        compExtractors[i] = (SingleFieldSingleScoreFeatExtractor)allExtractors[i];
+        compExtractors[i] = (SingleFieldInnerProdFeatExtractor)allExtractors[i];
       }
 
       ForwardIndex              compIndices[] = new ForwardIndex[featExtrQty];

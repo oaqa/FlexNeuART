@@ -1,41 +1,24 @@
-#!/usr/bin/env python
-import glob
+#!/usr/bin/env python3
 import sys
 sys.path.append('gen-py')
 
-from protocol.ExternalScorer import Processor
-from protocol.ttypes import WordEntryInfo, TextEntryInfo, ScoringException
+from BaseServer import *
 
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
-from thrift.server import TServer
+# Exclusive==True means that only one getScores
+# function is executed at at time
+class SampleQueryHandler(BaseQueryHandler):
+  def __init__(self, exclusive=True):
+    super().__init__(exclusive)
 
-class BaseQueryHandler:
-  def __init__(self):
-    pass
-
-  # One needs to override this function
-  def getScores(self, query, docs):
+  # This function needs to be overriden
+  def computeScoresOverride(self, query, docs):
     print('getScores', query, '# of docs', docs)
-    sampleRet = {'id0' : 0.1, 'id1' : 0.2, 'id2' : 0.3}
+    sampleRet = {}
+    for e in docs:
+      sampleRet[e.id] = [0, 1, 2, 3]
     return sampleRet
 
 if __name__ == '__main__':
 
-  handler = BaseQueryHandler()
-
-  processor = Processor(handler)
-  transport = TSocket.TServerSocket(host='127.0.0.1', port=8080)
-  tfactory = TTransport.TBufferedTransportFactory()
-  pfactory = TBinaryProtocol.TBinaryProtocolFactory()
-
-  #server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
-
-  # You could do one of these for a multithreaded server
-  server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
-  # server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
-
-  print('Starting the server...')
-  server.serve()
-  print('done.')
+  multiThreaded=True
+  startQueryServer(SAMPLE_HOST, SAMPLE_PORT, multiThreaded, SampleQueryHandler(exclusive=False))

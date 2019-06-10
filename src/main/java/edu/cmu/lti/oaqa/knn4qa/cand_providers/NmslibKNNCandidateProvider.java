@@ -28,7 +28,7 @@ import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
@@ -52,7 +52,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   Splitter splitOnColon = Splitter.on(':');	
   final private Client 			              mKNNClient;
   final private FeatExtrResourceManager       mResourceManager;
-  final private SingleFieldSingleScoreFeatExtractor  mCompExtractors[];
+  final private SingleFieldInnerProdFeatExtractor  mCompExtractors[];
   final private ForwardIndex                  mCompIndices[];
   final int                                   mFeatExtrQty;
   final DenseVector                           mCompQueryWeights;
@@ -84,14 +84,14 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     mCompQueryWeights = sparseInterleave ? VectorUtils.fill(1, mFeatExtrQty) : null;
     
     int featExtrQty = allExtractors.length;
-    mCompExtractors = new SingleFieldSingleScoreFeatExtractor[featExtrQty];
+    mCompExtractors = new SingleFieldInnerProdFeatExtractor[featExtrQty];
     
     for (int i = 0; i < featExtrQty; ++i) {
-      if (!(allExtractors[i] instanceof SingleFieldSingleScoreFeatExtractor)) {
+      if (!(allExtractors[i] instanceof SingleFieldInnerProdFeatExtractor)) {
         throw new Exception("Sub-extractor # " + (i+1) + " (" + allExtractors[i].getName() 
                             +") doesn't support export to NMSLIB");
       }
-      mCompExtractors[i] = (SingleFieldSingleScoreFeatExtractor)allExtractors[i];
+      mCompExtractors[i] = (SingleFieldInnerProdFeatExtractor)allExtractors[i];
     }
 
     mCompIndices  = new ForwardIndex[mFeatExtrQty];

@@ -15,14 +15,13 @@ import no.uib.cipr.matrix.DenseVector;
  * @author Leonid Boytsov
  *
  */
-public abstract class SingleFieldSingleScoreFeatExtractor extends SingleFieldFeatExtractor {
+public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatExtractor {
 
   /**
    * @return true if generates a sparse feature vector.
    */
   public abstract boolean isSparse();
 
-  @Override
   public abstract int getDim();
 
   @Override

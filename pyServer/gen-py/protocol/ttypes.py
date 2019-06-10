@@ -21,13 +21,15 @@ class WordEntryInfo(object):
     Attributes:
      - word
      - IDF
+     - qty
 
     """
 
 
-    def __init__(self, word=None, IDF=None,):
+    def __init__(self, word=None, IDF=None, qty=None,):
         self.word = word
         self.IDF = IDF
+        self.qty = qty
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -48,6 +50,11 @@ class WordEntryInfo(object):
                     self.IDF = iprot.readDouble()
                 else:
                     iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.I32:
+                    self.qty = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -66,6 +73,10 @@ class WordEntryInfo(object):
             oprot.writeFieldBegin('IDF', TType.DOUBLE, 2)
             oprot.writeDouble(self.IDF)
             oprot.writeFieldEnd()
+        if self.qty is not None:
+            oprot.writeFieldBegin('qty', TType.I32, 3)
+            oprot.writeI32(self.qty)
+            oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
 
@@ -74,6 +85,8 @@ class WordEntryInfo(object):
             raise TProtocolException(message='Required field word is unset!')
         if self.IDF is None:
             raise TProtocolException(message='Required field IDF is unset!')
+        if self.qty is None:
+            raise TProtocolException(message='Required field qty is unset!')
         return
 
     def __repr__(self):
@@ -232,6 +245,7 @@ WordEntryInfo.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'word', 'UTF8', None, ),  # 1
     (2, TType.DOUBLE, 'IDF', None, None, ),  # 2
+    (3, TType.I32, 'qty', None, None, ),  # 3
 )
 all_structs.append(TextEntryInfo)
 TextEntryInfo.thrift_spec = (

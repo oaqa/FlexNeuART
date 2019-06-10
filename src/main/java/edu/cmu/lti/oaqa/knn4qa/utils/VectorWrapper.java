@@ -22,7 +22,7 @@ import java.util.Map;
 import java.io.IOException;
 
 import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
-import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldSingleScoreFeatExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
@@ -107,7 +107,7 @@ public class VectorWrapper {
    */
   public static void writeAllVectorsToNMSLIBStream(String docId, Map<String, String> queryData,
                                             ForwardIndex[] compIndices, 
-                                            SingleFieldSingleScoreFeatExtractor[] compExtractors,
+                                            SingleFieldInnerProdFeatExtractor[] compExtractors,
                                             OutputStream out) throws Exception  {
     int featExtrQty = compIndices.length;
     
@@ -116,7 +116,7 @@ public class VectorWrapper {
     }
     
     for (int i = 0; i < featExtrQty; ++i) {
-      SingleFieldSingleScoreFeatExtractor extr = compExtractors[i];
+      SingleFieldInnerProdFeatExtractor extr = compExtractors[i];
       VectorWrapper featVect = getFeatInnerProdVector(docId, queryData, compIndices[i], extr);
       
       if (null == featVect) {
@@ -143,7 +143,7 @@ public class VectorWrapper {
   public static TrulySparseVector createAnInterleavedFeatureVect(String docId, 
                                                     Map<String, String> queryData,
                                                     ForwardIndex[] compIndices, 
-                                                    SingleFieldSingleScoreFeatExtractor[] compExtractors,
+                                                    SingleFieldInnerProdFeatExtractor[] compExtractors,
                                                     DenseVector compWeights) throws Exception  {
     int featExtrQty = compIndices.length;
 
@@ -157,7 +157,7 @@ public class VectorWrapper {
     ArrayList<IdValPair> allFeatures = new ArrayList<IdValPair>();
     
     for (int compId = 0; compId < featExtrQty; ++compId) {
-      SingleFieldSingleScoreFeatExtractor extr = compExtractors[compId];
+      SingleFieldInnerProdFeatExtractor extr = compExtractors[compId];
       VectorWrapper featVect = getFeatInnerProdVector(docId, queryData, compIndices[compId], extr);
       if (null == featVect) {
         throw new RuntimeException("Inner product representation is not available for extractor: " + 
@@ -180,7 +180,7 @@ public class VectorWrapper {
   public static void writeAllVectorsInterleavedToNMSLIBStream(String docId, 
                                                               Map<String, String> queryData,
                                                               ForwardIndex[] compIndices, 
-                                                              SingleFieldSingleScoreFeatExtractor[] compExtractors,
+                                                              SingleFieldInnerProdFeatExtractor[] compExtractors,
                                                               DenseVector compWeights,
                                                               OutputStream out) throws Exception  {
     
@@ -194,7 +194,7 @@ public class VectorWrapper {
       getFeatInnerProdVector(String docId, 
                                   Map<String, String> queryData,
                                   ForwardIndex compIndx,
-                                  SingleFieldSingleScoreFeatExtractor extr) throws Exception {
+                                  SingleFieldInnerProdFeatExtractor extr) throws Exception {
     DocEntry docEntry = null;
     
     boolean isQuery = queryData != null;
