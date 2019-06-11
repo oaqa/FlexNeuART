@@ -11,6 +11,7 @@ from BaseServer import *
 from utils import loadEmbeddings, createEmbedMap, robustCosineSimil
 
 DEBUG_PRINT=False
+USE_IDF=False
 
 # Exclusive==True means that only one getScores
 # function is executed at at time
@@ -44,7 +45,9 @@ class CosineSimilQueryHandler(BaseQueryHandler):
     res = zerov
 
     for winfo in textEntry.entries:
-      vectMult = winfo.IDF * winfo.qty
+      vectMult =  winfo.qty
+      if USE_IDF:
+        vectMult *= winfo.IDF
       word = winfo.word
       if word in embedMap:
         res += embeds[embedMap[word]] * vectMult
@@ -66,7 +69,10 @@ class CosineSimilQueryHandler(BaseQueryHandler):
       docEmbed = self.createDocEmbed(False, d)
       if DEBUG_PRINT:
         print(docEmbed)
-      ret[d.id] = [robustCosineSimil(docEmbed, queryEmbed)]
+      # Regular cosine deals poorly with all-zero vectors
+      simil=robustCosineSimil(docEmbed, queryEmbed)
+      #simil = (1-cosine(docEmbed, queryEmbed))
+      ret[d.id] = [simil]
 
     return ret
 

@@ -6,7 +6,7 @@ def loadEmbeddings(fileName, sep='\t'):
   dtFrame = pd.read_csv(fileName, sep=sep, header=None)
   words = dtFrame[0].values
   dtFrame.drop(0, axis=1, inplace=True)
-  return words, dtFrame.values
+  return words, dtFrame.values.astype(np.float32)
 
 
 def createEmbedMap(words):
