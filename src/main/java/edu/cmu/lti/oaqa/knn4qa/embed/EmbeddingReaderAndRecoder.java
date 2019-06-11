@@ -200,11 +200,11 @@ public class EmbeddingReaderAndRecoder {
    * @param     normalizeL2     if true, the output vector is L2-normalized.
    * @return    a respective average vector.
    */  
-  public float[] getDocAverage(DocEntry             doc,
-                               TFIDFSimilarity   simil,
-                               ForwardIndex    fieldIndex, 
-                               boolean              weightByIDF,
-                               boolean              normalizeL2) {
+  public float[] getDocAverage(DocEntry         doc,
+                               TFIDFSimilarity  simil,
+                               ForwardIndex     fieldIndex,
+                               boolean          weightByIDF,
+                               boolean          normalizeL2) {
     float[] res = new float[mDim];
     int qty = 0;
     

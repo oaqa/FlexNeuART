@@ -29,33 +29,30 @@ class CosineSimilQueryHandler(BaseQueryHandler):
     arr=[]
     for winfo in te.entries:
      arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
-    return te.id + ' '.join(arr)
+    return 'docId='+te.id + ' ' + ' '.join(arr)
 
   def createDocEmbed(self, isQuery, textEntry):
 
     if isQuery:
-      embeds = self.answEmbed
-      embedMap = self.answEmbedMap
-    else:
       embeds = self.queryEmbed
       embedMap = self.queryEmbedMap
+    else:
+      embeds = self.answEmbed
+      embedMap = self.answEmbedMap
 
-    idfSum = 0
     zerov = np.zeros_like(embeds[0])
     res = zerov
+
     for winfo in textEntry.entries:
       vectMult = winfo.IDF * winfo.qty
-      idfSum += vectMult
       word = winfo.word
       if word in embedMap:
         res += embeds[embedMap[word]] * vectMult
-      else:
-        res += zerov
 
-      return res / max(idfSum, 1e-10)
+    return res
 
 
-  # This function needs to be overriden
+  # This function overrids the parent class
   def computeScoresOverride(self, query, docs):
     if DEBUG_PRINT:
       print('getScores', self.textEntryToStr(query))

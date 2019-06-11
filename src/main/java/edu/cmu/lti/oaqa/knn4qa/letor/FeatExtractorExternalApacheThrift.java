@@ -28,9 +28,10 @@ import org.apache.thrift.transport.TTransportException;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
-
+import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import no.uib.cipr.matrix.DenseVector;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryInfo;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.WordEntryInfo;
@@ -48,11 +49,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   public static String EXTR_TYPE = "externalThrift";
   
   public static String FEAT_QTY = "featureQty";
-  
-  public static String BM25_SIMIL = "bm25";
-  public static String K1_PARAM = "k1";
-  public static String B_PARAM = "b";
-  
+
   public static String HOST = "host";
   public static String PORT = "port";
   
@@ -63,7 +60,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   public FeatExtractorExternalApacheThrift(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     // getReqParamStr throws an exception if the parameter is not defined
     mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
-    String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
     
     mFeatQty = conf.getReqParamInt(FEAT_QTY);
 
@@ -76,13 +72,9 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     
     mUseWordSeq = conf.getParamBool(POSITIONAL);
     
-    if (similType.equalsIgnoreCase(BM25_SIMIL))
-      mSimilObj = new BM25SimilarityLuceneNorm(
-                                          conf.getParam(K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
-                                          conf.getParam(B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
-                                          mFieldIndex);
-    else
-      throw new Exception("Unsupported field similarity: " + similType);
+    mSimilObj = new  BM25SimilarityLuceneNorm(BM25SimilarityLucene.DEFAULT_BM25_K1, 
+                                              BM25SimilarityLucene.DEFAULT_BM25_B, 
+                                              mFieldIndex);
   }
   
   /**
@@ -213,7 +205,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   }
   
   final String                       mFieldName;
-  final BM25SimilarityLuceneNorm     mSimilObj;
+  final TFIDFSimilarity              mSimilObj;
   final ForwardIndex                 mFieldIndex;
   final String                       mHost;
   final int                          mPort;
