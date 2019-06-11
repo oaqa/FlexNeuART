@@ -44,7 +44,9 @@ import edu.cmu.lti.oaqa.knn4qa.letor.external.ExternalScorer.Client;
  * @author Leonid Boytsov
  *
  */
-public class FeatExtractorExternal extends SingleFieldFeatExtractor {
+public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor {
+  public static String EXTR_TYPE = "externalThrift";
+  
   public static String FEAT_QTY = "featureQty";
   
   public static String BM25_SIMIL = "bm25";
@@ -55,8 +57,10 @@ public class FeatExtractorExternal extends SingleFieldFeatExtractor {
   public static String PORT = "port";
   
   public static String POSITIONAL = "useWordSeq";
+  
+  public static String UNK_WORD = "unkWord";
 
-  public FeatExtractorExternal(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtractorExternalApacheThrift(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     // getReqParamStr throws an exception if the parameter is not defined
     mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
     String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
@@ -67,6 +71,8 @@ public class FeatExtractorExternal extends SingleFieldFeatExtractor {
 
     mPort = conf.getReqParamInt(PORT);
     mHost = conf.getReqParamStr(HOST);
+    
+    mUnkWord = conf.getReqParamStr(UNK_WORD);
     
     mUseWordSeq = conf.getParamBool(POSITIONAL);
     
@@ -91,7 +97,9 @@ public class FeatExtractorExternal extends SingleFieldFeatExtractor {
       mFreeClients.remove(sz-1);
       return ret;
     }
+    
     TTransport serviceTransp = new TSocket(mHost, mPort);
+
     serviceTransp.open();
     return new Client(new TBinaryProtocol(serviceTransp));
   }
@@ -100,21 +108,40 @@ public class FeatExtractorExternal extends SingleFieldFeatExtractor {
     mFreeClients.add(c);
   }
 
-  TextEntryInfo createTextEntryInfo(String entryId, DocEntry docEntry) {
+  /**
+   * Create a text entry. Unknown words are going to be replaced with a special token.
+   * 
+   * @param entryId   entry ID, e.g., document ID.
+   * @param docEntry  document entry data point
+   * @return
+   * @throws Exception 
+   */
+  TextEntryInfo createTextEntryInfo(String entryId, DocEntry docEntry) throws Exception {
     ArrayList<WordEntryInfo> wentries = new ArrayList<WordEntryInfo>();
     
     if (mUseWordSeq) {
+      if (null == docEntry.mWordIdSeq) {
+        throw new Exception("Configuration error: positional info is not stored for field: '" + mFieldName + "'");
+      }
       for (int wid : docEntry.mWordIdSeq) {
-        float idf = mSimilObj.getIDF(mFieldIndex, wid);
-        wentries.add(new WordEntryInfo(mFieldIndex.getWord(wid), idf, 1));
+        if (wid >= 0) {
+          float idf = mSimilObj.getIDF(mFieldIndex, wid);
+          wentries.add(new WordEntryInfo(mFieldIndex.getWord(wid), idf, 1));
+        } else {
+          wentries.add(new WordEntryInfo(mUnkWord, 0, 1));
+        }
       }
     } else {
       for (int k = 0; k < docEntry.mWordIds.length; ++k) {
         int wid = docEntry.mWordIds[k];
         int qty = docEntry.mQtys[k];
-        float idf = mSimilObj.getIDF(mFieldIndex, wid);
-        wentries.add(new WordEntryInfo(mFieldIndex.getWord(wid), idf, qty));
-      }
+        if (wid >= 0) {
+          float idf = mSimilObj.getIDF(mFieldIndex, wid);
+          wentries.add(new WordEntryInfo(mFieldIndex.getWord(wid), idf, qty));
+        } else {
+          wentries.add(new WordEntryInfo(mUnkWord, 0, qty));
+        }
+       }
     }
     return new TextEntryInfo(entryId, wentries); 
   }
@@ -190,11 +217,12 @@ public class FeatExtractorExternal extends SingleFieldFeatExtractor {
   final ForwardIndex                 mFieldIndex;
   final String                       mHost;
   final int                          mPort;
+  final String                       mUnkWord;
   
   final int                          mFeatQty;
   final boolean                      mUseWordSeq;
 
-  private ArrayList<Client>          mFreeClients;
+  private ArrayList<Client>          mFreeClients = new ArrayList<Client>();
   
   @Override
   public String getName() {

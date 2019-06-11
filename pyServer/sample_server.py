@@ -10,12 +10,19 @@ class SampleQueryHandler(BaseQueryHandler):
   def __init__(self, exclusive=True):
     super().__init__(exclusive)
 
+  def textEntryToStr(self, te):
+    arr=[]
+    for winfo in te.entries:
+     arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
+    return te.id + ' '.join(arr)
+
   # This function needs to be overriden
   def computeScoresOverride(self, query, docs):
-    print('getScores', query, '# of docs', docs)
+    print('getScores', self.textEntryToStr(query))
     sampleRet = {}
     for e in docs:
-      sampleRet[e.id] = [0, 1, 2, 3]
+      print(self.textEntryToStr(e))
+      sampleRet[e.id] = [0]
     return sampleRet
 
 if __name__ == '__main__':
