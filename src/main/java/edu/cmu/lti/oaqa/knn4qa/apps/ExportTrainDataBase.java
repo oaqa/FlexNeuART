@@ -126,7 +126,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
                                String idRight, String textRight,
                                int relFlag) throws Exception {
     
-    String lineFields[] = { "" + mOutNum, idLeft, textLeft, idRight, textRight, "" + relFlag};
+    String lineFields[] = { idLeft, textLeft, idRight, textRight, "" + relFlag};
     mOut.writeNext(lineFields);
     mOutNum++; 
     
@@ -142,7 +142,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
                         UtilConst.NL
                         );
     
-    String lineFields[] = { "", "id_left", "text_left", "id_right", "text_right", "label"};
+    String lineFields[] = {"id_left", "text_left", "id_right", "text_right", "label"};
     mOut.writeNext(lineFields);
     
     mOutNum = 1;
