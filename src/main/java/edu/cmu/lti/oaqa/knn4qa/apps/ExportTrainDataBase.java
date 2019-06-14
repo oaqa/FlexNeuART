@@ -156,6 +156,13 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
   @Override
   void exportQuery(int queryNum, String queryId, 
                    String queryQueryText, String queryFieldText) throws Exception {
+    
+    queryFieldText = queryFieldText.trim();
+    
+    // It's super-important to not generate any empty text fields.
+    if (queryFieldText.isEmpty()) {
+      return;
+    }
 
     HashSet<String> relDocIds = new HashSet<String>();
     HashSet<String> othDocIds = new HashSet<String>();
@@ -195,10 +202,11 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     
     // First save *ALL* the relevant documents
     for (String docId : relDocIdsArr) {
-      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId));
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId)).trim();
       
-      writeField(queryId, queryFieldText, docId, text, 1);
-      
+      if (!text.isEmpty()) {
+        writeField(queryId, queryFieldText, docId, text, 1);
+      }
     }
     
     // Shuffle randomly
@@ -213,7 +221,11 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     for (int i = 0; i < Math.min(mSampleNegQty, othDocIdsArr.length); ++i) {
       
       String docId = othDocIdsArr[i];
-      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId));
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId)).trim();
+      
+      if (text.isEmpty()) {
+        continue;
+      }
       
       writeField(queryId, queryFieldText, docId, text, 0);
       
