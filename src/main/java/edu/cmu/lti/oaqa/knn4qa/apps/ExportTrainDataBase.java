@@ -170,6 +170,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
   
   void exportQueryTest(int queryNum, String queryId, 
       String queryQueryText, String queryFieldText) throws Exception {
+    System.out.println("Generating test data: just dumping all top-" + mCandQty + " retrieved candidates");
     
     queryFieldText = queryFieldText.trim();
     
@@ -219,6 +220,8 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
    */
   void exportQueryTrain(int queryNum, String queryId, 
       String queryQueryText, String queryFieldText) throws Exception {
+    
+    System.out.println("Generating training data using noise-contrastive estimation (sampling negative examples)");
     
     queryFieldText = queryFieldText.trim();
     
