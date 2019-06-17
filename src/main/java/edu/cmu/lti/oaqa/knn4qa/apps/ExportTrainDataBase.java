@@ -54,13 +54,18 @@ public abstract class ExportTrainDataBase {
   }
   // Supposed to return an error message, if some options are missing or poorly formatted
   abstract String readAddOptions(CommandLine cmd);
-  // 1. This function must be thread safe, so make sure it syncs output to the file.
-  // 2. There are potentially two different variants of the query coming from, e.g.
-  //    lemmatized and non-lemmatized text fields
+  /*
+   * 1. exportQuery function must be thread-safe: 
+   *    make sure the SYNC output to the file.
+   * 3. There are potentially two different variants of the query coming from, e.g.
+   *    lemmatized and non-lemmatized text fields
+   * 4. Specific sub-classes may implement specific functionality.    
+   */ 
   abstract void exportQuery(int queryNum, 
-                            String queryId,
-                            String queryQueryText,
-                            String queryFieldText) throws Exception;
+                                  String queryId,
+                                  String queryQueryText,
+                                  String queryFieldText) throws Exception;
+  
   abstract void startOutput() throws Exception;
   abstract void finishOutput() throws Exception;
 
@@ -89,7 +94,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
   static void addOptionDesc(Options opts) {
     opts.addOption(CommonParams.OUTPUT_FILE_PARAM, null, true, CommonParams.OUTPUT_FILE_DESC); 
     opts.addOption(CommonParams.MAX_CAND_QTY_PARAM, null, true, CommonParams.MAX_CAND_QTY_DESC);
-    opts.addOption(SAMPLE_NEG_QTY, null, true, "A number of negative samples per query");
+    opts.addOption(SAMPLE_NEG_QTY, null, true, "A number of negative samples per query or -1 to keep all candidate entries");
   }
 
   @Override
@@ -156,6 +161,64 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
   @Override
   void exportQuery(int queryNum, String queryId, 
                    String queryQueryText, String queryFieldText) throws Exception {
+    if (mSampleNegQty >= 0) {
+      exportQueryTrain(queryNum, queryId, queryQueryText, queryFieldText);
+    } else {
+      exportQueryTest(queryNum, queryId, queryQueryText, queryFieldText);
+    }
+  }
+  
+  void exportQueryTest(int queryNum, String queryId, 
+      String queryQueryText, String queryFieldText) throws Exception {
+    
+    queryFieldText = queryFieldText.trim();
+    
+    // It's super-important to not generate any empty text fields.
+    if (queryFieldText.isEmpty()) {
+      return;
+    }
+    
+
+    HashSet<String> relDocIds = new HashSet<String>();
+
+    HashMap<String, String> qq = mQrels.getQueryQrels(queryId);
+    
+    // First just read QRELs
+    for (Entry<String, String> e : qq.entrySet()) {
+      String docId = e.getKey();
+      String label = e.getValue();
+      int grade = CandidateProvider.parseRelevLabel(label);
+      if (grade >= 1) {
+        relDocIds.add(docId);
+      }
+    }
+
+    HashMap<String, String> queryData = new HashMap<String, String>();
+    
+    queryData.put(CandidateProvider.TEXT_FIELD_NAME, 
+    CandidateProvider.removeAddStopwords(queryQueryText));
+    queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
+    CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandQty);
+
+    for (CandidateEntry e : cands.mEntries) {
+      int relFlag = relDocIds.contains(e.mDocId) ? 1 : 0;
+      String docId = e.mDocId;
+      
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId)).trim();
+      
+      if (!text.isEmpty()) {
+        writeField(queryId, queryFieldText, docId, text, relFlag);
+      }
+    } 
+  }
+
+    
+  /**
+   *  This version of exportQueryTrain ignores queries without relevant entries
+   *  as well as queries with empty text.
+   */
+  void exportQueryTrain(int queryNum, String queryId, 
+      String queryQueryText, String queryFieldText) throws Exception {
     
     queryFieldText = queryFieldText.trim();
     
@@ -180,6 +243,9 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
       } else {
         othDocIds.add(docId);
       }
+    }
+    if (relDocIds.isEmpty()) {
+      return;
     }
     
     queryData.put(CandidateProvider.TEXT_FIELD_NAME, 
