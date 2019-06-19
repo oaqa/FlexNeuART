@@ -4,24 +4,23 @@ import pickle
 import matchzoo as mz
 from matchzoo.data_pack import pack, DataPack
 
-from matchzoo.models.knrm import KNRM
-
 sys.path.append('.')
 from scripts.data.matchzoo_reader import *
 
 colName = sys.argv[1]
-modelFilePrefix = sys.argv[2]
-modelFile = modelFilePrefix + '.bin'
-dataPrepFile = modelFilePrefix + '.dtran'
+modelFile = sys.argv[2]
 
-print(f'Collection: {colName} # model prefix: {modelFilePrefix}')
+dataTranFile = os.path.join('matchZooTrain', colName,  'data_transform.bin')
+dataFileTest = os.path.join('matchZooTrain', colName, 'dev1_allCand.tsv')
 
-dataFileTest= os.path.join('matchZooTrain', colName, 'dev1_allCand.tsv')
+print(f'Collection: {colName}  model file: {modelFile} data transform file: {dataTranFile}')
+print(f'Test file: {dataFileTest}')
+
 
 # Note dtype! don't let Pandas guess column data types!
 dataTestPacked = pack(readWhiteSpacedMatchZooData(dataFileTest))
 
-with open(dataPrepFile, 'rb') as f:
+with open(dataTranFile, 'rb') as f:
    prep = pickle.load(f) 
 
 import pdb, sys
