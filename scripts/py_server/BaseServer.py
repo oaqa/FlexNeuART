@@ -1,6 +1,11 @@
 import sys
 sys.path.append('gen-py')
 
+#
+# Thrift files are generated from
+# ./src/main/java/edu/cmu/lti/oaqa/knn4qa/letor/external/protocol.thrift
+#
+
 from protocol.ExternalScorer import Processor
 from protocol.ttypes import WordEntryInfo, TextEntryInfo, ScoringException
 

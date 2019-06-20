@@ -5,6 +5,11 @@ import matchzoo as mz
 from matchzoo.data_pack import pack, DataPack
 from matchzoo.preprocessors.basic_preprocessor import BasePreprocessor, BasicPreprocessor
 
+
+import time
+import numpy as np
+np.random.seed(int(time.time()))
+
 from matchzoo.models.dssm import DSSM
 from shutil import rmtree
 
@@ -67,7 +72,7 @@ if True:
     model.params.update(prep.context)
 
     model.params['mlp_num_layers'] = 5
-    model.params['mlp_num_units'] = 500
+    model.params['mlp_num_units'] = 5000
     model.params['mlp_num_fan_out'] = 128
     model.params['mlp_activation_func'] = 'relu'
     model.guess_and_fill_missing_params(verbose=0)
