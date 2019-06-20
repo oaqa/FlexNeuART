@@ -150,11 +150,12 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     String lineFields[] = {"id_left", "text_left", "id_right", "text_right", "label"};
     mOut.writeNext(lineFields);
     
-    mOutNum = 1;
+    mOutNum = 0;
   }
 
   @Override
   void finishOutput() throws Exception {
+    System.out.println("Wrote " + mOutNum + " entries.");
     mOut.close();
   }
 
@@ -248,6 +249,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
       }
     }
     if (relDocIds.isEmpty()) {
+      System.out.println("Skipping query " + queryId + " b/c it has no relevant entries.");
       return;
     }
     

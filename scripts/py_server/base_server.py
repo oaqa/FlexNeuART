@@ -1,5 +1,5 @@
 import sys
-sys.path.append('gen-py')
+sys.path.append('scripts/py_server/gen-py')
 
 from protocol.ExternalScorer import Processor
 from protocol.ttypes import WordEntryInfo, TextEntryInfo, ScoringException
@@ -24,6 +24,19 @@ class BaseQueryHandler:
         return self.computeScoresOverride(query, docs)
     else:
       return self.computeScoresOverride(query, docs)
+
+  def textEntryToStr(self, te):
+    arr=[]
+    for winfo in te.entries:
+     arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
+    return te.id + ' '.join(arr)
+
+  def concatTextEntryWords(self, te):
+    arr = []
+    for winfo in te.entries:
+      arr.append(winfo.word)
+    return ' '.join(arr)
+
 
   # This is the function to be implemented in the child class
   def computeScoresOverride(self, query, docs):

@@ -30,6 +30,7 @@ if True:
   dataTestProc = prep.transform(dataTestPacked)
 
   model=mz.load_model(modelFile)
+  model.backend.summary()
   xTest, yTest = dataTestProc.unpack()
   model.params['task'].metrics = [mz.metrics.NormalizedDiscountedCumulativeGain(k=20)]
   print(model.evaluate(xTest, yTest, batch_size=128))

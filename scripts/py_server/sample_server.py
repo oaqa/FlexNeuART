@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 import sys
-sys.path.append('gen-py')
+sys.path.append('scripts/py_server')
 
-from BaseServer import *
+from base_server import *
 
 # Exclusive==True means that only one getScores
 # function is executed at at time
 class SampleQueryHandler(BaseQueryHandler):
   def __init__(self, exclusive=True):
     super().__init__(exclusive)
-
-  def textEntryToStr(self, te):
-    arr=[]
-    for winfo in te.entries:
-     arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
-    return te.id + ' '.join(arr)
 
   # This function needs to be overriden
   def computeScoresOverride(self, query, docs):
