@@ -12,7 +12,7 @@ import org.apache.commons.cli.Options;
 
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 public class CollectionSplitterBase {
   protected static final String PART_NAMES_DESC = "Comma separated part names, e.g., dev,test,train";

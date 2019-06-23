@@ -23,8 +23,8 @@ import java.util.Map;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 
-import edu.cmu.lti.oaqa.annographix.solr.SolrServerWrapper;
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
+import edu.cmu.lti.oaqa.solr.SolrServerWrapper;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 public class SolrCandidateProvider extends CandidateProvider {
   private final static String TEXT_FIELD_NAME   = "Text_bm25";

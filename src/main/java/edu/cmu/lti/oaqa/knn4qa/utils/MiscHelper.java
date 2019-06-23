@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.annographix.util;
+package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

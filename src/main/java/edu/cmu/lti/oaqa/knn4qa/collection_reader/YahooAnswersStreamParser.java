@@ -24,7 +24,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 /**
  * An XML-stream based iterator over Yahoo-Answers collection. Modeled

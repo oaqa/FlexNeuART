@@ -22,8 +22,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 public class EvalUtils {
   protected static final String NL = System.getProperty("line.separator");

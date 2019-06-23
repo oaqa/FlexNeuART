@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.annographix.util;
+package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.*;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 /**
  * A bunch of useful functions to work with XML files. In particular,

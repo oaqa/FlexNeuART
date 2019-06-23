@@ -1,35 +1,48 @@
 #!/usr/bin/env python3
 import sys
-sys.path.append('gen-py')
+import argparse
+
+sys.path.append('scripts/py_server')
+sys.path.append('scripts/data')
+sys.path.append('.')
+
+from base_server import *
 
 import numpy as np
 
 from scipy.spatial.distance import cosine
 
-from BaseServer import *
+from base_server import *
 
 from utils import loadEmbeddings, createEmbedMap, robustCosineSimil
-
-DEBUG_PRINT=False
-USE_IDF=False
 
 # Exclusive==True means that only one getScores
 # function is executed at at time
 class CosineSimilQueryHandler(BaseQueryHandler):
-  def __init__(self, exclusive=False):
+  def __init__(self, queryEmbedFile, docEmbedFile, exclusive, debugPrint=False, useIDF=True):
     super().__init__(exclusive)
 
-    print('Loading query embeddings')
-    queryWords, self.queryEmbed = loadEmbeddings('../WordEmbeddings/manner/starspace_unlemm.query')
-    self.queryEmbedMap = createEmbedMap(queryWords)
-    print('Loading answer embeddings')
-    answWords, self.answEmbed = loadEmbeddings('../WordEmbeddings/manner/starspace_unlemm.answer')
+    self.debugPrint = debugPrint
+    self.useIDF = useIDF
+
+    print('Loading answer embeddings from: ' + docEmbedFile)
+    answWords, self.answEmbed = loadEmbeddings(docEmbedFile)
     self.answEmbedMap = createEmbedMap(answWords)
+
+    if queryEmbedFile is not None:
+      print('Loading query embeddings from: ' + queryEmbedFile)
+      queryWords, self.queryEmbed = loadEmbeddings(queryEmbedFile)
+      self.queryEmbedMap = createEmbedMap(queryWords)
+    else:
+      self.queryEmbed = self.answEmbed
+      self.queryEmbedMap = self.answEmbedMap
+    print('Loading is done!')
 
   def textEntryToStr(self, te):
     arr=[]
-    for winfo in te.entries:
-     arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
+    if self.debugPrint:
+      for winfo in te.entries:
+        arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
     return 'docId='+te.id + ' ' + ' '.join(arr)
 
   def createDocEmbed(self, isQuery, textEntry):
@@ -46,7 +59,7 @@ class CosineSimilQueryHandler(BaseQueryHandler):
 
     for winfo in textEntry.entries:
       vectMult =  winfo.qty
-      if USE_IDF:
+      if self.useIDF:
         vectMult *= winfo.IDF
       word = winfo.word
       if word in embedMap:
@@ -57,17 +70,17 @@ class CosineSimilQueryHandler(BaseQueryHandler):
 
   # This function overrids the parent class
   def computeScoresOverride(self, query, docs):
-    if DEBUG_PRINT:
+    if self.debugPrint:
       print('getScores', self.textEntryToStr(query))
     ret = {}
     queryEmbed = self.createDocEmbed(True, query)
-    if DEBUG_PRINT:
+    if self.debugPrint:
       print(queryEmbed)
     for d in docs:
-      if DEBUG_PRINT:
+      if self.debugPrint:
         print(self.textEntryToStr(d))
       docEmbed = self.createDocEmbed(False, d)
-      if DEBUG_PRINT:
+      if self.debugPrint:
         print(docEmbed)
       # Regular cosine deals poorly with all-zero vectors
       simil=robustCosineSimil(docEmbed, queryEmbed)
@@ -78,5 +91,32 @@ class CosineSimilQueryHandler(BaseQueryHandler):
 
 if __name__ == '__main__':
 
+  parser = argparse.ArgumentParser(description='Serving word-embedding models.')
+
+  parser.add_argument('--query_embed', metavar='query embeddings',
+                      default=None, type=str,
+                      help='Optional query embeddings file')
+
+  parser.add_argument('--doc_embed', metavar='doc embeddings',
+                      required=True, type=str,
+                      help='document embeddings file')
+
+  parser.add_argument('--debug_print', action='store_true',
+                      help='Provide debug output')
+
+  parser.add_argument('--port', metavar='server port',
+                      required=True, type=int,
+                      help='Server port')
+
+  parser.add_argument('--host', metavar='server host',
+                      default='127.0.0.1', type=str,
+                      help='server host addr to bind the port')
+
+  args = parser.parse_args()
+
   multiThreaded=True
-  startQueryServer(SAMPLE_HOST, SAMPLE_PORT, multiThreaded, CosineSimilQueryHandler(exclusive=False))
+  startQueryServer(args.host, args.port, multiThreaded, 
+                    CosineSimilQueryHandler(exclusive=False, 
+                                            queryEmbedFile=args.query_embed,
+                                            docEmbedFile=args.doc_embed,
+                                            debugPrint=args.debug_print))

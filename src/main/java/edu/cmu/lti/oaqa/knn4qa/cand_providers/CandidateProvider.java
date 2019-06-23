@@ -20,8 +20,8 @@ import java.util.*;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.annographix.solr.SolrRes;
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
+import edu.cmu.lti.oaqa.solr.SolrRes;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 public abstract class CandidateProvider {
   public final static String ID_FIELD_NAME     = UtilConst.TAG_DOCNO;

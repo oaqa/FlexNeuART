@@ -32,8 +32,8 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 /**
  * @author Leonid Boytsov

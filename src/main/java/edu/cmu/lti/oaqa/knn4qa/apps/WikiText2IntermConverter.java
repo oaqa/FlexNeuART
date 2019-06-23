@@ -32,10 +32,10 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.*;
 import edu.cmu.lti.oaqa.knn4qa.squad.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;

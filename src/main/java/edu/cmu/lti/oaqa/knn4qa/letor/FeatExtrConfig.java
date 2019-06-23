@@ -20,7 +20,7 @@ import java.util.Map.Entry;
 
 import com.google.gson.Gson;
 
-import edu.cmu.lti.oaqa.annographix.util.MiscHelper;
+import edu.cmu.lti.oaqa.knn4qa.utils.MiscHelper;
 
 class OneFeatExtrConf {
   String                  type;

@@ -31,7 +31,7 @@ import org.apache.commons.cli.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
 
 

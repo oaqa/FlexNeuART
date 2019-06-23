@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.annographix.solr;
+package edu.cmu.lti.oaqa.solr;
 
 import java.io.Closeable;
 import java.io.IOException;

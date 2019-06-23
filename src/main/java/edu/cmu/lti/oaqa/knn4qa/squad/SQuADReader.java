@@ -19,7 +19,7 @@ import java.io.*;
 
 import com.google.gson.*;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 
 public class SQuADReader {
 
