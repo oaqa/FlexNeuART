@@ -17,7 +17,7 @@ from matchzoo_reader import *
 class MatchZooQueryHandler(BaseQueryHandler):
   # Exclusive==True means that only one getScores
   # function is executed at at time
-  def __init__(self, modelDir, dtProcDir, debuPrint):
+  def __init__(self, modelDir, dtProcDir, debugPrint):
     super().__init__(exclusive=True)
 
     with open(dtProcDir, 'rb') as f:
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                       required=True, type=str,
                       help='Model directory')
 
-  parser.add_argument('--debug_print', actiona='store_true',
+  parser.add_argument('--debug_print', action='store_true',
                       help='Provide debug output')
 
   parser.add_argument('--dtproc_model', metavar='data processing model',
