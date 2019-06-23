@@ -27,7 +27,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 /**
  * 

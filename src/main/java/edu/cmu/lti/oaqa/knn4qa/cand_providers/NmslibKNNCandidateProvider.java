@@ -24,7 +24,6 @@ import org.apache.thrift.transport.TTransport;
 
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
@@ -35,6 +34,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.nmslib.QueryService;
 import edu.cmu.lti.oaqa.nmslib.ReplyEntry;
 import edu.cmu.lti.oaqa.nmslib.QueryService.Client;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

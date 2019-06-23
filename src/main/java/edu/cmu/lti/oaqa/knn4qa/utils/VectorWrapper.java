@@ -21,12 +21,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.io.IOException;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 import no.uib.cipr.matrix.DenseVector;
 
 /**

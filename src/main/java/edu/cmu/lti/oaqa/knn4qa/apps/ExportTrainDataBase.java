@@ -26,14 +26,14 @@ import org.apache.commons.cli.*;
 
 import com.opencsv.CSVWriter;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 
 public abstract class ExportTrainDataBase {

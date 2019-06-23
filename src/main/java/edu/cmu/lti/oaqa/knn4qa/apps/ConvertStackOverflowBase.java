@@ -44,7 +44,7 @@ import org.w3c.dom.Node;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 
 class ParsedPost {
   String mId;

@@ -24,9 +24,9 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import edu.cmu.lti.oaqa.annographix.solr.SolrEvalUtils;
 import edu.cmu.lti.oaqa.knn4qa.types.Answer;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.solr.SolrEvalUtils;
 
 /**
  * Creates a file with QRELs. This class is thread-safe.

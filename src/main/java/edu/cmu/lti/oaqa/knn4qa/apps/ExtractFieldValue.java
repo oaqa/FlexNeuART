@@ -17,8 +17,8 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import org.apache.commons.cli.*;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 
 import java.io.*;
 import java.util.*;

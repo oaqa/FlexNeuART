@@ -30,13 +30,13 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.types.FactoidQuestion;
 import edu.cmu.lti.oaqa.knn4qa.types.Passage;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 /**
  * This annotator saves passages and questions in the ready-for-indexing format.

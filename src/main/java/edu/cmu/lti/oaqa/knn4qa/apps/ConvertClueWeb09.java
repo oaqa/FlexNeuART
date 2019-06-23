@@ -38,12 +38,12 @@ import org.apache.commons.io.FileUtils;
 
 import edu.cmu.lemurproject.WarcRecord;
 import edu.cmu.lemurproject.WarcHTMLResponseRecord;
-import edu.cmu.lti.oaqa.annographix.solr.UtilConst;
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.HtmlDocData;
 import edu.cmu.lti.oaqa.knn4qa.utils.LeoHTMLParser;
+import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
+import edu.cmu.lti.oaqa.solr.UtilConst;
 
 class WarcProcessor implements Runnable  {
   final String warcRecFileName;

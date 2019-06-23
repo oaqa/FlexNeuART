@@ -13,18 +13,17 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.annographix.solr;
+package edu.cmu.lti.oaqa.solr;
 
 import java.util.*;
 
 import org.apache.solr.common.*;
-import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
 
-import edu.cmu.lti.oaqa.annographix.util.HttpHelper;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+
+import edu.cmu.lti.oaqa.knn4qa.utils.HttpHelper;
+
 
 /**
  * @author Leonid Boytsov using some of the SolrUtils code written
