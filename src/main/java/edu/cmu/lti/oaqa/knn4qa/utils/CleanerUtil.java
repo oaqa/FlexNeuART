@@ -1,15 +1,17 @@
 /*
- * HTML-parser/cleaner used in TREC 19,20,21 adhoc.
+ *  Copyright 2018+ Carnegie Mellon University
  *
- * Boytsov, L., Belova, A., 2011. Evaluating Learning-to-Rank Methods in the Web Track Adhoc Task. 
- * In TREC-20: Proceedings of the Nineteenth Text REtrieval Conference.  
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * Author: Leonid Boytsov
- * Copyright (c) 2013
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * This code is released under the
- * Apache License Version 2.0 http://www.apache.org/licenses/.
- * 
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 package edu.cmu.lti.oaqa.knn4qa.utils;
@@ -44,8 +46,14 @@ class Pair<T, U> {
   }
 };
 
-class LeoCleanerUtil extends NodeVisitor {
-  public LeoCleanerUtil(String BaseHref) {
+/**
+ * HTML-parser/cleaner used in TREC 19,20,21 adhoc.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
+class CleanerUtil extends NodeVisitor {
+  public CleanerUtil(String BaseHref) {
     SetBaseHref(BaseHref);
     mTextBuffer = new StringBuilder();
     mHrefBuffer = new StringBuilder();
@@ -328,10 +336,10 @@ class LeoCleanerUtil extends NodeVisitor {
         URLWords = URLDecoder.decode(URLWords, Charset);
       } catch (Exception e) {
       }
-      URLWords = LeoCleanerUtil.Replace(URLWords, "[.]php[0-9]?$", "");
-      URLWords = LeoCleanerUtil.Replace(URLWords, "[.]asp$", "");
-      URLWords = LeoCleanerUtil.Replace(URLWords, "[.]x?html?$", "");
-      URLWords = LeoCleanerUtil.Replace(URLWords, "[-=?_/#,.+%]", " ");
+      URLWords = CleanerUtil.Replace(URLWords, "[.]php[0-9]?$", "");
+      URLWords = CleanerUtil.Replace(URLWords, "[.]asp$", "");
+      URLWords = CleanerUtil.Replace(URLWords, "[.]x?html?$", "");
+      URLWords = CleanerUtil.Replace(URLWords, "[-=?_/#,.+%]", " ");
 
       return URLWords;
     } catch (Exception e) {

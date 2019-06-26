@@ -41,7 +41,7 @@ import edu.cmu.lemurproject.WarcHTMLResponseRecord;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.HtmlDocData;
-import edu.cmu.lti.oaqa.knn4qa.utils.LeoHTMLParser;
+import edu.cmu.lti.oaqa.knn4qa.utils.HTMLParser;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 import edu.cmu.lti.oaqa.solr.UtilConst;
 
@@ -80,7 +80,7 @@ class WarcProcessor implements Runnable  {
           if (endOfHead >= 0) {
             String html = response.substring(endOfHead + 2);
          
-            HtmlDocData htmlData = LeoHTMLParser.parse(ConvertClueWeb09.ENCODING, baseHref, html);
+            HtmlDocData htmlData = HTMLParser.parse(ConvertClueWeb09.ENCODING, baseHref, html);
 
             Map<String, String>  fieldInfo = new HashMap<String, String>();
 

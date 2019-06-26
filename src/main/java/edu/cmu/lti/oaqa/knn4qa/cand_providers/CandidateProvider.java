@@ -19,8 +19,6 @@ import java.util.*;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-
-import edu.cmu.lti.oaqa.solr.SolrRes;
 import edu.cmu.lti.oaqa.solr.UtilConst;
 
 public abstract class CandidateProvider {
@@ -29,7 +27,6 @@ public abstract class CandidateProvider {
   public final static String TEXT_FIELD_NAME = "text";
   public final static String TEXT_UNLEMM_FIELD_NAME = "text_unlemm";
       
-  public static final String CAND_TYPE_QRELS       = "qrels";
   public static final String CAND_TYPE_SOLR        = "solr";
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_LUCENE_GIZA = "lucene_giza";
@@ -38,7 +35,6 @@ public abstract class CandidateProvider {
 
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
-      CandidateProvider.CAND_TYPE_QRELS + ", " + 
       CandidateProvider.CAND_TYPE_SOLR + ", " + 
       CandidateProvider.CAND_TYPE_NMSLIB;
   

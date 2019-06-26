@@ -20,7 +20,7 @@ import org.htmlparser.util.ParserException;
  * Simple HTML Parser extracting title, meta tags, and body text
  * that is based on org.htmlparser.
  */
-public class LeoHTMLParser {
+public class HTMLParser {
 
   public static HtmlDocData parse(String encoding,
                        String baseHref,
@@ -40,7 +40,7 @@ public class LeoHTMLParser {
     try {
       Parser HtmlParser = Parser.createParser(html, encoding);  
 
-      LeoCleanerUtil res = new LeoCleanerUtil(baseHref);      
+      CleanerUtil res = new CleanerUtil(baseHref);      
       
       try {
         HtmlParser.visitAllNodesWith(res);
@@ -56,7 +56,7 @@ public class LeoHTMLParser {
     } catch (ParserException e) {      
       System.err.println(" Parser exception: " + e + " trying simple conversion");
       // Plan B!!!
-      Pair<String,String> sres = LeoCleanerUtil.SimpleProc(html);
+      Pair<String,String> sres = CleanerUtil.SimpleProc(html);
       
       title = sres.getFirst();
       bodyText = sres.getSecond();
