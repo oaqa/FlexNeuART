@@ -81,6 +81,8 @@ public class CheckDenseSparseExportScores {
   
   public static void main(String argv[]) {
     
+    RandomUtils rand = new RandomUtils(0);
+    
     Args args = new Args();
     CmdLineParser parser = null;
     
@@ -127,7 +129,7 @@ public class CheckDenseSparseExportScores {
       
       String allDocIds[] = compIndices[0].getAllDocIds();
       
-      ArrayList<String> docIdSample =  RandomUtils.reservoirSampling(allDocIds, args.mMaxNumDoc);
+      ArrayList<String> docIdSample =  rand.reservoirSampling(allDocIds, args.mMaxNumDoc);
       
       BufferedReader inpQueryBuffer = null;
       

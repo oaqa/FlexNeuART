@@ -17,6 +17,7 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
@@ -33,6 +34,7 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
+import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
 import edu.cmu.lti.oaqa.solr.UtilConst;
 
 
@@ -280,18 +282,10 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
       }
     }
     
-    // Shuffle randomly
-    for (int i = othDocIdsArr.length - 1; i >= 1; --i) {
-      int k = mRandGen.nextInt(i); // i exclusive
-      String tmp = othDocIdsArr[k];
-      othDocIdsArr[k] = othDocIdsArr[i];
-      othDocIdsArr[i] = tmp;
-    }
-    
     // Second sample non-relevant ones
-    for (int i = 0; i < Math.min(mSampleNegQty, othDocIdsArr.length); ++i) {
+    ArrayList<String> othDocSample = mRandUtils.reservoirSampling(othDocIdsArr, mSampleNegQty);
       
-      String docId = othDocIdsArr[i];
+    for (String docId : othDocSample) {
       String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId)).trim();
       
       if (text.isEmpty()) {
@@ -310,8 +304,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
   int                    mCandQty;
   int                    mSampleNegQty;
   String                 mOutFileName;
-  Random                 mRandGen = new Random(0);
-
+  RandomUtils            mRandUtils = new RandomUtils(0);
 
 
 }

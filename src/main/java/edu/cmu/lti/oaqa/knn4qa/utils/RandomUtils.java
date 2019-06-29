@@ -20,7 +20,12 @@ import java.util.Random;
 
 
 public class RandomUtils {
-  public static <ElemType> ArrayList<ElemType> reservoirSampling(ElemType [] inp, int n) {
+
+  public RandomUtils(int seed) {
+    mRandGen = new Random(seed);
+  }
+  
+  public <ElemType> ArrayList<ElemType> reservoirSampling(ElemType [] inp, int n) {
     ArrayList<ElemType> res = new ArrayList<ElemType>();
     
     for (int i = 0; i < Math.min(n, inp.length); ++i) {
@@ -35,6 +40,6 @@ public class RandomUtils {
     
     return res;
   }
-  
-  private final static Random mRandGen = new Random(0);
+
+  private final Random mRandGen;
 }

@@ -93,6 +93,8 @@ public class CheckSparseExportScores {
     Args args = new Args();
     CmdLineParser parser = null;
     
+    RandomUtils rand = new RandomUtils(0);
+    
     try {
  
       parser = new CmdLineParser(args, ParserProperties.defaults().withUsageWidth(CommonParams.USAGE_WIDTH));
@@ -140,7 +142,7 @@ public class CheckSparseExportScores {
       
       String allDocIds[] = compIndices[0].getAllDocIds();
       
-      ArrayList<String> docIdSample =  RandomUtils.reservoirSampling(allDocIds, args.mMaxNumDoc);
+      ArrayList<String> docIdSample =  rand.reservoirSampling(allDocIds, args.mMaxNumDoc);
       
       BufferedReader inpQueryBuffer = null;
       
