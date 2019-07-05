@@ -33,6 +33,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
@@ -131,72 +132,60 @@ public class CheckDenseSparseExportScores {
       
       ArrayList<String> docIdSample =  rand.reservoirSampling(allDocIds, args.mMaxNumDoc);
       
-      BufferedReader inpQueryBuffer = null;
-      
-      inpQueryBuffer = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args.mQueryFile)));
-        
-      String queryXML = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer);        
-        
-      for (int queryNo = 0; queryXML!= null && queryNo < args.mMaxNumQuery; 
-            queryXML = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer), ++queryNo) {
-        
-        Map<String, String> queryFields = null;
-        // Parse a query
-        try {
-          queryFields = XmlHelper.parseXMLIndexEntry(queryXML);
-        } catch (Exception e) {
-          System.err.println("Parsing error, offending DOC:\n" + queryXML);
-          System.exit(1);
-        }
-        
-        String queryId = queryFields.get(UtilConst.TAG_DOCNO);
-        
-        for (int k = 0; k < featExtrQty; ++k) {
-          SingleFieldInnerProdFeatExtractor oneExtr = compExtractors[k];
-          ForwardIndex                        oneIndx = compIndices[k];
-          String                              fieldName = oneExtr.getFieldName();
+      Map<String, String> queryFields = null;
+             
+      try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
+        for (int queryNo = 0; ((queryFields = inp.readNext()) != null) && queryNo < args.mMaxNumQuery;  ++queryNo) {
           
-          Map<String, DenseVector> res = oneExtr.getFeatures(docIdSample, queryFields);
+          String queryId = queryFields.get(UtilConst.TAG_DOCNO);
           
-          String queryText = queryFields.get(fieldName);
-          
-          if (queryText == null) {
-            System.out.println("No query text, query ID:" + queryId + " field: "+ fieldName);
-            queryText = "";
+          for (int k = 0; k < featExtrQty; ++k) {
+            SingleFieldInnerProdFeatExtractor oneExtr = compExtractors[k];
+            ForwardIndex                        oneIndx = compIndices[k];
+            String                              fieldName = oneExtr.getFieldName();
+            
+            Map<String, DenseVector> res = oneExtr.getFeatures(docIdSample, queryFields);
+            
+            String queryText = queryFields.get(fieldName);
+            
+            if (queryText == null) {
+              System.out.println("No query text, query ID:" + queryId + " field: "+ fieldName);
+              queryText = "";
+            }
+           
+            DocEntry queryEntry = oneIndx.createDocEntry(UtilConst.splitOnWhiteSpace(queryText), true); // true means including positions
+            
+            for (int i = 0; i < docIdSample.size(); ++i) {
+              String docId = docIdSample.get(i);
+              DocEntry docEntry = oneIndx.getDocEntry(docId);
+              
+              VectorWrapper docVect = oneExtr.getFeatInnerProdVector(docEntry, false);         
+              VectorWrapper queryVect = oneExtr.getFeatInnerProdVector(queryEntry, true);
+              
+              float innerProdVal = VectorWrapper.scalarProduct(docVect, queryVect);
+              DenseVector oneFeatVecScore = res.get(docId);
+              if (oneFeatVecScore == null) {
+                throw new Exception("Bug: no score for " + docId + " extractor: " + oneExtr.getName() + 
+                                   " field: " + oneExtr.getFieldName());
+              }
+              if (oneFeatVecScore.size() != 1) {
+                throw new Exception("Bug: feature vector for " + docId + " extractor: " + oneExtr.getName() + 
+                    " field: " + oneExtr.getFieldName() + " has size " + oneFeatVecScore.size() + " but we expect size one!");
+              }
+              float featureVal = (float) oneFeatVecScore.get(0);
+              
+              boolean isDiff = Math.abs(innerProdVal - featureVal) > args.mEpsDiff;  
+              compQty++;
+              diffQty += isDiff ? 1 : 0;
+              
+              System.out.println(String.format("Query id: %s Doc id: %s field name: %s feature val: %g inner product val: %g extractor: %s %s",
+                                              queryId, docId, fieldName, featureVal, innerProdVal, oneExtr.getName(),
+                                              isDiff ? "SIGN. DIFF." : ""));
+           }
+            
           }
-         
-          DocEntry queryEntry = oneIndx.createDocEntry(UtilConst.splitOnWhiteSpace(queryText), true); // true means including positions
-          
-          for (int i = 0; i < docIdSample.size(); ++i) {
-            String docId = docIdSample.get(i);
-            DocEntry docEntry = oneIndx.getDocEntry(docId);
-            
-            VectorWrapper docVect = oneExtr.getFeatInnerProdVector(docEntry, false);         
-            VectorWrapper queryVect = oneExtr.getFeatInnerProdVector(queryEntry, true);
-            
-            float innerProdVal = VectorWrapper.scalarProduct(docVect, queryVect);
-            DenseVector oneFeatVecScore = res.get(docId);
-            if (oneFeatVecScore == null) {
-              throw new Exception("Bug: no score for " + docId + " extractor: " + oneExtr.getName() + 
-                                 " field: " + oneExtr.getFieldName());
-            }
-            if (oneFeatVecScore.size() != 1) {
-              throw new Exception("Bug: feature vector for " + docId + " extractor: " + oneExtr.getName() + 
-                  " field: " + oneExtr.getFieldName() + " has size " + oneFeatVecScore.size() + " but we expect size one!");
-            }
-            float featureVal = (float) oneFeatVecScore.get(0);
-            
-            boolean isDiff = Math.abs(innerProdVal - featureVal) > args.mEpsDiff;  
-            compQty++;
-            diffQty += isDiff ? 1 : 0;
-            
-            System.out.println(String.format("Query id: %s Doc id: %s field name: %s feature val: %g inner product val: %g extractor: %s %s",
-                                            queryId, docId, fieldName, featureVal, innerProdVal, oneExtr.getName(),
-                                            isDiff ? "SIGN. DIFF." : ""));
-         }
           
         }
-        
       }
 
       System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));

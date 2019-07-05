@@ -45,8 +45,9 @@ public class BuildInMemFwdIndexApp {
     options.addOption(CommonParams.ROOT_DIR_PARAM,               null, true, CommonParams.ROOT_DIR_DESC);
     options.addOption(CommonParams.SUB_DIR_TYPE_PARAM,           null, true, CommonParams.SUB_DIR_TYPE_DESC);
     options.addOption(CommonParams.MAX_NUM_REC_PARAM,            null, true, CommonParams.MAX_NUM_REC_DESC);
-    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,         null, true, CommonParams.SOLR_FILE_NAME_DESC);    
-    options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_MINDEX_DESC);
+    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,         null, true, CommonParams.SOLR_FILE_NAME_DESC);  
+    options.addOption(CommonParams.DATA_FILE_PARAM,              null, true, CommonParams.DATA_FILE_DESC);   
+    options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_INDEX_DESC);
     options.addOption(FIELD_NAME_PARAM,                          null, true, FIELD_NAME_DESC);
     options.addOption(STORE_WORD_ID_SEQ_PARAM,                   null, false, STORE_WORD_ID_SEQ_DESC);
     options.addOption(CommonParams.USE_INMEM_FOWARD_INDEX_PARAM, null, false, CommonParams.USE_INMEM_FOWARD_INDEX_DESC);
@@ -60,19 +61,28 @@ public class BuildInMemFwdIndexApp {
       
       rootDir = cmd.getOptionValue(CommonParams.ROOT_DIR_PARAM);
       
-      if (null == rootDir) Usage("Specify: " + CommonParams.ROOT_DIR_DESC, options);
+      if (null == rootDir) Usage("Specify: " + CommonParams.ROOT_DIR_PARAM, options);
       
       String outPrefix = cmd.getOptionValue(CommonParams.OUT_INDEX_PARAM);
       
-      if (null == outPrefix) Usage("Specify: " + CommonParams.OUT_MINDEX_DESC, options);
+      if (null == outPrefix) Usage("Specify: " + CommonParams.OUT_INDEX_PARAM, options);
       
       String subDirTypeList = cmd.getOptionValue(CommonParams.SUB_DIR_TYPE_PARAM);
       
       if (null == subDirTypeList ||
-          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.SUB_DIR_TYPE_DESC, options);
+          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.SUB_DIR_TYPE_PARAM, options);
       
-      String solrFileName = cmd.getOptionValue(CommonParams.SOLR_FILE_NAME_PARAM);
-      if (null == solrFileName) Usage("Specify: " + CommonParams.SOLR_FILE_NAME_DESC, options);
+      String dataFileName = cmd.getOptionValue(CommonParams.DATA_FILE_PARAM);
+      
+      if (null == dataFileName) {
+        String solrFileName = cmd.getOptionValue(CommonParams.SOLR_FILE_NAME_PARAM);
+        if (solrFileName != null) {
+          dataFileName = solrFileName;
+        }
+      }
+      if (null == dataFileName) {
+        Usage("Specify: " + CommonParams.DATA_FILE_PARAM, options);
+      }
       
       int maxNumRec = Integer.MAX_VALUE;
       
@@ -100,7 +110,7 @@ public class BuildInMemFwdIndexApp {
         
       String [] fileNames = new String[subDirs.length];
       for (int i = 0; i < fileNames.length; ++i)
-        fileNames[i] = rootDir + "/" + subDirs[i] + "/" + solrFileName;
+        fileNames[i] = rootDir + "/" + subDirs[i] + "/" + dataFileName;
       
       boolean bStoreWordIdSeq = cmd.hasOption(STORE_WORD_ID_SEQ_PARAM);
       boolean bUseTextInMem = cmd.hasOption(CommonParams.USE_INMEM_FOWARD_INDEX_PARAM);

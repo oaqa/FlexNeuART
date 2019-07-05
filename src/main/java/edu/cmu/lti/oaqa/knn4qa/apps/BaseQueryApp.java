@@ -15,10 +15,8 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -40,9 +38,8 @@ import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorExperOld;
 import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
-import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
-import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 import ciir.umass.edu.learning.*;
 
 /**
@@ -92,12 +89,6 @@ class DataPointWrapper extends DataPoint {
   float [] mFeatValues;
 }
 
-class RevLenComp implements Comparator<String> { 
-  public int compare(String s1, String s2) {
-   return s2.length() - s1.length();
-  }
-}
-
 class BaseProcessingUnit {
   public static Object              mWriteLock = new Object();
   protected final BaseQueryApp      mAppRef;
@@ -107,18 +98,9 @@ class BaseProcessingUnit {
   }  
   
   public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
-    Map<String, String>    docFields = null;
-    String                 docText = mAppRef.mQueries.get(queryNum);
-    
-    // 1. Parse a query
-    try {
-      docFields = XmlHelper.parseXMLIndexEntry(docText);
-    } catch (Exception e) {
-      mAppRef.logger.error("Parsing error, offending DOC:\n" + docText);
-      throw new Exception("Parsing error.");
-    }
-    
-    String queryID = docFields.get(CandidateProvider.ID_FIELD_NAME);
+    Map<String, String>    queryFields = mAppRef.mParsedQueries.get(queryNum);
+
+    String queryID = queryFields.get(CandidateProvider.ID_FIELD_NAME);
             
     // 2. Obtain results
     long start = System.currentTimeMillis();
@@ -129,15 +111,15 @@ class BaseProcessingUnit {
       qres = mAppRef.mResultCache.getCacheEntry(queryID);
     if (qres == null) {            
 
-      String text = docFields.get(CandidateProvider.TEXT_FIELD_NAME);
+      String text = queryFields.get(CandidateProvider.TEXT_FIELD_NAME);
       if (text != null) {
         // This is a workaround for a pesky problem: didn't previously notice that the string
         // n't (obtained by tokenization of can't is indexed. Querying using this word
         // add a non-negligible overhead (although this doesn't affect overall accuracy)
         // THIS IS FOR THE FIELD TEXT ONLY
-        docFields.put(CandidateProvider.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
+        queryFields.put(CandidateProvider.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
       }
-      qres = candProvider.getCandidates(queryNum, docFields, mAppRef.mMaxCandRet);
+      qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
       if (mAppRef.mResultCache != null) 
         mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
     }
@@ -169,7 +151,7 @@ class BaseProcessingUnit {
     if (mAppRef.mInMemExtrInterm != null) {
       // Compute features once for all documents using an intermediate re-ranker
       start = System.currentTimeMillis();
-      allDocFeats = mAppRef.mInMemExtrInterm.getFeatures(allDocIds, docFields);
+      allDocFeats = mAppRef.mInMemExtrInterm.getFeatures(allDocIds, queryFields);
       
       DenseVector intermModelWeights = mAppRef.mModelInterm;
 
@@ -229,7 +211,7 @@ class BaseProcessingUnit {
       }
       // Compute features once for all documents using a final re-ranker
       start = System.currentTimeMillis();
-      allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, docFields);
+      allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, queryFields);
       
       Ranker modelFinal = mAppRef.mModelFinal;
       
@@ -274,7 +256,7 @@ class BaseProcessingUnit {
         synchronized (mWriteLock) {
           mAppRef.procResults(
               queryID,
-              docFields,
+              queryFields,
               resultsCurr,
               numRet,
               allDocFeats
@@ -371,7 +353,7 @@ class BaseQueryAppProcessingThread extends Thread  {
       
       CandidateProvider candProvider = mProcUnit.mAppRef.mCandProviders[mThreadId];
 
-      for (int iq = 0; iq < mProcUnit.mAppRef.mQueries.size(); ++iq)
+      for (int iq = 0; iq < mProcUnit.mAppRef.mParsedQueries.size(); ++iq)
         if (iq % mThreadQty == mThreadId) 
           mProcUnit.procQuery(candProvider, iq);
       
@@ -866,21 +848,20 @@ public abstract class BaseQueryApp {
         }
       }      
       
-      BufferedReader  inpText = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(mQueryFile)));
+      int queryQty = 0;
       
-      String docText = XmlHelper.readNextXMLIndexEntry(inpText);        
-      int docQty = 0;
-      for (; docText!= null && docQty < mMaxNumQuery; 
-          docText = XmlHelper.readNextXMLIndexEntry(inpText)) {
+      try (DataEntryReader inp = new DataEntryReader(mQueryFile)) {
+        Map<String, String> queryFields = null;      
         
-        mQueries.add(docText);
-        ++docQty;
-        if (docQty % 100 == 0) logger.info("Read " + docQty + " documents from " + mQueryFile);
+        for (; ((queryFields = inp.readNext()) != null) && queryQty < mMaxNumQuery; ) {
+           
+          mParsedQueries.add(queryFields);
+          ++queryQty;
+          if (queryQty % 100 == 0) logger.info("Read " + queryQty + " documents from " + mQueryFile);
+        }
       }
       
-      mQueries.sort(new RevLenComp());
-      
-      logger.info("Read " + docQty + " documents from " + mQueryFile);
+      logger.info("Read " + queryQty + " documents from " + mQueryFile);
       
       init();
           
@@ -888,7 +869,7 @@ public abstract class BaseQueryApp {
         ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
         logger.info(String.format("Created a fixed thread pool with %d threads", mThreadQty));
         
-        for (int iq = 0; iq < mQueries.size(); ++iq) {
+        for (int iq = 0; iq < mParsedQueries.size(); ++iq) {
           executor.execute(new BaseQueryAppProcessingWorker(this, iq));
         }                  
        
@@ -1011,5 +992,5 @@ public abstract class BaseQueryApp {
   SynchronizedSummaryStatistics mFinalRerankTimeStat  = new SynchronizedSummaryStatistics();
   SynchronizedSummaryStatistics mNumRetStat           = new SynchronizedSummaryStatistics();
   
-  ArrayList<String>                               mQueries = new ArrayList<String>();      
+  ArrayList<Map<String, String>> mParsedQueries = new ArrayList<Map<String, String>>();      
 }

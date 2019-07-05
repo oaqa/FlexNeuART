@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -34,10 +32,9 @@ import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
-import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 import edu.cmu.lti.oaqa.solr.UtilConst;
 
 /**
@@ -89,23 +86,20 @@ public class ExportToNMSLIBDenseSparseFusion {
     
     try {
       
-      BufferedReader inpQueryBuffer = null;
-      ArrayList<String> queries = null;
+      ArrayList<Map<String, String>> parsedQueries = null;
       
       if (args.mQueryFile != null) {
-        inpQueryBuffer = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args.mQueryFile)));
-      
-        queries = new ArrayList<String>();
+
+        parsedQueries = new ArrayList<Map<String, String>>();     
+        Map<String, String> queryFields = null;   
         
-        String queryText = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer);        
-        
-        for (; queryText!= null; 
-            queryText = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer)) {
-          queries.add(queryText);
+        try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
+          while ((queryFields = inp.readNext()) != null) {
+            parsedQueries.add(queryFields);
+          }
         }
         
-        inpQueryBuffer.close();
-      }
+      } 
       
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
       
@@ -135,7 +129,7 @@ public class ExportToNMSLIBDenseSparseFusion {
       
       String[] allDocIds = compIndices[0].getAllDocIds();
       
-      int entryQty = queries == null ?  allDocIds.length  : queries.size();
+      int entryQty = parsedQueries == null ?  allDocIds.length  : parsedQueries.size();
       
       System.out.println("Writing the number of entries (" + entryQty + ") to the output file");
       
@@ -147,7 +141,7 @@ public class ExportToNMSLIBDenseSparseFusion {
         out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
       }
       
-      if (queries == null) {    
+      if (parsedQueries == null) {    
         int docNum = 0;
         for (String docId : allDocIds) {
           writeStringId(docId, out);
@@ -159,27 +153,20 @@ public class ExportToNMSLIBDenseSparseFusion {
         }
         System.out.println("Exported " + docNum + " docs");
       } else {
-        for (String queryText : queries) {
-          Map<String, String> queryFields = null;
-          // Parse a query
-          try {
-            queryFields = XmlHelper.parseXMLIndexEntry(queryText);
-          } catch (Exception e) {
-            System.err.println("Parsing error, offending DOC:\n" + queryText);
-            System.exit(1);
-          }
-          
+        int queryQty = 0;
+        for (Map<String, String> queryFields : parsedQueries) {
+          ++queryQty;
           String queryId = queryFields.get(UtilConst.TAG_DOCNO);
           
           if (queryId == null) {
-            System.err.println("No query ID: Parsing error, offending DOC:\n" + queryText);
+            System.err.println("No query ID: Parsing error, query # " + queryQty);
             System.exit(1);
           }
           
           writeStringId(queryId, out);
           VectorWrapper.writeAllVectorsToNMSLIBStream(queryId, queryFields, compIndices, compExtractors, out);
         }
-        System.out.println("Exported " + queries.size() + " queries");
+        System.out.println("Exported " + parsedQueries.size() + " queries");
       }
       
     } catch (Exception e) {
@@ -201,7 +188,7 @@ public class ExportToNMSLIBDenseSparseFusion {
   private static void writeStringId(String id, BufferedOutputStream out) throws Exception {
     
     // Here we make a fat assumption that the string doesn't contain any non-ascii characters
-    if (StringUtilsLeo.hasNonAscii(id)) {
+    if (StringUtils.hasNonAscii(id)) {
       throw new Exception("Invalid id, contains non-ASCII chars: " + id);
     }
     out.write(BinWriteUtils.intToBytes(id.length()));

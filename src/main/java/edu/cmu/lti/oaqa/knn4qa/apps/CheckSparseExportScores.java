@@ -35,6 +35,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
@@ -144,63 +145,52 @@ public class CheckSparseExportScores {
       
       ArrayList<String> docIdSample =  rand.reservoirSampling(allDocIds, args.mMaxNumDoc);
       
-      BufferedReader inpQueryBuffer = null;
-      
-      inpQueryBuffer = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args.mQueryFile)));
-        
-      String queryXML = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer);        
-      
       int diffQty = 0, compQty = 0;
-        
-      for (int queryNo = 0; queryXML!= null && queryNo < args.mMaxNumQuery; 
-            queryXML = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer), ++queryNo) {
-        
-        Map<String, String> queryFields = null;
-        // Parse a query
-        try {
-          queryFields = XmlHelper.parseXMLIndexEntry(queryXML);
-        } catch (Exception e) {
-          System.err.println("Parsing error, offending DOC:\n" + queryXML);
-          System.exit(1);
-        }
-        
-        String queryId = queryFields.get(UtilConst.TAG_DOCNO);
-       
-        Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(docIdSample, queryFields);
-
-        for (int i = 0; i < docIdSample.size(); ++i) {
-          String docId = docIdSample.get(i);
-          
-          
-          TrulySparseVector queryVect = VectorWrapper.createAnInterleavedFeatureVect(null, queryFields, 
-                                                                                    compIndices, compExtractors, 
-                                                                                    compWeights);
-          
-          TrulySparseVector docVect = VectorWrapper.createAnInterleavedFeatureVect(docId, null, 
-                                                                                   compIndices, compExtractors, 
-                                                                                   unitWeights);
-          
-          float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);    
-          DenseVector featVect = res.get(docId);
-          float featBasedVal = (float)compWeights.dot(featVect);
-          
-          boolean isDiff = Math.abs(innerProdVal - featBasedVal) > args.mEpsDiff;  
-          compQty++;
-          diffQty += isDiff ? 1 : 0;
-          
-
-          
-          System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
-                                            queryId, docId, featBasedVal, innerProdVal,
-                                            isDiff ? "SIGN. DIFF." : ""));
-          
-          if (args.mVerbose) {
-            System.out.println("Weights: "+ VectorUtils.toString(compWeights));
-            System.out.println("Features: "+ VectorUtils.toString(featVect));
-          }
-          
-        }
       
+      Map<String, String> queryFields = null;
+        
+      try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
+        for (int queryNo = 0; ((queryFields = inp.readNext()) != null) && queryNo < args.mMaxNumQuery; 
+              ++queryNo) {
+          
+          String queryId = queryFields.get(UtilConst.TAG_DOCNO);
+         
+          Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(docIdSample, queryFields);
+
+          for (int i = 0; i < docIdSample.size(); ++i) {
+            String docId = docIdSample.get(i);
+            
+            
+            TrulySparseVector queryVect = VectorWrapper.createAnInterleavedFeatureVect(null, queryFields, 
+                                                                                      compIndices, compExtractors, 
+                                                                                      compWeights);
+            
+            TrulySparseVector docVect = VectorWrapper.createAnInterleavedFeatureVect(docId, null, 
+                                                                                     compIndices, compExtractors, 
+                                                                                     unitWeights);
+            
+            float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);    
+            DenseVector featVect = res.get(docId);
+            float featBasedVal = (float)compWeights.dot(featVect);
+            
+            boolean isDiff = Math.abs(innerProdVal - featBasedVal) > args.mEpsDiff;  
+            compQty++;
+            diffQty += isDiff ? 1 : 0;
+            
+
+            
+            System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
+                                              queryId, docId, featBasedVal, innerProdVal,
+                                              isDiff ? "SIGN. DIFF." : ""));
+            
+            if (args.mVerbose) {
+              System.out.println("Weights: "+ VectorUtils.toString(compWeights));
+              System.out.println("Features: "+ VectorUtils.toString(featVect));
+            }
+            
+          }
+        
+        }
       }
       
       System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));

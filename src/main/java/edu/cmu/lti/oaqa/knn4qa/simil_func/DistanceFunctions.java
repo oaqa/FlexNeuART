@@ -22,7 +22,7 @@ import java.util.Arrays;
 import no.uib.cipr.matrix.sparse.SparseVector;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
  * Implementations for some distance functions between vectors and/or strings.
@@ -573,7 +573,7 @@ public class DistanceFunctions {
       String tmp = sysInReader.readLine();
       thresh = Float.parseFloat(tmp);
       
-      String[] seq1=StringUtilsLeo.splitNoEmpty(word1, "\\s+");
+      String[] seq1=StringUtils.splitNoEmpty(word1, "\\s+");
       String[] seq2=word2.split("\\s+");
       
       float [][] distMatr = compDistMatrix(AbstractDistance.create("cosine"),

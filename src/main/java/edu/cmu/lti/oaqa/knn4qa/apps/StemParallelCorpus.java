@@ -100,7 +100,6 @@ public class StemParallelCorpus {
         throw new Exception("Error: Question file has more entries!");
       }
       
-      
     } catch (Exception e) {
       System.err.println("Terminating due to an exception: " + e);
       System.exit(1);

@@ -25,6 +25,7 @@ import org.apache.lucene.store.*;
 
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 import edu.cmu.lti.oaqa.solr.UtilConst;
 
@@ -74,8 +75,9 @@ public class LuceneIndexer {
     options.addOption(CommonParams.ROOT_DIR_PARAM,      null, true, CommonParams.ROOT_DIR_DESC);
     options.addOption(CommonParams.SUB_DIR_TYPE_PARAM,  null, true, CommonParams.SUB_DIR_TYPE_DESC);
     options.addOption(CommonParams.MAX_NUM_REC_PARAM,   null, true, CommonParams.MAX_NUM_REC_DESC);
-    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,null, true, CommonParams.SOLR_FILE_NAME_DESC);    
-    options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_MINDEX_DESC);    
+    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,null, true, CommonParams.SOLR_FILE_NAME_DESC);  
+    options.addOption(CommonParams.DATA_FILE_PARAM,     null, true, CommonParams.DATA_FILE_DESC);
+    options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_INDEX_DESC);    
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -90,15 +92,24 @@ public class LuceneIndexer {
       
       String outputDirName = cmd.getOptionValue(CommonParams.OUT_INDEX_PARAM);
       
-      if (null == outputDirName) Usage("Specify: " + CommonParams.OUT_MINDEX_DESC, options);
+      if (null == outputDirName) Usage("Specify: " + CommonParams.OUT_INDEX_PARAM, options);
       
       String subDirTypeList = cmd.getOptionValue(CommonParams.SUB_DIR_TYPE_PARAM);
       
       if (null == subDirTypeList ||
-          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.SUB_DIR_TYPE_DESC, options);
+          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.SUB_DIR_TYPE_PARAM, options);
       
-      String solrFileName = cmd.getOptionValue(CommonParams.SOLR_FILE_NAME_PARAM);
-      if (null == solrFileName) Usage("Specify: " + CommonParams.SOLR_FILE_NAME_DESC, options);
+      String dataFileName = cmd.getOptionValue(CommonParams.DATA_FILE_PARAM);
+      
+      if (null == dataFileName) {
+        String solrFileName = cmd.getOptionValue(CommonParams.SOLR_FILE_NAME_PARAM);
+        if (solrFileName != null) {
+          dataFileName = solrFileName;
+        }
+      }
+      if (null == dataFileName) {
+        Usage("Specify: " + CommonParams.DATA_FILE_PARAM, options);
+      }
       
       int maxNumRec = Integer.MAX_VALUE;
       
@@ -152,52 +163,41 @@ public class LuceneIndexer {
       IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      
       
       for (int subDirId = 0; subDirId < subDirs.length && docNum < maxNumRec; ++subDirId) {
-        String inputFileName = rootDir + "/" + subDirs[subDirId] + "/" + solrFileName;
+        String inputFileName = rootDir + "/" + subDirs[subDirId] + "/" + dataFileName;
         
-        System.out.println("Input file name: " + inputFileName);        
-
-        BufferedReader inpText = new BufferedReader(new InputStreamReader(
-            CompressUtils.createInputStream(inputFileName)));
-        String docText = XmlHelper.readNextXMLIndexEntry(inpText);
-
-        for (; docText != null && docNum < maxNumRec; docText = XmlHelper.readNextXMLIndexEntry(inpText)) {
-          ++docNum;
+        System.out.println("Input file name: " + inputFileName);   
+        try (DataEntryReader inp = new DataEntryReader(inputFileName)) {
           Map<String, String> docFields = null;
+          
+          for (; ((docFields = inp.readNext()) != null) && docNum < maxNumRec; ) {
+            ++docNum;
+            
+            String id = docFields.get(UtilConst.TAG_DOCNO);
 
-          Document luceneDoc = new Document();
+            if (id == null) {
+              System.err.println(String.format("No ID tag '%s', offending DOC #%d", UtilConst.TAG_DOCNO, docNum));
+            }
 
-          try {
-            docFields = XmlHelper.parseXMLIndexEntry(docText);
-          } catch (Exception e) {
-            System.err.println(String.format("Parsing error, offending DOC #%d:\n%s", docNum, docText));
-            System.exit(1);
-          }
+            Document luceneDoc = new Document();
+            luceneDoc.add(new StringField(UtilConst.TAG_DOCNO, id, Field.Store.YES));
 
-          String id = docFields.get(UtilConst.TAG_DOCNO);
-
-          if (id == null) {
-            System.err.println(String.format("No ID tag '%s', offending DOC #%d:\n%s", UtilConst.TAG_DOCNO, docNum,
-                docText));
-          }
-
-          luceneDoc.add(new StringField(UtilConst.TAG_DOCNO, id, Field.Store.YES));
-
-          for (Map.Entry<String, String> e : docFields.entrySet()) {
-            if (!e.getKey().equals(UtilConst.TAG_DOCNO)) {
-              luceneDoc.add(new Field(e.getKey(), e.getValue(), FIELD_TYPE));
+            for (Map.Entry<String, String> e : docFields.entrySet()) {
+              if (!e.getKey().equals(UtilConst.TAG_DOCNO)) {
+                luceneDoc.add(new Field(e.getKey(), e.getValue(), FIELD_TYPE));
+              }
+            }
+            
+            indexWriter.addDocument(luceneDoc);
+            if (docNum % UtilConst.PROGRESS_REPORT_QTY == 0) {
+              System.out.println("Indexed " + docNum + " docs");
+            }
+            if (docNum % COMMIT_INTERV == 0) {
+              System.out.println("Committing");
+              indexWriter.commit();
             }
           }
-          
-          indexWriter.addDocument(luceneDoc);
-          if (docNum % UtilConst.PROGRESS_REPORT_QTY == 0) {
-            System.out.println("Indexed " + docNum + " docs");
-          }
-          if (docNum % COMMIT_INTERV == 0) {
-            System.out.println("Committing");
-            indexWriter.commit();
-          }
+          System.out.println("Indexed " + docNum + " docs");
         }
-        System.out.println("Indexed " + docNum + " docs");
       }
       
       indexWriter.commit();

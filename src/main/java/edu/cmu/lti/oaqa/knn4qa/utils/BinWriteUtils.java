@@ -93,7 +93,7 @@ public class BinWriteUtils {
   public static void writeStringId(String id, 
                                    OutputStream out) throws Exception {
     // Here we make a fat assumption that the string doesn't contain any non-ascii characters
-    if (StringUtilsLeo.hasNonAscii(id)) {
+    if (StringUtils.hasNonAscii(id)) {
       throw new Exception("Invalid id, contains non-ASCII chars: " + id);
     }
     out.write(BinWriteUtils.intToBytes(id.length()));

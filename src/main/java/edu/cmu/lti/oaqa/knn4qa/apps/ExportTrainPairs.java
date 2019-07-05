@@ -32,6 +32,7 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 import edu.cmu.lti.oaqa.solr.UtilConst;
@@ -165,55 +166,45 @@ public class ExportTrainPairs {
       ArrayList<String> queryFieldTexts = new ArrayList<String>();
       ArrayList<String> queryIds = new ArrayList<String>();
       
-      BufferedReader inp = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(queryFile)));
-      
-      String docText = XmlHelper.readNextXMLIndexEntry(inp);        
       int queryQty = 0;
-      for (; docText!= null && queryQty < maxNumQuery; 
-         docText = XmlHelper.readNextXMLIndexEntry(inp)) {
+      
+      Map<String, String> docFields = null;
+      
+      try (DataEntryReader inp = new DataEntryReader(queryFile)) {
+        for (; ((docFields = inp.readNext()) != null) && queryQty < maxNumQuery; ) {
 
-        ++queryQty;
-        Map<String, String> docFields = null;
-        
-        // 1. Parse a query
-        try {
+          ++queryQty;
           
-          docFields = XmlHelper.parseXMLIndexEntry(docText);
-          
-        } catch (Exception e) {
-          
-          System.err.println("Parsing error, offending DOC:\n" + docText);
-          e.printStackTrace();
-          System.exit(1);
-          
-        }
-        
-        String qid = docFields.get(UtilConst.TAG_DOCNO);
-        if (qid == null) {
-          System.err.println("Undefined query ID in query # " + queryQty);
-          System.exit(1);
-        }
-        String queryText = CandidateProvider.removeAddStopwords(docFields.get(CandidateProvider.TEXT_FIELD_NAME));
-        String fieldText = CandidateProvider.removeAddStopwords(docFields.get(fieldName));
+          String qid = docFields.get(UtilConst.TAG_DOCNO);
+          if (qid == null) {
+            System.err.println("Undefined query ID in query # " + queryQty);
+            System.exit(1);
+          }
+          String queryText = CandidateProvider.removeAddStopwords(docFields.get(CandidateProvider.TEXT_FIELD_NAME));
+          String fieldText = CandidateProvider.removeAddStopwords(docFields.get(fieldName));
 
-        if (queryText == null) queryText = "";
-        if (fieldText == null) fieldText = "";
-        
-        if (queryText.isEmpty()) {
-          System.out.println(String.format("Ignoring query with empty field '%s' for query '%s'",
-                                          CandidateProvider.TEXT_FIELD_NAME, qid));
-          continue;
+          if (queryText == null) queryText = "";
+          if (fieldText == null) fieldText = "";
+          
+          if (queryText.isEmpty()) {
+            System.out.println(String.format("Ignoring query with empty field '%s' for query '%s'",
+                                            CandidateProvider.TEXT_FIELD_NAME, qid));
+            continue;
+          }
+          if (fieldText.isEmpty()) {
+            System.out.println(String.format("Ignoring query with empty field '%s' for query '%s'",
+                                            fieldName, qid));
+            continue;
+          }
+          
+          queryIds.add(qid);
+          queryQueryTexts.add(queryText);
+          queryFieldTexts.add(fieldText);
+          
         }
-        if (fieldText.isEmpty()) {
-          System.out.println(String.format("Ignoring query with empty field '%s' for query '%s'",
-                                          fieldName, qid));
-          continue;
-        }
-        
-        queryIds.add(qid);
-        queryQueryTexts.add(queryText);
-        queryFieldTexts.add(fieldText);
-        
+      } catch (Exception e1) {
+        // TODO Auto-generated catch block
+        e1.printStackTrace();
       }
 
       String providerURI = cmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);

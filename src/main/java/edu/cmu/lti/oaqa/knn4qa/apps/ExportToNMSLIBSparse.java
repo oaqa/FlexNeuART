@@ -36,6 +36,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
@@ -94,23 +95,19 @@ public class ExportToNMSLIBSparse {
     
     try {
       
-      BufferedReader inpQueryBuffer = null;
-      ArrayList<String> queries = null;
+      ArrayList<Map<String, String>> parsedQueries = null;
       DenseVector compWeights = null;
       
       if (args.mQueryFile != null) {
-        inpQueryBuffer = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(args.mQueryFile)));
-      
-        queries = new ArrayList<String>();
+
+        parsedQueries = new ArrayList<Map<String, String>>();     
+        Map<String, String> queryFields = null;   
         
-        String queryText = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer);        
-        
-        for (; queryText!= null; 
-            queryText = XmlHelper.readNextXMLIndexEntry(inpQueryBuffer)) {
-          queries.add(queryText);
+        try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
+          while ((queryFields = inp.readNext()) != null) {
+            parsedQueries.add(queryFields);
+          }
         }
-        
-        inpQueryBuffer.close();
         
       } else {
         
@@ -154,14 +151,14 @@ public class ExportToNMSLIBSparse {
       
       String[] allDocIds = compIndices[0].getAllDocIds();
       
-      int entryQty = queries == null ?  allDocIds.length  : queries.size();
+      int entryQty = parsedQueries == null ?  allDocIds.length  : parsedQueries.size();
       
       System.out.println("Writing the number of entries (" + entryQty + ") to the output file");
       
       out.write(BinWriteUtils.intToBytes(entryQty));
 
       
-      if (queries == null) {    
+      if (parsedQueries == null) {    
         int docNum = 0;
         for (String docId : allDocIds) {
           BinWriteUtils.writeStringId(docId, out);
@@ -173,20 +170,13 @@ public class ExportToNMSLIBSparse {
         }
         System.out.println("Exported " + docNum + " docs");
       } else {
-        for (String queryText : queries) {
-          Map<String, String> queryFields = null;
-          // Parse a query
-          try {
-            queryFields = XmlHelper.parseXMLIndexEntry(queryText);
-          } catch (Exception e) {
-            System.err.println("Parsing error, offending DOC:\n" + queryText);
-            System.exit(1);
-          }
-          
+        int queryQty = 0;
+        for (Map<String, String> queryFields : parsedQueries) {
+          ++queryQty;
           String queryId = queryFields.get(UtilConst.TAG_DOCNO);
           
           if (queryId == null) {
-            System.err.println("No query ID: Parsing error, offending DOC:\n" + queryText);
+            System.err.println("No query ID: Parsing error, query # " + queryQty);
             System.exit(1);
           }
           
@@ -195,7 +185,7 @@ public class ExportToNMSLIBSparse {
                                                                  compIndices, compExtractors, 
                                                                  unitWeights, out);
         }
-        System.out.println("Exported " + queries.size() + " queries");
+        System.out.println("Exported " + parsedQueries.size() + " queries");
       }
       
     } catch (Exception e) {

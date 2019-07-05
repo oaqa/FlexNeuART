@@ -123,3 +123,46 @@ function getNumCpuCores {
   fi
   echo $NUM_CPU_CORES
 }
+
+# This function 
+# 1. Identifies guesses what is the format of data: new JSONL or old series-of-XML format
+# 2. Finds all sub-directories containing indexable data and makes a string 
+#    that represents a list of comma-separated sub-directories with data. This string
+#    can be passed to indexing apps.
+# Attention: it "returns" an array by setting a variable retVal (ugly but works reliably)
+function getIndexDataInfo {
+  topDir="$1"
+  dirList=""
+  oldFile="SolrAnswerFile.txt"
+  newFile="AnswerFields.jsonl"
+  currFile=""
+  currDir="$PWD"
+  cd "$topDir"
+  for subDir in * ; do
+    if [ -d "$subDir" ] ; then
+      if [ -f "$subDir/$oldFile" -o -f "$subDir/$newFile" ] ; then
+        if [ "$dirList" != "" ] ; then
+          dirList="$dirList,"
+        fi
+        dirList="${dirList}$subDir"
+        if [ -f "$subDir/$oldFile" ] ; then
+          if [ "$currFile" = "$newFile" ] ; then
+            echo "Inconsistent use of XML/JSONL formats"
+            exit 1
+          fi
+          currFile=$oldFile
+        fi
+        if [ -f "$subDir/$newFile" ] ; then
+          if [ "$currFile" = "$oldFile" ] ; then
+            echo "Inconsistent use of XML/JSONL formats"
+            exit 1
+          fi
+          currFile=$newFile
+        fi
+      fi
+    fi
+  done
+  cd "$currDir"
+  # This is kinda ugly, but is better than other non-portable solutions.
+  retVal=("${dirList}" "${currFile}")
+}

@@ -18,6 +18,7 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 import org.apache.commons.cli.*;
 
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 
 import java.io.*;
@@ -65,31 +66,23 @@ public class ExtractFieldValue {
       if (null == outputFileName) Usage("Specify: " + OUTPUT_FILE_PARAM, options);
 
       String fieldName = cmd.getOptionValue(FIELD_NAME_PARAM);
-  
-      BufferedReader inpText = new BufferedReader(new InputStreamReader(
-          CompressUtils.createInputStream(inputFileName)));
-      String docText = XmlHelper.readNextXMLIndexEntry(inpText);
+
       
       System.out.println("Indexing field: " + fieldName);
       
       BufferedWriter outFile = new BufferedWriter(new FileWriter(new File(outputFileName)));
+      Map<String, String> docFields = null;
       
-      for (int docNum = 0; docText != null ; docText = XmlHelper.readNextXMLIndexEntry(inpText)) {
-        Map<String, String> docFields = null;
+      try (DataEntryReader inp = new DataEntryReader(inputFileName)) {
+        for (int docNum = 0; ((docFields = inp.readNext()) != null) ; ++docNum) {
 
-        try {
-          docFields = XmlHelper.parseXMLIndexEntry(docText);
-        } catch (Exception e) {
-          System.err.println(String.format("Parsing error, offending DOC #%d:\n%s", docNum, docText));
-          System.exit(1);
+          String val = docFields.get(fieldName);
+          val = val == null ? "" : val;
+          
+          outFile.write(val); outFile.newLine();
+      
+          
         }
-
-        String val = docFields.get(fieldName);
-        val = val == null ? "" : val;
-        
-        outFile.write(val); outFile.newLine();
-        
-        ++docNum;
       }       
       
       outFile.close();

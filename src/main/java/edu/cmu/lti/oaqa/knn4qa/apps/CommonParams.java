@@ -15,7 +15,6 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 
 public class CommonParams {
   
@@ -106,10 +105,14 @@ public class CommonParams {
   public final static String MAX_NUM_QUERY_DESC  = "maximum number of queries to process";
   public final static String MAX_NUM_QUERY_PARAM = "max_num_query";
   
-  public final static String SOLR_FILE_NAME_DESC = "A name of output file to be fed to a SOLR indexer, e.g., SolrAnswerFile.txt";
+  // A deprecated param
+  public final static String SOLR_FILE_NAME_DESC = "A deprecated parameter left for compatibility";
   public final static String SOLR_FILE_NAME_PARAM = "solr_file";
+  
+  public final static String DATA_FILE_DESC = "A data file";
+  public final static String DATA_FILE_PARAM = "data_file";
     
-  public final static String OUT_MINDEX_DESC = "A directory to store index";
+  public final static String OUT_INDEX_DESC = "A directory to store index";
   public final static String OUT_INDEX_PARAM = "index_dir";
   
   public final static String MIN_PROB_PARAM  = "min_prob";

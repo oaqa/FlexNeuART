@@ -101,7 +101,7 @@ public class XmlHelper {
   }
 
   /**
-   * Generates an entry that can be consumed by indexing applications.
+   * Generates an XML entry that can be consumed by indexing applications.
    * 
    * @param fields  (key, value) pairs; key is a field name, value is a text of the field.
    * 

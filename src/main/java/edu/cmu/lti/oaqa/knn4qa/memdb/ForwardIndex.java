@@ -13,6 +13,7 @@ import java.util.TreeMap;
 
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 import edu.cmu.lti.oaqa.solr.UtilConst;
 
@@ -49,6 +50,7 @@ public abstract class ForwardIndex {
   public static final int MIN_WORD_ID = 1;
   protected static final int PRINT_QTY = 10000;
   protected static final String BINARY_DIR_OR_FILE_SUFFIX = ".bin";
+  // Lucene compresses data quite well, but this comes at the cost of longer re-ranking times
   protected static final boolean USE_MEM_DB = false;
   protected HashMap<String, WordEntry> mStr2WordEntry = new HashMap<String, WordEntry>();
 
@@ -108,11 +110,11 @@ public abstract class ForwardIndex {
    * @param fileNames         an array of files from which the index is created
    * @param bStoreWordIdSeq   if true, we memorize the sequence of word IDs, otherwise only a number of words (doc. len.)
    * @param maxNumRec         the maximum number of records to process
-   * @throws IOException
+   * @throws Exception 
    */
   public void createIndex(String fieldName, String[] fileNames, 
                          boolean bStoreWordIdSeq,
-                         int maxNumRec) throws IOException {    
+                         int maxNumRec) throws Exception {    
     mDocQty       = 0;
     mTotalWordQty = 0;
     
@@ -123,78 +125,69 @@ public abstract class ForwardIndex {
     System.out.println("Creating a new in-memory forward index, maximum # of docs to process: " + maxNumRec);
     
     for (String fileName : fileNames) {    
-      BufferedReader  inpText = new BufferedReader(
-          new InputStreamReader(CompressUtils.createInputStream(fileName)));
-      
-      String docText = XmlHelper.readNextXMLIndexEntry(inpText);
-  
-      for (;mDocQty < maxNumRec && docText!= null; 
-           docText = XmlHelper.readNextXMLIndexEntry(inpText)) {
+      try (DataEntryReader inp = new DataEntryReader(fileName)) {
+ 
         Map<String, String>         docFields = null;
-  
-        try {
-          docFields = XmlHelper.parseXMLIndexEntry(docText);
-        } catch (Exception e) {
-          System.err.println(String.format("Parsing error, offending DOC #%d:\n%s", mDocQty, docText));
-          System.exit(1);
-        }
         
-        String docId = docFields.get(UtilConst.TAG_DOCNO);
-        
-        if (docId == null) {
-          System.err.println(String.format("No ID tag '%s', offending DOC #%d:\n%s", 
-                                            UtilConst.TAG_DOCNO, mDocQty, docText));
-        }
-        
-        String text = docFields.get(fieldName);
-        if (text == null) text = "";
-        if (text.isEmpty()) {
-          System.out.println(String.format("Warning: empty field '%s' for document '%s'",
-                                           fieldName, docId));
-        }
-        
-        // If the string is empty, the array will contain an emtpy string, but
-        // we don't want this
-        text=text.trim();
-        String words[] = text.isEmpty() ? new String[0] : text.split("\\s+");
-  
-        // First obtain word IDs for unknown words
-        for (int i = 0; i < words.length; ++i) {
-          String w = words[i];
-          WordEntry wEntry = mStr2WordEntry.get(w);
-          if (null == wEntry) {
-            wEntry = new WordEntry(MIN_WORD_ID + mStr2WordEntry.size());
-            mStr2WordEntry.put(w, wEntry);
+        for (;mDocQty < maxNumRec && ((docFields = inp.readNext()) != null) ;) {
+          
+          String docId = docFields.get(UtilConst.TAG_DOCNO);
+          
+          if (docId == null) {
+            System.err.println(String.format("No ID tag '%s', offending DOC #%d", 
+                                              UtilConst.TAG_DOCNO, mDocQty));
           }
-        }
-        
-        DocEntry doc = createDocEntry(words, bStoreWordIdSeq);
+          
+          String text = docFields.get(fieldName);
+          if (text == null) text = "";
+          if (text.isEmpty()) {
+            System.out.println(String.format("Warning: empty field '%s' for document '%s'",
+                                             fieldName, docId));
+          }
+          
+          // If the string is empty, the array will contain an emtpy string, but
+          // we don't want this
+          text=text.trim();
+          String words[] = text.isEmpty() ? new String[0] : text.split("\\s+");
+ 
+          // First obtain word IDs for unknown words
+          for (int i = 0; i < words.length; ++i) {
+            String w = words[i];
+            WordEntry wEntry = mStr2WordEntry.get(w);
+            if (null == wEntry) {
+              wEntry = new WordEntry(MIN_WORD_ID + mStr2WordEntry.size());
+              mStr2WordEntry.put(w, wEntry);
+            }
+          }
+          
+          DocEntry doc = createDocEntry(words, bStoreWordIdSeq);
 
-        addDocEntry(docId, doc);
-        
-        HashSet<String> uniqueWords = new HashSet<String>();        
-        for (String w: words) uniqueWords.add(w);
-        
-        // Let's update word co-occurrence statistics
-        for (String w: uniqueWords) {
-          WordEntry wEntry = mStr2WordEntry.get(w);
-          wEntry.mWordFreq++;
+          addDocEntry(docId, doc);
+          
+          HashSet<String> uniqueWords = new HashSet<String>();        
+          for (String w: words) uniqueWords.add(w);
+          
+          // Let's update word co-occurrence statistics
+          for (String w: uniqueWords) {
+            WordEntry wEntry = mStr2WordEntry.get(w);
+            wEntry.mWordFreq++;
+          }
+          
+          ++mDocQty;
+          if (mDocQty % PRINT_QTY == 0) {
+            System.out.println("Processed " + mDocQty + " documents");
+            System.gc();
+          }
+          mTotalWordQty += words.length;
+          totalUniqWordQty += doc.mQtys.length;
         }
         
-        ++mDocQty;
-        if (mDocQty % PRINT_QTY == 0) {
-          System.out.println("Processed " + mDocQty + " documents");
-          System.gc();
-        }
-        mTotalWordQty += words.length;
-        totalUniqWordQty += doc.mQtys.length;
+        postIndexComp();
+        
+        System.out.println("Finished processing file: " + fileName);
+        
+        if (mDocQty >= maxNumRec) break;
       }
-      
-      postIndexComp();
-      
-      System.out.println("Finished processing file: " + fileName);
-      
-      if (mDocQty >= maxNumRec) break;
     }
     
     System.out.println("Final statistics: ");

@@ -20,7 +20,7 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
  * This is a configurable feature extractor designed for experimentation (the
@@ -89,7 +89,7 @@ public class InMemIndexFeatureExtractorExperOld extends InMemIndexFeatureExtract
       if (featFieldArr == null)
         throw new Exception("Neither a property nor a feature name: '" + key + "'");
       for (String fieldName : parts[1].split(",")) {
-        int iField = StringUtilsLeo.findInArrayNoCase(fieldName, mFieldNames);
+        int iField = StringUtils.findInArrayNoCase(fieldName, mFieldNames);
         if (iField < 0)
           throw new Exception("Wrong field name: '" + fieldName + "'");
         featFieldArr[iField] = true;
@@ -124,7 +124,7 @@ public class InMemIndexFeatureExtractorExperOld extends InMemIndexFeatureExtract
           throw new Exception("In the definition of a property: '" + def + "', the second component is not float!");
         }
         String fieldName = parts1[0];
-        int iField = StringUtilsLeo.findInArrayNoCase(fieldName, mFieldNames);
+        int iField = StringUtils.findInArrayNoCase(fieldName, mFieldNames);
         if (iField < 0)
           throw new Exception("Wrong field name: '" + fieldName + "'");
         probFieldArr[iField] = val;
@@ -133,7 +133,7 @@ public class InMemIndexFeatureExtractorExperOld extends InMemIndexFeatureExtract
   }
   
   int getFieldIdByName(String fieldName) throws Exception {
-    int id = StringUtilsLeo.findInArrayNoCase(fieldName, mFieldNames);
+    int id = StringUtils.findInArrayNoCase(fieldName, mFieldNames);
     if (id < 0) throw new Exception("Not a field name: " + fieldName);
     return id;
   }

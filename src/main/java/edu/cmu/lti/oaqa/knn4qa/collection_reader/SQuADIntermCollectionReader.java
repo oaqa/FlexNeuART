@@ -37,7 +37,7 @@ import com.google.gson.Gson;
 import edu.cmu.lti.oaqa.knn4qa.qaintermform.*;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
  * 
@@ -115,7 +115,7 @@ public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
     
     QAPassage currPass = mTmpData.passages[mPassageIndex++];
     
-    jcas.setDocumentText(StringUtilsLeo.removeDiacritics(currPass.text));
+    jcas.setDocumentText(StringUtils.removeDiacritics(currPass.text));
     jcas.setDocumentLanguage(DOCUMENT_LANGUAGE);
     
     JCas jcasQuest;
@@ -137,7 +137,7 @@ public class SQuADIntermCollectionReader extends CasCollectionReader_ImplBase {
       // Create multiple question annotations, including question IDs
       for (int qid = 0; qid < qlen; ++ qid) {
         qStart[qid] = len;
-        String qtext = StringUtilsLeo.removeDiacritics(currPass.questions[qid].text);
+        String qtext = StringUtils.removeDiacritics(currPass.questions[qid].text);
         len += 1 + qtext.length();
         qEnd[qid] = len;
         sb.append(qtext); sb.append(' ');

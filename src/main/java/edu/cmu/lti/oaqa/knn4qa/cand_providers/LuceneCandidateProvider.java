@@ -30,7 +30,7 @@ import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 import com.google.common.base.Splitter;
 
@@ -86,7 +86,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
                         TEXT_FIELD_NAME, queryNum));
     }
     
-    String query = StringUtilsLeo.removePunct(text.trim());
+    String query = StringUtils.removePunct(text.trim());
 
     ArrayList<String>   toks = new ArrayList<String>();
     for (String s: mSpaceSplit.split(query)) {

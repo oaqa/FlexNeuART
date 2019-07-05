@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
  * 
@@ -88,7 +88,7 @@ public class ParsedQuestion {
   }
   
   private static String cleanUpWrapper(boolean doCleanUp, String s) {
-    return doCleanUp ? StringUtilsLeo.cleanUp(s) : s;
+    return doCleanUp ? StringUtils.cleanUp(s) : s;
   }
   
   
