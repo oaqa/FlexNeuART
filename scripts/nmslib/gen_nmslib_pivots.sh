@@ -39,9 +39,12 @@ fi
 for pivot_term_qty in 1000 ; do
   for max_term_qty_K in 50 ; do
     max_term_qty=$((1000*$max_term_qty_K))
-    pivot_file_name="pivots_3field_maxTermQty${max_term_qty_K}K_pivotTermQty${pivot_term_qty}"
-    scripts/nmslib/gen_pivots_multifield.py -d memfwdindex/$collect -o  $DATA_ROOT/nmslib/$collect/pivots/$pivot_file_name -q $PIVOT_QTY -f text,text_unlemm,bigram -m $max_term_qty,0,0 -t $pivot_term_qty,0,0
-    check "scripts/nmslib/gen_pivots_multifield.py -d memfwdindex/$collect -o  $DATA_ROOT/nmslib/$collect/pivots/$pivot_file_name -q $PIVOT_QTY -f text,text_unlemm,bigram -m $max_term_qty,0,0 -t $pivot_term_qty,0,0"
+    if [ "$collect" = "squad" ] ; then
+      pivot_file_name="pivots_2field_maxTermQty${max_term_qty_K}K_pivotTermQty${pivot_term_qty}"
+      cmd="scripts/nmslib/gen_pivots_multifield.py -d memfwdindex/$collect -o  $DATA_ROOT/nmslib/$collect/pivots/$pivot_file_name -q $PIVOT_QTY -f text,text_alias1 -m $max_term_qty,$max_term_qty -t $pivot_term_qty,$pivot_term_qty"
+      bash -c "$cmd"
+      check "$cmd"
+    fi
 
     pivot_file_name="pivots_text_field_maxTermQty${max_term_qty_K}K_pivotTermQty${pivot_term_qty}"
     scripts/nmslib/gen_pivots_multifield.py -d memfwdindex/$collect -o  $DATA_ROOT/nmslib/$collect/pivots/$pivot_file_name -q $PIVOT_QTY -f text -m $max_term_qty -t $pivot_term_qty

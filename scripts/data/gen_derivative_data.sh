@@ -35,8 +35,8 @@ function check_pipe {
 
 # Task 1, let's filter translation tables
 GIZA_ITER_QTY=5
-MIN_PROB_TRAN=0.0001
-MAX_WORD_TRAN_QTY=1000000
+MIN_PROB_TRAN=0.001
+#MAX_WORD_TRAN_QTY=1000000
 
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -72,8 +72,8 @@ for field in $FIELD_LIST ; do
     check "mkdir $TRAN_DIR_TEXT"
   fi
 
-  scripts/giza/filter_tran_table_and_voc.sh $TRAN_DIR $field $GIZA_ITER_QTY memfwdindex/$collect $MIN_PROB_TRAN $MAX_WORD_TRAN_QTY
-  check "filter_tran_table_and_voc"
+  scripts/giza/simple_filter_tran_table.sh $TRAN_DIR $field $GIZA_ITER_QTY $MIN_PROB_TRAN 
+  check "simple_filter_tran_table.sh"
 done
 
 # Create filtered word embeddings (from several sources)"
@@ -97,8 +97,11 @@ FILT_CMD="scripts/embeddings/filter_embed.py memfwdindex/$collect/text_unlemm $M
 src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.bin | $FILT_CMD > $OUT_EMBED_DIR/word2vec.txt
 check_pipe "src/main/c/convert_word2vec $COMPLETE_EMBED_DIR/GoogleNews-vectors-negative300.bin ... "
 
+cat $OUT_EMBED_DIR/word2vec_tran_text_unlemm_dim=300_unfilt.txt | $FILT_CMD > $OUT_EMBED_DIR/word2vec_tran_text_unlemm_dim=300_filt.txt
+check_pipe "cat $OUT_EMBED_DIR/word2vec_tran_text_unlemm_dim=300_unfilt.txt | $FILT_CMD > $OUT_EMBED_DIR/word2vec_tran_text_unlemm_dim=300_filt.txt"
+
 # Task 4 retrofit
-EMBED_LIST="word2vec"
+EMBED_LIST="word2vec word2vec_tran_text_unlemm_dim=300_filt"
 
 MIN_RETROFIT_PROB=0.001
 scripts/embeddings/do_retrofit.sh $collect  "$EMBED_LIST"  $MIN_RETROFIT_PROB

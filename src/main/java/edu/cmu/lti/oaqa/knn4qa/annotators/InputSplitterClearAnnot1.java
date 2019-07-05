@@ -83,6 +83,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
         , mDoPOSTagging, mMinTokQty, mCheckQuality, mSkipAnswers, mIncludeNotBest));
     
     mClearNLPEngine = new BasicEngine(aContext, mDoPOSTagging);
+    mJCasFactory = mClearNLPEngine.createJCasFactory();
   }
   
   JCas                          mQuestJCas = null;
@@ -92,16 +93,20 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   JCas                          mBaseJcas;
 
   boolean                       mGood = false;
+  boolean                       mReleasedEmpty = false;
   private int                   mAnswId = -1;
+  private int                   mMaxAnswerQty = 0;
 
   BasicEngine                   mClearNLPEngine;
+  private JCasFactory           mJCasFactory;
  
   @Override
   public void process(JCas jcas) throws AnalysisEngineProcessException {
     mBaseJcas = jcas;
     mGood = false;    
+    mReleasedEmpty = false;
     
-    //logger.info("*** Process! ***");
+    //logger.info("@@@ Process() @@@");
     
     releaseAll();
     
@@ -109,7 +114,7 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
     
     {
       try {
-        mQuestJCas = mClearNLPEngine.borrowJCas();
+        mQuestJCas = mJCasFactory.borrowJCas();
       } catch (ResourceInitializationException e) {
         e.printStackTrace();
         throw new AnalysisEngineProcessException(e);
@@ -133,30 +138,35 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
      for (Answer yan : JCasUtil.select(jcas, Answer.class)) 
      if (yan.getIsBest() || mIncludeNotBest) {
         JCas answJCas = null;
+        
         try {
           /*
            *  By default, a CAS Multiplier is only allowed to hold one output CAS instance at a time.
            *  However, we might need to have multiple output CASes.
            *  Using a separate analysis engine (inside BasicEngine) provides a work around.
            */
-          answJCas = mClearNLPEngine.borrowJCas();
-        } catch (Exception e) {
-          e.printStackTrace();
-          throw new AnalysisEngineProcessException(e);
-        }
-  
-        answJCas.setDocumentText(yan.getCoveredText());
-        answJCas.setDocumentLanguage(mBaseJcas.getDocumentLanguage());
-        
-        mClearNLPEngine.process(answJCas);
-  
-        try {
+          answJCas = mJCasFactory.borrowJCas();
+
+          answJCas.setDocumentText(yan.getCoveredText());
+          answJCas.setDocumentLanguage(mBaseJcas.getDocumentLanguage());
+          
+          mClearNLPEngine.process(answJCas);
+          
           if (mCheckQuality && !SimpleTextQualityChecker.checkCAS(answJCas, mMinTokQty)) {
             logger.info(String.format("Dropping answer %s, text '%s'", 
                 yan.getId(), yan.getCoveredText()));
+            if (answJCas != null)
+              mJCasFactory.returnJCas(answJCas); // Returning the JCas here, b/c
+            // it will not be saved to an answer array and hence it won't be 
+            // freed by the function releaseAll()
             continue;
           }
         } catch (Exception e) {
+          if (answJCas != null)
+            mJCasFactory.returnJCas(answJCas); // Returning the JCas here, b/c
+          // it will not be saved to an answer array and hence it won't be 
+          // freed by the function releaseAll()
+          
           e.printStackTrace();
           throw new AnalysisEngineProcessException(e); 
         }
@@ -171,6 +181,11 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
         return; // No answer passed the check
       }
     }
+    
+    if (mAnswerAnnot.size() > mMaxAnswerQty) {
+      mMaxAnswerQty = mAnswerAnnot.size();
+      logger.info("New max # of answ: " + mMaxAnswerQty);
+    }
 
     mAnswId = -1;    
     mGood  = true;
@@ -178,23 +193,37 @@ public class InputSplitterClearAnnot1 extends JCasMultiplier_ImplBase {
   
   private void releaseAll() {
     if (mQuestJCas != null) {
-      mClearNLPEngine.returnJCas(mQuestJCas);
+      mJCasFactory.returnJCas(mQuestJCas);
       mQuestJCas = null;
     }
     for (JCas jcas: mAnswerJCas) {
-      mClearNLPEngine.returnJCas(jcas);
+      mJCasFactory.returnJCas(jcas);
     }
     mAnswerJCas.clear();
     mAnswerAnnot.clear();
   }
   public boolean hasNext() throws AnalysisEngineProcessException {
-    return mGood && ( mAnswId < mAnswerJCas.size() );
+    boolean f = (mGood && (mAnswId < mAnswerJCas.size()))  ||
+                (!mGood && !mReleasedEmpty);
+    //logger.info("@@@ hasNext() @@@" + (f ? 1 : 0));
+    return f;
   }
 
   public AbstractCas next() throws AnalysisEngineProcessException {
+    //logger.info("@@@ next() @@@");
     JCas jCasDst = getEmptyJCas();
     
     jCasDst.setDocumentLanguage(mBaseJcas.getDocumentLanguage());
+    
+    /**
+     * Problem is that old CAS seems to refuse to be dropped if 
+     * the new CAS is not produced.
+     */
+    if (!mGood) {
+      mReleasedEmpty = true;
+      jCasDst.setDocumentText("");
+      return jCasDst;
+    }
     
     //logger.info("*** NEXT! ***");
 

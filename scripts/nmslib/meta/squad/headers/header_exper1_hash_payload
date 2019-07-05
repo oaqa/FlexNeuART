@@ -1,0 +1,20 @@
+isQueryFile=0
+useHashBasedPayloads=1
+weightFile=nmslib/squad/models/out_squad_train_exper@bm25=text+model1=text+minProbModel1=text:1e-3+model1=text_alias1+minProbModel1=text_alias1:1e-3_15.model
+
+fieldIndexFile=nmslib/squad/memfwdindex/text
+fieldFeatures=bm25 model1
+fieldTranTablePrefix=nmslib/squad/tran/text/
+gizaIterQty=5
+probSelfTran=0.05
+minTranProb=0.001
+lambdaModel1=0.1
+
+fieldIndexFile=nmslib/squad/memfwdindex/text_alias1
+fieldFeatures=model1
+fieldTranTablePrefix=nmslib/squad/tran/text_alias1/
+gizaIterQty=5
+probSelfTran=0.05
+minTranProb=0.001
+lambdaModel1=0.1
+

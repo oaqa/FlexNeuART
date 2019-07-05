@@ -38,37 +38,6 @@
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
       </configurationParameter>
-      <configurationParameter>
-        <name>DumpSrl</name>
-        <type>Boolean</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>DumpSrlLab</name>
-        <type>Boolean</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>DumpBiGram</name>
-        <description/>
-        <type>Boolean</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-      <configurationParameter>
-        <name>DumpDep</name>
-        <type>Boolean</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
-    <configurationParameter>
-        <name>DumpWNSS</name>
-        <type>Boolean</type>
-        <multiValued>false</multiValued>
-        <mandatory>true</mandatory>
-      </configurationParameter>
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
@@ -99,36 +68,6 @@
       </nameValuePair>
       <nameValuePair>
         <name>DumpTextUnlemm</name>
-        <value>
-          <boolean>true</boolean>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>DumpSrl</name>
-        <value>
-          <boolean>true</boolean>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>DumpSrlLab</name>
-        <value>
-          <boolean>true</boolean>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>DumpBiGram</name>
-        <value>
-          <boolean>true</boolean>
-        </value>
-      </nameValuePair>
-      <nameValuePair>
-        <name>DumpDep</name>
-        <value>
-          <boolean>true</boolean>
-        </value>
-      </nameValuePair>
-    <nameValuePair>
-        <name>DumpWNSS</name>
         <value>
           <boolean>true</boolean>
         </value>

@@ -17,6 +17,7 @@ package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
 import java.util.*;
 import java.io.*;
+import java.nio.file.Paths;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
@@ -29,22 +30,30 @@ import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 import com.google.common.base.Splitter;
 
 public class LuceneCandidateProvider extends CandidateProvider {
+  // 8 GB is quite reasonable, but if you increase this value, 
+  // you may need to modify the following line in *.sh files
+  // export MAVEN_OPTS="-Xms8192m -server"
+  public static double RAM_BUFFER_SIZE = 1024 * 8; // 8 GB
+  
   @Override
   public String getName() {
     return this.getClass().getName();
   }  
   
-  public LuceneCandidateProvider(String indexDirName) throws Exception {
+  public LuceneCandidateProvider(String indexDirName,
+                                 float k1, float b) throws Exception {
     File indexDir = new File(indexDirName);
+    mSimilarity = new BM25Similarity(k1, b);
     
     if (!indexDir.exists()) {
       throw new Exception(String.format("Directory '%s' doesn't exist", indexDirName)); 
     }
-    mReader = DirectoryReader.open(FSDirectory.open(indexDir));
+    mReader = DirectoryReader.open(FSDirectory.open(Paths.get(indexDirName)));
     mSearcher = new IndexSearcher(mReader);
     mSearcher.setSimilarity(mSimilarity);
   }
@@ -77,7 +86,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
                         TEXT_FIELD_NAME, queryNum));
     }
     
-    String query = text.trim();
+    String query = StringUtils.removePunct(text.trim());
 
     ArrayList<String>   toks = new ArrayList<String>();
     for (String s: mSpaceSplit.split(query)) {
@@ -88,7 +97,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
       BooleanQuery.setMaxClauseCount(2 * toks.size());
     }
 
-    int    numFound = 0;
+    long    numFound = 0;
 
     if (!query.isEmpty()) {    
       // QueryParser cannot be shared among threads!
@@ -118,7 +127,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
   
   private IndexReader   mReader = null;
   private IndexSearcher mSearcher = null;
-  private Similarity    mSimilarity = new BM25Similarity(FeatureExtractor.BM25_K1, FeatureExtractor.BM25_B);
+  private final Similarity mSimilarity;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
 
   private static Splitter mSpaceSplit = Splitter.on(' ').omitEmptyStrings().trimResults();

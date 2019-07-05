@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import argparse
 import sys
 import math
@@ -7,17 +7,21 @@ import subprocess as sp
 
 def Usage(err):
   if not err is None:
-    print err
-  print "Usage: <trec binary> <qrel file> <trec-format output file> <optional prefix of report files> <optional label (mandatory if the report prefix is specified>"
+    print(err)
+  print("Usage: <qrel file> <trec-format output file> <optional prefix of report files> <optional label (mandatory if the report prefix is specified>")
   sys.exit(1)
 
+MAP='map'
 RECIP_RANK='recip_rank'
 NUM_RET='num_ret'
 NUM_REL='num_rel'
 NUM_REL_RET='num_rel_ret'
-metrics = set([RECIP_RANK, NUM_RET, NUM_REL, NUM_REL_RET])
+P20 = 'P_20'
 
-def readResults(lines):
+NDCG20='ndcg20'
+ERR20='err20'
+
+def parseTrecEvalResults(lines, metrics):
   prevId=''
   res=dict()
   for s in lines:
@@ -31,79 +35,113 @@ def readResults(lines):
     if metr in metrics:
       entry[metr]=float(val)
   return res
-  
 
-if len(sys.argv) != 4 and len(sys.argv) != 5 and len(sys.argv) != 6:
+def parseGdevalResults(lines):
+  res=dict()
+  first=True
+  for s in lines:
+    if s == '': continue
+    if first:
+      first=False
+      continue
+    arr=s.split(',')
+    if (len(arr) != 4):
+      raise Exception("wrong-format line: '%s'" % s)
+    (runid, qid, val1, val2) = arr
+    res[qid]={NDCG20:float(val1), ERR20:float(val2)}
+  return res
+
+if len(sys.argv) != 3 and len(sys.argv) != 5:
   Usage(None)
 
-trecEvalBin=sys.argv[1]
-qrelFile=sys.argv[2]
-trecOut=sys.argv[3]
+trecEvalBin='trec_eval-9.0.4/trec_eval'
+gdevalScript='scripts/exper/gdeval.pl'
+
+qrelFile=sys.argv[1]
+trecOut=sys.argv[2]
 outPrefix=''
 label=''
-if len(sys.argv) >= 5: 
-  outPrefix = sys.argv[4]
-  if len(sys.argv) != 6: Usage("Specify the 6th arg")
-  label=sys.argv[5]
-output=sp.check_output([trecEvalBin, "-q", qrelFile, trecOut]).replace('\t', ' ').split('\n')
-res=readResults(output)
+if len(sys.argv) >= 4: 
+  outPrefix = sys.argv[3]
+  if len(sys.argv) != 5: Usage("Specify the 4th arg")
+  label=sys.argv[4]
 
-numRel=res['all'][NUM_REL]
-numRelRet=res['all'][NUM_REL_RET]
-mrr=res['all'][RECIP_RANK]
-gotCorrect=0
-recipRanks=[]
-recipRanksNonZeroRecall=[]
-ranksNonZeroRecall=[]
-accsNonZeroRecall=[]
+outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8').split('\n')
+resGdeval = parseGdevalResults(outputGdeval)
+outputTrecEval=sp.check_output([trecEvalBin, "-q", qrelFile, trecOut]).decode('utf-8').replace('\t', ' ').split('\n')
+resTrecEval=parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK, P20]))
+
+
+overallNumRel=resTrecEval['all'][NUM_REL]
+overallNumRelRet=resTrecEval['all'][NUM_REL_RET]
+overallRecall=float(overallNumRelRet)/overallNumRel
+overallMAP=resTrecEval['all'][MAP]
+overallP20=resTrecEval['all'][P20]
+overallRecipRank=resTrecEval['all'][RECIP_RANK]
+
+overallNDCG20=resGdeval['amean'][NDCG20]
+overallERR20=resGdeval['amean'][ERR20]
+
+#valsMAP   =[]
+#valsRecipRank   =[]
+#valsRecall =[]
+
 queryQty=0
-for qid, entry in res.iteritems():
+
+# May actually delete it at some point, it doesn't do much
+# Previously it was used to compute percentiles
+for qid, entry in resTrecEval.items():
   if qid == 'all': continue
   queryQty+=1
-  recipRanks.append(entry[RECIP_RANK])
-  if int(entry[NUM_REL_RET]) == 1:
-    rrank=entry[RECIP_RANK]
-    recipRanksNonZeroRecall.append(rrank)
-    ranksNonZeroRecall.append(1.0/rrank)
-    val=0
-    if (entry[RECIP_RANK]>=0.999): val=1
-    accsNonZeroRecall.append(val)
+  #valsMAP.append(entry[MAP])
+  #valsRecipRank.append(entry[RECIP_RANK])
+  
+  numRel    = entry[NUM_REL]
+  numRelRet = entry[NUM_REL_RET]
 
-gotRight=np.sum(accsNonZeroRecall)
-precision_at_1_nonzbinrecall=gotRight/numRelRet
-precision_at_1_overall=float(gotRight)/queryQty
-mrr_nonzbinrecall=np.average(recipRanksNonZeroRecall)
+  #
+  # Actually, for various reasons qrel may not have relevant answers for a given
+  # query, although, this should happen very rarely
+  #
+  if numRel <= 0:
+    print("Warning: No relevant documents for qid=%s numRel=%d" % (qid, numRel))
+  #valsRecall.append(numRel/numRelRet)
 
+if len(resTrecEval) != len(resGdeval):
+  print("Warning: The number of entries returned by trec_eval and gdeval are different!")
 
-mrrOverall=res['all'][RECIP_RANK]
-recall=numRelRet/numRel
 reportText=""
-reportText += "recall:          %f" % recall
-reportText += "\n"
 reportText += "# of queries:    %d" % queryQty
 reportText += "\n"
-reportText += "got correct:     %d" % int(gotRight)
+reportText += "NDCG@20:         %f" % overallNDCG20
 reportText += "\n"
-reportText += "p@1:             %f%s" % (precision_at_1_nonzbinrecall, " (for non-zero binary recall)")
+reportText += "ERR@20:          %f" % overallERR20
 reportText += "\n"
-reportText += "p@1:             %f%s" % (precision_at_1_overall, " (overall)")
+reportText += "P@20:            %f" % overallP20
 reportText += "\n"
-reportText += "MRR:             %f%s" % (mrr_nonzbinrecall, " (for non-zero binary recall)")
+reportText += "MAP:             %f" % overallMAP
 reportText += "\n"
-reportText += "MRR:             %f%s" % (mrr, " (overall)")
+reportText += "Reciprocal rank: %f" % overallRecipRank
 reportText += "\n"
-pcts=np.percentile(ranksNonZeroRecall, [50, 75, 90, 99])
-reportText += "Rank percentiles 50=%f, 75=%f, 90=%f, 99=%f %s" % (pcts[0], pcts[1], pcts[2], pcts[3], " (for non-zero binary recall)")
+reportText += "Recall:          %f" % overallRecall
 reportText += "\n"
+
 sys.stdout.write(reportText)
 if outPrefix != '':
   fRep=open(outPrefix +'.rep','w')
   fRep.write(reportText)
   fRep.close()
   fTSV=open(outPrefix +'.tsv','a')
-  fTSV.write("%s\t%f\t%d\t%d\t%f\t%f\n" % (label, recall, queryQty, int(gotRight), precision_at_1_nonzbinrecall, mrr_nonzbinrecall))
+  fTSV.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Label", "queryQty", "NDCG@20", "ERR@20", "P@20", "MAP", "MRR", "Recall"))
+  fTSV.write("%s\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n" % (label,  queryQty, overallNDCG20, overallERR20, overallP20, overallMAP, overallRecipRank, overallRecall))
   fTSV.close()
+
   fTrecEval=open(outPrefix +'.trec_eval','w')
-  for line in output:
+  for line in outputTrecEval:
     fTrecEval.write(line.rstrip() + '\n')
   fTrecEval.close()
+
+  fGdeval = open(outPrefix +'.gdeval','w')
+  for line in outputGdeval:
+    fGdeval.write(line.rstrip() + '\n')
+  fGdeval.close()

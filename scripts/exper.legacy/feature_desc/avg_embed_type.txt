@@ -1,0 +1,9 @@
+exper@avg_embed=text_unlemm	word2vec_tran_text_unlemm_dim=300_unfilt.txt                                dev1
+exper@avg_embed=text_unlemm	word2vec_tran_text_unlemm_dim=300_filt.txt                                  dev1
+exper@avg_embed=text_unlemm	word2vec_tran_text_unlemm_dim=300_filt_retro_weighted_minProb=0.001.txt     dev1
+exper@avg_embed=text_unlemm	word2vec_tran_text_unlemm_dim=300_filt_retro_unweighted_minProb=0.001.txt   dev1
+
+exper@avg_embed=text_unlemm	word2vec.txt                                                                dev1
+exper@avg_embed=text_unlemm	word2vec_retro_unweighted_minProb=0.001.txt                                 dev1
+exper@avg_embed=text_unlemm	word2vec_retro_weighted_minProb=0.001.txt                                   dev1
+

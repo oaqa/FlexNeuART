@@ -1,0 +1,26 @@
+
+exper@bm25=text+model1=text+minProbModel1=text:1e-5	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:2.5e-5	@   dev1
+exper@bm25=text+model1=text+minProbModel1=text:5e-5	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:7.5e-5	@   dev1
+
+exper@bm25=text+model1=text+minProbModel1=text:1e-4	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:2.5e-4	@   dev1
+exper@bm25=text+model1=text+minProbModel1=text:5e-4	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:7.5e-4	@   dev1
+
+exper@bm25=text+model1=text+minProbModel1=text:1e-3	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:2.5e-3	@   dev1
+exper@bm25=text+model1=text+minProbModel1=text:5e-3	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:7.5e-3	@   dev1
+
+exper@bm25=text+model1=text+minProbModel1=text:1e-2	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:2.5e-2	@   dev1
+exper@bm25=text+model1=text+minProbModel1=text:5e-2	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:7.5e-2	@   dev1
+
+exper@bm25=text+model1=text+minProbModel1=text:1e-1	  @   dev1
+exper@bm25=text+model1=text+minProbModel1=text:2.5e-1	@   dev1
+exper@bm25=text+model1=text+minProbModel1=text:5e-1	@     dev1
+
+

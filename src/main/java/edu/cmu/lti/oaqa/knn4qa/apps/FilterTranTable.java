@@ -15,8 +15,10 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
@@ -24,6 +26,7 @@ import org.apache.commons.cli.*;
 
 
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranRec;
+import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 import edu.cmu.lti.oaqa.knn4qa.memdb.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
@@ -33,6 +36,8 @@ import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 public class FilterTranTable {
   
   private static final int REPORT_INTERVAL_QTY = 100000;
+  
+  private final static boolean BINARY_OUTUPT = true;
 
 
   private static final String INPUT_PARAM = "i";
@@ -130,8 +135,16 @@ public class FilterTranTable {
       BufferedReader finp = new BufferedReader(new InputStreamReader(
                                                 CompressUtils.createInputStream(inputFile)));
       
-      BufferedWriter fout = new BufferedWriter(new OutputStreamWriter(
-                                                CompressUtils.createOutputStream(outputFile)));
+      BufferedWriter fout = null;
+      DataOutputStream foutBin = null;
+      if (BINARY_OUTUPT) {
+        foutBin = new DataOutputStream(
+                        new BufferedOutputStream(CompressUtils.createOutputStream(
+                                          GizaTranTableReaderAndRecoder.binaryFileName(outputFile))));
+      } else {
+        fout = new BufferedWriter(new OutputStreamWriter(
+                                  CompressUtils.createOutputStream(outputFile)));
+      }
       
       try {
         String  line;
@@ -171,8 +184,15 @@ public class FilterTranTable {
             String wordDst = dstVoc.getWord(rec.mDstId);
 
             if (filter == null || (wordDst != null && filter.checkWord(wordDst))) {
-              fout.write(String.format(rec.mSrcId + " " + rec.mDstId + " " + rec.mProb));
-              fout.newLine();
+              if (BINARY_OUTUPT) {
+                foutBin.writeInt(rec.mSrcId );   
+                foutBin.writeInt(rec.mDstId);
+                foutBin.writeFloat(rec.mProb);
+              } else {
+                fout.write(String.format(rec.mSrcId + " " + rec.mDstId + " " + rec.mProb));
+                fout.newLine();   
+              }
+
               addedQty++;
             }
           }          
@@ -183,7 +203,12 @@ public class FilterTranTable {
         
       } finally {
         finp.close();
-        fout.close();
+        if (fout != null) {
+          fout.close();
+        }
+        if (foutBin != null) {
+          foutBin.close();
+        }
       }      
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);

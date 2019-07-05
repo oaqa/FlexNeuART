@@ -18,11 +18,18 @@ if [ ! -f "$model_file" ] ; then
   echo "Not a file: '$model_file'" 
   exit 1
 fi
-norm_type="$3"
+
+metric_type="$3"
+if [ "$metric_type" = "" ] ; then
+  echo "Specify the metric type (3th arg)"
+  exit 1
+fi
+
+norm_type="$4"
 norm=""
 if [ "$norm_type" != "" ] ; then
   norm="-norm $norm_type"
 fi
 echo "Test file: '$test_file' Model file: '$model_file' Normalization parameter: $norm"
 
-java -jar lib/RankLib.jar -test "$test_file"   -metric2t P@1 -gmax 1 -load "$model_file"  $norm
+java -jar lib/RankLib.jar -test "$test_file"   -metric2t P@1 -gmax 1 -load "$model_file"  $norm   -metric2t $metric_type 

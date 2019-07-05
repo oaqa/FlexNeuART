@@ -9,9 +9,6 @@
     <delegateAnalysisEngine key="aeLexStat">
       <import name="descriptors.analysis_engines.aeLexStat"/>
     </delegateAnalysisEngine>
-    <delegateAnalysisEngine key="xmiConsumer">
-      <import name="descriptors.cas_consumers.xmiConsumer"/>
-    </delegateAnalysisEngine>
     <delegateAnalysisEngine key="aeCreateParallelCorpora">
       <import name="descriptors.analysis_engines.aeCreateParallelCorpora"/>
     </delegateAnalysisEngine>
@@ -29,12 +26,12 @@
     <vendor/>
     <configurationParameters searchStrategy="language_fallback">
       <configurationParameter>
-        <name>QrelFile</name>
+        <name>QrelFilePrefix</name>
         <type>String</type>
         <multiValued>false</multiValued>
         <mandatory>true</mandatory>
         <overrides>
-          <parameter>aeQrelWriter/QrelFile</parameter>
+          <parameter>aeQrelWriter/QrelFilePrefix</parameter>
         </overrides>
       </configurationParameter>
       <configurationParameter>
@@ -76,9 +73,9 @@
     </configurationParameters>
     <configurationParameterSettings>
       <nameValuePair>
-        <name>QrelFile</name>
+        <name>QrelFilePrefix</name>
         <value>
-          <string>output/stackoverflow/train/qrels.txt</string>
+          <string>output/stackoverflow/train/qrels</string>
         </value>
       </nameValuePair>
       <nameValuePair>
@@ -110,7 +107,6 @@
       <fixedFlow>
         <node>aeAnnotAggreg</node>
         <node>aeLexStat</node>
-        <!--node>xmiConsumer</node-->
         <node>aeCreateParallelCorpora</node>
         <node>aeQrelWriter</node>
         <node>aeSolrIndexFileWriter</node>

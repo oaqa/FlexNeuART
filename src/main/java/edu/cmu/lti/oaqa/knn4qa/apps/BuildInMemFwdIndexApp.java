@@ -21,16 +21,16 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 
 public class BuildInMemFwdIndexApp {
   
-  public static final String EXCLUDE_FIELDS_PARAM = "exclude_fields";
-  public static final String EXCLUDE_FIELDS_DESC  = "a comma separate lists of fields NOT to be indexed";
-
+  public final static String FIELD_NAME_PARAM = "field";
+  public final static String FIELD_NAME_DESC  = "a field to be indexed (use a regular name not the one from the XML index-file)";
+  public final static String STORE_WORD_ID_SEQ_PARAM = "store_word_id_seq";
+  public final static String STORE_WORD_ID_SEQ_DESC  = "Store positional info (a sequence of word IDs) in addition to word frequencies";  
+  
   
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
@@ -42,12 +42,15 @@ public class BuildInMemFwdIndexApp {
   public static void main(String[] args) {
     Options options = new Options();
     
-    options.addOption(CommonParams.ROOT_DIR_PARAM,      null, true, CommonParams.ROOT_DIR_DESC);
-    options.addOption(CommonParams.SUB_DIR_TYPE_PARAM,  null, true, CommonParams.SUB_DIR_TYPE_DESC);
-    options.addOption(CommonParams.MAX_NUM_REC_PARAM,   null, true, CommonParams.MAX_NUM_REC_DESC);
-    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,null, true, CommonParams.SOLR_FILE_NAME_DESC);    
-    options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_MINDEX_DESC);
-    options.addOption(EXCLUDE_FIELDS_PARAM,             null, true, EXCLUDE_FIELDS_DESC);
+    options.addOption(CommonParams.ROOT_DIR_PARAM,               null, true, CommonParams.ROOT_DIR_DESC);
+    options.addOption(CommonParams.SUB_DIR_TYPE_PARAM,           null, true, CommonParams.SUB_DIR_TYPE_DESC);
+    options.addOption(CommonParams.MAX_NUM_REC_PARAM,            null, true, CommonParams.MAX_NUM_REC_DESC);
+    options.addOption(CommonParams.SOLR_FILE_NAME_PARAM,         null, true, CommonParams.SOLR_FILE_NAME_DESC);  
+    options.addOption(CommonParams.DATA_FILE_PARAM,              null, true, CommonParams.DATA_FILE_DESC);   
+    options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_INDEX_DESC);
+    options.addOption(FIELD_NAME_PARAM,                          null, true, FIELD_NAME_DESC);
+    options.addOption(STORE_WORD_ID_SEQ_PARAM,                   null, false, STORE_WORD_ID_SEQ_DESC);
+    options.addOption(CommonParams.USE_INMEM_FOWARD_INDEX_PARAM, null, false, CommonParams.USE_INMEM_FOWARD_INDEX_DESC);
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -58,19 +61,28 @@ public class BuildInMemFwdIndexApp {
       
       rootDir = cmd.getOptionValue(CommonParams.ROOT_DIR_PARAM);
       
-      if (null == rootDir) Usage("Specify: " + CommonParams.ROOT_DIR_DESC, options);
+      if (null == rootDir) Usage("Specify: " + CommonParams.ROOT_DIR_PARAM, options);
       
       String outPrefix = cmd.getOptionValue(CommonParams.OUT_INDEX_PARAM);
       
-      if (null == outPrefix) Usage("Specify: " + CommonParams.OUT_MINDEX_DESC, options);
+      if (null == outPrefix) Usage("Specify: " + CommonParams.OUT_INDEX_PARAM, options);
       
       String subDirTypeList = cmd.getOptionValue(CommonParams.SUB_DIR_TYPE_PARAM);
       
       if (null == subDirTypeList ||
-          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.SUB_DIR_TYPE_DESC, options);
+          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.SUB_DIR_TYPE_PARAM, options);
       
-      String solrFileName = cmd.getOptionValue(CommonParams.SOLR_FILE_NAME_PARAM);
-      if (null == solrFileName) Usage("Specify: " + CommonParams.SOLR_FILE_NAME_DESC, options);
+      String dataFileName = cmd.getOptionValue(CommonParams.DATA_FILE_PARAM);
+      
+      if (null == dataFileName) {
+        String solrFileName = cmd.getOptionValue(CommonParams.SOLR_FILE_NAME_PARAM);
+        if (solrFileName != null) {
+          dataFileName = solrFileName;
+        }
+      }
+      if (null == dataFileName) {
+        Usage("Specify: " + CommonParams.DATA_FILE_PARAM, options);
+      }
       
       int maxNumRec = Integer.MAX_VALUE;
       
@@ -87,35 +99,31 @@ public class BuildInMemFwdIndexApp {
         }
       }
       
-      String [] exclFields = new String[0];
-      tmp = cmd.getOptionValue(EXCLUDE_FIELDS_PARAM);
-      if (null != tmp) {
-        exclFields = tmp.split(",");
+      String fieldName = cmd.getOptionValue(FIELD_NAME_PARAM);
+      if (fieldName == null) {
+        Usage("Specify: '" + FIELD_NAME_DESC, options);
       }
       
       String [] subDirs = subDirTypeList.split(",");
-      
-      for (int k = 0; k < FeatureExtractor.mFieldNames.length; ++k) {
-        String field = FeatureExtractor.mFieldsSOLR[k];
-        String fieldName = FeatureExtractor.mFieldNames[k];
-        
-        boolean bOk = !StringUtilsLeo.isInArrayNoCase(fieldName, exclFields);
-        
-        if (bOk) System.out.println("Processing field: " + field);
-        else {
-          System.out.println("Skipping field: " + field);
-          continue;
-        }
-        
-        String [] fileNames = new String[subDirs.length];
-        for (int i = 0; i < fileNames.length; ++i)
-          fileNames[i] = rootDir + "/" + subDirs[i] + "/" + solrFileName;
-        
-        InMemForwardIndex indx = new InMemForwardIndex(field, fileNames, maxNumRec);
-        
-        indx.save(InMemIndexFeatureExtractor.indexFileName(outPrefix, fieldName));
-      }
 
+      System.out.println("Processing field: '" + fieldName + "'");
+        
+      String [] fileNames = new String[subDirs.length];
+      for (int i = 0; i < fileNames.length; ++i)
+        fileNames[i] = rootDir + "/" + subDirs[i] + "/" + dataFileName;
+      
+      boolean bStoreWordIdSeq = cmd.hasOption(STORE_WORD_ID_SEQ_PARAM);
+      boolean bUseTextInMem = cmd.hasOption(CommonParams.USE_INMEM_FOWARD_INDEX_PARAM);
+      
+      System.out.println("Use in-memory (text only loadable) forward index?: " + bUseTextInMem);
+      System.out.println("Storing word id sequence?: " + bStoreWordIdSeq);
+        
+      ForwardIndex indx = ForwardIndex.createWriteInstance(
+          InMemIndexFeatureExtractorOld.indexFilePrefix(outPrefix, fieldName), bUseTextInMem);
+      
+      indx.createIndex(fieldName, fileNames, bStoreWordIdSeq, maxNumRec);
+      indx.saveIndex();
+      
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
     } catch (Exception e) {

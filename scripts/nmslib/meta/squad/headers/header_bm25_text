@@ -1,0 +1,7 @@
+isQueryFile=0
+useHashBasedPayloads=1
+weightFile=nmslib/squad/models/one_feature.model
+
+fieldIndexFile=nmslib/squad/memfwdindex/text
+fieldFeatures=bm25
+

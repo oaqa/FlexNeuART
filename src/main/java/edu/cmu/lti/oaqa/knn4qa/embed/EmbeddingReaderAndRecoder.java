@@ -23,8 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.simil.*;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 import net.openhft.koloboke.collect.map.hash.*;
@@ -200,11 +200,11 @@ public class EmbeddingReaderAndRecoder {
    * @param     normalizeL2     if true, the output vector is L2-normalized.
    * @return    a respective average vector.
    */  
-  public float[] getDocAverage(DocEntry             doc,
-                               QueryDocSimilarity   simil,
-                               InMemForwardIndex    fieldIndex, 
-                               boolean              weightByIDF,
-                               boolean              normalizeL2) {
+  public float[] getDocAverage(DocEntry         doc,
+                               TFIDFSimilarity  simil,
+                               ForwardIndex     fieldIndex,
+                               boolean          weightByIDF,
+                               boolean          normalizeL2) {
     float[] res = new float[mDim];
     int qty = 0;
     

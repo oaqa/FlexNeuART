@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2019 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.*;
 
 import javax.annotation.Nullable;
 
@@ -32,22 +31,16 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.BruteForceKNNCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneGIZACandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibKNNCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.NmslibQueryGenerator;
-import edu.cmu.lti.oaqa.knn4qa.cand_providers.SolrCandidateProvider;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.*;
+import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorExperOld;
+import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 import ciir.umass.edu.learning.*;
-
 
 /**
  * This class converts a dense vector to DataPoint format of the RankLib library
@@ -96,204 +89,181 @@ class DataPointWrapper extends DataPoint {
   float [] mFeatValues;
 }
 
-class BaseQueryAppProcessingThread extends Thread {
-  public static Object            mWriteLock = new Object();
-  private final int               mThreadId;
-  private final int               mThreadQty;
-  private final BaseQueryApp      mAppRef;
+class BaseProcessingUnit {
+  public static Object              mWriteLock = new Object();
+  protected final BaseQueryApp      mAppRef;
   
-  BaseQueryAppProcessingThread(BaseQueryApp appRef,
-                               int          threadId,
-                               int          threadQty) {
+  BaseProcessingUnit(BaseQueryApp appRef) {
     mAppRef    = appRef;
-    mThreadId  = threadId;
-    mThreadQty = threadQty;    
-  }
+  }  
   
-  @Override
-  public void run() {
+  public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
+    Map<String, String>    queryFields = mAppRef.mParsedQueries.get(queryNum);
+
+    String queryID = queryFields.get(CandidateProvider.ID_FIELD_NAME);
+            
+    // 2. Obtain results
+    long start = System.currentTimeMillis();
     
-    try {
-      mAppRef.logger.info("Thread id=" + mThreadId + " is created, the total # of threads " + mThreadQty);
+    CandidateInfo qres = null;
+    
+    if (mAppRef.mResultCache != null) 
+      qres = mAppRef.mResultCache.getCacheEntry(queryID);
+    if (qres == null) {            
+
+      String text = queryFields.get(CandidateProvider.TEXT_FIELD_NAME);
+      if (text != null) {
+        // This is a workaround for a pesky problem: didn't previously notice that the string
+        // n't (obtained by tokenization of can't is indexed. Querying using this word
+        // add a non-negligible overhead (although this doesn't affect overall accuracy)
+        // THIS IS FOR THE FIELD TEXT ONLY
+        queryFields.put(CandidateProvider.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
+      }
+      qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
+      if (mAppRef.mResultCache != null) 
+        mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
+    }
+    CandidateEntry [] resultsAll = qres.mEntries;
+    
+    long end = System.currentTimeMillis();
+    long searchTimeMS = end - start;
+    
+    mAppRef.logger.info(
+        String.format("Obtained results for the query # %d queryId='%s', the search took %d ms, we asked for max %d entries got %d", 
+                      queryNum, queryID, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
+    
+    mAppRef.mQueryTimeStat.addValue(searchTimeMS);
+    mAppRef.mNumRetStat.addValue(qres.mNumFound);
+    
+    ArrayList<String>           allDocIds = new ArrayList<String>();
+                    
+    for (int rank = 0; rank < resultsAll.length; ++rank) {
+      CandidateEntry e = resultsAll[rank];
+      allDocIds.add(e.mDocId);
+    }
+    
+    // allDocFeats will be first created by an intermediate re-ranker (if it exists).
+    // If there is a final re-ranker, it will overwrite previously created features.
+    Map<String, DenseVector> allDocFeats = null;
+    Integer maxNumRet = mAppRef.mMaxNumRet;
+            
+    // 3. If necessary carry out an intermediate re-ranking
+    if (mAppRef.mInMemExtrInterm != null) {
+      // Compute features once for all documents using an intermediate re-ranker
+      start = System.currentTimeMillis();
+      allDocFeats = mAppRef.mInMemExtrInterm.getFeatures(allDocIds, queryFields);
       
-      CandidateProvider candProvider = mAppRef.mCandProviders[mThreadId];
-      
-      boolean addRankScores = mAppRef.mInMemExtrFinal != null && mAppRef.mInMemExtrFinal.addRankScores();
-      
-      for (int iq = 0; iq < mAppRef.mQueries.size(); ++iq)
-      if (iq % mThreadQty == mThreadId) {
-        Map<String, String>    docFields = null;
-        String                 docText = mAppRef.mQueries.get(iq);
-        
-        // 1. Parse a query
-        try {
-          docFields = XmlHelper.parseXMLIndexEntry(docText);
-        } catch (Exception e) {
-          mAppRef.logger.error("Parsing error, offending DOC:\n" + docText);
-          throw new Exception("Parsing error.");
+      DenseVector intermModelWeights = mAppRef.mModelInterm;
+
+      for (int rank = 0; rank < resultsAll.length; ++rank) {
+        CandidateEntry e = resultsAll[rank];
+        DenseVector feat = allDocFeats.get(e.mDocId);
+        e.mScore = (float) feat.dot(intermModelWeights);
+        if (Float.isNaN(e.mScore)) {
+          if (Float.isNaN(e.mScore)) {
+            mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
+            mAppRef.logger.info("NAN scores, feature vector:");
+            mAppRef.logger.info(feat.toString());
+            mAppRef.logger.info("NAN scores, feature weights:");
+            mAppRef.logger.info(intermModelWeights.toString());
+            throw new Exception("NAN score encountered (intermediate reranker)!");
+          }
         }
-        
-        String queryID = docFields.get(CandidateProvider.ID_FIELD_NAME);
-                
-        // 2. Obtain results
-        long start = System.currentTimeMillis();
-        
-        CandidateInfo qres = candProvider.getCandidates(iq, docFields, mAppRef.mMaxCandRet);
-        CandidateEntry [] resultsAll = qres.mEntries;
-        
-        long end = System.currentTimeMillis();
-        long searchTimeMS = end - start;
-        
-        mAppRef.logger.info(
-            String.format("Obtained results for the query # %d queryId='%s' thread ID=%d, the search took %d ms, we asked for max %d entries got %d", 
-                          iq, queryID, mThreadId, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
-        
-        mAppRef.mQueryTimeStat.addValue(searchTimeMS);
-        mAppRef.mNumRetStat.addValue(qres.mNumFound);
-        
-        ArrayList<String>           allDocIds = new ArrayList<String>();
-                        
+      }
+      Arrays.sort(resultsAll);
+      // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
+      if (resultsAll.length > maxNumRet) {
+        allDocIds = new ArrayList<String>();
+        CandidateEntry resultsAllTrunc[] = Arrays.copyOf(resultsAll, maxNumRet);
+        resultsAll = resultsAllTrunc;
+        for (int rank = 0; rank < resultsAll.length; ++rank) 
+          allDocIds.add(resultsAll[rank].mDocId);            
+      }
+      end = System.currentTimeMillis();
+      long rerankIntermTimeMS = end - start;
+      mAppRef.logger.info(
+          String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' took %d ms", 
+                         queryNum, queryID, rerankIntermTimeMS));
+      mAppRef.mIntermRerankTimeStat.addValue(rerankIntermTimeMS);          
+    }
+            
+    // 4. If QRELs are specified, we need to save results only for subsets that return a relevant entry. 
+    //    Let's see what's the rank of the highest ranked entry. 
+    //    If, e.g., the rank is 10, then we discard subsets having less than top-10 entries.
+    int minRelevRank = Integer.MAX_VALUE;
+    if (mAppRef.mQrels != null) {
+      for (int rank = 0; rank < resultsAll.length; ++rank) {
+        CandidateEntry e = resultsAll[rank];
+        String label = mAppRef.mQrels.get(queryID, e.mDocId);
+        e.mRelevGrade = CandidateProvider.parseRelevLabel(label);
+        if (e.mRelevGrade >= 1 && minRelevRank == Integer.MAX_VALUE) {
+          minRelevRank = rank;
+        }
+      }
+    } else {
+      minRelevRank = 0;
+    }
+    
+    // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
+    if (mAppRef.mInMemExtrFinal!= null) {
+      if (allDocIds.size() > maxNumRet) {
+        throw new RuntimeException("Bug or you are using old/different cache: allDocIds.size()=" + allDocIds.size() + " > maxNumRet=" + maxNumRet);
+      }
+      // Compute features once for all documents using a final re-ranker
+      start = System.currentTimeMillis();
+      allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, queryFields);
+      
+      Ranker modelFinal = mAppRef.mModelFinal;
+      
+      if (modelFinal != null) {
+        DataPointWrapper featRankLib = new DataPointWrapper();
         for (int rank = 0; rank < resultsAll.length; ++rank) {
           CandidateEntry e = resultsAll[rank];
-          allDocIds.add(e.mDocId);
-          if (addRankScores) e.mOrigRank = rank;
-        }
-        
-        // allDocFeats will be first created by an intermediate re-ranker (if it exists).
-        // If there is a final re-ranker, it will overwrite previously created features.
-        Map<String, DenseVector> allDocFeats = null;
-        Integer maxNumRet = mAppRef.mMaxNumRet;
-                
-        // 3. If necessary carry out an intermediate re-ranking
-        if (mAppRef.mInMemExtrInterm != null) {
-          // Compute features once for all documents using an intermediate re-ranker
-          start = System.currentTimeMillis();
-          allDocFeats = mAppRef.mInMemExtrInterm.getFeatures(allDocIds, docFields);
-          
-          DenseVector intermModelWeights = mAppRef.mModelInterm;
-
-          for (int rank = 0; rank < resultsAll.length; ++rank) {
-            CandidateEntry e = resultsAll[rank];
-            DenseVector feat = allDocFeats.get(e.mDocId);
-            e.mScore = (float) feat.dot(intermModelWeights);
+          DenseVector feat = allDocFeats.get(e.mDocId);
+          // It looks like eval is thread safe in RankLib 2.5.
+          featRankLib.assign(feat);                            
+          e.mScore = (float) modelFinal.eval(featRankLib);
+          if (Float.isNaN(e.mScore)) {
             if (Float.isNaN(e.mScore)) {
-              if (Float.isNaN(e.mScore)) {
-                mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
-                mAppRef.logger.info("NAN scores, feature vector:");
-                mAppRef.logger.info(feat.toString());
-                mAppRef.logger.info("NAN scores, feature weights:");
-                mAppRef.logger.info(intermModelWeights.toString());
-                throw new Exception("NAN score encountered (intermediate reranker)!");
-              }
+              mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
+              mAppRef.logger.info("NAN scores, feature vector:");
+              mAppRef.logger.info(feat.toString());
+              throw new Exception("NAN score encountered (intermediate reranker)!");
             }
           }
-          Arrays.sort(resultsAll);
-          // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
-          if (resultsAll.length > maxNumRet) {
-            allDocIds = new ArrayList<String>();
-            CandidateEntry resultsAllTrunc[] = Arrays.copyOf(resultsAll, maxNumRet);
-            resultsAll = resultsAllTrunc;
-            for (int rank = 0; rank < resultsAll.length; ++rank) 
-              allDocIds.add(resultsAll[rank].mDocId);            
-          }
-          end = System.currentTimeMillis();
-          long rerankIntermTimeMS = end - start;
-          mAppRef.logger.info(
-              String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' thread ID=%d, took %d ms", 
-                             iq, queryID, mThreadId, rerankIntermTimeMS));
-          mAppRef.mIntermRerankTimeStat.addValue(rerankIntermTimeMS);          
-        }
-                
-        // 4. If QRELs are specified, we need to save results only for subsets that return a relevant entry. 
-        //    Let's see what's the rank of the highest ranked entry. 
-        //    If, e.g., the rank is 10, then we discard subsets having less than top-10 entries.
-        int minRelevRank = Integer.MAX_VALUE;
-        if (mAppRef.mQrels != null) {
-          for (int rank = 0; rank < resultsAll.length; ++rank) {
-            CandidateEntry e = resultsAll[rank];
-            String label = mAppRef.mQrels.get(queryID, e.mDocId);
-            if (CandidateProvider.isRelevLabel(label, 1)) {
-              e.mIsRelev = true;
-              minRelevRank = rank;
-              break;
-            }
-          }
-        } else {
-          minRelevRank = 0;
-        }
-        
-        // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
-        if (mAppRef.mInMemExtrFinal!= null) {
-          if (allDocIds.size() > maxNumRet) {
-            throw new RuntimeException("Bug: allDocIds.size()=" + allDocIds.size() + " > maxNumRet=" + maxNumRet);
-          }
-          // Compute features once for all documents using a final re-ranker
-          start = System.currentTimeMillis();
-          allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, docFields);
-          if (addRankScores) {
-            addScoresAndRanks(allDocFeats, resultsAll);
-          }
-          
-          Ranker modelFinal = mAppRef.mModelFinal;
-          
-          if (modelFinal != null) {
-            DataPointWrapper featRankLib = new DataPointWrapper();
-            for (int rank = 0; rank < resultsAll.length; ++rank) {
-              CandidateEntry e = resultsAll[rank];
-              DenseVector feat = allDocFeats.get(e.mDocId);
-              // It looks like eval is thread safe in RankLib 2.5.
-              featRankLib.assign(feat);                            
-              e.mScore = (float) modelFinal.eval(featRankLib);
-              if (Float.isNaN(e.mScore)) {
-                if (Float.isNaN(e.mScore)) {
-                  mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
-                  mAppRef.logger.info("NAN scores, feature vector:");
-                  mAppRef.logger.info(feat.toString());
-                  throw new Exception("NAN score encountered (intermediate reranker)!");
-                }
-              }
-            }            
-          }          
-          
-          end = System.currentTimeMillis();
-          long rerankFinalTimeMS = end - start;
-          mAppRef.logger.info(
-              String.format("Final-feature generation & re-ranking for the query # %d queryId='%s' thread ID=%d, final. reranking took %d ms", 
-                            iq, queryID, mThreadId, rerankFinalTimeMS));
-          mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
-        }
-        
-        /* 
-         * After computing scores based on the final model, elements need to be resorted.
-         * However, this needs to be done *SEPARATELY* for each of the subset of top-K results.
-         */
-        
-
-        for (int k = 0; k < mAppRef.mNumRetArr.size(); ++k) {
-          int numRet = mAppRef.mNumRetArr.get(k);
-          if (numRet >= minRelevRank) {
-            CandidateEntry resultsCurr[] = Arrays.copyOf(resultsAll, Math.min(numRet, resultsAll.length));
-            Arrays.sort(resultsCurr);
-            synchronized (mWriteLock) {
-              mAppRef.procResults(
-                  queryID,
-                  docFields,
-                  resultsCurr,
-                  numRet,
-                  allDocFeats
-               );
-            }
-          }
-        }                
-      }
-
+        }            
+      }          
       
-      mAppRef.logger.info("Thread id=" + mThreadId + " finished!");
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.err.println("Unhandled exception: " + e + " ... exiting");
-      System.exit(1);
+      end = System.currentTimeMillis();
+      long rerankFinalTimeMS = end - start;
+      mAppRef.logger.info(
+          String.format("Final-feature generation & re-ranking for the query # %d queryId='%s', final. reranking took %d ms", 
+                        queryNum, queryID, rerankFinalTimeMS));
+      mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
     }
+    
+    /* 
+     * After computing scores based on the final model, elements need to be resorted.
+     * However, this needs to be done *SEPARATELY* for each of the subset of top-K results.
+     */
+    
+
+    for (int k = 0; k < mAppRef.mNumRetArr.size(); ++k) {
+      int numRet = mAppRef.mNumRetArr.get(k);
+      if (numRet >= minRelevRank) {
+        CandidateEntry resultsCurr[] = Arrays.copyOf(resultsAll, Math.min(numRet, resultsAll.length));
+        Arrays.sort(resultsCurr);
+        synchronized (mWriteLock) {
+          mAppRef.procResults(
+              queryID,
+              queryFields,
+              resultsCurr,
+              numRet,
+              allDocFeats
+           );
+        }
+      }
+    }                
   }
 
   /**
@@ -302,7 +272,7 @@ class BaseQueryAppProcessingThread extends Thread {
    * @param docFeats        all features
    * @param resultsAll      result entries
    */
-  private void addScoresAndRanks(Map<String, DenseVector>   docFeats, 
+  protected void addScoresAndRanks(Map<String, DenseVector>   docFeats, 
                                  CandidateEntry[]           resultsAll) {
     for (CandidateEntry  e: resultsAll) {
       DenseVector oldVect = docFeats.get(e.mDocId);
@@ -316,7 +286,84 @@ class BaseQueryAppProcessingThread extends Thread {
     }    
     
   }
+}
+
+class BaseQueryAppProcessingWorker implements Runnable  {
+  private final BaseProcessingUnit mProcUnit;
+  private final int                mQueryNum;
+  
+  BaseQueryAppProcessingWorker(BaseQueryApp appRef,
+                               int          queryId) {
+    mProcUnit = new BaseProcessingUnit(appRef);
+    mQueryNum   = queryId;    
+  }
+  
+  private static int                              mUsedProvQty = 0;
+  private static HashMap<Long,CandidateProvider>  mProvMapping = new HashMap<Long,CandidateProvider>(); 
+  
+  /*
+   * This function retrieves a candidate provider for a given thread. It assumes that the number of threads
+   * is equal to the number of provider entries.
+   */
+  private static synchronized CandidateProvider getCandProvider(CandidateProvider[] candProvList)  {
+    long threadId = Thread.currentThread().getId();
+    CandidateProvider cand = mProvMapping.get(threadId);
+    if (cand != null) return cand;
+    if (mUsedProvQty >= candProvList.length)
+      throw new RuntimeException("Probably a bug: I am out of candidate providers, did you create more threads than provider entries?");
+    cand = candProvList[mUsedProvQty];
+    mUsedProvQty++;
+    mProvMapping.put(threadId, cand);
+    return cand;
+  }
+  
+  @Override
+  public void run() {
+    
+    try {
+      CandidateProvider candProvider = getCandProvider(mProcUnit.mAppRef.mCandProviders);
       
+      mProcUnit.procQuery(candProvider, mQueryNum);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println("Unhandled exception: " + e + " ... exiting");
+      System.exit(1);
+    }
+  }
+}
+
+class BaseQueryAppProcessingThread extends Thread  {
+  private final BaseProcessingUnit mProcUnit;
+  private final int                mThreadId;
+  private final int                mThreadQty;
+  
+  BaseQueryAppProcessingThread(BaseQueryApp appRef,
+                               int          threadId,
+                               int          threadQty) {
+    mProcUnit = new BaseProcessingUnit(appRef);
+    mThreadId  = threadId;
+    mThreadQty = threadQty; 
+  }
+
+  @Override
+  public void run() {
+    
+    try {
+      mProcUnit.mAppRef.logger.info("Thread id=" + mThreadId + " is created, the total # of threads " + mThreadQty);
+      
+      CandidateProvider candProvider = mProcUnit.mAppRef.mCandProviders[mThreadId];
+
+      for (int iq = 0; iq < mProcUnit.mAppRef.mParsedQueries.size(); ++iq)
+        if (iq % mThreadQty == mThreadId) 
+          mProcUnit.procQuery(candProvider, iq);
+      
+      mProcUnit.mAppRef.logger.info("Thread id=" + mThreadId + " finished!");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println("Unhandled exception: " + e + " ... exiting");
+      System.exit(1);
+    }    
+  }
 }
 
 /**
@@ -329,7 +376,7 @@ class BaseQueryAppProcessingThread extends Thread {
  *
  */
 public abstract class BaseQueryApp {
-  
+
   /**
    * A child class implements this function where it calls {@link #addCandGenOpts(boolean, boolean, boolean)},
    * {@link #addResourceOpts(boolean)}, and {@link #addLetorOpts(boolean, boolean)} with appropriate parameters,
@@ -398,7 +445,7 @@ public abstract class BaseQueryApp {
    * Adds options related to candidate generation.  
    * 
    * @param onlyLucene
-   *                    if true, we don't allow to specify the provider type and only uses Lucene
+   *                    if true, we don't allow to specify the provider type and only use Lucene
    * @param multNumRetr
    *                    if true, an app generates results for top-K sets of various sizes
    * @param useQRELs
@@ -419,7 +466,9 @@ public abstract class BaseQueryApp {
       mOptions.addOption(CommonParams.CAND_PROVID_PARAM,       null, true, CandidateProvider.CAND_PROVID_DESC);
       mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,      null, true, CommonParams.PROVIDER_URI_DESC);
       mOptions.addOption(CommonParams.MIN_SHOULD_MATCH_PCT_PARAM, null, true, CommonParams.MIN_SHOULD_MATCH_PCT_DESC);
+      mOptions.addOption(CommonParams.KNN_INTERLEAVE_PARAM,     null, false, CommonParams.KNN_INTERLEAVE_DESC);
     }
+    mOptions.addOption(CommonParams.QUERY_CACHE_FILE_PARAM,    null, true, CommonParams.QUERY_CACHE_FILE_DESC);
     mOptions.addOption(CommonParams.QUERY_FILE_PARAM,          null, true, CommonParams.QUERY_FILE_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_RESULTS_PARAM,     null, true, mMultNumRetr ? 
                                                                              CommonParams.MAX_NUM_RESULTS_DESC : 
@@ -432,16 +481,9 @@ public abstract class BaseQueryApp {
 
     if (useThreadQty)
       mOptions.addOption(CommonParams.THREAD_QTY_PARAM,        null, true, CommonParams.THREAD_QTY_DESC);
-    mOptions.addOption(CommonParams.KNN_THREAD_QTY_PARAM,      null, true, CommonParams.KNN_THREAD_QTY_DESC);
-    mOptions.addOption(CommonParams.KNN_WEIGHTS_FILE_PARAM,    null, true, CommonParams.KNN_WEIGHTS_FILE_DESC);
-    mOptions.addOption(CommonParams.MAX_NUM_QUERY_PARAM,       null, true, CommonParams.MAX_NUM_QUERY_DESC);
-    
-    mOptions.addOption(CommonParams.GIZA_EXPAND_QTY_PARAM,          null, true,  CommonParams.GIZA_EXPAND_QTY_DESC);
-    mOptions.addOption(CommonParams.GIZA_EXPAND_USE_WEIGHTS_PARAM,  null, false, CommonParams.GIZA_EXPAND_USE_WEIGHTS_DESC);
-
-    mOptions.addOption(CommonParams.NMSLIB_FIELDS_PARAM,       null, true, CommonParams.NMSLIB_FIELDS_DESC);
     
     mOptions.addOption(CommonParams.SAVE_STAT_FILE_PARAM,      null, true, CommonParams.SAVE_STAT_FILE_DESC);
+    mOptions.addOption(CommonParams.USE_THREAD_POOL_PARAM,     null, false, CommonParams.USE_THREAD_POOL_DESC);
   }
   
   /**
@@ -464,10 +506,14 @@ public abstract class BaseQueryApp {
    * Adds options related to LETOR (learning-to-rank).
    */
   void addLetorOpts(boolean useIntermModel, boolean useFinalModel) {
+    
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM,     null, true,  CommonParams.EXTRACTOR_TYPE_FINAL_DESC);
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM,    null, true,  CommonParams.EXTRACTOR_TYPE_INTERM_DESC);
+    mOptions.addOption(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM,   null, true,  CommonParams.EXTRACTOR_TYPE_NMSLIBL_DESC);
+    
     mUseIntermModel = useIntermModel;
     mUseFinalModel = useFinalModel;
+    
     if (mUseIntermModel) {
       mOptions.addOption(CommonParams.MODEL_FILE_INTERM_PARAM, null, true, CommonParams.MODEL_FILE_INTERM_DESC);
       mOptions.addOption(CommonParams.MAX_CAND_QTY_PARAM,      null, true, CommonParams.MAX_CAND_QTY_DESC);
@@ -491,10 +537,6 @@ public abstract class BaseQueryApp {
       if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_DESC);
     }
     
-    String tmps = mCmd.getOptionValue(CommonParams.NMSLIB_FIELDS_PARAM);
-    if (null != tmps) {
-      mNmslibFields = tmps.split(",");
-    }
     mProviderURI = mCmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
     if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_DESC);              
     mQueryFile = mCmd.getOptionValue(CommonParams.QUERY_FILE_PARAM);
@@ -512,6 +554,8 @@ public abstract class BaseQueryApp {
     
     logger.info(String.format("Candidate provider type: %s URI: %s Query file: %s Maximum # of queries: %d # of cand. records: %s", 
         mCandProviderType, mProviderURI, mQueryFile, mMaxNumQuery, tmpn));
+    mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
+    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
     
     // mMaxNumRet must be init before mMaxCandRet
     mMaxNumRet = Integer.MIN_VALUE;
@@ -547,27 +591,7 @@ public abstract class BaseQueryApp {
       }
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
-    tmpn = mCmd.getOptionValue(CommonParams.KNN_THREAD_QTY_PARAM);
-    if (null != tmpn) {
-      try {
-        mKnnThreadQty = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Number of threads for brute-force KNN-provider isn't integer: '" + tmpn + "'");
-      }
-    }
-    String knnWeightFileName = mCmd.getOptionValue(CommonParams.KNN_WEIGHTS_FILE_PARAM);
-    if (null != knnWeightFileName) {
-      mKnnWeights = FeatureExtractor.readFeatureWeights(knnWeightFileName);
-    }
-    tmpn = mCmd.getOptionValue(CommonParams.GIZA_EXPAND_QTY_PARAM);
-    if (tmpn != null) {
-      try {
-        mGizaExpandQty = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Number of GIZA-based query-extension terms is not integer: '" + tmpn + "'");
-      }
-    }
-    mGizaExpandUseWeights = mCmd.hasOption(CommonParams.GIZA_EXPAND_USE_WEIGHTS_PARAM);
+
     mGizaRootDir = mCmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
     tmpn = mCmd.getOptionValue(CommonParams.GIZA_ITER_QTY_PARAM);
     if (null != tmpn) {
@@ -577,8 +601,12 @@ public abstract class BaseQueryApp {
         showUsage("Number of GIZA iterations isn't integer: '" + tmpn + "'");
       }
     }
+    
     mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
     String embedFilesStr = mCmd.getOptionValue(CommonParams.EMBED_FILES_PARAM);
+    
+    mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
+    mKnnInterleave = mCmd.hasOption(CommonParams.KNN_INTERLEAVE_PARAM);
 
     if (null != embedFilesStr) {
       mEmbedFiles = embedFilesStr.split(",");
@@ -621,6 +649,7 @@ public abstract class BaseQueryApp {
         logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
       }
     }
+    mExtrTypeNmslib = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM);
     mSaveStatFile = mCmd.getOptionValue(CommonParams.SAVE_STAT_FILE_PARAM);
     if (mSaveStatFile != null)
       logger.info("Saving some vital stats to '" + mSaveStatFile);
@@ -643,10 +672,42 @@ public abstract class BaseQueryApp {
    * @throws Exception 
    */
   void initExtractors() throws Exception {
-    if (mExtrTypeFinal != null)
-      mInMemExtrFinal  = createOneExtractor(mExtrTypeFinal);
-    if (mExtrTypeInterm != null)
-      mInMemExtrInterm = createOneExtractor(mExtrTypeInterm, mInMemExtrFinal /* try to reuse existing resources from another extractor */);
+    boolean bOldExtr = false;
+    
+    if (mExtrTypeFinal != null) {
+      if (mExtrTypeFinal.startsWith(InMemIndexFeatureExtractorExperOld.CODE)) {
+        bOldExtr = true;
+        
+        if (mExtrTypeInterm != null) {
+          if (!mExtrTypeInterm.startsWith(InMemIndexFeatureExtractorExperOld.CODE)) {
+            throw new Exception("Either both or none of the extractors should be old-style:"
+                                +"however the final one is old style, but intermediate one is not!");
+          }
+        
+        }
+      }
+    } else {
+      // Here the final extractor type is null
+      bOldExtr = mExtrTypeInterm != null &&
+                 mExtrTypeInterm.startsWith(InMemIndexFeatureExtractorExperOld.CODE);
+    }
+    
+    if (bOldExtr) {
+      InMemIndexFeatureExtractorOld extr1 = createOneExtractorOld(mExtrTypeFinal);
+      mInMemExtrFinal  = extr1;
+      if (mExtrTypeInterm != null) {
+        mInMemExtrInterm = createOneExtractorOld(mExtrTypeInterm, 
+                                                 extr1 /* try to reuse existing resources from another extractor */);        
+      }
+    } else if (mExtrTypeFinal != null || mExtrTypeInterm != null || mExtrTypeNmslib != null) {
+      mResourceManager = new FeatExtrResourceManager(mMemIndexPref, mGizaRootDir, mEmbedDir);
+      if (mExtrTypeFinal != null)
+        mInMemExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
+      if (mExtrTypeInterm != null)
+        mInMemExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
+      if (mExtrTypeNmslib != null)
+        mInMemExtrNmslib = new CompositeFeatureExtractor(mResourceManager, mExtrTypeNmslib);
+    }
   }
   
   /**
@@ -665,58 +726,42 @@ public abstract class BaseQueryApp {
       for (int ic = 1; ic < mThreadQty; ++ic) 
         mCandProviders[ic] = mCandProviders[0];
     } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
-      mCandProviders[0] = new LuceneCandidateProvider(mProviderURI);
+      mCandProviders[0] = new LuceneCandidateProvider(mProviderURI,
+                                                      BM25SimilarityLucene.DEFAULT_BM25_K1, 
+                                                      BM25SimilarityLucene.DEFAULT_BM25_B);
       for (int ic = 1; ic < mThreadQty; ++ic) 
         mCandProviders[ic] = mCandProviders[0];
-    } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE_GIZA)) {
-      if (mGizaExpandQty == null)
-        showUsageSpecify(CommonParams.GIZA_EXPAND_QTY_DESC);
-      if (mGizaRootDir == null) {
-        showUsageSpecify(CommonParams.GIZA_ROOT_DIR_DESC);
-      }
-      if (mGizaIterQty <= 0) {
-        showUsageSpecify(CommonParams.GIZA_ITER_QTY_DESC);
-      }
-      
-      mCandProviders[0] = new LuceneGIZACandidateProvider(mProviderURI, mGizaExpandQty, mGizaExpandUseWeights,
-                                                          mGizaRootDir, mGizaIterQty, 
-                                                          mMemIndexPref,
-                                                          mInMemExtrFinal, mInMemExtrInterm);
-      for (int ic = 1; ic < mThreadQty; ++ic) 
-        mCandProviders[ic] = mCandProviders[0];        
-    } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_KNN)) {
-      if (null != mInMemExtrInterm)
-        showUsage("One shouldn't use an intermeditate re-ranker together with the brute-force Java provider!");
-      if (null == mKnnWeights)
-        showUsageSpecify(CommonParams.KNN_WEIGHTS_FILE_DESC);
-      if (null == mInMemExtrInterm)
-        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_FINAL_DESC);
-      mCandProviders[0] = new BruteForceKNNCandidateProvider(mInMemExtrFinal,
-                                                             mKnnWeights,
-                                                             mKnnThreadQty
-                                                            );      
-      for (int ic = 1; ic < mThreadQty; ++ic) 
-        mCandProviders[ic] = mCandProviders[0];        
+    
     } else if (mCandProviderType.equals(CandidateProvider.CAND_TYPE_NMSLIB)) {
       /*
        * NmslibKNNCandidateProvider isn't really thread-safe,
        * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
        * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
        */
-      if (null == mNmslibFields) showUsageSpecify(CommonParams.NMSLIB_FIELDS_PARAM);
-      NmslibQueryGenerator queryGen = 
-          new NmslibQueryGenerator(mNmslibFields, mMemIndexPref, mInMemExtrInterm, mInMemExtrFinal); 
+      if (mInMemExtrNmslib == null) {
+        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM);
+      }
+      
+      if (!(mInMemExtrNmslib instanceof CompositeFeatureExtractor)) {
+        throw new Exception("NMSLIB needs to be used only with a composite feature extractor!");
+      }
+      CompositeFeatureExtractor compExtractor = (CompositeFeatureExtractor)mInMemExtrNmslib;
+
       for (int ic = 0; ic < mThreadQty; ++ic) {
-        mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, queryGen);
-      }                
+        mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, 
+                                                            mResourceManager,
+                                                            compExtractor,
+                                                            mKnnInterleave
+                                                            );
+      }
+             
     } else {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
-
   }
   
   /**
-   * Creates one in-memory feature extractor.
+   * Creates one old-style in-memory feature extractor.
    * 
    * @param extrType            
    *              an extractor type
@@ -725,13 +770,13 @@ public abstract class BaseQueryApp {
    * @return
    * @throws Exception
    */
-  InMemIndexFeatureExtractor createOneExtractor(String extrType, InMemIndexFeatureExtractor... donnorExtractors)
+  InMemIndexFeatureExtractorOld createOneExtractorOld(String extrType, InMemIndexFeatureExtractorOld... donnorExtractors)
       throws Exception {
     if (null == mMemIndexPref)
       showUsageSpecify(CommonParams.MEMINDEX_DESC);
 
-    InMemIndexFeatureExtractor inMemExtractor = 
-        InMemIndexFeatureExtractor.createExtractor(extrType, 
+    InMemIndexFeatureExtractorOld inMemExtractor = 
+        InMemIndexFeatureExtractorOld.createExtractor(extrType, 
                                                    mGizaRootDir, mGizaIterQty, 
                                                    mMemIndexPref, 
                                                    mEmbedDir, mEmbedFiles, mHighOrderFiles);
@@ -794,33 +839,55 @@ public abstract class BaseQueryApp {
       // because they may some of the resources (e.g., NMSLIB needs an in-memory feature extractor)
       initProvider();
       
-      BufferedReader  inpText = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(mQueryFile)));
+      if (mResultCacheName != null) {
+        mResultCache = new CandidateInfoCache();
+        // If the cache file name is specified and it exists, read the cache!
+        if (CandidateInfoCache.cacheExists(mResultCacheName)) { 
+          mResultCache.readCache(mResultCacheName);
+          logger.info("Result cache is loaded from '" + mResultCacheName + "'");
+        }
+      }      
       
-      String docText = XmlHelper.readNextXMLIndexEntry(inpText);        
-      int docQty = 0;
-      for (; docText!= null && docQty < mMaxNumQuery; 
-          docText = XmlHelper.readNextXMLIndexEntry(inpText)) {
+      int queryQty = 0;
+      
+      try (DataEntryReader inp = new DataEntryReader(mQueryFile)) {
+        Map<String, String> queryFields = null;      
         
-        mQueries.add(docText);
-        ++docQty;
-        if (docQty % 100 == 0) logger.info("Read " + docQty + " documents");
+        for (; ((queryFields = inp.readNext()) != null) && queryQty < mMaxNumQuery; ) {
+           
+          mParsedQueries.add(queryFields);
+          ++queryQty;
+          if (queryQty % 100 == 0) logger.info("Read " + queryQty + " documents from " + mQueryFile);
+        }
       }
       
-      logger.info("Read " + docQty + " documents"); 
+      logger.info("Read " + queryQty + " documents from " + mQueryFile);
       
       init();
-      
-      BaseQueryAppProcessingThread[] workers = new BaseQueryAppProcessingThread[mThreadQty];
-      
-      for (int threadId = 0; threadId < mThreadQty; ++threadId) {               
-        workers[threadId] = new BaseQueryAppProcessingThread(this, threadId, mThreadQty);
+          
+      if (mUseThreadPool ) {
+        ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
+        logger.info(String.format("Created a fixed thread pool with %d threads", mThreadQty));
+        
+        for (int iq = 0; iq < mParsedQueries.size(); ++iq) {
+          executor.execute(new BaseQueryAppProcessingWorker(this, iq));
+        }                  
+       
+        executor.shutdown();
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+      } else {
+        BaseQueryAppProcessingThread[] workers = new BaseQueryAppProcessingThread[mThreadQty];
+        
+        for (int threadId = 0; threadId < mThreadQty; ++threadId) {               
+          workers[threadId] = new BaseQueryAppProcessingThread(this, threadId, mThreadQty);
+        }
+              
+        // Start threads
+        for (BaseQueryAppProcessingThread e : workers) e.start();
+        // Wait till they finish
+        for (BaseQueryAppProcessingThread e : workers) e.join(0);        
       }
-            
-      // Start threads
-      for (BaseQueryAppProcessingThread e : workers) e.start();
-      // Wait till they finish
-      for (BaseQueryAppProcessingThread e : workers) e.join(0);
-     
+      
       fin();
       
       long end = System.currentTimeMillis();
@@ -851,6 +918,12 @@ public abstract class BaseQueryApp {
         f.close();
       }
       
+      // Overwrite cache only if it doesn't exist or is incomplete
+      if (mResultCacheName != null && !CandidateInfoCache.cacheExists(mResultCacheName)) {
+        mResultCache.writeCache(mResultCacheName);
+        logger.info("Result cache is loaded from '" + mResultCacheName + "'");        
+      }
+      
     } catch (ParseException e) {
       showUsageSpecify("Cannot parse arguments: " + e);
     } catch(Exception e) {
@@ -875,12 +948,7 @@ public abstract class BaseQueryApp {
   String       mQrelFile;
   QrelReader   mQrels;
   int          mThreadQty = 1;
-  int          mKnnThreadQty = 1;
-  String       mNmslibFields[];
-  String       mSaveStatFile;
-  DenseVector  mKnnWeights;        
-  Integer      mGizaExpandQty;
-  boolean      mGizaExpandUseWeights = false;
+  String       mSaveStatFile;     
   String       mGizaRootDir;
   int          mGizaIterQty = -1;
   String       mEmbedDir;
@@ -889,11 +957,19 @@ public abstract class BaseQueryApp {
   String       mMemIndexPref;
   String       mExtrTypeFinal;
   String       mExtrTypeInterm;
+  String       mExtrTypeNmslib;
   DenseVector  mModelInterm;
   Ranker       mModelFinal;
+  boolean      mKnnInterleave = false;
+  boolean      mUseThreadPool = false;
+  FeatExtrResourceManager mResourceManager;
   
-  InMemIndexFeatureExtractor mInMemExtrInterm;
-  InMemIndexFeatureExtractor mInMemExtrFinal;
+  String             mResultCacheName = null; 
+  CandidateInfoCache mResultCache = null;
+  
+  FeatureExtractor mInMemExtrInterm;
+  FeatureExtractor mInMemExtrFinal;
+  FeatureExtractor mInMemExtrNmslib;
   
   String   mAppName;
   Options  mOptions = new Options();
@@ -916,5 +992,5 @@ public abstract class BaseQueryApp {
   SynchronizedSummaryStatistics mFinalRerankTimeStat  = new SynchronizedSummaryStatistics();
   SynchronizedSummaryStatistics mNumRetStat           = new SynchronizedSummaryStatistics();
   
-  ArrayList<String>                               mQueries = new ArrayList<String>();      
+  ArrayList<Map<String, String>> mParsedQueries = new ArrayList<Map<String, String>>();      
 }

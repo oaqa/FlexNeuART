@@ -18,21 +18,13 @@ package edu.cmu.lti.oaqa.knn4qa.collection_reader;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.regex.*;
-import java.text.Normalizer;
-import java.text.Normalizer.Form;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.*;
-import org.xml.sax.SAXException;
 import org.apache.uima.cas.*;
 import org.apache.uima.collection.*;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.*;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
 import edu.cmu.lti.oaqa.knn4qa.utils.*;
 import edu.cmu.lti.oaqa.knn4qa.types.*;
 

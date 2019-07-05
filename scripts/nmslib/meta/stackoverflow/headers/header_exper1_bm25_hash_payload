@@ -1,0 +1,13 @@
+isQueryFile=0
+useHashBasedPayloads=1
+weightFile=nmslib/stackoverflow/models/out_stackoverflow_train_exper@bm25=text+model1=text_15.model
+simpleIndexType=bm25
+
+fieldIndexFile=nmslib/stackoverflow/memfwdindex/text
+fieldFeatures=bm25 model1
+fieldTranTablePrefix=nmslib/stackoverflow/tran/text/
+gizaIterQty=5
+probSelfTran=0.05
+minTranProb=0.0025
+lambdaModel1=0.1
+

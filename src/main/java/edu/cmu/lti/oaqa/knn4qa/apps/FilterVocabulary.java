@@ -24,7 +24,7 @@ import org.apache.commons.cli.*;
 
 import edu.cmu.lti.oaqa.knn4qa.giza.*;
 import edu.cmu.lti.oaqa.knn4qa.memdb.FrequentIndexWordFilterAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexText;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.ParamHelper;
 import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;

@@ -1,0 +1,5 @@
+exper@bm25=text                                                                                             @       dev2
+exper@bm25=text+model1=text+minProbModel1=text:1e-3+model1=text_alias1+minProbModel1=text_alias1:1e-3       @       dev2
+exper@bm25=text+model1=text+minProbModel1=text:1e-3                                                         @       dev2
+exper@bm25=text+model1=text_alias1+minProbModel1=text_alias1:1e-3                                           @       dev2
+

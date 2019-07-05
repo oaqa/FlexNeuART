@@ -25,7 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
 import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 public class WMDTest extends AbstractTest {
   final static Logger mLogger = LoggerFactory.getLogger(WMDTest.class);  
@@ -34,7 +35,7 @@ public class WMDTest extends AbstractTest {
     float [][]res = new float[s.length][];
     
     for (int i = 0; i < s.length; ++i) {
-      String parts[] = StringUtilsLeo.splitNoEmpty(s[i], " ");
+      String parts[] = StringUtils.splitNoEmpty(s[i], " ");
       res[i] = new float[parts.length];
       for (int k = 0; k < parts.length; ++k)
         res[i][k] = Float.parseFloat(parts[k]);
@@ -62,7 +63,7 @@ public class WMDTest extends AbstractTest {
       arrIds.add(-1); // The test wouldn't care about IDs, only about qtys
     }    
     
-    return new DocEntry(arrIds, arrQtys, wordIdSeq);
+    return new DocEntry(arrIds, arrQtys, wordIdSeq, true);
   }
   
   /**

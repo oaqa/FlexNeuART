@@ -1,63 +1,70 @@
-#!/bin/bash
+#!/bin/bash -e
+. scripts/common.sh
 
 # This script runs annotation pipelines for a given collection
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, compr2M, compr_notran, compr2M_notran"
+  echo "Specify sub-collection (1st arg), e.g., squad"
   exit 1
 fi
 
-OUT_DIR="memfwdindex/$collect/"
-IN_DIR="output/$collect/"
-
-if [ ! -d "$OUT_DIR" ] ; then
-  echo "The output directory '$OUT_DIR' doesn't exist!"
+fieldList=$2
+if [ "$fieldList" = "" ] ; then
+  echo "Specify a list of fields to index (2d arg), e.g., 'text text_unlemm'"
   exit 1
 fi
 
-echo "=========================================================================="
-echo "Output directory: $OUT_DIR"
-echo "Removing previous index (if exists)"
-rm -f "$OUT_DIR"/*
-echo "=========================================================================="
+store_word_id_seq=$3
+store_word_id_seq_param=""
+if [ "$store_word_id_seq" = "" ] ; then
+  echo "Specify the flag to store word sequence (3d arg): 1 or 0"
+  exit 1
+fi
+if [ "$store_word_id_seq" = "1" ] ; then
+  store_word_id_seq_param=" -store_word_id_seq "
+fi
+inmem_text_indx=$4
+inmem_text_indx_param=""
+if [ "$inmem_text_indx" = "" ] ; then
+  echo "Specify in-memory (text-only) index flag (4th arg): 1 or 0"
+  exit 1
+fi
+if [ "$inmem_text_indx" = "1" ] ; then
+  inmem_text_indx_param=" -inmem_index "
+fi
 
-if [ "$collect" = "manner" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "compr" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt # -exclude_fields "srl,srl_lab,dep,wnss"
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "stackoverflow" ] ; then
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt -exclude_fields "srl,srl_lab,dep,wnss"
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "compr_notran" ] ; then
-  # compr_notran is used merely for filtering of embeddings and IBM Model1 translation tables
-  # therefore, we create index only for two text fields, excluding everything else 
-  IN_DIR="output/compr/"
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test  -solr_file SolrAnswerFile.txt  -exclude_fields "bigram,srl,srl_lab,dep,wnss"
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "compr2M" ] ; then
-  # For compr2M the order of parts MUST be the same as in create_lucene_index.sh !!!
-  IN_DIR="output/compr/"
-  scripts/index/run_inmemfwd_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -n 2000000
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
+
+
+indexDir="memfwdindex/$collect/"
+dataDir="output/$collect/"
+
+echo "=========================================================================="
+echo "Data directory: $dataDir"
+echo "Index directory: $indexDir"
+if [ ! -d "$indexDir" ] ; then
+  mkdir -p "$indexDir"
 else
-  echo "Wrong collection name '$collect'"
+  echo "Removing previous index (if exists)"
+  rm -rf "$indexDir"/*
+fi
+
+echo "Storing word id seq param: $store_word_id_seq_param"
+echo "Using text index param:    $inmem_text_indx_param"
+echo "=========================================================================="
+retVal=""
+getIndexDataInfo "$dataDir"
+dirList=${retVal[0]}
+currFile=${retVal[1]}
+if [ "$dirList" = "" ] ; then
+  echo "Cannot get a list of relevant data directories, did you dump the data?"
   exit 1
 fi
+if [ "$currFile" = "" ] ; then
+  echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
+  exit 1
+fi
+
+for field in $fieldList ; do
+  scripts/index/run_inmemfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir "$dataDir"  -index_dir "$indexDir" -sub_dirs "$dirList" -data_file "$currFile" -field "$field"
+done
 

@@ -20,9 +20,9 @@ import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 
 public class InMemForwardIndexFilterAndRecoder extends
     VocabularyFilterAndRecoder {
-  private InMemForwardIndex mIndex;
+  private ForwardIndex mIndex;
 
-  public InMemForwardIndexFilterAndRecoder(InMemForwardIndex index) {
+  public InMemForwardIndexFilterAndRecoder(ForwardIndex index) {
     mIndex = index;
   }
   

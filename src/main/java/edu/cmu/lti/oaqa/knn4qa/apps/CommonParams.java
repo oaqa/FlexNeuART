@@ -15,13 +15,16 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractor;
 
 public class CommonParams {
   
   public final static String LUCENE_INDEX_LOCATION_DESC = "Location of a Lucene index";
+  
   public static final String PROVIDER_URI_DESC = "Provider URI: an index location or a query server address";
   public static final String PROVIDER_URI_PARAM = "u";
+  
+  public static final String QUERY_CACHE_FILE_DESC  = "A file to cache query results";
+  public static final String QUERY_CACHE_FILE_PARAM = "query_cache_file";
   
   public static final String QUERY_FILE_DESC = "Query file";
   public static final String QUERY_FILE_PARAM = "q";
@@ -40,13 +43,10 @@ public class CommonParams {
   public static final String FEATURE_FILE_DESC  = "An output file for features in the SVM-rank format";
   
   public static final String TREC_STYLE_OUT_FILE_PARAM = "o";
-  public static final String TREC_STYLE_OUT_FILE_DESC = "A TREC-style (QRELs) output file";
+  public static final String TREC_STYLE_OUT_FILE_DESC = "A TREC-style output file";
   
   public final static String THREAD_QTY_DESC   = "The number of threads";
   public final static String THREAD_QTY_PARAM  = "thread_qty";
-  
-  public final static String KNN_THREAD_QTY_DESC   = "The number of threads of knn brute-force candidate provider";
-  public final static String KNN_THREAD_QTY_PARAM  = "knn_thread_qty";
   
   public final static String MEMINDEX_DESC = "A directory for in-memory index";
   public final static String MEMINDEX_PARAM = "memindex_dir";
@@ -61,16 +61,16 @@ public class CommonParams {
   public final static String MIN_SHOULD_MATCH_PCT_DESC  = "a percentage of query word (an integer from 0 to 100) that must match a document word";
 
   public final static String EXTRACTOR_TYPE_FINAL_PARAM = "extr_type_final";
-  public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type: " + 
-                                                  InMemIndexFeatureExtractor.getExtractorListDesc();
+  public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type/json"; 
+  
+  public final static String EXTRACTOR_TYPE_NMSLIBL_PARAM = "extr_type_nmslib";
+  public final static String EXTRACTOR_TYPE_NMSLIBL_DESC = "Extrator type/json to generate NMSLIB query vectors"; 
                                   ;
   public final static String EXTRACTOR_TYPE_INTERM_PARAM = "extr_type_interm";  
-  public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type: " + 
-                                                  InMemIndexFeatureExtractor.getExtractorListDesc();
+  public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type/json";
   
   public final static String MAX_CAND_QTY_PARAM    = "cand_qty";
-  public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. " +
-                                                     "This is used only in conjunction with an intermediate re-ranker.";
+  public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. ";
   
   public final static String MAX_NUM_RESULTS_PARAM = "n";
   public final static String MAX_NUM_RESULTS_DESC  = "A comma-separated list of numbers of candidate records (per-query).";
@@ -80,13 +80,7 @@ public class CommonParams {
     
   public static final String GIZA_ITER_QTY_PARAM = "giza_iter_qty";
   public static final String GIZA_ITER_QTY_DESC = "a number of GIZA iterations";
-
-  public static final String GIZA_EXPAND_QTY_PARAM = "giza_expand_qty";
-  public static final String GIZA_EXPAND_QTY_DESC  = "A number of GIZA-based query-expansion terms";
-  
-  public static final String GIZA_EXPAND_USE_WEIGHTS_PARAM = "giza_wght_expand";
-  public static final String GIZA_EXPAND_USE_WEIGHTS_DESC = "Use translation probabilities as weights during expansion";  
-  
+ 
   public static final String EMBED_DIR_PARAM = "embed_dir";
   public static final String EMBED_DIR_DESC = "a root dir for word embeddings";
   
@@ -95,19 +89,10 @@ public class CommonParams {
   
   public static final String HIHG_ORDER_FILES_PARAM = "horder_files";
   public static final String HIHG_ORDER_FILES_DESC  = "a comma-separated list of sparse (high-order models) word embedding file names";
-  
-  public final static String KNN_WEIGHTS_FILE_DESC = "a file with the weights for knn-search";
-  public final static String KNN_WEIGHTS_FILE_PARAM = "knn_weights";
-  
-  public final static String KNN_QUERIES_DESC  = "a file to save knn-queries in the format that can be processed by NMSLIB";
-  public final static String KNN_QUERIES_PARAM = "knn_queries";    
-  
-  public final static String KNN_SERVICE_PARAM = "nmslib_addr";
-  public final static String KNN_SERVICE_DESC  = "the address (in the format host:port) of the NMSLIB server";
-  
-  public final static String NMSLIB_FIELDS_PARAM = "nmslib_fields";
-  public final static String NMSLIB_FIELDS_DESC  = "A comma-separated list of fields used by an NMSLIB provider, it must correspond exactly to what is specified in respective NMSLIB header file";
-  
+ 
+  public final static String KNN_INTERLEAVE_DESC  = "Used sparse interlleaved vectors for NMSLIB";
+  public final static String KNN_INTERLEAVE_PARAM = "knn_interleave";    
+
   public final static String ROOT_DIR_DESC = "A root dir for the pipeline output";
   public final static String ROOT_DIR_PARAM = "root_dir";
     
@@ -120,10 +105,14 @@ public class CommonParams {
   public final static String MAX_NUM_QUERY_DESC  = "maximum number of queries to process";
   public final static String MAX_NUM_QUERY_PARAM = "max_num_query";
   
-  public final static String SOLR_FILE_NAME_DESC = "A name of output file to be fed to a SOLR indexer, e.g., SolrAnswerFile.txt";
+  // A deprecated param
+  public final static String SOLR_FILE_NAME_DESC = "A deprecated parameter left for compatibility";
   public final static String SOLR_FILE_NAME_PARAM = "solr_file";
+  
+  public final static String DATA_FILE_DESC = "A data file";
+  public final static String DATA_FILE_PARAM = "data_file";
     
-  public final static String OUT_MINDEX_DESC = "A directory to store index";
+  public final static String OUT_INDEX_DESC = "A directory to store index";
   public final static String OUT_INDEX_PARAM = "index_dir";
   
   public final static String MIN_PROB_PARAM  = "min_prob";
@@ -138,4 +127,20 @@ public class CommonParams {
   public final static String SAVE_STAT_FILE_PARAM = "save_stat_file";
   public final static String SAVE_STAT_FILE_DESC  = "A file to save some vital query execution statistics";
   
+  public final static String USE_THREAD_POOL_PARAM = "use_thread_pool";
+  public final static String USE_THREAD_POOL_DESC = "Use a thread pool instead of a round-robin division of queries among threads";
+  
+  public final static String FIELD_NAME_PARAM = "field_name";
+  public final static String FIELD_NAME_DESC = "Field name";
+  
+  public final static String USE_INMEM_FOWARD_INDEX_PARAM = "inmem_index";
+  public final static String USE_INMEM_FOWARD_INDEX_DESC = "Create a text-only fully in-memory forward index";
+ 
+  // A general-purpose output file parameter
+  public static final String OUTPUT_FILE_PARAM = "out_file";
+  public static final String OUTPUT_FILE_DESC = "Output file";
+  
+  public static final int USAGE_WIDTH = 90;
+  
+
 }

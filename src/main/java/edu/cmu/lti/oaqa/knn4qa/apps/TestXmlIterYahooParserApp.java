@@ -17,10 +17,10 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import java.io.*;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.ParsedQuestion;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.YahooAnswersParser;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.YahooAnswersStreamParser;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
 
 

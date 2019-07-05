@@ -33,6 +33,7 @@ import org.apache.tools.bzip2.CBZip2InputStream;
  *
  */
 public class CompressUtils {
+  
   /**
    * Creates an input stream to read from a regular or compressed file.
    * 
@@ -98,4 +99,23 @@ public class CompressUtils {
     
     return res;
   }
-}
+  
+  /** 
+   * Removes a file suffix that is known to be created by a compression
+   * program.
+   * 
+   * @param fileName  a file name
+   * @return a string possibly without a suffix, e.g., fileName.txt if the input was fileName.txt.gz
+   * 
+   */
+  public static String removeComprSuffix(String fileName) {
+    
+    for (String suff : SUFF_ARRAY) {
+      if (!suff.isEmpty() && fileName.endsWith(suff)) {
+        return fileName.substring(0, fileName.length() - suff.length());
+      }
+    }
+    return fileName;
+  }
+
+} 

@@ -23,7 +23,7 @@
             </configurationParameterSettings>
         </collectionIterator>
     </collectionReader>
-    <casProcessors casPoolSize="4" processingUnitThreadCount="4">
+    <casProcessors casPoolSize="4" processingUnitThreadCount="3">
     <casProcessor deployment="integrated" name="aeWrapperAggreg">
         <descriptor>
             <import name="descriptors.analysis_engines.aeWrapperAggregMannerTrain"/>

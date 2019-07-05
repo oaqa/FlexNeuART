@@ -1,50 +1,34 @@
-#!/bin/bash
+#!/bin/bash -e
+source scripts/common.sh
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg): manner, compr, stackoverflow, compr2M"
+  echo "Specify sub-collection (1st arg), e.g., squad"
   exit 1
 fi
 
-IN_DIR="output/$collect/"
-OUT_DIR="lucene_index/$collect"
+dataDir="output/$collect/"
+indexDir="lucene_index/$collect"
 
-if [ ! -d "$OUT_DIR" ] ; then
-  echo "Directory (or a link to a directory) $OUT_DIR doesn't exist"
-  exit 1
-fi
 echo "=========================================================================="
-echo "Output directory: $OUT_DIR"
-echo "Removing previous index (if exists)"
-rm -f "$OUT_DIR"/*
-echo "=========================================================================="
-
-if [ "$collect" = "manner" ] ; then
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR -sub_dirs train,dev1,dev2,test -solr_file SolrAnswerFile.txt
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "compr" ] ; then
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "stackoverflow" ] ; then
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran  -solr_file SolrAnswerFile.txt
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
-elif [ "$collect" = "compr2M" ] ; then
-  # For compr2M the order of parts MUST be the same as in create_inmemfwd_index.sh !!!
-  IN_DIR="output/compr/"
-  scripts/index/run_lucene_index.sh -root_dir $IN_DIR  -index_dir $OUT_DIR  -sub_dirs train,dev1,dev2,test,tran -solr_file SolrAnswerFile.txt -n 2000000
-  if [ "$?" != "0" ] ; then
-    echo "FAILURE!!!"
-    exit 1
-  fi
+echo "Data directory: $dataDir"
+echo "Index directory: $indexDir"
+if [ ! -d "$indexDir" ] ; then
+  mkdir -p "$indexDir"
 else
-  echo "Wrong collection name '$collect'"
+  echo "Removing previous index (if exists)"
+  rm -rf "$indexDir"/*
+fi
+echo "=========================================================================="
+retVal=""
+getIndexDataInfo "$dataDir"
+dirList=${retVal[0]}
+currFile=${retVal[1]}
+if [ "$dirList" = "" ] ; then
+  echo "Cannot get a list of relevant data directories, did you dump the data?"
   exit 1
 fi
+if [ "$currFile" = "" ] ; then
+  echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
+  exit 1
+fi
+scripts/index/run_lucene_index.sh -root_dir "$dataDir" -index_dir "$indexDir" -sub_dirs "$dirList" -data_file "$currFile"

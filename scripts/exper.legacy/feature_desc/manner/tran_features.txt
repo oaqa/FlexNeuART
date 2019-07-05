@@ -1,0 +1,14 @@
+exper@bm25=text+model1=text	          @   dev2
+exper@bm25=text+model1=text_unlemm	  @   dev2
+exper@bm25=text+model1=bigram	        @   dev2
+exper@bm25=text+model1=dep	          @   dev2
+exper@bm25=text+model1=srl	          @   dev2
+exper@bm25=text+model1=srl_lab	      @   dev2
+exper@bm25=text+model1=wnss	          @   dev2
+
+exper@bm25=text+model1=text+model1=text_unlemm	  @   dev2
+exper@bm25=text+model1=text+model1=bigram	        @   dev2
+exper@bm25=text+model1=text+model1=dep	          @   dev2
+exper@bm25=text+model1=text+model1=srl	          @   dev2
+exper@bm25=text+model1=text+model1=srl_lab	      @   dev2
+exper@bm25=text+model1=text+model1=wnss	          @   dev2

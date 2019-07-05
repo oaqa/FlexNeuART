@@ -44,8 +44,8 @@ NUM_PIVOT_SEARCH=`for t in $NUM_PIVOT_SEARCH_ARG ; do echo -n " -t numPivotSearc
 echo "NUM_PIVOT_SEARCH=$NUM_PIVOT_SEARCH"
 
 NUM_PIVOT=8000
-HEADER_FILE_BASE="header_exper1"
-HEADER_FILE_ALTERN="header_exper1_bm25"
+HEADER_FILE_BASE="header_exper1_hash_payload"
+HEADER_FILE_ALTERN="header_exper1_bm25_hash_payload"
 
 if [ "$USE_ALTERN_PIVOT_DIST" = "1" ] ; then
   HEADER_FILE=$HEADER_FILE_ALTERN
@@ -54,23 +54,35 @@ else
 fi
 
 MAX_QUERY_QTY=5000
+if [ "$5" != "" ] ; then
+  MAX_QUERY_QTY="$5"
+fi
+
 QUERY_SET="dev1"
-#FIELD_CODE="3field";
-#FIELD_CODE_PIVOT="3field"
-FIELD_CODE="text"
-FIELD_CODE_PIVOT="text_field"
-QUERY_FILE="${FIELD_CODE}_queries.txt"
+
+if [ "$COLLECT_NAME" = "squad" ] ; then
+  FIELD_CODE_PIVOT="2field"
+  FIELD_CODE_QUERY="text,text_alias1"
+else
+  FIELD_CODE_PIVOT="text_field"
+  FIELD_CODE_QUERY="text"
+fi
+
+QUERY_FILE_NAME="${FIELD_CODE_QUERY}_queries.txt"
+QUERY_FILE="nmslib/$COLLECT_NAME/queries/$QUERY_SET/${QUERY_FILE_NAME}"
+
 GS_CACHE_DIR="gs_cache/$COLLECT_NAME/$HEADER_FILE"
 REPORT_DIR="results/tunning/$COLLECT_NAME/$HEADER_FILE"
 INDEX_DIR="nmslib/$COLLECT_NAME/index/tuning/$HEADER_FILE"
 SPACE="qa1"
-CHUNK_INDEX_SIZE=$((114*1024))
+#CHUNK_INDEX_SIZE=$((114*1024))
 K=10
 
 echo "Header file:  $HEADER_FILE"
 echo "Report dir:   $REPORT_DIR"
 echo "Index dir:    $INDEX_DIR"
 echo "GS cache dir: $GS_CACHE_DIR"
+echo "Max. query #: $MAX_QUERY_QTY"
 
 BEST_PIVOT_TERM_QTY=1000
 BEST_MAX_TERM_QTY_K=50
@@ -108,7 +120,7 @@ if [ "$THREAD_QTY" = "" ] ; then
   exit 1
 fi
 
-echo "Chunk index size: $CHUNK_INDEX_SIZE"
+#echo "Chunk index size: $CHUNK_INDEX_SIZE"
 echo "Will be using $THREAD_QTY threads"
 
 #for((numPivotIndex=220;numPivotIndex<261;numPivotIndex+=2))
@@ -117,7 +129,8 @@ echo "Will be using $THREAD_QTY threads"
 for numPivotIndex in $NUM_PIVOT_INDEX 
 do
   pivot_file_name="pivots_${FIELD_CODE_PIVOT}_maxTermQty${BEST_MAX_TERM_QTY_K}K_pivotTermQty${BEST_PIVOT_TERM_QTY}"
-  INDEX_PARAMS="chunkIndexSize=$CHUNK_INDEX_SIZE,numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex,pivotFile=nmslib/$COLLECT_NAME/pivots/$pivot_file_name"
+  #INDEX_PARAMS="chunkIndexSize=$CHUNK_INDEX_SIZE,numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex,pivotFile=nmslib/$COLLECT_NAME/pivots/$pivot_file_name"
+  INDEX_PARAMS="numPivot=$NUM_PIVOT,numPivotIndex=$numPivotIndex,pivotFile=nmslib/$COLLECT_NAME/pivots/$pivot_file_name"
 
   INDEX_PARAMS_NOSLASH=`echo $INDEX_PARAMS|sed 's|/|_|g'`
   INDEX_NAME="${INDEX_PREF}_${INDEX_PARAMS_NOSLASH}"
@@ -146,9 +159,9 @@ do
     #NUM_PIVOT_SEARCH=" -t numPivotSearch=22 -t numPivotSearch=23  -t numPivotSearch=24  -t numPivotSearch=25 -t numPivotSearch=26 -t numPivotSearch=27 -t numPivotSearch=28 -t numPivotSearch=29  -t numPivotSearch=30 -t numPivotSearch=31 -t numPivotSearch=32 "
   #fi 
 
-  bash_cmd="release/experiment -s $SPACE -g $GS_CACHE_PREF -i nmslib/$COLLECT_NAME/headers/$HEADER_FILE \
+  bash_cmd="../nmslib/similarity_search/release/experiment -s $SPACE -g $GS_CACHE_PREF -i nmslib/$COLLECT_NAME/headers/$HEADER_FILE \
                      --threadTestQty $THREAD_QTY \
-                      -q nmslib/$COLLECT_NAME/queries/$QUERY_SET/${FIELD_CODE}_queries.txt -Q $MAX_QUERY_QTY -k $K \
+                      -q ${QUERY_FILE} -Q $MAX_QUERY_QTY -k $K \
                       -m napp_qa1 \
                       -c $INDEX_PARAMS -S $INDEX_NAME -L $INDEX_NAME \
                       $NUM_PIVOT_SEARCH -o $REPORT_PREF -a  "

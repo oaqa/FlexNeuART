@@ -1,5 +1,5 @@
 /*
- *  Copyright 2016 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,80 +23,30 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import no.uib.cipr.matrix.DenseVector;
 
-public abstract class FeatureExtractor {
-  public static final int TEXT_FIELD_ID        = 0;
-  public static final int TEXT_UNLEMM_FIELD_ID = 1;
-  public static final int BIGRAM_FIELD_ID      = 2;
-    
-  public static final float BM25_K1 = 1.2f;
-  public static final float BM25_B = 0.75f;
-  
-  public boolean isSomeTextFieldId(int fieldId) {
-    return fieldId == TEXT_FIELD_ID || fieldId == TEXT_UNLEMM_FIELD_ID;
-  }
-  
+public abstract class FeatureExtractor {  
   public abstract String getName();
-
-  /*
-   * These field names are kept mostly for historical reasons.
-   * The first candidate provider that we used was SOLR (which you can still use if you want). 
-   * 1) These field names are specified in the SOLR configuration file (see solr/yahoo_answ/conf/schema.xml).
-   * 2) These field names are specified in UIMA descriptors (see src/main/resources/descriptors).
-   * 
-   */
-  public final static String[] mFieldsSOLR = {"Text_bm25",
-                                              "TextUnlemm_bm25",
-                                              "BiGram_bm25",
-                                              "Srl_bm25",   
-                                              "SrlLab_bm25",
-                                              "DepRel_bm25",
-                                              "WNSS_bm25"
-                                              }; 
-
-  public final static String[] mFieldNames = { 
-                                            "text",
-                                            "text_unlemm",
-                                            "bigram",
-                                            "srl",
-                                            "srl_lab",
-                                            "dep",
-                                            "wnss"
-                                            };
-  
-  /*
-   * OOV_PROB is taken from
-   * 
-   * Learning to Rank Answers to Non-Factoid Questions from Web Collections
-   * by Mihai Surdeanu et al.
-   * 
-   */
-  public static final double OOV_PROB = 1e-9;
-  public static final float DEFAULT_PROB_SELF_TRAN = 0.5f;
-    
-  
-  public static String indexFileName(String prefixDir, String fileName) {
-    return prefixDir + "/" + fileName;
-  }  
   
   /**
    * Obtains features for a set of documents, this function should be <b>thread-safe!</b>.
    * 
    * @param     arrDocIds    an array of document IDs
-   * @param     queryData    several pieces of input data, one is typically a bag-of-words query. 
+   * @param     queryData    a multifield representation of the query (map keys are field names). 
 
    * @return a map docId -> sparse feature vector
    */
   public abstract Map<String,DenseVector> getFeatures(ArrayList<String>    arrDocIds, 
-                                                       Map<String, String>  queryData) throws Exception;
-  
+                                                      Map<String, String>  queryData) throws Exception;
   
   /**
    * @return the total number of features (some may be missing, though).
    */
   public abstract int getFeatureQty();
    
+  
   /**
    * Saves features (in the form of a sparse vector) to a file.
    * 
@@ -204,5 +154,29 @@ public abstract class FeatureExtractor {
         }
       }
     }
+  }
+
+  public static HashMap<String, DenseVector> initResultSet(ArrayList<String> arrDocIds, int featureQty) {
+    HashMap<String, DenseVector> res = new HashMap<String,DenseVector>();
+
+    for (String docId : arrDocIds) {
+      res.put(docId, new DenseVector(featureQty));
+    }
+    
+    return res;
+  }
+  
+  public static DocEntry getQueryEntry(String fieldName, ForwardIndex fieldIndex, Map<String, String> queryData) {
+    String query = queryData.get(fieldName);
+    if (null == query) return null;
+    query = query.trim();
+    if (query.isEmpty()) return null;
+    
+    return
+        fieldIndex.createDocEntry(query.split("\\s+"),
+                                  true  /* True means we generate word ID sequence:
+                                   * in the case of queries, there's never a harm in doing so.
+                                   * If word ID sequence is not used, it will be used only to compute the document length. */              
+                                  );
   }
 }

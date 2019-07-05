@@ -25,7 +25,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexFilterAndRecoder;
 
 /**
@@ -48,7 +48,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   @Test
   public void testWordProbSrcWord() throws Exception {
     InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(
@@ -79,7 +79,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   @Test
   public void testWordProbSrcWordFlipped() throws Exception {
     InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(
@@ -110,7 +110,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   @Test
   public void testWordProbSrcWordId() throws Exception {
     InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(false,
@@ -141,7 +141,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   @Test
   public void testWordProbSrcWordIdFlipped() throws Exception {
     InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(
@@ -174,7 +174,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
 
     try {
       InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(false,
@@ -214,7 +214,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
 
     try {
       InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(
@@ -255,7 +255,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
 
     try {
       InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(false,
@@ -307,7 +307,7 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
 
     try {
       InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(new InMemForwardIndex(FWD_INDEX_NAME));
+      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(true, // flipped

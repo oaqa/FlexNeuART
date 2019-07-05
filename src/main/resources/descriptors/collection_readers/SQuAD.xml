@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<collectionReaderDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <frameworkImplementation>org.apache.uima.java</frameworkImplementation>
+  <implementationName>edu.cmu.lti.oaqa.knn4qa.collection_reader.SQuADIntermCollectionReader</implementationName>
+  <processingResourceMetaData>
+    <name>SQuAD</name>
+    <description/>
+    <version>1.0</version>
+    <vendor/>
+    <configurationParameters>
+      <configurationParameter>
+        <name>InputFile</name>
+        <description>Input file.</description>
+        <type>String</type>
+        <multiValued>false</multiValued>
+        <mandatory>false</mandatory>
+      </configurationParameter>
+      <configurationParameter>
+        <name>MaxQty</name>
+        <type>Integer</type>
+        <multiValued>false</multiValued>
+        <mandatory>false</mandatory>
+      </configurationParameter>
+    </configurationParameters>
+    <configurationParameterSettings/>
+
+    <!-- Types used by this pipeline -->
+    <typeSystemDescription>
+      <imports>
+        <import name="types.typeSystemDescriptor"/>
+        <import name="org.apache.uima.examples.SourceDocumentInformation"/>
+        <import name="desc.type.metadata"/>
+        <import name="desc.type.POS"/>
+        <import name="desc.type.Semantics"/>
+        <import name="desc.type.Dependency_customized"/>
+      </imports>
+    </typeSystemDescription>
+
+    <typePriorities/>
+    <fsIndexCollection/>
+
+    <capabilities>
+        <capability>
+          <inputs/>
+          <outputs/>
+        <languagesSupported/>
+      </capability>
+    </capabilities>
+  <operationalProperties>
+      <modifiesCas>true</modifiesCas>
+      <multipleDeploymentAllowed>false</multipleDeploymentAllowed>
+      <outputsNewCASes>true</outputsNewCASes>
+    </operationalProperties>
+  </processingResourceMetaData>
+  <resourceManagerConfiguration/>
+</collectionReaderDescription>

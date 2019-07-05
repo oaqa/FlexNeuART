@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.simil.AbstractDistance;
-import edu.cmu.lti.oaqa.knn4qa.simil.DistanceFunctions;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtilsLeo;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.AbstractDistance;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
  * @author Leonid Boytsov
@@ -34,8 +34,8 @@ public class LCSTest extends AbstractTest {
   final static Logger mLogger = LoggerFactory.getLogger(LCSTest.class);
   
   int LCSWrapper(String s1, String s2) {
-    return DistanceFunctions.compLCS(StringUtilsLeo.splitNoEmpty(s1, " "), 
-                                     StringUtilsLeo.splitNoEmpty(s2, " "));
+    return DistanceFunctions.compLCS(StringUtils.splitNoEmpty(s1, " "), 
+                                     StringUtils.splitNoEmpty(s2, " "));
   }
   
   /*
@@ -46,8 +46,8 @@ public class LCSTest extends AbstractTest {
   void LCSWrapperEmbed(String s1, String s2, EmbeddingReaderAndRecoder wr, float expValue) throws Exception {
     float [][] distMatrix = DistanceFunctions.compDistMatrix(
                                                             AbstractDistance.create("cosine"), 
-                                                            StringUtilsLeo.splitNoEmpty(s1, " "), 
-                                                            StringUtilsLeo.splitNoEmpty(s2, " "), 
+                                                            StringUtils.splitNoEmpty(s1, " "), 
+                                                            StringUtils.splitNoEmpty(s2, " "), 
                                                             wr);
     
     float res[] = DistanceFunctions.compLCSLike(distMatrix, 0.0f);

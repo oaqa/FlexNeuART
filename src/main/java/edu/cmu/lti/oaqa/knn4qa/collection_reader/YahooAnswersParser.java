@@ -23,7 +23,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
-import edu.cmu.lti.oaqa.annographix.util.XmlHelper;
+import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 
 public class YahooAnswersParser {
   public static ParsedQuestion parse(String docText, boolean doCleanUp) throws Exception {    

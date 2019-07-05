@@ -29,6 +29,7 @@ public class DocEntryExt implements Comparable<DocEntryExt> {
     mDocEntry = docEntry;
     mId = id;
   }
+  
   @Override
   public int compareTo(DocEntryExt o) {
     return mId.compareTo(o.mId);

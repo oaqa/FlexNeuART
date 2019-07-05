@@ -1,25 +1,5 @@
 #!/bin/bash
-function check {
-  f="$?"
-  name=$1
-  if [ "$f" != "0" ] ; then
-    echo "**************************************"
-    echo "* Failed: $name"
-    echo "**************************************"
-    exit 1
-  fi
-}
-
-function check_pipe {
-  f="${PIPESTATUS[*]}"
-  name=$1
-  if [ "$f" != "0 0" ] ; then
-    echo "******************************************"
-    echo "* Failed (pipe): $name, exit statuses: $f "
-    echo "******************************************"
-    exit 1
-  fi
-}
+. scripts/common.sh
 
 POS_ARGS=()
 
@@ -105,45 +85,51 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-TEST_PART=${POS_ARGS[1]}
-if [ "$TEST_PART" = "" ] ; then
-  echo "Specify a test part, e.g., dev1 (2d arg)"
-  exit 1 
-fi
-
-CAND_PROV_TYPE=${POS_ARGS[2]}
-if [ "$CAND_PROV_TYPE" = "" ] ; then
-  echo "Specify a candidate type: lucene or nmslib (3d arg)"
-  exit 1 
-fi
-
-EXPER_DIR_BASE=${POS_ARGS[3]}
-if [ "$EXPER_DIR_BASE" = "" ] ; then
-  echo "Specify a working directory (4th positional arg)!"
+QREL_FILE=${POS_ARGS[1]}
+if [ "$QREL_FILE" = "" ] ; then
+  echo "Specify QREL file (2d positional arg): e.g., qrels_all_graded.txt, qrels_all_graded_same_score.txt"
   exit 1
 fi
 
-EXTR_TYPE="${POS_ARGS[4]}"
+TEST_PART=${POS_ARGS[2]}
+if [ "$TEST_PART" = "" ] ; then
+  echo "Specify a test part, e.g., dev1 (3d arg)"
+  exit 1 
+fi
+
+CAND_PROV_TYPE=${POS_ARGS[3]}
+if [ "$CAND_PROV_TYPE" = "" ] ; then
+  echo "Specify a candidate type: lucene or nmslib (4th arg)"
+  exit 1 
+fi
+
+EXPER_DIR_BASE=${POS_ARGS[4]}
+if [ "$EXPER_DIR_BASE" = "" ] ; then
+  echo "Specify a working directory (5th positional arg)!"
+  exit 1
+fi
+
+EXTR_TYPE="${POS_ARGS[5]}"
 
 if [ "$EXTR_TYPE" = "" ] ; then
-  echo "Specify a feature extractor type (5th positional arg)"
+  echo "Specify a feature extractor type (6th positional arg)"
   exit 1
 fi
 
 
 if [ "$EXTR_TYPE" != "none" ] ; then
-  MODEL_FILE=${POS_ARGS[5]}
+  MODEL_FILE=${POS_ARGS[6]}
 
   if [ "$MODEL_FILE" = "" ] ; then
-    echo "Specify a model file (6th positional) arg)!"
+    echo "Specify a model file (7th positional) arg)!"
     exit 1
   fi
 fi
 
-NTEST_STR="${POS_ARGS[6]}"
+NTEST_STR="${POS_ARGS[7]}"
 
 if [ "$NTEST_STR" = "" ] ; then
-  echo "Specify a comma-separated list of candidate records # retrieved for testing for each query (7th positional arg)!"
+  echo "Specify a comma-separated list of candidate records # retrieved for testing for each query (8th positional arg)!"
   exit 1
 fi
 
@@ -229,10 +215,9 @@ fi
 scripts/query/run_query.sh  -u "$URI" $cand_qty_param $max_num_query_param $extr_type_interm_param $model_interm_param $nmslib_fields_param -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov $CAND_PROV_TYPE -memindex_dir memfwdindex/$collect -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" $maxQueryQtyTestParam -save_stat_file "$STAT_FILE" $EXTR_FINAL_PARAM $giza_expand_qty_param $giza_wght_expand_param  2>&1|tee $query_log_file
 check_pipe "run_query.sh"
 
-QRELS="output/$collect/${TEST_PART}/qrels.txt"
-
-
 rm -f "${REPORT_DIR}/out_*"
+
+QRELS="output/$collect/${TEST_PART}/$QREL_FILE"
 
 for oneN in $NTEST_LIST ; do
   echo "======================================"
@@ -240,7 +225,7 @@ for oneN in $NTEST_LIST ; do
   echo "======================================"
   REPORT_PREF="${REPORT_DIR}/out_${oneN}"
 
-  scripts/exper/eval_output.py trec_eval-9.0.4/trec_eval "$QRELS"  "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
+  scripts/exper/eval_output.py "$QRELS" "${TREC_RUN_DIR}/run_${oneN}" "$REPORT_PREF" "$oneN"
   check "eval_output.py"
 done
 

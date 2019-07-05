@@ -19,12 +19,6 @@ while [ $# -ne 0 ] ; do
       -max_num_query)
         max_num_query_param=$OPT
         ;;
-      -embed_files)
-        embed_files_param=$OPT
-        ;;
-      -horder_files)
-        horder_files_param=$OPT
-        ;;
       -extr_type_interm)
         extr_type_interm_param=$OPT
         extr_type_interm=$OPT_VALUE
@@ -39,6 +33,9 @@ while [ $# -ne 0 ] ; do
         ;;
       -out_pref)
         out_pref=$OPT_VALUE
+        ;;
+      -query_cache_file)
+        query_cache_file_param=$OPT
         ;;
       *)
         echo "Invalid option: $OPT_NAME" >&2
@@ -66,39 +63,45 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-part=${POS_ARGS[1]}
+qrel_file=${POS_ARGS[1]}
+if [ "$qrel_file" = "" ] ; then
+  echo "Specify QREL file (2d positional arg): e.g., qrels_all_graded.txt, qrels_all_graded_same_score.txt"
+  exit 1
+fi
+
+part=${POS_ARGS[2]}
 if [ "$part" = "" ] ; then
-  echo "Specify part (2d positional arg): e.g., dev1, dev2, train, test"
+  echo "Specify part (3d positional arg): e.g., dev1, dev2, train, test"
   exit 1
 fi
 
-cand_type=${POS_ARGS[2]}
+cand_type=${POS_ARGS[3]}
 if [ "$cand_type" = "" ] ; then
-  echo "Specify the type of candidate provider (3d positional arg): e.g., nmslib, lucene"
+  echo "Specify the type of candidate provider (4th positional arg): e.g., nmslib, lucene"
   exit 1
 fi
 
-URI=${POS_ARGS[3]}
+URI=${POS_ARGS[4]}
 if [ "$URI" = "" ] ; then
-  echo "Specify the index location: Lucene index dir, nmslib TCP/IP address, etc... (4th positional arg)"
+  echo "Specify the index location: Lucene index dir, nmslib TCP/IP address, etc... (5th positional arg)"
   exit 1
 fi
 
-n=${POS_ARGS[4]}
+n=${POS_ARGS[5]}
 if [ "$n" = "" ] ; then
-  echo "Specify coma-separated numbers of candidate records (5th positional arg)"
+  echo "Specify coma-separated numbers of candidate records (6th positional arg)"
   exit
 fi
 
-extr_type_final=${POS_ARGS[5]}
+extr_type_final=${POS_ARGS[6]}
 if [ "$extr_type_final" = "" ] ; then
-  echo "Specify the type of the final feature extractor (6th positional arg) "
+  echo "Specify the type of the final feature extractor (7th positional arg) "
   exit 1
 fi
 
-out_dir=${POS_ARGS[6]}
+out_dir=${POS_ARGS[7]}
 if [ "$out_dir" = "" ] ; then
-  echo "Specify the output directory (7th positional arg)"
+  echo "Specify the output directory (8th positional arg)"
   exit 1
 fi
 
@@ -114,14 +117,13 @@ full_out_pref="$out_dir/$out_pref"
 echo "==============================================="
 echo "PARAMETER REVIEW"
 echo "==============================================="
-echo "Thread qty:           $thread_qty"
-echo "max_num_query_param:  $max_num_query_param"
-echo "embed_files_param:    $embed_files_param"
-echo "horder_files_param:   $horder_files_param"
-echo "extr_type_interm:     $extr_type_interm_param"
-echo "model_interm_param:   $model_interm_param"
-echo "cand_qty_param:       $cand_qty_param"
-echo "Positional arguments: ${POS_ARGS[*]}"
+echo "Thread qty:             $thread_qty"
+echo "max_num_query_param:    $max_num_query_param"
+echo "extr_type_interm:       $extr_type_interm_param"
+echo "model_interm_param:     $model_interm_param"
+echo "cand_qty_param:         $cand_qty_param"
+echo "query_cache_file_param: $query_cache_file_param"
+echo "Positional arguments:   ${POS_ARGS[*]}"
 echo "==============================================="
 echo "OUTPUT FILE PREFIX:"
 echo "$out_pref"
@@ -132,7 +134,7 @@ echo "==============================================="
 scripts/query/run_multhread_feat.sh \
 -u "$URI" \
 -cand_prov $cand_type \
--q output/$collect/$part/SolrQuestionFile.txt -qrel_file output/$collect/$part/qrels.txt "$max_num_query_param" \
+-q output/$collect/$part/SolrQuestionFile.txt -qrel_file output/$collect/$part/$qrel_file "$max_num_query_param" \
 -n "$n" \
 -f "$full_out_pref" \
 -memindex_dir "memfwdindex/$collect" \
@@ -140,7 +142,8 @@ scripts/query/run_multhread_feat.sh \
 -extr_type_final $extr_type_final \
 "$extr_type_interm_param" "$model_interm_param" "$cand_qty_param" \
 -thread_qty $thread_qty  \
--embed_dir WordEmbeddings/$collect  "$embed_files_param" "$horder_files_param" \
+-embed_dir WordEmbeddings/$collect \
+$query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
 if [ "${PIPESTATUS[0]}" != "0" ] ; then
   exit 1

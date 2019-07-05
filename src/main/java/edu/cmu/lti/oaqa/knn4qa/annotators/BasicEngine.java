@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2017 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-import de.tudarmstadt.ukp.dkpro.core.clearnlp.*;
+//import de.tudarmstadt.ukp.dkpro.core.clearnlp.*;
 import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.*;
 
 
@@ -40,29 +40,7 @@ import de.tudarmstadt.ukp.dkpro.core.stanfordnlp.*;
  */
 public class BasicEngine {
   private static final Logger logger = LoggerFactory.getLogger(BasicEngine.class);
-  
-  private AnalysisEngine   mEngine;
-  private ArrayList<JCas>  mJCasList = new ArrayList<JCas>(); 
-  
-  public JCas borrowJCas() throws ResourceInitializationException {
-    synchronized (this) {
-      if (!mJCasList.isEmpty()) {
-        int last = mJCasList.size() - 1;
-        JCas res = mJCasList.get(last);
-        mJCasList.remove(last);
-        res.reset();      
-        return res;
-      }
-      return mEngine.newJCas();
-    }
-  }
-  
-  public void returnJCas(JCas jcas) {
-    synchronized (this) {
-      mJCasList.add(jcas);
-    }
-  }
-  
+  private static int mThreadQty = 0;
 
   public BasicEngine(UimaContext context, boolean doPOSTagging) throws ResourceInitializationException{
     AnalysisEngineDescription aggregate = null;
@@ -89,13 +67,23 @@ public class BasicEngine {
     }
 
     mEngine = createEngine(aggregate);
-    long threadId = Thread.currentThread().getId();
-    logger.info(String.format("Created an engine, thread # %d",threadId));
+    int tqty = 0;
+    synchronized (this.getClass()) {
+      mThreadQty ++;
+      tqty = mThreadQty;
+    }
+    logger.info(String.format("Created an engine, # of threads %d", tqty));
   }
 
   public void process(JCas origJCas) throws AnalysisEngineProcessException {
     mEngine.process(origJCas);
   }
+  
+  public JCasFactory createJCasFactory() {
+    return new JCasFactory(mEngine);
+  }
+  
+  private AnalysisEngine   mEngine;
 }
 
 

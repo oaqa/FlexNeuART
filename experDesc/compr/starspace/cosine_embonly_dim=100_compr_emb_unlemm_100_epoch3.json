@@ -1,0 +1,1 @@
+{"extractors": [{"params": {"docEmbedFile": "starspace/dim=100_compr_emb_unlemm_100_epoch3.answer", "useIDFWeight": "True", "queryEmbedFile": "starspace/dim=100_compr_emb_unlemm_100_epoch3.query", "distType": "cosine", "fieldName": "text_unlemm", "useL2Norm": "True"}, "type": "avgWordEmbed"}]}

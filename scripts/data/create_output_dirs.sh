@@ -7,11 +7,12 @@ done
 
 mkdir -p output/ComprMinusManner/tran
 
-for part in dev1 dev2 test train tran ; do
-  mkdir -p output/compr/$part
+for col in compr stackoverflow wiki_squad squad ; do
+  for part in dev1 dev2 test train tran ; do
+    mkdir -p output/$col/$part
+  done
+  if [ "$col" == "wiki_squad" ] ; then
+    mkdir -p output/$col/wiki
+  fi
 done
 
-
-for part in dev1 dev2 test train tran ; do
-  mkdir -p output/stackoverflow/$part
-done

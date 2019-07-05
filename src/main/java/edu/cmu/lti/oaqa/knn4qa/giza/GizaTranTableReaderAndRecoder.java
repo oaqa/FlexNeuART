@@ -55,9 +55,15 @@ public class GizaTranTableReaderAndRecoder {
   private static final Logger logger = LoggerFactory.getLogger(GizaTranTableReaderAndRecoder.class);
   
   private static final int  REPORT_INTERVAL_QTY = 100000;
+  
+  private static final String BINARY_SUFFIX = ".bin";
 
   private static final int INIT_SIZE = 2 * 1024* 1024; // Most dictionaries will have < than this number of entries 
 
+  public static String binaryFileName(String txtFileName) {
+    return txtFileName + BINARY_SUFFIX;
+  }
+  
   /**
    * Constructor
    * 
@@ -94,8 +100,20 @@ public class GizaTranTableReaderAndRecoder {
       throw 
       new Exception(
           String.format("Illegal self-translation probability %f", probSelfTran));
-    BufferedReader fr = new BufferedReader(new InputStreamReader(
-                                CompressUtils.createInputStream(fileName)));
+    
+    BufferedReader fr = null;
+    DataInputStream frBin = null;
+    
+    String binFileName = binaryFileName(fileName);
+    
+    if ((new File(binFileName).exists())) {
+      System.out.println("Opening binary translation table.");
+      frBin = new DataInputStream(new BufferedInputStream(CompressUtils.createInputStream(binFileName)));    
+    } else {
+      System.out.println("Opening text translation table.");
+      fr = new BufferedReader(new InputStreamReader(
+                                  CompressUtils.createInputStream(fileName)));
+    }
     
     String line = null;
     
@@ -109,13 +127,32 @@ public class GizaTranTableReaderAndRecoder {
     int addedQty = 0;
     int totalQty = 0;
   
-    for (totalQty = 0; (line = fr.readLine()) != null; ) {
-      ++totalQty;
-      // Skip empty lines
-      line = line.trim(); if (line.isEmpty()) continue;
+    for (totalQty = 0; ; ) {
       
-      GizaTranRec rec = new GizaTranRec(line);
+      final GizaTranRec rec;
+      
+      // Skip empty lines
+      
+      if (fr != null) {
+        line = fr.readLine();
+        if (line == null)
+          break;
+        line = line.trim(); if (line.isEmpty()) continue;
+        rec = new GizaTranRec(line);
+      } else {
+        try {
+          int srcId = frBin.readInt();
+          int dstId = frBin.readInt();
+          float prob = frBin.readFloat();
+          
+          rec = new GizaTranRec(srcId, dstId, prob);
+        } catch (EOFException e) {
+          break;
+        }
+      }            
 
+       ++totalQty;
+       
       if (rec.mSrcId != prevSrcId) {
         if (rec.mSrcId < prevSrcId) {
           throw new Exception(
@@ -280,7 +317,12 @@ public class GizaTranTableReaderAndRecoder {
    * @param id2     id of the target string
    * 
    * @return    a scaled translation probability, which is zero if there is no
-   *            translation entry in the source table.
+   *            translation entry in the source table unless we ask for translation
+   *            of a word into itself. In such a case, we return mProbSelfTran
+   *            if there's no translation entry. If such a translation entry
+   *            exists (i.e., Model 1 has come up with some self-translation probability)
+   *            that self-translation probability is summed up with mProbSelfTran
+   *            when we load translation table into memory.
    */
    public float getTranProb(int id1, int id2) {
      float minProb = id1 == id2 ? mProbSelfTran : 0;

@@ -20,11 +20,12 @@ import java.util.*;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.cmu.lti.oaqa.annographix.util.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.collection_reader.YahooAnswersReader;
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
 
 /**
@@ -34,93 +35,18 @@ import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
  * @author Leonid Boytsov
  *
  */
-public class CollectionSplitter {
-  static void Usage(String err) {
-    System.err.println("Error: " + err);
-    System.err.println("Usage: " 
-                       + "-i <Input file> "
-                       + "-o <Output file prefix> "
-                       + "-p <Comma separated probabilities e.g., 0.1,0.2,0.7> " 
-                       + "-n <Comma separated part names, e.g., dev,test,train> "
-                       );
-    System.exit(1);
-  }
+public class CollectionSplitter extends CollectionSplitterBase {
+  
 
   public static void main(String[] args) {
-    Options options = new Options();
-    
-    options.addOption("i", null, true, "Input file");
-    options.addOption("o", null, true, "Output file prefix");
-    options.addOption("p", null, true, "Comma separated probabilities e.g., 0.1,0.2,0.7.");
-    options.addOption("n", null, true, "Comma separated part names, e.g., dev,test,train");
-
-    CommandLineParser parser = new org.apache.commons.cli.GnuParser(); 
-    
-    try {
-      CommandLine cmd = parser.parse(options, args);
-      
-      InputStream  input = null;
-      
-      if (cmd.hasOption("i")) {
-        input = CompressUtils.createInputStream(cmd.getOptionValue("i"));
-      } else {
-        Usage("Specify Input file"); 
-      }
-
-      ArrayList<Double> probs = new ArrayList<Double>();
-      String []         partNames = null;
-      
-      if (cmd.hasOption("p")) {
-        String parts[] = cmd.getOptionValue("p").split(",");
-
-        try {
-          double sum = 0;
-          for (String s: parts) {
-            double p = Double.parseDouble(s);
-            if (p <= 0 || p > 1) Usage("All probabilities must be in the range (0,1)");
-            sum += p;
-            probs.add(p);
-          }
-            
-          if (Math.abs(sum - 1.0) > Float.MIN_NORMAL) {
-            Usage("The sum of probabilities should be equal to 1, but it's: " + sum);
-          }
-        } catch (NumberFormatException e ) {
-          Usage("Can't convert some of the probabilities to a floating-point number.");
-        }
-      } else {
-        Usage("Specify part probabilities.");
-      }
-      
-      if (cmd.hasOption("n")) {
-        partNames = cmd.getOptionValue("n").split(",");
+    mAppName = "Collection splitter for Yahoo Answers format";
         
-        if (partNames.length != probs.size())
-          Usage("The number of probabilities is not equal to the number of parts!");
-      } else {
-        Usage("Specify part names");
-      }
-      
-      BufferedWriter [] outFiles = new BufferedWriter[partNames.length];  
-      
-      if (cmd.hasOption("o")) {
-        String outPrefix = cmd.getOptionValue("o");
+    try {
+      parseOptions(args);
 
-        for (int partId = 0; partId < partNames.length; ++partId) {
-          outFiles[partId] =  new BufferedWriter(
-                                    new OutputStreamWriter(
-                                         CompressUtils.createOutputStream(outPrefix+"_" + partNames[partId]+ ".gz")));
-        }
-      } else {
-        Usage("Specify Output file prefix");      
-      }
+      InputStream  input = CompressUtils.createInputStream(mInputFileName);
       
-      System.out.println("Using probabilities:");
-      for (int partId = 0; partId < partNames.length; ++partId) 
-        System.out.println(partNames[partId] + " : " + probs.get(partId));
-      System.out.println("=================================================");  
-      
-      XmlIterator   inpIter = new XmlIterator(input, YahooAnswersReader.DOCUMENT_TAG);
+      XmlIterator  inpIter = new XmlIterator(input, YahooAnswersReader.DOCUMENT_TAG);
       
       String oneRec = inpIter.readNext();
       int docNum = 1;
@@ -133,10 +59,10 @@ public class CollectionSplitter {
         
         BufferedWriter out = null;
         
-        for (int partId = 0; partId < partNames.length; ++partId) {
-          double pp = probs.get(partId);
-          if (p <= pp || partId + 1 == partNames.length) {
-            out = outFiles[partId];
+        for (int partId = 0; partId < mPartNames.length; ++partId) {
+          double pp = mProbs.get(partId);
+          if (p <= pp || partId + 1 == mPartNames.length) {
+            out = mOutFiles[partId];
             break;
           }
           p -= pp;
@@ -147,9 +73,9 @@ public class CollectionSplitter {
       }
       System.out.println(String.format("Processed %d documents", docNum - 1));
       // It's important to close all the streams here!
-      for (BufferedWriter f : outFiles) f.close();
+      closeFiles();
     } catch (ParseException e) {
-      Usage("Cannot parse arguments");
+      showUsage("Cannot parse arguments");
     } catch(Exception e) {
       System.err.println("Terminating due to an exception: " + e);
       System.exit(1);

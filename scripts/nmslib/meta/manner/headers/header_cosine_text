@@ -1,0 +1,7 @@
+isQueryFile=0
+useHashBasedPayloads=1
+weightFile=nmslib/manner/models/one_feature.model
+
+fieldIndexFile=nmslib/manner/memfwdindex/text
+fieldFeatures=cosine
+

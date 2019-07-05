@@ -1,6 +1,6 @@
 
 
-/* First created by JCasGen Mon Nov 30 13:17:14 EST 2015 */
+/* First created by JCasGen Thu Jan 12 13:26:20 EST 2017 */
 package edu.cmu.lti.oaqa.knn4qa.types;
 
 import org.apache.uima.jcas.JCas; 
@@ -11,8 +11,8 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** A description of one question.
- * Updated by JCasGen Mon Nov 30 13:17:14 EST 2015
- * XML source: /home/leo/SourceTreeGit/leo_struct_ir_qa/src/main/resources/types/typeSystemDescriptor.xml
+ * Updated by JCasGen Tue Jan 17 12:22:14 EST 2017
+ * XML source: /home/leo/SourceTreeGit/knn4qa_oqaqa/src/main/resources/types/typeSystemDescriptor.xml
  * @generated */
 public class Question extends Annotation {
   /** @generated
@@ -65,13 +65,10 @@ public class Question extends Annotation {
     readObject();
   }   
 
-  /** 
-   * <!-- begin-user-doc -->
+  /** <!-- begin-user-doc -->
    * Write your own initialization here
    * <!-- end-user-doc -->
-   *
-   * @generated modifiable 
-   */
+  @generated modifiable */
   private void readObject() {/*default - does nothing empty block */}
      
  
@@ -80,18 +77,14 @@ public class Question extends Annotation {
   //* Feature: uri
 
   /** getter for uri - gets A unique question resource identifier
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public String getUri() {
     if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_uri == null)
       jcasType.jcas.throwFeatMissing("uri", "edu.cmu.lti.oaqa.knn4qa.types.Question");
     return jcasType.ll_cas.ll_getStringValue(addr, ((Question_Type)jcasType).casFeatCode_uri);}
     
   /** setter for uri - sets A unique question resource identifier 
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setUri(String v) {
     if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_uri == null)
       jcasType.jcas.throwFeatMissing("uri", "edu.cmu.lti.oaqa.knn4qa.types.Question");
@@ -102,18 +95,14 @@ public class Question extends Annotation {
   //* Feature: bestAnswId
 
   /** getter for bestAnswId - gets 
-   * @generated
-   * @return value of the feature 
-   */
+   * @generated */
   public int getBestAnswId() {
     if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_bestAnswId == null)
       jcasType.jcas.throwFeatMissing("bestAnswId", "edu.cmu.lti.oaqa.knn4qa.types.Question");
     return jcasType.ll_cas.ll_getIntValue(addr, ((Question_Type)jcasType).casFeatCode_bestAnswId);}
     
   /** setter for bestAnswId - sets  
-   * @generated
-   * @param v value to set into the feature 
-   */
+   * @generated */
   public void setBestAnswId(int v) {
     if (Question_Type.featOkTst && ((Question_Type)jcasType).casFeat_bestAnswId == null)
       jcasType.jcas.throwFeatMissing("bestAnswId", "edu.cmu.lti.oaqa.knn4qa.types.Question");

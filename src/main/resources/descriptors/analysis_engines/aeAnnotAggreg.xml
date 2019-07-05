@@ -9,9 +9,6 @@
     <delegateAnalysisEngine key="aeClearAnnot2">
       <import name="descriptors.analysis_engines.aeClearAnnot2"/>
     </delegateAnalysisEngine>
-    <delegateAnalysisEngine key="aeWordNetSuperSenseAnnot">
-      <import name="descriptors.analysis_engines.aeWordNetSuperSenseAnnot"/>
-    </delegateAnalysisEngine>
   </delegateAnalysisEngineSpecifiers>
   <flowController key="FixedFlowController">
     <import name="org.apache.uima.flow.FixedFlowController"/>
@@ -66,7 +63,6 @@
       <fixedFlow>
         <node>aeInputSplitterClearAnnot1</node>
         <node>aeClearAnnot2</node>
-        <node>aeWordNetSuperSenseAnnot</node>
       </fixedFlow>
     </flowConstraints>
     <typePriorities/>

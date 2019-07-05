@@ -21,11 +21,17 @@ if [ "$tree" = "" ] ; then
     exit 1
 fi
 
-norm_type="$4"
+metric_type="$4"
+if [ "$metric_type" = "" ] ; then
+  echo "Specify the metric type (4th arg)"
+  exit 1
+fi
+
+norm_type="$5"
 norm=""
 if [ "$norm_type" != "" ] ; then
   norm="-norm $norm_type"
 fi
 echo "Train file: '$train_file' Model file: '$model_file' Normalization parameter: $norm"
 
-java -jar lib/RankLib.jar  -train  "${train_file}" -ranker 6 -tree "$tree" -metric2t P@1 -gmax 1 -save "${model_file}" $norm #-kcv 5
+java -jar lib/RankLib.jar  -train  "${train_file}" -ranker 6 -tree "$tree" -metric2t P@1 -gmax 1 -save "${model_file}" $norm  -metric2t $metric_type  #-kcv 5
