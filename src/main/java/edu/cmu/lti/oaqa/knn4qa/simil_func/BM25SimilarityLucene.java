@@ -15,9 +15,9 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 
 /**
  * A re-implementation of the Lucene/SOLR BM25 similarity. 

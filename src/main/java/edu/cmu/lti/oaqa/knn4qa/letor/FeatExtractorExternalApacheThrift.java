@@ -26,13 +26,13 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.memdb.WordEntry;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import no.uib.cipr.matrix.DenseVector;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryInfo;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.WordEntryInfo;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.ExternalScorer.Client;

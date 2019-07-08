@@ -6,10 +6,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.knn4qa.giza.TranRecSortByProb;
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 import edu.cmu.lti.oaqa.knn4qa.utils.IdValPair;
 import edu.cmu.lti.oaqa.knn4qa.utils.IdValParamByValDesc;

@@ -124,7 +124,7 @@ function getNumCpuCores {
   echo $NUM_CPU_CORES
 }
 
-# This function 
+# This function:
 # 1. Identifies guesses what is the format of data: new JSONL or old series-of-XML format
 # 2. Finds all sub-directories containing indexable data and makes a string 
 #    that represents a list of comma-separated sub-directories with data. This string

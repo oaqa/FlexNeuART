@@ -1,5 +1,5 @@
   /*
-   *  Copyright 2015 Carnegie Mellon University
+   *  Copyright 2014+ Carnegie Mellon University
    *
    *  Licensed under the Apache License, Version 2.0 (the "License");
    *  you may not use this file except in compliance with the License.
@@ -33,9 +33,8 @@ class GenFeaturesAppImpl extends BaseQueryApp {
                      multNumRetr,
                      useQRELs,
                      useThreadQty);
-      
-      boolean useHigHorderModels = true;
-      addResourceOpts(useHigHorderModels);
+
+      addResourceOpts();
       
       boolean useIntermModel = true, 
               useFinalModel = false; // There is no second-stage re-ranking here!

@@ -15,6 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 
 public class CommonParams {
   
@@ -47,12 +48,12 @@ public class CommonParams {
   
   public final static String THREAD_QTY_DESC   = "The number of threads";
   public final static String THREAD_QTY_PARAM  = "thread_qty";
-  
-  public final static String MEMINDEX_DESC = "A directory for in-memory index";
-  public final static String MEMINDEX_PARAM = "memindex_dir";
-    
-  public static final String MEM_FWD_INDEX_PARAM = "memindex";
-  public static final String MEM_FWD_INDEX_DESC = "A forward index file used for filtering";
+ 
+  public final static String FWDINDEX_PARAM = "fwd_index_dir";
+  public final static String FWDINDEX_DESC = "A forward-index directory";
+ 
+  public static final String FLT_FWD_INDEX_PARAM = "flt_fwd_index_dir";
+  public static final String FLT_FWD_INDEX_DESC = "A forward index file used for filtering";
 
   public final static String CAND_PROVID_DESC = "candidate record provider type, e.g., lucene, nmslib";
   public final static String CAND_PROVID_PARAM = "cand_prov";
@@ -63,9 +64,9 @@ public class CommonParams {
   public final static String EXTRACTOR_TYPE_FINAL_PARAM = "extr_type_final";
   public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type/json"; 
   
-  public final static String EXTRACTOR_TYPE_NMSLIBL_PARAM = "extr_type_nmslib";
-  public final static String EXTRACTOR_TYPE_NMSLIBL_DESC = "Extrator type/json to generate NMSLIB query vectors"; 
-                                  ;
+  public final static String EXTRACTOR_TYPE_NMSLIB_PARAM = "extr_type_nmslib";
+  public final static String EXTRACTOR_TYPE_NMSLIB_DESC = "Extrator type/json to generate NMSLIB query vectors"; 
+                                  
   public final static String EXTRACTOR_TYPE_INTERM_PARAM = "extr_type_interm";  
   public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type/json";
   
@@ -82,32 +83,22 @@ public class CommonParams {
   public static final String GIZA_ITER_QTY_DESC = "a number of GIZA iterations";
  
   public static final String EMBED_DIR_PARAM = "embed_dir";
-  public static final String EMBED_DIR_DESC = "a root dir for word embeddings";
+  public static final String EMBED_DIR_DESC = "a root dir for embeddings";
   
-  public static final String EMBED_FILES_PARAM = "embed_files";
-  public static final String EMBED_FILES_DESC  = "a comma-separated list of word embedding file names";
-  
-  public static final String HIHG_ORDER_FILES_PARAM = "horder_files";
-  public static final String HIHG_ORDER_FILES_DESC  = "a comma-separated list of sparse (high-order models) word embedding file names";
- 
   public final static String KNN_INTERLEAVE_DESC  = "Used sparse interlleaved vectors for NMSLIB";
   public final static String KNN_INTERLEAVE_PARAM = "knn_interleave";    
 
-  public final static String ROOT_DIR_DESC = "A root dir for the pipeline output";
-  public final static String ROOT_DIR_PARAM = "root_dir";
+  public final static String INPUT_DATA_DIR_DESC = "A data directory (to be used for indexing/querying)";
+  public final static String INPUT_DATA_DIR_PARAM = "input_data_dir";
     
-  public final static String SUB_DIR_TYPE_DESC = "A coma separated list of directories to be included, e.g., train,dev1,dev2,test";
-  public final static String SUB_DIR_TYPE_PARAM = "sub_dirs";
+  public final static String INPDATA_SUB_DIR_TYPE_DESC = "A coma separated list of data sub-directories to be used, e.g., train,dev1,dev2,test";
+  public final static String INPDATA_SUB_DIR_TYPE_PARAM = "data_sub_dirs";
     
   public final static String MAX_NUM_REC_DESC = "maximum number of records to process";
   public final static String MAX_NUM_REC_PARAM = "n";
   
   public final static String MAX_NUM_QUERY_DESC  = "maximum number of queries to process";
   public final static String MAX_NUM_QUERY_PARAM = "max_num_query";
-  
-  // A deprecated param
-  public final static String SOLR_FILE_NAME_DESC = "A deprecated parameter left for compatibility";
-  public final static String SOLR_FILE_NAME_PARAM = "solr_file";
   
   public final static String DATA_FILE_DESC = "A data file";
   public final static String DATA_FILE_PARAM = "data_file";
@@ -117,9 +108,6 @@ public class CommonParams {
   
   public final static String MIN_PROB_PARAM  = "min_prob";
   public final static String MIN_PROB_DESC   = "A minimum probability";
-  
-  public final static String SEL_PROB_PARAM  = "sel_prob";
-  public final static String SEL_PROB_DESC   = "A selection probability";
       
   public final static String MAX_WORD_QTY_PARAM = "max_word_qty";
   public final static String MAX_WORD_QTY_DESC  = "A maximum number of words";
@@ -133,8 +121,8 @@ public class CommonParams {
   public final static String FIELD_NAME_PARAM = "field_name";
   public final static String FIELD_NAME_DESC = "Field name";
   
-  public final static String USE_INMEM_FOWARD_INDEX_PARAM = "inmem_index";
-  public final static String USE_INMEM_FOWARD_INDEX_DESC = "Create a text-only fully in-memory forward index";
+  public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
+  public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getTypeList();
  
   // A general-purpose output file parameter
   public static final String OUTPUT_FILE_PARAM = "out_file";

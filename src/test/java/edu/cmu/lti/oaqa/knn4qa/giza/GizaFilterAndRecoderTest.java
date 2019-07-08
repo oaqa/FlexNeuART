@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.InMemForwardIndexFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexFilterAndRecoder;
 
 /**
  * @author Leonid Boytsov

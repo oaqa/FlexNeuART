@@ -16,13 +16,11 @@
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class HttpHelper {
-  public static final String USER_AGENT = "Mozilla/4.0";
   
   /**
    * Retrieves a page with a given URI.
@@ -40,7 +38,7 @@ public class HttpHelper {
     con.setRequestMethod("GET");
  
     //add request header
-    con.setRequestProperty("User-Agent", USER_AGENT);
+    con.setRequestProperty("User-Agent", Const.USER_AGENT);
     
     int responseCode = con.getResponseCode();
     if (responseCode != 200) {
@@ -53,12 +51,11 @@ public class HttpHelper {
  
     while ((respLine = in.readLine()) != null) {
       resp.append(respLine);
-      resp.append(NL);
+      resp.append(Const.NL);
     }
     
     in.close();
     
     return resp.toString();    
   }  
-  private final static String NL = System.getProperty("line.separator");
 }

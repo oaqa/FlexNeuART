@@ -1,7 +1,0 @@
-isQueryFile=0
-useHashBasedPayloads=1
-weightFile=nmslib/stackoverflow/models/one_feature.model
-
-fieldIndexFile=nmslib/stackoverflow/memfwdindex/text
-fieldFeatures=cosine
-

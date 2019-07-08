@@ -8,7 +8,6 @@ check "getting the number of CPU cores, do you have /proc/cpu/info?"
 THREAD_QTY=$NUM_CPU_CORES
 
 NMSLIB_ADDR=""
-NMSLIB_SPACE="qa1"
 
 nmslib_fields_param=""
 extr_type_interm_param=""
@@ -142,8 +141,6 @@ if [ "$EMBED_FILES" = "" ] ; then
   exit 1
 fi
 
-HORDER_FILES="tran_embed.0,tran_embed.1,tran_embed.2,tran_embed.3,tran_embed.4"
-
 # TODO is for Lucene, changes are coming for nmslib provider
 if [ "$CAND_PROV_TYPE" = "lucene" -o "$CAND_PROV_TYPE" = "lucene_giza" ] ; then
   URI="lucene_index/$collect"
@@ -212,7 +209,7 @@ else
   EXTR_FINAL_PARAM=" -model_final $MODEL_FILE -extr_type_final $EXTR_TYPE"
 fi
 
-scripts/query/run_query.sh  -u "$URI" $cand_qty_param $max_num_query_param $extr_type_interm_param $model_interm_param $nmslib_fields_param -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov $CAND_PROV_TYPE -memindex_dir memfwdindex/$collect -thread_qty $THREAD_QTY -horder_files "$HORDER_FILES" $maxQueryQtyTestParam -save_stat_file "$STAT_FILE" $EXTR_FINAL_PARAM $giza_expand_qty_param $giza_wght_expand_param  2>&1|tee $query_log_file
+scripts/query/run_query.sh  -u "$URI" $cand_qty_param $max_num_query_param $extr_type_interm_param $model_interm_param $nmslib_fields_param -q output/$collect/${TEST_PART}/SolrQuestionFile.txt  -n "$NTEST_STR" -o $TREC_RUN_DIR/run  -giza_root_dir tran/$collect/ -giza_iter_qty 5 -embed_dir WordEmbeddings/$collect  -embed_files  "$EMBED_FILES" -cand_prov $CAND_PROV_TYPE -memindex_dir memfwdindex/$collect -thread_qty $THREAD_QTY $maxQueryQtyTestParam -save_stat_file "$STAT_FILE" $EXTR_FINAL_PARAM $giza_expand_qty_param $giza_wght_expand_param  2>&1|tee $query_log_file
 check_pipe "run_query.sh"
 
 rm -f "${REPORT_DIR}/out_*"

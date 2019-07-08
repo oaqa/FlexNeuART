@@ -1,5 +1,5 @@
 /*
- *  Copyright 2014+ Carnegie Mellon University
+ *  Copyright 2015 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -13,19 +13,25 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.utils;
+package edu.cmu.lti.oaqa.knn4qa.fwdindx;
 
-public class HtmlDocData {
-  public final String mTitle;
-  public final String mBodyText;
-  public final String mLinkText;
-  public final String mAllText;
-  
-  public HtmlDocData(String title, String bodyText, String linkText, String allText) {
-    this.mTitle = title;
-    this.mBodyText = bodyText;
-    this.mLinkText = linkText;
-    this.mAllText = allText;
+/**
+ * One document entry of an in-memory forward index.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
+public class DocEntryExt implements Comparable<DocEntryExt> {
+  public final DocEntry  mDocEntry;
+  public final String    mId;
+
+  DocEntryExt(String id, DocEntry docEntry) {
+    mDocEntry = docEntry;
+    mId = id;
   }
   
+  @Override
+  public int compareTo(DocEntryExt o) {
+    return mId.compareTo(o.mId);
+  }
 }

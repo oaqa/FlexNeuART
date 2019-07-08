@@ -1,5 +1,5 @@
 /*
- *  Copyright 2014+ Carnegie Mellon University
+ *  Copyright 2015 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -13,19 +13,23 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.utils;
+package edu.cmu.lti.oaqa.knn4qa.fwdindx;
 
-public class HtmlDocData {
-  public final String mTitle;
-  public final String mBodyText;
-  public final String mLinkText;
-  public final String mAllText;
+/**
+ * One word entry in the dictionary of the forward in-memory index.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
+public class WordEntry {
+  public int mWordId = 0;
+  public int mWordFreq = 0;
   
-  public HtmlDocData(String title, String bodyText, String linkText, String allText) {
-    this.mTitle = title;
-    this.mBodyText = bodyText;
-    this.mLinkText = linkText;
-    this.mAllText = allText;
+  WordEntry(int wordId) {
+    mWordId = wordId;
   }
-  
+  WordEntry(int wordId, int docQty) {
+    mWordId = wordId;
+    mWordFreq = docQty;
+  }
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,9 +22,8 @@ import java.io.OutputStreamWriter;
 
 import org.apache.commons.cli.*;
 
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.*;
-import edu.cmu.lti.oaqa.knn4qa.memdb.FrequentIndexWordFilterAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexText;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.ParamHelper;
 import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
@@ -38,8 +37,6 @@ public class FilterVocabulary {
   
   private static final String IN_VOC_FILE_DESC = "a name of the input vocabulary file (can have a .gz or .bz2 extension)";
   private static final String IN_VOC_FILE_PARAM = "i";
-
-  
    
       
   static void Usage(String err, Options options) {
@@ -56,8 +53,8 @@ public class FilterVocabulary {
   }
 
   public static void main(String[] args) {
-    String optKeys[]  = {IN_VOC_FILE_PARAM, OUT_VOC_FILE_PARAM, CommonParams.MEM_FWD_INDEX_PARAM, CommonParams.MAX_WORD_QTY_PARAM};
-    String optDescs[] = {IN_VOC_FILE_DESC,  OUT_VOC_FILE_DESC,  CommonParams.MEM_FWD_INDEX_DESC,  CommonParams.MAX_WORD_QTY_DESC};
+    String optKeys[]  = {IN_VOC_FILE_PARAM, OUT_VOC_FILE_PARAM, CommonParams.FLT_FWD_INDEX_PARAM, CommonParams.MAX_WORD_QTY_PARAM};
+    String optDescs[] = {IN_VOC_FILE_DESC,  OUT_VOC_FILE_DESC,  CommonParams.FLT_FWD_INDEX_DESC,  CommonParams.MAX_WORD_QTY_DESC};
     boolean hasArg[]  = {true,              true,               true,                             true};
   
     ParamHelper mParamHelper = null;
@@ -86,12 +83,12 @@ public class FilterVocabulary {
         maxWordQty = Integer.parseInt(tmpi);
       }
                   
-      String memFwdIndxName = cmd.getOptionValue(CommonParams.MEM_FWD_INDEX_PARAM);
-      if (null == memFwdIndxName) {
-        UsageSpecify(CommonParams.MEM_FWD_INDEX_DESC, mParamHelper.getOptions());
+      String fwdIndxName = cmd.getOptionValue(CommonParams.FLT_FWD_INDEX_PARAM);
+      if (null == fwdIndxName) {
+        UsageSpecify(CommonParams.FLT_FWD_INDEX_DESC, mParamHelper.getOptions());
       }
       
-      VocabularyFilterAndRecoder filter = new FrequentIndexWordFilterAndRecoder(memFwdIndxName, maxWordQty);
+      VocabularyFilterAndRecoder filter = new FrequentIndexWordFilterAndRecoder(fwdIndxName, maxWordQty);
 
       BufferedReader finp = new BufferedReader(new InputStreamReader(
                                                 CompressUtils.createInputStream(inputFile)));      

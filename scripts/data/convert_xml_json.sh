@@ -3,7 +3,7 @@
 outDir=$1
 
 if [ "$outDir" = "" ] ; then
-  echo "Specify the output directory, e.g., output/manner"
+  echo "Specify the data input directory, e.g., squad/input_data"
   exit 1
 fi
 if [ ! -d "$outDir" ] ; then

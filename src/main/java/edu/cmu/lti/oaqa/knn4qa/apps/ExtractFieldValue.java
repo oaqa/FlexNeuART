@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import org.apache.commons.cli.*;
 
-import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
-import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
 
 import java.io.*;
 import java.util.*;

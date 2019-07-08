@@ -1,8 +1,0 @@
-exper@model1=qfeat_only+minProbModel1=qfeat_only:0.001+model1Lambda=qfeat_only:0.1  @   dev1
-exper@model1=ephyra_spacy+minProbModel1=ephyra_spacy:0.001+model1Lambda=ephyra_spacy:0.1  @   dev1
-exper@model1=ephyra_dbpedia+minProbModel1=ephyra_dbpedia:0.001+model1Lambda=ephyra_dbpedia:0.1  @   dev1
-exper@model1=ephyra_allent+minProbModel1=ephyra_allent:0.001+model1Lambda=ephyra_allent:0.1  @   dev1
-exper@model1=lexical_spacy+minProbModel1=lexical_spacy:0.001+model1Lambda=lexical_spacy:0.1  @   dev1
-exper@model1=lexical_dbpedia+minProbModel1=lexical_dbpedia:0.001+model1Lambda=lexical_dbpedia:0.1  @   dev1
-exper@model1=lexical_allent+minProbModel1=lexical_allent:0.001+model1Lambda=lexical_allent:0.1  @   dev1
-

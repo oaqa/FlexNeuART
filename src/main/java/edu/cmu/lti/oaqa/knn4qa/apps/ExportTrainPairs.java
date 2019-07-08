@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -31,11 +29,9 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
-import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
-import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
-import edu.cmu.lti.oaqa.solr.UtilConst;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 class Worker extends Thread  {
   
@@ -96,7 +92,7 @@ public class ExportTrainPairs {
   
   public static void main(String[] args) {
     
-    mOptions.addOption(CommonParams.MEMINDEX_PARAM,         null, true, CommonParams.MEMINDEX_DESC); 
+    mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
     mOptions.addOption(CommonParams.FIELD_NAME_PARAM,       null, true, CommonParams.FIELD_NAME_DESC);
     mOptions.addOption(EXPORT_FMT,                          null, true, "A type of the export procedure/format");
     mOptions.addOption(CommonParams.QUERY_FILE_PARAM,       null, true, CommonParams.QUERY_FILE_DESC);
@@ -120,9 +116,9 @@ public class ExportTrainPairs {
         showUsage(e.toString());
       }
       
-      String fwdIndex = cmd.getOptionValue(CommonParams.MEMINDEX_PARAM);
+      String fwdIndex = cmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
       if (fwdIndex == null) {
-        showUsageSpecify(CommonParams.MEMINDEX_PARAM);
+        showUsageSpecify(CommonParams.FWDINDEX_PARAM);
       }
       String fieldName = cmd.getOptionValue(CommonParams.FIELD_NAME_PARAM);
       if (fieldName == null) {
@@ -175,7 +171,7 @@ public class ExportTrainPairs {
 
           ++queryQty;
           
-          String qid = docFields.get(UtilConst.TAG_DOCNO);
+          String qid = docFields.get(Const.TAG_DOCNO);
           if (qid == null) {
             System.err.println("Undefined query ID in query # " + queryQty);
             System.exit(1);

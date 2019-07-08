@@ -55,7 +55,7 @@ public class DataEntryWriter implements java.lang.AutoCloseable {
       doc = mXmlHlp.genXMLIndexEntry(fieldInfo);
     }
     mOut.write(doc);
-    mOut.write(NL);
+    mOut.write(Const.NL);
   }
   
 
@@ -67,7 +67,5 @@ public class DataEntryWriter implements java.lang.AutoCloseable {
   final private boolean mIsJson;
   final private BufferedWriter mOut;
   final private XmlHelper mXmlHlp = new XmlHelper();
-  
-  final static private String NL = System.getProperty("line.separator");
 
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -28,19 +26,17 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.BinWriteUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
-import edu.cmu.lti.oaqa.knn4qa.utils.XmlHelper;
-import edu.cmu.lti.oaqa.solr.UtilConst;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -53,7 +49,7 @@ import no.uib.cipr.matrix.DenseVector;
 public class ExportToNMSLIBSparse {
   public static final class Args {
     
-    @Option(name = "-" + CommonParams.MEMINDEX_PARAM, required = true, usage = CommonParams.MEMINDEX_DESC)
+    @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
     String mMemIndexPref;
     
     @Option(name = "-" + CommonParams.GIZA_ROOT_DIR_PARAM, usage = CommonParams.GIZA_ROOT_DIR_DESC)
@@ -164,7 +160,7 @@ public class ExportToNMSLIBSparse {
           BinWriteUtils.writeStringId(docId, out);
           VectorWrapper.writeAllVectorsInterleavedToNMSLIBStream(docId, null, compIndices, compExtractors, compWeights, out);
           ++docNum;
-          if (docNum % UtilConst.PROGRESS_REPORT_QTY == 0) {
+          if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
             System.out.println("Exported " + docNum + " docs");
           }
         }
@@ -173,7 +169,7 @@ public class ExportToNMSLIBSparse {
         int queryQty = 0;
         for (Map<String, String> queryFields : parsedQueries) {
           ++queryQty;
-          String queryId = queryFields.get(UtilConst.TAG_DOCNO);
+          String queryId = queryFields.get(Const.TAG_DOCNO);
           
           if (queryId == null) {
             System.err.println("No query ID: Parsing error, query # " + queryQty);

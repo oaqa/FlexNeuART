@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ import java.util.*;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import edu.cmu.lti.oaqa.solr.UtilConst;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 public abstract class CandidateProvider {
-  public final static String ID_FIELD_NAME     = UtilConst.TAG_DOCNO;
+  public final static String ID_FIELD_NAME     = Const.TAG_DOCNO;
 
   public final static String TEXT_FIELD_NAME = "text";
   public final static String TEXT_UNLEMM_FIELD_NAME = "text_unlemm";
@@ -111,7 +111,7 @@ public abstract class CandidateProvider {
   
   static Splitter mSplitOnSpace = Splitter.on(' ');
   static Joiner   mJoinOnSpace  = Joiner.on(' ');
-  static String[] mAddStopWords = {UtilConst.PESKY_STOP_WORD};
+  static String[] mAddStopWords = {Const.PESKY_STOP_WORD};
 }
 
 

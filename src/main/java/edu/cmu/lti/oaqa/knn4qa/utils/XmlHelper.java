@@ -1,5 +1,5 @@
 /*
- *  Copyright 2014 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import edu.cmu.lti.oaqa.solr.UtilConst;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 /**
  * A bunch of useful functions to work with XML files. In particular,
@@ -117,8 +117,8 @@ public class XmlHelper {
     DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
    
     Document doc = docBuilder.newDocument();
-    doc.setXmlVersion(UtilConst.XML_VERSION);
-    Element rootElement = doc.createElement(UtilConst.TAG_DOC_ENTRY);
+    doc.setXmlVersion(Const.XML_VERSION);
+    Element rootElement = doc.createElement(Const.TAG_DOC_ENTRY);
     doc.appendChild(rootElement);
    
     for (String key: fields.keySet()) {
@@ -172,10 +172,10 @@ public class XmlHelper {
     
     Document doc = parseDocWithoutXMLDecl(text);
     
-    Node root = XmlHelper.getNode(UtilConst.TAG_DOC_ENTRY, doc.getChildNodes());
+    Node root = XmlHelper.getNode(Const.TAG_DOC_ENTRY, doc.getChildNodes());
     if (root == null) {
-      System.err.println("Parsing error, offending document:" + NL + text);
-      throw new Exception("No " + UtilConst.TAG_DOC_ENTRY);
+      System.err.println("Parsing error, offending document:" + Const.NL + text);
+      throw new Exception("No " + Const.TAG_DOC_ENTRY);
     }  
 
     NodeList nodes = root.getChildNodes();
@@ -191,7 +191,7 @@ public class XmlHelper {
   }
   
   private static final 
-  String CLOSING_TAG = "</"  + UtilConst.TAG_DOC_ENTRY + ">";
+  String CLOSING_TAG = "</"  + Const.TAG_DOC_ENTRY + ">";
 
   /**
    * Several entries produced produced by the function {@link #genXMLIndexEntry(Map)}
@@ -217,7 +217,7 @@ public class XmlHelper {
     boolean foundEnd = false;
 
     do {
-      docBuffer.append(docLine); docBuffer.append(NL);
+      docBuffer.append(docLine); docBuffer.append(Const.NL);
       if (docLine.trim().endsWith(CLOSING_TAG)) {
         foundEnd = true;
         break;        
@@ -245,10 +245,10 @@ public class XmlHelper {
     Transformer transformer = transformerFactory.newTransformer();  
     Document doc = parseDocWithoutXMLDecl(docText);
     
-    Node root = XmlHelper.getNode(UtilConst.TAG_DOC_ENTRY, doc.getChildNodes());
+    Node root = XmlHelper.getNode(Const.TAG_DOC_ENTRY, doc.getChildNodes());
     if (root == null) {
-      System.err.println("Parsing error, offending document:" + NL + docText);
-      throw new Exception("No " + UtilConst.TAG_DOC_ENTRY);
+      System.err.println("Parsing error, offending document:" + Const.NL + docText);
+      throw new Exception("No " + Const.TAG_DOC_ENTRY);
     }  
 
     NodeList nodes = root.getChildNodes();
@@ -305,7 +305,7 @@ public class XmlHelper {
       throws ParserConfigurationException, SAXException, IOException {
     String xml = String.format(
         "<?xml version=\"%s\"  encoding=\"%s\" ?>%s",
-        UtilConst.XML_VERSION, UtilConst.ENCODING_NAME, docLine);
+        Const.XML_VERSION, Const.ENCODING_NAME, docLine);
     return parseDocument(xml);
 
   }
@@ -341,5 +341,4 @@ public class XmlHelper {
     return m.replaceAll(" ");
   }  
 
-  private final static String NL = System.getProperty("line.separator");
 }

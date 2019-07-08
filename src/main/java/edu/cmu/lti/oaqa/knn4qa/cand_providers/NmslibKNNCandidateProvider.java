@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,17 +24,17 @@ import org.apache.thrift.transport.TTransport;
 
 import com.google.common.base.Splitter;
 
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.nmslib.QueryService;
 import edu.cmu.lti.oaqa.nmslib.ReplyEntry;
 import edu.cmu.lti.oaqa.nmslib.QueryService.Client;
-import edu.cmu.lti.oaqa.solr.UtilConst;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -148,7 +148,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   @Override
   public CandidateInfo getCandidates(int queryNum, Map<String, String> queryData, int maxQty) throws Exception {
        
-    String queryId = queryData.get(UtilConst.TAG_DOCNO);
+    String queryId = queryData.get(Const.TAG_DOCNO);
     
     if (queryId == null) {
       throw new Exception("No query ID");

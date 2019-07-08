@@ -3,12 +3,12 @@
 
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection: manner, compr, stackoverflow, squad, wiki_squad (1st arg)"
+  echo "Specify a collection, e.g., squad (1st arg)"
   exit 1
 fi
 
-wcq=(`wc output/$collect/tran/question_text`)
-wca=(`wc output/$collect/tran/answer_text`)
+wcq=(`wc $collect/input_data/bitext/question_text`)
+wca=(`wc $collect/input_data/bitext/answer_text`)
 echo -e "# of questions:\t${wcq[0]}"
 echo -e "# of answers:\t${wca[0]}"
 qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`

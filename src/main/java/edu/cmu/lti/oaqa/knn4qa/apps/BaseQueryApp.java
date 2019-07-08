@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -35,8 +35,6 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.*;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorExperOld;
-import edu.cmu.lti.oaqa.knn4qa.letor.InMemIndexFeatureExtractorOld;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
@@ -148,10 +146,10 @@ class BaseProcessingUnit {
     Integer maxNumRet = mAppRef.mMaxNumRet;
             
     // 3. If necessary carry out an intermediate re-ranking
-    if (mAppRef.mInMemExtrInterm != null) {
+    if (mAppRef.mExtrInterm != null) {
       // Compute features once for all documents using an intermediate re-ranker
       start = System.currentTimeMillis();
-      allDocFeats = mAppRef.mInMemExtrInterm.getFeatures(allDocIds, queryFields);
+      allDocFeats = mAppRef.mExtrInterm.getFeatures(allDocIds, queryFields);
       
       DenseVector intermModelWeights = mAppRef.mModelInterm;
 
@@ -205,13 +203,13 @@ class BaseProcessingUnit {
     }
     
     // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
-    if (mAppRef.mInMemExtrFinal!= null) {
+    if (mAppRef.mExtrFinal!= null) {
       if (allDocIds.size() > maxNumRet) {
         throw new RuntimeException("Bug or you are using old/different cache: allDocIds.size()=" + allDocIds.size() + " > maxNumRet=" + maxNumRet);
       }
       // Compute features once for all documents using a final re-ranker
       start = System.currentTimeMillis();
-      allDocFeats = mAppRef.mInMemExtrFinal.getFeatures(allDocIds, queryFields);
+      allDocFeats = mAppRef.mExtrFinal.getFeatures(allDocIds, queryFields);
       
       Ranker modelFinal = mAppRef.mModelFinal;
       
@@ -489,17 +487,12 @@ public abstract class BaseQueryApp {
   /**
    * Adds options related to resource initialization.
    * 
-   * @param useHigHorderModels
-   *            if true, high-order models are used
    */
-  void addResourceOpts(boolean useHigHorderModels) {    
-    mOptions.addOption(CommonParams.MEMINDEX_PARAM,            null, true,  CommonParams.MEMINDEX_DESC);    
+  void addResourceOpts() {    
+    mOptions.addOption(CommonParams.FWDINDEX_PARAM,            null, true,  CommonParams.FWDINDEX_DESC);    
     mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,       null, true,  CommonParams.GIZA_ROOT_DIR_DESC);
     mOptions.addOption(CommonParams.GIZA_ITER_QTY_PARAM,       null, true,  CommonParams.GIZA_ITER_QTY_DESC);   
-    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,           null, true,  CommonParams.EMBED_DIR_DESC);
-    mOptions.addOption(CommonParams.EMBED_FILES_PARAM,         null, true,  CommonParams.EMBED_FILES_DESC);
-    if (useHigHorderModels)
-      mOptions.addOption(CommonParams.HIHG_ORDER_FILES_PARAM,    null, true,  CommonParams.HIHG_ORDER_FILES_DESC);            
+    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,           null, true,  CommonParams.EMBED_DIR_DESC);         
   }
   
   /**
@@ -509,7 +502,7 @@ public abstract class BaseQueryApp {
     
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM,     null, true,  CommonParams.EXTRACTOR_TYPE_FINAL_DESC);
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM,    null, true,  CommonParams.EXTRACTOR_TYPE_INTERM_DESC);
-    mOptions.addOption(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM,   null, true,  CommonParams.EXTRACTOR_TYPE_NMSLIBL_DESC);
+    mOptions.addOption(CommonParams.EXTRACTOR_TYPE_NMSLIB_PARAM,   null, true,  CommonParams.EXTRACTOR_TYPE_NMSLIB_DESC);
     
     mUseIntermModel = useIntermModel;
     mUseFinalModel = useFinalModel;
@@ -603,20 +596,11 @@ public abstract class BaseQueryApp {
     }
     
     mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
-    String embedFilesStr = mCmd.getOptionValue(CommonParams.EMBED_FILES_PARAM);
     
     mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
     mKnnInterleave = mCmd.hasOption(CommonParams.KNN_INTERLEAVE_PARAM);
 
-    if (null != embedFilesStr) {
-      mEmbedFiles = embedFilesStr.split(",");
-    }
-
-    String highOrderFilesStr = mCmd.getOptionValue(CommonParams.HIHG_ORDER_FILES_PARAM);
-    if (null != highOrderFilesStr) {
-      mHighOrderFiles = highOrderFilesStr.split(",");
-    }
-    mMemIndexPref = mCmd.getOptionValue(CommonParams.MEMINDEX_PARAM);
+    mFwdIndexPref = mCmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
     mExtrTypeInterm = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM);
     if (mExtrTypeInterm != null) {
       String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_INTERM_PARAM);
@@ -649,7 +633,7 @@ public abstract class BaseQueryApp {
         logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
       }
     }
-    mExtrTypeNmslib = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM);
+    mExtrTypeNmslib = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_NMSLIB_PARAM);
     mSaveStatFile = mCmd.getOptionValue(CommonParams.SAVE_STAT_FILE_PARAM);
     if (mSaveStatFile != null)
       logger.info("Saving some vital stats to '" + mSaveStatFile);
@@ -672,41 +656,14 @@ public abstract class BaseQueryApp {
    * @throws Exception 
    */
   void initExtractors() throws Exception {
-    boolean bOldExtr = false;
-    
-    if (mExtrTypeFinal != null) {
-      if (mExtrTypeFinal.startsWith(InMemIndexFeatureExtractorExperOld.CODE)) {
-        bOldExtr = true;
-        
-        if (mExtrTypeInterm != null) {
-          if (!mExtrTypeInterm.startsWith(InMemIndexFeatureExtractorExperOld.CODE)) {
-            throw new Exception("Either both or none of the extractors should be old-style:"
-                                +"however the final one is old style, but intermediate one is not!");
-          }
-        
-        }
-      }
-    } else {
-      // Here the final extractor type is null
-      bOldExtr = mExtrTypeInterm != null &&
-                 mExtrTypeInterm.startsWith(InMemIndexFeatureExtractorExperOld.CODE);
-    }
-    
-    if (bOldExtr) {
-      InMemIndexFeatureExtractorOld extr1 = createOneExtractorOld(mExtrTypeFinal);
-      mInMemExtrFinal  = extr1;
-      if (mExtrTypeInterm != null) {
-        mInMemExtrInterm = createOneExtractorOld(mExtrTypeInterm, 
-                                                 extr1 /* try to reuse existing resources from another extractor */);        
-      }
-    } else if (mExtrTypeFinal != null || mExtrTypeInterm != null || mExtrTypeNmslib != null) {
-      mResourceManager = new FeatExtrResourceManager(mMemIndexPref, mGizaRootDir, mEmbedDir);
+    if (mExtrTypeFinal != null || mExtrTypeInterm != null || mExtrTypeNmslib != null) {
+      mResourceManager = new FeatExtrResourceManager(mFwdIndexPref, mGizaRootDir, mEmbedDir);
       if (mExtrTypeFinal != null)
-        mInMemExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
+        mExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
       if (mExtrTypeInterm != null)
-        mInMemExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
+        mExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
       if (mExtrTypeNmslib != null)
-        mInMemExtrNmslib = new CompositeFeatureExtractor(mResourceManager, mExtrTypeNmslib);
+        mExtrNmslib = new CompositeFeatureExtractor(mResourceManager, mExtrTypeNmslib);
     }
   }
   
@@ -721,11 +678,7 @@ public abstract class BaseQueryApp {
   void initProvider() throws Exception {
     mCandProviders = new CandidateProvider[mThreadQty];
     
-    if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_SOLR)) {
-      mCandProviders[0] = new SolrCandidateProvider(mProviderURI, mMinShouldMatchPCT);
-      for (int ic = 1; ic < mThreadQty; ++ic) 
-        mCandProviders[ic] = mCandProviders[0];
-    } else if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
+    if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
       mCandProviders[0] = new LuceneCandidateProvider(mProviderURI,
                                                       BM25SimilarityLucene.DEFAULT_BM25_K1, 
                                                       BM25SimilarityLucene.DEFAULT_BM25_B);
@@ -738,14 +691,14 @@ public abstract class BaseQueryApp {
        * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
        * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
        */
-      if (mInMemExtrNmslib == null) {
-        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_NMSLIBL_PARAM);
+      if (mExtrNmslib == null) {
+        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_NMSLIB_PARAM);
       }
       
-      if (!(mInMemExtrNmslib instanceof CompositeFeatureExtractor)) {
+      if (!(mExtrNmslib instanceof CompositeFeatureExtractor)) {
         throw new Exception("NMSLIB needs to be used only with a composite feature extractor!");
       }
-      CompositeFeatureExtractor compExtractor = (CompositeFeatureExtractor)mInMemExtrNmslib;
+      CompositeFeatureExtractor compExtractor = (CompositeFeatureExtractor)mExtrNmslib;
 
       for (int ic = 0; ic < mThreadQty; ++ic) {
         mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, 
@@ -759,60 +712,7 @@ public abstract class BaseQueryApp {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
   }
-  
-  /**
-   * Creates one old-style in-memory feature extractor.
-   * 
-   * @param extrType            
-   *              an extractor type
-   * @param donnorExtractors
-   *              "donnor" extractor, they permit sharing their resources
-   * @return
-   * @throws Exception
-   */
-  InMemIndexFeatureExtractorOld createOneExtractorOld(String extrType, InMemIndexFeatureExtractorOld... donnorExtractors)
-      throws Exception {
-    if (null == mMemIndexPref)
-      showUsageSpecify(CommonParams.MEMINDEX_DESC);
 
-    InMemIndexFeatureExtractorOld inMemExtractor = 
-        InMemIndexFeatureExtractorOld.createExtractor(extrType, 
-                                                   mGizaRootDir, mGizaIterQty, 
-                                                   mMemIndexPref, 
-                                                   mEmbedDir, mEmbedFiles, mHighOrderFiles);
-
-    if (inMemExtractor == null) {
-      showUsage("Wrong type of the feature extractor: '" + extrType + "'");
-    }
-
-    if (inMemExtractor.needsSomeEmbed()) {
-      if (null == mEmbedDir) {
-        showUsageSpecify(CommonParams.EMBED_DIR_DESC);
-      }
-    }
-    if (inMemExtractor.needsDenseEmbed()) {
-      if (null == mEmbedFiles || mEmbedFiles.length == 0) {
-        showUsageSpecify(CommonParams.EMBED_FILES_DESC);
-      }
-    }
-    if (inMemExtractor.needsHighOrderEmbed()) {
-      if (null == mHighOrderFiles || mHighOrderFiles.length == 0) {
-        showUsageSpecify(CommonParams.HIHG_ORDER_FILES_DESC);
-      }
-    }
-    if (inMemExtractor.needsGIZA()) {
-      if (mGizaRootDir == null) {
-        showUsageSpecify(CommonParams.GIZA_ROOT_DIR_DESC);
-      }
-      if (mGizaIterQty <= 0) {
-        showUsageSpecify(CommonParams.GIZA_ITER_QTY_DESC);
-      }
-    }
-
-    inMemExtractor.init(donnorExtractors);
-
-    return inMemExtractor;
-  }
   
   /**
    * For debugging only.
@@ -952,9 +852,7 @@ public abstract class BaseQueryApp {
   String       mGizaRootDir;
   int          mGizaIterQty = -1;
   String       mEmbedDir;
-  String       mEmbedFiles[];
-  String       mHighOrderFiles[];
-  String       mMemIndexPref;
+  String       mFwdIndexPref;
   String       mExtrTypeFinal;
   String       mExtrTypeInterm;
   String       mExtrTypeNmslib;
@@ -967,9 +865,9 @@ public abstract class BaseQueryApp {
   String             mResultCacheName = null; 
   CandidateInfoCache mResultCache = null;
   
-  FeatureExtractor mInMemExtrInterm;
-  FeatureExtractor mInMemExtrFinal;
-  FeatureExtractor mInMemExtrNmslib;
+  FeatureExtractor mExtrInterm;
+  FeatureExtractor mExtrFinal;
+  FeatureExtractor mExtrNmslib;
   
   String   mAppName;
   Options  mOptions = new Options();

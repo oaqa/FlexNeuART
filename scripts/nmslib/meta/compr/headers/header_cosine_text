@@ -1,7 +1,0 @@
-isQueryFile=0
-useHashBasedPayloads=1
-weightFile=nmslib/compr/models/one_feature.model
-
-fieldIndexFile=nmslib/compr/memfwdindex/text
-fieldFeatures=cosine
-

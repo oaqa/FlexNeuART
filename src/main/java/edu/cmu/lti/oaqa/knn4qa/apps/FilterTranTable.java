@@ -19,16 +19,16 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import org.apache.commons.cli.*;
 
-
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranRec;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
-import edu.cmu.lti.oaqa.knn4qa.memdb.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 
@@ -59,7 +59,7 @@ public class FilterTranTable {
     
     options.addOption(INPUT_PARAM,                      null, true, INPUT_DESC);
     options.addOption(OUTPUT_PARAM,                     null, true, OUTPUT_DESC);
-    options.addOption(CommonParams.MEM_FWD_INDEX_PARAM, null, true, CommonParams.MEM_FWD_INDEX_DESC);
+    options.addOption(CommonParams.FLT_FWD_INDEX_PARAM, null, true, CommonParams.FLT_FWD_INDEX_DESC);
     options.addOption(CommonParams.GIZA_ITER_QTY_PARAM, null, true, CommonParams.GIZA_ITER_QTY_PARAM);
     options.addOption(CommonParams.GIZA_ROOT_DIR_PARAM, null, true, CommonParams.GIZA_ROOT_DIR_PARAM);
     options.addOption(CommonParams.MIN_PROB_PARAM,      null, true, CommonParams.MIN_PROB_DESC);
@@ -106,31 +106,31 @@ public class FilterTranTable {
         maxWordQty = Integer.parseInt(tmpi);
       }
                  
-      String memFwdIndxName = cmd.getOptionValue(CommonParams.MEM_FWD_INDEX_PARAM);
-      if (null == memFwdIndxName) {
-        Usage("Specify '" + CommonParams.MEM_FWD_INDEX_DESC + "'", options);
+      String fwdIndxName = cmd.getOptionValue(CommonParams.FLT_FWD_INDEX_PARAM);
+      if (null == fwdIndxName) {
+        Usage("Specify '" + CommonParams.FLT_FWD_INDEX_DESC + "'", options);
       }      
 
-      System.out.println("Filtering index: " + memFwdIndxName + " max # of frequent words: " + maxWordQty + " min. probability:" + minProb);
+      System.out.println("Filtering index: " + fwdIndxName + " max # of frequent words: " + maxWordQty + " min. probability:" + minProb);
       
       VocabularyFilterAndRecoder filter 
-            = new FrequentIndexWordFilterAndRecoder(memFwdIndxName, maxWordQty);
+            = new FrequentIndexWordFilterAndRecoder(fwdIndxName, maxWordQty);
       
-      String srcVocFile = CompressUtils.findFileVariant(gizaRootDir + "/source.vcb");
+      String srcVocFile = CompressUtils.findFileVariant(gizaRootDir + File.separator + "source.vcb");
       
       System.out.println("Source vocabulary file: " + srcVocFile);
       
       GizaVocabularyReader srcVoc = 
           new GizaVocabularyReader(srcVocFile, filter);
       
-      String dstVocFile = CompressUtils.findFileVariant(gizaRootDir + "/target.vcb");
+      String dstVocFile = CompressUtils.findFileVariant(gizaRootDir + File.separator + "target.vcb");
       
       System.out.println("Target vocabulary file: " + dstVocFile);
       
       GizaVocabularyReader dstVoc = 
           new GizaVocabularyReader(CompressUtils.findFileVariant(dstVocFile), filter);            
 
-      String inputFile = CompressUtils.findFileVariant(gizaRootDir + "/output.t1." + gizaIterQty);
+      String inputFile = CompressUtils.findFileVariant(gizaRootDir + File.separator + "output.t1." + gizaIterQty);
       
       BufferedReader finp = new BufferedReader(new InputStreamReader(
                                                 CompressUtils.createInputStream(inputFile)));

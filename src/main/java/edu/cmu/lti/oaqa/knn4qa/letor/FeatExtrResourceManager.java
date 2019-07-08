@@ -23,11 +23,11 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.apps.CommonParams;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.InMemForwardIndexFilterAndRecoder;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.InMemForwardIndexText;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexText;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.memdb.InMemForwardIndexFilterAndRecoder;
 
 class Model1Data {
   public final GizaTranTableReaderAndRecoder mRecorder;
@@ -73,7 +73,7 @@ public class FeatExtrResourceManager {
   public ForwardIndex getFwdIndex(String fieldName) throws Exception {
     if (mRootFwdIndexDir == null) {
       throw new Exception("There is no forward index directory, likely, you need to specify " + 
-          CommonParams.MEMINDEX_PARAM + " in the calling app");
+          CommonParams.FWDINDEX_PARAM + " in the calling app");
     }
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
     synchronized (this) {

@@ -1,8 +1,0 @@
-isQueryFile=0
-useHashBasedPayloads=1
-weightFile=nmslib/stackoverflow/models/one_feature.model
-
-fieldIndexFile=nmslib/stackoverflow/memfwdindex/text_unlemm
-fieldFeatures=avg_embed
-embedFile=nmslib/stackoverflow/WordEmbeddings/word2vec_retro_unweighted_minProb=0.001.txt
-

@@ -38,10 +38,22 @@ done
 
 PID=""
 
+#
+# IMPORTANT: this function is different from
+# the old version (used by exper.legacy scripts) in that
+# it accepts NMSLIB_SPACE as a parameter.
+#
 function start_server {
-  NMSLIB_INDEX=$1
-  INDEX_PARAMS=$2
+  NMSLIB_SPACE=$1
+  NMSLIB_INDEX=$2
+  INDEX_PARAMS=$3
   PROG_NAME="query_server"
+
+  # Note the curly brackets, if one uses round brackets to group processes this creates
+  # a new child shell. Thus, exit affects only this child shell and not the current (parent) one.
+  [ "$NMSLIB_SPACE" != "" ]  || { echo "Specify NMSLIB space (1st arg) " ; exit 1 ; } 
+  [ "$NMSLIB_INDEX" != "" ]  || { echo "Specify NMSLIB index (2d arg) " ; exit 1 ; } 
+  [ "$INDEX_PARAMS" != "" ]  || { echo "Specify NMSLIB params (3d arg) " ; exit 1 ; } 
 
   NMSLIB_INDEX_COMP="${NMSLIB_INDEX}.gz"
 

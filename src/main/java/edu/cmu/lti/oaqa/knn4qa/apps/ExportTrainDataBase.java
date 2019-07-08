@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
-import java.util.Random;
 
 import org.apache.commons.cli.*;
 
@@ -31,11 +30,11 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
-import edu.cmu.lti.oaqa.solr.UtilConst;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 
 public abstract class ExportTrainDataBase {
@@ -146,7 +145,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
                         ',', // field separator
                         CSVWriter.NO_QUOTE_CHARACTER, // quote char
                         CSVWriter.NO_ESCAPE_CHARACTER, // escape char
-                        UtilConst.NL
+                        Const.NL
                         );
     
     String lineFields[] = {"id_left", "text_left", "id_right", "text_right", "label"};

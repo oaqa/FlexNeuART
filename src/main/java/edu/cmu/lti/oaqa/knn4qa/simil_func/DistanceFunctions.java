@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 import no.uib.cipr.matrix.sparse.SparseVector;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**

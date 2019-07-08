@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 Carnegie Mellon University
+ *  Copyright 2015+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,12 +22,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.lucene.queryparser.flexible.messages.NLS;
+
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 public class EvalUtils {
-  protected static final String NL = System.getProperty("line.separator");
-  
   /** Some fake document ID, which is unlikely to be equal to a real one */
   private static final String FAKE_DOC_ID = 
       "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES";
@@ -90,7 +91,7 @@ public class EvalUtils {
     trecFile.write(String.format("%s\tQ0\t%s\t%d\t%f\t%s%s",
         topicId, docId, 
         docPos, score, runId,
-        NL));    
+        Const.NL));    
   }
   
   /**
@@ -179,7 +180,7 @@ public class EvalUtils {
                                       String           topicId,
                                       String           docId,
                                       int              relGrade) throws IOException {
-    qrelFile.write(String.format("%s 0 %s %d%s", topicId, docId, relGrade, NL));
+    qrelFile.write(String.format("%s 0 %s %d%s", topicId, docId, relGrade, Const.NL));
   }
   
   /**

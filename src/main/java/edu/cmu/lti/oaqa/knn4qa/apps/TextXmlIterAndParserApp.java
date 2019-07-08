@@ -3,6 +3,7 @@ package edu.cmu.lti.oaqa.knn4qa.apps;
 import java.io.*;
 
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 import edu.cmu.lti.oaqa.knn4qa.utils.XmlIterator;
 
 class Diff {
@@ -32,8 +33,6 @@ class Diff {
  *  heuristics.
  */
 public class TextXmlIterAndParserApp {
-  
-  private static final String NL = System.getProperty("line.separator");
 
   public static void usage(String err) {
     System.err.println("Error: " + err);
@@ -64,7 +63,7 @@ public class TextXmlIterAndParserApp {
         String s;
         boolean bStart = false;
         while ((s=rd.readLine()) != null) {
-          s = s + NL;
+          s = s + Const.NL;
           ++lineNum;
           if (!bStart) {
             int pos = s.indexOf(startTag);
@@ -119,8 +118,8 @@ public class TextXmlIterAndParserApp {
   }
 
   private static Diff getFirstDiffLine(String s1, String s2) {
-    String [] p1 = s1.split(NL);
-    String [] p2 = s2.split(NL);
+    String [] p1 = s1.split(Const.NL);
+    String [] p2 = s2.split(Const.NL);
     for (int i = 0; i < Math.min(p1.length, p2.length); ++i) {
       String d1 = p1[i], d2 = p2[i];
       if (!d1.equals(d2)) {        

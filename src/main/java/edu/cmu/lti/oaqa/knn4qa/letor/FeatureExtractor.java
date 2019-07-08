@@ -23,8 +23,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import no.uib.cipr.matrix.DenseVector;
 
 public abstract class FeatureExtractor {  

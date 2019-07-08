@@ -21,12 +21,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.io.IOException;
 
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.knn4qa.memdb.DocEntry;
-import edu.cmu.lti.oaqa.knn4qa.memdb.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
-import edu.cmu.lti.oaqa.solr.UtilConst;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -205,7 +204,7 @@ public class VectorWrapper {
       if (text == null) {
         throw new Exception("No query information for field: " + fieldName);
       }
-      docEntry = compIndx.createDocEntry(UtilConst.splitOnWhiteSpace(text), true); // true means including positions
+      docEntry = compIndx.createDocEntry(StringUtils.splitOnWhiteSpace(text), true); // true means including positions
     } else {
       docEntry = compIndx.getDocEntry(docId);
     }

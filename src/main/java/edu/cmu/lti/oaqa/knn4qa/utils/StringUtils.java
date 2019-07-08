@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StringUtils {
+
   /**
    * Splits the string using the pattern, however, if the input string
    * is empty, it returns the empty array rather than the array with
@@ -135,4 +136,49 @@ public class StringUtils {
     return false;
   }  
   
+  /**
+   *  Replaces bad Unicode characters, but doesn't change the string length!
+   *  <p>
+   *  Based on this solution:
+   *  http://stackoverflow.com/questions/20762/how-do-you-remove-invalid-hexadecimal-characters-from-an-xml-based-data-source-p
+   *  </p>
+   *  @param inString   input string
+   *  @return an output string (will have the same length as inString).
+   */
+  public static String removeBadUnicode(String inString) {
+    StringBuilder newString = new StringBuilder();
+    char ch;
+
+    for (int i = 0; i < inString.length(); i++) {
+      ch = inString.charAt(i);
+      /*
+       *  Replace any characters outside the valid UTF-8 range 
+       *  as well as all control characters with the space except 
+       *  tabs and new lines.
+       *  
+       *  Don't delete any chars, we need to preserve word lengths 
+       *  and positions!
+       *  
+       */
+      if ((ch < 0x00FD && ch > 0x001F) 
+          || ch == '\t' || ch == '\n' || ch == '\r') {
+        newString.append(ch);
+      } else {
+        newString.append(' ');
+      }
+    }    
+    return newString.toString();
+  } 
+
+  /**
+   * @param  str  a string where replace white-spaces are to be replaced.
+   * @return a string with white-spaces replaced by regular spaces.
+   */
+  public static String replaceWhiteSpaces(String str) {
+    return Const.PATTERN_WHITESPACE.matcher(str).replaceAll(" ");
+  }
+
+  public static String[] splitOnWhiteSpace(String str) {
+    return Const.PATTERN_WHITESPACE.split(str);
+  }
 }
