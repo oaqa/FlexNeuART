@@ -35,6 +35,7 @@ public class Const {
   
   public static final String TAG_DOC_ENTRY = "DOC";
   public static final String TAG_DOCNO     = "DOCNO";
+  public static final String TEXT_FIELD_NAME = "text";
   
   public static final String NL = System.getProperty("line.separator");
 
@@ -48,6 +49,5 @@ public class Const {
   public static final Pattern PATTERN_WHITESPACE = Pattern.compile("[\\s\n\r\t]");
   
   public static final int PROGRESS_REPORT_QTY = 10000;
- 
   
 }

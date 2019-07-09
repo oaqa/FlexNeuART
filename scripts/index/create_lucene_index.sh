@@ -1,16 +1,21 @@
 #!/bin/bash -e
-source scripts/common.sh
+# A script to create a Lucene index
+source scripts/common_proc.sh
+source scripts/common_vars.sh
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify sub-collection (1st arg), e.g., squad"
   exit 1
 fi
 
-dataDir="output/$collect/"
-indexDir="lucene_index/$collect"
+checkVarNonEmpty "LUCENE_INDEX_DIR"
+checkVarNonEmpty "INPUT_DATA_SUBDIR"
+
+inputDataDir="$collect/$INPUT_DATA_SUBDIR"
+indexDir="$collect/$LUCENE_INDEX_DIR"
 
 echo "=========================================================================="
-echo "Data directory: $dataDir"
+echo "Data directory: $inputDataDir"
 echo "Index directory: $indexDir"
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
@@ -20,15 +25,17 @@ else
 fi
 echo "=========================================================================="
 retVal=""
-getIndexDataInfo "$dataDir"
+getIndexDataInfo "$inputDataDir"
 dirList=${retVal[0]}
-currFile=${retVal[1]}
+dataFileName=${retVal[1]}
 if [ "$dirList" = "" ] ; then
   echo "Cannot get a list of relevant data directories, did you dump the data?"
   exit 1
 fi
-if [ "$currFile" = "" ] ; then
+if [ "$dataFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1
+else
+  echo "Using the data input file: $dataFileName"
 fi
-scripts/index/run_lucene_index.sh -root_dir "$dataDir" -index_dir "$indexDir" -sub_dirs "$dirList" -data_file "$currFile"
+scripts/index/run_lucene_index.sh -input_data_dir "$inputDataDir" -index_dir "$indexDir" -data_sub_dirs "$dirList" -data_file "$dataFileName"

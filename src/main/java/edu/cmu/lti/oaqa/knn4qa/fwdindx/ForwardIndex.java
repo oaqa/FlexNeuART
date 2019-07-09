@@ -18,22 +18,16 @@ package edu.cmu.lti.oaqa.knn4qa.fwdindx;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.netlib.lapack.Sbdsdc;
-
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
-import kotlin.jvm.Throws;
 
 /**
  * 

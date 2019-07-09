@@ -1,5 +1,6 @@
 #!/bin/bash -e
-. scripts/common.sh
+source scripts/common_proc.sh
+source scripts/common_vars.sh
 
 # This script runs annotation pipelines for a given collection
 collect=$1
@@ -10,7 +11,7 @@ fi
 
 fieldList=$2
 if [ "$fieldList" = "" ] ; then
-  echo "Specify a list of fields to index (2d arg), e.g., 'text text_unlemm'"
+  echo "Specify a space-separated list of fields to index (2d arg), e.g., 'text text_unlemm'"
   exit 1
 fi
 
@@ -23,22 +24,20 @@ fi
 if [ "$store_word_id_seq" = "1" ] ; then
   store_word_id_seq_param=" -store_word_id_seq "
 fi
-inmem_text_indx=$4
-inmem_text_indx_param=""
-if [ "$inmem_text_indx" = "" ] ; then
-  echo "Specify in-memory (text-only) index flag (4th arg): 1 or 0"
+fwd_index_type=$4
+if [ "$fwd_index_type" = "" ] ; then
+  echo "Specify index-type (4th arg), e.g. lucene"
   exit 1
 fi
-if [ "$inmem_text_indx" = "1" ] ; then
-  inmem_text_indx_param=" -inmem_index "
-fi
 
+checkVarNonEmpty "FWD_INDEX_SUBDIR"
+checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
-indexDir="memfwdindex/$collect/"
-dataDir="output/$collect/"
+inputDataDir="$collect/$INPUT_DATA_SUBDIR"
+indexDir="$collect/$FWD_INDEX_SUBDIR/"
 
 echo "=========================================================================="
-echo "Data directory: $dataDir"
+echo "Data directory: $inputDataDir"
 echo "Index directory: $indexDir"
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
@@ -48,22 +47,23 @@ else
 fi
 
 echo "Storing word id seq param: $store_word_id_seq_param"
-echo "Using text index param:    $inmem_text_indx_param"
+echo "Index type:                $fwd_index_type"
+echo "Field list:                $fieldList"
 echo "=========================================================================="
 retVal=""
-getIndexDataInfo "$dataDir"
+getIndexDataInfo "$inputDataDir"
 dirList=${retVal[0]}
-currFile=${retVal[1]}
+dataFileName=${retVal[1]}
 if [ "$dirList" = "" ] ; then
   echo "Cannot get a list of relevant data directories, did you dump the data?"
   exit 1
 fi
-if [ "$currFile" = "" ] ; then
+if [ "$dataFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1
 fi
 
 for field in $fieldList ; do
-  scripts/index/run_buildfwd_index.sh $inmem_text_indx_param $store_word_id_seq_param -root_dir "$dataDir"  -index_dir "$indexDir" -sub_dirs "$dirList" -data_file "$currFile" -field "$field"
+  scripts/index/run_buildfwd_index.sh -fwd_index_type $fwd_index_type $store_word_id_seq_param -input_data_dir "$inputDataDir"  -index_dir "$indexDir" -data_sub_dirs "$dirList" -data_file "$dataFileName" -field_name "$field"
 done
 

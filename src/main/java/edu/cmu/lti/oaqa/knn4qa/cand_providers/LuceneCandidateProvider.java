@@ -79,11 +79,11 @@ public class LuceneCandidateProvider extends CandidateProvider {
                         ID_FIELD_NAME, queryNum));
     }        
     
-    String text = queryData.get(TEXT_FIELD_NAME);
+    String text = queryData.get(QUERY_FIELD_NAME);
     if (null == text) {
       throw new Exception(
           String.format("Query (%s) is undefined for query # %d",
-                        TEXT_FIELD_NAME, queryNum));
+                        QUERY_FIELD_NAME, queryNum));
     }
     
     String query = StringUtils.removePunct(text.trim());
@@ -101,7 +101,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
 
     if (!query.isEmpty()) {    
       // QueryParser cannot be shared among threads!
-      QueryParser parser = new QueryParser(TEXT_FIELD_NAME, mAnalyzer);
+      QueryParser parser = new QueryParser(QUERY_FIELD_NAME, mAnalyzer);
       parser.setDefaultOperator(QueryParser.OR_OPERATOR);
 
       Query       queryParsed = parser.parse(query);

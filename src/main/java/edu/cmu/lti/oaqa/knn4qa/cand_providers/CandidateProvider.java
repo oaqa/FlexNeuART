@@ -22,12 +22,9 @@ import com.google.common.base.Splitter;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 public abstract class CandidateProvider {
-  public final static String ID_FIELD_NAME     = Const.TAG_DOCNO;
-
-  public final static String TEXT_FIELD_NAME = "text";
-  public final static String TEXT_UNLEMM_FIELD_NAME = "text_unlemm";
-      
-  public static final String CAND_TYPE_SOLR        = "solr";
+  public final static String ID_FIELD_NAME    = Const.TAG_DOCNO;
+  public final static String QUERY_FIELD_NAME = Const.TEXT_FIELD_NAME;
+  
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_LUCENE_GIZA = "lucene_giza";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
@@ -35,7 +32,7 @@ public abstract class CandidateProvider {
 
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
-      CandidateProvider.CAND_TYPE_SOLR + ", " + 
+      CandidateProvider.CAND_TYPE_LUCENE_GIZA + ", " + 
       CandidateProvider.CAND_TYPE_NMSLIB;
   
   /**

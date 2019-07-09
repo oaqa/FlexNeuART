@@ -119,7 +119,7 @@ public class CommonParams {
   public final static String USE_THREAD_POOL_DESC = "Use a thread pool instead of a round-robin division of queries among threads";
   
   public final static String FIELD_NAME_PARAM = "field_name";
-  public final static String FIELD_NAME_DESC = "Field name";
+  public final static String FIELD_NAME_DESC = "The name of a field to process";
   
   public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
   public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getTypeList();

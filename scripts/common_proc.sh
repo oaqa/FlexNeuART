@@ -2,6 +2,32 @@
 
 SERVER_LOG_NAME="server.log"
 
+function execAndCheck {
+  cmd0=$1
+  desc=$2
+  cmd="$cmd0"' ; (echo ${PIPESTATUS[*]} | grep -E "^0(\s+0)*$")'
+  echo "$cmd0"
+  bash -c "$cmd"
+  # The status of the command sequence is
+  #   i) The status of the last command, i.e., that of a grepping.
+  #   ii)  *OR* the failure status of the whole bash -c operation,
+  #        if it fails for some reason. One common reason: syntax error.
+  if [ "$?" != "0" ] ; then
+      echo "********************************************************************************"
+      if [ "$desc" != "" ] ; then
+        echo "  Command $desc failed:"
+      else
+        echo "  Command failed:"
+      fi
+      echo "$cmd0"
+      echo "  Expanded cmd that was actually run in a seperate shell:"
+      echo "$cmd"
+      echo "********************************************************************************"
+      exit 1
+  fi
+}
+
+
 function check {
   f="$?"
   name=$1
@@ -14,8 +40,8 @@ function check {
 }
 
 function checkVarNonEmpty {
-  val="$1"
-  name="$2"
+  name="$1"
+  val="${!name}"
   if [ "$val" = "" ] ; then
     echo "Variable $name is not set!"
     exit 1
@@ -135,7 +161,7 @@ function getIndexDataInfo {
   dirList=""
   oldFile="SolrAnswerFile.txt"
   newFile="AnswerFields.jsonl"
-  currFile=""
+  dataFileName=""
   currDir="$PWD"
   cd "$topDir"
   for subDir in * ; do
@@ -146,23 +172,23 @@ function getIndexDataInfo {
         fi
         dirList="${dirList}$subDir"
         if [ -f "$subDir/$oldFile" ] ; then
-          if [ "$currFile" = "$newFile" ] ; then
+          if [ "$dataFileName" = "$newFile" ] ; then
             echo "Inconsistent use of XML/JSONL formats"
             exit 1
           fi
-          currFile=$oldFile
+          dataFileName=$oldFile
         fi
         if [ -f "$subDir/$newFile" ] ; then
-          if [ "$currFile" = "$oldFile" ] ; then
+          if [ "$dataFileName" = "$oldFile" ] ; then
             echo "Inconsistent use of XML/JSONL formats"
             exit 1
           fi
-          currFile=$newFile
+          dataFileName=$newFile
         fi
       fi
     fi
   done
   cd "$currDir"
   # This is kinda ugly, but is better than other non-portable solutions.
-  retVal=("${dirList}" "${currFile}")
+  retVal=("${dirList}" "${dataFileName}")
 }

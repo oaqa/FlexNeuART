@@ -28,8 +28,6 @@ import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex.ForwardIndexType;
 
 public class BuildFwdIndexApp {
   
-  public final static String FIELD_NAME_PARAM = "field";
-  public final static String FIELD_NAME_DESC  = "a field to be indexed (use a regular name not the one from the XML index-file)";
   public final static String STORE_WORD_ID_SEQ_PARAM = "store_word_id_seq";
   public final static String STORE_WORD_ID_SEQ_DESC  = "Store positional info (a sequence of word IDs) in addition to word frequencies";  
   
@@ -49,9 +47,10 @@ public class BuildFwdIndexApp {
     options.addOption(CommonParams.MAX_NUM_REC_PARAM,            null, true, CommonParams.MAX_NUM_REC_DESC); 
     options.addOption(CommonParams.DATA_FILE_PARAM,              null, true, CommonParams.DATA_FILE_DESC);   
     options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_INDEX_DESC);
-    options.addOption(FIELD_NAME_PARAM,                          null, true, FIELD_NAME_DESC);
+    options.addOption(CommonParams.FIELD_NAME_PARAM,             null, true, CommonParams.FIELD_NAME_DESC);
+    options.addOption(CommonParams.FOWARD_INDEX_TYPE_PARAM,      null, true, CommonParams.FOWARD_INDEX_TYPE_DESC);
     options.addOption(STORE_WORD_ID_SEQ_PARAM,                   null, false, STORE_WORD_ID_SEQ_DESC);
-    options.addOption(CommonParams.FOWARD_INDEX_TYPE_PARAM,      null, false, CommonParams.FOWARD_INDEX_TYPE_DESC);
+
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -94,9 +93,9 @@ public class BuildFwdIndexApp {
         }
       }
       
-      String fieldName = cmd.getOptionValue(FIELD_NAME_PARAM);
+      String fieldName = cmd.getOptionValue(CommonParams.FIELD_NAME_PARAM);
       if (fieldName == null) {
-        Usage("Specify: '" + FIELD_NAME_DESC, options);
+        Usage("Specify: '" + CommonParams.FIELD_NAME_PARAM, options);
       }
       
       String [] subDirs = subDirTypeList.split(",");
@@ -108,6 +107,7 @@ public class BuildFwdIndexApp {
         fileNames[i] = inputDataDir + File.separator + subDirs[i] + File.separator + dataFileName;
       
       boolean bStoreWordIdSeq = cmd.hasOption(STORE_WORD_ID_SEQ_PARAM);
+      
       String fwdIndexType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_TYPE_PARAM);
       
       if (fwdIndexType == null) {

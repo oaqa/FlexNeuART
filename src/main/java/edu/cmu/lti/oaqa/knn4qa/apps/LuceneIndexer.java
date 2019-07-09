@@ -33,13 +33,9 @@ import java.util.*;
 
 /**
  * An simple application that reads text files produced by an annotation
- * pipeline and indexes their content using SOLR.
- * <p>
- * <b>A limitation: can index only text fields, the ID field name is hardcoded.</b>
- * <p>
- * The input file contains documents. The document
- * text is enclosed between tags &lt;DOC&gt; and &lt;DOC&gt; and occupies
- * exactly one line.
+ * pipeline and indexes their content using Lucene. 
+ * 
+ * Limitations: the name of ID-field and indexable text fields are hard-coded.
  * 
  * @author Leonid Boytsov
  *
@@ -74,8 +70,8 @@ public class LuceneIndexer {
     options.addOption(CommonParams.INPDATA_SUB_DIR_TYPE_PARAM,  null, true, CommonParams.INPDATA_SUB_DIR_TYPE_DESC);
     options.addOption(CommonParams.MAX_NUM_REC_PARAM,   null, true, CommonParams.MAX_NUM_REC_DESC); 
     options.addOption(CommonParams.DATA_FILE_PARAM,     null, true, CommonParams.DATA_FILE_DESC);
-    options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_INDEX_DESC);    
-
+    options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_INDEX_DESC);
+    
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
     try {
@@ -166,17 +162,23 @@ public class LuceneIndexer {
             String id = docFields.get(Const.TAG_DOCNO);
 
             if (id == null) {
-              System.err.println(String.format("No ID tag '%s', offending DOC #%d", Const.TAG_DOCNO, docNum));
+              System.out.println(String.format("Warning: No ID tag '%s', offending DOC #%d", Const.TAG_DOCNO, docNum));
+              continue;
+            }
+            
+            String textFieldName = Const.TEXT_FIELD_NAME; 
+            String textFieldValue = docFields.get(textFieldName);
+            
+            if (textFieldValue == null) {
+              System.out.println(String.format("Warning: No field '%s', offending DOC #%d", 
+                                               textFieldName, docNum));
+              continue;
             }
 
             Document luceneDoc = new Document();
             luceneDoc.add(new StringField(Const.TAG_DOCNO, id, Field.Store.YES));
-
-            for (Map.Entry<String, String> e : docFields.entrySet()) {
-              if (!e.getKey().equals(Const.TAG_DOCNO)) {
-                luceneDoc.add(new Field(e.getKey(), e.getValue(), FIELD_TYPE));
-              }
-            }
+         
+            luceneDoc.add(new Field(textFieldName, textFieldValue, FIELD_TYPE));
             
             indexWriter.addDocument(luceneDoc);
             if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
