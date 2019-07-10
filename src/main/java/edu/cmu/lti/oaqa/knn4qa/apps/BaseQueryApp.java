@@ -36,6 +36,7 @@ import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 import ciir.umass.edu.learning.*;
@@ -98,7 +99,7 @@ class BaseProcessingUnit {
   public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
     Map<String, String>    queryFields = mAppRef.mParsedQueries.get(queryNum);
 
-    String queryID = queryFields.get(CandidateProvider.ID_FIELD_NAME);
+    String queryID = queryFields.get(Const.TAG_DOCNO);
             
     // 2. Obtain results
     long start = System.currentTimeMillis();
@@ -109,13 +110,13 @@ class BaseProcessingUnit {
       qres = mAppRef.mResultCache.getCacheEntry(queryID);
     if (qres == null) {            
 
-      String text = queryFields.get(CandidateProvider.TEXT_FIELD_NAME);
+      String text = queryFields.get(Const.TEXT_FIELD_NAME);
       if (text != null) {
         // This is a workaround for a pesky problem: didn't previously notice that the string
         // n't (obtained by tokenization of can't is indexed. Querying using this word
         // add a non-negligible overhead (although this doesn't affect overall accuracy)
         // THIS IS FOR THE FIELD TEXT ONLY
-        queryFields.put(CandidateProvider.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
+        queryFields.put(Const.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
       }
       qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
       if (mAppRef.mResultCache != null) 
