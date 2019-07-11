@@ -1,4 +1,7 @@
-#/bin/bash
+#/bin/bash -e
+source scripts/common_proc.sh
+source scripts/config.sh
+
 POS_ARGS=()
 thread_qty=1
 while [ $# -ne 0 ] ; do
@@ -55,7 +58,6 @@ if [ "$extr_type_interm_param" != "" ] ; then
 
   extr_type_interm_code="${extr_type_interm}:${model_interm}:cand_qty=${cand_qty}_"
 fi
-
 
 collect=${POS_ARGS[0]}
 if [ "$collect" = "" ] ; then
@@ -114,17 +116,42 @@ if [ "$out_pref" = "" ] ; then
   out_pref="out_${collect}_${part}_${extr_type_interm_code}${extr_type_final}"
 fi
 full_out_pref="$out_dir/$out_pref"
+
+checkVarNonEmpty "EMBED_SUBDIR"
+checkVarNonEmpty "FWD_INDEX_SUBDIR"
+checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "GIZA_ITER_QTY"
+
+inputDataDir="$collect/$INPUT_DATA_SUBDIR"
+fwdIndexDir="$collect/$FWD_INDEX_SUBDIR/"
+embedDir="$collect/$EMBED_SUBDIR/"
+gizaRootDir="$collect/$BITEXT_SUBDIR"
+
+retVal=""
+getIndexQueryDataInfo "$inputDataDir"
+queryFileName=${retVal[2]}
+if [ "$queryFileName" = "" ] ; then
+  echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
+  exit 1
+fi
+
 echo "==============================================="
 echo "PARAMETER REVIEW"
 echo "==============================================="
-echo "Thread qty:             $thread_qty"
-echo "max_num_query_param:    $max_num_query_param"
-echo "extr_type_interm:       $extr_type_interm_param"
-echo "model_interm_param:     $model_interm_param"
-echo "cand_qty_param:         $cand_qty_param"
-echo "query_cache_file_param: $query_cache_file_param"
-echo "Positional arguments:   ${POS_ARGS[*]}"
+echo "Thread qty:              $thread_qty"
+echo "max_num_query_param:     $max_num_query_param"
+echo "extr_type_interm:        $extr_type_interm_param"
+echo "model_interm_param:      $model_interm_param"
+echo "cand_qty_param:          $cand_qty_param"
+echo "query_cache_file_param:  $query_cache_file_param"
+echo "Positional arguments:    ${POS_ARGS[*]}"
 echo "==============================================="
+echo "Data directory:          $inputDataDir"
+echo "Data file name:          $queryFileName"
+echo "Forward index directory: $fwdIndexDir"
+echo "Embedding directory:     $embedDir"
+echo "GIZA root directory:     $gizaRootDir"
 echo "OUTPUT FILE PREFIX:"
 echo "$out_pref"
 echo "FULL OUTPUT FILE PREFIX:"
@@ -134,15 +161,17 @@ echo "==============================================="
 scripts/query/run_multhread_feat.sh \
 -u "$URI" \
 -cand_prov $cand_type \
--q output/$collect/$part/SolrQuestionFile.txt -qrel_file output/$collect/$part/$qrel_file "$max_num_query_param" \
+-q "$inputDataDir/$part/$queryFileName" \
+-qrel_file "$inputDataDir/$part/$qrel_file" \
+ "$max_num_query_param" \
 -n "$n" \
 -f "$full_out_pref" \
--memindex_dir "memfwdindex/$collect" \
--giza_root_dir tran/$collect/ -giza_iter_qty 5 \
+-fwd_index_dir "$fwdIndexDir" \
+-giza_root_dir "$gizaRootDir" -giza_iter_qty $GIZA_ITER_QTY \
+-embed_dir "$embedDir" \
 -extr_type_final $extr_type_final \
 "$extr_type_interm_param" "$model_interm_param" "$cand_qty_param" \
 -thread_qty $thread_qty  \
--embed_dir WordEmbeddings/$collect \
 $query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
 if [ "${PIPESTATUS[0]}" != "0" ] ; then

@@ -1,20 +1,15 @@
-#!/bin/bash -e
-. scripts/common.sh
+#!/bin/bash 
+. scripts/common_proc.sh
+
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection: manner, compr"
+  echo "Specify a collection, e.g., squad (1st arg)"
   exit 1
 fi
 
-QREL_FILE=$2
-if [ "$QREL_FILE" = "" ] ; then
-  echo "Specify QREL file (2rd arg)"
-  exit 1
-fi
-
-EXPER_DIR=$3
+EXPER_DIR=$2
 if [ "$EXPER_DIR" = "" ] ; then
-  echo "Specify a working directory prefix(3d arg)!"
+  echo "Specify a working directory prefix(2d arg)!"
   exit 1
 fi
 if [ ! -d "$EXPER_DIR" ] ; then
@@ -27,29 +22,29 @@ fi
 
 . scripts/num_ret_list.sh
 
-EXTRACTORS_DESC=$4
+EXTRACTORS_DESC=$3
 if [ "$EXTRACTORS_DESC" = "" ] ; then
-  "Specify a file with extractor description (4th arg)"
+  "Specify a file with extractor description (3d arg)"
   exit 1
 fi
 if [ ! -f "$EXTRACTORS_DESC" ] ; then
-  "Not a file '$EXTRACTORS_DESC' (4th arg)"
+  "Not a file '$EXTRACTORS_DESC' (3d arg)"
   exit 1
 fi
 
-PARALLEL_EXPER_QTY=$5
+PARALLEL_EXPER_QTY=$4
 if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
-  echo "Specify a number of experiments that are run in parallel (5th arg)!"
+  echo "Specify a number of experiments that are run in parallel (4th arg)!"
   exit 1
 fi
 
-THREAD_QTY=$6
+THREAD_QTY=$5
 if [ "$THREAD_QTY" = "" ] ; then
-  echo "Specify a number of threads for the feature extractor (6th arg)!"
+  echo "Specify a number of threads for the feature extractor (5th arg)!"
   exit 1
 fi
 
-MAX_QUERY_QTY="$7"
+MAX_QUERY_QTY="$6"
 
 nTotal=0
 nRunning=0
@@ -63,10 +58,12 @@ n=$(($n+1))
 childPIDs=()
 nrun=0
 nfail=0
-for ((i=1;i<$n;++i))
+for ((ivar=1;ivar<$n;++ivar))
   do
-    line=`head -$i "$EXTRACTORS_DESC"|tail -1`
-    if [ "$line" !=  "" ]
+    line=`head -$ivar "$EXTRACTORS_DESC"|tail -1`
+    echo "$line" | grep -E '^\s*[#]' >/dev/null
+    comment_stat=$?
+    if [ "$line" !=  "" -a "$comment_stat" != "0" ]
     then
       EXTR_TYPE=`echo $line|awk '{print $1}'`
       if [ "$EXTR_TYPE" = "" ] ; then
@@ -84,7 +81,7 @@ for ((i=1;i<$n;++i))
         exit 1
       fi
       # Each experiment should run in its separate sub-directory
-      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$QREL_FILE/$TEST_SET/$EXPER_SUBDIR"
+      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$TEST_SET/$EXPER_SUBDIR"
       if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
         mkdir -p "$EXPER_DIR_UNIQUE"
         if [ "$?" != "0" ] ; then
@@ -92,7 +89,7 @@ for ((i=1;i<$n;++i))
           exit 1
         fi
       fi
-      scripts/exper/run_one_lucene_exper.sh $collect "$QREL_FILE" "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN"  &> $EXPER_DIR_UNIQUE/exper.log &
+      scripts/exper/run_one_lucene_exper.sh $collect "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN"  &> $EXPER_DIR_UNIQUE/exper.log &
       pid=$!
       childPIDs+=($pid)
       echo "Started a process $pid, working dir: $EXPER_DIR_UNIQUE"

@@ -1,6 +1,6 @@
 #!/bin/bash -e
 source scripts/common_proc.sh
-source scripts/common_vars.sh
+source scripts/config.sh
 
 # This script runs annotation pipelines for a given collection
 collect=$1
@@ -51,7 +51,7 @@ echo "Index type:                $fwd_index_type"
 echo "Field list:                $fieldList"
 echo "=========================================================================="
 retVal=""
-getIndexDataInfo "$inputDataDir"
+getIndexQueryDataInfo "$inputDataDir"
 dirList=${retVal[0]}
 dataFileName=${retVal[1]}
 if [ "$dirList" = "" ] ; then

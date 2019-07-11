@@ -1,18 +1,18 @@
 #!/bin/bash -e
 # A script to create a Lucene index
 source scripts/common_proc.sh
-source scripts/common_vars.sh
+source scripts/config.sh
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify sub-collection (1st arg), e.g., squad"
   exit 1
 fi
 
-checkVarNonEmpty "LUCENE_INDEX_DIR"
+checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
 inputDataDir="$collect/$INPUT_DATA_SUBDIR"
-indexDir="$collect/$LUCENE_INDEX_DIR"
+indexDir="$collect/$LUCENE_INDEX_SUBDIR"
 
 echo "=========================================================================="
 echo "Data directory: $inputDataDir"
@@ -25,7 +25,7 @@ else
 fi
 echo "=========================================================================="
 retVal=""
-getIndexDataInfo "$inputDataDir"
+getIndexQueryDataInfo "$inputDataDir"
 dirList=${retVal[0]}
 dataFileName=${retVal[1]}
 if [ "$dirList" = "" ] ; then

@@ -1,19 +1,16 @@
 #!/bin/bash -e
-. scripts/common.sh
+. scripts/common_proc.sh
+. scripts/config.sh
 
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection: manner, compr, stackoverflow, squad (1st arg)"
+  echo "Specify a collection, e.g., squad (1st arg)"
   exit 1
 fi
 
-QREL_TYPE=$2
-QREL_FILE=`get_qrel_file $QREL_TYPE "2d"`
-check ""
-
-FEATURE_DESC_FILE="$3"
+FEATURE_DESC_FILE=$2
 if [ "$FEATURE_DESC_FILE" = "" ] ; then
-  echo "Specify a feature description file (3d arg)"
+  echo "Specify a feature description file (2d arg)"
   exit 1
 fi
 if [ ! -f "$FEATURE_DESC_FILE" ] ; then
@@ -21,15 +18,15 @@ if [ ! -f "$FEATURE_DESC_FILE" ] ; then
   exit 1
 fi
 
-PARALLEL_EXPER_QTY=$4
+PARALLEL_EXPER_QTY=$3
 if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
-  echo "Specify a number of experiments that are run in parallel (4th arg)!"
+  echo "Specify a number of experiments that are run in parallel (3d arg)!"
   exit 1
 fi
 
-MAX_QUERY_QTY="$5"
+MAX_QUERY_QTY="$4"
 
-NUM_CPU_CORES="$6"
+NUM_CPU_CORES="$5"
 
 if [ "$NUM_CPU_CORES" = "" ] ; then
   NUM_CPU_CORES=`getNumCpuCores`
@@ -45,9 +42,10 @@ echo "The number of CPU cores:      $NUM_CPU_CORES"
 echo "The number of || experiments: $PARALLEL_EXPER_QTY"
 echo "The number of threads:        $THREAD_QTY"
 echo "Max # of queries to use:      $MAX_QUERY_QTY"
-echo "QREL file:                    $QREL_FILE"
 
-EXPER_DIR="results/feature_exper/"
+checkVarNonEmpty "RESULTS_DIR"
 
-scripts/exper/run_feature_exper_aux.sh $collect $QREL_FILE $EXPER_DIR $FEATURE_DESC_FILE $PARALLEL_EXPER_QTY $THREAD_QTY $MAX_QUERY_QTY 
+EXPER_DIR="$RESULTS_DIR/feature_exper/"
+
+scripts/exper/run_feature_exper_aux.sh $collect $EXPER_DIR $FEATURE_DESC_FILE $PARALLEL_EXPER_QTY $THREAD_QTY $MAX_QUERY_QTY 
 

@@ -198,7 +198,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
 
     HashMap<String, String> queryData = new HashMap<String, String>();
     
-    queryData.put(CandidateProvider.TEXT_FIELD_NAME, 
+    queryData.put(Const.TEXT_FIELD_NAME, 
     CandidateProvider.removeAddStopwords(queryQueryText));
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
     CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandQty);
@@ -254,7 +254,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
       return;
     }
     
-    queryData.put(CandidateProvider.TEXT_FIELD_NAME, 
+    queryData.put(Const.TEXT_FIELD_NAME, 
                   CandidateProvider.removeAddStopwords(queryQueryText));
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
     CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandQty);

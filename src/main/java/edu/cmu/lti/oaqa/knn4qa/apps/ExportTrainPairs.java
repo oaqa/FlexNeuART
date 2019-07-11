@@ -176,7 +176,7 @@ public class ExportTrainPairs {
             System.err.println("Undefined query ID in query # " + queryQty);
             System.exit(1);
           }
-          String queryText = CandidateProvider.removeAddStopwords(docFields.get(CandidateProvider.TEXT_FIELD_NAME));
+          String queryText = CandidateProvider.removeAddStopwords(docFields.get(Const.TEXT_FIELD_NAME));
           String fieldText = CandidateProvider.removeAddStopwords(docFields.get(fieldName));
 
           if (queryText == null) queryText = "";
@@ -184,7 +184,7 @@ public class ExportTrainPairs {
           
           if (queryText.isEmpty()) {
             System.out.println(String.format("Ignoring query with empty field '%s' for query '%s'",
-                                            CandidateProvider.TEXT_FIELD_NAME, qid));
+                                            Const.TEXT_FIELD_NAME, qid));
             continue;
           }
           if (fieldText.isEmpty()) {

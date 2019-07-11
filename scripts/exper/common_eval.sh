@@ -1,5 +1,7 @@
+#!/bin/bash -e
+source scripts/config.sh
 
-QRELS="output/$collect/${TEST_PART}/$QREL_FILE"
+QRELS="$inputDataDir/$TEST_PART/$QREL_FILE"
 
 rm -f "${REPORT_DIR}/out_*"
 

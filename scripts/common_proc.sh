@@ -74,33 +74,6 @@ function wait_children {
   done
 }
 
-function get_qrel_file {
-  QREL_TYPE=$1
-  ARG_NUM=$2
-  QREL_FILE=""
-
-  if [ "$QREL_TYPE" = "graded" ] ; then
-    QREL_FILE="qrels_all_graded.txt"
-  elif [ "$QREL_TYPE" = "binary" ] ; then
-    QREL_FILE="qrels_all_binary.txt"
-  elif [ "$QREL_TYPE" = "onlybest" ] ; then
-    QREL_FILE="qrels_onlybest.txt"
-  elif [ "$QREL_TYPE" = "graded_same_score" ] ; then
-    QREL_FILE="qrels_all_graded_same_score.txt"
-  elif [ "$QREL_TYPE" = "" ] ; then
-    echo "Specifiy QREL type ($ARG_NUM arg)" 1>&2
-    exit 1
-  else
-    echo "Unsupported QREL type ($ARG_NUM arg) $QREL_TYPE, expected binary, onlybest, graded, graded_same_score" 1>&2
-    exit 1
-  fi
-  if [ "$QREL_FILE" = "" ] ; then
-    echo "Bug QREL_FILE is empty for QREL_TYPE=$QREL_TYPE" 1>&2
-    exit 1
-  fi
-  echo $QREL_FILE
-}
-
 function save_server_logs {
   me=`basename "$0"`
   mv $SERVER_LOG_NAME $SERVER_LOG_NAME.$me
@@ -154,14 +127,17 @@ function getNumCpuCores {
 # 1. Identifies guesses what is the format of data: new JSONL or old series-of-XML format
 # 2. Finds all sub-directories containing indexable data and makes a string 
 #    that represents a list of comma-separated sub-directories with data. This string
-#    can be passed to indexing apps.
+#    can be passed to indexing (and querying) apps.
 # Attention: it "returns" an array by setting a variable retVal (ugly but works reliably)
-function getIndexDataInfo {
+function getIndexQueryDataInfo {
   topDir="$1"
   dirList=""
   oldFile="SolrAnswerFile.txt"
+  oldQueryFile="SolrQuestionFile.txt"
   newFile="AnswerFields.jsonl"
+  newQueryFile="QuestionFields.jsonl"
   dataFileName=""
+  queryFileName=""
   currDir="$PWD"
   cd "$topDir"
   for subDir in * ; do
@@ -177,6 +153,7 @@ function getIndexDataInfo {
             exit 1
           fi
           dataFileName=$oldFile
+          qyeryFileName=$oldQueryFile
         fi
         if [ -f "$subDir/$newFile" ] ; then
           if [ "$dataFileName" = "$oldFile" ] ; then
@@ -184,11 +161,12 @@ function getIndexDataInfo {
             exit 1
           fi
           dataFileName=$newFile
+          queryFileName=$newQueryFile
         fi
       fi
     fi
   done
   cd "$currDir"
   # This is kinda ugly, but is better than other non-portable solutions.
-  retVal=("${dirList}" "${dataFileName}")
+  retVal=("${dirList}" "${dataFileName}" "${queryFileName}")
 }
