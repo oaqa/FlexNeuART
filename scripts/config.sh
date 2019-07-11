@@ -6,6 +6,7 @@ EMBED_SUBDIR="embeddings"
 INPUT_DATA_SUBDIR="input_data"
 
 BITEXT_SUBDIR="bitext"
+GIZA_SUBDIR="giza"
 GIZA_ITER_QTY=5
 
 METRIC_TYPE="NDCG@20"

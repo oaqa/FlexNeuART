@@ -52,8 +52,8 @@ public class CommonParams {
   public final static String FWDINDEX_PARAM = "fwd_index_dir";
   public final static String FWDINDEX_DESC = "A forward-index directory";
  
-  public static final String FLT_FWD_INDEX_PARAM = "flt_fwd_index_dir";
-  public static final String FLT_FWD_INDEX_DESC = "A forward index file used for filtering";
+  public static final String FLT_FWD_INDEX_PARAM = "flt_fwd_index_header";
+  public static final String FLT_FWD_INDEX_DESC = "A forward index header file used for filtering";
 
   public final static String CAND_PROVID_DESC = "candidate record provider type, e.g., lucene, nmslib";
   public final static String CAND_PROVID_PARAM = "cand_prov";
