@@ -2,7 +2,9 @@
 
 This is a learning-to-rank pipeline, which is a part of the project where we study applicability of k-nearest neighbor search methods to IR and QA applications. This project is supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
 
-It currently has two branches:
+The master branch contains a new, simplified version of this package, which has a better integration with NMSLIB. It also has support for external scorers, in particular, implemented in Python. We will keep working on improving this version and respective documentation. A basic usage/installation example can be found [in these notebooks](scripts/notebooks).
+
+Previous work can be found in the following branches branches:
 
 1. [The ``bigger_reruns`` branch includes software](https://github.com/oaqa/knn4qa/tree/bigger_reruns) used in the dissertation of Leonid Boytsov: ["Efficient and Accurate Non-Metric k-NN Search with Applications to Text Matching"](http://boytsov.info/pubs/thesis_boytsov.pdf). A summary of this work is given in the [following blog post.](http://searchivarius.org/blog/efficient-and-accurate-non-metric-k-nn-search-applications-text-matching-we-need-more-k-nn).
 2. [The ``cikm2016`` branch](https://github.com/oaqa/knn4qa/tree/cikm2016) includes software for the paper [L. Boytsov, D. Novak, Y. Malkov, E. Nyberg  (2016). *Off the Beaten Path: Let’s Replace Term-Based Retrieval
