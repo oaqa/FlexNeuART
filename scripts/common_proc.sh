@@ -20,7 +20,7 @@ function execAndCheck {
         echo "  Command failed:"
       fi
       echo "$cmd0"
-      echo "  Expanded cmd that was actually run in a seperate shell:"
+      echo "  Expanded cmd that was actually run in a separate shell:"
       echo "$cmd"
       echo "********************************************************************************"
       exit 1
