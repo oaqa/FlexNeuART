@@ -1,5 +1,6 @@
 #!/bin/bash 
 . scripts/common_proc.sh
+. scripts/config.sh
 
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -7,44 +8,43 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-EXPER_DIR=$2
-if [ "$EXPER_DIR" = "" ] ; then
-  echo "Specify a working directory prefix(2d arg)!"
-  exit 1
-fi
-if [ ! -d "$EXPER_DIR" ] ; then
-  mkdir -p $EXPER_DIR
-  if [ "$?" != "0" ] ; then
-    echo "Cannot create '$EXPER_DIR'"
-    exit 1
-  fi
-fi
-
 . scripts/num_ret_list.sh
 
-EXTRACTORS_DESC=$3
+EXTRACTORS_DESC=$2
 if [ "$EXTRACTORS_DESC" = "" ] ; then
-  "Specify a file with extractor description (3d arg)"
+  "Specify a file with extractor description (2d arg)"
   exit 1
 fi
 if [ ! -f "$EXTRACTORS_DESC" ] ; then
-  "Not a file '$EXTRACTORS_DESC' (3d arg)"
+  "Not a file '$EXTRACTORS_DESC' (2d arg)"
   exit 1
 fi
 
-PARALLEL_EXPER_QTY=$4
+PARALLEL_EXPER_QTY=$3
 if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
-  echo "Specify a number of experiments that are run in parallel (4th arg)!"
+  echo "Specify a number of experiments that are run in parallel (3d arg)!"
   exit 1
 fi
 
-THREAD_QTY=$5
+THREAD_QTY=$4
 if [ "$THREAD_QTY" = "" ] ; then
-  echo "Specify a number of threads for the feature extractor (5th arg)!"
+  echo "Specify a number of threads for the feature extractor (4th arg)!"
   exit 1
 fi
 
-MAX_QUERY_QTY="$6"
+MAX_QUERY_QTY="$5"
+
+checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "FEAT_EXPER_SUBDIR"
+
+experDir="$COLLECT_ROOT/$collect/$FEAT_EXPER_SUBDIR"
+if [ ! -d "$experDir" ] ; then
+  mkdir -p $experDir
+  if [ "$?" != "0" ] ; then
+    echo "Cannot create '$experDir'"
+    exit 1
+  fi
+fi
 
 nTotal=0
 nRunning=0
@@ -60,39 +60,38 @@ nrun=0
 nfail=0
 for ((ivar=1;ivar<$n;++ivar))
   do
-    line=`head -$ivar "$EXTRACTORS_DESC"|tail -1`
-    echo "$line" | grep -E '^\s*[#]' >/dev/null
-    comment_stat=$?
-    if [ "$line" !=  "" -a "$comment_stat" != "0" ]
+    line=$(head -$ivar "$EXTRACTORS_DESC"|tail -1)
+    line=$(removeComment "$line")
+    if [ "$line" !=  "" ]
     then
-      EXTR_TYPE=`echo $line|awk '{print $1}'`
-      if [ "$EXTR_TYPE" = "" ] ; then
+      extrType=`echo $line|awk '{print $1}'`
+      if [ "$extrType" = "" ] ; then
         echo "Missing extractor type (1st field) in line $line, file $EXTRACTORS_DESC"
         exit 1
       fi
-      TEST_SET=`echo $line|awk '{print $2}'`
-      if [ "$TEST_SET" = "" ] ; then
+      testSet=`echo $line|awk '{print $2}'`
+      if [ "$testSet" = "" ] ; then
         echo "Missing test set (e.g., dev1) (2d field) in line $line, file $EXTRACTORS_DESC"
         exit 1
       fi
-      EXPER_SUBDIR=`echo $line|awk '{print $3}'`
-      if [ "$TEST_SET" = "" ] ; then
+      experSubdir=`echo $line|awk '{print $3}'`
+      if [ "$testSet" = "" ] ; then
         echo "Missing experimental sub-dir (3d field) in line $line, file $EXTRACTORS_DESC"
         exit 1
       fi
       # Each experiment should run in its separate sub-directory
-      EXPER_DIR_UNIQUE="$EXPER_DIR/$collect/$TEST_SET/$EXPER_SUBDIR"
-      if [ ! -d "$EXPER_DIR_UNIQUE" ] ; then
-        mkdir -p "$EXPER_DIR_UNIQUE"
+      experDirUnique=$(getExperDirUnique "$experDir" "$testSet" "$experSubdir")
+      if [ ! -d "$experDirUnique" ] ; then
+        mkdir -p "$experDirUnique"
         if [ "$?" != "0" ] ; then
-          echo "Failed to create $EXPER_DIR_UNIQUE"
+          echo "Failed to create $experDirUnique"
           exit 1
         fi
       fi
-      scripts/exper/run_one_lucene_exper.sh $collect "$EXPER_DIR_UNIQUE" "$EXTR_TYPE" "$MAX_QUERY_QTY"  "$TEST_SET" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN"  &> $EXPER_DIR_UNIQUE/exper.log &
+      scripts/exper/run_one_lucene_exper.sh $collect "$experDirUnique" "$extrType" "$MAX_QUERY_QTY"  "$testSet" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN"  &> $experDirUnique/exper.log &
       pid=$!
       childPIDs+=($pid)
-      echo "Started a process $pid, working dir: $EXPER_DIR_UNIQUE"
+      echo "Started a process $pid, working dir: $experDirUnique"
       nRunning=$(($nRunning+1))
       nrun=$(($nrun+1))
     fi

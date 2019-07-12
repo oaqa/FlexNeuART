@@ -43,9 +43,5 @@ echo "The number of || experiments: $PARALLEL_EXPER_QTY"
 echo "The number of threads:        $THREAD_QTY"
 echo "Max # of queries to use:      $MAX_QUERY_QTY"
 
-checkVarNonEmpty "RESULTS_DIR"
-
-EXPER_DIR="$RESULTS_DIR/feature_exper/"
-
-scripts/exper/run_feature_exper_aux.sh $collect $EXPER_DIR $FEATURE_DESC_FILE $PARALLEL_EXPER_QTY $THREAD_QTY $MAX_QUERY_QTY 
+scripts/exper/run_feature_exper_aux.sh $collect $FEATURE_DESC_FILE $PARALLEL_EXPER_QTY $THREAD_QTY $MAX_QUERY_QTY 
 

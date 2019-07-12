@@ -2,6 +2,7 @@
 source scripts/config.sh
 source scripts/common_proc.sh
 
+checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "GIZA_SUBDIR"
@@ -23,7 +24,7 @@ if [ "$field" = "" ] ; then
   exit 1
 fi
 
-filterDir="$collect/$FWD_INDEX_SUBDIR"
+filterDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR"
 
 minProb="$3"
 if [ "$minProb" = "" ] ; then
@@ -87,8 +88,8 @@ function do_filter() {
   check "filter_tran_table"
 }
 
-dirSrc=$collect/$GIZA_SUBDIR/$field.orig
-dirDst=$collect/$GIZA_SUBDIR/$field
+dirSrc="$COLLECT_ROOT/$collect/$GIZA_SUBDIR/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$GIZA_SUBDIR/$field"
 
 if [ ! -d "$dirSrc" ] ; then
   echo "Error, '$dirDst' doesn't exist"

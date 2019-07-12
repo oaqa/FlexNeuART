@@ -170,3 +170,29 @@ function getIndexQueryDataInfo {
   # This is kinda ugly, but is better than other non-portable solutions.
   retVal=("${dirList}" "${dataFileName}" "${queryFileName}")
 }
+
+function getExperDirUnique {
+  experDir="$1"
+  testSet="$2"
+  experSubdir="$3"
+
+  checkVarNonEmpty "experDir"
+  checkVarNonEmpty "testSet"
+  checkVarNonEmpty "experSubdir"
+ 
+  echo "$experDir/$testSet/$experSubdir"
+  
+}
+
+function removeComment {
+  line="$1"
+
+  bash -c "echo \"$line\" | grep -E '^\s*[#]' >/dev/null"
+
+  if [ "$?" = "0" ] ; then
+    line=""
+  fi
+
+
+  echo $line
+}

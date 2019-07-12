@@ -30,11 +30,12 @@ if [ "$fwd_index_type" = "" ] ; then
   exit 1
 fi
 
+checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
-inputDataDir="$collect/$INPUT_DATA_SUBDIR"
-indexDir="$collect/$FWD_INDEX_SUBDIR/"
+inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
+indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 
 echo "=========================================================================="
 echo "Data directory: $inputDataDir"

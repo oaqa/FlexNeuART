@@ -117,16 +117,17 @@ if [ "$out_pref" = "" ] ; then
 fi
 full_out_pref="$out_dir/$out_pref"
 
+checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "EMBED_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 
-inputDataDir="$collect/$INPUT_DATA_SUBDIR"
-fwdIndexDir="$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$collect/$EMBED_SUBDIR/"
-gizaRootDir="$collect/$BITEXT_SUBDIR"
+inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
+fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
+embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
+gizaRootDir="$COLLECT_ROOT/$collect/$BITEXT_SUBDIR"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"

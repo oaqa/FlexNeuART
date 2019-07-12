@@ -1,9 +1,26 @@
+# TODO change this to the location you want to use as
+# the root directory for all collections/indices.
+# Each collection is supposed to be stored in respective sub-directories:
+# $COLLECT_ROOT
+#              <toy-collection>
+#                               $INPUT_DATA_SUBDIR
+#                                                   train
+#                                                   dev
+#                                                   test
+#                                                   $BITEXT_SUBDIR
+#                               $FWD_INDEX_SUBDIR
+#                               $LUCENE_INDEX_SUBDIR
+
+COLLECT_ROOT="collections"
+
 FWD_INDEX_SUBDIR="forward_index"
 LUCENE_INDEX_SUBDIR="lucene_index"
 LUCENE_CACHE_SUBDIR="lucene_index"
 
 EMBED_SUBDIR="embeddings"
 INPUT_DATA_SUBDIR="input_data"
+FEAT_EXPER_SUBDIR="results/feat_exper"
+FINAL_RESULTS_SUBDIR="results/final_exper"
 
 BITEXT_SUBDIR="bitext"
 GIZA_SUBDIR="giza"
@@ -14,6 +31,5 @@ NUM_RAND_RESTART=10
 
 TRAIN_SUBDIR="train"
 
-RESULTS_DIR="results"
 
 QREL_FILE="qrels.txt"

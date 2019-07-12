@@ -1,6 +1,7 @@
 #!/bin/bash -e
 source scripts/common_proc.sh
 source scripts/config.sh
+
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify a collection, e.g., squad (1st arg)"
@@ -89,11 +90,12 @@ checkVarNonEmpty "TRAIN_SUBDIR"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "LUCENE_CACHE_SUBDIR"
+checkVarNonEmpty "COLLECT_ROOT"
 
-inputDataDir="$collect/$INPUT_DATA_SUBDIR"
-fwdIndexDir="$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$collect/$EMBED_SUBDIR/"
-gizaRootDir="$collect/$BITEXT_SUBDIR"
+inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
+fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
+embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
+gizaRootDir="$COLLECT_ROOT/$collect/$BITEXT_SUBDIR"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
@@ -130,7 +132,7 @@ else
   CACHE_FILE_TEST="$cacheDir/$TEST_PART/max_query_qty=$maxQueryQtyTrain"
 fi
 
-URI="$collect/$LUCENE_INDEX_SUBDIR"
+URI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
 
 echo "==============================================="
 echo "Using $TEST_PART for testing!"

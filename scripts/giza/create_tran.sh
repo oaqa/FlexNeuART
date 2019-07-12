@@ -30,20 +30,21 @@ fi
 VOC_ONLY="0"
 SYMMETRIZE=1 # Nearly always work better
 
+checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
-export source_dir="$collect/$INPUT_DATA_SUBDIR/$BITEXT_SUBDIR"
-export target_dir="$collect/$GIZA_SUBDIR"
+export source_dir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR/$BITEXT_SUBDIR"
+export target_dir="$COLLECT_ROOT/$collect/$GIZA_SUBDIR"
 
 echo "Source dir prefix=$source_dir" 
 echo "Target dir prefix=$target_dir" 
 
 if [ ! -d "$source_dir" ] ; then
-  echo "Source BI-TEXT directory does not exist!"
+  echo "Directory does not exist: $source_dir!"
   exit 1
 fi
 

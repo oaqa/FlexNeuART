@@ -1,4 +1,5 @@
 #!/bin/bash -e
+source scripts/config.sh
 
 outDir=$1
 
@@ -13,6 +14,9 @@ fi
 
 oldFilesArr=(SolrQuestionFile.txt SolrAnswerFile.txt)
 newFilesArr=(QuestionFields.jsonl AnswerFields.jsonl)
+
+checkVarNonEmpty "COLLECT_ROOT"
+cd "$COLLECT_ROOT"
 
 for subDir in "$outDir"/* ; do
   if [ -d "$subDir" ] ; then
