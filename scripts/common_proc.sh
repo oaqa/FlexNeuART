@@ -3,8 +3,8 @@
 SERVER_LOG_NAME="server.log"
 
 function execAndCheck {
-  cmd0=$1
-  desc=$2
+  cmd0="$1"
+  desc="$2"
   cmd="$cmd0"' ; (echo ${PIPESTATUS[*]} | grep -E "^0(\s+0)*$")'
   echo "$cmd0"
   bash -c "$cmd"
@@ -117,7 +117,7 @@ function getNumCpuCores {
   elif [ "$OS" = "Darwin" ] ; then
     NUM_CPU_CORES=4
   else
-    echo "Unsupported OS: $OS" 1>&2
+    echo "Cannot guess the # of cores for OS: $OS" 1>&2
     exit 1
   fi
   echo $NUM_CPU_CORES

@@ -26,13 +26,11 @@ public abstract class CandidateProvider {
   public final static String QUERY_FIELD_NAME = Const.TEXT_FIELD_NAME;
   
   public static final String CAND_TYPE_LUCENE      = "lucene";
-  public static final String CAND_TYPE_LUCENE_GIZA = "lucene_giza";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
   
 
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
-      CandidateProvider.CAND_TYPE_LUCENE_GIZA + ", " + 
       CandidateProvider.CAND_TYPE_NMSLIB;
   
   /**

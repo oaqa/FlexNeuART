@@ -81,6 +81,9 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     SingleFieldFeatExtractor[] allExtractors = featExtr.getCompExtr();
     mFeatExtrQty = allExtractors.length;
     
+    // Potentially we can use these weights to re-mix component weights
+    // differently (from indexing mix) at query time. However,
+    // currently we do not do it
     mCompQueryWeights = sparseInterleave ? VectorUtils.fill(1, mFeatExtrQty) : null;
     
     int featExtrQty = allExtractors.length;

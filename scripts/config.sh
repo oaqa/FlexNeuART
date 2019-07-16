@@ -15,12 +15,12 @@ COLLECT_ROOT="collections"
 
 FWD_INDEX_SUBDIR="forward_index"
 LUCENE_INDEX_SUBDIR="lucene_index"
-LUCENE_CACHE_SUBDIR="lucene_index"
+LUCENE_CACHE_SUBDIR="lucene_cache"
 
 EMBED_SUBDIR="embeddings"
 INPUT_DATA_SUBDIR="input_data"
 FEAT_EXPER_SUBDIR="results/feat_exper"
-FINAL_RESULTS_SUBDIR="results/final_exper"
+FINAL_EXPER_SUBDIR="results/final_exper"
 
 BITEXT_SUBDIR="bitext"
 GIZA_SUBDIR="giza"
