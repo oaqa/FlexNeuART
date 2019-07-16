@@ -23,7 +23,9 @@ while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
   if [ $? = 0 ] ; then
     OPT_NAME="$1"
-    if [ "$OPT_NAME" = "-dont_delete_trec_runs" ] ; then
+    if [ "$OPT_NAME" = "-dont_delete_trec_runs" -o "$OPT_NAME" = "-knn_interleave" ] ; then
+      OPT_VALUE=""
+      OPT=""
       # option without an argument
       shift 1
     else
@@ -49,7 +51,7 @@ while [ $# -ne 0 ] ; do
         nmslibURI=$OPT_VALUE
         ;;
       -knn_interleave)
-        nmslibAddParams="$nmslibAddParams $OPT"
+        nmslibAddParams="$nmslibAddParams $OPT_NAME"
         ;;
       -extr_type_nmslib)
         nmslibExtrType="$OPT_VALUE"
@@ -104,7 +106,7 @@ fi
 extrType="${POS_ARGS[4]}"
 
 if [ "$extrType" = "" ] ; then
-  echo "Specify a feature extractor path (4th positional arg)"
+  echo "Specify a feature extractor path or none (4th positional arg)"
   exit 1
 fi
 
@@ -172,9 +174,9 @@ elif [ "$candProvType" = "nmslib" ] ; then
   URI=$nmslibURI
   if [ "$nmslibExtrType" = "" ] ; then
     echo "Missing parameter -extr_type_nmslib"
-    nmslibAddParams=" -extr_type_nmslib \"$nmslibExtrType\" $nmslibAddParams"
     exit 1
   fi
+  nmslibAddParams=" -extr_type_nmslib \"$nmslibExtrType\" $nmslibAddParams"
 else
   echo "Invalid provider type: $candProvType"
 fi
@@ -211,6 +213,7 @@ FULL_OUT_PREF_TEST="$experDir/$OUT_PREF_TEST"
 query_log_file=${reportDir}/query.log
 check "query_log_file=${reportDir}/query.log"
 
+echo "============================================"
 echo "Using $testPart for testing!"
 echo "Candidate provider type:        $candProvType"
 echo "Candidate provider URI:         $URI"
@@ -234,6 +237,7 @@ fi
 if [ "$nmslibAddParams != """ ] ; then
   echo "NMSLIB add params:              $nmslibAddParams"
 fi
+echo "============================================"
 
 statFile="$reportDir/stat_file"
 
