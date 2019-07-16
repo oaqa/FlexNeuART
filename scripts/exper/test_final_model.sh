@@ -195,8 +195,12 @@ fi
 
 checkVarNonEmpty "experDir"
 
-trecRunDir="$experDir/trec_runs"
-reportDir="$experDir/rep"
+experDirUnique=$(getExperDirUnique "$experDir" "$testPart" "$experSubDir")
+
+checkVarNonEmpty "experDirUnique"
+
+trecRunDir="$experDirUnique/trec_runs"
+reportDir="$experDirUnique/rep"
 
 mkdir -p $trecRunDir
 mkdir -p "$reportDir"
@@ -208,7 +212,7 @@ check "rm -f ${reportDir}/*"
 
 # No extractor type here, the user will have to specify the sub-directory that is extractor-type-specific
 OUT_PREF_TEST="out_${collect}_${testPart}"
-FULL_OUT_PREF_TEST="$experDir/$OUT_PREF_TEST"
+FULL_OUT_PREF_TEST="$experDirUnique/$OUT_PREF_TEST"
 
 query_log_file=${reportDir}/query.log
 check "query_log_file=${reportDir}/query.log"
@@ -220,7 +224,7 @@ echo "Candidate provider URI:         $URI"
 echo "Data directory:                 $inputDataDir"
 echo "Data file name:                 $queryFileName"
 
-echo "Experiment directory:           $experDir"
+echo "Experiment directory:           $experDirUnique"
 echo "Report directory:               $reportDir"
 
 if [ "$maxNumQueryParam" != "" ] ; then
