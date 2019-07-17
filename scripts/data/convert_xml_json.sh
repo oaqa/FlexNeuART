@@ -1,4 +1,5 @@
 #!/bin/bash -e
+source scripts/common_proc.sh
 source scripts/config.sh
 
 outDir=$1

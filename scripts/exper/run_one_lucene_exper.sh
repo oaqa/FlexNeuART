@@ -95,7 +95,7 @@ checkVarNonEmpty "COLLECT_ROOT"
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$BITEXT_SUBDIR"
+gizaRootDir="$COLLECT_ROOT/$collect/$GIZA_SUBDIR"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"

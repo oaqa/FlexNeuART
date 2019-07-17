@@ -1,5 +1,10 @@
 #!/bin/bash
-. scripts/common.sh
+source scripts/common_proc.sh
+source scripts/config.sh
+
+checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -7,8 +12,10 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-wcq=(`wc $collect/input_data/bitext/question_text`)
-wca=(`wc $collect/input_data/bitext/answer_text`)
+inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
+
+wcq=(`wc $inputDataDir/$BITEXT_SUBDIR/question_text`)
+wca=(`wc $inputDataDir/$BITEXT_SUBDIR/answer_text`)
 echo -e "# of questions:\t${wcq[0]}"
 echo -e "# of answers:\t${wca[0]}"
 qt=`awk "BEGIN{printf(\"%.1f\", ${wcq[1]}/${wcq[0]})}"`
