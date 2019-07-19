@@ -13,11 +13,11 @@ fi
 
 cd "$outDir"
 
-for subDir in "$outDir"/* ; do
+for subDir in * ; do
   if [ -d "$subDir" ] ; then
       cd "$subDir"
       for f in `ls | fgrep qrels_ | fgrep -v 'qrels_all_graded.txt'` ; do
-        echo rm $f
+        rm $f
       done
       mv qrels_all_graded.txt qrels.txt
       cd ..
