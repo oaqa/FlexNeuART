@@ -7,11 +7,11 @@ from matchzoo.preprocessors.basic_preprocessor import BasePreprocessor, BasicPre
 
 from matchzoo.models.knrm import KNRM
 
-BATCH_SIZE=128
-WORKERS_QTY=4
+BATCH_SIZE=64
+WORKERS_QTY=1
 USE_MULTI_PROC=True
 
-print("loading embedding ...")
+print("loading embeddings ...")
 gloveEmbedding = mz.datasets.embeddings.load_glove_embedding(dimension=300)
 print("embedding loaded")
 
@@ -77,7 +77,6 @@ if True:
   model=KNRM()
   model.params.update(prep.context)
 
-  model.params['embedding_input_dim'] =  500
   model.params['embedding_output_dim'] = gloveEmbedding.output_dim
   model.params['embedding_trainable'] = True
   model.params['task'] = rankingTask
@@ -86,18 +85,22 @@ if True:
   model.params['exact_sigma'] = 0.001
   model.params['optimizer'] = 'adadelta'
 
-  print('Loading the embedding matrix!')
-  embeddingMatrix = glove_embedding.build_matrix(preprocessor.context['vocab_unit'].state['term_index'])
-  model.load_embedding_matrix(embeddingMatrix)
-
   model.guess_and_fill_missing_params(verbose=1)
   print("Params completed",model.params.completed())
   model.build()
   model.compile()
   model.backend.summary()
+
+  print('Building the embedding matrix!')
+  embeddingMatrix = gloveEmbedding.build_matrix(prep.context['vocab_unit'].state['term_index'])
+  model.load_embedding_matrix(embeddingMatrix)
+
+  print('Unpacking test data')
   
   xTest, yTest = dataTestProc.unpack()
   evaluate = mz.callbacks.EvaluateAllMetrics(model, x=xTest, y=yTest, batch_size=len(xTest))
+
+  print('Generating training data!')
 
   # This needs to use the processed data!
   trainGenerator = mz.DataGenerator(
@@ -108,7 +111,7 @@ if True:
     batch_size=BATCH_SIZE
   )
   print('num batches:', len(trainGenerator))
-  history = model.fit_generator(train_generator, epochs=epochQty, callbacks=[evaluate], workers=WORKERS_QTY, use_multiprocessing=USE_MULTI_PROC)
+  history = model.fit_generator(trainGenerator, epochs=epochQty, callbacks=[evaluate], workers=WORKERS_QTY, use_multiprocessing=USE_MULTI_PROC)
 
   model.save(modelFile)
   print(model.evaluate(xTest, yTest, batch_size=128))
