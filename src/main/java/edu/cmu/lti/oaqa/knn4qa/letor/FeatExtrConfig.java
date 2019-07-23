@@ -82,7 +82,9 @@ class OneFeatExtrConf {
 
 public class FeatExtrConfig {
 
-  public static String FIELD_NAME = "fieldName";
+  public static String QUERY_FIELD_NAME = "queryFieldName";
+  public static String INDEX_FIELD_NAME = "indexFieldName";
+  
   public static String EXTR_TYPE = "extrType";
   
   public static String SIMIL_TYPE = "similType";

@@ -18,18 +18,39 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 
 /**
  * A single-field feature extractor interface (enforcing 
- * implementation of some common functions).
+ * implementation of some common functions). Note that
+ * the query-field can be different from an index-field.
+ * This permits "between" a single query field such as "text"
+ * with multiple document fields, e.g., "title", and "body".
+ * If the user does not specify the query field name
+ * it is assumed to be equal to the index field name.
  * 
  * @author Leonid Boytsov
  *
  */
 public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
   
+  public SingleFieldFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+    mIndexFieldName = conf.getReqParamStr(FeatExtrConfig.INDEX_FIELD_NAME);
+    mQueryFieldName = conf.getParam(FeatExtrConfig.QUERY_FIELD_NAME, mIndexFieldName);
+  }
+
   /**
    * 
-   * @return the name of the feature field.
+   * @return the name of the query field.
    */
-  public abstract String getFieldName();
+  public String getQueryFieldName() {
+    return mQueryFieldName;
+  }
 
-  
+  /**
+   * 
+   * @return the name of the index field.
+   */
+  public String getIndexFieldName() {
+    return mIndexFieldName;
+  }
+
+  protected final String mQueryFieldName;
+  protected final String mIndexFieldName;
 }

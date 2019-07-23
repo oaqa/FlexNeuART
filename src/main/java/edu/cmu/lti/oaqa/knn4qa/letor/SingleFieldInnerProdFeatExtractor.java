@@ -10,12 +10,17 @@ import no.uib.cipr.matrix.DenseVector;
 /**
  * A single-field, single-score feature generator,
  * whose score can be computed (exactly or approximately)
- * as an inner product between two vectors.
+ * as an inner product between two vectors. Note, again,
+ * that query and index fields can be different.
  * 
  * @author Leonid Boytsov
  *
  */
 public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatExtractor {
+
+  public SingleFieldInnerProdFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+    super(resMngr, conf);
+  }
 
   /**
    * @return true if generates a sparse feature vector.
@@ -23,10 +28,7 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
   public abstract boolean isSparse();
 
   public abstract int getDim();
-
-  @Override
-  public abstract String getFieldName();
-
+  
   @Override
   public abstract String getName();
 

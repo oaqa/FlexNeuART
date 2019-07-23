@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import no.uib.cipr.matrix.DenseVector;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryInfo;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.WordEntryInfo;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.ExternalScorer.Client;
@@ -58,12 +57,12 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   public static String UNK_WORD = "unkWord";
 
   public FeatExtractorExternalApacheThrift(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+    super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
-    mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
     
     mFeatQty = conf.getReqParamInt(FEAT_QTY);
 
-    mFieldIndex = resMngr.getFwdIndex(mFieldName);
+    mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 
     mPort = conf.getReqParamInt(PORT);
     mHost = conf.getReqParamStr(HOST);
@@ -113,7 +112,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     
     if (mUseWordSeq) {
       if (null == docEntry.mWordIdSeq) {
-        throw new Exception("Configuration error: positional info is not stored for field: '" + mFieldName + "'");
+        throw new Exception("Configuration error: positional info is not stored for field: '" + getIndexFieldName() + "'");
       }
       for (int wid : docEntry.mWordIdSeq) {
         if (wid >= 0) {
@@ -147,7 +146,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     
     try {
       res = initResultSet(arrDocIds, getFeatureQty()); 
-      DocEntry queryEntry = getQueryEntry(mFieldName, mFieldIndex, queryData);
+      DocEntry queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
       if (queryEntry == null) return res;
       
       TextEntryInfo queryTextEntry = createTextEntryInfo("", queryEntry);
@@ -198,13 +197,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     return res;
   }
   
-
-  @Override
-  public String getFieldName() {
-    return mFieldName;
-  }
-  
-  final String                       mFieldName;
   final TFIDFSimilarity              mSimilObj;
   final ForwardIndex                 mFieldIndex;
   final String                       mHost;

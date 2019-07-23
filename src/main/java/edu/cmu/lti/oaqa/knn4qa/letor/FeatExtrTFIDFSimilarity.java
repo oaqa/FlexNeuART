@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -40,11 +40,11 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
   public static String B_PARAM = "b";
   
   FeatExtrTFIDFSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+    super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
-    mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
     String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
 
-    mFieldIndex = resMngr.getFwdIndex(mFieldName);
+    mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 
     if (similType.equalsIgnoreCase(BM25_SIMIL))
       mSimilObj = new BM25SimilarityLuceneNorm(
@@ -54,12 +54,6 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
     else
       throw new Exception("Unsupported field similarity: " + similType);
  
-  }
-  
-
-  @Override
-  public String getFieldName() {
-    return mFieldName;
   }
   
   @Override
@@ -76,7 +70,7 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
-    DocEntry queryEntry = getQueryEntry(mFieldName, mFieldIndex, queryData);
+    DocEntry queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
     if (queryEntry == null) return res;
     
     for (String docId : arrDocIds) {
@@ -109,7 +103,6 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
     return 0;
   }
 
-  final String                       mFieldName;
   final BM25SimilarityLuceneNorm     mSimilObj;
   final ForwardIndex                 mFieldIndex;
 

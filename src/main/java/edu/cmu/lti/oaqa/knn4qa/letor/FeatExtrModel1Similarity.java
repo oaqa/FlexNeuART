@@ -42,14 +42,10 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return this.getClass().getName();
   }
   
-  @Override
-  public String getFieldName() {
-    return mFieldName;
-  }
-  
   public FeatExtrModel1Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
-    mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);   
-    mModel1SubDir = conf.getParam(MODEL1_SUBDIR, mFieldName);
+    super(resMngr, conf);
+   
+    mModel1SubDir = conf.getParam(MODEL1_SUBDIR, getIndexFieldName());
     mGizaIterQty = conf.getReqParamInt(GIZA_ITER_QTY);
     mProbSelfTran = conf.getReqParamFloat(PROB_SELF_TRAN);
     mMinModel1Prob = conf.getReqParamFloat(MIN_MODEL1_PROB);
@@ -70,12 +66,12 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     
     mFlipDocQuery = conf.getParamBool(FLIP_DOC_QUERY);
     
-    mModel1Data = resMngr.getModel1Tran(mFieldName, 
+    mModel1Data = resMngr.getModel1Tran(getIndexFieldName(), 
                                         mModel1SubDir,
                                         false /* no translation table flip */, 
                                         mGizaIterQty, mProbSelfTran, mMinModel1Prob);
     
-    mFieldIndex = resMngr.getFwdIndex(mFieldName);
+    mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
     mTopTranCache = HashIntObjMaps.<Integer []>newMutableMap(mModel1Data.mFieldProbTable.length);
   }
 
@@ -83,7 +79,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
-    DocEntry queryEntry = getQueryEntry(mFieldName, mFieldIndex, queryData);
+    DocEntry queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
     if (queryEntry == null) return res;
 
     for (String docId : arrDocIds) {
@@ -353,7 +349,6 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
   
   final ForwardIndex    mFieldIndex;
-  final String          mFieldName;
   final String          mModel1SubDir;
   final Model1Data      mModel1Data;
   final int             mGizaIterQty;

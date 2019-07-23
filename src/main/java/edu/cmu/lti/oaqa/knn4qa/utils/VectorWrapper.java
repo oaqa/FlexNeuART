@@ -198,11 +198,11 @@ public class VectorWrapper {
     
     boolean isQuery = queryData != null;
     if (isQuery) {
-      String fieldName = extr.getFieldName();
+      String queryFieldName = extr.getQueryFieldName();
 
-      String text = queryData.get(fieldName);
+      String text = queryData.get(queryFieldName);
       if (text == null) {
-        throw new Exception("No query information for field: " + fieldName);
+        throw new Exception("No query information for field: " + queryFieldName);
       }
       docEntry = compIndx.createDocEntry(StringUtils.splitOnWhiteSpace(text), true); // true means including positions
     } else {
