@@ -142,11 +142,8 @@ function getIndexQueryDataInfo {
   cd "$topDir"
   for subDir in * ; do
     if [ -d "$subDir" ] ; then
-      if [ -f "$subDir/$oldFile" -o -f "$subDir/$newFile" ] ; then
-        if [ "$dirList" != "" ] ; then
-          dirList="$dirList,"
-        fi
-        dirList="${dirList}$subDir"
+      hasData=0
+      if [ -f "$subDir/$oldFile" ] ; then
         if [ -f "$subDir/$oldFile" ] ; then
           if [ "$dataFileName" = "$newFile" ] ; then
             echo "Inconsistent use of XML/JSONL formats"
@@ -154,17 +151,32 @@ function getIndexQueryDataInfo {
           fi
           dataFileName=$oldFile
           qyeryFileName=$oldQueryFile
+          hasData=1
         fi
-        if [ -f "$subDir/$newFile" ] ; then
+      fi
+
+      # New-layout/format data may be compressed, but queries shouldn't be compressed (and there's little sense to do so)
+      for suff in "" ".gz" ".bz2" ; do
+        fn=$subDir/${newFile}${suff}
+        if [ -f "$fn" ] ; then
           if [ "$dataFileName" = "$oldFile" ] ; then
             echo "Inconsistent use of XML/JSONL formats"
             exit 1
           fi
-          dataFileName=$newFile
+          dataFileName=${newFile}${suff}
           queryFileName=$newQueryFile
+          hasData=1
+          break
         fi
+      done
+
+      if [ "$hasData" = "1" ] ; then
+        if [ "$dirList" != "" ] ; then
+          dirList="$dirList,"
+        fi
+        dirList="${dirList}$subDir"
       fi
-    fi
+    fi # if [ -d "$subDir"]
   done
   cd "$currDir"
   # This is kinda ugly, but is better than other non-portable solutions.

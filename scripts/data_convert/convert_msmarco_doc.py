@@ -13,6 +13,10 @@ inpFileName = sys.argv[1]
 outFileName = sys.argv[2]
 
 # TODO need some common file to store constants and common functions like these open functions and stop word reading functions
+
+MAX_DOC_SIZE=16536 # 16 K should be more than enough!
+REPORT_QTY=10000
+
 inpFile = gzip.open(inpFileName) if inpFileName.endswith('.gz') else open(inpFileName)
 outFile = gzip.open(outFileName, 'w') if outFileName.endswith('.gz') else open(outFileName, 'w')
 
@@ -28,12 +32,20 @@ with open('data/stopwords.txt') as f:
 nlp = SpacyTextParser("en_core_web_sm", stopWords, keepOnlyAlphaNum=True)
 
 # Input file is a TSV file
+ln=0
 for line in inpFile:
+  ln+=1
   line = line.decode('utf-8').strip()
   if not line: 
     continue
-  #print(line)
-  did, url, title, body = line.split('\t')
+  line = line[:MAX_DOC_SIZE] # cut documents that are too long!
+  fields = line.split('\t')
+  if len(fields) != 4:
+    print('Misformated line %d ignoring:' % ln)
+    print(line.replace('\t', '<field delimiter>'))
+    continue
+
+  did, url, title, body = fields
 
   title_lemmas, title_unlemm = nlp.procText(title)
   body_lemmas, body_unlemm = nlp.procText(body)
@@ -48,6 +60,10 @@ for line in inpFile:
   doc = {'DOCNO' : did, 'text' : text, 'title' : title_unlemm, 'body' : body_unlemm}
   docStr = (json.dumps(doc) + '\n').encode('utf-8')
   outFile.write(docStr)
+  if ln % REPORT_QTY == 0:
+    print('Processed %d docs' % ln)
+
+print('Processed %d docs' % ln)
 
 inpFile.close()
 outFile.close()
