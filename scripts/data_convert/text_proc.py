@@ -7,12 +7,12 @@ SPACY_PARSER = 'parser'
 
 ALPHANUM_TOKENS = re.compile("^[a-zA-Z-_.0-9]+$")
 
-def isGoodToken(s):
-  return s and (ALPHANUM_TOKENS.match(s) is not None) and not s.startswith('-')
+def isAlphaNum(s):
+  return s and (ALPHANUM_TOKENS.match(s) is not None)
 
 """A wrapper class to handle basic Spacy-based text processing."""
 class SpacyTextParser:
-  def __init__(self, spacyModel, stopWords, removePunct=True, sentSplit=False):
+  def __init__(self, spacyModel, stopWords, removePunct=True, sentSplit=False, keepOnlyAlphaNum=False):
     """Constructor.
 
     :param  spacyMode    a name of the spacy model to use, e.g., en_core_web_sm 
@@ -20,6 +20,7 @@ class SpacyTextParser:
                          a token is also excluded when its lemma is in the stop word list.
     :param  removePunct  a bool flag indicating if the punctuation tokens need to be removed
     :param  sentSplit    a bool flag indicating if sentence splitting is necessary
+    :param  keepOnlyAlphaNum a bool flag indicating if we need to keep only alpha-numeric characters
     """
 
     # Disabling all heavy-weight parsing, but enabling splitting into sentences
@@ -30,6 +31,7 @@ class SpacyTextParser:
 
     self._removePunct = removePunct
     self._stopWords = frozenset([w.lower() for w in stopWords])
+    self._keepOnlyAlphaNum = keepOnlyAlphaNum
 
 
   def __call__(self, text): 
@@ -57,6 +59,8 @@ class SpacyTextParser:
         continue
       lemma = tokObj.lemma_
       text = tokObj.text
+      if self._keepOnlyAlphaNum and not isAlphaNum(text):
+        continue
       tok1 = text.lower()  
       tok2 = lemma.lower()  
       if tok1 in self._stopWords or tok2 in self._stopWords:
