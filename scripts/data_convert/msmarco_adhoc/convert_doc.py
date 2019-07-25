@@ -2,33 +2,34 @@
 import sys
 import gzip
 import json
+import argparse
 sys.path.append('.')
 from text_proc import *
+from convert_common import *
 
-if len(sys.argv) != 3:
-  print('Usage: <input: can be in gz format> <output: can be in gz format>')
-  sys.exit(1)
+parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc main documents.')
+parser.add_argument('--input', metavar='input file', help='input file',
+                    type=str, required=True)
+parser.add_argument('--output', metavar='output file', help='output file',
+                    type=str, required=True)
+parser.add_argument('thread_qty', metavar='# of threads', help='number of threads to use in Spacy',
+                    type=int, default=4)
+parser.add_argument('max_doc_size', metavar='max doc size bytes', help='the threshold for the document size, if a document is larger it is truncated',
+                    type=int, default=MAX_DOC_SIZE)
 
-inpFileName = sys.argv[1]
-outFileName = sys.argv[2]
+
+args = parser.parse_args()
 
 # TODO need some common file to store constants and common functions like these open functions and stop word reading functions
 
-MAX_DOC_SIZE=16536 # 16 K should be more than enough!
 REPORT_QTY=10000
 
-inpFile = gzip.open(inpFileName) if inpFileName.endswith('.gz') else open(inpFileName)
-outFile = gzip.open(outFileName, 'w') if outFileName.endswith('.gz') else open(outFileName, 'w')
+inpFile = openFile(args.input)
+outFile = openFile(args.output, 'w')
+maxDocSize = args.max_doc_size
 
-stopWords = []
-with open('data/stopwords.txt') as f:
-  for w in f:
-    w = w.strip()
-    if w:
-      stopWords.append(w)
-
-
-#print(stopWords)
+stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
+print(stopWords)
 nlp = SpacyTextParser("en_core_web_sm", stopWords, keepOnlyAlphaNum=True)
 
 # Input file is a TSV file
@@ -38,7 +39,7 @@ for line in inpFile:
   line = line.decode('utf-8').strip()
   if not line: 
     continue
-  line = line[:MAX_DOC_SIZE] # cut documents that are too long!
+  line = line[:maxDocSize] # cut documents that are too long!
   fields = line.split('\t')
   if len(fields) != 4:
     print('Misformated line %d ignoring:' % ln)
