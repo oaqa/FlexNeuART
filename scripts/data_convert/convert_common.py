@@ -4,14 +4,14 @@ import gzip
 STOPWORD_FILE = 'data/stopwords.txt'
 MAX_DOC_SIZE=16536 # 16 K should be more than enough!
 
-def openFile(fileName, flags):
+def openFile(fileName, flags='r'):
   """Opens a regular or gzipped-file
 
     :param  fileName a name of the file, it has a '.gz' extension, we open a gzip-stream.
     :param  flags    open flags such as 'r' or 'w'
     :return a file handler that needs to be closed
   """
-  return gzip.open(fileName) if fileName.endswith('.gz', flags) else open(fileName, flags)
+  return gzip.open(fileName, flags) if fileName.endswith('.gz') else open(fileName, flags)
 
 def readStopWords(fileName=STOPWORD_FILE, lowerCase=True):
   """Reads a list of stopwords from a file. By default the words

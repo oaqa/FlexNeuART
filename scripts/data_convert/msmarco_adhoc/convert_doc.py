@@ -4,21 +4,20 @@ import gzip
 import json
 import argparse
 sys.path.append('.')
-from text_proc import *
-from convert_common import *
+from scripts.data_convert.text_proc import *
+from scripts.data_convert.convert_common import *
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc main documents.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
-parser.add_argument('thread_qty', metavar='# of threads', help='number of threads to use in Spacy',
-                    type=int, default=4)
-parser.add_argument('max_doc_size', metavar='max doc size bytes', help='the threshold for the document size, if a document is larger it is truncated',
+parser.add_argument('--max_doc_size', metavar='max doc size bytes', help='the threshold for the document size, if a document is larger it is truncated',
                     type=int, default=MAX_DOC_SIZE)
 
 
 args = parser.parse_args()
+print(args)
 
 # TODO need some common file to store constants and common functions like these open functions and stop word reading functions
 
