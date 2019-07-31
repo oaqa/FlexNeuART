@@ -7,7 +7,7 @@ sys.path.append('.')
 from scripts.data_convert.text_proc import *
 from scripts.data_convert.convert_common import *
 
-parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc main documents.')
+parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc documents.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--output', metavar='output file', help='output file',
@@ -19,12 +19,8 @@ parser.add_argument('--max_doc_size', metavar='max doc size bytes', help='the th
 args = parser.parse_args()
 print(args)
 
-# TODO need some common file to store constants and common functions like these open functions and stop word reading functions
-
-REPORT_QTY=10000
-
-inpFile = openFile(args.input)
-outFile = openFile(args.output, 'w')
+inpFile = FileWrapper(args.input)
+outFile = FileWrapper(args.output, 'w')
 maxDocSize = args.max_doc_size
 
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
@@ -35,7 +31,6 @@ nlp = SpacyTextParser("en_core_web_sm", stopWords, keepOnlyAlphaNum=True)
 ln=0
 for line in inpFile:
   ln+=1
-  line = line.decode('utf-8').strip()
   if not line: 
     continue
   line = line[:maxDocSize] # cut documents that are too long!
@@ -58,7 +53,7 @@ for line in inpFile:
   text = title_lemmas + ' ' + body_lemmas
   text = text.strip()
   doc = {'DOCNO' : did, 'text' : text, 'title' : title_unlemm, 'body' : body_unlemm}
-  docStr = (json.dumps(doc) + '\n').encode('utf-8')
+  docStr = json.dumps(doc) + '\n'
   outFile.write(docStr)
   if ln % REPORT_QTY == 0:
     print('Processed %d docs' % ln)
