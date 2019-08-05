@@ -11,7 +11,7 @@ fi
 field=$2
 
 if [ "$field" = "" ] ; then
-  echo "Specify a FIELD: e.g., text (2d arg)"
+  echo "Specify a field: e.g., text (2d arg)"
   exit 1
 fi
 

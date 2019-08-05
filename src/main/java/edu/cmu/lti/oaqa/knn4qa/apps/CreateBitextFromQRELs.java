@@ -38,10 +38,8 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
  * Creating parallel (bi-text) corpus from relevance judgements, queries,
- * and indexed documents. It is possible to limit the maximum ratio (max. fertility)
- * of words in queries and documents and sample document words in such
- * a way that the ratio is never exceeded.
- * 
+ * and indexed documents.
+ *
  * Importantly, it requires a forward index to store sequences of words
  * rather than merely bag-of-words entries.
  * 
@@ -68,15 +66,15 @@ public class CreateBitextFromQRELs {
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, required = false, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery = Integer.MAX_VALUE;
     
-    @Option(name = "-max_fert", required=false, usage = "Maximum fertility: max. ratio of words in docs and queries" +
-                                                        "If the ratio is exceeded docs are truncated or subsampled.")
-    int mMaxFert = Integer.MAX_VALUE;
-    
+    @Option(name = "-max_doc_query_qty_ratio", required = true, usage = "Max. ratio of # words in docs to # of words in queries")
+    float mDocQueryWordRatio;
+    /*
     @Option(name = "-sample_words", required=false, usage = "If specified, document words are sampled.")
     boolean mSample;
     @Option(name = "-sample_qty", required=false, usage = "Number of times sampling is repeated. " +
                                                           "If this parameter is set to, e.g., 2, " +
                                                           " we obtain 2*n bi-text entries, where n is the number of queries.")
+    */
     int mSampleQty = 1;
   }
   
@@ -128,10 +126,15 @@ public class CreateBitextFromQRELs {
               String queryText = docFields.get(args.mQueryField);
               if (queryText == null) queryText = "";
               queryText = queryText.trim();
-              if (queryText.isEmpty()) {
+              String [] queryWords = StringUtils.splitOnWhiteSpace(queryText);
+            
+              if (queryText.isEmpty() || queryWords.length == 0) {
                 System.out.println("Empty text in query # " + queryQty + " ignoring");
                 continue;
               }
+              
+              float queryWordQtyInv = 1.0f / queryWords.length;
+              
               HashMap<String, String> relInfo = qrels.getQueryQrels(qid);
               for (Entry<String, String> e : relInfo.entrySet()) {
                 String did = e.getKey();
@@ -141,17 +144,32 @@ public class CreateBitextFromQRELs {
                   if (dentry.mWordIdSeq == null) {
                     System.err.println("Index for the field " + fieldName + " doesn't have words sequences!");
                     System.exit(1);
-                  }
-                  
-                  questFile.write(queryText + Const.NL);
-                  //String [] queryWords = StringUtils.splitOnWhiteSpace(queryText);
+                  }      
+
                   ArrayList<String> answWords = new ArrayList<String>();
+                  /*
+                   * In principle, queries can be longer then documents, especially,
+                   * when we write the "tail" part of the documents. However, the 
+                   * difference should not be large and longer queries will be 
+                   * truncated by  
+                   */
                   for (int wid : dentry.mWordIdSeq) {
+                    if (answWords.size() * queryWordQtyInv >= args.mDocQueryWordRatio) {
+                      questFile.write(queryText + Const.NL);
+                      answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+                      answWords.clear();
+                    }
+                    
                     if (wid >=0) { // -1 is OOV
                       answWords.add(fwdIndex.getWord(wid));
                     }
                   }
-                  answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+                  
+                  if (!answWords.isEmpty()) {
+                    questFile.write(queryText + Const.NL);
+                    answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+                  }
+                  
                 }
               }
             }

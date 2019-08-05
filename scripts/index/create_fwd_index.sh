@@ -38,8 +38,8 @@ inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 
 echo "=========================================================================="
-echo "Data directory: $inputDataDir"
-echo "Index directory: $indexDir"
+echo "Data directory:            $inputDataDir"
+echo "Forward index directory:   $indexDir"
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
 else
