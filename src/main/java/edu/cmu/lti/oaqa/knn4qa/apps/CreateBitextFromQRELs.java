@@ -112,72 +112,74 @@ public class CreateBitextFromQRELs {
       Map<String, String> docFields = null;
       int queryQty = 0;
       
-      try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-        for (; ((docFields = inp.readNext()) != null) && queryQty < args.mMaxNumQuery; ) {
+      DataEntryReader inp = new DataEntryReader(args.mQueryFile);
+      
+      for (; ((docFields = inp.readNext()) != null) && queryQty < args.mMaxNumQuery; ) {
 
-          ++queryQty;
-          
-          String qid = docFields.get(Const.TAG_DOCNO);
-          if (qid == null) {
-            System.err.println("Undefined query ID in query # " + queryQty);
-            System.exit(1);
-          }
-          
-          String queryText = docFields.get(args.mQueryField);
-          if (queryText == null) queryText = "";
-          queryText = queryText.trim();
-          String [] queryWords = StringUtils.splitOnWhiteSpace(queryText);
+        ++queryQty;
         
-          if (queryText.isEmpty() || queryWords.length == 0) {
-            System.out.println("Empty text in query # " + queryQty + " ignoring");
-            continue;
-          }
-          
-          float queryWordQtyInv = 1.0f / queryWords.length;
-          
-          HashMap<String, String> relInfo = qrels.getQueryQrels(qid);
-          for (Entry<String, String> e : relInfo.entrySet()) {
-            String did = e.getKey();
-            int grade = CandidateProvider.parseRelevLabel(e.getValue());
-            if (grade >= 1) {
-              DocEntry dentry = fwdIndex.getDocEntry(did);
-              if (dentry.mWordIdSeq == null) {
-                System.err.println("Index for the field " + fieldName + " doesn't have words sequences!");
-                System.exit(1);
-              }      
+        String qid = docFields.get(Const.TAG_DOCNO);
+        if (qid == null) {
+          System.err.println("Undefined query ID in query # " + queryQty);
+          System.exit(1);
+        }
+        
+        String queryText = docFields.get(args.mQueryField);
+        if (queryText == null) queryText = "";
+        queryText = queryText.trim();
+        String [] queryWords = StringUtils.splitOnWhiteSpace(queryText);
+      
+        if (queryText.isEmpty() || queryWords.length == 0) {
+          System.out.println("Empty text in query # " + queryQty + " ignoring");
+          continue;
+        }
+        
+        float queryWordQtyInv = 1.0f / queryWords.length;
+        
+        HashMap<String, String> relInfo = qrels.getQueryQrels(qid);
+        for (Entry<String, String> e : relInfo.entrySet()) {
+          String did = e.getKey();
+          int grade = CandidateProvider.parseRelevLabel(e.getValue());
+          if (grade >= 1) {
+            DocEntry dentry = fwdIndex.getDocEntry(did);
+            if (dentry.mWordIdSeq == null) {
+              System.err.println("Index for the field " + fieldName + " doesn't have words sequences!");
+              System.exit(1);
+            }      
 
-              ArrayList<String> answWords = new ArrayList<String>();
-              /*
-               * In principle, queries can be longer then documents, especially,
-               * when we write the "tail" part of the documents. However, the 
-               * difference should not be large and longer queries will be 
-               * truncated by  
-               */
-              for (int wid : dentry.mWordIdSeq) {
-                if (answWords.size() * queryWordQtyInv >= args.mDocQueryWordRatio) {
-                  questFile.write(queryText + Const.NL);
-                  answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
-                  answWords.clear();
-                }
-                
-                if (wid >=0) { // -1 is OOV
-                  answWords.add(fwdIndex.getWord(wid));
-                }
-              }
-              
-              if (!answWords.isEmpty()) {
+            ArrayList<String> answWords = new ArrayList<String>();
+            /*
+             * In principle, queries can be longer then documents, especially,
+             * when we write the "tail" part of the documents. However, the 
+             * difference should not be large and longer queries will be 
+             * truncated by  
+             */
+            for (int wid : dentry.mWordIdSeq) {
+              if (answWords.size() * queryWordQtyInv >= args.mDocQueryWordRatio) {
                 questFile.write(queryText + Const.NL);
                 answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+                answWords.clear();
               }
               
+              if (wid >=0) { // -1 is OOV
+                answWords.add(fwdIndex.getWord(wid));
+              }
             }
+            
+            if (!answWords.isEmpty()) {
+              questFile.write(queryText + Const.NL);
+              answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+            }
+            
           }
-          questFile.close();
-          answFile.close();    
-        } 
-       } catch (Exception e) {
-         throw e;
-       }
+        }  
+      } 
+      
+      questFile.close();
+      answFile.close();  
+ 
+      inp.close();
+      
     } catch (Exception e) {
       System.err.println(e.getMessage());
       System.exit(1);
