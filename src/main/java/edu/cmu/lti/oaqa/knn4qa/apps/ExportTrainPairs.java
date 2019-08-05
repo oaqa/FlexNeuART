@@ -78,7 +78,6 @@ class Worker extends Thread  {
 public class ExportTrainPairs {
 
   private static final String EXPORT_FMT = "export_fmt";
-  private static final String QUERY_FIELD_PARAM = "query_field";
   
   static void showUsage(String err) {
     System.err.println("Error: " + err);
@@ -90,17 +89,22 @@ public class ExportTrainPairs {
     showUsage("Specify: '" + optName + "'");
   }
   
+  /**
+   * The class that exports/generate training data for an external LETOR framework such as MatchZoo.
+   * It was designed to run efficiently in a multithreaded fashion, b/c potentially we can
+   * use it to generate weakly supervised data (using millions of queries).
+   */
   public static void main(String[] args) {
     
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
-    mOptions.addOption(CommonParams.FIELD_NAME_PARAM,       null, true, CommonParams.FIELD_NAME_DESC);
+    mOptions.addOption(CommonParams.INDEX_FIELD_NAME_PARAM, null, true, CommonParams.INDEX_FIELD_NAME_DESC);
     mOptions.addOption(EXPORT_FMT,                          null, true, "A type of the export procedure/format");
     mOptions.addOption(CommonParams.QUERY_FILE_PARAM,       null, true, CommonParams.QUERY_FILE_DESC);
     mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,     null, true, CommonParams.LUCENE_INDEX_LOCATION_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_QUERY_PARAM,    null, true, CommonParams.MAX_NUM_QUERY_DESC);
     mOptions.addOption(CommonParams.THREAD_QTY_PARAM,       null, true, CommonParams.THREAD_QTY_DESC);
     mOptions.addOption(CommonParams.QREL_FILE_PARAM,        null, true, CommonParams.QREL_FILE_DESC);
-    mOptions.addOption(QUERY_FIELD_PARAM,                   null, true, "The name of the field used for querying to find negative examples");    
+    mOptions.addOption(CommonParams.QUERY_FIELD_NAME_PARAM, null, true, CommonParams.QUERY_FIELD_NAME_DESC);    
     ExportTrainDataBase.addAllOptionDesc(mOptions);
     
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
@@ -120,9 +124,9 @@ public class ExportTrainPairs {
       if (fwdIndex == null) {
         showUsageSpecify(CommonParams.FWDINDEX_PARAM);
       }
-      String fieldName = cmd.getOptionValue(CommonParams.FIELD_NAME_PARAM);
+      String fieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
       if (fieldName == null) {
-        showUsageSpecify(CommonParams.FIELD_NAME_PARAM);
+        showUsageSpecify(CommonParams.INDEX_FIELD_NAME_PARAM);
       }
       String exportType = cmd.getOptionValue(EXPORT_FMT);
       if (null == exportType) {
@@ -218,7 +222,7 @@ public class ExportTrainPairs {
                                              resourceManager.getFwdIndex(fieldName), 
                                              qrels);
       if (null == oneExport) {
-        showUsage("Undefined outupt format: '" + exportType + "'");
+        showUsage("Undefined output format: '" + exportType + "'");
       }
       
       String err = oneExport.readAddOptions(cmd);

@@ -121,6 +121,12 @@ public class CommonParams {
   public final static String FIELD_NAME_PARAM = "field_name";
   public final static String FIELD_NAME_DESC = "The name of a field to process";
   
+  public static final String QUERY_FIELD_NAME_PARAM = "query_field";
+  public final static String QUERY_FIELD_NAME_DESC = "The name of a query field";
+  
+  public static final String INDEX_FIELD_NAME_PARAM = "index_field";
+  public final static String INDEX_FIELD_NAME_DESC = "The name of an index field";
+  
   public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
   public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getTypeList();
  

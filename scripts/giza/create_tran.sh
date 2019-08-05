@@ -78,7 +78,8 @@ echo "Full target dir: $full_target_dir"
 # Jiwoon Jeon, W. Bruce Croft and Joon Ho Lee 
 # However, a better performance is achieved with a symmetrized approach.
 
-# Filtering out sentences where the difference in the number of words is too large and symmetrizing if needed
+# 1. Filtering out sentences where the difference in the number of words is too large 
+# 2. Applying symmetrizing if needed
 MAX_FERTILITY=9
 execAndCheck "scripts/giza/filter_long.py \"${source_dir}/answer_${field}\"   \"${source_dir}/question_${field}\" \"$MAX_FERTILITY\" \"$full_target_dir/source\" \"$full_target_dir/target\" \"$SYMMETRIZE\""
 

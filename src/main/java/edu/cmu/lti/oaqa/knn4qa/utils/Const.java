@@ -15,6 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
+import java.io.File;
 import java.util.regex.Pattern;
 
 /**
@@ -35,9 +36,15 @@ public class Const {
   
   public static final String TAG_DOC_ENTRY = "DOC";
   public static final String TAG_DOCNO     = "DOCNO";
+  
+  
   public static final String TEXT_FIELD_NAME = "text";
   
+  public static final String BITEXT_QUEST_PREFIX = "question_";
+  public static final String BITEXT_ANSW_PREFIX = "answer_";
+  
   public static final String NL = System.getProperty("line.separator");
+  public static final String PATH_SEP = File.separator;
 
   /** These are all ASCII punctuation chars except the apostrophe! */
   public static final String NON_INDEXABLE_PUNCT = 
