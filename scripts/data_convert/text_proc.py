@@ -12,7 +12,7 @@ def isAlphaNum(s):
 
 """A wrapper class to handle basic Spacy-based text processing."""
 class SpacyTextParser:
-  def __init__(self, spacyModel, stopWords, removePunct=True, sentSplit=False, keepOnlyAlphaNum=False):
+  def __init__(self, spacyModel, stopWords, removePunct=True, sentSplit=False, keepOnlyAlphaNum=False, lowerCase=True):
     """Constructor.
 
     :param  spacyMode    a name of the spacy model to use, e.g., en_core_web_sm 
@@ -32,6 +32,7 @@ class SpacyTextParser:
     self._removePunct = removePunct
     self._stopWords = frozenset([w.lower() for w in stopWords])
     self._keepOnlyAlphaNum = keepOnlyAlphaNum
+    self._lowerCase = lowerCase
 
 
   def __call__(self, text): 
@@ -41,6 +42,11 @@ class SpacyTextParser:
     :return         a spacy Doc object 
     """
 
+    text = text.replace("’", "'")
+
+    if self._lowerCase:
+      text = text.lower()
+
     return self._nlp(text)
 
   
@@ -49,7 +55,6 @@ class SpacyTextParser:
     :param text     input text string
     :return         a tuple (lemmatized text, original-form text). Text is white-space separated.
     """
-    text = text.replace("’", "'")
 
     lemmas = []
     tokens = []

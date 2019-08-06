@@ -22,7 +22,7 @@ outFile = FileWrapper(args.output, 'w')
 
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
 print(stopWords)
-nlp = SpacyTextParser("en_core_web_sm", stopWords, keepOnlyAlphaNum=True)
+nlp = SpacyTextParser("en_core_web_sm", stopWords, keepOnlyAlphaNum=True, lowerCase=True)
 
 # Input file is a TSV file
 ln=0
@@ -40,8 +40,6 @@ for line in inpFile:
   did, query = fields
 
   query_lemmas, query_unlemm = nlp.procText(query)
-  query_lemmas = query_lemmas.lower().strip()
-  query_unlemm = query_unlemm.lower().strip()
 
   doc = {'DOCNO' : did, 'text' : query_lemmas, 'text_unlemm' : query_unlemm}
   docStr = json.dumps(doc) + '\n'

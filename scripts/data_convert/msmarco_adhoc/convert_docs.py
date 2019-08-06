@@ -25,7 +25,7 @@ maxDocSize = args.max_doc_size
 
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
 print(stopWords)
-nlp = SpacyTextParser("en_core_web_sm", stopWords, keepOnlyAlphaNum=True)
+nlp = SpacyTextParser("en_core_web_sm", stopWords, keepOnlyAlphaNum=True, lowerCase=True)
 
 # Input file is a TSV file
 ln=0
@@ -44,11 +44,6 @@ for line in inpFile:
 
   title_lemmas, title_unlemm = nlp.procText(title)
   body_lemmas, body_unlemm = nlp.procText(body)
-
-  title_lemmas = title_lemmas.lower()
-  title_unlemm = title_unlemm.lower()
-  body_lemmas = body_lemmas.lower()
-  body_unlemm = body_unlemm.lower()
 
   text = title_lemmas + ' ' + body_lemmas
   text = text.strip()
