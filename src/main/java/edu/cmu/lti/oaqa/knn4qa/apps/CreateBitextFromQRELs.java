@@ -181,7 +181,8 @@ public class CreateBitextFromQRELs {
       inp.close();
       
     } catch (Exception e) {
-      System.err.println(e.getMessage());
+      e.printStackTrace();
+      System.err.println("Exception: " + e);
       System.exit(1);
     }
     
