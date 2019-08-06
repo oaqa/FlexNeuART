@@ -30,6 +30,7 @@ METRIC_TYPE="NDCG@20"
 NUM_RAND_RESTART=10
 
 TRAIN_SUBDIR="train"
+BITEXT_TRAIN_SUBDIR="train_bitext"
 
 
 QREL_FILE="qrels.txt"
