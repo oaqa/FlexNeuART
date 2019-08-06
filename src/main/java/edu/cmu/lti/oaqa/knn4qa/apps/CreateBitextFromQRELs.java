@@ -137,6 +137,10 @@ public class CreateBitextFromQRELs {
         float queryWordQtyInv = 1.0f / queryWords.length;
         
         HashMap<String, String> relInfo = qrels.getQueryQrels(qid);
+        if (relInfo == null) {
+          System.out.println("Warning: no QRELs for query id: " + qid);
+          continue;
+        }
         for (Entry<String, String> e : relInfo.entrySet()) {
           String did = e.getKey();
           int grade = CandidateProvider.parseRelevLabel(e.getValue());
