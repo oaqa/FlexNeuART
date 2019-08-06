@@ -12,6 +12,16 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
+
+inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
+outDir="$inputDataDir/$BITEXT_SUBDIR"
+indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
+
+if [ ! -d "$outDir" ] ; then
+  mkdir "$outDir"
+fi
 
 field=$2
 
@@ -27,36 +37,13 @@ if [ "$query_field" = "" ] ; then
   exit 1
 fi
 
-part=$4
-
-if [ "$part" = "" ] ; then
-  echo "Specify an input collection sub-directory, e.g., train (4th arg)"
-  exit 1
-fi
-
-outDir=$5
-
-if [ "$outDir" = "" ] ; then
- echo "Specify output dir (5th arg)"
- exit 1
-fi
-
-if [ ! -d "$outDir" ] ; then
-  "$outDir isn't a directory"
-  exit 1
-fi
-
-
-maxRatio=$6
+maxRatio=$4
 
 if [ "$maxRatio" = "" ] ; then
-  echo "Specify max. ratio of # words in docs to # of words in queries (6th arg)"
+  echo "Specify max. ratio of # words in docs to # of words in queries (4th arg)"
   exit 1
 fi
 
-
-inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 
 echo "=========================================================================="
 echo "Data directory:          $inputDataDir"
@@ -71,7 +58,7 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-partPref=$inputDataDir/$part
+partPref=$inputDataDir/$BITEXT_TRAIN_SUBDIR
 
 scripts/data/run_export_bitext.sh -fwd_index_dir $indexDir \
                                   -index_field $field \
