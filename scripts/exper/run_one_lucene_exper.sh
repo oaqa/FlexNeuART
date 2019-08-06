@@ -84,7 +84,6 @@ check "rm -f ${REPORT_DIR}/*"
 checkVarNonEmpty "EMBED_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
-checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "TRAIN_SUBDIR"
 checkVarNonEmpty "QREL_FILE"
@@ -106,7 +105,7 @@ if [ "$queryFileName" = "" ] ; then
 fi
 
 
-cacheDir="$collect/$LUCENE_CACHE_SUBDIR/"
+cacheDir="$COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR/"
 
 if [ ! -d "$cacheDir" ] ; then
   mkdir -p "$cacheDir"

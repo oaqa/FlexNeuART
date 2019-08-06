@@ -41,7 +41,9 @@ for devPart in dev1 dev2 ; do
   if [ ! -d "$inputDataDir/$devPart" ] ; then
     mkdir "$inputDataDir/$devPart"
   fi
-  cp "$inputDataDir/$TRAIN_SUBDIR/$QREL_FILE" "$inputDataDir/$devPart/"
+  # Simply replicate the qrel file from dev it's not too big
+  # to worry about splitting it
+  cp "$inputDataDir/dev/$QREL_FILE" "$inputDataDir/$devPart/"
 done
 
 fullQueryPath=$inputDataDir/dev/$queryFileName
