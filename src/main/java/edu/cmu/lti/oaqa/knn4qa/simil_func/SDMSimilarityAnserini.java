@@ -177,7 +177,9 @@ public class SDMSimilarityAnserini implements QueryDocSimilarityFunc {
     docSize ++;
     // Only compute the score for what's in term count all else 0
     for (int queryToken : queryTokens) {
-      score += Math.log((float) (termCount.get(queryToken)  +1) / docSize);
+      if (termCount.containsKey(queryToken)) {
+        score += Math.log((float) (termCount.get(queryToken)  +1) / docSize);
+      }
     }
     return score;    
   }
