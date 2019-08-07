@@ -67,30 +67,8 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
-      throws Exception {
-    HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
-    DocEntry queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
-    if (queryEntry == null) return res;
-    
-    for (String docId : arrDocIds) {
-      DocEntry docEntry = mFieldIndex.getDocEntry(docId);
-      
-      if (docEntry == null) {
-        throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
-      }
-      
-      float score = mSimilObj.compute(queryEntry, docEntry);
-      
-      DenseVector v = res.get(docId);
-      if (v == null) {
-        throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
-      }
-      
-      v.set(0, score);      
-    }    
-    
-    return res;
+  public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData) throws Exception {
+    return getSimpleFeatures(arrDocIds, queryData, mFieldIndex, mSimilObj);
   }
   
   @Override

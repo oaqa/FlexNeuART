@@ -43,6 +43,8 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
         fe = new FeatExtrWordEmbedSimilarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtractorExternalApacheThrift.EXTR_TYPE)) {
         fe = new FeatExtractorExternalApacheThrift(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(SDMFeatExtractorSimilarity.EXTR_TYPE)) {
+        fe = new SDMFeatExtractorSimilarity(resMngr, oneExtrConf);
       } else 
         // TODO ideally need to inform about the set of supported extractors
         throw new Exception("Unsupported extractor type: " + extrType);

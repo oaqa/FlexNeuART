@@ -15,6 +15,14 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.letor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.QueryDocSimilarityFunc;
+import no.uib.cipr.matrix.DenseVector;
 
 /**
  * A single-field feature extractor interface (enforcing 
@@ -49,6 +57,43 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
    */
   public String getIndexFieldName() {
     return mIndexFieldName;
+  }
+  
+  /**
+   * A helper function that computes a simple single-score similarity
+   * 
+   * @param arrDocIds       document IDs
+   * @param queryData
+   * @param fieldIndex
+   * @param similObj
+   * @return
+   * @throws Exception
+   */
+  protected Map<String, DenseVector> getSimpleFeatures(ArrayList<String> arrDocIds, 
+                                                       Map<String, String> queryData,
+                                                       ForwardIndex fieldIndex, QueryDocSimilarityFunc similObj) throws Exception {
+    HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
+    DocEntry queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryData);
+    if (queryEntry == null) return res;
+    
+    for (String docId : arrDocIds) {
+      DocEntry docEntry = fieldIndex.getDocEntry(docId);
+      
+      if (docEntry == null) {
+        throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
+      }
+      
+      float score = similObj.compute(queryEntry, docEntry);
+      
+      DenseVector v = res.get(docId);
+      if (v == null) {
+        throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
+      }
+      
+      v.set(0, score);      
+    }  
+    
+    return res;
   }
 
   protected final String mQueryFieldName;

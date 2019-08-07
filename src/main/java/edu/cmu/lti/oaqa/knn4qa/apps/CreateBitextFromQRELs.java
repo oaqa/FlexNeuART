@@ -146,6 +146,10 @@ public class CreateBitextFromQRELs {
           int grade = CandidateProvider.parseRelevLabel(e.getValue());
           if (grade >= 1) {
             DocEntry dentry = fwdIndex.getDocEntry(did);
+            if (dentry == null) {
+              System.err.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+              System.exit(1);
+            }
             if (dentry.mWordIdSeq == null) {
               System.err.println("Index for the field " + fieldName + " doesn't have words sequences!");
               System.exit(1);
