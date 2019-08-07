@@ -147,8 +147,8 @@ public class CreateBitextFromQRELs {
           if (grade >= 1) {
             DocEntry dentry = fwdIndex.getDocEntry(did);
             if (dentry == null) {
-              System.err.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
-              System.exit(1);
+              System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+              continue;
             }
             if (dentry.mWordIdSeq == null) {
               System.err.println("Index for the field " + fieldName + " doesn't have words sequences!");
