@@ -44,9 +44,6 @@ class SpacyTextParser:
 
     text = text.replace("’", "'")
 
-    if self._lowerCase:
-      text = text.lower()
-
     return self._nlp(text)
 
   
@@ -70,6 +67,10 @@ class SpacyTextParser:
       tok2 = lemma.lower()  
       if tok1 in self._stopWords or tok2 in self._stopWords:
         continue
+
+      if self._lowerCase:
+        text = text.lower()
+        lemma = lemma.lower()
 
       lemmas.append(lemma)
       tokens.append(text)

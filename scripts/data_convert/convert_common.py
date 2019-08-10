@@ -1,5 +1,6 @@
 import gzip
 
+SPACY_MODEL = 'en_core_web_sm'
 STOPWORD_FILE = 'data/stopwords.txt'
 MAX_DOC_SIZE=16536 # 16 K should be more than enough!
 REPORT_QTY=10000
