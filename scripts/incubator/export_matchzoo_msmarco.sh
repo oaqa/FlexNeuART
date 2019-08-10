@@ -1,0 +1,4 @@
+#!/bin/bash
+#scripts/data/run_export_train_text_pairs.sh -cand_qty 100 -export_fmt match_zoo  -max_num_query 50000 -fwd_index_dir  collections/msmarco/forward_index/ -thread_qty 4 -sample_neg_qty 10 -field_name text -q collections/msmarco/input_data/train/QuestionFields.jsonl -u collections/msmarco/lucene_index/ -qrel_file collections/msmarco/input_data/train/qrels.txt -query_field text -out_file collections/msmarco/match_zoo_train/tran50K_neg10.tsv
+scripts/data/run_export_train_text_pairs.sh -cand_qty 100 -export_fmt match_zoo  -max_num_query 5000 -fwd_index_dir  collections/msmarco/forward_index/ -thread_qty 4 -sample_neg_qty -1 -field_name text -q collections/msmarco/input_data/dev/QuestionFields.jsonl -u collections/msmarco/lucene_index/ -qrel_file collections/msmarco/input_data/dev/qrels.txt -query_field text -out_file collections/msmarco/match_zoo_train/dev1_allCand.tsv
+

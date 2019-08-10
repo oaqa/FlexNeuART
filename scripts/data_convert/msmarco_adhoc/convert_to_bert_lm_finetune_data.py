@@ -14,8 +14,8 @@ parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
 parser.add_argument('--max_doc_size', metavar='max doc size bytes', help='the threshold for the document size, if a document is larger it is truncated',
                     type=int, default=MAX_DOC_SIZE)
-parser.add_argument('--lower_case', metavar='lowercase', help='lowercase text',
-                    type=bool, default=False)
+parser.add_argument('--lower_case', help='lowercase text',
+                    action='store_true', default=False)
 
 
 args = parser.parse_args()
@@ -38,9 +38,11 @@ for line in inpFile:
   body = fields[-1] # passage or document, body is always the last field
 
   for oneSent in nlp(body).sents:
-    oneSent = str(oneSent)
+    oneSent = str(oneSent).strip()
     if args.lower_case:
       oneSent = oneSent.lower()
+    if oneSent:
+      outFile.write(oneSent + '\n')
 
   outFile.write('\n')
   if ln % REPORT_QTY == 0:
