@@ -18,7 +18,9 @@ nmslibAddParams=""
 nmslibExtrType=""
 modelFile=""
 maxNumQueryParam=""
+
 compScores="1"
+runId=$FAKE_RUN_ID
 
 while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
@@ -52,6 +54,9 @@ while [ $# -ne 0 ] ; do
         ;;
       -max_num_query)
         maxNumQueryParam=$OPT
+        ;;
+      -run_id)
+        runId=$OPT_VALUE
         ;;
       -nmslib_addr)
         nmslibURI=$OPT_VALUE
@@ -230,6 +235,7 @@ echo "============================================"
 echo "Using $testPart for testing!"
 echo "Candidate provider type:        $candProvType"
 echo "Candidate provider URI:         $URI"
+echo "Run id:                         $runId"
 echo "Data directory:                 $inputDataDir"
 echo "Data file name:                 $queryFileName"
 
@@ -266,6 +272,7 @@ trecRunPrefix="$trecRunDir/run"
 
 # Despite all the efforts these quotes won't preserve spaces :-( due to quirks of passing arguments
 cmd="scripts/query/run_query.sh  -u \"$URI\"  -cand_prov $candProvType -thread_qty $threadQty \
+  -run_id $runId \
   $nmslibAddParams \
   $resourceDirParams \
   $extrFinalParam \

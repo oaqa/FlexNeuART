@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
-import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.SDMSimilarityAnserini;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -31,21 +29,22 @@ import no.uib.cipr.matrix.DenseVector;
  * @author Leonid Boytsov
  *
  */
-public class SDMFeatExtractorSimilarity extends SingleFieldFeatExtractor {
+public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
   public static String EXTR_TYPE = "SDMSimilarity";
   
   public static String WINDOW_PARAM = "window";
   public static String LAMBDA_T_PARAM = "lambdaT";
-  public static String LAMBDA_O_PARAM = "lambdaO";
   public static String LAMBDA_U_PARAM = "lambdaU";
+  public static String LAMBDA_O_PARAM = "lambdaO";
 
-  public SDMFeatExtractorSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+
+  public FeatExtrSDMSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
     //String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
 
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
-    mSimilObj = new SDMSimilarityAnserini(conf.getParam(LAMBDA_U_PARAM, 0.5f), 
+    mSimilObj = new SDMSimilarityAnserini(conf.getParam(LAMBDA_T_PARAM, 0.5f), 
                                           conf.getParam(LAMBDA_O_PARAM, 0.2f), 
                                           conf.getParam(LAMBDA_U_PARAM, 0.3f), 
                                           conf.getParam(WINDOW_PARAM, 8));

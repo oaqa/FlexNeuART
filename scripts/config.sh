@@ -34,3 +34,4 @@ BITEXT_TRAIN_SUBDIR="train_bitext"
 
 
 QREL_FILE="qrels.txt"
+FAKE_RUN_ID="fake_run"

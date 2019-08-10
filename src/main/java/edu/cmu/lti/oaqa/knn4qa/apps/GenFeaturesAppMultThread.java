@@ -70,7 +70,8 @@ class GenFeaturesAppImpl extends BaseQueryApp {
     }
 
     @Override
-    void procResults(String queryID, Map<String, String> docFields, 
+    void procResults(String runId,
+                     String queryId, Map<String, String> docFields, 
                      CandidateEntry[] scoredDocs, int numRet, Map<String, DenseVector> docFeats)
         throws IOException {
       BufferedWriter featOut = mhOutFiles.get(numRet);
@@ -85,7 +86,7 @@ class GenFeaturesAppImpl extends BaseQueryApp {
         StringBuffer sb = new StringBuffer();
         
         sb.append(label + " ");
-        sb.append("qid:" + queryID);
+        sb.append("qid:" + queryId);
         
         for (int fn = 0; fn < vect.size(); ++fn)
           // Note that feature numbers should start from 1 or else some libraries like RankLib will not work correctly!
