@@ -13,10 +13,11 @@ checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-outDir="$inputDataDir/$BITEXT_SUBDIR"
+outDir="$inputDataDir/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
 indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 
 if [ ! -d "$outDir" ] ; then

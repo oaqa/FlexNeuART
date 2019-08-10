@@ -34,10 +34,10 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
-checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
-export source_dir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR/$BITEXT_SUBDIR"
+export source_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
 export target_dir="$COLLECT_ROOT/$collect/$GIZA_SUBDIR"
 
 echo "Source dir prefix=$source_dir" 

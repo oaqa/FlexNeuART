@@ -19,6 +19,7 @@ LUCENE_CACHE_SUBDIR="lucene_cache"
 
 EMBED_SUBDIR="embeddings"
 INPUT_DATA_SUBDIR="input_data"
+DERIVED_DATA_SUBDIR="derived_data"
 FEAT_EXPER_SUBDIR="results/feat_exper"
 FINAL_EXPER_SUBDIR="results/final_exper"
 

@@ -22,9 +22,9 @@ colName = sys.argv[1]
 modelFile = sys.argv[2]
 epochQty = int(sys.argv[3])
 
-dataTranFile = os.path.join('collections', colName,  'match_zoo_train', 'data_transform.bin')
-dataFileTrain = os.path.join('collections', colName, 'match_zoo_train', 'tran_neg10.tsv')
-dataFileTest = os.path.join('collections', colName,  'match_zoo_train', 'dev1_allCand.tsv')
+dataTranFile = os.path.join('collections', 'derived_data', colName,  'match_zoo_train', 'data_transform.bin')
+dataFileTrain = os.path.join('collections', 'derived_data', colName, 'match_zoo_train', 'tran_neg10.tsv')
+dataFileTest = os.path.join('collections', 'derived_data', colName,  'match_zoo_train', 'dev1_allCand.tsv')
 
 print(f'Collection: {colName} # of epochs: {epochQty} model file: {modelFile} data transform file: {dataTranFile}')
 
