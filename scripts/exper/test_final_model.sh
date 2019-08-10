@@ -18,12 +18,18 @@ nmslibAddParams=""
 nmslibExtrType=""
 modelFile=""
 maxNumQueryParam=""
+compScores="1"
 
 while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
   if [ $? = 0 ] ; then
     OPT_NAME="$1"
     if [ "$OPT_NAME" = "-dont_delete_trec_runs" -o "$OPT_NAME" = "-knn_interleave" ] ; then
+      OPT_VALUE=""
+      OPT=""
+      # option without an argument
+      shift 1
+    elif [ "$OPT_NAME" = "-skip_eval" ] ; then
       OPT_VALUE=""
       OPT=""
       # option without an argument
@@ -52,6 +58,9 @@ while [ $# -ne 0 ] ; do
         ;;
       -knn_interleave)
         nmslibAddParams="$nmslibAddParams $OPT_NAME"
+        ;;
+      -skip_eval)
+        compScores="0"
         ;;
       -extr_type_nmslib)
         nmslibExtrType="$OPT_VALUE"
@@ -266,20 +275,23 @@ cmd="scripts/query/run_query.sh  -u \"$URI\"  -cand_prov $candProvType -thread_q
 
 execAndCheck "$cmd 2>&1|tee $query_log_file"
 
-rm -f "${reportDir}/out_*"
+if [ "$compScores" = "1" ] ; then 
 
-qrels="$inputDataDir/$testPart/$QREL_FILE"
+  rm -f "${reportDir}/out_*"
 
-for oneN in $nTestList ; do
-  echo "======================================"
-  echo "N=$oneN"
-  echo "======================================"
-  reportPref="${reportDir}/out_${oneN}"
+  qrels="$inputDataDir/$testPart/$QREL_FILE"
 
-  scripts/exper/eval_output.py "$qrels" "${trecRunPrefix}_${oneN}" "$reportPref" "$oneN"
-  check "eval_output.py"
-done
-
+  for oneN in $nTestList ; do
+    echo "======================================"
+    echo "N=$oneN"
+    echo "======================================"
+    reportPref="${reportDir}/out_${oneN}"
+  
+    scripts/exper/eval_output.py "$qrels" "${trecRunPrefix}_${oneN}" "$reportPref" "$oneN"
+    check "eval_output.py"
+  done
+fi
+  
 if [ "$delete_trec_runs" = "1" ] ; then
   echo "Deleting trec runs from the directory: ${trecRunDir}"
   rm ${trecRunDir}/*
@@ -293,7 +305,9 @@ else
   check "bzip2 ${trecRunDir}/*" 
 fi
 
-echo "Bzipping trec_eval output in the directory: ${reportDir}"
-rm -f ${reportDir}/*.trec_eval.bz2
-bzip2 ${reportDir}/*.trec_eval
-check "bzip2 ${reportDir}/*.trec_eval"
+if [ "$compScores" = "1" ] ; then 
+  echo "Bzipping trec_eval output in the directory: ${reportDir}"
+  rm -f ${reportDir}/*.trec_eval.bz2
+  bzip2 ${reportDir}/*.trec_eval
+  check "bzip2 ${reportDir}/*.trec_eval"
+fi
