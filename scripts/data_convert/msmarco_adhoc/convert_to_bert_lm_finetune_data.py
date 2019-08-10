@@ -25,7 +25,7 @@ inpFile = FileWrapper(args.input)
 outFile = FileWrapper(args.output, 'w')
 maxDocSize = args.max_doc_size
 
-nlp = SpacyTextParser(SPACY_MODEL, [])
+nlp = SpacyTextParser(SPACY_MODEL, [], sentSplit=True)
 
 # Input file is a TSV file
 ln=0
