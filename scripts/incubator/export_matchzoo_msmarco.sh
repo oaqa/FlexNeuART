@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 source scripts/common_proc.sh
 source scripts/config.sh
 
@@ -31,8 +31,8 @@ if [ ! -d "$matchZooTrainDir" ] ; then
 fi
 
 part=dev1
-scripts/data/run_export_train_text_pairs.sh -cand_qty $CAND_QTY -export_fmt match_zoo  -max_num_query 5000 -fwd_index_dir  "$fwdIndexDir" -thread_qty $THREAD_QTY -sample_neg_qty -1 -field_name $INDEX_FIELD_NAME -q $inputDataDir/$part/QuestionFields.jsonl -u "$luceneIndexDir" -qrel_file collections/msmarco/input_data/$part/$QREL_FILE -query_field $QUERY_FIELD_NAME -out_file $matchZooTrainDir/${part}_allCand.tsv
+scripts/data/run_export_train_text_pairs.sh -cand_qty $CAND_QTY -export_fmt match_zoo  -max_num_query 5000 -fwd_index_dir  "$fwdIndexDir" -thread_qty $THREAD_QTY -sample_neg_qty -1 -index_field $INDEX_FIELD_NAME -q $inputDataDir/$part/QuestionFields.jsonl -u "$luceneIndexDir" -qrel_file $inputDataDir/$part/$QREL_FILE -query_field $QUERY_FIELD_NAME -out_file $matchZooTrainDir/${part}_allCand.tsv
 
 part=train_bitext
-scripts/data/run_export_train_text_pairs.sh -cand_qty $CAND_QTY -export_fmt match_zoo  -max_num_query 50000 -fwd_index_dir  "$fwdIndexDir" -thread_qty $THREAD_QTY -sample_neg_qty 10 -field_name $INDEX_FIELD_NAME -q $inputDataDir/$part/QuestionFields.jsonl -u "$luceneIndexDir" -qrel_file $inputDataDir/$part/$QREL_FILE -query_field $QUERY_FIELD_NAME -out_file $matchZooTrainDir/${part}_neg10.tsv
+scripts/data/run_export_train_text_pairs.sh -cand_qty $CAND_QTY -export_fmt match_zoo  -max_num_query 50000 -fwd_index_dir  "$fwdIndexDir" -thread_qty $THREAD_QTY -sample_neg_qty 10 -index_field $INDEX_FIELD_NAME -q $inputDataDir/$part/QuestionFields.jsonl -u "$luceneIndexDir" -qrel_file $inputDataDir/$part/$QREL_FILE -query_field $QUERY_FIELD_NAME -out_file $matchZooTrainDir/${part}_neg10.tsv
 
