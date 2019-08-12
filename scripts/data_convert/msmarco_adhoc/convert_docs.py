@@ -3,9 +3,9 @@ import sys
 import gzip
 import json
 import argparse
-sys.path.append('.')
-from scripts.data_convert.text_proc import *
-from scripts.data_convert.convert_common import *
+sys.path.append('scripts')
+from data_convert.text_proc import *
+from data_convert.convert_common import *
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc documents.')
 parser.add_argument('--input', metavar='input file', help='input file',
@@ -47,7 +47,8 @@ for line in inpFile:
 
   text = title_lemmas + ' ' + body_lemmas
   text = text.strip()
-  doc = {'DOCNO' : did, 'text' : text, 'title' : title_unlemm, 'body' : body_unlemm}
+  text_raw = (title.strip() + ' ' + body.strip()).lower()
+  doc = {'DOCNO' : did, 'text' : text, 'title' : title_unlemm, 'body' : body_unlemm, 'text_raw' : text_raw}
   docStr = json.dumps(doc) + '\n'
   outFile.write(docStr)
   if ln % REPORT_QTY == 0:

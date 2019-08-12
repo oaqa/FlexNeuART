@@ -4,7 +4,6 @@ import argparse
 
 sys.path.append('scripts/py_server')
 sys.path.append('scripts/data')
-sys.path.append('.')
 
 from base_server import *
 

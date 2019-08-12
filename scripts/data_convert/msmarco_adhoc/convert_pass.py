@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import sys
 import gzip
 import json
 import argparse
-sys.path.append('.')
-from scripts.data_convert.text_proc import *
-from scripts.data_convert.convert_common import *
+sys.path.append('scripts')
+from data_convert.text_proc import *
+from data_convert.convert_common import *
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc documents.')
 parser.add_argument('--input', metavar='input file', help='input file',
@@ -44,7 +44,7 @@ for line in inpFile:
 
   text, text_unlemm = nlp.procText(body)
 
-  doc = {'DOCNO' : pid, 'text' : text, 'text_unlemm' : text_unlemm}
+  doc = {'DOCNO' : pid, 'text' : text, 'text_unlemm' : text_unlemm, 'text_raw' : body.lowercase()}
   docStr = json.dumps(doc) + '\n'
   outFile.write(docStr)
   if ln % REPORT_QTY == 0:

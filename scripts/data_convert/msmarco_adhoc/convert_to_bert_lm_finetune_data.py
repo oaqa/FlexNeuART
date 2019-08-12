@@ -3,9 +3,9 @@ import sys
 import gzip
 import json
 import argparse
-sys.path.append('.')
-from scripts.data_convert.text_proc import *
-from scripts.data_convert.convert_common import *
+sys.path.append('scripts')
+from data_convert.text_proc import *
+from data_convert.convert_common import *
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc documents or passage to BERT LM finetuning data file.')
 parser.add_argument('--input', metavar='input file', help='input file',

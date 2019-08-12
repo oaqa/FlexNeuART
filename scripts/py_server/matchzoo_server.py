@@ -8,7 +8,6 @@ import pandas as pd
 
 sys.path.append('scripts/py_server')
 sys.path.append('scripts/data')
-sys.path.append('.')
 
 from base_server import *
 from matchzoo_reader import *
