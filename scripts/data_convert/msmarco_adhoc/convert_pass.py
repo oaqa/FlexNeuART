@@ -44,7 +44,7 @@ for line in inpFile:
 
   text, text_unlemm = nlp.procText(body)
 
-  doc = {'DOCNO' : pid, 'text' : text, 'text_unlemm' : text_unlemm, 'text_raw' : body.lowercase()}
+  doc = {'DOCNO' : pid, 'text' : text, 'text_unlemm' : text_unlemm, 'text_raw' : body.lower()}
   docStr = json.dumps(doc) + '\n'
   outFile.write(docStr)
   if ln % REPORT_QTY == 0:

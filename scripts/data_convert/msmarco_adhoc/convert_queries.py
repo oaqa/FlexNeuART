@@ -41,7 +41,7 @@ for line in inpFile:
 
   query_lemmas, query_unlemm = nlp.procText(query)
 
-  doc = {'DOCNO' : did, 'text' : query_lemmas, 'text_unlemm' : query_unlemm}
+  doc = {'DOCNO' : did, 'text' : query_lemmas, 'text_unlemm' : query_unlemm, 'text_raw' : query.lower()}
   docStr = json.dumps(doc) + '\n'
   outFile.write(docStr)
   if ln % REPORT_QTY == 0:
