@@ -35,7 +35,7 @@ import no.uib.cipr.matrix.Vector.Norm;
 import no.uib.cipr.matrix.sparse.SparseVector;
 import net.openhft.koloboke.collect.map.hash.HashIntObjMap;
 import net.openhft.koloboke.collect.map.hash.HashIntObjMaps;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
@@ -282,7 +282,7 @@ public class SparseEmbeddingReaderAndRecorder {
                                                float[] fieldProbTable,
                                                GizaTranTableReaderAndRecoder answToQuestTran,                                               
                                                TFIDFSimilarity            similObj,
-                                               DocEntry                      entry,
+                                               DocEntryParsed                      entry,
                                                boolean                       bMultByTF,
                                                boolean                       bMultByProb,
                                                boolean                       bMultByIDF) {
@@ -357,7 +357,7 @@ public class SparseEmbeddingReaderAndRecorder {
                                                float[] fieldProbTable,
                                                GizaTranTableReaderAndRecoder answToQuestTran,                                               
                                                TFIDFSimilarity            similObj,
-                                               DocEntry                      entry) {
+                                               DocEntryParsed                      entry) {
     ArrayList<WordIdVals>   data = new ArrayList<WordIdVals>();
     
     for (int i = 0; i < entry.mWordIds.length; ++i) {
@@ -422,7 +422,7 @@ public class SparseEmbeddingReaderAndRecorder {
    */
   public static SparseVector createCompositeWordEmbed(ForwardIndex             fieldIndex,
                                                       HashIntObjMap<SparseVector>   model, 
-                                                      DocEntry                      entry) {
+                                                      DocEntryParsed                      entry) {
 
     ArrayList<WordIdProb>   data = new ArrayList<WordIdProb>();
         

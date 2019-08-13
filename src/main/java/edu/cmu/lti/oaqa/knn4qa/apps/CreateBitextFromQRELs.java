@@ -28,7 +28,7 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
@@ -145,7 +145,7 @@ public class CreateBitextFromQRELs {
           String did = e.getKey();
           int grade = CandidateProvider.parseRelevLabel(e.getValue());
           if (grade >= 1) {
-            DocEntry dentry = fwdIndex.getDocEntry(did);
+            DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
             if (dentry == null) {
               System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
               continue;

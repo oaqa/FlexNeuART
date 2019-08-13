@@ -9,24 +9,9 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-fieldList=$2
-if [ "$fieldList" = "" ] ; then
-  echo "Specify a space-separated list of fields to index (2d arg), e.g., 'text text_unlemm'"
-  exit 1
-fi
-
-store_word_id_seq=$3
-store_word_id_seq_param=""
-if [ "$store_word_id_seq" = "" ] ; then
-  echo "Specify the flag to store word sequence (3d arg): 1 or 0"
-  exit 1
-fi
-if [ "$store_word_id_seq" = "1" ] ; then
-  store_word_id_seq_param=" -store_word_id_seq "
-fi
-fwd_index_type=$4
-if [ "$fwd_index_type" = "" ] ; then
-  echo "Specify index-type (4th arg), e.g. lucene"
+fieldListDef=$2
+if [ "$fieldListDef" = "" ] ; then
+  echo "Specify a *QUOTED* space-separated list of field index definitions (2d arg), e.g., 'text:parsedBOW text_unlemm:parsedBOW text_raw:raw'"
   exit 1
 fi
 
@@ -47,9 +32,7 @@ else
   rm -rf "$indexDir"/*
 fi
 
-echo "Storing word id seq param: $store_word_id_seq_param"
-echo "Index type:                $fwd_index_type"
-echo "Field list:                $fieldList"
+echo "Field list definition:     $fieldListDef"
 echo "=========================================================================="
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
@@ -64,7 +47,14 @@ if [ "$dataFileName" = "" ] ; then
   exit 1
 fi
 
-for field in $fieldList ; do
-  scripts/index/run_buildfwd_index.sh -fwd_index_type $fwd_index_type $store_word_id_seq_param -input_data_dir "$inputDataDir"  -index_dir "$indexDir" -data_sub_dirs "$dirList" -data_file "$dataFileName" -field_name "$field"
+for fieldDef in $fieldListDef ; do
+  fieldDefSplit=(`echo $fieldDef|sed 's/:/ /'`)
+  field=${fieldDefSplit[0]}
+  fwdIndexType=${fieldDefSplit[1]}
+  if [ "$field" = "" -o "$fwdIndexType" = "" ] ; then
+    echo "Invalid field definition $fieldDef (should be two colon-separated values, e.g, text:parsedBOW)"
+    exit 1
+  fi
+  scripts/index/run_buildfwd_index.sh -fwd_index_type $fwdIndexType -input_data_dir "$inputDataDir"  -index_dir "$indexDir" -data_sub_dirs "$dirList" -data_file "$dataFileName" -field_name "$field"
 done
 

@@ -175,12 +175,11 @@ if [ "$EXTR_TYPE" != "none" ] ; then
                                   $QREL_FILE \
                                   "$TRAIN_SUBDIR" \
                                   lucene $URI $N_TRAIN \
-                                  -run_id $FAKE_RUN_ID \
                                   "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  \
                                   -out_pref "$OUT_PREF_TRAIN" \
                                   -thread_qty $THREAD_QTY \
                                   -query_cache_file $CACHE_FILE_TRAIN 2>&1
-    check "scripts/query/gen_features.sh $collect $QREL_FILE $TRAIN_SUBDIR lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1"
+    check "gen_features.sh $collect ... "
   fi
 
   MODEL_FILE="${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.model"

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.QueryDocSimilarityFunc;
 import no.uib.cipr.matrix.DenseVector;
@@ -71,26 +71,28 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
    */
   protected Map<String, DenseVector> getSimpleFeatures(ArrayList<String> arrDocIds, 
                                                        Map<String, String> queryData,
-                                                       ForwardIndex fieldIndex, QueryDocSimilarityFunc similObj) throws Exception {
-    HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
-    DocEntry queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryData);
+                                                       ForwardIndex fieldIndex, QueryDocSimilarityFunc[] similObj) throws Exception {
+    HashMap<String, DenseVector> res = initResultSet(arrDocIds, similObj.length); 
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryData);
     if (queryEntry == null) return res;
     
     for (String docId : arrDocIds) {
-      DocEntry docEntry = fieldIndex.getDocEntry(docId);
+      DocEntryParsed docEntry = fieldIndex.getDocEntryParsed(docId);
       
       if (docEntry == null) {
         throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
       }
-      
-      float score = similObj.compute(queryEntry, docEntry);
+
       
       DenseVector v = res.get(docId);
       if (v == null) {
         throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
       }
       
-      v.set(0, score);      
+      for (int k = 0; k < similObj.length; ++k) {      
+        float score = similObj[k].compute(queryEntry, docEntry);
+        v.set(k, score);   
+      }
     }  
     
     return res;

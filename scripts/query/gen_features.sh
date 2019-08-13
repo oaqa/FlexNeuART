@@ -2,6 +2,8 @@
 source scripts/common_proc.sh
 source scripts/config.sh
 
+checkVarNonEmpty "FAKE_RUN_ID"
+
 POS_ARGS=()
 thread_qty=1
 while [ $# -ne 0 ] ; do
@@ -161,6 +163,7 @@ echo "==============================================="
 
 scripts/query/run_multhread_feat.sh \
 -u "$URI" \
+-run_id "$FAKE_RUN_ID" \
 -cand_prov $cand_type \
 -q "$inputDataDir/$part/$queryFileName" \
 -qrel_file "$inputDataDir/$part/$qrel_file" \
@@ -176,5 +179,6 @@ scripts/query/run_multhread_feat.sh \
 $query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
 if [ "${PIPESTATUS[0]}" != "0" ] ; then
+  echo "run_multhread_feat.sh failed!"
   exit 1
 fi

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 
 public class SDMSimilarityAnserini implements QueryDocSimilarityFunc {
   
@@ -36,7 +36,7 @@ public class SDMSimilarityAnserini implements QueryDocSimilarityFunc {
     mWindowSize = windowSize;
   }
   
-  private float computeUnorderedFrequencyScore(DocEntry query, DocEntry doc) {
+  private float computeUnorderedFrequencyScore(DocEntryParsed query, DocEntryParsed doc) {
     Map<Integer, Integer> queryPairMap = new HashMap<>();
     Map<Integer, Integer> phraseCountMap = new HashMap<>();
     Map<Integer, Integer> singleCountMap = new HashMap<>();
@@ -102,7 +102,7 @@ public class SDMSimilarityAnserini implements QueryDocSimilarityFunc {
     
   }
   
-  private float computeOrderedFrequencyScore(DocEntry query, DocEntry doc) {
+  private float computeOrderedFrequencyScore(DocEntryParsed query, DocEntryParsed doc) {
     Map<Integer, Integer> queryPairMap = new HashMap<>();
     Map<Integer, Integer> phraseCountMap = new HashMap<>();
     Map<Integer, Integer> singleCountMap = new HashMap<>();
@@ -151,7 +151,7 @@ public class SDMSimilarityAnserini implements QueryDocSimilarityFunc {
 
   }
   
-  private float computeFullIndependenceScore(DocEntry query, DocEntry doc) {
+  private float computeFullIndependenceScore(DocEntryParsed query, DocEntryParsed doc) {
     // tf can be calculated by iterating over terms, number of times a term occurs in doc
     // |D| total number of terms can be calculated by iterating over stream
     Map<Integer, Integer> termCount = new HashMap<>();
@@ -192,7 +192,7 @@ public class SDMSimilarityAnserini implements QueryDocSimilarityFunc {
    * @param document
    * @return
    */
-  public float compute(DocEntry query, DocEntry doc) {
+  public float compute(DocEntryParsed query, DocEntryParsed doc) {
     float independentScore = computeFullIndependenceScore(query, doc);
     float orderedWindowScore = computeOrderedFrequencyScore(query, doc);
     float  unorderedDependenceScore = computeUnorderedFrequencyScore(query, doc);

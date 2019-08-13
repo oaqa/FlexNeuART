@@ -16,10 +16,9 @@
 package edu.cmu.lti.oaqa.knn4qa.letor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
@@ -47,7 +46,7 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 
     if (similType.equalsIgnoreCase(BM25_SIMIL))
-      mSimilObj = new BM25SimilarityLuceneNorm(
+      mSimilObjs[0] = new BM25SimilarityLuceneNorm(
                                           conf.getParam(K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
                                           conf.getParam(B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
                                           mFieldIndex);
@@ -57,8 +56,8 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
   }
   
   @Override
-  public VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) {
-    return new VectorWrapper(mSimilObj.getBM25SparseVector(e, isQuery, true /* share IDF */));
+  public VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) {
+    return new VectorWrapper(mSimilObjs[0].getBM25SparseVector(e, isQuery, true /* share IDF */));
   }
 
   @Override
@@ -68,7 +67,7 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
 
   @Override
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(arrDocIds, queryData, mFieldIndex, mSimilObj);
+    return getSimpleFeatures(arrDocIds, queryData, mFieldIndex, mSimilObjs);
   }
   
   @Override
@@ -81,7 +80,7 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
     return 0;
   }
 
-  final BM25SimilarityLuceneNorm     mSimilObj;
+  final BM25SimilarityLuceneNorm[]   mSimilObjs = new BM25SimilarityLuceneNorm[1];
   final ForwardIndex                 mFieldIndex;
 
 }

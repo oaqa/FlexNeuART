@@ -30,7 +30,7 @@ import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import no.uib.cipr.matrix.DenseVector;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryInfo;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.WordEntryInfo;
@@ -107,7 +107,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
    * @return
    * @throws Exception 
    */
-  TextEntryInfo createTextEntryInfo(String entryId, DocEntry docEntry) throws Exception {
+  TextEntryInfo createTextEntryInfo(String entryId, DocEntryParsed docEntry) throws Exception {
     ArrayList<WordEntryInfo> wentries = new ArrayList<WordEntryInfo>();
     
     if (mUseWordSeq) {
@@ -146,7 +146,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     
     try {
       res = initResultSet(arrDocIds, getFeatureQty()); 
-      DocEntry queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+      DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
       if (queryEntry == null) return res;
       
       TextEntryInfo queryTextEntry = createTextEntryInfo("", queryEntry);
@@ -154,7 +154,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
       ArrayList<TextEntryInfo> docTextEntries = new ArrayList<TextEntryInfo>();
       
       for (String docId : arrDocIds) {
-        DocEntry docEntry = mFieldIndex.getDocEntry(docId);
+        DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
         
         if (docEntry == null) {
           throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");

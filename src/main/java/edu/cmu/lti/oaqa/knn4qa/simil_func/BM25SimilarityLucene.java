@@ -15,7 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 
@@ -67,7 +67,7 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
    * @return
    */
   @Override
-  public float compute(DocEntry query, DocEntry doc) {
+  public float compute(DocEntryParsed query, DocEntryParsed doc) {
     float score = 0;
     
     int   docTermQty = doc.mWordIds.length;
@@ -105,7 +105,7 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
     return "BM25";
   }
 
-  public float [] computeEmbed(float[][] distMatrixCosine, DocEntry query, DocEntry doc) {
+  public float [] computeEmbed(float[][] distMatrixCosine, DocEntryParsed query, DocEntryParsed doc) {
     float docLen = doc.mDocLen;
     float scores[] = new float[2];
     
@@ -176,11 +176,11 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
    * 
    * @return
    */
-  public TrulySparseVector getBM25SparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
+  public TrulySparseVector getBM25SparseVector(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
     return getBM25SparseVectorNoNorm(e, isQuery, shareIDF);
   }
 
-  protected TrulySparseVector getBM25SparseVectorNoNorm(DocEntry e, boolean isQuery, boolean shareIDF) {
+  protected TrulySparseVector getBM25SparseVectorNoNorm(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
     int qty = 0;
     for (int wid : e.mWordIds)
       if (wid >= 0) qty++;
@@ -209,7 +209,7 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
     return res;
   }
   
-  public TrulySparseVector getDocCosineSparseVector(DocEntry e) {
+  public TrulySparseVector getDocCosineSparseVector(DocEntryParsed e) {
     int qty = 0;
     for (int wid : e.mWordIds)
       if (wid >= 0) qty++;

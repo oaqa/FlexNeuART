@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 import no.uib.cipr.matrix.sparse.SparseVector;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
@@ -211,7 +211,7 @@ public class DistanceFunctions {
    * @param document
    * @return
    */
-  public static float compOverallMatch(DocEntry query, DocEntry doc) {
+  public static float compOverallMatch(DocEntryParsed query, DocEntryParsed doc) {
     float score = 0;
     
     int   docTermQty = doc.mWordIds.length;
@@ -374,8 +374,8 @@ public class DistanceFunctions {
    *         are filled with Float.POSITIVE_INFINITY
    */
    public static float [][]  compDistMatrix(AbstractDistance distType,
-                               DocEntry e1, 
-                               DocEntry e2,
+                               DocEntryParsed e1, 
+                               DocEntryParsed e2,
                                EmbeddingReaderAndRecoder embed) {
     int qty1 = e1.mWordIds.length;
     float vecs1 [][] = new float[qty1][];    
@@ -442,7 +442,7 @@ public class DistanceFunctions {
    *         by Kusner et al, other three entries are its different
    *         normalized and weighted versions (proposed by us).
    */
-  public static float[] compEMDLike(DocEntry e1, DocEntry e2,
+  public static float[] compEMDLike(DocEntryParsed e1, DocEntryParsed e2,
                                     float distMatr[][]) {
     int qty1 = distMatr.length;
 

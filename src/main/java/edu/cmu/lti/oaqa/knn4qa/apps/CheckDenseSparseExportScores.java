@@ -24,7 +24,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
@@ -151,11 +151,11 @@ public class CheckDenseSparseExportScores {
               queryText = "";
             }
            
-            DocEntry queryEntry = oneIndx.createDocEntry(StringUtils.splitOnWhiteSpace(queryText), true); // true means including positions
+            DocEntryParsed queryEntry = oneIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), true); // true means including positions
             
             for (int i = 0; i < docIdSample.size(); ++i) {
               String docId = docIdSample.get(i);
-              DocEntry docEntry = oneIndx.getDocEntry(docId);
+              DocEntryParsed docEntry = oneIndx.getDocEntryParsed(docId);
               
               VectorWrapper docVect = oneExtr.getFeatInnerProdVector(docEntry, false);         
               VectorWrapper queryVect = oneExtr.getFeatInnerProdVector(queryEntry, true);

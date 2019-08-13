@@ -37,6 +37,9 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
@@ -46,6 +49,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.Const;
  */
 public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
   
+  private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryLucene.class);
   public static final int COMMIT_INTERV = 500000;
   
   protected String mBinDir;
@@ -62,16 +66,16 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     File outputDir = new File(mBinDir);
     if (!outputDir.exists()) {
       if (!outputDir.mkdirs()) {
-        System.out.println("couldn't create " + outputDir.getAbsolutePath());
+        logger.error("couldn't create " + outputDir.getAbsolutePath());
         System.exit(1);
       }
     }
     if (!outputDir.isDirectory()) {
-      System.out.println(outputDir.getAbsolutePath() + " is not a directory!");
+      logger.error(outputDir.getAbsolutePath() + " is not a directory!");
       System.exit(1);
     }
     if (!outputDir.canWrite()) {
-      System.out.println("Can't write to " + outputDir.getAbsolutePath());
+      logger.error("Can't write to " + outputDir.getAbsolutePath());
       System.exit(1);
     }
     Analyzer analyzer = new WhitespaceAnalyzer();
@@ -88,9 +92,8 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     indexConf.setOpenMode(OpenMode.CREATE);
     mIndexWriter = new IndexWriter(indexDir, indexConf);  
   }
-
-  @Override
-  public DocEntry getDocEntry(String docId) throws Exception {
+  
+  private String getDocEntryStr(String docId) throws Exception {
     QueryParser parser = new QueryParser(Const.TAG_DOCNO, mAnalyzer);
     Query       queryParsed = parser.parse(docId);
     
@@ -98,8 +101,27 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     ScoreDoc[]  scoreDocs = hits.scoreDocs;
     if (scoreDocs != null && scoreDocs.length == 1) {
       Document doc = mSearcher.doc(scoreDocs[0].doc);
-      String docText = doc.get(Const.TAG_DOC_ENTRY);
-      return DocEntry.fromString(docText);
+      return doc.get(Const.TAG_DOC_ENTRY);
+    }
+    return null;
+  }
+
+  @Override
+  public String getDocEntryRaw(String docId) throws Exception {
+    if (!mIsRaw) {
+      throw new Exception("An attempt to read the raw entry for the parsed field, directory: " + mBinDir);
+    }
+    return getDocEntryStr(docId);
+  }
+
+  @Override
+  public DocEntryParsed getDocEntryParsed(String docId) throws Exception {
+    if (mIsRaw) {
+      throw new Exception("An attempt to read the parsed entry for the raw field, directory: " + mBinDir);
+    }
+    String docText = getDocEntryStr(docId);
+    if (docText != null) {
+      return DocEntryParsed.fromString(docText);
     }
     return null;
   }
@@ -111,24 +133,28 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     mReader = DirectoryReader.open(FSDirectory.open(Paths.get(mBinDir)));
     mSearcher = new IndexSearcher(mReader);
     
-    System.out.println("Finished loading context from dir: " + mBinDir);
+    logger.info("Finished loading context from dir: " + mBinDir);
   }
   
-
   @Override
-  protected void addDocEntry(String docId, DocEntry doc) throws IOException {   
+  protected void addDocEntryRaw(String docId, String docText) throws IOException {   
     mDocIds.add(docId);
     Document luceneDoc = new Document();
     
     if (mDocIds.size() % COMMIT_INTERV == 0) {
-      System.out.println("Committing");
+      logger.info("Committing");
       mIndexWriter.commit();
     }
     
     luceneDoc.add(new StringField(Const.TAG_DOCNO, docId, Field.Store.YES));
-    luceneDoc.add(new StoredField(Const.TAG_DOC_ENTRY, doc.toString()));
+    luceneDoc.add(new StoredField(Const.TAG_DOC_ENTRY, docText));
     mIndexWriter.addDocument(luceneDoc);
     
+  }
+  
+  @Override
+  protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {   
+    addDocEntryRaw(docId, doc.toString());    
   }
 
   @Override
@@ -143,5 +169,6 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
   private DirectoryReader mReader;
   private IndexSearcher mSearcher;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
+
 
 }

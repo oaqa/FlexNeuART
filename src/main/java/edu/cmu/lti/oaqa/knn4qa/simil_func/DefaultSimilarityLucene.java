@@ -2,7 +2,7 @@ package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
 import java.util.*;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 
@@ -39,7 +39,7 @@ public class DefaultSimilarityLucene extends TFIDFSimilarity {
    * @return
    */
   @Override
-  public float compute(DocEntry query, DocEntry doc) {
+  public float compute(DocEntryParsed query, DocEntryParsed doc) {
     float score = 0;
     
     int   docTermQty = doc.mWordIds.length;

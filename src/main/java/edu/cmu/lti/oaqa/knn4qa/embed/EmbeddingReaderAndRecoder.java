@@ -22,7 +22,7 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
@@ -200,7 +200,7 @@ public class EmbeddingReaderAndRecoder {
    * @param     normalizeL2     if true, the output vector is L2-normalized.
    * @return    a respective average vector.
    */  
-  public float[] getDocAverage(DocEntry         doc,
+  public float[] getDocAverage(DocEntryParsed         doc,
                                TFIDFSimilarity  simil,
                                ForwardIndex     fieldIndex,
                                boolean          weightByIDF,

@@ -26,6 +26,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
+ * A base class for (mostly) binary forward indices. It can be possible
+ * to have more than one. However, certain information such as the
+ * list of IDs is stored for simplicity as plain text.
+ * 
  * @author Leonid Boytsov
  *
  */

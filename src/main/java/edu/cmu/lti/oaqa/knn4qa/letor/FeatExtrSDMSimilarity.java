@@ -44,7 +44,7 @@ public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
     //String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
 
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
-    mSimilObj = new SDMSimilarityAnserini(conf.getParam(LAMBDA_T_PARAM, 0.5f), 
+    mSimilObjs[0] = new SDMSimilarityAnserini(conf.getParam(LAMBDA_T_PARAM, 0.5f), 
                                           conf.getParam(LAMBDA_O_PARAM, 0.2f), 
                                           conf.getParam(LAMBDA_U_PARAM, 0.3f), 
                                           conf.getParam(WINDOW_PARAM, 8));
@@ -57,7 +57,7 @@ public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
 
   @Override
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(arrDocIds, queryData, mFieldIndex, mSimilObj);
+    return getSimpleFeatures(arrDocIds, queryData, mFieldIndex, mSimilObjs);
   }
 
   @Override
@@ -65,6 +65,6 @@ public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
     return 1;
   }
 
-  final SDMSimilarityAnserini     mSimilObj;
+  final SDMSimilarityAnserini[]   mSimilObjs = new SDMSimilarityAnserini[1];
   final ForwardIndex              mFieldIndex;
 }

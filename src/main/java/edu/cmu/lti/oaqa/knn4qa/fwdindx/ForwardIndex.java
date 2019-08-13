@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,20 +30,38 @@ import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Joiner;
+
+class WordEntryExt implements Comparable<WordEntryExt> {
+  WordEntry mWordEntry;
+  String    mWord;
+
+  WordEntryExt(String word, WordEntry wordEntry) {
+    mWordEntry = wordEntry;
+    mWord = word;
+  }
+  @Override
+  public int compareTo(WordEntryExt o) {
+    return mWordEntry.mWordId - o.mWordEntry.mWordId;
+  }
+}
+
 /**
  * 
  * An in-memory forward index. 
  * 
- * <p>A base abstract class for the forward index.
- * The forward index is created from an XML file produced by a pipeline.
- * It collects all unique (space-separated) words that appear in all the fields.
- * These are used to (1) create an in-memory dictionary (2) and a forward index.
- * The forward index can be either fully in-memory index (it is then
- * saved to and loaded from a text file) or the index where documents
- * are stored in binary files. In any case, the dictionary is always
- * stored in memory.</p>
+ * <p>A base abstract class for the forward index that is created for <b>one field</b>.
+ * The forward index is created from an XML/JSON file produced by a pipeline.
+ * The index can hold either the raw or parsed text. The parsed text can
+ * be either bag-of-words only or positional.</p>
  * 
- * <p><b>NOTE:</b> word IDs start from 1.</p>
+ * <p>The raw text index merely keeps all text entries in the unparsed form.
+ * For the parsed text, we assume that tokens are space-separated. 
+ * We then compile all field-specific unique (space-separated) into a dictionary.
+ * </p>>
  * 
  * <p>
  * In addition, it computes some statistics for each field:
@@ -53,69 +72,103 @@ import edu.cmu.lti.oaqa.knn4qa.utils.Const;
  *  <li>An number of documents where each word occur;
  * </ol>  
  * 
+ * <p><b>NOTE:</b> word IDs start from 1.</p>
+ * 
  * @author Leonid Boytsov
  *
  */
 public abstract class ForwardIndex {
 
-  public enum ForwardIndexType {
+  private static final Logger logger = LoggerFactory.getLogger(ForwardIndex.class);
+  
+  public enum ForwardIndexStorageType {
+    raw,
+    parsedBOW,
+    parsedText,
+    unknown // to use as an indicator that a string entry doesn't correspond to the forward index time
+  }
+  
+  /* 
+   * Implementation type is left for flexibility
+   */
+  public enum ForwardIndexImplType {
    lucene,
-   memdb,
-   inmem,
    unknown // to use as an indicator that a string entry doesn't correspond to the forward index time
   }
   
-  public static final ForwardIndexType mIndexTypes[] = {ForwardIndexType.lucene, ForwardIndexType.memdb, ForwardIndexType.inmem};
-  public static final WordEntry UNKNOWN_WORD = new WordEntry(-1);
+  public static final WordEntry UNKNOWN_WORD = new WordEntry(Const.UNKNOWN_WORD_ID);
   public static final int MIN_WORD_ID = 1;
   protected static final int PRINT_QTY = 10000;
   
   protected HashMap<String, WordEntry> mStr2WordEntry = new HashMap<String, WordEntry>();
   
-  public static ForwardIndexType getIndexType(String type) {
-    for (ForwardIndexType itype : mIndexTypes) {
-      if (itype.toString().compareToIgnoreCase(type) == 0) {
+  public static ForwardIndexImplType getIndexImplType(String type) {
+    for (ForwardIndexImplType itype : ForwardIndexImplType.values()) {
+      if (itype != ForwardIndexImplType.unknown &&
+          itype.toString().compareToIgnoreCase(type) == 0) {
         return itype;
       }
     }
-    return ForwardIndexType.unknown;
+    return ForwardIndexImplType.unknown;
   }
-  public static String getTypeList() {
-   StringBuffer  sb = new StringBuffer();
-   for (int i = 0;  i < mIndexTypes.length; ++i) {
-     if (i > 0) sb.append(',');
-     sb.append(mIndexTypes[i].toString());
+  
+  /**
+   * Convert an index  <b>storage</b> type to the corresponding enum.
+   * 
+   * @param type a string type
+   * @return the corresponding enum value or the unknown value if the string isn't recognized
+   */
+  public static ForwardIndexStorageType getIndexStorageType(String type) {
+    for (ForwardIndexStorageType itype : ForwardIndexStorageType.values()) {
+      if (itype != ForwardIndexStorageType.unknown &&
+          itype.toString().compareToIgnoreCase(type) == 0) {
+        return itype;
+      }
+    }
+    return ForwardIndexStorageType.unknown;
+  }
+  
+  public static String getIndexStorageTypeList() {
+   Joiner   joinOnComma  = Joiner.on(',');
+   ArrayList<String> parts = new ArrayList<String>();
+   for (ForwardIndexStorageType itype : ForwardIndexStorageType.values()) 
+   if (itype != ForwardIndexStorageType.unknown) {
+     parts.add(itype.toString());
    }
-   return sb.toString();
+   return joinOnComma.join(parts);
   }
 
   /**
    * Create an index file instance that can be used to create/save index.
    * 
    * @param filePrefix  a prefix of the index file/directories
-   * @param indexType a type of the index field
+   * @param indexType a <b>storage</b> type of the index field
    * @return a  ForwardIndex sub-class instance
    * @throws IOException
    */
-  public static ForwardIndex createWriteInstance(String filePrefix, ForwardIndexType indexType) throws IOException {
+  public static ForwardIndex createWriteInstance(String filePrefix, ForwardIndexStorageType indexType) throws IOException {
     return createInstance(filePrefix, indexType);
   }
 
+  /**
+   * Create a readable instance of the index. The storage type isn't 
+   * important at this point.
+   * 
+   * @param filePrefix a prefix of the index file/directories
+   * @return a  ForwardIndex sub-class instance
+   * @throws Exception
+   */
   public static ForwardIndex createReadInstance(String filePrefix) throws Exception {
-    // If for some weird reason more than one index was created, we will try to use the first one
+    ForwardIndexImplType itype = ForwardIndexImplType.lucene;
+    
+    String indexPrefixFull = getIndexPrefix(filePrefix, itype);  
+    File indexDirOrFile = new File(indexPrefixFull);
+
     ForwardIndex res = null;
     
-    for (ForwardIndexType itype : mIndexTypes) {
-      String indexPrefixFull = getIndexPrefix(filePrefix, itype);  
-      File indexDirOrFile = new File(indexPrefixFull);
-      
-      if (indexDirOrFile.exists()) {
-        res = createInstance(filePrefix, itype);
-        break;
-      }
-    }
-    
-    if (null == res) {
+    if (indexDirOrFile.exists()) {
+      res = createInstance(filePrefix, ForwardIndexStorageType.unknown);
+    } else {
       throw new Exception("No index found at location: " + filePrefix);
     }
     
@@ -137,12 +190,10 @@ public abstract class ForwardIndex {
    * 
    * @param fieldName         the name of the field (as specified in the SOLR index-file)
    * @param fileNames         an array of files from which the index is created
-   * @param bStoreWordIdSeq   if true, we memorize the sequence of word IDs, otherwise only a number of words (doc. len.)
    * @param maxNumRec         the maximum number of records to process
    * @throws Exception 
    */
   public void createIndex(String fieldName, String[] fileNames, 
-                         boolean bStoreWordIdSeq,
                          int maxNumRec) throws Exception {    
     mDocQty       = 0;
     mTotalWordQty = 0;
@@ -151,7 +202,7 @@ public abstract class ForwardIndex {
     
     long totalUniqWordQty = 0; // sum the number of uniq words per document (over all documents)
     
-    System.out.println("Creating a new in-memory forward index, maximum # of docs to process: " + maxNumRec);
+    logger.info("Creating a new in-memory forward index, maximum # of docs to process: " + maxNumRec);
     
     for (String fileName : fileNames) {    
       try (DataEntryReader inp = new DataEntryReader(fileName)) {
@@ -163,67 +214,71 @@ public abstract class ForwardIndex {
           String docId = docFields.get(Const.TAG_DOCNO);
           
           if (docId == null) {
-            System.err.println(String.format("No ID tag '%s', offending DOC #%d", 
-                                              Const.TAG_DOCNO, mDocQty));
+            logger.warn(String.format("No ID tag '%s', offending DOC #%d ignoring", 
+                                      Const.TAG_DOCNO, mDocQty));
+            continue;
           }
           
           String text = docFields.get(fieldName);
           if (text == null) text = "";
           if (text.isEmpty()) {
-            System.out.println(String.format("Warning: empty field '%s' for document '%s'",
-                                             fieldName, docId));
+            logger.warn(String.format("Warning: empty field '%s' for document '%s'",
+                                      fieldName, docId));
           }
           
-          // If the string is empty, the array will contain an emtpy string, but
-          // we don't want this
+          // If the string is empty, the array will contain an empty string, but we don't want this
           text=text.trim();
-          String words[] = text.isEmpty() ? new String[0] : text.split("\\s+");
+          String words[];
  
-          // First obtain word IDs for unknown words
-          for (int i = 0; i < words.length; ++i) {
-            String w = words[i];
-            WordEntry wEntry = mStr2WordEntry.get(w);
-            if (null == wEntry) {
-              wEntry = new WordEntry(MIN_WORD_ID + mStr2WordEntry.size());
-              mStr2WordEntry.put(w, wEntry);
-            }
-          }
-          
-          DocEntry doc = createDocEntry(words, bStoreWordIdSeq);
+          DocEntryParsed doc;
 
-          addDocEntry(docId, doc);
-          
-          HashSet<String> uniqueWords = new HashSet<String>();        
-          for (String w: words) uniqueWords.add(w);
-          
-          // Let's update word co-occurrence statistics
-          for (String w: uniqueWords) {
-            WordEntry wEntry = mStr2WordEntry.get(w);
-            wEntry.mWordFreq++;
+          if (mIsRaw) {
+            addDocEntryRaw(docId, text);
+          } else {
+            words = text.isEmpty() ? new String[0] : text.split("\\s+");
+            // First obtain word IDs for unknown words
+            for (int i = 0; i < words.length; ++i) {
+              String w = words[i];
+              WordEntry wEntry = mStr2WordEntry.get(w);
+              if (null == wEntry) {
+                wEntry = new WordEntry(MIN_WORD_ID + mStr2WordEntry.size());
+                mStr2WordEntry.put(w, wEntry);
+              }
+            }
+            doc = createDocEntryParsed(words, mStoreWordIdSeq);
+            addDocEntryParsed(docId, doc);
+            HashSet<String> uniqueWords = new HashSet<String>();
+            for (String w : words)
+              uniqueWords.add(w);
+            // Let's update word co-occurrence statistics
+            for (String w : uniqueWords) {
+              WordEntry wEntry = mStr2WordEntry.get(w);
+              wEntry.mWordFreq++;
+            } 
+            mTotalWordQty += words.length;
+            totalUniqWordQty += doc.mQtys.length;
           }
-          
           ++mDocQty;
           if (mDocQty % PRINT_QTY == 0) {
-            System.out.println("Processed " + mDocQty + " documents");
+            logger.info("Processed " + mDocQty + " documents");
             System.gc();
           }
-          mTotalWordQty += words.length;
-          totalUniqWordQty += doc.mQtys.length;
         }
         
         postIndexComp();
         
-        System.out.println("Finished processing file: " + fileName);
+        logger.info("Finished processing file: " + fileName);
         
         if (mDocQty >= maxNumRec) break;
       }
     }
     
-    System.out.println("Final statistics: ");
-    System.out.println(
+    logger.info("Final statistics: ");
+    logger.info(
         String.format("Number of documents %d, total number of words %d, average reduction due to keeping only unique words %f",
                       mDocQty, mTotalWordQty, 
-                      ((double)mTotalWordQty)/totalUniqWordQty));
+                      // When total # of words is zero, without max we would be dividing by zero
+                      ((double)mTotalWordQty)/Math.max(1,totalUniqWordQty)));
   }
   
   public abstract void saveIndex() throws IOException;
@@ -243,8 +298,10 @@ public abstract class ForwardIndex {
     
     sortDocEntries();
     
-    mAvgDocLen = mTotalWordQty;
-    mAvgDocLen /= mDocQty;
+    if (mDocQty > 0) {
+      mAvgDocLen = mTotalWordQty;
+      mAvgDocLen /= mDocQty;
+    }
   }
 
   /**
@@ -294,39 +351,57 @@ public abstract class ForwardIndex {
   }
 
   protected void writeHeader(BufferedWriter out) throws IOException {
-    // 1. Write meta-info
-    out.write(String.format("%d %d", mDocQty, mTotalWordQty));
+    // 1. Write meta-info, if the number of words is negative
+    //    this is an indicator that the index is raw, not parsed
+    out.write(String.format("%d %d", mDocQty, mIsRaw ? -1 : mTotalWordQty ));
     out.newLine();
     out.newLine();
-    // 2. Write the dictionary
-    for (WordEntryExt e: mWordEntSortById) {
-      String    w    = e.mWord;
-      WordEntry info = e.mWordEntry;
-      out.write(String.format("%s\t%d:%d", w, info.mWordId, info.mWordFreq));
-      out.newLine();
+    // 2. Write the dictionary (if the index is not raw)
+    if (!mIsRaw) {
+      for (WordEntryExt e: mWordEntSortById) {
+        String    w    = e.mWord;
+        WordEntry info = e.mWordEntry;
+        out.write(String.format("%s\t%d:%d", w, info.mWordId, info.mWordFreq));
+        out.newLine();
+      }
     }
     out.newLine();
   }
 
   /**
-   * Retrieves an existing document entry.
+   * Retrieves an existing parsed document entry. 
    * 
    * @param docId document id.
-   * @return the document entry of the type {@link DocEntry} or null,
+   * @return the document entry of the type {@link DocEntryParsed} or null,
    *         if there is no document with the specified document ID.
+   *         
+   * @throws An exception if there is a retrieval error, or if the index type is "raw".
    */
-  public abstract DocEntry getDocEntry(String docId) throws Exception;
+  public abstract DocEntryParsed getDocEntryParsed(String docId) throws Exception;
+  
+  /**
+   * Retrieves an existing raw-text document entry. 
+   * 
+   * @param docId document id.
+   * @return raw document string or null,
+   *         if there is no document with the specified document ID.
+   *         
+   * @throws An exception if there is a retrieval error, or if the index type is "parsed".
+   */
+  public abstract String getDocEntryRaw(String docId) throws Exception;
 
   /**
-   * Retrieves an existing document entry and constructs a textual representation.
+   * Retrieves an existing parsed document entry and constructs a textual representation.
    * This function needs a positional index.
    * 
    * @param docId document id.
    * @return the document text or null,
    *         if there is no document with the specified document ID.
+   *         
+   * @throws An exception if there is a retrieval error, or if the index type is raw.
    */
-  public String getDocEntryText(String docId) throws Exception {
-    DocEntry e = getDocEntry(docId);
+  public String getDocEntryParsedText(String docId) throws Exception {
+    DocEntryParsed e = getDocEntryParsed(docId);
     if (e == null) {
       return null;
     }
@@ -348,7 +423,7 @@ public abstract class ForwardIndex {
   }
 
   /**
-   * Creates a document entry: a sequence of word IDs,
+   * Creates a parsed document entry: a sequence of word IDs,
    * plus a list of words (represented again by their IDs)
    * with their frequencies of occurrence in the document.
    * This list is sorted by word IDs. Unknown words
@@ -359,7 +434,7 @@ public abstract class ForwardIndex {
    * 
    * @return a document entry.
    */
-  public DocEntry createDocEntry(String[] words, boolean bStoreWordIdSeq) {
+  public DocEntryParsed createDocEntryParsed(String[] words, boolean bStoreWordIdSeq) {
       // TreeMap guarantees that entries are sorted by the wordId
       TreeMap<Integer, Integer> wordQtys = new TreeMap<Integer, Integer>();        
       int [] wordIdSeq = new int[words.length];
@@ -382,7 +457,7 @@ public abstract class ForwardIndex {
         wordQtys.put(wordId, qty);
       }
       
-      DocEntry doc = new DocEntry(wordQtys.size(), wordIdSeq, bStoreWordIdSeq);
+      DocEntryParsed doc = new DocEntryParsed(wordQtys.size(), wordIdSeq, bStoreWordIdSeq);
       
       int k =0;
       
@@ -428,7 +503,8 @@ public abstract class ForwardIndex {
 
   public int getMaxWordId() { return mMaxWordId; }
   
-  protected abstract void addDocEntry(String docId, DocEntry doc) throws IOException;
+  protected abstract void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException;
+  protected abstract void addDocEntryRaw(String docId, String docText) throws IOException;
 
   protected abstract void initIndex() throws IOException;
   
@@ -456,10 +532,12 @@ public abstract class ForwardIndex {
   HashMap<Integer,WordEntryExt> mInt2WordEntryExt = new HashMap<Integer, WordEntryExt>();
   WordEntryExt[] mWordEntSortById = null;
 
-  protected int mDocQty = 0;
-  int mMaxWordId = 0;
-  protected long mTotalWordQty = 0;
-  float mAvgDocLen = 0;
+  protected boolean mIsRaw = false;
+  protected boolean mStoreWordIdSeq = false;
+  protected int     mDocQty = 0;
+  int               mMaxWordId = 0;
+  protected long    mTotalWordQty = 0;
+  float             mAvgDocLen = 0;
 
   /**
    * Read the text-only header (which includes vocabulary info) of the forward file.
@@ -503,11 +581,24 @@ public abstract class ForwardIndex {
               "Can't read an empty line after meta information: the file '%s' may have been truncated.",
               fileName);
     }
+    
 
-    // First read the dictionary
+
+    // Read the dictionary if the index isn't raw
     int lineNum = 3;
     line = inp.readLine();
+    
+    if (mTotalWordQty < 0) {
+      mIsRaw = true;
+      line = inp.readLine();
+    }
+    
     for (; line != null && !line.isEmpty(); line = inp.readLine(), ++lineNum) {
+     if (mIsRaw) {
+       throw new Exception(
+           String.format("Inconsistent data: the apparently raw index contains word, line %d, file %s",
+                       lineNum, fileName));
+     }
       parts = line.split("\\t");
       if (parts.length != 2) {
         throw new Exception(
@@ -551,25 +642,35 @@ public abstract class ForwardIndex {
     return lineNum;
   }
 
-  private static String getIndexPrefix(String filePrefix, ForwardIndexType indexType) {
+  private static String getIndexPrefix(String filePrefix, ForwardIndexImplType indexType) {
     switch (indexType) {
-      case lucene: return filePrefix + "." + ForwardIndexType.lucene.toString();       
-      case memdb:  return filePrefix + "." + ForwardIndexType.memdb.toString();
-      case inmem:  return filePrefix + "." + ForwardIndexType.inmem.toString();
+      case lucene: return filePrefix + "." + ForwardIndexImplType.lucene.toString();
+    default:
+      throw new RuntimeException("Unsupported forward index type: " + indexType);       
     }
-    throw new RuntimeException("Bug: should not reach this point!");
   }
   
-  private static ForwardIndex createInstance(String filePrefix, ForwardIndexType indexType) throws IOException {
-    String indexPrefixFull = getIndexPrefix(filePrefix, indexType);
-    ForwardIndex res = null;
+  // unknown index type is used to create a read instance
+  private static ForwardIndex createInstance(String filePrefix, ForwardIndexStorageType indexType) throws IOException {
+    String indexPrefixFull = getIndexPrefix(filePrefix, ForwardIndexImplType.lucene);
+    ForwardIndex res = new ForwardIndexBinaryLucene(filePrefix, indexPrefixFull); 
     
-    switch (indexType) {
-      case lucene:res = new ForwardIndexBinaryLucene(filePrefix, indexPrefixFull); break;
-      case memdb: res = new ForwardIndexBinaryMapDb(filePrefix, indexPrefixFull); break;
-      case inmem:  res = new InMemForwardIndexText(indexPrefixFull); break;
+    if (indexType == ForwardIndexStorageType.raw) {
+      res.mIsRaw = true;
+    } else if (indexType == ForwardIndexStorageType.unknown) {
+      res.mIsRaw = false;
+      res.mStoreWordIdSeq = false;
+    } else {
+      res.mIsRaw = false;
+      if (indexType == ForwardIndexStorageType.parsedBOW) {
+        res.mStoreWordIdSeq = false;
+      } else if (indexType == ForwardIndexStorageType.parsedText) {
+        res.mStoreWordIdSeq = true;
+      } else {
+        throw new RuntimeException("Unsupported forward index type: " + indexType);     
+      }
     }
-
+                         
     return res;    
   }
   

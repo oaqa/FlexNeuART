@@ -15,7 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 
 public interface QueryDocSimilarityFunc {
   /**
@@ -26,5 +26,5 @@ public interface QueryDocSimilarityFunc {
    * @param document
    * @return
    */
-  public float compute(DocEntry query, DocEntry doc);
+  public float compute(DocEntryParsed query, DocEntryParsed doc);
 }

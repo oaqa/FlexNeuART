@@ -17,7 +17,7 @@ checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-outDir="$inputDataDir/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
+outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
 indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 
 if [ ! -d "$outDir" ] ; then
@@ -27,7 +27,7 @@ fi
 field=$2
 
 if [ "$field" = "" ] ; then
-  echo "Specify a document/index: e.g., text (2d arg)"
+  echo "Specify a document/index field: e.g., text (2d arg)"
   exit 1
 fi
 

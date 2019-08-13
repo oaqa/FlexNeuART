@@ -6,7 +6,7 @@ import java.util.Map;
 
 
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
@@ -58,7 +58,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   }
   
   @Override
-  public VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception {
+  public VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) throws Exception {
     if (!mIsCosine) {
       throw new Exception("Inner-product representation is available only for the cosine similarity!");
     }
@@ -88,14 +88,14 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
-    DocEntry queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
     if (queryEntry == null) return res;
     
     float [] queryVect = mQueryEmbed.getDocAverage(queryEntry, mSimilObj, mFieldIndex, 
                                                    mUseIDFWeight, mUseL2Norm);
 
     for (String docId : arrDocIds) {
-      DocEntry docEntry = mFieldIndex.getDocEntry(docId);
+      DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
       
       if (docEntry == null) {
         throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");

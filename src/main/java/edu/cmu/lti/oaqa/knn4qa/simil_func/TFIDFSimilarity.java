@@ -2,7 +2,7 @@ package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
 import java.util.HashMap;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 
@@ -16,7 +16,7 @@ public abstract class TFIDFSimilarity implements QueryDocSimilarityFunc {
    * @param document
    * @return
    */
-  public abstract float compute(DocEntry query, DocEntry doc);
+  public abstract float compute(DocEntryParsed query, DocEntryParsed doc);
 
   /**
    * Computes an IDF value. 

@@ -23,7 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -166,14 +166,14 @@ public abstract class FeatureExtractor {
     return res;
   }
   
-  public static DocEntry getQueryEntry(String fieldName, ForwardIndex fieldIndex, Map<String, String> queryData) {
+  public static DocEntryParsed getQueryEntry(String fieldName, ForwardIndex fieldIndex, Map<String, String> queryData) {
     String query = queryData.get(fieldName);
     if (null == query) return null;
     query = query.trim();
     if (query.isEmpty()) return null;
     
     return
-        fieldIndex.createDocEntry(query.split("\\s+"),
+        fieldIndex.createDocEntryParsed(query.split("\\s+"),
                                   true  /* True means we generate word ID sequence:
                                    * in the case of queries, there's never a harm in doing so.
                                    * If word ID sequence is not used, it will be used only to compute the document length. */              

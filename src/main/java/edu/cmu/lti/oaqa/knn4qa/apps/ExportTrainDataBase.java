@@ -207,7 +207,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
       int relFlag = relDocIds.contains(e.mDocId) ? 1 : 0;
       String docId = e.mDocId;
       
-      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId)).trim();
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryParsedText(docId)).trim();
       
       if (!text.isEmpty()) {
         writeField(queryId, queryFieldText, docId, text, relFlag);
@@ -274,7 +274,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     
     // First save *ALL* the relevant documents
     for (String docId : relDocIdsArr) {
-      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId)).trim();
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryParsedText(docId)).trim();
       
       if (!text.isEmpty()) {
         writeField(queryId, queryFieldText, docId, text, 1);
@@ -285,7 +285,7 @@ class ExportTextMatchZoo extends ExportTrainDataBase {
     ArrayList<String> othDocSample = mRandUtils.reservoirSampling(othDocIdsArr, mSampleNegQty);
       
     for (String docId : othDocSample) {
-      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryText(docId)).trim();
+      String text = CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryParsedText(docId)).trim();
       
       if (text.isEmpty()) {
         continue;

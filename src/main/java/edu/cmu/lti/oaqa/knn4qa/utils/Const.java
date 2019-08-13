@@ -37,6 +37,7 @@ public class Const {
   public static final String TAG_DOC_ENTRY = "DOC";
   public static final String TAG_DOCNO     = "DOCNO";
   
+  public static final int UNKNOWN_WORD_ID = -1;
   
   public static final String TEXT_FIELD_NAME = "text";
   

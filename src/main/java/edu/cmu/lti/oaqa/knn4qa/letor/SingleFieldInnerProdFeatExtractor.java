@@ -3,7 +3,7 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 import java.util.ArrayList;
 import java.util.Map;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -49,7 +49,7 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
    *         if the inner-product representation is not possible.
    * @throws Exception 
    */
-  public abstract VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception;
+  public abstract VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) throws Exception;
 
   public int getFeatureQty() {
     return 1;

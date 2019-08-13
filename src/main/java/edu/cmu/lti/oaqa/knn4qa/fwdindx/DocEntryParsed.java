@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import java.util.ArrayList;
  * @author Leonid Boytsov
  *
  */
-public class DocEntry {
-  public DocEntry(int uniqQty, int [] wordIdSeq, boolean bStoreWordIdSeq) {
+public class DocEntryParsed {
+  public DocEntryParsed(int uniqQty, int [] wordIdSeq, boolean bStoreWordIdSeq) {
     mWordIds = new int [uniqQty];
     mQtys    = new int [uniqQty];
     if (bStoreWordIdSeq)
@@ -34,7 +34,7 @@ public class DocEntry {
     mDocLen = wordIdSeq.length;
   }
 
-  public DocEntry(ArrayList<Integer> wordIds, 
+  public DocEntryParsed(ArrayList<Integer> wordIds, 
                   ArrayList<Integer> wordQtys,
                   int                docLen) {
     mWordIds = new int [wordIds.size()];
@@ -49,7 +49,7 @@ public class DocEntry {
   }
 
   
-  public DocEntry(ArrayList<Integer> wordIds, 
+  public DocEntryParsed(ArrayList<Integer> wordIds, 
                   ArrayList<Integer> wordQtys,
                   ArrayList<Integer> wordIdSeq,
                   boolean bStoreWordIdSeq) throws Exception {
@@ -99,7 +99,7 @@ public class DocEntry {
     return sb.toString();
   }
   
-  public static DocEntry fromString(String text) throws Exception {
+  public static DocEntryParsed fromString(String text) throws Exception {
     int nli = text.indexOf('\n');
     if (nli < 0) {
       throw new Exception("Invalid document entry, no newline found in:\n" + text);
@@ -147,7 +147,7 @@ public class DocEntry {
       } catch (NumberFormatException e) {
         throw new Exception("Document length isn't integer");               
       }
-      return new DocEntry(wordIds, wordQtys, docLen); 
+      return new DocEntryParsed(wordIds, wordQtys, docLen); 
     } else {
       ArrayList<Integer> wordIdSeq = new ArrayList<Integer>();
       
@@ -168,7 +168,7 @@ public class DocEntry {
         }
       }
       
-      return new DocEntry(wordIds, wordQtys, wordIdSeq, true);
+      return new DocEntryParsed(wordIds, wordQtys, wordIdSeq, true);
     }    
     
   }

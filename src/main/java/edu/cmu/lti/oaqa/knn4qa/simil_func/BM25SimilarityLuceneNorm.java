@@ -2,7 +2,7 @@ package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
 import java.util.*;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 
 /**
@@ -36,7 +36,7 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
    * @return
    */
   @Override
-  public float compute(DocEntry query, DocEntry doc) {
+  public float compute(DocEntryParsed query, DocEntryParsed doc) {
     float score = 0;
     
     int   docTermQty = doc.mWordIds.length;
@@ -72,7 +72,7 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
     return score;
   }
   
-  private float getNormIDF(DocEntry query) {
+  private float getNormIDF(DocEntryParsed query) {
     float normIDF = 0;
     int   queryTermQty = query.mWordIds.length;
     for (int i = 0; i < queryTermQty; ++i) {
@@ -86,7 +86,7 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
   }
   
   @Override
-  public TrulySparseVector getBM25SparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
+  public TrulySparseVector getBM25SparseVector(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
     TrulySparseVector res = getBM25SparseVectorNoNorm(e, isQuery, shareIDF);
     
     if (isQuery) {
