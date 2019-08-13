@@ -2,7 +2,7 @@
 
 This is a learning-to-rank pipeline, which is a part of the project where we study applicability of k-nearest neighbor search methods to IR and QA applications. This project is supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
 
-The master branch contains a new, simplified version of this package, which has a better integration with NMSLIB. It also has support for external scorers, in particular, implemented in Python. We will keep working on improving this version and respective documentation. A basic usage/installation example can be found [in these notebooks](scripts/notebooks). More detailed documentation is in preparation.
+The master branch contains a new, simplified version of this package, which has a better integration with NMSLIB. It also has support for external scorers, in particular, implemented in Python. We will keep working on improving this version and respective documentation. A basic usage/installation example can be found [in these notebooks](scripts/notebooks). More detailed documentation is in preparation. Please, note that currently the toolkit is still under active development. 
 
 Previous work can be found in the following branches branches:
 
