@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -13,7 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.utils;
+package edu.cmu.lti.oaqa.knn4qa.fwdindx;
+
+import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilter;
 
 public abstract class VocabularyFilterAndRecoder extends VocabularyFilter {
   @Override

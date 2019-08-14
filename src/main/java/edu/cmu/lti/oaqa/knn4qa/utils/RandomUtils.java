@@ -41,5 +41,50 @@ public class RandomUtils {
     return res;
   }
 
+  /**
+   * Weighted sampling with replacement.
+   * 
+   * @param weights non-negative weights
+   * @param qty number of sampling attempts
+   * @return an array of sampled IDs.
+   */
+  int[] sampleWeightWithReplace(float weights[], int qty) {
+    int res[] = new int[qty];
+    
+    float totWght = 0;
+    for (float e : weights) {
+      if (e < 0) { // Let's allow zero weights as long as the sum is positive
+        throw new RuntimeException("Weights must be non-negative!");
+      }
+      totWght += e;
+    }
+    
+    if (qty <= 0) {
+      throw new RuntimeException("# of samples must be > 0");
+    }
+    if (weights.length == 0) {
+      throw new RuntimeException("weight array should be non-empty");
+    }
+    if (totWght <= 0) {
+      throw new RuntimeException("Sum of weights needs to be positive!");
+    }
+    
+    for (int att = 0; att < qty; ++att) {
+      float sampleWght = mRandGen.nextFloat() * totWght;
+      
+      float s = 0;
+      for (int k = 0; k < weights.length; ++k) {
+        float sNext = s + weights[k];
+        if (s <= sampleWght && sampleWght < sNext) { // If we have a zero weight an element is never selected
+          res[att] = k;
+          break;
+        }
+        s = sNext;
+      }
+    }
+    
+    return res;
+  }
+  
   private final Random mRandGen;
 }

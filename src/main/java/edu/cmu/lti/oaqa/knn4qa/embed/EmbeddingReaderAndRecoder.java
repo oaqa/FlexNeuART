@@ -24,9 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 import net.openhft.koloboke.collect.map.hash.*;
 
 class ParsedEmbedRec {  

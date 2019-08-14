@@ -38,12 +38,12 @@ import net.openhft.koloboke.collect.map.hash.HashIntObjMaps;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.FrequentIndexWordFilterAndRecoder;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 
 
 class WordIdProb implements Comparable<WordIdProb> {

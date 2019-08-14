@@ -16,7 +16,6 @@
 package edu.cmu.lti.oaqa.knn4qa.fwdindx;
 
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.*;
-import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 
 public class InMemForwardIndexFilterAndRecoder extends
     VocabularyFilterAndRecoder {
