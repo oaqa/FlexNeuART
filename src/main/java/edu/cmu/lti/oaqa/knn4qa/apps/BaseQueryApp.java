@@ -852,8 +852,7 @@ public abstract class BaseQueryApp {
   Integer      mMaxNumRet;
   int          mMinShouldMatchPCT = 0;  
   int          mMaxNumQuery = Integer.MAX_VALUE;
-  ArrayList<Integer> 
-                     mNumRetArr= new ArrayList<Integer>();
+  ArrayList<Integer> mNumRetArr= new ArrayList<Integer>();
   String       mCandProviderType;
   String       mQrelFile;
   QrelReader   mQrels;

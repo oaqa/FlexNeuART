@@ -16,10 +16,14 @@
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class MiscHelper {
+  
   public static String readFile(String inputFile) throws IOException {
     final BufferedReader  input = 
         new BufferedReader(
@@ -33,5 +37,9 @@ public class MiscHelper {
     }
     input.close();
     return sb.toString();
+  }
+  
+  public static BufferedWriter createBufferedFileWriter(String outputFile) throws IOException {
+    return new BufferedWriter(new FileWriter(new File(outputFile)));
   }
 }

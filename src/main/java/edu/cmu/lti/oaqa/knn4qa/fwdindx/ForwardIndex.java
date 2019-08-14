@@ -102,6 +102,16 @@ public abstract class ForwardIndex {
   
   protected HashMap<String, WordEntry> mStr2WordEntry = new HashMap<String, WordEntry>();
   
+  /**
+   * Is the index type raw text? This function makes sense only if the 
+   * instance was created for writing, or after we read the header from
+   * disk.
+   * 
+   * @return true when the index type is not raw, or we just created
+   *              an instance for reading, but didn't actually read contents.
+   */
+  public boolean isRaw() { return mIsRaw; }
+  
   public static ForwardIndexImplType getIndexImplType(String type) {
     for (ForwardIndexImplType itype : ForwardIndexImplType.values()) {
       if (itype != ForwardIndexImplType.unknown &&
@@ -590,7 +600,6 @@ public abstract class ForwardIndex {
     
     if (mTotalWordQty < 0) {
       mIsRaw = true;
-      line = inp.readLine();
     }
     
     for (; line != null && !line.isEmpty(); line = inp.readLine(), ++lineNum) {

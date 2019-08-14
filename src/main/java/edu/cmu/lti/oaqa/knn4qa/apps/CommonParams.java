@@ -103,6 +103,12 @@ public class CommonParams {
   public final static String MAX_NUM_QUERY_DESC  = "maximum number of queries to process";
   public final static String MAX_NUM_QUERY_PARAM = "max_num_query";
   
+  public final static String MAX_NUM_QUERY_TRAIN_DESC  = "maximum number of train queries to process/use";
+  public final static String MAX_NUM_QUERY_TRAIN_PARAM = "max_num_query_train";
+  
+  public final static String MAX_NUM_QUERY_TEST_DESC  = "maximum number of train queries to process/use";
+  public final static String MAX_NUM_QUERY_TEST_PARAM = "max_num_query_test";
+  
   public final static String DATA_FILE_DESC = "A data file";
   public final static String DATA_FILE_PARAM = "data_file";
     
@@ -133,9 +139,9 @@ public class CommonParams {
   public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
   public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index storage type: " + ForwardIndex.getIndexStorageTypeList();
  
-  // A general-purpose output file parameter
   public static final String OUTPUT_FILE_PARAM = "out_file";
   public static final String OUTPUT_FILE_DESC = "Output file";
+  
   
   public static final int USAGE_WIDTH = 90;
   

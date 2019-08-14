@@ -3,4 +3,4 @@
 
 export N_TRAIN=100 
 
-export NUM_RET_LIST="10,50,100,250,500"
+export NUM_RET_LIST="10,50,100,250"

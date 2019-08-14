@@ -20,7 +20,7 @@ import java.util.*;
 
 import no.uib.cipr.matrix.DenseVector;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.knn4qa.letor.EvalUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.EvalUtils;
 
 
 class QueryAppImpl extends BaseQueryApp {      

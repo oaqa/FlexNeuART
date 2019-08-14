@@ -97,6 +97,16 @@ public abstract class CandidateProvider {
      }
      return mJoinOnSpace.join(res);
   }
+  
+  /**
+   * Removes stop-word that are often a by-product of tokenization and which
+   * isn't always present in standard dictionaries (and thus accidentally
+   * added to the index). However, when included into a query, 
+   * it drastically can increase retrieval times.
+   * 
+   * @param text
+   * @return
+   */
   public static String removeAddStopwords(String text) {
     if (text != null) {
       text = removeWords(text,  mAddStopWords);

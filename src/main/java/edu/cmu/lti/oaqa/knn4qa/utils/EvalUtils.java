@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.letor;
+package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,11 +22,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.lucene.queryparser.flexible.messages.NLS;
-
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 public class EvalUtils {
   /** Some fake document ID, which is unlikely to be equal to a real one */
@@ -81,7 +77,7 @@ public class EvalUtils {
    * @param runId       a run ID.
    * @throws IOException
    */
-  private static void saveTrecOneEntry(BufferedWriter trecFile,
+  public static void saveTrecOneEntry(BufferedWriter trecFile,
                                        String         topicId,
                                        String         docId,
                                        int            docPos,
@@ -183,54 +179,4 @@ public class EvalUtils {
     qrelFile.write(String.format("%s 0 %s %d%s", topicId, docId, relGrade, Const.NL));
   }
   
-  /**
-   * Reading TREC QREL entries.
-   * 
-   * @param fileName   input file (can be gz or bz2 compressed).
-   * @return a hash map of hash maps, where the outer hash map key is topic ID and the inner hash map key
-   *         is a document id, inner hash values are relevance grades (integers).
-   * @throws Exception
-   */
-  public static HashMap<String,HashMap<String, Integer>> readQrelEntries(String fileName) throws Exception {
-    HashMap<String,HashMap<String, Integer>> res = new HashMap<String,HashMap<String, Integer>>();
-    
-    BufferedReader inp = new BufferedReader(new InputStreamReader(CompressUtils.createInputStream(fileName)));
-    
-    String line = null;
-
-    for (int lineNum = 1; (line = inp.readLine()) != null; ++lineNum) {
-      line = line.trim();
-      if (line.isEmpty()) continue;
-      String parts[] = line.split("\\s+");
-      if (parts.length != 4)
-        throw new Exception(
-              String.format("Wrong number of fields %d (expected 4) in line %d, file %s", 
-                            parts.length, lineNum, fileName));
-      String topicId = parts[0], docId = parts[2], relGradeStr = parts[3];
-      
-      int relGrade = 0;
-      
-      try {
-        relGrade = Integer.parseInt(relGradeStr);
-      } catch (NumberFormatException e) {
-        throw new Exception(
-            String.format("Error converting integer relevance grade in line %d, file %s", 
-                          lineNum, fileName));
-      }
-      HashMap<String, Integer> topicRels = res.get(topicId);
-      if (topicRels == null) {
-        res.put(topicId, new HashMap<String, Integer>());
-        topicRels = res.get(topicId);        
-      }
-      if (topicRels.containsKey(docId)) {
-        throw new Exception(
-            String.format("Duplicate docId (%s) or topicId (5s) in line %d, file %s", 
-                          docId, topicId, lineNum, fileName));
-        
-      }
-      topicRels.put(docId, relGrade);
-    }
-    
-    return res;
-  }
 }

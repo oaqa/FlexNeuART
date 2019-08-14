@@ -108,7 +108,11 @@ public class BM25CloseUnorderPairSimilQueryNorm extends BM25ClosePairSimilarityQ
       }
     }
     
-    return score / getNormIDF(query);
+    float normIDF = getNormIDF(query);
+    if (normIDF > 0) {
+      score /= normIDF;
+    }
+    return score;
   }
 
 }

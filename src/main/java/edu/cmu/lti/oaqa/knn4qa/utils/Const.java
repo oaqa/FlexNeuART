@@ -58,4 +58,6 @@ public class Const {
   
   public static final int PROGRESS_REPORT_QTY = 10000;
   
+  public static final String FAKE_RUN_ID = "fake_run";
+  
 }

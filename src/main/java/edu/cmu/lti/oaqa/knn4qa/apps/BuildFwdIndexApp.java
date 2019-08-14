@@ -23,10 +23,15 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex.ForwardIndexStorageType;
 
 public class BuildFwdIndexApp {  
+  
+  private static final Logger logger = LoggerFactory.getLogger(BuildFwdIndexApp.class);
   
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
@@ -94,7 +99,7 @@ public class BuildFwdIndexApp {
       
       String [] subDirs = subDirTypeList.split(",");
 
-      System.out.println("Processing field: '" + fieldName + "'");
+      logger.info("Processing field: '" + fieldName + "'");
         
       String [] fileNames = new String[subDirs.length];
       for (int i = 0; i < fileNames.length; ++i)
@@ -112,7 +117,7 @@ public class BuildFwdIndexApp {
         Usage("Wrong value for " + CommonParams.FOWARD_INDEX_TYPE_PARAM, options);
       }
       
-      System.out.println("Forward index storage type: " + fwdIndexType);
+      logger.info("Forward index storage type: " + fwdIndexType);
         
       ForwardIndex indx = ForwardIndex.createWriteInstance(outPrefix + File.separator + fieldName, iType);
       
@@ -123,7 +128,7 @@ public class BuildFwdIndexApp {
       Usage("Cannot parse arguments", options);
     } catch (Exception e) {
       e.printStackTrace();
-      System.err.println("Terminating due to an exception: " + e);
+      logger.error("Terminating due to an exception: " + e);
       System.exit(1);
     }
   }

@@ -57,7 +57,7 @@ public abstract class BM25ClosePairSimilarityQueryNormBase extends TFIDFSimilari
         normIDF += idf; // IDF normalization
       }
     }
-    return normIDF;
+    return Math.max(normIDF, Float.MIN_NORMAL);
   }
 
 }
