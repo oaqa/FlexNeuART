@@ -48,7 +48,7 @@ public class RandomUtils {
    * @param qty number of sampling attempts
    * @return an array of sampled IDs.
    */
-  int[] sampleWeightWithReplace(float weights[], int qty) {
+  public int[] sampleWeightWithReplace(float weights[], int qty) {
     int res[] = new int[qty];
     
     float totWght = 0;

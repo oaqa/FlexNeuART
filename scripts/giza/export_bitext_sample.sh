@@ -9,6 +9,7 @@ if [ "$collect" = "" ] ; then
 fi
 
 checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "EMBED_SUBDIR"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
@@ -19,6 +20,7 @@ checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
 indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
+embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
 
 if [ ! -d "$outDir" ] ; then
   mkdir "$outDir"
@@ -38,17 +40,24 @@ if [ "$query_field" = "" ] ; then
   exit 1
 fi
 
-maxRatio=$4
+sampleQty=$4
 
-if [ "$maxRatio" = "" ] ; then
-  echo "Specify max. ratio of # words in docs to # of words in queries (4th arg)"
+if [ "$sampleQty" = "" ] ; then
+  echo "Specify # of samples (4th arg)"
   exit 1
 fi
 
+embedFile=$5
+
+if [ "$embedFile"" = "" ] ; then
+  echo "Specify embeddings file relative to the embedding dir (5th arg)"
+  exit 1
+fi
 
 echo "=========================================================================="
 echo "Data directory:          $inputDataDir"
 echo "Forward index directory: $indexDir"
+echo "Embedding directory:     $embedDir"
 echo "=========================================================================="
 
 retVal=""
@@ -61,11 +70,13 @@ fi
 
 partPref=$inputDataDir/$BITEXT_TRAIN_SUBDIR
 
-scripts/data/run_export_bitext.sh -fwd_index_dir $indexDir \
+scripts/data/run_export_bitext.sh -fwd_index_dir "$indexDir" \
+                                  -embed_dir "$embedDir" \
+                                  -embed_file "$embedDir/$embedFile" \
                                   -index_field $field \
                                   -query_field $query_field \
                                   -output_dir "$outDir" \
                                   -q "$partPref/$queryFileName" \
                                   -qrel_file "$partPref/$QREL_FILE" \
-                                  -max_doc_query_qty_ratio "$maxRatio"
+                                  -sample_qty "$sampleQty"
 
