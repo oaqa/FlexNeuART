@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TTransportException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,29 +81,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
                                               BM25SimilarityLucene.DEFAULT_BM25_B, 
                                               mFieldIndex);
   }
-  
-  /**
-   * getSocket() retrieves the first unused socket, or creates a new one.
-   * Note that a single client and socket cannot be re-used across threads, b/c
-   * each client/thread needs to use a separate socket.
-   */
-  private synchronized TTransport acquireTransport() throws TTransportException {
-    if (!mFreeTransports.isEmpty()) {
-      int sz = mFreeTransports.size();
-      TTransport ret = mFreeTransports.get(sz-1);
-      mFreeTransports.remove(sz-1);
-      return ret;
-    }
-    
-    TTransport serviceTransp = new TSocket(mHost, mPort);
-    serviceTransp.open();
-    
-    return serviceTransp;
-  }
-  
-  private synchronized void releaseTransport(TTransport c) {
-    mFreeTransports.add(c);
-  }
 
   /**
    * Create a parsed-text entry. Unknown words are going to be replaced with a special token.
@@ -148,7 +125,14 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
       throws Exception {
     HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
     
-    TTransport transp = acquireTransport();
+    /*
+     * This is not super-efficient. However, implementing release/acquire without closing socket
+     * and caching sockets somehow leads to a dead-lock sometimes. In any case, openining/closing
+     * connection is quite fast compared to re-ranking the output of a single query using
+     * SOTA neural models. 
+     */
+    TTransport transp = new TSocket(mHost, mPort);
+    transp.open();
      
     try {
       Client clnt = new Client(new TBinaryProtocol(transp));
@@ -222,11 +206,11 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
       }
     } catch (Exception e) {
       logger.error("Caught an exception:" + e);
-      releaseTransport(transp);
+      transp.close();
       throw e;
     }    
     
-    releaseTransport(transp);
+    transp.close();
     
     return res;
   }
@@ -239,8 +223,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   
   final int                          mFeatQty;
   final boolean                      mUseWordSeq;
-
-  private ArrayList<TTransport>      mFreeTransports = new ArrayList<>();
   
   @Override
   public String getName() {

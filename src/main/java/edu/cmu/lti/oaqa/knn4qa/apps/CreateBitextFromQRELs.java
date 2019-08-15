@@ -51,6 +51,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
  */
 public class CreateBitextFromQRELs {
   public final static String EMBED_FILE_NAME_PARAM = "-embed_file";
+  public final static String MAX_DOC_QUERY_QTY_RATIO_PARAM = "-max_doc_query_qty_ratio";
   
   static RandomUtils rand = new RandomUtils(0);
   
@@ -78,8 +79,8 @@ public class CreateBitextFromQRELs {
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, required = false, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery = Integer.MAX_VALUE;
     
-    @Option(name = "-max_doc_query_qty_ratio", required = true, usage = "Max. ratio of # words in docs to # of words in queries")
-    float mDocQueryWordRatio;
+    @Option(name = MAX_DOC_QUERY_QTY_RATIO_PARAM, usage = "Max. ratio of # words in docs to # of words in queries")
+    float mDocQueryWordRatio = -1;
 
   }
   
@@ -118,6 +119,11 @@ public class CreateBitextFromQRELs {
         }
         
         embeds = resourceManager.getWordEmbed(fieldName, args.mEmbedFile);
+      } else {
+        if (args.mDocQueryWordRatio <= 0) {
+          System.err.println("For simple/plain export you need to specify positive fraction " + MAX_DOC_QUERY_QTY_RATIO_PARAM);
+          System.exit(1);         
+        }
       }
 
       

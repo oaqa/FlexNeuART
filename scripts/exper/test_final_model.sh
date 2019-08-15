@@ -13,7 +13,8 @@ nmslibURI=""
 extrTypeIntermParam=""
 modelIntermParam=""
 candQtyParam=""
-delete_trec_runs="1"
+# Shouldn't delete these runs by default!
+delete_trec_runs="0"
 nmslibAddParams=""
 nmslibExtrType=""
 modelFile=""
@@ -26,7 +27,7 @@ while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
   if [ $? = 0 ] ; then
     OPT_NAME="$1"
-    if [ "$OPT_NAME" = "-dont_delete_trec_runs" -o "$OPT_NAME" = "-knn_interleave" ] ; then
+    if [ "$OPT_NAME" = "-delete_trec_runs" -o "$OPT_NAME" = "-knn_interleave" ] ; then
       OPT_VALUE=""
       OPT=""
       # option without an argument
@@ -79,8 +80,8 @@ while [ $# -ne 0 ] ; do
       -cand_qty)
         candQtyParam=$OPT
        ;; 
-      -dont_delete_trec_runs)
-        delete_trec_runs="0"
+      -delete_trec_runs)
+        delete_trec_runs="1"
        ;; 
       *)
         echo "Invalid option: $OPT_NAME" >&2
