@@ -28,12 +28,15 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
+import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
+import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
@@ -47,6 +50,9 @@ import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
  *
  */
 public class CreateBitextFromQRELs {
+  public final static String EMBED_FILE_NAME_PARAM = "-embed_file";
+  
+  static RandomUtils rand = new RandomUtils(0);
   
   public static final class Args {  
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
@@ -62,20 +68,19 @@ public class CreateBitextFromQRELs {
     String mQrelFile;
     @Option(name = "-output_dir", required = true, usage = "bi-text output directory")
     String mOutDir;
+    @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
+    String mEmbedDir;
+    @Option(name = EMBED_FILE_NAME_PARAM, usage = "embedding file name relative to the root (used for document word sampling)")
+    String mEmbedFile;
+    @Option(name = "-sample_qty", usage = "number of samples per query, if specified we need embeddings")
+    int mSampleQty = -1;
     
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, required = false, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery = Integer.MAX_VALUE;
     
     @Option(name = "-max_doc_query_qty_ratio", required = true, usage = "Max. ratio of # words in docs to # of words in queries")
     float mDocQueryWordRatio;
-    /*
-    @Option(name = "-sample_words", required=false, usage = "If specified, document words are sampled.")
-    boolean mSample;
-    @Option(name = "-sample_qty", required=false, usage = "Number of times sampling is repeated. " +
-                                                          "If this parameter is set to, e.g., 2, " +
-                                                          " we obtain 2*n bi-text entries, where n is the number of queries.")
-    */
-    int mSampleQty = 1;
+
   }
   
   public static void main(String[] argv) {
@@ -96,9 +101,25 @@ public class CreateBitextFromQRELs {
     
     
     try {
-      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mFwdIndex, null, null);
+      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mFwdIndex, null, args.mEmbedDir);
+      EmbeddingReaderAndRecoder embeds = null;
+
       
       String fieldName = args.mIndexField;
+      
+      if (args.mSampleQty > 0) {
+        if (args.mEmbedDir == null) {
+          System.err.println("For sampling you need to specify: -" + CommonParams.EMBED_DIR_PARAM);
+          System.exit(1);
+        }
+        if (args.mEmbedFile == null) {
+          System.err.println("For sampling you need to specify (relative to embedding dir root): " + EMBED_FILE_NAME_PARAM);
+          System.exit(1); 
+        }
+        
+        embeds = resourceManager.getWordEmbed(fieldName, args.mEmbedFile);
+      }
+
       
       ForwardIndex fwdIndex = resourceManager.getFwdIndex(fieldName);
       
@@ -145,40 +166,11 @@ public class CreateBitextFromQRELs {
           String did = e.getKey();
           int grade = CandidateProvider.parseRelevLabel(e.getValue());
           if (grade >= 1) {
-            DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
-            if (dentry == null) {
-              System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
-              continue;
+            if (args.mSampleQty <= 0) {
+              genBitextSplitPlain(fwdIndex, did, fieldName, questFile, answFile, queryText, queryWordQtyInv, args.mDocQueryWordRatio);
+            } else {
+              genBitextSample(fwdIndex, embeds, did, fieldName, questFile, answFile, queryWords, args.mSampleQty);
             }
-            if (dentry.mWordIdSeq == null) {
-              System.err.println("Index for the field " + fieldName + " doesn't have words sequences!");
-              System.exit(1);
-            }      
-
-            ArrayList<String> answWords = new ArrayList<String>();
-            /*
-             * In principle, queries can be longer then documents, especially,
-             * when we write the "tail" part of the documents. However, the 
-             * difference should not be large and longer queries will be 
-             * truncated by  
-             */
-            for (int wid : dentry.mWordIdSeq) {
-              if (answWords.size() * queryWordQtyInv >= args.mDocQueryWordRatio) {
-                questFile.write(queryText + Const.NL);
-                answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
-                answWords.clear();
-              }
-              
-              if (wid >=0) { // -1 is OOV
-                answWords.add(fwdIndex.getWord(wid));
-              }
-            }
-            
-            if (!answWords.isEmpty()) {
-              questFile.write(queryText + Const.NL);
-              answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
-            }
-            
           }
         }  
       } 
@@ -193,8 +185,99 @@ public class CreateBitextFromQRELs {
       System.err.println("Exception: " + e);
       System.exit(1);
     }
+     
+  }
+  
+  private static void genBitextSample(ForwardIndex fwdIndex, EmbeddingReaderAndRecoder embeds, 
+                                     String did, String fieldName, 
+                                     BufferedWriter questFile, BufferedWriter answFile, 
+                                     String[] queryWords, int sampleQty) throws Exception {
+    DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
+    if (dentry == null) {
+      System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+      return;
+    }
+
+    AbstractDistance dist = AbstractDistance.create(AbstractDistance.COSINE);
     
+    int docWordQty = dentry.mWordIds.length;
+    float weights[] = new float[docWordQty];
     
+    ArrayList<ArrayList<String>>  sampledDocWords = new ArrayList<>();
+    
+    for (int i = 0; i < sampleQty; ++i) {
+      sampledDocWords.add(new ArrayList<String>()); // Each sample has an array of words
+    }
+    
+    for (int iq = 0; iq < queryWords.length; ++iq) {
+      float[] qvec = embeds.getVector(queryWords[iq]);
+      
+      if (qvec != null) {
+        for (int iWord = 0; iWord < docWordQty; ++iWord) {
+          int wordId = dentry.mWordIds[iWord];
+          float[] dvec = embeds.getVector(wordId);
+          if (dvec != null) {
+            // A sample weight is proportional to both the similarity and the # of occurrences
+            // note that all weights have to be non-negative!
+            weights[iWord] = (1 + dist.compute(qvec, dvec)) * dentry.mQtys[iWord];
+          } else {
+            weights[iWord] = 0;
+          }
+        } 
+        int sampledWordIdx[] = rand.sampleWeightWithReplace(weights, sampleQty);
+        for (int sampleId = 0; sampleId < sampleQty; ++sampleId) {
+          int wid = dentry.mWordIds[sampledWordIdx[sampleId]];
+          sampledDocWords.get(sampleId).add(fwdIndex.getWord(wid));
+        }
+      }
+    }
+    
+    for (int i = 0; i < sampleQty; ++i) {
+      ArrayList<String> answWords = sampledDocWords.get(i);
+      if (!answWords.isEmpty()) {
+          questFile.write(StringUtils.joinWithSpace(queryWords) + Const.NL);
+          answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+      }
+    }
+  }
+
+  static void genBitextSplitPlain(ForwardIndex fwdIndex, String did, String fieldName, 
+                          BufferedWriter questFile, BufferedWriter answFile,
+                          String queryText, 
+                          float queryWordQtyInv, float docQueryWordRatio) throws Exception {
+    DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
+    if (dentry == null) {
+      System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+      return;
+    }
+    if (dentry.mWordIdSeq == null) {
+      System.err.println("Index for the field " + fieldName + " doesn't have words sequences!");
+      System.exit(1);
+    }      
+
+    ArrayList<String> answWords = new ArrayList<String>();
+    /*
+     * In principle, queries can be longer then documents, especially,
+     * when we write the "tail" part of the documents. However, the 
+     * difference should not be large and longer queries will be 
+     * truncated by  
+     */
+    for (int wid : dentry.mWordIdSeq) {
+      if (answWords.size() * queryWordQtyInv >= docQueryWordRatio) {
+        questFile.write(queryText + Const.NL);
+        answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+        answWords.clear();
+      }
+      
+      if (wid >=0) { // -1 is OOV
+        answWords.add(fwdIndex.getWord(wid));
+      }
+    }
+    
+    if (!answWords.isEmpty()) {
+      questFile.write(queryText + Const.NL);
+      answFile.write(StringUtils.joinWithSpace(answWords) + Const.NL);
+    }
   }
 
 }
