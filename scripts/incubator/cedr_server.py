@@ -5,7 +5,10 @@ import numpy as np
 
 sys.path.append('scripts/py_server')
 sys.path.append('scripts/data')
-sys.path.append('scripts/py_server/cedr')
+
++# TODO needs to be-renamed when/if this 
++# thing leaves the incubator
++sys.path.append('scripts/incubator/cedr')
 
 from base_server import *
 
@@ -74,9 +77,13 @@ if __name__ == '__main__':
   parser.add_argument('--debug_print', action='store_true',
                       help='Provide debug output')
 
-  parser.add_argument('--dtproc_model', metavar='data processing model',
-                      required=True, type=str,
-                      help='Pickled data processor file')
+  parser.add_argument('--model_weights', metavar='model weights',
+                      default=None, type=str,
+                      help='model weight file')
+
+  parser.add_argument('--batch_size', metavar='batch size',
+                      default=DEFAULT_BATCH_SIZE, type=int,
+                      help='batch size')
 
   parser.add_argument('--port', metavar='server port',
                       required=True, type=int,
@@ -90,7 +97,8 @@ if __name__ == '__main__':
 
 
   multiThreaded=False #
-  startQueryServer(args.host, args.port, multiThreaded, MatchZooQueryHandler(modelDir=args.model,
-                                                                             dtProcDir=args.dtproc_model,
-                                                                             debugPrint=args.debug_print))
+  startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(modelType=args.model,
+                                                                        modelWeights=args.model_weights,
+                                                                        batchSize=args.batch_size,
+                                                                        debugPrint=args.debug_print))
 
