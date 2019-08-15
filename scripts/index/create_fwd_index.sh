@@ -11,7 +11,7 @@ fi
 
 fieldListDef=$2
 if [ "$fieldListDef" = "" ] ; then
-  echo "Specify a *QUOTED* space-separated list of field index definitions (2d arg), e.g., 'text:parsedBOW text_unlemm:parsedBOW text_raw:raw'"
+  echo "Specify a *QUOTED* space-separated list of field index definitions (2d arg), e.g., 'text:parsedBOW text_unlemm:parsedText text_raw:raw'"
   exit 1
 fi
 

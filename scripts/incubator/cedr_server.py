@@ -1,72 +1,65 @@
 #!/usr/bin/env python3
 import sys, pickle
 import argparse
-import matchzoo as mz
-from matchzoo.data_pack import pack
 import numpy as np
-import pandas as pd
 
 sys.path.append('scripts/py_server')
 sys.path.append('scripts/data')
+sys.path.append('scripts/py_server/cedr')
 
 from base_server import *
-from matchzoo_reader import *
 
+# CEDR imports
+import train
+import data
 
-class MatchZooQueryHandler(BaseQueryHandler):
+# Let's use a small number so that we can run two servers on a single GPU
+DEFAULT_BATCH_SIZE=8 
+
+class CedrQueryHandler(BaseQueryHandler):
   # Exclusive==True means that only one getScores
   # function is executed at at time
-  def __init__(self, modelDir, dtProcDir, debugPrint):
+  def __init__(self, modelType, modelWeights=None, batchSize=DEFAULT_BATCH_SIZE, debugPrint=False):
     super().__init__(exclusive=True)
 
-    with open(dtProcDir, 'rb') as f:
-      self.prep = pickle.load(f)
-
-    self.model = mz.load_model(modelDir)
-    self.model.backend.summary()
     self.debugPrint = debugPrint
+    self.batchSize
+    self.model = train.MODEL_MAP[modelType]().cuda()
+    if modelWeights is not None:
+      if self.debugPrint:
+        print(f'Loading model {modelType} from {modelWeights}')    
+      self.model.load(modelWeights)
 
-  # This function needs to be overriden
-  def computeScoresOverride(self, query, docs):
-    queryText = self.concatTextEntryWords(query)
+    # need to be in the eval mode
+    self.model.eval()
+
+  # This function needs to be overridden
+  def computeScoresFromRawOverride(self, query, docs):
     if self.debugPrint:
-      print('getScores', queryText)
+      print('getScores', query.id, query.text)
 
-    queryIdArr = []
-    queryTextArr = []
-    docTextArr = []
-    docIdArr = []
-    labelArr = []
+    queryData = { query.id : query.text }
+    docData = {}
 
     for e in docs:
-      docIdArr.append(e.id)
-      docTextArr.append(self.concatTextEntryWords(e))
-      queryTextArr.append(queryText)
-      queryIdArr.append('fake_qid')
-      labelArr.append(0)
-
-
-    dataRaw = pd.DataFrame({'id_left' : queryIdArr,
-                         'text_left' : queryTextArr,
-                         'id_right' : docIdArr,
-                         'text_right' : docTextArr,
-                         'label' : labelArr})
-
-    dataTestPacked = pack(dataRaw)
-
-    dataTestProc = self.prep.transform(dataTestPacked)
-
-    dataForModel, _ = dataTestProc.unpack()
-
-    preds = self.model.predict(dataForModel)
+      docData[e.id] = e.text
 
     sampleRet = {}
-    for k in range(len(docs)):
-      e = docs[k]
-      score = preds[k]
-      if self.debugPrint:
-        print(score, self.textEntryToStr(e))
-      sampleRet[e.id] = score
+
+    if docData:
+
+      # based on the code from run_model function (train.py)
+      dataSet = queryData, docData 
+      run = queryData # run can be either a set or a dictionary the code cares only about keys
+      for records in data.iter_valid_records(self.model, dataSet, run, self.batchSize):
+        scores = model(records['query_tok'],
+                       records['query_mask'],
+                       records['doc_tok'],
+                       records['doc_mask'])
+        for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
+          if self.debugPrint:
+            print(score, did, e.text)
+          sampleRet[did] = score
 
     return sampleRet
 

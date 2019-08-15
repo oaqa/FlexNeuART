@@ -101,7 +101,7 @@ class WordEntryInfo(object):
         return not (self == other)
 
 
-class TextEntryInfo(object):
+class TextEntryParsed(object):
     """
     Attributes:
      - id
@@ -148,7 +148,7 @@ class TextEntryInfo(object):
         if oprot._fast_encode is not None and self.thrift_spec is not None:
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
-        oprot.writeStructBegin('TextEntryInfo')
+        oprot.writeStructBegin('TextEntryParsed')
         if self.id is not None:
             oprot.writeFieldBegin('id', TType.STRING, 1)
             oprot.writeString(self.id.encode('utf-8') if sys.version_info[0] == 2 else self.id)
@@ -168,6 +168,78 @@ class TextEntryInfo(object):
             raise TProtocolException(message='Required field id is unset!')
         if self.entries is None:
             raise TProtocolException(message='Required field entries is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+class TextEntryRaw(object):
+    """
+    Attributes:
+     - id
+     - text
+
+    """
+
+
+    def __init__(self, id=None, text=None,):
+        self.id = id
+        self.text = text
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.STRING:
+                    self.id = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.STRING:
+                    self.text = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('TextEntryRaw')
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.STRING, 1)
+            oprot.writeString(self.id.encode('utf-8') if sys.version_info[0] == 2 else self.id)
+            oprot.writeFieldEnd()
+        if self.text is not None:
+            oprot.writeFieldBegin('text', TType.STRING, 2)
+            oprot.writeString(self.text.encode('utf-8') if sys.version_info[0] == 2 else self.text)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.id is None:
+            raise TProtocolException(message='Required field id is unset!')
+        if self.text is None:
+            raise TProtocolException(message='Required field text is unset!')
         return
 
     def __repr__(self):
@@ -247,11 +319,17 @@ WordEntryInfo.thrift_spec = (
     (2, TType.DOUBLE, 'IDF', None, None, ),  # 2
     (3, TType.I32, 'qty', None, None, ),  # 3
 )
-all_structs.append(TextEntryInfo)
-TextEntryInfo.thrift_spec = (
+all_structs.append(TextEntryParsed)
+TextEntryParsed.thrift_spec = (
     None,  # 0
     (1, TType.STRING, 'id', 'UTF8', None, ),  # 1
     (2, TType.LIST, 'entries', (TType.STRUCT, [WordEntryInfo, None], False), None, ),  # 2
+)
+all_structs.append(TextEntryRaw)
+TextEntryRaw.thrift_spec = (
+    None,  # 0
+    (1, TType.STRING, 'id', 'UTF8', None, ),  # 1
+    (2, TType.STRING, 'text', 'UTF8', None, ),  # 2
 )
 all_structs.append(ScoringException)
 ScoringException.thrift_spec = (

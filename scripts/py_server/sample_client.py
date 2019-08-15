@@ -2,17 +2,19 @@
 
 import sys
 import glob
-sys.path.append('gen-py')
+
+sys.path.append('scripts/py_server')
+sys.path.append('scripts/py_server/gen-py')
 
 from protocol.ExternalScorer import Client
-from protocol.ttypes import WordEntryInfo, TextEntryInfo, ScoringException
+from protocol.ttypes import WordEntryInfo, TextEntryParsed, TextEntryRaw, ScoringException
 
 from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-from BaseServer import *
+from base_server import *
 
 # Make socket
 transport = TSocket.TSocket(SAMPLE_HOST, SAMPLE_PORT)
@@ -29,10 +31,20 @@ client = Client(protocol)
 # Connect!
 transport.open()
 
-query = TextEntryInfo("query_id", [])
+query = TextEntryParsed("query_id", [])
 docs = []
 for did in ['1', '2', '3']:
-  docs.append(TextEntryInfo(did, []))
+  docs.append(TextEntryParsed(did, [WordEntryInfo(word="did: " + did, IDF=0.3, qty=3)]))
 
-print(client.getScores(query, docs))
+print('Calling using parsed text')
+print(client.getScoresFromParsed(query, docs))
+
+
+query = TextEntryRaw("query_id", "some query text")
+docs = []
+for did in ['1', '2', '3']:
+  docs.append(TextEntryRaw(did, "some document text: " + did))
+
+print('Calling using raw text')
+print(client.getScoresFromRaw(query, docs))
 

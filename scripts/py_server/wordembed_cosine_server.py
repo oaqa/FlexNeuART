@@ -67,10 +67,10 @@ class CosineSimilQueryHandler(BaseQueryHandler):
     return res
 
 
-  # This function overrids the parent class
-  def computeScoresOverride(self, query, docs):
+  # This function overrides the parent class
+  def computeScoresFromParsedOverride(self, query, docs):
     if self.debugPrint:
-      print('getScores', self.textEntryToStr(query))
+      print('getScores', query.id, self.textEntryToStr(query))
     ret = {}
     queryEmbed = self.createDocEmbed(True, query)
     if self.debugPrint:
