@@ -10,12 +10,21 @@ class SampleQueryHandler(BaseQueryHandler):
   def __init__(self, exclusive=True):
     super().__init__(exclusive)
 
-  # This function needs to be overriden
-  def computeScoresOverride(self, query, docs):
-    print('getScores', self.textEntryToStr(query))
+  # This function needs to be overridden
+  def computeScoresFromParsedOverride(self, query, docs):
+    print('getScores', query.id, self.textEntryToStr(query))
     sampleRet = {}
     for e in docs:
       print(self.textEntryToStr(e))
+      sampleRet[e.id] = [0]
+    return sampleRet
+
+  # This function needs to be overridden
+  def computeScoresFromRawOverride(self, query, docs):
+    print('getScores', query.id, query.text)
+    sampleRet = {}
+    for e in docs:
+      print(e.text)
       sampleRet[e.id] = [0]
     return sampleRet
 

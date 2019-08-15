@@ -7,7 +7,7 @@ sys.path.append('scripts/py_server/gen-py')
 #
 
 from protocol.ExternalScorer import Processor
-from protocol.ttypes import WordEntryInfo, TextEntryInfo, ScoringException
+from protocol.ttypes import WordEntryInfo, TextEntryParsed, ScoringException
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -23,12 +23,26 @@ SAMPLE_PORT=8080
 class BaseQueryHandler:
   def __init__(self, exclusive=True):
     self.lock_ = Lock() if exclusive else None 
-  def getScores(self, query, docs):
-    if self.lock_ is not None:
-      with self.lock_:
-        return self.computeScoresOverride(query, docs)
-    else:
-      return self.computeScoresOverride(query, docs)
+
+  def getScoresFromParsed(self, query, docs):
+    try:
+      if self.lock_ is not None:
+        with self.lock_:
+          return self.computeScoresFromParsedOverride(query, docs)
+      else:
+        return self.computeScoresFromParsedOverride(query, docs)
+    except Exception as e:
+      raise ScoringException(str(e))
+
+  def getScoresFromRaw(self, query, docs):
+    try:
+      if self.lock_ is not None:
+        with self.lock_:
+          return self.computeScoresFromRawOverride(query, docs)
+      else:
+        return self.computeScoresFromRawOverride(query, docs)
+    except Exception as e:
+      raise ScoringException(str(e))
 
   def textEntryToStr(self, te):
     arr=[]
@@ -43,9 +57,11 @@ class BaseQueryHandler:
     return ' '.join(arr)
 
 
-  # This is the function to be implemented in the child class
-  def computeScoresOverride(self, query, docs):
-    raise NotImplementedError()
+  # One or both functions need to be implemented in a child class
+  def computeScoresFromParsedOverride(self, query, docs):
+    raise ScoringException('Parsed fields are not supported by this server!')
+  def computeScoresFromRawOverride(self, query, docs):
+    raise ScoringException('Raw-text fields are not supported by this server!')
 
 
 # This function starts the server and takes over the program control
