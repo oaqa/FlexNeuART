@@ -49,7 +49,7 @@ fi
 
 embedFile=$5
 
-if [ "$embedFile"" = "" ] ; then
+if [ "$embedFile" = "" ] ; then
   echo "Specify embeddings file relative to the embedding dir (5th arg)"
   exit 1
 fi

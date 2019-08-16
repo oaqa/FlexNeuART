@@ -16,6 +16,8 @@ class SampleQueryHandler(BaseQueryHandler):
     sampleRet = {}
     for e in docs:
       print(self.textEntryToStr(e))
+      # Note that each element must be an array, b/c
+      # we can generate more than one feature per document!
       sampleRet[e.id] = [0]
     return sampleRet
 
@@ -25,6 +27,8 @@ class SampleQueryHandler(BaseQueryHandler):
     sampleRet = {}
     for e in docs:
       print(e.text)
+      # Note that each element must be an array, b/c
+      # we can generate more than one feature per document!
       sampleRet[e.id] = [0]
     return sampleRet
 
