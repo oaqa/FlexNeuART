@@ -207,6 +207,10 @@ public class CreateBitextFromQRELs {
     AbstractDistance dist = AbstractDistance.create(AbstractDistance.COSINE);
     
     int docWordQty = dentry.mWordIds.length;
+    if (docWordQty == 0) {
+      System.out.println("Empty doc " + did + " for field: " + fieldName);
+      return; // emtpy doc
+    }
     float weights[] = new float[docWordQty];
     
     ArrayList<ArrayList<String>>  sampledDocWords = new ArrayList<>();
@@ -223,9 +227,11 @@ public class CreateBitextFromQRELs {
           int wordId = dentry.mWordIds[iWord];
           float[] dvec = embeds.getVector(wordId);
           if (dvec != null) {
-            // A sample weight is proportional to both the similarity and the # of occurrences
+            // A sample weight can be proportional to both the similarity and the # of occurrences,
+            // but let's dampen it a bit to give other words a chance:
+            float w = (float)Math.sqrt((1 + dist.compute(qvec, dvec)) * dentry.mQtys[iWord]);
             // note that all weights have to be non-negative!
-            weights[iWord] = (1 + dist.compute(qvec, dvec)) * dentry.mQtys[iWord];
+            weights[iWord] = w;
           } else {
             weights[iWord] = 0;
           }
