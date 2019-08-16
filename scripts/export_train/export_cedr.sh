@@ -6,6 +6,19 @@ source scripts/config.sh
 INDEX_FIELD_NAME=text_raw
 QUERY_FIELD_NAME=text
 
+partTest=dev1
+partTrain=train_bitext
+sampleNegQty=20
+candTrainQty=500
+# For faster eval the depth of the testing tool can be made much smaller
+# then the depth of the training pool. The thing is that we only
+# sample negative examples from training pool to make it more diverse,
+# but for test data having a deep candidate pool directly affects
+# evaluation times.
+candTestQty=50
+maxNumQueryTest=3000
+maxNumQueryTrain=1000000
+
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify sub-collection (1st arg), e.g., squad"
@@ -33,14 +46,9 @@ if [ ! -d "$trainDir" ] ; then
   mkdir "$trainDir"
 fi
 
-partTest=dev1
-partTrain=train_bitext
-sampleNegQty=20
-candQty=50
-maxNumQueryTest=3000
-maxNumQueryTrain=1000000
-
-scripts/data/run_export_train_text_pairs.sh -cand_qty $candQty -export_fmt cedr  \
+scripts/data/run_export_train_text_pairs.sh \
+-cand_train_qty $candTrain -cand_test_qty $candTestQty \
+-export_fmt cedr  \
 -max_num_query_test $maxNumQueryTest -max_num_query_train $maxNumQueryTrain \
 -fwd_index_dir  "$fwdIndexDir" \
 -data_file_docs "$trainDir/data_docs.tsv" \

@@ -3,12 +3,9 @@ import sys, pickle
 import argparse
 import numpy as np
 
-sys.path.append('scripts/py_server')
+sys.path.append('scripts/py_featextr_server')
 sys.path.append('scripts/data')
-
-# TODO needs to be-renamed when/if this 
-# thing leaves the incubator
-sys.path.append('scripts/incubator/cedr')
+sys.path.append('scripts/cedr')
 
 from base_server import *
 

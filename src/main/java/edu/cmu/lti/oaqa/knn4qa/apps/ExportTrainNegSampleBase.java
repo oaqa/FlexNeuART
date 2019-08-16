@@ -21,7 +21,10 @@ import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
 
 public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   private static final Logger logger = LoggerFactory.getLogger(ExportTrainNegSampleBase.class);
-  private static final String SAMPLE_NEG_QTY = "sample_neg_qty";
+  
+  private final static String SAMPLE_NEG_QTY = "sample_neg_qty";
+  private final static String MAX_CAND_TRAIN_QTY_PARAM    = "cand_train_qty";
+  private final static String MAX_CAND_TEST_QTY_PARAM    = "cand_test_qty";
   
   public ExportTrainNegSampleBase(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
                                   QrelReader qrelsTrain, QrelReader qrelsTest) {
@@ -31,6 +34,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   //Must be called from ExportTrainBase.addAllOptionDesc
   static void addOptionsDesc(Options opts) {
     opts.addOption(SAMPLE_NEG_QTY, null, true, "A number of negative samples per query or -1 to keep all candidate entries");
+    
     opts.addOption(CommonParams.MAX_CAND_QTY_PARAM, null, true, CommonParams.MAX_CAND_QTY_DESC);
   }
   
@@ -47,14 +51,24 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
       return SAMPLE_NEG_QTY + " isn't integer: '" + tmpn + "'";
     }
     
-    tmpn = cmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
+    tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_QTY_PARAM);
     if (null == tmpn) {
-      return "Specify option: " + CommonParams.MAX_CAND_QTY_PARAM;
+      return "Specify option: " + MAX_CAND_TRAIN_QTY_PARAM;
     }
     try {
-      mCandQty = Integer.parseInt(tmpn);
+      mCandTrainQty = Integer.parseInt(tmpn);
     } catch (NumberFormatException e) {
-      return CommonParams.MAX_CAND_QTY_PARAM + " isn't integer: '" + tmpn + "'";
+      return MAX_CAND_TRAIN_QTY_PARAM + " isn't integer: '" + tmpn + "'";
+    }
+    
+    tmpn = cmd.getOptionValue(MAX_CAND_TEST_QTY_PARAM);
+    if (null == tmpn) {
+      return "Specify option: " + MAX_CAND_TEST_QTY_PARAM;
+    }
+    try {
+      mCandTestQty = Integer.parseInt(tmpn);
+    } catch (NumberFormatException e) {
+      return MAX_CAND_TEST_QTY_PARAM + " isn't integer: '" + tmpn + "'";
     }
     
     return "";
@@ -129,7 +143,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     queryData.put(Const.TEXT_FIELD_NAME, 
     CandidateProvider.removeAddStopwords(queryQueryText));
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
-    CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandQty);
+    CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandTestQty);
 
     ArrayList<String> docIds = new ArrayList<String>();
     for (CandidateEntry e : cands.mEntries) {
@@ -185,7 +199,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     queryData.put(Const.TEXT_FIELD_NAME, 
                   CandidateProvider.removeAddStopwords(queryQueryText));
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
-    CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandQty);
+    CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandTrainQty);
 
     for (CandidateEntry e : cands.mEntries) {
       
@@ -211,7 +225,8 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   }
 
   int mSampleNegQty = 0;
-  int mCandQty = 0;
+  int mCandTrainQty = 0;
+  int mCandTestQty = 0;
   
   RandomUtils            mRandUtils = new RandomUtils(0);
 }

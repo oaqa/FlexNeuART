@@ -298,13 +298,16 @@ public class EmbeddingReaderAndRecoder {
         if (q.size() < k) {
           VectorSearchEntry toAdd = new VectorSearchEntry(e.getKey(), sim);
           q.add(toAdd);
-//          System.out.println("Add " + toAdd);
+          //System.out.println("Add " + toAdd);
         }
         else if (sim < q.peek().mDist) {
           VectorSearchEntry toAdd = new VectorSearchEntry(e.getKey(), sim);
           q.add(toAdd);
-          VectorSearchEntry toDel = q.poll();
-//          System.out.println("Delete " + toDel + " add " + toAdd);
+          q.poll();
+          /*
+           * VectorSearchEntry toDel = q.poll();
+           * System.out.println("Delete " + toDel + " add " + toAdd);
+           */      
         }
       }
       int qty = q.size();

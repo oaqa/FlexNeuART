@@ -1,5 +1,5 @@
 import sys
-sys.path.append('scripts/py_server/gen-py')
+sys.path.append('scripts/py_featextr_server/gen-py')
 
 #
 # Thrift files are generated from

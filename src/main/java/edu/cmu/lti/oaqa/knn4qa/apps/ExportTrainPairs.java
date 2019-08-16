@@ -34,52 +34,16 @@ import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
-class Worker extends Thread  {
-  
-  public Worker(ExportTrainBase exporter) {
-    mExporter = exporter;
-  }
-  
-  public void addQuery(int queryNum, String queryId, 
-                       String queryQueryText, String queryFieldText,
-                       boolean bIsTestQuery) {
-    mQueryNum.add(queryNum);
-    mQueryId.add(queryId);
-    mQueryQueryText.add(queryQueryText);
-    mQueryFieldText.add(queryFieldText);
-    mIsTestQuery.add(bIsTestQuery);
-  }
 
-  @Override
-  public void run() {
-    for (int i = 0; i < mQueryId.size(); ++i) {
-      try {
-        mExporter.exportQuery(mQueryNum.get(i), mQueryId.get(i), 
-                              mQueryQueryText.get(i), mQueryFieldText.get(i),
-                              mIsTestQuery.get(i));
-      } catch (Exception e) {
-        mFail = true;
-        e.printStackTrace();
-        break;
-      }
-    }
-  }
-  
-  public boolean isFailure() {
-    return mFail;
-  }
-  
-  ArrayList<String> mQueryId = new ArrayList<String>();
-  // mQueryQueryText and mQueryFieldText may come from different fields.
-  ArrayList<String> mQueryQueryText = new ArrayList<String>();
-  ArrayList<String> mQueryFieldText = new ArrayList<String>();
-  ArrayList<Integer> mQueryNum = new ArrayList<Integer>();
-  ArrayList<Boolean> mIsTestQuery = new ArrayList<Boolean>();
-  
-  private ExportTrainBase mExporter; 
-  private boolean mFail = false;
-}
-
+/**
+ * A wrapper app for generating different types of training data from existing indexed
+ * data and QREL (relevance) information. It is a multi-threaded app: We want it 
+ * to be as efficient as possible so that we could generate tons of training
+ * data in short time.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
 public class ExportTrainPairs {
   
   private static final Logger logger = LoggerFactory.getLogger(ExportTrainPairs.class);
@@ -312,4 +276,50 @@ public class ExportTrainPairs {
   
   static Options  mOptions = new Options();
   static String   mAppName = "Export training data";
+}
+
+class Worker extends Thread  {
+  
+  public Worker(ExportTrainBase exporter) {
+    mExporter = exporter;
+  }
+  
+  public void addQuery(int queryNum, String queryId, 
+                       String queryQueryText, String queryFieldText,
+                       boolean bIsTestQuery) {
+    mQueryNum.add(queryNum);
+    mQueryId.add(queryId);
+    mQueryQueryText.add(queryQueryText);
+    mQueryFieldText.add(queryFieldText);
+    mIsTestQuery.add(bIsTestQuery);
+  }
+
+  @Override
+  public void run() {
+    for (int i = 0; i < mQueryId.size(); ++i) {
+      try {
+        mExporter.exportQuery(mQueryNum.get(i), mQueryId.get(i), 
+                              mQueryQueryText.get(i), mQueryFieldText.get(i),
+                              mIsTestQuery.get(i));
+      } catch (Exception e) {
+        mFail = true;
+        e.printStackTrace();
+        break;
+      }
+    }
+  }
+  
+  public boolean isFailure() {
+    return mFail;
+  }
+  
+  ArrayList<String> mQueryId = new ArrayList<String>();
+  // mQueryQueryText and mQueryFieldText may come from different fields.
+  ArrayList<String> mQueryQueryText = new ArrayList<String>();
+  ArrayList<String> mQueryFieldText = new ArrayList<String>();
+  ArrayList<Integer> mQueryNum = new ArrayList<Integer>();
+  ArrayList<Boolean> mIsTestQuery = new ArrayList<Boolean>();
+  
+  private ExportTrainBase mExporter; 
+  private boolean mFail = false;
 }

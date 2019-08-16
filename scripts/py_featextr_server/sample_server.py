@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-sys.path.append('scripts/py_server')
+sys.path.append('scripts/py_featextr_server')
 
 from base_server import *
 

@@ -3,8 +3,8 @@
 import sys
 import glob
 
-sys.path.append('scripts/py_server')
-sys.path.append('scripts/py_server/gen-py')
+sys.path.append('scripts/py_featextr_server')
+sys.path.append('scripts/py_featextr_server/gen-py')
 
 from protocol.ExternalScorer import Client
 from protocol.ttypes import WordEntryInfo, TextEntryParsed, TextEntryRaw, ScoringException
