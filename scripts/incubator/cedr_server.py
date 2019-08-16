@@ -6,9 +6,9 @@ import numpy as np
 sys.path.append('scripts/py_server')
 sys.path.append('scripts/data')
 
-+# TODO needs to be-renamed when/if this 
-+# thing leaves the incubator
-+sys.path.append('scripts/incubator/cedr')
+# TODO needs to be-renamed when/if this 
+# thing leaves the incubator
+sys.path.append('scripts/incubator/cedr')
 
 from base_server import *
 
@@ -26,7 +26,7 @@ class CedrQueryHandler(BaseQueryHandler):
     super().__init__(exclusive=True)
 
     self.debugPrint = debugPrint
-    self.batchSize
+    self.batchSize = batchSize
     self.model = train.MODEL_MAP[modelType]().cuda()
     if modelWeights is not None:
       if self.debugPrint:
@@ -42,8 +42,10 @@ class CedrQueryHandler(BaseQueryHandler):
       print('getScores', query.id, query.text)
 
     queryData = { query.id : query.text }
-    docData = {}
+    # Run maps queries to arrays of document IDs see iter_valid_records (train.py)
+    run = { query.id : [e.id for e in docs] }
 
+    docData = {}
     for e in docs:
       docData[e.id] = e.text
 
@@ -53,26 +55,31 @@ class CedrQueryHandler(BaseQueryHandler):
 
       # based on the code from run_model function (train.py)
       dataSet = queryData, docData 
-      run = queryData # run can be either a set or a dictionary the code cares only about keys
       for records in data.iter_valid_records(self.model, dataSet, run, self.batchSize):
-        scores = model(records['query_tok'],
-                       records['query_mask'],
-                       records['doc_tok'],
-                       records['doc_mask'])
+        scores = self.model(records['query_tok'],
+                            records['query_mask'],
+                            records['doc_tok'],
+                            records['doc_mask'])
         for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
+          score = score.item() # From tensor to value
           if self.debugPrint:
-            print(score, did, e.text)
-          sampleRet[did] = score
+            print(score, did, docData[did])
+          # Note that each element must be an array, b/c
+          # we can generate more than one feature per document!
+          sampleRet[did] = [score]
+
+    if self.debugPrint:
+      print('All scores:', sampleRet)
 
     return sampleRet
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser(description='Serving MatchZoo models.')
+  parser = argparse.ArgumentParser(description='Serving CEDR models.')
 
-  parser.add_argument('--model', metavar='MatchZoo model',
+  parser.add_argument('--model', metavar='model type',
                       required=True, type=str,
-                      help='Model directory')
+                      help=' type, e.g., vanilla_bert')
 
   parser.add_argument('--debug_print', action='store_true',
                       help='Provide debug output')

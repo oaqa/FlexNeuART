@@ -84,6 +84,9 @@ class CosineSimilQueryHandler(BaseQueryHandler):
       # Regular cosine deals poorly with all-zero vectors
       simil=robustCosineSimil(docEmbed, queryEmbed)
       #simil = (1-cosine(docEmbed, queryEmbed))
+
+      # Note that each element must be an array, b/c
+      # we can generate more than one feature per document!
       ret[d.id] = [simil]
 
     return ret

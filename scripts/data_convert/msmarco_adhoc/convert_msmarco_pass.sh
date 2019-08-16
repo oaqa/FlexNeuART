@@ -16,6 +16,9 @@ if [ "$dst" = "" ] ; then
   exit 1
 fi
 
+mkdir -p $dst/input_data/test2019
+python -u scripts/data_convert/msmarco_adhoc/convert_queries.py --input  $src/msmarco-test2019-queries.tsv --output $dst/input_data/test2019/QuestionFields.jsonl
+
 for part in pass train dev eval ; do
   mkdir -p $dst/input_data/$part
 done
