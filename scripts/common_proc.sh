@@ -131,7 +131,7 @@ function getNumCpuCores {
 # Attention: it "returns" an array by setting a variable retVal (ugly but works reliably)
 function getIndexQueryDataInfo {
   topDir="$1"
-  dirList=""
+  indexDirs=""
   oldFile="SolrAnswerFile.txt"
   oldQueryFile="SolrQuestionFile.txt"
   newFile="AnswerFields.jsonl"
@@ -171,18 +171,50 @@ function getIndexQueryDataInfo {
       done
 
       if [ "$hasData" = "1" ] ; then
-        if [ "$dirList" != "" ] ; then
-          dirList="$dirList,"
+        if [ "$indexDirs" != "" ] ; then
+          indexDirs="$indexDirs,"
         fi
-        dirList="${dirList}$subDir"
+        indexDirs="${indexDirs}$subDir"
       fi
     fi # if [ -d "$subDir"]
   done
+  queryDirs=""
+  for subDir in * ; do
+    if [ -d "$subDir" ] ; then
+      fn=$subDir/${queryFileName}
+      if [ -f "$fn" ] ; then
+        if [ "queryDirs" != "" ] ; then
+          queryDirs="$queryDirs,"
+        fi
+        queryDirs="${queryDirs}$subDir"
+      fi
+    fi
+  done
   cd "$currDir"
   # This is kinda ugly, but is better than other non-portable solutions.
-  retVal=("${dirList}" "${dataFileName}" "${queryFileName}")
+  retVal=("${indexDirs}" "${dataFileName}" "${queryDirs}" "${queryFileName}")
 }
 
+function getCatCmd {
+  fileName=$1
+  catCommand=""
+  if [ -f "$fileName" ] ; then
+
+    # Not all parts correspond to the data files
+    echo "$fileName" | grep '^.gz$' >/dev/null
+    if [ "$?" = "0" ] ; then
+      catCommand="zcat"
+    else
+      echo "$fileName" | grep '^.bz2$' >/dev/null
+      if [ "$?" = "0" ] ; then
+        catCommand="zcat"
+      else
+        catCommand="cat"
+      fi
+    fi
+  fi
+  echo $catCommand
+}
 function getExperDirUnique {
   experDir="$1"
   testSet="$2"

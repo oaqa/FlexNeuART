@@ -29,7 +29,7 @@ echo "Data directory:          $inputDataDir"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[2]}
+queryFileName=${retVal[3]}
 if [ "$queryFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1

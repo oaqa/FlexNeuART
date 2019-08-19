@@ -52,23 +52,21 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     }
     
     tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_QTY_PARAM);
-    if (null == tmpn) {
-      return "Specify option: " + MAX_CAND_TRAIN_QTY_PARAM;
+    if (null != tmpn) {
+      try {
+        mCandTrainQty = Integer.parseInt(tmpn);
+      } catch (NumberFormatException e) {
+        return MAX_CAND_TRAIN_QTY_PARAM + " isn't integer: '" + tmpn + "'";
+      }
     }
-    try {
-      mCandTrainQty = Integer.parseInt(tmpn);
-    } catch (NumberFormatException e) {
-      return MAX_CAND_TRAIN_QTY_PARAM + " isn't integer: '" + tmpn + "'";
-    }
-    
+     
     tmpn = cmd.getOptionValue(MAX_CAND_TEST_QTY_PARAM);
-    if (null == tmpn) {
-      return "Specify option: " + MAX_CAND_TEST_QTY_PARAM;
-    }
-    try {
-      mCandTestQty = Integer.parseInt(tmpn);
-    } catch (NumberFormatException e) {
-      return MAX_CAND_TEST_QTY_PARAM + " isn't integer: '" + tmpn + "'";
+    if (null != tmpn) {
+      try {
+        mCandTestQty = Integer.parseInt(tmpn);
+      } catch (NumberFormatException e) {
+        return MAX_CAND_TEST_QTY_PARAM + " isn't integer: '" + tmpn + "'";
+      }
     }
     
     return "";
@@ -225,8 +223,8 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   }
 
   int mSampleNegQty = 0;
-  int mCandTrainQty = 0;
-  int mCandTestQty = 0;
+  int mCandTrainQty = Integer.MAX_VALUE;
+  int mCandTestQty = Integer.MAX_VALUE;
   
   RandomUtils            mRandUtils = new RandomUtils(0);
 }

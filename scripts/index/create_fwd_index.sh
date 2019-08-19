@@ -55,6 +55,12 @@ for fieldDef in $fieldListDef ; do
     echo "Invalid field definition $fieldDef (should be two colon-separated values, e.g, text:parsedBOW)"
     exit 1
   fi
-  scripts/index/run_buildfwd_index.sh -fwd_index_type $fwdIndexType -input_data_dir "$inputDataDir"  -index_dir "$indexDir" -data_sub_dirs "$dirList" -data_file "$dataFileName" -field_name "$field"
+  scripts/index/run_buildfwd_index.sh \
+    -fwd_index_type $fwdIndexType \
+    -input_data_dir "$inputDataDir"  \
+    -index_dir "$indexDir" \
+    -data_sub_dirs "$dirList" \
+    -data_file "$dataFileName" \
+    -field_name "$field"
 done
 

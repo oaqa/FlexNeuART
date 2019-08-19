@@ -8,11 +8,18 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-. scripts/num_ret_list.sh
+
+checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "FEAT_EXPER_SUBDIR"
+checkVarNonEmpty "EXPER_DESC_SUBDIR"
+
+experDescLoc="$COLLECT_ROOT/$EXPER_DESC_SUBDIR"
+
+. scripts/config_cand_qty.sh
 
 EXTRACTORS_DESC=$2
 if [ "$EXTRACTORS_DESC" = "" ] ; then
-  "Specify a file with extractor description (2d arg)"
+  "Specify a file with extractor description relative to dir. '$experDescLoc' (2d arg)"
   exit 1
 fi
 if [ ! -f "$EXTRACTORS_DESC" ] ; then
@@ -34,8 +41,6 @@ fi
 
 MAX_QUERY_QTY="$5"
 
-checkVarNonEmpty "COLLECT_ROOT"
-checkVarNonEmpty "FEAT_EXPER_SUBDIR"
 
 experDir="$COLLECT_ROOT/$collect/$FEAT_EXPER_SUBDIR"
 if [ ! -d "$experDir" ] ; then
@@ -53,7 +58,7 @@ nRunning=0
 echo "Number of parallel experiments:                             $PARALLEL_EXPER_QTY"
 echo "Number of threads in feature extractors/query applications: $THREAD_QTY"
 
-n=`wc -l "$EXTRACTORS_DESC"|awk '{print $1}'`
+n=`wc -l "$experDescLoc/$EXTRACTORS_DESC"|awk '{print $1}'`
 n=$(($n+1))
 childPIDs=()
 nrun=0
@@ -64,9 +69,14 @@ for ((ivar=1;ivar<$n;++ivar))
     line=$(removeComment "$line")
     if [ "$line" !=  "" ]
     then
-      extrType=`echo $line|awk '{print $1}'`
-      if [ "$extrType" = "" ] ; then
-        echo "Missing extractor type (1st field) in line $line, file $EXTRACTORS_DESC"
+      extrConfigFile=`echo $line|awk '{print $1}'`
+      if [ "$extrConfigFile" = "" ] ; then
+        echo "Missing feature-extractor config file (1st field) in line $line, file $EXTRACTORS_DESC"
+        exit 1
+      fi
+      extrConfigPath="$experDescLoc/$extrConfigFile"
+      if [ ! -f "$extrConfigPath" ] ; then
+        echo "Missing feature-extractor configuration file: $extrConfigPath"
         exit 1
       fi
       testSet=`echo $line|awk '{print $2}'`
@@ -88,7 +98,16 @@ for ((ivar=1;ivar<$n;++ivar))
           exit 1
         fi
       fi
-      scripts/exper/run_one_lucene_exper.sh $collect "$experDirUnique" "$extrType" "$MAX_QUERY_QTY"  "$testSet" "$THREAD_QTY" "$NUM_RET_LIST" "$N_TRAIN"  &> $experDirUnique/exper.log &
+
+      scripts/exper/run_one_lucene_exper.sh \
+      $collect "$experDirUnique" \
+      "$extrConfigPath" \
+      "$MAX_QUERY_QTY"  \
+      "$testSet" \
+      "$THREAD_QTY" \
+      "$NUM_RET_LIST" \
+      "$N_TRAIN"  &> $experDirUnique/exper.log &
+
       pid=$!
       childPIDs+=($pid)
       echo "Started a process $pid, working dir: $experDirUnique"

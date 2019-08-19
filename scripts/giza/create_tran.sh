@@ -38,7 +38,7 @@ checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 
 export source_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
-export target_dir="$COLLECT_ROOT/$collect/$GIZA_SUBDIR"
+export target_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 
 echo "Source dir prefix=$source_dir" 
 echo "Target dir prefix=$target_dir" 

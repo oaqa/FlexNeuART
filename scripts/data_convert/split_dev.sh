@@ -10,6 +10,9 @@ fi
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "QREL_FILE"
+checkVarNonEmpty "DEV_SUBDIR"
+checkVarNonEmpty "DEV1_SUBDIR"
+checkVarNonEmpty "DEV2_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
 dev1qty=$2
@@ -28,7 +31,7 @@ echo "Data directory:          $inputDataDir"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[2]}
+queryFileName=${retVal[3]}
 if [ "$queryFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1
@@ -37,7 +40,7 @@ fi
 echo "Query file name:         $queryFileName"
 echo "=========================================================================="
 
-for devPart in dev1 dev2 ; do
+for devPart in "$DEV1_SUBDIR" "$DEV2_SUBDIR" ; do
   if [ ! -d "$inputDataDir/$devPart" ] ; then
     mkdir "$inputDataDir/$devPart"
   fi
@@ -46,12 +49,12 @@ for devPart in dev1 dev2 ; do
   cp "$inputDataDir/dev/$QREL_FILE" "$inputDataDir/$devPart/"
 done
 
-fullQueryPath=$inputDataDir/dev/$queryFileName
+fullQueryPath=$inputDataDir/$DEV_SUBDIR/$queryFileName
 qty=`wc -l "$fullQueryPath"|awk '{print $1}'` 
 dev2qty=$(($qty-$dev1qty))
-echo "# of queries: $qty # of queries in dev1: $dev1qty # of queries in dev2: $dev2qty"
+echo "# of queries: $qty # of queries in "$DEV1_SUBDIR": $dev1qty # of queries in $DEV2_SUBDIR: $dev2qty"
 if [ "$dev2qty" -lt "1" ] ; then
-  echo "Requested number of dev1 queries $dev1qty is too large!"
+  echo "Requested number of "$DEV1_SUBDIR" queries $dev1qty is too large!"
   exit 1
 fi
 execAndCheck "sort -R \"$fullQueryPath\" > \"$tmpFileQueries\""

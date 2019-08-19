@@ -123,17 +123,18 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "EMBED_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$GIZA_SUBDIR"
+embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[2]}
+queryFileName=${retVal[3]}
 if [ "$queryFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1

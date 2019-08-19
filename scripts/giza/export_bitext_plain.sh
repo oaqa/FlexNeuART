@@ -20,7 +20,7 @@ checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
 indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
+embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 
 if [ ! -d "$outDir" ] ; then
   mkdir "$outDir"
@@ -56,7 +56,7 @@ echo "==========================================================================
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[2]}
+queryFileName=${retVal[3]}
 if [ "$queryFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1
