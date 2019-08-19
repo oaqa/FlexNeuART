@@ -52,6 +52,7 @@ echo "==========================================================================
 echo "Data directory:          $inputDataDir"
 echo "Forward index directory: $indexDir"
 echo "Embedding directory:     $embedDir"
+echo "Max ratio:               $maxRatio
 echo "=========================================================================="
 
 retVal=""
