@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import sys
-import gzip
-import json
 import argparse
+import random
+
 sys.path.append('scripts')
+
 from data_convert.text_proc import *
 from data_convert.convert_common import *
 
@@ -16,6 +17,8 @@ parser.add_argument('--max_doc_size', metavar='max doc size bytes', help='the th
                     type=int, default=MAX_DOC_SIZE)
 parser.add_argument('--lower_case', help='lowercase text',
                     action='store_true', default=False)
+parser.add_argument('--sample_prob', help='document sampling probability',
+                    type=float, default=1.0)
 
 
 args = parser.parse_args()
@@ -24,6 +27,9 @@ print(args)
 inpFile = FileWrapper(args.input)
 outFile = FileWrapper(args.output, 'w')
 maxDocSize = args.max_doc_size
+sampleProb = args.sample_prob
+
+random.seed(0)
 
 nlp = SpacyTextParser(SPACY_MODEL, [], sentSplit=True)
 
@@ -32,6 +38,8 @@ ln=0
 for line in inpFile:
   ln+=1
   if not line: 
+    continue
+  if random.random() > sampleProb:
     continue
   line = line[:maxDocSize] # cut documents that are too long!
   fields = line.split('\t')
