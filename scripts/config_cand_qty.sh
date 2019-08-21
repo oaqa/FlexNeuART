@@ -3,5 +3,5 @@
 
 export N_TRAIN=20 
 
-#export NUM_RET_LIST="10,50,100,250"
-export NUM_RET_LIST="10,50"
+export NUM_RET_LIST="10,50,100,250"
+#export NUM_RET_LIST="10,50"

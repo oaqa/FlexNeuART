@@ -47,9 +47,12 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
         fe = new FeatExtrSDMSimilarity(resMngr, oneExtrConf); 
       } else if (extrType.equalsIgnoreCase(FeatExtrBM25ClosePairSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrBM25ClosePairSimilarity(resMngr, oneExtrConf); 
-      } else 
+      } else if (extrType.equalsIgnoreCase(FeatExtractorRM3Similarity.EXTR_TYPE)) {
+        fe = new FeatExtractorRM3Similarity(resMngr, oneExtrConf);
+      } else {
         // TODO ideally need to inform about the set of supported extractors
         throw new Exception("Unsupported extractor type: " + extrType);
+      }
       compList.add(fe);
     }
     init(compList);
