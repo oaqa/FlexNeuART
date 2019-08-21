@@ -13,24 +13,20 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.utils;
+package edu.cmu.lti.oaqa.knn4qa.letor;
 
-import java.util.Comparator;
-
-/**
- * A comparator for the id-value pair class, 
- * which sorts by the value (in the descending order)
- * rather than by the ID.
- * 
- * @author Leonid Boytsov
- */
-public class IdValParamByValDesc implements Comparator<IdValPair> {
-
-  @Override
-  public int compare(IdValPair e1, IdValPair e2) {
-    // If e1.mVal > e2.mVal, we return -1
-    // that is larger-value entries will go first
-    return (int) Math.signum(e2.mVal - e1.mVal);
-  }
+public class CommonParams {
+  
+  public static String BM25_SIMIL = "bm25";
+  
+  public static String QUERY_FIELD_NAME = "queryFieldName";
+  public static String INDEX_FIELD_NAME = "indexFieldName";
+  
+  public static String EXTR_TYPE = "extrType";
+  
+  public static String SIMIL_TYPE = "similType";
+  
+  public static String K1_PARAM = "k1";
+  public static String B_PARAM = "b";
 
 }

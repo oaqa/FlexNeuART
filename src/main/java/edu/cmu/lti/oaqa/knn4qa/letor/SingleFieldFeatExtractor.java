@@ -39,8 +39,8 @@ import no.uib.cipr.matrix.DenseVector;
 public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
   
   public SingleFieldFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
-    mIndexFieldName = conf.getReqParamStr(FeatExtrConfig.INDEX_FIELD_NAME);
-    mQueryFieldName = conf.getParam(FeatExtrConfig.QUERY_FIELD_NAME, mIndexFieldName);
+    mIndexFieldName = conf.getReqParamStr(CommonParams.INDEX_FIELD_NAME);
+    mQueryFieldName = conf.getParam(CommonParams.QUERY_FIELD_NAME, mIndexFieldName);
   }
 
   /**

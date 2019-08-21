@@ -75,8 +75,6 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
     
     int   iQuery = 0, iDoc = 0;
     
-    float docLen = doc.mDocLen;
-    
     while (iQuery < queryTermQty && iDoc < docTermQty) {
       final int queryWordId = query.mWordIds[iQuery];
       final int docWordId   = doc.mWordIds[iDoc];
@@ -84,21 +82,40 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
       if (queryWordId < docWordId) ++iQuery;
       else if (queryWordId > docWordId) ++iDoc;
       else {
-        float tf = doc.mQtys[iDoc];
         
-        float normTf = (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl));
+        // This computation can be made a bit efficient by keeping
+        // document length and the word id in a local variable,
+        // but the gains would be small and this way we provide
+        // a function to compute a document term weight
+        float termDocScore = getDocTermScore(doc, iDoc); 
         
-        score += getIDF(mFieldIndex, query.mWordIds[iQuery]) * // IDF 
-                  query.mQtys[iQuery] *           // query frequency
-                  normTf;                         // Normalized term frequency        
+        score += termDocScore * query.mQtys[iQuery];            
         ++iQuery; ++iDoc;
       }
     }
     
     return score;
   }
-  
-  
+
+  /**
+   * Computes a BM25 weight of a given word in a document.
+   * 
+   * @param doc     document entry reference
+   * @param iDoc    the zero-based position of the word in 
+   *                the BOW list of document words.
+   * @return
+   */
+  public float getDocTermScore(DocEntryParsed doc, int iDoc) {
+    float tf = doc.mQtys[iDoc];
+    float docLen = doc.mDocLen;
+    
+    // Normalized term frequency    
+    float normTf = (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl));
+    float idf = getIDF(mFieldIndex, doc.mWordIds[iDoc]) ;
+    float termDocScore = idf * normTf;
+    return termDocScore;
+  }
+
   
   @Override
   public String getName() {

@@ -13,7 +13,7 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FEAT_EXPER_SUBDIR"
 checkVarNonEmpty "EXPER_DESC_SUBDIR"
 
-experDescLoc="$COLLECT_ROOT/$EXPER_DESC_SUBDIR"
+experDescLoc="$COLLECT_ROOT/$collect/$EXPER_DESC_SUBDIR"
 
 . scripts/config_cand_qty.sh
 
@@ -22,8 +22,9 @@ if [ "$EXTRACTORS_DESC" = "" ] ; then
   "Specify a file with extractor description relative to dir. '$experDescLoc' (2d arg)"
   exit 1
 fi
-if [ ! -f "$EXTRACTORS_DESC" ] ; then
-  "Not a file '$EXTRACTORS_DESC' (2d arg)"
+experDescPath=$experDescLoc/$EXTRACTORS_DESC
+if [ ! -f "$experDescPath" ] ; then
+  echo "Not a file '$experDescPath' (2d arg)"
   exit 1
 fi
 
@@ -58,20 +59,20 @@ nRunning=0
 echo "Number of parallel experiments:                             $PARALLEL_EXPER_QTY"
 echo "Number of threads in feature extractors/query applications: $THREAD_QTY"
 
-n=`wc -l "$experDescLoc/$EXTRACTORS_DESC"|awk '{print $1}'`
+n=`wc -l "$experDescPath"|awk '{print $1}'`
 n=$(($n+1))
 childPIDs=()
 nrun=0
 nfail=0
 for ((ivar=1;ivar<$n;++ivar))
   do
-    line=$(head -$ivar "$EXTRACTORS_DESC"|tail -1)
+    line=$(head -$ivar "$experDescPath"|tail -1)
     line=$(removeComment "$line")
     if [ "$line" !=  "" ]
     then
       extrConfigFile=`echo $line|awk '{print $1}'`
       if [ "$extrConfigFile" = "" ] ; then
-        echo "Missing feature-extractor config file (1st field) in line $line, file $EXTRACTORS_DESC"
+        echo "Missing feature-extractor config file (1st field) in line $line, file $experDescPath"
         exit 1
       fi
       extrConfigPath="$experDescLoc/$extrConfigFile"
@@ -81,12 +82,12 @@ for ((ivar=1;ivar<$n;++ivar))
       fi
       testSet=`echo $line|awk '{print $2}'`
       if [ "$testSet" = "" ] ; then
-        echo "Missing test set (e.g., dev1) (2d field) in line $line, file $EXTRACTORS_DESC"
+        echo "Missing test set (e.g., dev1) (2d field) in line $line, file $experDescPath"
         exit 1
       fi
       experSubdir=`echo $line|awk '{print $3}'`
       if [ "$testSet" = "" ] ; then
-        echo "Missing experimental sub-dir (3d field) in line $line, file $EXTRACTORS_DESC"
+        echo "Missing experimental sub-dir (3d field) in line $line, file $experDescPath"
         exit 1
       fi
       # Each experiment should run in its separate sub-directory

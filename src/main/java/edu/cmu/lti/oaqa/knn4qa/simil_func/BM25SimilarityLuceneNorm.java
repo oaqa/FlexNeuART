@@ -37,35 +37,9 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
    */
   @Override
   public float compute(DocEntryParsed query, DocEntryParsed doc) {
-    float score = 0;
-    
-    int   docTermQty = doc.mWordIds.length;
-    int   queryTermQty = query.mWordIds.length;
+    float score = super.compute(query, doc);
 
     float normIDF = getNormIDF(query);
-
-    int   iQuery = 0, iDoc = 0;
-    
-    float docLen = doc.mDocLen;
-    
-    while (iQuery < queryTermQty && iDoc < docTermQty) {
-      final int queryWordId = query.mWordIds[iQuery];
-      final int docWordId   = doc.mWordIds[iDoc];
-      
-      if (queryWordId < docWordId) ++iQuery;
-      else if (queryWordId > docWordId) ++iDoc;
-      else {
-        float tf = doc.mQtys[iDoc];
-        
-        float normTf = (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl));
-        
-        float idf = getIDF(mFieldIndex, query.mWordIds[iQuery]);
-        score +=  idf * // IDF 
-                  query.mQtys[iQuery] *           // query frequency
-                  normTf;                         // Normalized term frequency        
-        ++iQuery; ++iDoc;
-      }
-    }
 
     if (normIDF > 0) score /= normIDF;
     

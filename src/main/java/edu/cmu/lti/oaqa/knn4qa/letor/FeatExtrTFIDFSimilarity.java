@@ -23,6 +23,7 @@ import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
+
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -34,21 +35,17 @@ import no.uib.cipr.matrix.DenseVector;
 public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  {
   public static String EXTR_TYPE = "TFIDFSimilarity";
   
-  public static String BM25_SIMIL = "bm25";
-  public static String K1_PARAM = "k1";
-  public static String B_PARAM = "b";
-  
   FeatExtrTFIDFSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
-    String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
+    String similType = conf.getReqParamStr(CommonParams.SIMIL_TYPE);
 
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 
-    if (similType.equalsIgnoreCase(BM25_SIMIL))
+    if (similType.equalsIgnoreCase(CommonParams.BM25_SIMIL))
       mSimilObjs[0] = new BM25SimilarityLuceneNorm(
-                                          conf.getParam(K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
-                                          conf.getParam(B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
+                                          conf.getParam(CommonParams.K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
+                                          conf.getParam(CommonParams.B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
                                           mFieldIndex);
     else
       throw new Exception("Unsupported field similarity: " + similType);

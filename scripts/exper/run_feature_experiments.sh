@@ -13,10 +13,6 @@ if [ "$FEATURE_DESC_FILE" = "" ] ; then
   echo "Specify a feature description file (2d arg)"
   exit 1
 fi
-if [ ! -f "$FEATURE_DESC_FILE" ] ; then
-  echo "Not a file (2d arg)"
-  exit 1
-fi
 
 PARALLEL_EXPER_QTY=$3
 if [ "$PARALLEL_EXPER_QTY" = "" ] ; then

@@ -18,7 +18,7 @@ checkVarNonEmpty "$threadQty"
 checkVarNonEmpty "$candTrainQty"
 checkVarNonEmpty "$candTestQty"
 
-outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/cedr"
+outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/cedr_train"
 
 if [ ! -d "$outDir" ] ; then
   mkdir "$outDir"

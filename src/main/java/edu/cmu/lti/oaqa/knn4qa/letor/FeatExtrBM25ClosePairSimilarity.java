@@ -1,3 +1,18 @@
+/*
+ *  Copyright 2014+ Carnegie Mellon University
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package edu.cmu.lti.oaqa.knn4qa.letor;
 
 import java.util.ArrayList;
@@ -22,14 +37,14 @@ public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
     
     mSimilObjs[0] = new BM25CloseOrderPairSimilQueryNorm(
-                            conf.getParam(FeatExtrTFIDFSimilarity.K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
-                            conf.getParam(FeatExtrTFIDFSimilarity.B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
+                            conf.getParam(CommonParams.K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
+                            conf.getParam(CommonParams.B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
                             conf.getParam(QUERY_WINDOW_PARAM, 4),
                             conf.getParam(DOC_WINDOW_PARAM, 8),
                             mFieldIndex);
     mSimilObjs[1] = new BM25CloseUnorderPairSimilQueryNorm(
-                            conf.getParam(FeatExtrTFIDFSimilarity.K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
-                            conf.getParam(FeatExtrTFIDFSimilarity.B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
+                            conf.getParam(CommonParams.K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
+                            conf.getParam(CommonParams.B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
                             conf.getParam(QUERY_WINDOW_PARAM, 4),
                             conf.getParam(DOC_WINDOW_PARAM, 8),
                             mFieldIndex);
