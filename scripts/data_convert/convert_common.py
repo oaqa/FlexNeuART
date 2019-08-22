@@ -70,3 +70,60 @@ def readStopWords(fileName=STOPWORD_FILE, lowerCase=True):
         stopWords.append(w)
 
   return stopWords
+
+
+def SimpleXmlRecIterator(fileName, recTagName):
+  """A simple class to read XML records stored in a way similar to
+    the Yahoo Answers collection. In this format, each record
+    occupies a certain number of lines, but no record "share" the same
+    line. The format may not be fully proper XML, but each individual
+    record may be. It always starts with a given tag name ends with
+    the same tag, e.g.,:
+
+    <recordTagName ...>
+    </recordTagName>
+
+  :param fileName:  input file name (can be compressed).
+  :param tagName:   a record tag name (for the tag that encloses the record)
+
+  :return:   it yields a series of records
+  """
+
+  with FileWrapper(fileName) as f:
+
+    recLines = []
+
+    startEntry = '<' + recTagName
+    endEntry = '</' + recTagName + '>'
+
+    seenEnd = True
+    seenStart = False
+
+    ln = 0
+    for line in f:
+      ln += 1
+      if not seenStart:
+        if line.strip() == '':
+          continue # Can skip empty lines
+        if line.startswith(startEntry) :
+          if not seenEnd:
+            raise Exception(f'Invalid format, no previous end tag, line {ln} file {fileName}')
+          assert(not recLines)
+          recLines.append(line)
+          seenEnd = False
+          seenStart = True
+        else:
+          raise Exception(f'Invalid format, no previous start tag, line {ln} file {fileName}')
+      else:
+        recLines.append(line)
+        noSpaceLine = line.replace(' ', '').strip() # End tags may contain spaces
+        if noSpaceLine.endswith(endEntry):
+          if not seenStart:
+            raise Exception(f'Invalid format, no previous start tag, line {ln} file {fileName}')
+          yield ''.join(recLines)
+          recLines = []
+          seenEnd = True
+          seenStart = False
+
+    if recLines:
+      raise Exception(f'Invalid trailine entries in the file {fileName} %d entries left' % (len(recLines)))
