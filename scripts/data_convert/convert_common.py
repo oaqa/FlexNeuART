@@ -1,4 +1,7 @@
 import gzip
+import collections
+import re
+from bs4 import BeautifulSoup
 
 SPACY_MODEL = 'en_core_web_sm'
 STOPWORD_FILE = 'data/stopwords.txt'
@@ -127,3 +130,51 @@ def SimpleXmlRecIterator(fileName, recTagName):
 
     if recLines:
       raise Exception(f'Invalid trailine entries in the file {fileName} %d entries left' % (len(recLines)))
+
+def removeTags(str):
+  """Just remove anything that looks like a tag"""
+  return re.sub(r'</?[a-z]+\s*/?>', '', str)
+
+def procYahooAnswersRecord(recStr):
+  """A procedure to parse a single Yahoo-answers format entry.
+
+  :param recStr: Answer content including enclosing tags <document>...</document>
+  :return:  parsed data as YahooAnswerRecParsed entry
+  """
+  doc = BeautifulSoup(recStr, 'lxml')
+
+  docRoot = doc.find('document')
+  if docRoot is None:
+    raise Exception('Invalid format, missing <document> tag')
+
+  uri = docRoot.find('uri')
+  if uri is None:
+    raise Exception('Invalid format, missing <uri> tag')
+  uri = uri.text
+
+  subject = docRoot.find('subject')
+  if subject is None:
+    raise Exception('Invalid format, missing <subject> tag')
+  subject = removeTags(subject.text)
+
+  content = docRoot.find('content')
+  content = '' if content is None else removeTags(content.text) # can probably be missing
+
+  bestAnswer = docRoot.find('bestanswer')
+  bestAnswer = '' if bestAnswer is None else bestAnswer.text # is missing occaisionally
+
+  bestAnswerId = -1
+
+  answList = []
+  answers = docRoot.find('nbestanswers')
+  if answers is not None:
+    for answ in answers.find_all('answer_item'):
+      answText = answ.text
+      if answText == bestAnswer:
+        bestAnswerId = len(answList)
+      answList.append(removeTags(answText))
+
+  YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed', 'uri subject content bestAnswerId answerList')
+
+  return YahooAnswerRecParsed(uri=uri, subject=subject.strip(), content=content.strip(),
+                              bestAnswerId=bestAnswerId, answerList=answList)
