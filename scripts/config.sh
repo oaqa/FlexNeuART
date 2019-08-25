@@ -17,12 +17,15 @@ COLLECT_ROOT="collections"
 #
 # $COLLECT_ROOT
 #     <Collection sub-directory>
+#         $INPUT_RAW_SUBDIR (optional)
 #         $INPUT_DATA_SUBDIR
 #             $TRAIN_SUBDIR
 #             $DEV_SUBDIR (optional)
 #             $DEV1_SUBDIR (optional)
 #             $DEV2_SUBDIR (optional)
-#             $BITEXT_TRAIN_SUBDIR
+#             $BITEXT_TRAIN_SUBDIR (optional, can also be created using
+#                                   scripts/data_convert/split_train4bitext.sh
+#                                   from the train subdir data)
 #
 #         $EXPER_DESC_SUBDIR
 #         $EXPER_SUBDIR
@@ -36,8 +39,10 @@ COLLECT_ROOT="collections"
 #         $LUCENE_CACHE_SUBDIR
 #
 
+# Original input data directory
+INPUT_RAW_SUBDIR="input_raw"
 
-# Original input data (possibly compressed question and/or answer JSONs)
+# Processed multi-field input data (possibly compressed question and/or answer JSONs)
 INPUT_DATA_SUBDIR="input_data"
 # Derived data subdirectory
 DERIVED_DATA_SUBDIR="derived_data"

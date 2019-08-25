@@ -8,6 +8,22 @@ STOPWORD_FILE = 'data/stopwords.txt'
 MAX_DOC_SIZE=16536 # 16 K should be more than enough!
 REPORT_QTY=10000
 
+QREL_FILE = 'qrels.txt'
+QUESTION_FILE_JSON = 'QuestionFields.jsonl'
+ANSWER_FILE_JSON = 'AnswerFields.jsonl.gz' # We'd like to keep it compressed
+
+DOCID_FIELD = 'DOCNO'
+
+TEXT_FIELD_NAME = 'text'
+TEXT_UNLEMM_FIELD_NAME = 'text_unlemm'
+TEXT_RAW_FIELD_NAME = 'text_raw'
+
+# bitext naming conventions
+BITEXT_QUESTION_PREFIX = 'question_'
+BITEXT_ANSWER_PREFIX = 'answer_'
+
+MAX_RELEV_GRADE=4
+
 class GizppedFileWrapperIterator:
 
   def __init__(self, fileHandler):
@@ -178,3 +194,14 @@ def procYahooAnswersRecord(recStr):
 
   return YahooAnswerRecParsed(uri=uri, subject=subject.strip(), content=content.strip(),
                               bestAnswerId=bestAnswerId, answerList=answList)
+
+
+def qrelEntry(questId, answId, relGrade):
+  """Produces one QREL entry
+
+  :param questId:  question ID
+  :param answId:   answer ID
+  :param relGrade: relevance grade
+  :return: QREL entry
+  """
+  return f'{questId} 0 {answId} {relGrade}'

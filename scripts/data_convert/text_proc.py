@@ -49,6 +49,8 @@ class SpacyTextParser:
   
   def procText(self, text):
     """Process text, remove stopwords and obtain lemmas, but does not split into sentences.
+    This function should not emit newlines!
+
     :param text     input text string
     :return         a tuple (lemmatized text, original-form text). Text is white-space separated.
     """

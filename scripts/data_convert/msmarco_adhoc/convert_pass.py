@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys
-import gzip
 import json
 import argparse
+
 sys.path.append('scripts')
 from data_convert.text_proc import *
 from data_convert.convert_common import *
@@ -44,7 +44,10 @@ for line in inpFile:
 
   text, text_unlemm = nlp.procText(body)
 
-  doc = {'DOCNO' : pid, 'text' : text, 'text_unlemm' : text_unlemm, 'text_raw' : body.lower()}
+  doc = {DOCID_FIELD : pid,
+         TEXT_FIELD_NAME : text,
+         TEXT_UNLEMM_FIELD_NAME : text_unlemm,
+         TEXT_RAW_FIELD_NAME : body.lower()}
   docStr = json.dumps(doc) + '\n'
   outFile.write(docStr)
   if ln % REPORT_QTY == 0:

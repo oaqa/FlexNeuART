@@ -8,11 +8,6 @@ checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "GIZA_SUBDIR"
 
-echo "========================================================================================================================="
-echo " This script assumes that each sub-directory of the directory 'tran' has two versions, e.g., 'text' and 'text.orig'"
-echo " The 'text.orig' keeps data to be filtered. The filtering result is stored in the 'text' directory."
-echo "========================================================================================================================="
-
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify a collection, e.g., squad (1st arg)"
@@ -38,6 +33,16 @@ if [ "$maxWordQty" = "" ] ; then
   echo "Specify the maximum number of (most frequent) words to use (4th arg)"
   exit 1
 fi
+
+dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field"
+
+echo "========================================================================================================================="
+echo " This script takes the data created by scripts/giza/create_tran.sh which is placed in the directory:"
+echo "$dirSrc"
+echo "It keeps the data to be filtered. The filtering result is stored in the following directory:"
+echo "$dirDst"
+echo "========================================================================================================================="
 
 function get_file_name {
   base=$1

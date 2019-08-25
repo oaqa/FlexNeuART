@@ -29,7 +29,7 @@ fi
 field=$2
 
 if [ "$field" = "" ] ; then
-  echo "Specify a document/index field: e.g., text (2d arg)"
+  echo "Specify a document/index field: e.g., text_unlemm (2d arg)"
   exit 1
 fi
 
@@ -52,7 +52,7 @@ echo "==========================================================================
 echo "Data directory:          $inputDataDir"
 echo "Forward index directory: $indexDir"
 echo "Embedding directory:     $embedDir"
-echo "Max ratio:               $maxRatio
+echo "Max ratio:               $maxRatio"
 echo "=========================================================================="
 
 retVal=""

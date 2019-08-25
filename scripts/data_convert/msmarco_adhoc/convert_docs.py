@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import sys
-import gzip
 import json
 import argparse
+
 sys.path.append('scripts')
 from data_convert.text_proc import *
 from data_convert.convert_common import *
@@ -48,7 +48,11 @@ for line in inpFile:
   text = title_lemmas + ' ' + body_lemmas
   text = text.strip()
   text_raw = (title.strip() + ' ' + body.strip()).lower()
-  doc = {'DOCNO' : did, 'text' : text, 'title' : title_unlemm, 'body' : body_unlemm, 'text_raw' : text_raw}
+  doc = {DOCID_FIELD : did,
+         TEXT_FIELD_NAME : text,
+         'title' : title_unlemm,
+         'body' : body_unlemm,
+         TEXT_RAW_FIELD_NAME : text_raw}
   docStr = json.dumps(doc) + '\n'
   outFile.write(docStr)
   if ln % REPORT_QTY == 0:

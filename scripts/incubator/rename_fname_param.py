@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# This script renames the parameter
+# 'fieldName' to 'indexFieldName'
 import sys, json
 f=open(sys.argv[1])
 doc=json.load(f)
