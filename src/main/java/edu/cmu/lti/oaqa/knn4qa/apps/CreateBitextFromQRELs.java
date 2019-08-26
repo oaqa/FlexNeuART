@@ -222,6 +222,7 @@ public class CreateBitextFromQRELs {
     for (int iq = 0; iq < queryWords.length; ++iq) {
       float[] qvec = embeds.getVector(queryWords[iq]);
       
+      float weightSum = 0;
       if (qvec != null) {
         for (int iWord = 0; iWord < docWordQty; ++iWord) {
           int wordId = dentry.mWordIds[iWord];
@@ -232,14 +233,17 @@ public class CreateBitextFromQRELs {
             float w = (float)Math.sqrt((1 + dist.compute(qvec, dvec)) * dentry.mQtys[iWord]);
             // note that all weights have to be non-negative!
             weights[iWord] = w;
+            weightSum += w;
           } else {
             weights[iWord] = 0;
           }
         } 
-        int sampledWordIdx[] = rand.sampleWeightWithReplace(weights, sampleQty);
-        for (int sampleId = 0; sampleId < sampleQty; ++sampleId) {
-          int wid = dentry.mWordIds[sampledWordIdx[sampleId]];
-          sampledDocWords.get(sampleId).add(fwdIndex.getWord(wid));
+        if (weightSum > 0) {
+          int sampledWordIdx[] = rand.sampleWeightWithReplace(weights, sampleQty);
+          for (int sampleId = 0; sampleId < sampleQty; ++sampleId) {
+            int wid = dentry.mWordIds[sampledWordIdx[sampleId]];
+            sampledDocWords.get(sampleId).add(fwdIndex.getWord(wid));
+          }
         }
       }
     }

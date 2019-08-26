@@ -24,7 +24,7 @@ if [ "$EXTRACTORS_DESC" = "" ] ; then
 fi
 experDescPath=$experDescLoc/$EXTRACTORS_DESC
 if [ ! -f "$experDescPath" ] ; then
-  echo "Not a file '$experDescPath' (2d arg)"
+  echo "Not a file '$experDescPath' (wrong 2d arg)"
   exit 1
 fi
 

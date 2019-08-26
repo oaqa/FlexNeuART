@@ -36,7 +36,7 @@ biAnswFiles = {}
 
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
 print(stopWords)
-nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
+nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True, enablePOS=False)
 
 dataQuestFile = open(os.path.join(outMainDir, QUESTION_FILE_JSON), 'w')
 # File wrapper can handle output gz files

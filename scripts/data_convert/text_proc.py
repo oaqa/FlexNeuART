@@ -12,7 +12,12 @@ def isAlphaNum(s):
 
 """A wrapper class to handle basic Spacy-based text processing."""
 class SpacyTextParser:
-  def __init__(self, spacyModel, stopWords, removePunct=True, sentSplit=False, keepOnlyAlphaNum=False, lowerCase=True):
+  def __init__(self, spacyModel, stopWords,
+               removePunct=True,
+               sentSplit=False,
+               keepOnlyAlphaNum=False,
+               lowerCase=True,
+               enablePOS=True):
     """Constructor.
 
     :param  spacyMode    a name of the spacy model to use, e.g., en_core_web_sm 
@@ -21,10 +26,16 @@ class SpacyTextParser:
     :param  removePunct  a bool flag indicating if the punctuation tokens need to be removed
     :param  sentSplit    a bool flag indicating if sentence splitting is necessary
     :param  keepOnlyAlphaNum a bool flag indicating if we need to keep only alpha-numeric characters
+    :param  enablePOS    a bool flag that enables POS tagging (which, e.g., can improve lemmatization)
     """
 
     # Disabling all heavy-weight parsing, but enabling splitting into sentences
-    self._nlp = spacy.load(spacyModel, disable=[SPACY_NER, SPACY_PARSER, SPACY_POS])
+    disableList = [SPACY_NER, SPACY_PARSER]
+    if not enablePOS:
+      disableList.append(SPACY_POS)
+    print('Disabled Spacy components: ', disableList)
+
+    self._nlp = spacy.load(spacyModel, disable=disableList)
     if sentSplit:
       sentencizer = self._nlp.create_pipe("sentencizer")
       self._nlp.add_pipe(sentencizer)
