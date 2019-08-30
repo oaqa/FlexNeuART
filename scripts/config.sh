@@ -33,6 +33,7 @@ COLLECT_ROOT="collections"
 #         $DERIVED_DATA_SUBDIR
 #             $BITEXT_SUBDIR (optional)
 #             $EMBED_SUBDIR (optional)
+#             $LM_FINETUNE_SUBDIR (optional)
 #
 #         $FWD_INDEX_SUBDIR
 #         $LUCENE_INDEX_SUBDIR
@@ -70,6 +71,10 @@ DEV_SUBDIR="dev"
 DEV1_SUBDIR="dev1"
 DEV2_SUBDIR="dev2"
 BITEXT_TRAIN_SUBDIR="train_bitext"
+
+# A directory with data for BERT LM fine-tuning
+LM_FINETUNE_SUBDIR="lm_finetune_data"
+LM_FINETUNE_SET_PREF="set"
 
 FEAT_EXPER_SUBDIR="$EXPER_SUBDIR/feat_exper"
 FINAL_EXPER_SUBDIR="$EXPER_SUBDIR/final_exper"

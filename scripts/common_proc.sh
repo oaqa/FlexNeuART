@@ -141,6 +141,7 @@ function getIndexQueryDataInfo {
   currDir="$PWD"
   cd "$topDir"
   for subDir in * ; do
+    echo "Checking data sub-directory: $subDir"
     if [ -d "$subDir" ] ; then
       hasData=0
       if [ -f "$subDir/$oldFile" ] ; then
@@ -159,6 +160,7 @@ function getIndexQueryDataInfo {
       for suff in "" ".gz" ".bz2" ; do
         fn=$subDir/${newFile}${suff}
         if [ -f "$fn" ] ; then
+          echo "Found indexable data file: $fn"
           if [ "$dataFileName" = "$oldFile" ] ; then
             echo "Inconsistent use of XML/JSONL formats"
             exit 1
@@ -183,6 +185,7 @@ function getIndexQueryDataInfo {
     if [ -d "$subDir" ] ; then
       fn=$subDir/${queryFileName}
       if [ -f "$fn" ] ; then
+        echo "Found query file: $fn"
         if [ "queryDirs" != "" ] ; then
           queryDirs="$queryDirs,"
         fi

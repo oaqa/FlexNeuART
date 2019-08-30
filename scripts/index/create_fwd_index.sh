@@ -28,7 +28,7 @@ echo "Forward index directory:   $indexDir"
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
 else
-  echo "Removing previous index (if exists)"
+  echo "Removing previously created index (if exists)"
   rm -rf "$indexDir"/*
 fi
 
