@@ -44,14 +44,25 @@ for line in inpFile:
   doc = json.loads(line)
   textRaw = doc[TEXT_RAW_FIELD_NAME]
 
+  docSents = []
+
   for oneSent in nlp(textRaw).sents:
     oneSent = str(oneSent).strip()
     if args.lower_case:
       oneSent = oneSent.lower()
     if oneSent:
-      outFile.write(oneSent + '\n')
+      docSents.append(oneSent)
 
-  outFile.write('\n')
+  # Work hard to not write empty documents, b/c it'll upset the pregenerator
+  if docSents:
+    docSentQty = 0
+    for oneSent in docSents:
+      oneSent = oneSent.strip()
+      if oneSent:
+        outFile.write(oneSent + '\n')
+    if docSentQty > 0:
+      outFile.write('\n')
+
   docQty +=1
   setQty +=1
   if docQty % REPORT_QTY == 0:

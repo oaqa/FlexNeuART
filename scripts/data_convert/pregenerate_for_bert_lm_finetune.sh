@@ -54,6 +54,20 @@ if [ ! -f "$inputFile" ] ; then
 fi
 
 scripts/data_convert/convert_to_bert_lm_finetune_data.py \
- --input "$inputFile"  \
+  --input "$inputFile"  \
   --lower_case  \
   --output_pref "$outLMDir/$LM_FINETUNE_SET_PREF"
+
+setDirId=0
+for setFile in "$outLMDir/$LM_FINETUNE_SET_PREF"* ; do
+
+  outDir="$outLMDir/${LM_FINETUNE_SUBDIR}_pregen$setDirId"
+
+  scripts/pytorch-transformers/pregenerate_training_data.py \
+    --epochs_to_generate 1 --bert_model bert-base-uncased \
+    --train_corpus "$setFile" \
+    --output_dir "$outDir"
+
+  bzip2 $setFile
+  setDirId=$(($setDirId+1))
+done
