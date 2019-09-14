@@ -143,7 +143,7 @@ def SimpleXmlRecIterator(fileName, recTagName):
           seenStart = False
 
     if recLines:
-      raise Exception(f'Invalid trailine entries in the file {fileName} %d entries left' % (len(recLines)))
+      raise Exception(f'Invalid trailing entries in the file {fileName} %d entries left' % (len(recLines)))
 
 def removeTags(str):
   """Just remove anything that looks like a tag"""
