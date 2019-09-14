@@ -24,6 +24,10 @@ BITEXT_ANSWER_PREFIX = 'answer_'
 
 MAX_RELEV_GRADE=4
 
+# Replace \n and \r characters with spaces
+def replaceCharsNL(s):
+  return re.sub(r'[\n\r]', ' ', s)
+
 class GizppedFileWrapperIterator:
 
   def __init__(self, fileHandler):

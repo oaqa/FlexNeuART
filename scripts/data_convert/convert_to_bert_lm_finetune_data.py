@@ -47,7 +47,7 @@ for line in inpFile:
   docSents = []
 
   for oneSent in nlp(textRaw).sents:
-    oneSent = str(oneSent).strip()
+    oneSent = replaceCharsNL(str(oneSent)).strip()
     if args.lower_case:
       oneSent = oneSent.lower()
     if oneSent:
@@ -55,13 +55,9 @@ for line in inpFile:
 
   # Work hard to not write empty documents, b/c it'll upset the pregenerator
   if docSents:
-    docSentQty = 0
     for oneSent in docSents:
-      oneSent = oneSent.strip()
-      if oneSent:
-        outFile.write(oneSent + '\n')
-    if docSentQty > 0:
-      outFile.write('\n')
+      outFile.write(oneSent + '\n')
+    outFile.write('\n')
 
   docQty +=1
   setQty +=1
