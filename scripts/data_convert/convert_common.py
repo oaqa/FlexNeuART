@@ -1,4 +1,4 @@
-import gzip
+import gzip, bz2
 import collections
 import re
 from bs4 import BeautifulSoup
@@ -28,11 +28,6 @@ MAX_RELEV_GRADE=4
 def replaceCharsNL(s):
   return re.sub(r'[\n\r]', ' ', s)
 
-class GizppedFileWrapperIterator:
-
-  def __init__(self, fileHandler):
-    self._file = fileHandler
-
 class FileWrapper:
 
   def __enter__(self):
@@ -41,24 +36,27 @@ class FileWrapper:
   def __init__(self, fileName, flags='r'):
     """Constructor, which opens a regular or gzipped-file
 
-      :param  fileName a name of the file, it has a '.gz' extension, we open a gzip-stream.
+      :param  fileName a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
       :param  flags    open flags such as 'r' or 'w'
     """
     if fileName.endswith('.gz'): 
       self._file = gzip.open(fileName, flags) 
-      self._isGziped = True
+      self._isCompr = True
+    elif fileName.endswith('.bz2'): 
+      self._file = bz2.open(fileName, flags) 
+      self._isCompr = True
     else: 
       self._file = open(fileName, flags)
-      self._isGziped = False
+      self._isCompr = False
 
   def write(self, s):
-    if self._isGziped:
+    if self._isCompr:
       self._file.write(s.encode())  
     else:
       self._file.write(s)
 
   def read(self, s):
-    if self._isGziped:
+    if self._isCompr:
       return self._file.read().decode()  
     else:
       return self._file.read()
@@ -71,7 +69,7 @@ class FileWrapper:
 
   def __iter__(self):
     for line in self._file:
-      yield line.decode() if self._isGziped else line
+      yield line.decode() if self._isCompr else line
 
 
 def readStopWords(fileName=STOPWORD_FILE, lowerCase=True):
@@ -149,7 +147,7 @@ def SimpleXmlRecIterator(fileName, recTagName):
           seenStart = False
 
     if recLines:
-      raise Exception(f'Invalid trailine entries in the file {fileName} %d entries left' % (len(recLines)))
+      raise Exception(f'Invalid trailing entries in the file {fileName} %d entries left' % (len(recLines)))
 
 def removeTags(str):
   """Just remove anything that looks like a tag"""
