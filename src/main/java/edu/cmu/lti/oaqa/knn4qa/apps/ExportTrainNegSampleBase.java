@@ -23,8 +23,14 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   private static final Logger logger = LoggerFactory.getLogger(ExportTrainNegSampleBase.class);
   
   private final static String SAMPLE_NEG_QTY = "sample_neg_qty";
+  
   private final static String MAX_CAND_TRAIN_QTY_PARAM    = "cand_train_qty";
+  private final static String MAX_CAND_TRAIN_QTY_DESC = 
+                    "A maximum number of candidate records returned by the provider to generate training data.";
+  
   private final static String MAX_CAND_TEST_QTY_PARAM    = "cand_test_qty";
+  private final static String MAX_CAND_TEST_QTY_DESC = 
+      "A maximum number of candidate records returned by the provider to generate test data.";
   
   public ExportTrainNegSampleBase(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
                                   QrelReader qrelsTrain, QrelReader qrelsTest) {
@@ -35,7 +41,8 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   static void addOptionsDesc(Options opts) {
     opts.addOption(SAMPLE_NEG_QTY, null, true, "A number of negative samples per query or -1 to keep all candidate entries");
     
-    opts.addOption(CommonParams.MAX_CAND_QTY_PARAM, null, true, CommonParams.MAX_CAND_QTY_DESC);
+    opts.addOption(MAX_CAND_TRAIN_QTY_PARAM, null, true, MAX_CAND_TRAIN_QTY_DESC);
+    opts.addOption(MAX_CAND_TEST_QTY_PARAM, null, true, MAX_CAND_TEST_QTY_DESC);
   }
   
   @Override
