@@ -114,14 +114,14 @@ fi
 
 experSubDir=${POS_ARGS[3]}
 if [ "$experSubDir" = "" ] ; then
-  echo "Specify a sub-directory to store final results (3d positional arg)!"
+  echo "Specify a sub-directory to store final results (4th positional arg)!"
   exit 1
 fi
 
 extrType="${POS_ARGS[4]}"
 
 if [ "$extrType" = "" ] ; then
-  echo "Specify a feature extractor path or none (4th positional arg)"
+  echo "Specify a feature extractor path or none (5th positional arg)"
   exit 1
 fi
 
