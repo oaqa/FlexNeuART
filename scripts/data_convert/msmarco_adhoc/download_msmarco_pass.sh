@@ -8,12 +8,14 @@ dstDir="$1"
 
 source scripts/common_proc.sh
 
+cd "$dstDir"
+
 fn=top1000.dev
 wget https://msmarco.blob.core.windows.net/msmarcoranking/$fn.tar.gz
 # The downloaded file contains documents too, but we only need queries.
 tar zxvf $fn.tar.gz
 execAndCheck "cat $fn|cut -f 1,3|sort -u > queries.devTop1000.tsv"
-rm $fn
+rm $fn.tar.gz
 
 wget https://msmarco.blob.core.windows.net/msmarcoranking/collection.tar.gz
 tar zxvf collection.tar.gz

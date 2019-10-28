@@ -1,9 +1,7 @@
 #!/bin/bash -e
 # The main script to convert MSMARCO passage collection 
-# It should be invoked after a bit of data massaging
-# After downloading data from https://microsoft.github.io/TREC-2019-Deep-Learning/
-# 1. documents needs to recompressed to collection.tsv.gz
-# 2. queries need to be decompressed
+# It should be invoked after a bit of data massaging,
+# which is down by download_msmarco_pass.sh script
 source scripts/common_proc.sh
 src=$1
 if [ "$src" = "" ] ; then
@@ -19,14 +17,16 @@ fi
 mkdir -p $dst/input_data/test2019
 python -u scripts/data_convert/msmarco_adhoc/convert_queries.py --input  $src/msmarco-test2019-queries.tsv --output $dst/input_data/test2019/QuestionFields.jsonl
 
-for part in pass train dev eval ; do
+for part in devTop1000 pass train dev eval ; do
   mkdir -p $dst/input_data/$part
 done
 
 for part in train dev ; do
   cp $src/qrels.$part.tsv $dst/input_data/$part/qrels.txt
 done
-for part in train dev eval ; do
+cp $src/qrels.dev.tsv $dst/input_data/devTop1000/qrels.txt
+
+for part in train dev eval devTop1000 ; do
   python -u scripts/data_convert/msmarco_adhoc/convert_queries.py --input  $src/queries.$part.tsv --output $dst/input_data/$part/QuestionFields.jsonl
 done
 
