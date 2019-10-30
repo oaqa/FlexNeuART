@@ -15,13 +15,11 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.fwdindx;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.*;
-
-public class InMemForwardIndexFilterAndRecoder extends
+public class ForwardIndexBasedFilterAndRecoder extends
     VocabularyFilterAndRecoder {
   private ForwardIndex mIndex;
 
-  public InMemForwardIndexFilterAndRecoder(ForwardIndex index) {
+  public ForwardIndexBasedFilterAndRecoder(ForwardIndex index) {
     mIndex = index;
   }
   

@@ -194,4 +194,5 @@ public class StringUtils {
   }
   
   static Joiner   mJoinOnSpace  = Joiner.on(' ');
+  static Joiner   mJoinOnNewLine  = Joiner.on(Const.NL);
 }

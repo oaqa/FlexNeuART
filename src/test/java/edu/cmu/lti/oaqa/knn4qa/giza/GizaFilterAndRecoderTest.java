@@ -24,7 +24,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.InMemForwardIndexFilterAndRecoder;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndexBasedFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 
@@ -47,8 +47,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
    */
   @Test
   public void testWordProbSrcWord() throws Exception {
-    InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+    ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+    = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(
@@ -78,8 +78,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
    */
   @Test
   public void testWordProbSrcWordFlipped() throws Exception {
-    InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+    ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+    = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(
@@ -109,8 +109,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
    */
   @Test
   public void testWordProbSrcWordId() throws Exception {
-    InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+    ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+    = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(false,
@@ -140,8 +140,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
    */
   @Test
   public void testWordProbSrcWordIdFlipped() throws Exception {
-    InMemForwardIndexFilterAndRecoder filterAndRecoder 
-    = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+    ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+    = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
     GizaTranTableReaderAndRecoder tranReader = 
         new GizaTranTableReaderAndRecoder(
@@ -173,8 +173,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   public void testTranTableByWords() throws Exception {
 
     try {
-      InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+      ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+      = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(false,
@@ -213,8 +213,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   public void testTranTableByWordsFlipped() throws Exception {
 
     try {
-      InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+      ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+      = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(
@@ -254,8 +254,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   public void testTranTableById() throws Exception {
 
     try {
-      InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+      ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+      = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(false,
@@ -306,8 +306,8 @@ public class GizaFilterAndRecoderTest extends AbstractTest {
   public void testTranTableByIdFlipped() throws Exception {
 
     try {
-      InMemForwardIndexFilterAndRecoder filterAndRecoder 
-      = new InMemForwardIndexFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
+      ForwardIndexBasedFilterAndRecoder filterAndRecoder 
+      = new ForwardIndexBasedFilterAndRecoder(ForwardIndex.createReadInstance(FWD_INDEX_NAME));
 
       GizaTranTableReaderAndRecoder tranReader = 
           new GizaTranTableReaderAndRecoder(true, // flipped

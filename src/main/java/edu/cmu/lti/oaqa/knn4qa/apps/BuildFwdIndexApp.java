@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex.ForwardIndexStorageType;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex.ForwardIndexType;
 
 public class BuildFwdIndexApp {  
   
@@ -50,6 +51,7 @@ public class BuildFwdIndexApp {
     options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_INDEX_DESC);
     options.addOption(CommonParams.FIELD_NAME_PARAM,             null, true, CommonParams.FIELD_NAME_DESC);
     options.addOption(CommonParams.FOWARD_INDEX_TYPE_PARAM,      null, true, CommonParams.FOWARD_INDEX_TYPE_DESC);
+    options.addOption(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM,      null, true, CommonParams.FOWARD_INDEX_STORE_TYPE_DESC);
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -76,7 +78,7 @@ public class BuildFwdIndexApp {
       if (null == dataFileName) {
         Usage("Specify: " + CommonParams.DATA_FILE_PARAM, options);
       }
-      
+            
       int maxNumRec = Integer.MAX_VALUE;
       
       String tmp = cmd.getOptionValue(CommonParams.MAX_NUM_REC_PARAM);
@@ -91,7 +93,7 @@ public class BuildFwdIndexApp {
           Usage("The maximum number of records should be a positive integer", options);
         }
       }
-      
+            
       String fieldName = cmd.getOptionValue(CommonParams.FIELD_NAME_PARAM);
       if (fieldName == null) {
         Usage("Specify: '" + CommonParams.FIELD_NAME_PARAM, options);
@@ -105,21 +107,36 @@ public class BuildFwdIndexApp {
       for (int i = 0; i < fileNames.length; ++i)
         fileNames[i] = inputDataDir + File.separator + subDirs[i] + File.separator + dataFileName;
       
+      String fwdIndexStoreType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM);
+      
+      if (fwdIndexStoreType == null) {
+        Usage("Specify: " + CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, options);
+      }
+      
       String fwdIndexType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_TYPE_PARAM);
       
       if (fwdIndexType == null) {
-        Usage("Specify: " + CommonParams.FOWARD_INDEX_TYPE_PARAM, options);
+        Usage("Specify: " + CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, options);
+      }                  
+      
+      ForwardIndexStorageType iStoreageType = ForwardIndex.getIndexStorageType(fwdIndexStoreType);
+      
+      if (iStoreageType == ForwardIndexStorageType.unknown) {
+        Usage("Wrong value '" + fwdIndexStoreType + "' for " + CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, options);
       }
       
-      ForwardIndexStorageType iType = ForwardIndex.getIndexStorageType(fwdIndexType);
       
-      if (iType == ForwardIndexStorageType.unknown) {
-        Usage("Wrong value for " + CommonParams.FOWARD_INDEX_TYPE_PARAM, options);
+      logger.info("Forward index storage type: " + iStoreageType);
+      
+      ForwardIndexType iType = ForwardIndex.getIndexType(fwdIndexType);
+      
+      if (iType == ForwardIndexType.unknown) {
+      	Usage("Wrong value '" + fwdIndexType + "' for " + CommonParams.FOWARD_INDEX_TYPE_PARAM, options);
       }
       
-      logger.info("Forward index storage type: " + fwdIndexType);
+      logger.info("Forward index storage type: " + iType);
         
-      ForwardIndex indx = ForwardIndex.createWriteInstance(outPrefix + File.separator + fieldName, iType);
+      ForwardIndex indx = ForwardIndex.createWriteInstance(outPrefix + File.separator + fieldName, iType, iStoreageType);
       
       indx.createIndex(fieldName, fileNames, maxNumRec);
       indx.saveIndex();

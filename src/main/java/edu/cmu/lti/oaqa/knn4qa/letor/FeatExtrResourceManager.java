@@ -21,7 +21,7 @@ import java.util.HashMap;
 import edu.cmu.lti.oaqa.knn4qa.apps.CommonParams;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.InMemForwardIndexFilterAndRecoder;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndexBasedFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 
@@ -89,7 +89,7 @@ public class FeatExtrResourceManager {
       String embedKey = fieldName + "_" + fileName;
       if (!mWordEmbeds.containsKey(embedKey)) {
         ForwardIndex fwdIndx = getFwdIndex(fieldName);
-        InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(fwdIndx);
+        ForwardIndexBasedFilterAndRecoder filterAndRecoder = new ForwardIndexBasedFilterAndRecoder(fwdIndx);
         mWordEmbeds.put(embedKey, 
             new EmbeddingReaderAndRecoder(mRootEmbedDir +FS + fileName, filterAndRecoder));
       }
@@ -110,7 +110,7 @@ public class FeatExtrResourceManager {
       if (!mModel1Data.containsKey(key)) {
         ForwardIndex fwdIndx = getFwdIndex(fieldName);
         
-        InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(fwdIndx);
+        ForwardIndexBasedFilterAndRecoder filterAndRecoder = new ForwardIndexBasedFilterAndRecoder(fwdIndx);
         
         
         String prefix = mRootModel1TranDir + FS + model1SubDir + FS;

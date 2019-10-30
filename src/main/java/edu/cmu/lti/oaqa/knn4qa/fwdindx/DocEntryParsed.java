@@ -15,7 +15,11 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.fwdindx;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 /**
  * One document entry in the forward in-memory index.
@@ -34,9 +38,24 @@ public class DocEntryParsed {
     mDocLen = wordIdSeq.length;
   }
 
+  public DocEntryParsed(int uniqQty, int [] wordIdSeq, int docLen) {
+    mWordIds = new int [uniqQty];
+    mQtys    = new int [uniqQty];
+    // Empty array should be treated as null
+    if (wordIdSeq != null && wordIdSeq.length > 0) {
+      mWordIdSeq = wordIdSeq;
+      if (wordIdSeq.length != docLen) {
+      	throw new RuntimeException("Bug: different lengths docLen=" + docLen + " wordIdSeq.length=" + wordIdSeq.length);
+      }
+    } else {
+      mWordIdSeq = null;
+    }
+    mDocLen = docLen;
+  }
+  
   public DocEntryParsed(ArrayList<Integer> wordIds, 
-                  ArrayList<Integer> wordQtys,
-                  int                docLen) {
+                  			ArrayList<Integer> wordQtys,
+                  			int                docLen) {
     mWordIds = new int [wordIds.size()];
     mQtys    = new int [wordIds.size()];
     
@@ -64,7 +83,7 @@ public class DocEntryParsed {
       mQtys[i] = wordQtys.get(i);
     }
     
-    if (bStoreWordIdSeq) {
+    if (bStoreWordIdSeq && !wordIdSeq.isEmpty()) {
       mWordIdSeq = new int [wordIdSeq.size()];
       for (int k = 0; k < wordIdSeq.size(); ++k) {
         mWordIdSeq[k] = wordIdSeq.get(k);
@@ -99,6 +118,9 @@ public class DocEntryParsed {
     return sb.toString();
   }
   
+  /**
+   * Parse a textual DocEntry representation.
+   */
   public static DocEntryParsed fromString(String text) throws Exception {
     int nli = text.indexOf('\n');
     if (nli < 0) {
@@ -172,8 +194,92 @@ public class DocEntryParsed {
     }    
     
   }
+
   
-  public static final String DOCLEN_QTY_PREFIX = "@ ";
+  /**
+   * Generate a binary representation of a document entry.
+   */
+  public byte[] toBinary() {
+  	int totalSize = 4 + // # of (word id, qty) pairs 
+  								  4 + // # the length of a word sequence
+  								mWordIds.length * 8 + // id + qty
+  								mDocLen * 4;
+  	ByteBuffer out = ByteBuffer.allocate(totalSize);
+  	out.order(Const.BYTE_ORDER);
+  	out.putInt(mWordIds.length);
+  	// minus indicates there will be no word id sequence
+  	out.putInt(mWordIdSeq != null ? mDocLen : -mDocLen);
+  	for (int i = 0; i < mWordIds.length; ++i) {
+      out.putInt(mWordIds[i]);
+      out.putInt(mQtys[i]);
+    }
+  	
+    if (mWordIdSeq != null) {
+      for (int i = 0; i < mWordIdSeq.length; ++i) {
+      	out.putInt(mWordIdSeq[i]);
+      }
+    }
+  	
+  	return out.array();
+  }
+  
+  /**
+   * Parse a binary DocEntry representation. We try to make this function as efficient
+   * as possible so that it doesn't make extra allocations.
+   */
+  public static DocEntryParsed fromBinary(byte[] bin) throws Exception {
+  	ByteBuffer in = ByteBuffer.wrap(bin);
+  	in.order(Const.BYTE_ORDER);
+  	int uniqueQty = in.getInt();
+  	int docLen = in.getInt();
+  	int wordIdSeq[] = null;
+  	if (docLen < 0) {
+  		docLen = -docLen;
+  	} else if (docLen > 0) {
+  		// If docLen == 0, let's keep the array null rather than empty
+  		wordIdSeq = new int[docLen];
+  	}
+  	
+  	DocEntryParsed res = new DocEntryParsed(uniqueQty, wordIdSeq, docLen);
+    // After doc entry is created we need to fill out the following
+  	// 1) doc ids and qtys
+  	// 2) optionally retrieve a sequence of word ids
+  	for (int i = 0; i < uniqueQty; i++) {
+  		res.mWordIds[i] = in.getInt();
+  		res.mQtys[i] = in.getInt();
+  	}
+  	if (res.mWordIdSeq != null) {
+  		for (int i = 0; i < docLen; ++i) {
+  			res.mWordIdSeq[i] = in.getInt();
+  		}
+  	}
+  	
+  	return res;
+  	
+  }
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DocEntryParsed other = (DocEntryParsed) obj;
+		if (mDocLen != other.mDocLen)
+			return false;
+		if (!Arrays.equals(mQtys, other.mQtys))
+			return false;
+		if (!Arrays.equals(mWordIdSeq, other.mWordIdSeq))
+			return false;
+		if (!Arrays.equals(mWordIds, other.mWordIds))
+			return false;
+		return true;
+	}
+
+
+	public static final String DOCLEN_QTY_PREFIX = "@ ";
   
 
   public final int mWordIds[]; // unique word ids

@@ -135,9 +135,13 @@ public class CommonParams {
   
   public static final String INDEX_FIELD_NAME_PARAM = "index_field";
   public final static String INDEX_FIELD_NAME_DESC = "The name of an index field";
-  
+
   public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
-  public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index storage type: " + ForwardIndex.getIndexStorageTypeList();
+  public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getIndexTypeList();
+
+  
+  public final static String FOWARD_INDEX_STORE_TYPE_PARAM = "fwd_index_store_type";
+  public final static String FOWARD_INDEX_STORE_TYPE_DESC  = "A forward index storage type: " + ForwardIndex.getIndexStorageTypeList();
  
   public static final String OUTPUT_FILE_PARAM = "out_file";
   public static final String OUTPUT_FILE_DESC = "Output file";

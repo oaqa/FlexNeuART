@@ -138,16 +138,21 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
   
   @Override
   protected void addDocEntryRaw(String docId, String docText) throws IOException {   
-    mDocIds.add(docId);
+    
     Document luceneDoc = new Document();
-    
-    if (mDocIds.size() % COMMIT_INTERV == 0) {
-      logger.info("Committing");
-      mIndexWriter.commit();
-    }
-    
     luceneDoc.add(new StringField(Const.TAG_DOCNO, docId, Field.Store.YES));
     luceneDoc.add(new StoredField(Const.TAG_DOC_ENTRY, docText));
+    
+    synchronized (this) {
+    	mDocIds.add(docId);
+    
+	    if (mDocIds.size() % COMMIT_INTERV == 0) {
+	      logger.info("Committing");
+	      mIndexWriter.commit();
+	    }
+    }
+    
+    // Index writers should be completely thread-safe 
     mIndexWriter.addDocument(luceneDoc);
     
   }

@@ -19,6 +19,9 @@ import java.io.*;
 import java.util.zip.*;
 
 import org.apache.tools.bzip2.CBZip2InputStream;
+import org.apache.tools.bzip2.CBZip2OutputStream;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  *   Creates an input/output stream for a potentially compressed file;
@@ -71,6 +74,130 @@ public class CompressUtils {
       throw new IOException("bz2 is not supported for writing");      
     }
     return foutp;
+  }
+  
+  /**
+   * A wrapper function that tries to compress the string using GZIP. However,
+   * if the compressed string is longer than the original one,
+   * we keep the string uncompressed. This resolves the issue
+   * with short strings where compressed string is actually longer
+   * than an uncompressed one.
+   * 
+   * @param input   input stream
+   * @return  a byte array that represents the compressed string
+   * @throws IOException
+   */
+  public static byte[] comprStr(String input) throws IOException {
+  	ByteArrayOutputStream res = new ByteArrayOutputStream();
+  	byte[] gzipped = gzipStr(input);
+  	byte[] orig = input.getBytes(Const.ENCODING);
+  	byte[] marker = {1};
+  	if (gzipped.length < orig.length) {
+  		marker[0] = 1;
+  		res.write(marker);
+  		res.write(gzipped);
+  	} else {
+  		marker[0] = 0;
+  		res.write(marker);
+  		res.write(orig);
+  	}
+  	return res.toByteArray();
+  }
+
+  /** 
+   * Decompress a string previously compressed by {@link comprStr}
+   * 
+   * @param input a byte buffer with the compressed output
+   * @return uncompressed string
+   * @throws IOException
+   */
+  public static String decomprStr(byte [] input) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    if (input.length < 1) {
+    	throw new IOException("Input is too small!");
+    }
+    byte marker = input[0];
+    if (marker == 1) {
+	    try{
+	        IOUtils.copy(new GZIPInputStream(new ByteArrayInputStream(input, 1, input.length - 1)), out);
+	    } catch(IOException e){
+	        throw new RuntimeException(e);
+	    }
+	   
+	    return new String(out.toByteArray(), Const.ENCODING);
+    } else {
+    	return new String(input, 1, input.length - 1, Const.ENCODING);
+    }
+  }
+  
+  /**
+   * Compress the input string using the GZIP algorithm. String is
+   * written in the {@link Const.ENCODING} encoding. Based on the
+   * Largely based on https://piotrga.wordpress.com/2009/06/08/howto-compress-or-decompress-byte-array-in-java/
+   * 
+   * @param input   input stream
+   * @return  a byte array that represents the compressed string
+   * @throws IOException 
+   */
+  public static byte[] gzipStr(String input) throws IOException {
+  	 ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+     GZIPOutputStream gzipOutputStream = new GZIPOutputStream(arrayOutputStream);
+     gzipOutputStream.write(input.getBytes(Const.ENCODING));
+     gzipOutputStream.close();
+     return arrayOutputStream.toByteArray();
+  }
+  
+  /**
+   * Compress the input string using BZIP2 algorithm. String is
+   * written in the {@link Const.ENCODING} encoding. Based on the
+   * Largely based on https://piotrga.wordpress.com/2009/06/08/howto-compress-or-decompress-byte-array-in-java/
+   * 
+   * @param input   input stream
+   * @return  a byte array that represents the compressed string
+   * @throws IOException 
+   */
+  public static byte[] bzip2Str(String input) throws IOException {
+  	 ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+  	 CBZip2OutputStream bzip2OutputStream = new CBZip2OutputStream(arrayOutputStream);
+     bzip2OutputStream.write(input.getBytes(Const.ENCODING));
+     bzip2OutputStream.close();
+     return arrayOutputStream.toByteArray();
+  }
+  
+  /**
+   * Decompress string compressed by GZIP assuming the string encoding is {@link Const.ENCODING}.
+   * Largely based on https://piotrga.wordpress.com/2009/06/08/howto-compress-or-decompress-byte-array-in-java/
+   * 
+   * @param input
+   * @return
+   * @throws IOException
+   */
+  public static String ungzipStr(byte[] input) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try{
+        IOUtils.copy(new GZIPInputStream(new ByteArrayInputStream(input)), out);
+    } catch(IOException e){
+        throw new RuntimeException(e);
+    }
+    return new String(out.toByteArray(), Const.ENCODING);
+  }
+  
+  /**
+   * Decompress string compressed by BZIP2 assuming the string encoding is {@link Const.ENCODING}.
+   * Largely based on https://piotrga.wordpress.com/2009/06/08/howto-compress-or-decompress-byte-array-in-java/
+   * 
+   * @param input
+   * @return
+   * @throws IOException
+   */
+  public static String unbzip2Str(byte[] input) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    try{
+        IOUtils.copy(new CBZip2InputStream(new ByteArrayInputStream(input)), out);
+    } catch(IOException e){
+        throw new RuntimeException(e);
+    }
+    return new String(out.toByteArray(), Const.ENCODING);
   }
   
   private static final String SUFF_ARRAY[] = {"", ".gz", ".bz2"};

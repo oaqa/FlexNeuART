@@ -9,9 +9,15 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-fieldListDef=$2
+fwdIndexType=$2
+if [ "$fwdIndexType" = "" ] ; then
+  echo "Specify forward index type (2d arg), e.g., mapdb, lucene, inmem"
+  exit 1
+fi
+
+fieldListDef=$3
 if [ "$fieldListDef" = "" ] ; then
-  echo "Specify a *QUOTED* space-separated list of field index definitions (2d arg), e.g., 'text:parsedBOW text_unlemm:parsedText text_raw:raw'"
+  echo "Specify a *QUOTED* space-separated list of field index definitions (3d arg), e.g., 'text:parsedBOW text_unlemm:parsedText text_raw:raw'"
   exit 1
 fi
 
@@ -50,13 +56,14 @@ fi
 for fieldDef in $fieldListDef ; do
   fieldDefSplit=(`echo $fieldDef|sed 's/:/ /'`)
   field=${fieldDefSplit[0]}
-  fwdIndexType=${fieldDefSplit[1]}
+  fwdIndexStoreType=${fieldDefSplit[1]}
   if [ "$field" = "" -o "$fwdIndexType" = "" ] ; then
     echo "Invalid field definition $fieldDef (should be two colon-separated values, e.g, text:parsedBOW)"
     exit 1
   fi
   scripts/index/run_buildfwd_index.sh \
     -fwd_index_type $fwdIndexType \
+    -fwd_index_store_type $fwdIndexStoreType \
     -input_data_dir "$inputDataDir"  \
     -index_dir "$indexDir" \
     -data_sub_dirs "$dirList" \

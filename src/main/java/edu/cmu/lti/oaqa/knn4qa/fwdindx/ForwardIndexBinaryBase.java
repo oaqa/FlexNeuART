@@ -26,9 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * A base class for (mostly) binary forward indices. It can be possible
- * to have more than one. However, certain information such as the
- * list of IDs is stored for simplicity as plain text.
+ * A base class for (mostly) binary forward indices, which keeps
+ * meta information in text format (words stat and doc ids). 
  * 
  * @author Leonid Boytsov
  *
@@ -47,6 +46,7 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
    * 
    */
   protected void readHeaderAndDocIds() throws Exception {
+  	
     try (BufferedReader inp = new BufferedReader(new InputStreamReader(new FileInputStream(mVocabAndDocIdsFile)))) {
 
       String line;

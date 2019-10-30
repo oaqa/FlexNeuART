@@ -16,6 +16,7 @@
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.File;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
@@ -30,6 +31,8 @@ public class Const {
   public static final String ENCODING_NAME = "UTF-8";
   public static final Charset ENCODING = Charset.forName(ENCODING_NAME);
   public static final String USER_AGENT = "Mozilla/4.0";
+  
+  public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; // we'll do everything on Intel Linux/Mac
   
   /**
    * An XML version, must be 1.0.

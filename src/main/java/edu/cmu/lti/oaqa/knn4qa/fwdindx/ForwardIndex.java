@@ -64,7 +64,7 @@ class WordEntryExt implements Comparable<WordEntryExt> {
  * </p>>
  * 
  * <p>
- * In addition, it computes some statistics for each field:
+ * In addition, we compute some statistics for each field in the parsed index:
  * </p>
  * <ol> 
  *  <li>An average number of words per document;
@@ -80,6 +80,17 @@ class WordEntryExt implements Comparable<WordEntryExt> {
 public abstract class ForwardIndex {
 
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndex.class);
+  
+
+  public enum ForwardIndexType {
+   lucene,
+   mapdb,
+   inmem,
+   unknown // to use as an indicator that a string entry doesn't correspond to the forward index time
+  }
+  
+  // If multiple indices are present, this array defines the priority of choosing which to use.
+  public static final ForwardIndexType mIndexTypes[] = {ForwardIndexType.inmem, ForwardIndexType.mapdb, ForwardIndexType.lucene};
   
   public enum ForwardIndexStorageType {
     raw,
@@ -147,17 +158,41 @@ public abstract class ForwardIndex {
    }
    return joinOnComma.join(parts);
   }
+  
+  public static ForwardIndexType getIndexType(String type) {
+    for (ForwardIndexType itype : mIndexTypes) {
+      if (itype.toString().compareToIgnoreCase(type) == 0) {
+        return itype;
+      }
+    }
+    return ForwardIndexType.unknown;
+  }
+  
+  public static String getIndexTypeList() {
+   Joiner   joinOnComma  = Joiner.on(',');
+   ArrayList<String> parts = new ArrayList<String>();
+   for (ForwardIndexType itype : ForwardIndexType.values()) 
+   if (itype != ForwardIndexType.unknown) {
+     parts.add(itype.toString());
+   }
+   return joinOnComma.join(parts);
+  }
 
+  
   /**
    * Create an index file instance that can be used to create/save index.
    * 
    * @param filePrefix  a prefix of the index file/directories
-   * @param indexType a <b>storage</b> type of the index field
+   * @param indexType a type of the index (text, lucene, mapdb)
+   * @param indexStorageType a storage type of the index field
+   * 
    * @return a  ForwardIndex sub-class instance
    * @throws IOException
    */
-  public static ForwardIndex createWriteInstance(String filePrefix, ForwardIndexStorageType indexType) throws IOException {
-    return createInstance(filePrefix, indexType);
+  public static ForwardIndex createWriteInstance(String filePrefix,
+  																							 ForwardIndexType indexType,
+  																							 ForwardIndexStorageType indexStorageType) throws IOException {
+    return createInstance(filePrefix, indexType, indexStorageType);
   }
 
   /**
@@ -168,17 +203,21 @@ public abstract class ForwardIndex {
    * @return a  ForwardIndex sub-class instance
    * @throws Exception
    */
-  public static ForwardIndex createReadInstance(String filePrefix) throws Exception {
-    ForwardIndexImplType itype = ForwardIndexImplType.lucene;
-    
-    String indexPrefixFull = getIndexPrefix(filePrefix, itype);  
-    File indexDirOrFile = new File(indexPrefixFull);
-
+  public static ForwardIndex createReadInstance(String filePrefix) throws Exception {    
+    // If for some weird reason more than one index was created, we will try to use the first one
     ForwardIndex res = null;
     
-    if (indexDirOrFile.exists()) {
-      res = createInstance(filePrefix, ForwardIndexStorageType.unknown);
-    } else {
+    for (ForwardIndexType itype : mIndexTypes) {
+      String indexPrefixFull = getIndexPrefix(filePrefix, itype);  
+      File indexDirOrFile = new File(indexPrefixFull);
+      
+      if (indexDirOrFile.exists()) {
+        res = createInstance(filePrefix, itype, ForwardIndexStorageType.unknown);
+        break;
+      }
+    }
+    
+    if (null == res) {
       throw new Exception("No index found at location: " + filePrefix);
     }
     
@@ -201,6 +240,7 @@ public abstract class ForwardIndex {
    * @param fieldName         the name of the field (as specified in the SOLR index-file)
    * @param fileNames         an array of files from which the index is created
    * @param maxNumRec         the maximum number of records to process
+   * 
    * @throws Exception 
    */
   public void createIndex(String fieldName, String[] fileNames, 
@@ -513,6 +553,7 @@ public abstract class ForwardIndex {
 
   public int getMaxWordId() { return mMaxWordId; }
   
+  // addDocEntry* functions are supposed to be thread-safe!
   protected abstract void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException;
   protected abstract void addDocEntryRaw(String docId, String docText) throws IOException;
 
@@ -659,21 +700,39 @@ public abstract class ForwardIndex {
     }
   }
   
+  private static String getIndexPrefix(String filePrefix, ForwardIndexType indexType) {
+    switch (indexType) {
+      case lucene: return filePrefix + "." + ForwardIndexType.lucene.toString();       
+      case mapdb:  return filePrefix + "." + ForwardIndexType.mapdb.toString();
+      case inmem:  return filePrefix + "." + ForwardIndexType.inmem.toString();
+      case unknown: throw new RuntimeException("getIndexPrefix shouldn't be called with index type: unknown!");
+    }
+    throw new RuntimeException("Bug: should not reach this point!");
+  }
+  
   // unknown index type is used to create a read instance
-  private static ForwardIndex createInstance(String filePrefix, ForwardIndexStorageType indexType) throws IOException {
-    String indexPrefixFull = getIndexPrefix(filePrefix, ForwardIndexImplType.lucene);
-    ForwardIndex res = new ForwardIndexBinaryLucene(filePrefix, indexPrefixFull); 
+  private static ForwardIndex createInstance(String filePrefix,
+  																					 ForwardIndexType indexType,
+  																					 ForwardIndexStorageType indexStorageType) throws IOException {
+    String indexPrefixFull = getIndexPrefix(filePrefix, indexType);
+    ForwardIndex res = null;
     
-    if (indexType == ForwardIndexStorageType.raw) {
+    switch (indexType) {
+      case lucene:res = new ForwardIndexBinaryLucene(filePrefix, indexPrefixFull); break;
+      case mapdb: res = new ForwardIndexBinaryMapDb(filePrefix, indexPrefixFull); break;
+      case inmem:  res = new ForwardIndexTextInMem(indexPrefixFull); break;
+      case unknown: throw new RuntimeException("getIndexPrefix shouldn't be called with index type: unknown!");
+    }    
+    if (indexStorageType == ForwardIndexStorageType.raw) {
       res.mIsRaw = true;
-    } else if (indexType == ForwardIndexStorageType.unknown) {
+    } else if (indexStorageType == ForwardIndexStorageType.unknown) {
       res.mIsRaw = false;
       res.mStoreWordIdSeq = false;
     } else {
       res.mIsRaw = false;
-      if (indexType == ForwardIndexStorageType.parsedBOW) {
+      if (indexStorageType == ForwardIndexStorageType.parsedBOW) {
         res.mStoreWordIdSeq = false;
-      } else if (indexType == ForwardIndexStorageType.parsedText) {
+      } else if (indexStorageType == ForwardIndexStorageType.parsedText) {
         res.mStoreWordIdSeq = true;
       } else {
         throw new RuntimeException("Unsupported forward index type: " + indexType);     
