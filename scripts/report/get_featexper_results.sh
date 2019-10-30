@@ -4,20 +4,23 @@ source scripts/config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FEAT_EXPER_SUBDIR"
+checkVarNonEmpty "EXPER_DESC_SUBDIR"
 
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "Specify a collection: manner, compr, squad (1st arg)"
   exit 1
 fi
+experDescLoc="$COLLECT_ROOT/$collect/$EXPER_DESC_SUBDIR"
 
-FEATURE_DESC_FILE="$2"
-if [ "$FEATURE_DESC_FILE" = "" ] ; then
-  echo "Specify a feature description file (2d arg)"
+EXTRACTORS_DESC=$2
+if [ "$EXTRACTORS_DESC" = "" ] ; then
+  "Specify a file with extractor description relative to dir. '$experDescLoc' (2d arg)"
   exit 1
 fi
-if [ ! -f "$FEATURE_DESC_FILE" ] ; then
-  echo "Not a file (2d arg)"
+experDescPath=$experDescLoc/$EXTRACTORS_DESC
+if [ ! -f "$experDescPath" ] ; then
+  echo "Not a file '$experDescPath' (wrong 2d arg)"
   exit 1
 fi
 
@@ -30,11 +33,11 @@ experDir="$COLLECT_ROOT/$collect/$FEAT_EXPER_SUBDIR"
 
 echo -e "extractor_type\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
 
-n=`wc -l "$FEATURE_DESC_FILE"|awk '{print $1}'`
+n=`wc -l "$experDescPath"|awk '{print $1}'`
 n=$(($n+1))
 for ((i=1;i<$n;++i))
   do
-    line=`head -$i "$FEATURE_DESC_FILE"|tail -1`
+    line=`head -$i "$experDescPath"|tail -1`
     line=$(removeComment "$line")
     if [ "$line" !=  "" ]
     then

@@ -20,7 +20,7 @@ import java.util.*;
 
 import no.uib.cipr.matrix.DenseVector;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.knn4qa.letor.EvalUtils;
+import edu.cmu.lti.oaqa.knn4qa.utils.EvalUtils;
 
 
 class QueryAppImpl extends BaseQueryApp {      
@@ -66,15 +66,17 @@ class QueryAppImpl extends BaseQueryApp {
   }
 
   @Override
-  void procResults(String queryID, Map<String, String> docFields, 
+  void procResults(String runId, 
+                   String queryId, 
+                   Map<String, String> docFields, 
                    CandidateEntry[] scoredDocs, int numRet, Map<String, DenseVector> docFeats) throws IOException {
     BufferedWriter trecOut = mhOutFiles.get(numRet);
     if (null == trecOut) 
       throw new RuntimeException("Bug, output file is not init. for numRet=" + numRet);
-    EvalUtils.saveTrecResults(queryID, 
+    EvalUtils.saveTrecResults(queryId, 
                               scoredDocs,
                               trecOut, 
-                              "fake_run", 
+                              runId, 
                               scoredDocs.length);
   }
 

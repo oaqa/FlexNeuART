@@ -131,7 +131,7 @@ function getNumCpuCores {
 # Attention: it "returns" an array by setting a variable retVal (ugly but works reliably)
 function getIndexQueryDataInfo {
   topDir="$1"
-  dirList=""
+  indexDirs=""
   oldFile="SolrAnswerFile.txt"
   oldQueryFile="SolrQuestionFile.txt"
   newFile="AnswerFields.jsonl"
@@ -141,12 +141,10 @@ function getIndexQueryDataInfo {
   currDir="$PWD"
   cd "$topDir"
   for subDir in * ; do
+    echo "Checking data sub-directory: $subDir"
     if [ -d "$subDir" ] ; then
-      if [ -f "$subDir/$oldFile" -o -f "$subDir/$newFile" ] ; then
-        if [ "$dirList" != "" ] ; then
-          dirList="$dirList,"
-        fi
-        dirList="${dirList}$subDir"
+      hasData=0
+      if [ -f "$subDir/$oldFile" ] ; then
         if [ -f "$subDir/$oldFile" ] ; then
           if [ "$dataFileName" = "$newFile" ] ; then
             echo "Inconsistent use of XML/JSONL formats"
@@ -154,23 +152,72 @@ function getIndexQueryDataInfo {
           fi
           dataFileName=$oldFile
           qyeryFileName=$oldQueryFile
+          hasData=1
         fi
-        if [ -f "$subDir/$newFile" ] ; then
+      fi
+
+      # New-layout/format data may be compressed, but queries shouldn't be compressed (and there's little sense to do so)
+      for suff in "" ".gz" ".bz2" ; do
+        fn=$subDir/${newFile}${suff}
+        if [ -f "$fn" ] ; then
+          echo "Found indexable data file: $fn"
           if [ "$dataFileName" = "$oldFile" ] ; then
             echo "Inconsistent use of XML/JSONL formats"
             exit 1
           fi
-          dataFileName=$newFile
+          dataFileName=${newFile}${suff}
           queryFileName=$newQueryFile
+          hasData=1
+          break
         fi
+      done
+
+      if [ "$hasData" = "1" ] ; then
+        if [ "$indexDirs" != "" ] ; then
+          indexDirs="$indexDirs,"
+        fi
+        indexDirs="${indexDirs}$subDir"
+      fi
+    fi # if [ -d "$subDir"]
+  done
+  queryDirs=""
+  for subDir in * ; do
+    if [ -d "$subDir" ] ; then
+      fn=$subDir/${queryFileName}
+      if [ -f "$fn" ] ; then
+        echo "Found query file: $fn"
+        if [ "queryDirs" != "" ] ; then
+          queryDirs="$queryDirs,"
+        fi
+        queryDirs="${queryDirs}$subDir"
       fi
     fi
   done
   cd "$currDir"
   # This is kinda ugly, but is better than other non-portable solutions.
-  retVal=("${dirList}" "${dataFileName}" "${queryFileName}")
+  retVal=("${indexDirs}" "${dataFileName}" "${queryDirs}" "${queryFileName}")
 }
 
+function getCatCmd {
+  fileName=$1
+  catCommand=""
+  if [ -f "$fileName" ] ; then
+
+    # Not all parts correspond to the data files
+    echo "$fileName" | grep '^.gz$' >/dev/null
+    if [ "$?" = "0" ] ; then
+      catCommand="zcat"
+    else
+      echo "$fileName" | grep '^.bz2$' >/dev/null
+      if [ "$?" = "0" ] ; then
+        catCommand="zcat"
+      else
+        catCommand="cat"
+      fi
+    fi
+  fi
+  echo $catCommand
+}
 function getExperDirUnique {
   experDir="$1"
   testSet="$2"

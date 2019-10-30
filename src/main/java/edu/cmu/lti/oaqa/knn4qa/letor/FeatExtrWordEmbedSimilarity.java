@@ -6,7 +6,7 @@ import java.util.Map;
 
 
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
@@ -25,9 +25,9 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   public static String DIST_TYPE = "distType";
   
   FeatExtrWordEmbedSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
-    mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
-    mFieldIndex = resMngr.getFwdIndex(mFieldName);
+    super(resMngr, conf);
  
+    mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
     mSimilObj = new BM25SimilarityLuceneNorm(BM25SimilarityLucene.DEFAULT_BM25_K1, 
                                              BM25SimilarityLucene.DEFAULT_BM25_B, 
                                              mFieldIndex);
@@ -39,18 +39,17 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
     mIsCosine = distType.compareToIgnoreCase(AbstractDistance.COSINE) == 0;
     
     String docEmbedFile = conf.getReqParamStr(DOC_EMBED_FILE);
-    mDocEmbed = resMngr.getWordEmbed(mFieldName, docEmbedFile);
+    mDocEmbed = resMngr.getWordEmbed(getIndexFieldName(), docEmbedFile);
     String queryEmbedFile = conf.getParam(QUERY_EMBED_FILE, null);
     if (queryEmbedFile == null) {
       mQueryEmbed = mDocEmbed;
     } else {
-      mQueryEmbed = resMngr.getWordEmbed(mFieldName, queryEmbedFile);
+      mQueryEmbed = resMngr.getWordEmbed(getQueryFieldName(), queryEmbedFile);
       if (mQueryEmbed.getDim() != mDocEmbed.getDim()) {
         throw new 
-          Exception("Dimension mismatch btween query and document embeddings for field: " + mFieldName);
+          Exception("Dimension mismatch btween query and document embeddings for field: " + getQueryFieldName());
       }
     }
-
   }
 
   @Override
@@ -59,7 +58,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   }
   
   @Override
-  public VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception {
+  public VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) throws Exception {
     if (!mIsCosine) {
       throw new Exception("Inner-product representation is available only for the cosine similarity!");
     }
@@ -89,14 +88,14 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
-    DocEntry queryEntry = getQueryEntry(mFieldName, mFieldIndex, queryData);
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
     if (queryEntry == null) return res;
     
     float [] queryVect = mQueryEmbed.getDocAverage(queryEntry, mSimilObj, mFieldIndex, 
                                                    mUseIDFWeight, mUseL2Norm);
 
     for (String docId : arrDocIds) {
-      DocEntry docEntry = mFieldIndex.getDocEntry(docId);
+      DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
       
       if (docEntry == null) {
         throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
@@ -119,7 +118,6 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   }
   
   final ForwardIndex        mFieldIndex;
-  final String              mFieldName;
   final TFIDFSimilarity     mSimilObj;
   final boolean             mUseIDFWeight;
   final boolean             mUseL2Norm;
@@ -128,9 +126,5 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   final AbstractDistance    mDist;
   final boolean             mIsCosine;
 
-  @Override
-  public String getFieldName() {
-    return mFieldName;
-  }
 
 }

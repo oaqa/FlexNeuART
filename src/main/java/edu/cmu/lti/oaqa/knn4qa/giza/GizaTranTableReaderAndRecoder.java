@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.openhft.koloboke.collect.map.hash.*;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 
 /**
  * 

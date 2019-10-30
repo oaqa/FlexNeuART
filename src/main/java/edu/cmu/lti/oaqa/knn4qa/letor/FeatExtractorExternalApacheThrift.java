@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,16 +24,19 @@ import java.util.Map;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TTransportException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 import no.uib.cipr.matrix.DenseVector;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
-import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryInfo;
+import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryParsed;
+import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryRaw;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.WordEntryInfo;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.ExternalScorer.Client;
 
@@ -46,6 +49,8 @@ import edu.cmu.lti.oaqa.knn4qa.letor.external.ExternalScorer.Client;
  *
  */
 public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor {
+  private static final Logger logger = LoggerFactory.getLogger(FeatExtractorExternalApacheThrift.class);
+  
   public static String EXTR_TYPE = "externalThrift";
   
   public static String FEAT_QTY = "featureQty";
@@ -58,12 +63,12 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   public static String UNK_WORD = "unkWord";
 
   public FeatExtractorExternalApacheThrift(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+    super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
-    mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);
     
     mFeatQty = conf.getReqParamInt(FEAT_QTY);
 
-    mFieldIndex = resMngr.getFwdIndex(mFieldName);
+    mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 
     mPort = conf.getReqParamInt(PORT);
     mHost = conf.getReqParamStr(HOST);
@@ -76,44 +81,21 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
                                               BM25SimilarityLucene.DEFAULT_BM25_B, 
                                               mFieldIndex);
   }
-  
-  /**
-   * getClient() retrieves the first unused client, or creates a new one.
-   * Note that a single client cannot be re-used across threads, b/c
-   * each client/thread needs to use a separate socket.
-   */
-  private synchronized Client getClient() throws TTransportException {
-    if (!mFreeClients.isEmpty()) {
-      int sz = mFreeClients.size();
-      Client ret = mFreeClients.get(sz-1);
-      mFreeClients.remove(sz-1);
-      return ret;
-    }
-    
-    TTransport serviceTransp = new TSocket(mHost, mPort);
-
-    serviceTransp.open();
-    return new Client(new TBinaryProtocol(serviceTransp));
-  }
-  
-  private synchronized void releaseClient(Client c) {
-    mFreeClients.add(c);
-  }
 
   /**
-   * Create a text entry. Unknown words are going to be replaced with a special token.
+   * Create a parsed-text entry. Unknown words are going to be replaced with a special token.
    * 
    * @param entryId   entry ID, e.g., document ID.
    * @param docEntry  document entry data point
    * @return
    * @throws Exception 
    */
-  TextEntryInfo createTextEntryInfo(String entryId, DocEntry docEntry) throws Exception {
+  TextEntryParsed createTextEntryParsed(String entryId, DocEntryParsed docEntry) throws Exception {
     ArrayList<WordEntryInfo> wentries = new ArrayList<WordEntryInfo>();
     
     if (mUseWordSeq) {
       if (null == docEntry.mWordIdSeq) {
-        throw new Exception("Configuration error: positional info is not stored for field: '" + mFieldName + "'");
+        throw new Exception("Configuration error: positional info is not stored for field: '" + getIndexFieldName() + "'");
       }
       for (int wid : docEntry.mWordIdSeq) {
         if (wid >= 0) {
@@ -135,7 +117,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         }
        }
     }
-    return new TextEntryInfo(entryId, wentries); 
+    return new TextEntryParsed(entryId, wentries); 
   }
   
   @Override
@@ -143,28 +125,62 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
       throws Exception {
     HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
     
-    Client clnt = getClient();
-    
+    /*
+     * This is not super-efficient. However, implementing release/acquire without closing socket
+     * and caching sockets somehow leads to a dead-lock sometimes. In any case, openining/closing
+     * connection is quite fast compared to re-ranking the output of a single query using
+     * SOTA neural models. 
+     */
+    TTransport transp = new TSocket(mHost, mPort);
+    transp.open();
+     
     try {
+      Client clnt = new Client(new TBinaryProtocol(transp));
+      
       res = initResultSet(arrDocIds, getFeatureQty()); 
-      DocEntry queryEntry = getQueryEntry(mFieldName, mFieldIndex, queryData);
-      if (queryEntry == null) return res;
+
+      Map<String, List<Double>> scores = null;
       
-      TextEntryInfo queryTextEntry = createTextEntryInfo("", queryEntry);
+      String queryId = queryData.get(Const.TAG_DOCNO);
       
-      ArrayList<TextEntryInfo> docTextEntries = new ArrayList<TextEntryInfo>();
-      
-      for (String docId : arrDocIds) {
-        DocEntry docEntry = mFieldIndex.getDocEntry(docId);
-        
-        if (docEntry == null) {
-          throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
-        }
-        
-        docTextEntries.add(createTextEntryInfo(docId, docEntry));
+      if (queryId == null) {
+        throw new Exception("Undefined query ID!");
       }
       
-      Map<String, List<Double>> scores = clnt.getScores(queryTextEntry, docTextEntries);
+      if (mFieldIndex.isRaw()) {
+        String queryTextRaw = queryData.get(getQueryFieldName());
+        if (queryTextRaw == null) return res;
+        
+        ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
+        
+        for (String docId : arrDocIds) {
+          String docEntryRaw = mFieldIndex.getDocEntryRaw(docId);
+
+          if (docEntryRaw == null) {
+            throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
+          }
+
+          docEntries.add(new TextEntryRaw(docId, docEntryRaw));
+        }
+        scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
+      } else {
+        DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+        if (queryEntry == null) return res;
+        
+        TextEntryParsed queryTextEntry = createTextEntryParsed(queryId, queryEntry);
+        ArrayList<TextEntryParsed> docTextEntries = new ArrayList<>();
+        for (String docId : arrDocIds) {
+          DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
+
+          if (docEntry == null) {
+            throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
+          }
+
+          docTextEntries.add(createTextEntryParsed(docId, docEntry));
+        }
+        scores = clnt.getScoresFromParsed(queryTextEntry, docTextEntries);
+      }
+      
       
       for (String docId : arrDocIds) {
         List<Double> scoreList = scores.get(docId);
@@ -189,22 +205,16 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         res.put(docId, scoreVect);
       }
     } catch (Exception e) {
-      releaseClient(clnt);
+      logger.error("Caught an exception:" + e);
+      transp.close();
       throw e;
     }    
     
-    releaseClient(clnt);
+    transp.close();
     
     return res;
   }
   
-
-  @Override
-  public String getFieldName() {
-    return mFieldName;
-  }
-  
-  final String                       mFieldName;
   final TFIDFSimilarity              mSimilObj;
   final ForwardIndex                 mFieldIndex;
   final String                       mHost;
@@ -213,8 +223,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   
   final int                          mFeatQty;
   final boolean                      mUseWordSeq;
-
-  private ArrayList<Client>          mFreeClients = new ArrayList<Client>();
   
   @Override
   public String getName() {

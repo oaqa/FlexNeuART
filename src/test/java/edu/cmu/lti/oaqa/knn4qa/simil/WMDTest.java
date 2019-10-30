@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
@@ -45,15 +45,15 @@ public class WMDTest extends AbstractTest {
   }
   
   float[] getWMD(String dists[], int [] qtys1, int [] qtys2) throws Exception {
-    DocEntry doc1 = createFakeDoc(qtys1);
-    DocEntry doc2 = createFakeDoc(qtys2);
+    DocEntryParsed doc1 = createFakeDoc(qtys1);
+    DocEntryParsed doc2 = createFakeDoc(qtys2);
     
     float [][] distMatr = parseDistMatrix(dists);
     
     return DistanceFunctions.compEMDLike(doc1, doc2, distMatr);
   }
   
-  private DocEntry createFakeDoc(int[] qtys) throws Exception {
+  private DocEntryParsed createFakeDoc(int[] qtys) throws Exception {
     ArrayList<Integer> arrQtys = new ArrayList<Integer>(),
                        arrIds  = new ArrayList<Integer>(),
                        wordIdSeq = new ArrayList<Integer>();
@@ -63,7 +63,7 @@ public class WMDTest extends AbstractTest {
       arrIds.add(-1); // The test wouldn't care about IDs, only about qtys
     }    
     
-    return new DocEntry(arrIds, arrQtys, wordIdSeq, true);
+    return new DocEntryParsed(arrIds, arrQtys, wordIdSeq, true);
   }
   
   /**

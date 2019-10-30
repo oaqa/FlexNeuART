@@ -13,17 +13,28 @@ nmslibURI=""
 extrTypeIntermParam=""
 modelIntermParam=""
 candQtyParam=""
-delete_trec_runs="1"
+# Shouldn't delete these runs by default!
+delete_trec_runs="0"
 nmslibAddParams=""
 nmslibExtrType=""
 modelFile=""
 maxNumQueryParam=""
 
+compScores="1"
+runId=$FAKE_RUN_ID
+
 while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
   if [ $? = 0 ] ; then
     OPT_NAME="$1"
-    if [ "$OPT_NAME" = "-dont_delete_trec_runs" ] ; then
+    if [ "$OPT_NAME" = "-delete_trec_runs" -o "$OPT_NAME" = "-knn_interleave" ] ; then
+      OPT_VALUE=""
+      OPT=""
+      # option without an argument
+      shift 1
+    elif [ "$OPT_NAME" = "-skip_eval" ] ; then
+      OPT_VALUE=""
+      OPT=""
       # option without an argument
       shift 1
     else
@@ -45,11 +56,17 @@ while [ $# -ne 0 ] ; do
       -max_num_query)
         maxNumQueryParam=$OPT
         ;;
+      -run_id)
+        runId=$OPT_VALUE
+        ;;
       -nmslib_addr)
         nmslibURI=$OPT_VALUE
         ;;
       -knn_interleave)
-        nmslibAddParams="$nmslibAddParams $OPT"
+        nmslibAddParams="$nmslibAddParams $OPT_NAME"
+        ;;
+      -skip_eval)
+        compScores="0"
         ;;
       -extr_type_nmslib)
         nmslibExtrType="$OPT_VALUE"
@@ -63,8 +80,8 @@ while [ $# -ne 0 ] ; do
       -cand_qty)
         candQtyParam=$OPT
        ;; 
-      -dont_delete_trec_runs)
-        delete_trec_runs="0"
+      -delete_trec_runs)
+        delete_trec_runs="1"
        ;; 
       *)
         echo "Invalid option: $OPT_NAME" >&2
@@ -97,14 +114,14 @@ fi
 
 experSubDir=${POS_ARGS[3]}
 if [ "$experSubDir" = "" ] ; then
-  echo "Specify a sub-directory to store final results (3d positional arg)!"
+  echo "Specify a sub-directory to store final results (4th positional arg)!"
   exit 1
 fi
 
 extrType="${POS_ARGS[4]}"
 
 if [ "$extrType" = "" ] ; then
-  echo "Specify a feature extractor path (4th positional arg)"
+  echo "Specify a feature extractor path or none (5th positional arg)"
   exit 1
 fi
 
@@ -127,6 +144,7 @@ nTestList=`echo $nTestStr|sed 's/,/ /g'`
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "EMBED_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
@@ -138,12 +156,12 @@ checkVarNonEmpty "experSubDir"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$BITEXT_SUBDIR"
+embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[2]}
+queryFileName=${retVal[3]}
 if [ "$queryFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1
@@ -172,9 +190,9 @@ elif [ "$candProvType" = "nmslib" ] ; then
   URI=$nmslibURI
   if [ "$nmslibExtrType" = "" ] ; then
     echo "Missing parameter -extr_type_nmslib"
-    nmslibAddParams=" -extr_type_nmslib \"$nmslibExtrType\" $nmslibAddParams"
     exit 1
   fi
+  nmslibAddParams=" -extr_type_nmslib \"$nmslibExtrType\" $nmslibAddParams"
 else
   echo "Invalid provider type: $candProvType"
 fi
@@ -193,8 +211,12 @@ fi
 
 checkVarNonEmpty "experDir"
 
-trecRunDir="$experDir/trec_runs"
-reportDir="$experDir/rep"
+experDirUnique=$(getExperDirUnique "$experDir" "$testPart" "$experSubDir")
+
+checkVarNonEmpty "experDirUnique"
+
+trecRunDir="$experDirUnique/trec_runs"
+reportDir="$experDirUnique/rep"
 
 mkdir -p $trecRunDir
 mkdir -p "$reportDir"
@@ -206,18 +228,20 @@ check "rm -f ${reportDir}/*"
 
 # No extractor type here, the user will have to specify the sub-directory that is extractor-type-specific
 OUT_PREF_TEST="out_${collect}_${testPart}"
-FULL_OUT_PREF_TEST="$experDir/$OUT_PREF_TEST"
+FULL_OUT_PREF_TEST="$experDirUnique/$OUT_PREF_TEST"
 
 query_log_file=${reportDir}/query.log
 check "query_log_file=${reportDir}/query.log"
 
+echo "============================================"
 echo "Using $testPart for testing!"
 echo "Candidate provider type:        $candProvType"
 echo "Candidate provider URI:         $URI"
+echo "Run id:                         $runId"
 echo "Data directory:                 $inputDataDir"
 echo "Data file name:                 $queryFileName"
 
-echo "Experiment directory:           $experDir"
+echo "Experiment directory:           $experDirUnique"
 echo "Report directory:               $reportDir"
 
 if [ "$maxNumQueryParam" != "" ] ; then
@@ -234,6 +258,7 @@ fi
 if [ "$nmslibAddParams != """ ] ; then
   echo "NMSLIB add params:              $nmslibAddParams"
 fi
+echo "============================================"
 
 statFile="$reportDir/stat_file"
 
@@ -249,6 +274,7 @@ trecRunPrefix="$trecRunDir/run"
 
 # Despite all the efforts these quotes won't preserve spaces :-( due to quirks of passing arguments
 cmd="scripts/query/run_query.sh  -u \"$URI\"  -cand_prov $candProvType -thread_qty $threadQty \
+  -run_id $runId \
   $nmslibAddParams \
   $resourceDirParams \
   $extrFinalParam \
@@ -258,20 +284,23 @@ cmd="scripts/query/run_query.sh  -u \"$URI\"  -cand_prov $candProvType -thread_q
 
 execAndCheck "$cmd 2>&1|tee $query_log_file"
 
-rm -f "${reportDir}/out_*"
+if [ "$compScores" = "1" ] ; then 
 
-qrels="$inputDataDir/$testPart/$QREL_FILE"
+  rm -f "${reportDir}/out_*"
 
-for oneN in $nTestList ; do
-  echo "======================================"
-  echo "N=$oneN"
-  echo "======================================"
-  reportPref="${reportDir}/out_${oneN}"
+  qrels="$inputDataDir/$testPart/$QREL_FILE"
 
-  scripts/exper/eval_output.py "$qrels" "${trecRunPrefix}_${oneN}" "$reportPref" "$oneN"
-  check "eval_output.py"
-done
-
+  for oneN in $nTestList ; do
+    echo "======================================"
+    echo "N=$oneN"
+    echo "======================================"
+    reportPref="${reportDir}/out_${oneN}"
+  
+    scripts/exper/eval_output.py "$qrels" "${trecRunPrefix}_${oneN}" "$reportPref" "$oneN"
+    check "eval_output.py"
+  done
+fi
+  
 if [ "$delete_trec_runs" = "1" ] ; then
   echo "Deleting trec runs from the directory: ${trecRunDir}"
   rm ${trecRunDir}/*
@@ -285,7 +314,9 @@ else
   check "bzip2 ${trecRunDir}/*" 
 fi
 
-echo "Bzipping trec_eval output in the directory: ${reportDir}"
-rm -f ${reportDir}/*.trec_eval.bz2
-bzip2 ${reportDir}/*.trec_eval
-check "bzip2 ${reportDir}/*.trec_eval"
+if [ "$compScores" = "1" ] ; then 
+  echo "Bzipping trec_eval output in the directory: ${reportDir}"
+  rm -f ${reportDir}/*.trec_eval.bz2
+  bzip2 ${reportDir}/*.trec_eval
+  check "bzip2 ${reportDir}/*.trec_eval"
+fi

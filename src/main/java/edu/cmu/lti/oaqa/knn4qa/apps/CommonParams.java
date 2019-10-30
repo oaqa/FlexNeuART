@@ -21,6 +21,9 @@ public class CommonParams {
   
   public final static String LUCENE_INDEX_LOCATION_DESC = "Location of a Lucene index";
   
+  public static final String RUN_ID_PARAM = "run_id";
+  public static final String RUN_ID_DESC = "a trec-style run id";
+  
   public static final String PROVIDER_URI_DESC = "Provider URI: an index location or a query server address";
   public static final String PROVIDER_URI_PARAM = "u";
   
@@ -100,6 +103,12 @@ public class CommonParams {
   public final static String MAX_NUM_QUERY_DESC  = "maximum number of queries to process";
   public final static String MAX_NUM_QUERY_PARAM = "max_num_query";
   
+  public final static String MAX_NUM_QUERY_TRAIN_DESC  = "maximum number of train queries to process/use";
+  public final static String MAX_NUM_QUERY_TRAIN_PARAM = "max_num_query_train";
+  
+  public final static String MAX_NUM_QUERY_TEST_DESC  = "maximum number of train queries to process/use";
+  public final static String MAX_NUM_QUERY_TEST_PARAM = "max_num_query_test";
+  
   public final static String DATA_FILE_DESC = "A data file";
   public final static String DATA_FILE_PARAM = "data_file";
     
@@ -121,12 +130,22 @@ public class CommonParams {
   public final static String FIELD_NAME_PARAM = "field_name";
   public final static String FIELD_NAME_DESC = "The name of a field to process";
   
+  public static final String QUERY_FIELD_NAME_PARAM = "query_field";
+  public final static String QUERY_FIELD_NAME_DESC = "The name of a query field";
+  
+  public static final String INDEX_FIELD_NAME_PARAM = "index_field";
+  public final static String INDEX_FIELD_NAME_DESC = "The name of an index field";
+
   public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
-  public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getTypeList();
+  public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getIndexTypeList();
+
+  
+  public final static String FOWARD_INDEX_STORE_TYPE_PARAM = "fwd_index_store_type";
+  public final static String FOWARD_INDEX_STORE_TYPE_DESC  = "A forward index storage type: " + ForwardIndex.getIndexStorageTypeList();
  
-  // A general-purpose output file parameter
   public static final String OUTPUT_FILE_PARAM = "out_file";
   public static final String OUTPUT_FILE_DESC = "Output file";
+  
   
   public static final int USAGE_WIDTH = 90;
   

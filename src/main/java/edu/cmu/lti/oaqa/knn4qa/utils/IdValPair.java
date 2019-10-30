@@ -16,7 +16,8 @@
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
 /**
- * A an id-value pair class.
+ * A an id-value pair class, which can be sorted
+ * by the id (in the ascending order)
  * 
  * @author Leonid Boytsov
  *

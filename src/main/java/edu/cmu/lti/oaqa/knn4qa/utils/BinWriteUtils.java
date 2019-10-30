@@ -29,8 +29,6 @@ import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
  */
 public class BinWriteUtils {
   
-  public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; // we'll do everything on Intel Linux/Mac
-  
   /**
    * Converts a 32-bit integer to a sequence of bytes in a given order.
    * 
@@ -39,7 +37,7 @@ public class BinWriteUtils {
    */
   public static byte[] intToBytes(int v) {
     ByteBuffer out = ByteBuffer.allocate(4);
-    out.order(BYTE_ORDER);
+    out.order(Const.BYTE_ORDER);
     out.putInt(v);
     // The array should be fully filled up
     return out.array();
@@ -53,7 +51,7 @@ public class BinWriteUtils {
    */
   public static byte[] longToBytes(long v) {
     ByteBuffer out = ByteBuffer.allocate(8);
-    out.order(BYTE_ORDER);
+    out.order(Const.BYTE_ORDER);
     out.putLong(v);
     // The array should be fully filled up
     return out.array();
@@ -61,7 +59,7 @@ public class BinWriteUtils {
 
   public static byte[] denseVectorToBytes(float[] vec) {
     ByteBuffer out = ByteBuffer.allocate(4 * vec.length);
-    out.order(BinWriteUtils.BYTE_ORDER);
+    out.order(Const.BYTE_ORDER);
     for (float v : vec) {
       out.putFloat(v);
     }
@@ -71,7 +69,7 @@ public class BinWriteUtils {
   
   public static byte[] sparseVectorToBytes(TrulySparseVector vec) {
     ByteBuffer out = ByteBuffer.allocate(8 * vec.mIDs.length);
-    out.order(BinWriteUtils.BYTE_ORDER);
+    out.order(Const.BYTE_ORDER);
     for (int i = 0; i < vec.mIDs.length; ++i) {
       out.putInt(vec.mIDs[i]);
       out.putFloat(vec.mVals[i]);
@@ -84,7 +82,7 @@ public class BinWriteUtils {
    * Write a string ID to the stream. To simplify things,
    * we don't permit non-ASCII characters here for the fear
    * that non-ASCII characters will not be preserved correctly
-   * by NMSLIB quqery server.
+   * by NMSLIB query server.
    * 
    * @param id      input string
    * @param out     output stream

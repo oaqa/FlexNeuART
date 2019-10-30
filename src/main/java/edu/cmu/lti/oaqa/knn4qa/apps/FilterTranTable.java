@@ -26,11 +26,11 @@ import java.io.OutputStreamWriter;
 import org.apache.commons.cli.*;
 
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.FrequentIndexWordFilterAndRecoder;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranRec;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 
 
 public class FilterTranTable {

@@ -22,7 +22,13 @@ import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
+import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
+
 /**
+ * A MapDB implementation of the forward file. It compressed all raw text entries
+ * (GZIP when it reduces size and raw string, when it doesn't)
+ * and converts regular {@link DocEntryParsed} entries to binary format.
+ * 
  * @author Leonid Boytsov
  *
  */
@@ -42,40 +48,65 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
     mDocIds.clear();
   
     mDb = DBMaker.fileDB(mBinFile).closeOnJvmShutdown().fileMmapEnable().make();
-    mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.STRING).create();
+    mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).create();
   }
-
 
   @Override
-  public DocEntry getDocEntry(String docId) throws Exception {
-    String docText =  mDbMap.get(docId);
-    if (docText != null) {
-      return DocEntry.fromString(docText);
+  public DocEntryParsed getDocEntryParsed(String docId) throws Exception {
+    byte[] docBin =  mDbMap.get(docId);
+    if (docBin != null) {
+      return DocEntryParsed.fromBinary(docBin);
     }
     return null;
+  }  
+  
+  @Override
+  protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {
+  	synchronized (this) {
+  		mDocIds.add(docId);
+  	}
+    mDbMap.put(docId, doc.toBinary());
+    
+    synchronized (this) {
+	    if (mDocIds.size() % COMMIT_INTERV == 0) {
+	      System.out.println("Committing");
+	      mDb.commit();
+	    }
+    }
   }
+  
+	@Override
+	public String getDocEntryRaw(String docId) throws Exception {
+    byte[] zippedStr =  mDbMap.get(docId);
+    if (zippedStr != null) {
+      return CompressUtils.decomprStr(zippedStr);
+    }
+    return null;
+	}
+
+	@Override
+	protected void addDocEntryRaw(String docId, String docText) throws IOException {
+		synchronized (this) {
+			mDocIds.add(docId);
+		}
+    mDbMap.put(docId, CompressUtils.comprStr(docText));
+    
+    synchronized (this) {
+	    if (mDocIds.size() % COMMIT_INTERV == 0) {
+	      System.out.println("Committing");
+	      mDb.commit();
+	    }
+    }
+   }
   
   @Override
   public void readIndex() throws Exception {
     readHeaderAndDocIds();
     
     mDb = DBMaker.fileDB(mBinFile).closeOnJvmShutdown().fileMmapEnable().make();
-    mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.STRING).open();
+    mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).open();
     
     System.out.println("Finished loading context from file: " + mBinFile);
-  }
-  
-
-  @Override
-  protected void addDocEntry(String docId, DocEntry doc) throws IOException {   
-    mDocIds.add(docId);
-    mDbMap.put(docId, doc.toString());
-    
-    if (mDocIds.size() % COMMIT_INTERV == 0) {
-      System.out.println("Committing");
-      mDb.commit();
-    }
-
   }
 
   @Override
@@ -87,5 +118,5 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   }
 
   private DB mDb;
-  ConcurrentMap<String,String> mDbMap;
+  ConcurrentMap<String,byte[]> mDbMap;
 }

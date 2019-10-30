@@ -100,7 +100,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     mCompIndices  = new ForwardIndex[mFeatExtrQty];
 
     for (int i = 0; i < mFeatExtrQty; ++i) {
-      mCompIndices[i] = mResourceManager.getFwdIndex(mCompExtractors[i].getFieldName());
+      mCompIndices[i] = mResourceManager.getFwdIndex(mCompExtractors[i].getIndexFieldName());
     }
 
     int part = 0;

@@ -1,3 +1,18 @@
+/*
+ *  Copyright 2014+ Carnegie Mellon University
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package edu.cmu.lti.oaqa.knn4qa.letor;
 
 import java.util.ArrayList;
@@ -6,7 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.knn4qa.giza.TranRecSortByProb;
@@ -42,14 +57,10 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return this.getClass().getName();
   }
   
-  @Override
-  public String getFieldName() {
-    return mFieldName;
-  }
-  
   public FeatExtrModel1Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
-    mFieldName = conf.getReqParamStr(FeatExtrConfig.FIELD_NAME);   
-    mModel1SubDir = conf.getParam(MODEL1_SUBDIR, mFieldName);
+    super(resMngr, conf);
+   
+    mModel1SubDir = conf.getParam(MODEL1_SUBDIR, getIndexFieldName());
     mGizaIterQty = conf.getReqParamInt(GIZA_ITER_QTY);
     mProbSelfTran = conf.getReqParamFloat(PROB_SELF_TRAN);
     mMinModel1Prob = conf.getReqParamFloat(MIN_MODEL1_PROB);
@@ -70,12 +81,12 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     
     mFlipDocQuery = conf.getParamBool(FLIP_DOC_QUERY);
     
-    mModel1Data = resMngr.getModel1Tran(mFieldName, 
+    mModel1Data = resMngr.getModel1Tran(getIndexFieldName(), 
                                         mModel1SubDir,
                                         false /* no translation table flip */, 
                                         mGizaIterQty, mProbSelfTran, mMinModel1Prob);
     
-    mFieldIndex = resMngr.getFwdIndex(mFieldName);
+    mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
     mTopTranCache = HashIntObjMaps.<Integer []>newMutableMap(mModel1Data.mFieldProbTable.length);
   }
 
@@ -83,11 +94,11 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
-    DocEntry queryEntry = getQueryEntry(mFieldName, mFieldIndex, queryData);
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
     if (queryEntry == null) return res;
 
     for (String docId : arrDocIds) {
-      DocEntry docEntry = mFieldIndex.getDocEntry(docId);
+      DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
       if (docEntry == null) {
         throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
       }  
@@ -105,7 +116,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return res;
   }
 
-  private double [] computeWordScores(int [] wordIds, DocEntry docEntry) throws Exception {
+  private double [] computeWordScores(int [] wordIds, DocEntryParsed docEntry) throws Exception {
     int queryWordQty = wordIds.length;
     
     double res[] = new double[queryWordQty];
@@ -148,7 +159,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return res;
   }
   
-  private double computeOverallScore(DocEntry queryEntry, DocEntry docEntry) throws Exception { 
+  private double computeOverallScore(DocEntryParsed queryEntry, DocEntryParsed docEntry) throws Exception { 
     double logScore = 0;
 
 
@@ -180,7 +191,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return logScore / queryNorm;
   }
   
-  private ArrayList<IdValPair> getTopWordIdsAndScores(DocEntry doc) throws Exception {
+  private ArrayList<IdValPair> getTopWordIdsAndScores(DocEntryParsed doc) throws Exception {
     HashIntSet   wordIdsHash = HashIntSets.newMutableSet();
     
     for (int wid : doc.mWordIds) {
@@ -291,7 +302,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
 
   @Override
-  public VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception {
+  public VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) throws Exception {
 
     if (mFlipDocQuery) {
       isQuery = !isQuery;
@@ -304,7 +315,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
  
   }
 
-  private VectorWrapper getDocFeatureVectorsForInnerProd(DocEntry doc) throws Exception {
+  private VectorWrapper getDocFeatureVectorsForInnerProd(DocEntryParsed doc) throws Exception {
     // 1. Get terms with sufficiently high translation probability with
     //    respect to the document
     ArrayList<IdValPair> topIdsScores = getTopWordIdsAndScores(doc);
@@ -325,7 +336,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return new VectorWrapper(res);
   }
 
-  private VectorWrapper getQueryFeatureVectorsForInnerProd(DocEntry e) {
+  private VectorWrapper getQueryFeatureVectorsForInnerProd(DocEntryParsed e) {
     int queryWordQty = e.mWordIds.length; 
     
     int nonzWordQty = 0;
@@ -353,7 +364,6 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
   
   final ForwardIndex    mFieldIndex;
-  final String          mFieldName;
   final String          mModel1SubDir;
   final Model1Data      mModel1Data;
   final int             mGizaIterQty;

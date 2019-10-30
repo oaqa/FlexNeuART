@@ -26,8 +26,8 @@
   "type" : "avgWordEmbed",
   "params" : {
     "fieldName" : "text",
-    "queryEmbedFile" : "starspace_unlemm.query",
-    "docEmbedFile"   : "starspace_unlemm.answer",
+    "queryEmbedFile" : "starspace/starspace_unlemm.query",
+    "docEmbedFile"   : "starspace/starspace_unlemm.answer",
     "useIDFWeight"   : "True",
     "useL2Norm"      : "True",
     "distType"       : "cosine"

@@ -3,19 +3,24 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 import java.util.ArrayList;
 import java.util.Map;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
  * A single-field, single-score feature generator,
  * whose score can be computed (exactly or approximately)
- * as an inner product between two vectors.
+ * as an inner product between two vectors. Note, again,
+ * that query and index fields can be different.
  * 
  * @author Leonid Boytsov
  *
  */
 public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatExtractor {
+
+  public SingleFieldInnerProdFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+    super(resMngr, conf);
+  }
 
   /**
    * @return true if generates a sparse feature vector.
@@ -23,10 +28,7 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
   public abstract boolean isSparse();
 
   public abstract int getDim();
-
-  @Override
-  public abstract String getFieldName();
-
+  
   @Override
   public abstract String getName();
 
@@ -47,7 +49,7 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
    *         if the inner-product representation is not possible.
    * @throws Exception 
    */
-  public abstract VectorWrapper getFeatInnerProdVector(DocEntry e, boolean isQuery) throws Exception;
+  public abstract VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) throws Exception;
 
   public int getFeatureQty() {
     return 1;

@@ -59,7 +59,7 @@ public class DictNoComments {
    */
   public DictNoComments(File file, boolean toLower) throws Exception {
     mToLower = toLower;
-    for (String s: FileUtils.readLines(file)) {
+    for (String s: FileUtils.readLines(file, Const.ENCODING)) {
       processLine(s);
     }    
   }

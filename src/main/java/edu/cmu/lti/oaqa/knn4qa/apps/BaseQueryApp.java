@@ -99,7 +99,7 @@ class BaseProcessingUnit {
   public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
     Map<String, String>    queryFields = mAppRef.mParsedQueries.get(queryNum);
 
-    String queryID = queryFields.get(Const.TAG_DOCNO);
+    String queryId = queryFields.get(Const.TAG_DOCNO);
             
     // 2. Obtain results
     long start = System.currentTimeMillis();
@@ -107,7 +107,7 @@ class BaseProcessingUnit {
     CandidateInfo qres = null;
     
     if (mAppRef.mResultCache != null) 
-      qres = mAppRef.mResultCache.getCacheEntry(queryID);
+      qres = mAppRef.mResultCache.getCacheEntry(queryId);
     if (qres == null) {            
 
       String text = queryFields.get(Const.TEXT_FIELD_NAME);
@@ -120,7 +120,7 @@ class BaseProcessingUnit {
       }
       qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
       if (mAppRef.mResultCache != null) 
-        mAppRef.mResultCache.addOrReplaceCacheEntry(queryID, qres);
+        mAppRef.mResultCache.addOrReplaceCacheEntry(queryId, qres);
     }
     CandidateEntry [] resultsAll = qres.mEntries;
     
@@ -129,7 +129,7 @@ class BaseProcessingUnit {
     
     mAppRef.logger.info(
         String.format("Obtained results for the query # %d queryId='%s', the search took %d ms, we asked for max %d entries got %d", 
-                      queryNum, queryID, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
+                      queryNum, queryId, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
     
     mAppRef.mQueryTimeStat.addValue(searchTimeMS);
     mAppRef.mNumRetStat.addValue(qres.mNumFound);
@@ -160,7 +160,7 @@ class BaseProcessingUnit {
         e.mScore = (float) feat.dot(intermModelWeights);
         if (Float.isNaN(e.mScore)) {
           if (Float.isNaN(e.mScore)) {
-            mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
+            mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryId);
             mAppRef.logger.info("NAN scores, feature vector:");
             mAppRef.logger.info(feat.toString());
             mAppRef.logger.info("NAN scores, feature weights:");
@@ -182,7 +182,7 @@ class BaseProcessingUnit {
       long rerankIntermTimeMS = end - start;
       mAppRef.logger.info(
           String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' took %d ms", 
-                         queryNum, queryID, rerankIntermTimeMS));
+                         queryNum, queryId, rerankIntermTimeMS));
       mAppRef.mIntermRerankTimeStat.addValue(rerankIntermTimeMS);          
     }
             
@@ -193,7 +193,7 @@ class BaseProcessingUnit {
     if (mAppRef.mQrels != null) {
       for (int rank = 0; rank < resultsAll.length; ++rank) {
         CandidateEntry e = resultsAll[rank];
-        String label = mAppRef.mQrels.get(queryID, e.mDocId);
+        String label = mAppRef.mQrels.get(queryId, e.mDocId);
         e.mRelevGrade = CandidateProvider.parseRelevLabel(label);
         if (e.mRelevGrade >= 1 && minRelevRank == Integer.MAX_VALUE) {
           minRelevRank = rank;
@@ -224,7 +224,7 @@ class BaseProcessingUnit {
           e.mScore = (float) modelFinal.eval(featRankLib);
           if (Float.isNaN(e.mScore)) {
             if (Float.isNaN(e.mScore)) {
-              mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryID);
+              mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryId);
               mAppRef.logger.info("NAN scores, feature vector:");
               mAppRef.logger.info(feat.toString());
               throw new Exception("NAN score encountered (intermediate reranker)!");
@@ -237,7 +237,7 @@ class BaseProcessingUnit {
       long rerankFinalTimeMS = end - start;
       mAppRef.logger.info(
           String.format("Final-feature generation & re-ranking for the query # %d queryId='%s', final. reranking took %d ms", 
-                        queryNum, queryID, rerankFinalTimeMS));
+                        queryNum, queryId, rerankFinalTimeMS));
       mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
     }
     
@@ -254,7 +254,8 @@ class BaseProcessingUnit {
         Arrays.sort(resultsCurr);
         synchronized (mWriteLock) {
           mAppRef.procResults(
-              queryID,
+              mAppRef.mRunId,
+              queryId,
               queryFields,
               resultsCurr,
               numRet,
@@ -405,6 +406,8 @@ public abstract class BaseQueryApp {
    * will take care to sync. 
    * @param docFields 
    * 
+   * @param   runId
+   *              an ID of the run
    * @param   queryId
    *              a query ID
    * @param   docFields
@@ -419,7 +422,8 @@ public abstract class BaseQueryApp {
    *      
    */
   abstract void procResults(
-      String                              queryID,
+      String                              runId,
+      String                              queryId,
       Map<String, String>                 docFields, 
       CandidateEntry[]                    scoredDocs,
       int                                 numRet,
@@ -467,6 +471,9 @@ public abstract class BaseQueryApp {
       mOptions.addOption(CommonParams.MIN_SHOULD_MATCH_PCT_PARAM, null, true, CommonParams.MIN_SHOULD_MATCH_PCT_DESC);
       mOptions.addOption(CommonParams.KNN_INTERLEAVE_PARAM,     null, false, CommonParams.KNN_INTERLEAVE_DESC);
     }
+    
+    mOptions.addOption(CommonParams.RUN_ID_PARAM,              null, true, CommonParams.RUN_ID_DESC);
+    
     mOptions.addOption(CommonParams.QUERY_CACHE_FILE_PARAM,    null, true, CommonParams.QUERY_CACHE_FILE_DESC);
     mOptions.addOption(CommonParams.QUERY_FILE_PARAM,          null, true, CommonParams.QUERY_FILE_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_RESULTS_PARAM,     null, true, mMultNumRetr ? 
@@ -530,6 +537,8 @@ public abstract class BaseQueryApp {
       mCandProviderType = mCmd.getOptionValue(CommonParams.CAND_PROVID_PARAM);
       if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_DESC);
     }
+    mRunId = mCmd.getOptionValue(CommonParams.RUN_ID_PARAM);
+    if (mRunId == null) showUsageSpecify(CommonParams.RUN_ID_PARAM);
     
     mProviderURI = mCmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
     if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_DESC);              
@@ -836,15 +845,14 @@ public abstract class BaseQueryApp {
     logger.info("Finished successfully!");
   }
   
-
+  String       mRunId;
   String       mProviderURI;
   String       mQueryFile;
   Integer      mMaxCandRet;
   Integer      mMaxNumRet;
   int          mMinShouldMatchPCT = 0;  
   int          mMaxNumQuery = Integer.MAX_VALUE;
-  ArrayList<Integer> 
-                     mNumRetArr= new ArrayList<Integer>();
+  ArrayList<Integer> mNumRetArr= new ArrayList<Integer>();
   String       mCandProviderType;
   String       mQrelFile;
   QrelReader   mQrels;

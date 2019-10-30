@@ -2,6 +2,8 @@
 source scripts/common_proc.sh
 source scripts/config.sh
 
+checkVarNonEmpty "FAKE_RUN_ID"
+
 POS_ARGS=()
 thread_qty=1
 while [ $# -ne 0 ] ; do
@@ -121,17 +123,18 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "EMBED_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
-checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
+checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$BITEXT_SUBDIR"
+embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[2]}
+queryFileName=${retVal[3]}
 if [ "$queryFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1
@@ -161,6 +164,7 @@ echo "==============================================="
 
 scripts/query/run_multhread_feat.sh \
 -u "$URI" \
+-run_id "$FAKE_RUN_ID" \
 -cand_prov $cand_type \
 -q "$inputDataDir/$part/$queryFileName" \
 -qrel_file "$inputDataDir/$part/$qrel_file" \
@@ -176,5 +180,6 @@ scripts/query/run_multhread_feat.sh \
 $query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
 if [ "${PIPESTATUS[0]}" != "0" ] ; then
+  echo "run_multhread_feat.sh failed!"
   exit 1
 fi

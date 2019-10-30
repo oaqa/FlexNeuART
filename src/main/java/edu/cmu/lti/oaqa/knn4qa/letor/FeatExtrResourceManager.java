@@ -18,14 +18,10 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 import java.io.File;
 import java.util.HashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import edu.cmu.lti.oaqa.knn4qa.apps.CommonParams;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.InMemForwardIndexFilterAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.InMemForwardIndexText;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndexBasedFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.giza.GizaVocabularyReader;
 
@@ -39,14 +35,13 @@ class Model1Data {
 }
 
 /**
- * This class takes care about loading resources necessary for feature extraction.
+ * <p>This class takes care about loading resources necessary for feature extraction.
  * All resource allocation classes are synchronized on "this" to prevent 
- * race conditions AND DEADLOCKS! Fortunately, Java locks are re-entrant
- * to allow for this.
+ * race conditions and <b>deadlocks</b>! Fortunately, Java locks are re-entrant
+ * to allow for this.</p>
  * 
  */
 public class FeatExtrResourceManager {
-  private static final Logger logger = LoggerFactory.getLogger(FeatExtrResourceManager.class);
   
   public static final String FS = File.separator;
   
@@ -94,7 +89,7 @@ public class FeatExtrResourceManager {
       String embedKey = fieldName + "_" + fileName;
       if (!mWordEmbeds.containsKey(embedKey)) {
         ForwardIndex fwdIndx = getFwdIndex(fieldName);
-        InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(fwdIndx);
+        ForwardIndexBasedFilterAndRecoder filterAndRecoder = new ForwardIndexBasedFilterAndRecoder(fwdIndx);
         mWordEmbeds.put(embedKey, 
             new EmbeddingReaderAndRecoder(mRootEmbedDir +FS + fileName, filterAndRecoder));
       }
@@ -115,7 +110,7 @@ public class FeatExtrResourceManager {
       if (!mModel1Data.containsKey(key)) {
         ForwardIndex fwdIndx = getFwdIndex(fieldName);
         
-        InMemForwardIndexFilterAndRecoder filterAndRecoder = new InMemForwardIndexFilterAndRecoder(fwdIndx);
+        ForwardIndexBasedFilterAndRecoder filterAndRecoder = new ForwardIndexBasedFilterAndRecoder(fwdIndx);
         
         
         String prefix = mRootModel1TranDir + FS + model1SubDir + FS;

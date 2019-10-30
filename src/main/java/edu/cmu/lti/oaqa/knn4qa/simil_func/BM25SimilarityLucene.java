@@ -15,7 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.simil_func;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.WordEntry;
 
@@ -67,15 +67,13 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
    * @return
    */
   @Override
-  public float compute(DocEntry query, DocEntry doc) {
+  public float compute(DocEntryParsed query, DocEntryParsed doc) {
     float score = 0;
     
     int   docTermQty = doc.mWordIds.length;
     int   queryTermQty = query.mWordIds.length;
     
     int   iQuery = 0, iDoc = 0;
-    
-    float docLen = doc.mDocLen;
     
     while (iQuery < queryTermQty && iDoc < docTermQty) {
       final int queryWordId = query.mWordIds[iQuery];
@@ -84,28 +82,47 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
       if (queryWordId < docWordId) ++iQuery;
       else if (queryWordId > docWordId) ++iDoc;
       else {
-        float tf = doc.mQtys[iDoc];
         
-        float normTf = (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl));
+        // This computation can be made a bit efficient by keeping
+        // document length and the word id in a local variable,
+        // but the gains would be small and this way we provide
+        // a function to compute a document term weight
+        float termDocScore = getDocTermScore(doc, iDoc); 
         
-        score += getIDF(mFieldIndex, query.mWordIds[iQuery]) * // IDF 
-                  query.mQtys[iQuery] *           // query frequency
-                  normTf;                         // Normalized term frequency        
+        score += termDocScore * query.mQtys[iQuery];            
         ++iQuery; ++iDoc;
       }
     }
     
     return score;
   }
-  
-  
+
+  /**
+   * Computes a BM25 weight of a given word in a document.
+   * 
+   * @param doc     document entry reference
+   * @param iDoc    the zero-based position of the word in 
+   *                the BOW list of document words.
+   * @return
+   */
+  public float getDocTermScore(DocEntryParsed doc, int iDoc) {
+    float tf = doc.mQtys[iDoc];
+    float docLen = doc.mDocLen;
+    
+    // Normalized term frequency    
+    float normTf = (tf * (mBM25_k1 + 1)) / ( tf + mBM25_k1 * (1 - mBM25_b + mBM25_b * docLen * mInvAvgDl));
+    float idf = getIDF(mFieldIndex, doc.mWordIds[iDoc]) ;
+    float termDocScore = idf * normTf;
+    return termDocScore;
+  }
+
   
   @Override
   public String getName() {
     return "BM25";
   }
 
-  public float [] computeEmbed(float[][] distMatrixCosine, DocEntry query, DocEntry doc) {
+  public float [] computeEmbed(float[][] distMatrixCosine, DocEntryParsed query, DocEntryParsed doc) {
     float docLen = doc.mDocLen;
     float scores[] = new float[2];
     
@@ -176,11 +193,11 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
    * 
    * @return
    */
-  public TrulySparseVector getBM25SparseVector(DocEntry e, boolean isQuery, boolean shareIDF) {
+  public TrulySparseVector getBM25SparseVector(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
     return getBM25SparseVectorNoNorm(e, isQuery, shareIDF);
   }
 
-  protected TrulySparseVector getBM25SparseVectorNoNorm(DocEntry e, boolean isQuery, boolean shareIDF) {
+  protected TrulySparseVector getBM25SparseVectorNoNorm(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
     int qty = 0;
     for (int wid : e.mWordIds)
       if (wid >= 0) qty++;
@@ -209,7 +226,7 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
     return res;
   }
   
-  public TrulySparseVector getDocCosineSparseVector(DocEntry e) {
+  public TrulySparseVector getDocCosineSparseVector(DocEntryParsed e) {
     int qty = 0;
     for (int wid : e.mWordIds)
       if (wid >= 0) qty++;

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2018 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,22 +16,15 @@
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class MiscHelper {
-  public static String readFile(String inputFile) throws IOException {
-    final BufferedReader  input = 
-        new BufferedReader(
-            new InputStreamReader(CompressUtils.createInputStream(inputFile)));
-
-    StringBuffer sb = new StringBuffer();
-    String s;
-    while ((s=input.readLine()) != null) {
-      sb.append(s);
-      sb.append('\n');
-    }
-    input.close();
-    return sb.toString();
+  
+  public static BufferedWriter createBufferedFileWriter(String outputFile) throws IOException {
+    return new BufferedWriter(new FileWriter(new File(outputFile)));
   }
 }

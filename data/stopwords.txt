@@ -417,3 +417,9 @@ yours
 yourself
 yourselves
 n't
+'d
+'ll
+'m
+'re
+'s
+'ve

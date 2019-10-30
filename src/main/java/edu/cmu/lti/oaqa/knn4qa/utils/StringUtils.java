@@ -17,8 +17,11 @@ package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.base.Joiner;
 
 public class StringUtils {
 
@@ -181,4 +184,15 @@ public class StringUtils {
   public static String[] splitOnWhiteSpace(String str) {
     return Const.PATTERN_WHITESPACE.split(str);
   }
+  
+  public static String joinWithSpace(List<String> arr) {
+    return mJoinOnSpace.join(arr);
+  }
+  
+  public static String joinWithSpace(String [] arr) {
+    return mJoinOnSpace.join(arr);
+  }
+  
+  static Joiner   mJoinOnSpace  = Joiner.on(' ');
+  static Joiner   mJoinOnNewLine  = Joiner.on(Const.NL);
 }

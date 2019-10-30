@@ -20,8 +20,6 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
-import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
-
 class WordEntryStr {
   public final int mWordId;
   public final int mWordFreq;

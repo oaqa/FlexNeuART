@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.io.IOException;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
@@ -194,19 +194,19 @@ public class VectorWrapper {
                                   Map<String, String> queryData,
                                   ForwardIndex compIndx,
                                   SingleFieldInnerProdFeatExtractor extr) throws Exception {
-    DocEntry docEntry = null;
+    DocEntryParsed docEntry = null;
     
     boolean isQuery = queryData != null;
     if (isQuery) {
-      String fieldName = extr.getFieldName();
+      String queryFieldName = extr.getQueryFieldName();
 
-      String text = queryData.get(fieldName);
+      String text = queryData.get(queryFieldName);
       if (text == null) {
-        throw new Exception("No query information for field: " + fieldName);
+        throw new Exception("No query information for field: " + queryFieldName);
       }
-      docEntry = compIndx.createDocEntry(StringUtils.splitOnWhiteSpace(text), true); // true means including positions
+      docEntry = compIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(text), true); // true means including positions
     } else {
-      docEntry = compIndx.getDocEntry(docId);
+      docEntry = compIndx.getDocEntryParsed(docId);
     }
     VectorWrapper featVect = extr.getFeatInnerProdVector(docEntry, isQuery);
     return featVect;

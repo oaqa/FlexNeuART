@@ -11,7 +11,7 @@ fi
 field=$2
 
 if [ "$field" = "" ] ; then
-  echo "Specify a FIELD: e.g., text (2d arg)"
+  echo "Specify a field: e.g., text (2d arg)"
   exit 1
 fi
 
@@ -34,11 +34,11 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
-checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
-export source_dir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR/$BITEXT_SUBDIR"
-export target_dir="$COLLECT_ROOT/$collect/$GIZA_SUBDIR"
+export source_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
+export target_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 
 echo "Source dir prefix=$source_dir" 
 echo "Target dir prefix=$target_dir" 
@@ -78,7 +78,8 @@ echo "Full target dir: $full_target_dir"
 # Jiwoon Jeon, W. Bruce Croft and Joon Ho Lee 
 # However, a better performance is achieved with a symmetrized approach.
 
-# Filtering out sentences where the difference in the number of words is too large and symmetrizing if needed
+# 1. Filtering out sentences where the difference in the number of words is too large 
+# 2. Applying symmetrizing if needed
 MAX_FERTILITY=9
 execAndCheck "scripts/giza/filter_long.py \"${source_dir}/answer_${field}\"   \"${source_dir}/question_${field}\" \"$MAX_FERTILITY\" \"$full_target_dir/source\" \"$full_target_dir/target\" \"$SYMMETRIZE\""
 

@@ -15,6 +15,9 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
+import java.io.File;
+import java.nio.ByteOrder;
+import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 /**
@@ -26,7 +29,10 @@ import java.util.regex.Pattern;
  */
 public class Const {
   public static final String ENCODING_NAME = "UTF-8";
+  public static final Charset ENCODING = Charset.forName(ENCODING_NAME);
   public static final String USER_AGENT = "Mozilla/4.0";
+  
+  public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; // we'll do everything on Intel Linux/Mac
   
   /**
    * An XML version, must be 1.0.
@@ -35,9 +41,16 @@ public class Const {
   
   public static final String TAG_DOC_ENTRY = "DOC";
   public static final String TAG_DOCNO     = "DOCNO";
+  
+  public static final int UNKNOWN_WORD_ID = -1;
+  
   public static final String TEXT_FIELD_NAME = "text";
   
+  public static final String BITEXT_QUEST_PREFIX = "question_";
+  public static final String BITEXT_ANSW_PREFIX = "answer_";
+  
   public static final String NL = System.getProperty("line.separator");
+  public static final String PATH_SEP = File.separator;
 
   /** These are all ASCII punctuation chars except the apostrophe! */
   public static final String NON_INDEXABLE_PUNCT = 
@@ -49,5 +62,7 @@ public class Const {
   public static final Pattern PATTERN_WHITESPACE = Pattern.compile("[\\s\n\r\t]");
   
   public static final int PROGRESS_REPORT_QTY = 10000;
+  
+  public static final String FAKE_RUN_ID = "fake_run";
   
 }

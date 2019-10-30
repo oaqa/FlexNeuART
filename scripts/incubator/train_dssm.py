@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import os, sys
 import pickle
 import matchzoo as mz

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,11 +17,17 @@ package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.util.Comparator;
 
+/**
+ * A comparator for the id-value pair class, 
+ * which sorts by the value (in the descending order)
+ * rather than by the ID.
+ * 
+ * @author Leonid Boytsov
+ */
 public class IdValParamByValDesc implements Comparator<IdValPair> {
 
   @Override
   public int compare(IdValPair e1, IdValPair e2) {
-    
     // If e1.mVal > e2.mVal, we return -1
     // that is larger-value entries will go first
     return (int) Math.signum(e2.mVal - e1.mVal);

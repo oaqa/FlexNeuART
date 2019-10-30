@@ -134,7 +134,7 @@ public class CheckSparseExportScores {
       ForwardIndex              compIndices[] = new ForwardIndex[featExtrQty];
       
       for (int i = 0; i < featExtrQty; ++i) {
-        compIndices[i] = resourceManager.getFwdIndex(compExtractors[i].getFieldName());
+        compIndices[i] = resourceManager.getFwdIndex(compExtractors[i].getIndexFieldName());
       }
       
       String allDocIds[] = compIndices[0].getAllDocIds();

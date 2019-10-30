@@ -22,11 +22,11 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntry;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.knn4qa.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.*;
 import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
-import edu.cmu.lti.oaqa.knn4qa.utils.VocabularyFilterAndRecoder;
 import net.openhft.koloboke.collect.map.hash.*;
 
 class ParsedEmbedRec {  
@@ -200,7 +200,7 @@ public class EmbeddingReaderAndRecoder {
    * @param     normalizeL2     if true, the output vector is L2-normalized.
    * @return    a respective average vector.
    */  
-  public float[] getDocAverage(DocEntry         doc,
+  public float[] getDocAverage(DocEntryParsed         doc,
                                TFIDFSimilarity  simil,
                                ForwardIndex     fieldIndex,
                                boolean          weightByIDF,
@@ -298,13 +298,16 @@ public class EmbeddingReaderAndRecoder {
         if (q.size() < k) {
           VectorSearchEntry toAdd = new VectorSearchEntry(e.getKey(), sim);
           q.add(toAdd);
-//          System.out.println("Add " + toAdd);
+          //System.out.println("Add " + toAdd);
         }
         else if (sim < q.peek().mDist) {
           VectorSearchEntry toAdd = new VectorSearchEntry(e.getKey(), sim);
           q.add(toAdd);
-          VectorSearchEntry toDel = q.poll();
-//          System.out.println("Delete " + toDel + " add " + toAdd);
+          q.poll();
+          /*
+           * VectorSearchEntry toDel = q.poll();
+           * System.out.println("Delete " + toDel + " add " + toAdd);
+           */      
         }
       }
       int qty = q.size();

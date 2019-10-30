@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019+ Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,29 +18,35 @@ package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-
 import org.junit.Test;
 
 public class RandomUtilsTest {
 
   private static final boolean DEBUG_PRINT = false;
 
-  void doSimpleTest( int iterQty, int maxNum, int sampleQty, float sigmaQty, int seed) {
+  void doSimpleTestReservoirSample(boolean useResSample, int iterQty, int maxNum, int sampleQty, float sigmaQty, int seed) {
     float [] qtys = new float[maxNum + 1];
     Integer [] allInts = new Integer[maxNum + 1];
     RandomUtils rand = new RandomUtils(seed);
+    float weights[] = new float[maxNum + 1];
     
     for (int k = 0; k <= maxNum; ++k) {
       allInts[k] = k;
+      weights[k] = 1; // Let's test this basic equal-weight scenario
     }
     
-    
     for (int iter = 0; iter < iterQty; ++iter) {
-      ArrayList<Integer> res = rand.reservoirSampling(allInts, sampleQty);
-      for (int v : res) {
-        qtys[v]++;
+      
+      if (useResSample) {
+        for (int v : rand.reservoirSampling(allInts, sampleQty)) {
+          qtys[v]++;
+        }
+      } else {
+        for (int v : rand.sampleWeightWithReplace(weights, sampleQty)) {
+          qtys[v]++;
+        }
       }
+
     }
     for (int k = 0; k <= maxNum; ++k) {
       qtys[k] /= iterQty;
@@ -64,11 +70,19 @@ public class RandomUtilsTest {
   }
   
   @Test
-  public void test() {
+  public void testReservoirSample() {
     for (int seed = 0; seed < 5; seed++) {
-      doSimpleTest(100 /* iterQty */, 10, 2, 6f /* six-sigma should not be exceeded, very unlikely */, seed);
-      doSimpleTest(50 /* iterQty */, 20, 5, 6f /* six-sigma should not be exceeded, very unlikely */, seed);
+      doSimpleTestReservoirSample(true, 100 /* iterQty */, 10, 2, 6f /* six-sigma should not be exceeded, very unlikely */, seed);
+      doSimpleTestReservoirSample(true, 50 /* iterQty */, 20, 5, 6f /* six-sigma should not be exceeded, very unlikely */, seed);
     }
   }
 
+  @Test
+  public void testSampleWithReplace() {
+    for (int seed = 0; seed < 5; seed++) {
+      doSimpleTestReservoirSample(false, 100 /* iterQty */, 10, 2, 6f /* six-sigma should not be exceeded, very unlikely */, seed);
+      doSimpleTestReservoirSample(false, 50 /* iterQty */, 20, 5, 6f /* six-sigma should not be exceeded, very unlikely */, seed);
+    }
+  }  
+  
 }

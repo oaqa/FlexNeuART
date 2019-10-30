@@ -8,7 +8,7 @@ maxFert = int(sys.argv[3])
 outFileQuest=open(sys.argv[4], "w")
 outFileAnsw=open(sys.argv[5], "w")
 symmetr=int(sys.argv[6]) != 0
-print("Symmetrizing %d, maxFet %d" % (symmetr, maxFert))
+print("Symmetrizing %d, max. fertility %d" % (symmetr, maxFert))
 for quest in questFile:
   answ = answFile.readline()
   len1=len(answ.split())

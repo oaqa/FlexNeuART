@@ -82,31 +82,33 @@ rm -f ${REPORT_DIR}/*
 check "rm -f ${REPORT_DIR}/*"
 
 checkVarNonEmpty "EMBED_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
-checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "TRAIN_SUBDIR"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "LUCENE_CACHE_SUBDIR"
 checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "FAKE_RUN_ID"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$BITEXT_SUBDIR"
+embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[2]}
+queryFileName=${retVal[3]}
 if [ "$queryFileName" = "" ] ; then
   echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
   exit 1
 fi
 
 
-cacheDir="$collect/$LUCENE_CACHE_SUBDIR/"
+cacheDir="$COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR/"
 
 if [ ! -d "$cacheDir" ] ; then
   mkdir -p "$cacheDir"
@@ -179,7 +181,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
                                   -out_pref "$OUT_PREF_TRAIN" \
                                   -thread_qty $THREAD_QTY \
                                   -query_cache_file $CACHE_FILE_TRAIN 2>&1
-    check "scripts/query/gen_features.sh $collect $QREL_FILE $TRAIN_SUBDIR lucene $URI $N_TRAIN "$EXTR_TYPE" "$EXPER_DIR" $maxQueryQtyTrainParam  -out_pref "$OUT_PREF_TRAIN" -thread_qty $THREAD_QTY -query_cache_file $CACHE_FILE_TRAIN 2>&1"
+    check "gen_features.sh $collect ... "
   fi
 
   MODEL_FILE="${FULL_OUT_PREF_TRAIN}_${N_TRAIN}.model"
@@ -193,6 +195,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
 
     if [ "$test_model_results" = "1" ] ; then
       scripts/query/run_query.sh  -u "$URI" -cand_prov lucene -q "$inputDataDir/$TRAIN_SUBDIR/$queryFileName" -n "$N_TRAIN" \
+                                  -run_id $FAKE_RUN_ID \
                                   -o $TREC_RUN_DIR/run_check_train_metrics  -thread_qty $THREAD_QTY  \
                                   $resourceDirParams \
                                   -extr_type_final "$EXTR_TYPE" -model_final "$MODEL_FILE" $maxQueryQtyTrainParam \
@@ -209,6 +212,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
 
   if [ "$rerun_lucene" = 1 ] ; then
     scripts/query/run_query.sh  -u "$URI" -cand_prov lucene -q "$inputDataDir/$TEST_PART/$queryFileName"  -n "$NTEST_STR" \
+                                -run_id $FAKE_RUN_ID \
                                 -o $TREC_RUN_DIR/run   -thread_qty $THREAD_QTY \
                                 $resourceDirParams \
                                 -extr_type_final "$EXTR_TYPE" -model_final "$MODEL_FILE" $maxQueryQtyTestParam \
@@ -218,6 +222,7 @@ if [ "$EXTR_TYPE" != "none" ] ; then
 else
   if [ "$rerun_lucene" = 1 ] ; then
     scripts/query/run_query.sh  -u "$URI" -cand_prov lucene -q "$inputDataDir/$TEST_PART/$queryFileName"  -n "$NTEST_STR" \
+                                -run_id $FAKE_RUN_ID \
                                 -o $TREC_RUN_DIR/run -thread_qty $THREAD_QTY $maxQueryQtyTestParam \
                                 -query_cache_file $CACHE_FILE_TEST 2>&1|tee $query_log_file
     check_pipe "run_query.sh"

@@ -6,9 +6,14 @@ struct WordEntryInfo {
   3: required i32         qty; // the number of times the word repeats
 }
 
-struct TextEntryInfo {
+struct TextEntryParsed {
   1: required string                id;
   2: required list<WordEntryInfo>   entries; 
+}
+
+struct TextEntryRaw {
+  1: required string id;
+  2: required string text;
 }
 
 exception ScoringException {
@@ -16,7 +21,10 @@ exception ScoringException {
 }
 
 service ExternalScorer {
-  map<string, list<double>> getScores(1: required TextEntryInfo   query, // a query entry
-                                2: required list<TextEntryInfo>   docs) // an array of documents 
+  // Process parsed document entries
+  map<string, list<double>> getScoresFromParsed(1: required TextEntryParsed query, // a parsed query entry
+                                                2: required list<TextEntryParsed> docs) // an array of parsed documents 
+  map<string, list<double>> getScoresFromRaw(1: required TextEntryRaw query, // a raw-text query entry
+                                             2: required list<TextEntryRaw> docs) // an array of raw-text documents 
   throws (1: ScoringException err)
 }
