@@ -203,7 +203,7 @@ public class DocEntryParsed {
   	int totalSize = 4 + // # of (word id, qty) pairs 
   								  4 + // # the length of a word sequence
   								mWordIds.length * 8 + // id + qty
-  								mDocLen * 4;
+  								mDocLen * (mWordIdSeq != null ? 4 : 0);
   	ByteBuffer out = ByteBuffer.allocate(totalSize);
   	out.order(Const.BYTE_ORDER);
   	out.putInt(mWordIds.length);

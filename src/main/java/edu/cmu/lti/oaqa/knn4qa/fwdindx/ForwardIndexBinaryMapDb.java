@@ -65,7 +65,8 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   	synchronized (this) {
   		mDocIds.add(docId);
   	}
-    mDbMap.put(docId, doc.toBinary());
+  	byte binDoc[] = doc.toBinary();
+    mDbMap.put(docId, binDoc);
     
     synchronized (this) {
 	    if (mDocIds.size() % COMMIT_INTERV == 0) {
