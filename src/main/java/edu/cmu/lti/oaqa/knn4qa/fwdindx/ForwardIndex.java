@@ -553,7 +553,8 @@ public abstract class ForwardIndex {
 
   public int getMaxWordId() { return mMaxWordId; }
   
-  // addDocEntry* functions are supposed to be thread-safe!
+  // addDocEntry* functions are not supposed to be thread-safe
+  // the indexing app shouldn't be multi-threaded
   protected abstract void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException;
   protected abstract void addDocEntryRaw(String docId, String docText) throws IOException;
 

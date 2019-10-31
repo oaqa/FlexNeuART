@@ -183,11 +183,8 @@ public class ForwardIndexTextInMem extends ForwardIndex {
   
   	DocEntryExt e = new DocEntryExt(docId, doc);
   	
-  	// Well this function won't work well on multiple threads
-  	synchronized (this) {
-  		mStr2DocEntry.put(docId, doc);        
-  		mDocEntInAdditionOrder.add(e);
-  	}
+		mStr2DocEntry.put(docId, doc);        
+		mDocEntInAdditionOrder.add(e);
   }
   
   @Override

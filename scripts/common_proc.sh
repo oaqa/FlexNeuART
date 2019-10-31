@@ -86,6 +86,7 @@ function getOS {
 function setJavaMem {
   F1="$1"
   F2="$2"
+  NO_MAX="$3"
   OS=$(getOS)
   if [ "$OS" = "Linux" ] ; then
     MEM_SIZE_MX_KB=`free|grep Mem|awk '{print $2}'`
@@ -96,10 +97,13 @@ function setJavaMem {
     echo "Unsupported OS: $OS" 1>&2
     exit 1
   fi
-  # No mx
   MEM_SIZE_MIN_KB=$(($F1*$MEM_SIZE_MX_KB/$F2))
   MEM_SIZE_MAX_KB=$((7*$MEM_SIZE_MX_KB/8))
-  export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
+  if [ "$NO_MAX" = "1" ] ; then
+    export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -server"
+  else
+    export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
+  fi
   echo "MAVEN_OPTS=$MAVEN_OPTS"
 }
 

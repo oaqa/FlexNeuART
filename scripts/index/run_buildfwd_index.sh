@@ -1,5 +1,6 @@
 #/bin/bash -e
 source scripts/common_proc.sh
-setJavaMem 6 8
+NO_MAX=1
+setJavaMem 6 8 $NO_MAX
 cmd="mvn compile exec:java -Dexec.mainClass=edu.cmu.lti.oaqa.knn4qa.apps.BuildFwdIndexApp -Dexec.args='$@' "
 execAndCheck "$cmd"

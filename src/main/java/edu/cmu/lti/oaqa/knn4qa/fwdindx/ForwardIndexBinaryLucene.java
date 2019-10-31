@@ -143,13 +143,11 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     luceneDoc.add(new StringField(Const.TAG_DOCNO, docId, Field.Store.YES));
     luceneDoc.add(new StoredField(Const.TAG_DOC_ENTRY, docText));
     
-    synchronized (this) {
-    	mDocIds.add(docId);
-    
-	    if (mDocIds.size() % COMMIT_INTERV == 0) {
-	      logger.info("Committing");
-	      mIndexWriter.commit();
-	    }
+  	mDocIds.add(docId);
+  
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      logger.info("Committing");
+      mIndexWriter.commit();
     }
     
     // Index writers should be completely thread-safe 
