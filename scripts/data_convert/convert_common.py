@@ -1,6 +1,7 @@
 import gzip, bz2
 import collections
 import re
+import os
 from bs4 import BeautifulSoup
 
 SPACY_MODEL = 'en_core_web_sm'
@@ -152,6 +153,35 @@ def SimpleXmlRecIterator(fileName, recTagName):
 def removeTags(str):
   """Just remove anything that looks like a tag"""
   return re.sub(r'</?[a-z]+\s*/?>', '', str)
+
+def wikiExtractorFileIterator(rootDir):
+  """Iterate over all files produced by the wikiextractor and return file names.
+  """
+
+  for dn in os.listdir(rootDir):
+    fullDirName = os.path.join(rootDir, dn)
+    if os.path.isdir(fullDirName):
+      flist = list(os.listdir(fullDirName))
+      for fn in flist:
+        if fn.startswith('wiki_'):
+          yield os.path.join(fullDirName, fn)
+  
+
+def procWikipediaRecord(recStr):
+  """A procedure to parse a single Wikipedia page record
+     from the wikiextractor output, which we assume is UTF-8 encoded.
+
+  :param recStr:  One page content including encosing tags <doc> ... </doc>
+  """
+  doc = BeautifulSoup(recStr, 'lxml', from_encoding='utf-8')
+
+  docRoot = doc.find('doc')
+  if docRoot is None:
+    raise Exception('Invalid format, missing <doc> tag')
+
+  WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed', 'id url title content')
+
+  return WikipediaRecordParsed(id=docRoot['id'], url=docRoot['url'], title=docRoot['title'], content=docRoot.text)
 
 def procYahooAnswersRecord(recStr):
   """A procedure to parse a single Yahoo-answers format entry.
