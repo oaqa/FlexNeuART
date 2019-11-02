@@ -62,17 +62,13 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   @Override
   protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {
-  	synchronized (this) {
-  		mDocIds.add(docId);
-  	}
+  	mDocIds.add(docId);
   	byte binDoc[] = doc.toBinary();
     mDbMap.put(docId, binDoc);
     
-    synchronized (this) {
-	    if (mDocIds.size() % COMMIT_INTERV == 0) {
-	      System.out.println("Committing");
-	      mDb.commit();
-	    }
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      System.out.println("Committing");
+      mDb.commit();
     }
   }
   
@@ -87,17 +83,13 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
 
 	@Override
 	protected void addDocEntryRaw(String docId, String docText) throws IOException {
-		synchronized (this) {
-			mDocIds.add(docId);
-		}
+		mDocIds.add(docId);
     mDbMap.put(docId, CompressUtils.comprStr(docText));
     
-    synchronized (this) {
-	    if (mDocIds.size() % COMMIT_INTERV == 0) {
-	      System.out.println("Committing");
-	      mDb.commit();
-	    }
-    }
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      System.out.println("Committing");
+      mDb.commit();
+    }    
    }
   
   @Override
