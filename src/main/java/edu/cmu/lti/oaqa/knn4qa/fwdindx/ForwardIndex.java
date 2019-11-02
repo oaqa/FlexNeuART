@@ -86,11 +86,15 @@ public abstract class ForwardIndex {
    lucene,
    mapdb,
    inmem,
+   flatdata,
    unknown // to use as an indicator that a string entry doesn't correspond to the forward index time
   }
   
   // If multiple indices are present, this array defines the priority of choosing which to use.
-  public static final ForwardIndexType mIndexTypes[] = {ForwardIndexType.inmem, ForwardIndexType.mapdb, ForwardIndexType.lucene};
+  public static final ForwardIndexType mIndexTypes[] = {ForwardIndexType.inmem, 
+  																											ForwardIndexType.mapdb, 
+  																											ForwardIndexType.lucene, 
+  																											ForwardIndexType.flatdata};
   
   public enum ForwardIndexStorageType {
     raw,
@@ -706,6 +710,7 @@ public abstract class ForwardIndex {
       case lucene: return filePrefix + "." + ForwardIndexType.lucene.toString();       
       case mapdb:  return filePrefix + "." + ForwardIndexType.mapdb.toString();
       case inmem:  return filePrefix + "." + ForwardIndexType.inmem.toString();
+      case flatdata: return filePrefix + "." + ForwardIndexType.flatdata.toString();
       case unknown: throw new RuntimeException("getIndexPrefix shouldn't be called with index type: unknown!");
     }
     throw new RuntimeException("Bug: should not reach this point!");
@@ -722,6 +727,7 @@ public abstract class ForwardIndex {
       case lucene:res = new ForwardIndexBinaryLucene(filePrefix, indexPrefixFull); break;
       case mapdb: res = new ForwardIndexBinaryMapDb(filePrefix, indexPrefixFull); break;
       case inmem:  res = new ForwardIndexTextInMem(indexPrefixFull); break;
+      case flatdata: res = new ForwardIndexBinaryFlatFileData(filePrefix, indexPrefixFull); break;
       case unknown: throw new RuntimeException("getIndexPrefix shouldn't be called with index type: unknown!");
     }    
     if (indexStorageType == ForwardIndexStorageType.raw) {
