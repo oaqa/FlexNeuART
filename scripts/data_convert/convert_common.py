@@ -157,12 +157,14 @@ def removeTags(str):
 def wikiExtractorFileIterator(rootDir):
   """Iterate over all files produced by the wikiextractor and return file names.
   """
-
-  for dn in os.listdir(rootDir):
+  dirList1Sorted = list(os.listdir(rootDir))
+  dirList1Sorted.sort()
+  for dn in dirList1Sorted:
     fullDirName = os.path.join(rootDir, dn)
     if os.path.isdir(fullDirName):
-      flist = list(os.listdir(fullDirName))
-      for fn in flist:
+      dirList2Sorted = list(os.listdir(fullDirName))
+      dirList2Sorted.sort()
+      for fn in dirList2Sorted:
         if fn.startswith('wiki_'):
           yield os.path.join(fullDirName, fn)
   
