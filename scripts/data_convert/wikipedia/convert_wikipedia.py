@@ -42,6 +42,8 @@ tokenizer = BertTokenizer.from_pretrained(bertModel, do_lower_case=True)
 fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
 
 class FakeSentence:
+  def __repr__(self):
+    return '[%s,%d]' % (self.start_char, self.end_char)
   def __init__(self, s, e):
     self.start_char = s
     self.end_char = e
@@ -82,11 +84,20 @@ for fn in wikiExtractorFileIterator(args.input_dir):
     sentList = []
     for i in range(len(origSentList)):
       sentText = getSentText(wikiText, origSentList, i, i)
-      if len(tokenizer.tokenize(sentText)) > maxBertTokQty:
-        print('Found a sentence with more than %d BERT pieces will split into tokens before processing: %s' % (maxBertTokQty, str(sentList[currSent])))
+      toks = tokenizer.tokenize(sentText)
+      if  len(toks) > maxBertTokQty:
+        longSent = origSentList[i]
+        print('Tokenized version has %d tokens' % len(toks), toks)
+        print('Found a sentence (%d:%d) with more than %d BERT pieces will split into tokens before processing: %s' % 
+              (longSent.start_char, longSent.end_char, maxBertTokQty, str(sentList[currSent])))
         # Just treat each token
-        for tok in origSentList[i]:
-          sentList.extend(FakeSentence(tok.idx, tok.idx + len(tok)))
+        sentTokList = []
+        for tok in longSent:
+          #Spacy documentation claims that idx is an offset within a parent document, 
+          #which apparently means an absolute offset, not offset within a sentence: https://spacy.io/api/token
+          sentTokList.append(FakeSentence(tok.idx, tok.idx + len(tok)))
+        print('Long sentence split into tokens:', sentTokList)
+        sentList.extend(sentTokList)
       else:
         sentList.append(origSentList[i])
 
