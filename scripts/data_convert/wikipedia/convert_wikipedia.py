@@ -41,6 +41,11 @@ tokenizer = BertTokenizer.from_pretrained(bertModel, do_lower_case=True)
 
 fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
 
+class FakeSentence:
+  def __init__(self, s, e):
+    self.start_char = s
+    self.end_char = e
+
 def getSentText(wikiText, sentList, sentFirst, sentLast):
   return wikiText[sentList[sentFirst].start_char : sentList[sentLast].end_char + 1]
 
@@ -79,8 +84,9 @@ for fn in wikiExtractorFileIterator(args.input_dir):
       sentText = getSentText(wikiText, origSentList, i, i)
       if len(tokenizer.tokenize(sentText)) > maxBertTokQty:
         print('Found a sentence with more than %d BERT pieces will split into tokens before processing: %s' % (maxBertTokQty, str(sentList[currSent])))
-        # Just treat each toekn
-        sentList.extend(list(origSentList[i]))
+        # Just treat each token
+        for tok in origSentList[i]:
+          sentList.extend(FakeSentence(tok.idx, tok.idx + len(tok)))
       else:
         sentList.append(origSentList[i])
 
@@ -97,8 +103,8 @@ for fn in wikiExtractorFileIterator(args.input_dir):
         else:
           break
       if lastGoodSent is None:
-        print('Bug: should not be finding a sentence with more than %d BERT pieces at this point: %s' % (maxBertTokQty, str(sentList[currSent])))
-        sys.exit(1)
+        print('Bug or weirdly long Wikipedia token: we should not be finding a text piece with more than %d BERT pieces at this point: %s' % (maxBertTokQty, str(sentList[currSent])))
+        currSent += 1
       else:
         currSent = lastGoodSent + 1
 
