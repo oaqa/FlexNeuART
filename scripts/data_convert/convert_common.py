@@ -17,6 +17,8 @@ DOCID_FIELD = 'DOCNO'
 
 TEXT_FIELD_NAME = 'text'
 TEXT_UNLEMM_FIELD_NAME = 'text_unlemm'
+TITLE_FIELD_NAME = 'title'
+TITLE_UNLEMM_FIELD_NAME = 'title_unlemm'
 TEXT_RAW_FIELD_NAME = 'text_raw'
 
 # bitext naming conventions
