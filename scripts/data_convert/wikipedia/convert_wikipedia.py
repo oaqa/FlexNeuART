@@ -102,7 +102,7 @@ def procOneFile(e):
         longSent = origSentList[i]
         print('Tokenized version has %d tokens' % len(toks), toks)
         print('Found a sentence (%d:%d) with more than %d BERT pieces will split into tokens before processing: %s' % 
-              (longSent.start_char, longSent.end_char, maxBertTokQty, str(sentList[currSent])))
+              (longSent.start_char, longSent.end_char, maxBertTokQty, str(longSent)))
         # Just treat each token
         sentTokList = []
         for tok in longSent:

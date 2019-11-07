@@ -50,7 +50,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryLucene.class);
-  public static final int COMMIT_INTERV = 500000;
+  public static final int COMMIT_INTERV = 2000000;
   
   protected String mBinDir;
 
