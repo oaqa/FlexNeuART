@@ -21,6 +21,8 @@ TITLE_FIELD_NAME = 'title'
 TITLE_UNLEMM_FIELD_NAME = 'title_unlemm'
 TEXT_RAW_FIELD_NAME = 'text_raw'
 
+ANSWER_LIST_FIELD_NAME = 'answer_list' 
+
 # bitext naming conventions
 BITEXT_QUESTION_PREFIX = 'question_'
 BITEXT_ANSWER_PREFIX = 'answer_'
