@@ -22,7 +22,7 @@ MODEL_MAP = {
 }
 
 
-def main(model, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
+def main(model, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
     LR = 0.001
     BERT_LR = 2e-5
     MAX_EPOCH = 100
@@ -35,7 +35,7 @@ def main(model, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
     epoch = 0
     top_valid_score = None
     for epoch in range(MAX_EPOCH):
-        loss = train_iteration(model, optimizer, dataset, train_pairs, qrels)
+        loss = train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels)
         print(f'train epoch={epoch} loss={loss}')
         valid_score = validate(model, dataset, valid_run, qrelf, epoch, model_out_dir)
         print(f'validation epoch={epoch} score={valid_score}')
@@ -45,7 +45,7 @@ def main(model, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
             model.save(os.path.join(model_out_dir, 'weights.p'))
 
 
-def train_iteration(model, optimizer, dataset, train_pairs, qrels):
+def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
     BATCH_SIZE = 16
     BATCHES_PER_EPOCH = 32
     GRAD_ACC_SIZE = 2
@@ -53,7 +53,7 @@ def train_iteration(model, optimizer, dataset, train_pairs, qrels):
     model.train()
     total_loss = 0.
     with tqdm('training', total=BATCH_SIZE * BATCHES_PER_EPOCH, ncols=80, desc='train', leave=False) as pbar:
-        for record in data.iter_train_pairs(model, dataset, train_pairs, qrels, GRAD_ACC_SIZE):
+        for record in data.iter_train_pairs(model, no_cuda, dataset, train_pairs, qrels, GRAD_ACC_SIZE):
             scores = model(record['query_tok'],
                            record['query_mask'],
                            record['doc_tok'],
@@ -72,20 +72,20 @@ def train_iteration(model, optimizer, dataset, train_pairs, qrels):
                 return total_loss
 
 
-def validate(model, dataset, run, qrelf, epoch, model_out_dir):
+def validate(model, no_cuda, dataset, run, qrelf, epoch, model_out_dir):
     #VALIDATION_METRIC = 'P.20'
     VALIDATION_METRIC = 'map'
     runf = os.path.join(model_out_dir, f'{epoch}.run')
-    run_model(model, dataset, run, runf)
+    run_model(model, no_cuda, dataset, run, runf)
     return trec_eval(qrelf, runf, VALIDATION_METRIC)
 
 
-def run_model(model, dataset, run, runf, desc='valid'):
+def run_model(model, no_cuda, dataset, run, runf, desc='valid'):
     BATCH_SIZE = 16
     rerank_run = {}
     with torch.no_grad(), tqdm(total=sum(len(r) for r in run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
-        for records in data.iter_valid_records(model, dataset, run, BATCH_SIZE):
+        for records in data.iter_valid_records(model, no_cuda, dataset, run, BATCH_SIZE):
             scores = model(records['query_tok'],
                            records['query_mask'],
                            records['doc_tok'],
@@ -117,8 +117,11 @@ def main_cli():
     parser.add_argument('--valid_run', type=argparse.FileType('rt'))
     parser.add_argument('--initial_bert_weights', type=argparse.FileType('rb'))
     parser.add_argument('--model_out_dir')
+    parser.add_argument('--no_cuda', action='store_true')
     args = parser.parse_args()
-    model = MODEL_MAP[args.model]().cuda()
+    model = MODEL_MAP[args.model]()
+    if not args.no_cuda:
+        model = model.cuda()
     dataset = data.read_datafiles(args.datafiles)
     qrels = data.read_qrels_dict(args.qrels)
     train_pairs = data.read_pairs_dict(args.train_pairs)
@@ -126,7 +129,7 @@ def main_cli():
     if args.initial_bert_weights is not None:
         model.load(args.initial_bert_weights.name)
     os.makedirs(args.model_out_dir, exist_ok=True)
-    main(model, dataset, train_pairs, qrels, valid_run, args.qrels.name, args.model_out_dir)
+    main(model, args.no_cuda, dataset, train_pairs, qrels, valid_run, args.qrels.name, args.model_out_dir)
 
 
 if __name__ == '__main__':
