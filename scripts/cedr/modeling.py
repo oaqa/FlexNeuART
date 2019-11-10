@@ -1,7 +1,8 @@
 #
 # This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
 # (c) Georgetown IR lab
-# It's distributed under the MIT License 
+# It's distributed under the MIT License
+# MIT License is compatible with Apache 2 license for the code in this repo.
 #
 from pytools import memoize_method
 import torch
@@ -16,7 +17,7 @@ class BertRanker(torch.nn.Module):
         self.BERT_MODEL = 'bert-base-uncased'
         self.CHANNELS = 12 + 1 # from bert-base-uncased
         self.BERT_SIZE = 768 # from bert-base-uncased
-        self.bert = CustomBertModel.from_pretrained(self.BERT_MODEL)
+        self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
         self.tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(self.BERT_MODEL)
 
     def forward(self, **inputs):
@@ -179,21 +180,3 @@ class CedrDrmmRanker(BertRanker):
         term_scores = self.hidden_2(torch.relu(self.hidden_1(output))).reshape(BATCH, QLEN)
         return term_scores.sum(dim=1)
 
-
-class CustomBertModel(pytorch_pretrained_bert.BertModel):
-    """
-    Based on pytorch_pretrained_bert.BertModel, but also outputs un-contextualized embeddings.
-    """
-    def forward(self, input_ids, token_type_ids, attention_mask):
-        """
-        Based on pytorch_pretrained_bert.BertModel
-        """
-        embedding_output = self.embeddings(input_ids, token_type_ids)
-
-        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
-        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
-        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
-
-        encoded_layers = self.encoder(embedding_output, extended_attention_mask, output_all_encoded_layers=True)
-
-        return [embedding_output] + encoded_layers

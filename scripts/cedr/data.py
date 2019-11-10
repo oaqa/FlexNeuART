@@ -1,7 +1,8 @@
 #
 # This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
 # (c) Georgetown IR lab
-# It's distributed under the MIT License 
+# It's distributed under the MIT License
+# MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import random
 from tqdm import tqdm

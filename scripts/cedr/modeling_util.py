@@ -1,11 +1,31 @@
 #
 # This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
 # (c) Georgetown IR lab
-# It's distributed under the MIT License 
+# It's distributed under the MIT License
+# MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import math
 import torch
 
+import pytorch_pretrained_bert
+
+class CustomBertModel(pytorch_pretrained_bert.BertModel):
+    """
+    Based on pytorch_pretrained_bert.BertModel, but also outputs un-contextualized embeddings.
+    """
+    def forward(self, input_ids, token_type_ids, attention_mask):
+        """
+        Based on pytorch_pretrained_bert.BertModel
+        """
+        embedding_output = self.embeddings(input_ids, token_type_ids)
+
+        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
+        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+
+        encoded_layers = self.encoder(embedding_output, extended_attention_mask, output_all_encoded_layers=True)
+
+        return [embedding_output] + encoded_layers
 
 def subbatch(toks, maxlen):
     _, DLEN = toks.shape[:2]

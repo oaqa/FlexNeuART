@@ -1,3 +1,8 @@
+# This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
+# (c) Georgetown IR lab
+# It's distributed under the MIT License
+# MIT License is compatible with Apache 2 license for the code in this repo.
+#
 import os
 import argparse
 import subprocess
@@ -111,12 +116,12 @@ def trec_eval(qrelf, runf, metric):
 def main_cli():
     parser = argparse.ArgumentParser('CEDR model training and validation')
     parser.add_argument('--model', choices=MODEL_MAP.keys(), default='vanilla_bert')
-    parser.add_argument('--datafiles', type=argparse.FileType('rt'), nargs='+')
-    parser.add_argument('--qrels', type=argparse.FileType('rt'))
-    parser.add_argument('--train_pairs', type=argparse.FileType('rt'))
-    parser.add_argument('--valid_run', type=argparse.FileType('rt'))
-    parser.add_argument('--initial_bert_weights', type=argparse.FileType('rb'))
-    parser.add_argument('--model_out_dir')
+    parser.add_argument('--datafiles', type=argparse.FileType('rt'), nargs='+', required=True)
+    parser.add_argument('--qrels', type=argparse.FileType('rt'), required=True)
+    parser.add_argument('--train_pairs', type=argparse.FileType('rt'), required=True)
+    parser.add_argument('--valid_run', type=argparse.FileType('rt'), required=True)
+    parser.add_argument('--initial_bert_weights', type=argparse.FileType('rb'), default=None)
+    parser.add_argument('--model_out_dir', required=True)
     parser.add_argument('--no_cuda', action='store_true')
     args = parser.parse_args()
     model = MODEL_MAP[args.model]()
