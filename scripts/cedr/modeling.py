@@ -10,7 +10,6 @@ import torch.nn.functional as F
 import pytorch_pretrained_bert
 import modeling_util
 
-
 class BertRanker(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -94,7 +93,6 @@ class VanillaBertRanker(BertRanker):
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         cls_reps, _, _ = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
         return self.cls(self.dropout(cls_reps[-1]))
-
 
 class CedrPacrrRanker(BertRanker):
     def __init__(self):

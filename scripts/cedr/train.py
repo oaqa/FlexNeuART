@@ -10,6 +10,7 @@ import random
 from tqdm import tqdm
 import torch
 import modeling
+import modeling_duet
 import data
 
 
@@ -23,7 +24,8 @@ MODEL_MAP = {
     'vanilla_bert': modeling.VanillaBertRanker,
     'cedr_pacrr': modeling.CedrPacrrRanker,
     'cedr_knrm': modeling.CedrKnrmRanker,
-    'cedr_drmm': modeling.CedrDrmmRanker
+    'cedr_drmm': modeling.CedrDrmmRanker,
+    'duet_bert' : modeling_duet.DuetBertRanker
 }
 
 

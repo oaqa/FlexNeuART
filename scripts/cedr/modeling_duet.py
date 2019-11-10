@@ -5,6 +5,7 @@
 #
 from pytools import memoize_method
 import torch
+import os
 import torch.nn.functional as F
 import pytorch_pretrained_bert
 import modeling_util
@@ -33,7 +34,7 @@ class BertEncoder(torch.nn.Module):
 
 
   def forward(self, toks, mask):
-      cls_reps, _, _ = self.encode_bert(toks, mask)
+      cls_reps, _ = self.encode_bert(toks, mask)
       return self.fc(self.dropout(cls_reps[-1]))
 
   def save(self, path):
@@ -48,12 +49,6 @@ class BertEncoder(torch.nn.Module):
   def load(self, path):
     self.load_state_dict(torch.load(path), strict=False)
 
-  @memoize_method
-  def tokenize(self, text):
-    toks = self.tokenizer.tokenize(text)
-    toks = [self.tokenizer.vocab[t] for t in toks]
-    return toks
-
   def encode_bert(self, toks, mask):
     BATCH, LEN = toks.shape
     DIFF = 1  # = [CLS]
@@ -65,16 +60,19 @@ class BertEncoder(torch.nn.Module):
 
     CLSS = torch.full_like(subbatch_toks[:, :1], self.tokenizer.vocab['[CLS]'])
     ONES = torch.ones_like(subbatch_mask[:, :1])
-    NILS = torch.zeros_like(subbatch_mask[:, :1])
 
     # build BERT input sequences
     toks_4model = torch.cat([CLSS, subbatch_toks], dim=1)
     mask_4model = torch.cat([ONES, subbatch_mask], dim=1)
-    segment_ids = torch.cat([NILS] * (1 + LEN), dim=1)
+    # While encoding queries & documents separately we have only one type of the segment
+    segment_ids = torch.zeros_like(mask_4model)
     # Original CEDR developer Sean MacAvaney's comment: remove padding (will be masked anyway)
     # Leo's comment: Although, we modified the token-merging procedure,
     # it is likely still a useful thing to do.
-    toks_4model[toks == -1] = 0
+    toks_4model[toks_4model == -1] = 0
+
+    assert(toks_4model.shape == mask_4model.shape)
+    assert(segment_ids.shape == mask_4model.shape)
 
     # execute BERT model
     results = self.bert(toks_4model, segment_ids.long(), mask_4model)
@@ -93,3 +91,42 @@ class BertEncoder(torch.nn.Module):
       cls_results.append(cls_result)
 
     return cls_results, unsubbatch_results
+
+
+
+class DuetBertRanker(torch.nn.Module):
+    def __init__(self, dim=128, dropout=0.1):
+        super().__init__()
+        self.query_encoder = BertEncoder(dim=dim, dropout=dropout)
+        self.doc_encoder = BertEncoder(dim=dim, dropout=dropout)
+        self.tokenizer = self.query_encoder.tokenizer
+
+    # TODO this is a copy-paste of the BertRanker class tokenize
+    #      can we somehow unify two classes?
+    @memoize_method
+    def tokenize(self, text):
+      toks = self.tokenizer.tokenize(text)
+      toks = [self.tokenizer.vocab[t] for t in toks]
+      return toks
+
+    def save(self, path):
+        self.query_encoder.save(path + '_query')
+        self.doc_encoder.save(path + '_doc')
+
+    def load(self, path):
+        query_path = path + '_query'
+        doc_path = path + '_doc'
+        if not os.path.exists(query_path) or not os.path.exists(doc_path):
+          print('Trying to load LM-finetuned model')
+          self.query_encoder.load(path)
+          self.doc_encoder.load(path)
+        else:
+          self.query_encoder.load(query_path)
+          self.doc_encoder.load(doc_path)
+
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
+        query_vec = self.query_encoder(query_tok, query_mask)
+        doc_vec = self.doc_encoder(doc_tok, doc_mask)
+        # Returnining batched dot-product
+        return torch.einsum('bi, bi -> b', query_vec, doc_vec)
+
