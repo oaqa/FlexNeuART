@@ -19,6 +19,10 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
 random.seed(SEED)
 
+BATCH_SIZE = 64
+MAX_GRAD_ACCUM_SIZE = 4
+BATCHES_PER_TRAIN_EPOCH = 32
+GRAD_ACC_SIZE = 2
 
 MODEL_MAP = {
     'vanilla_bert': modeling.VanillaBertRanker,
@@ -44,7 +48,7 @@ def main(model, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_ou
     for epoch in range(MAX_EPOCH):
         loss = train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels)
         print(f'train epoch={epoch} loss={loss}')
-        valid_score = validate(model, dataset, valid_run, qrelf, epoch, model_out_dir)
+        valid_score = validate(model, no_cuda, dataset, valid_run, qrelf, epoch, model_out_dir)
         print(f'validation epoch={epoch} score={valid_score}')
         if top_valid_score is None or valid_score > top_valid_score:
             top_valid_score = valid_score
@@ -53,21 +57,18 @@ def main(model, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_ou
 
 
 def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
-    BATCH_SIZE = 16
-    BATCHES_PER_EPOCH = 32
-    GRAD_ACC_SIZE = 2
     total = 0
     model.train()
     total_loss = 0.
-    with tqdm('training', total=BATCH_SIZE * BATCHES_PER_EPOCH, ncols=80, desc='train', leave=False) as pbar:
+    with tqdm('training', total=BATCH_SIZE * BATCHES_PER_TRAIN_EPOCH, ncols=80, desc='train', leave=False) as pbar:
         for record in data.iter_train_pairs(model, no_cuda, dataset, train_pairs, qrels, GRAD_ACC_SIZE):
             scores = model(record['query_tok'],
                            record['query_mask'],
                            record['doc_tok'],
-                           record['doc_mask'])
+                           record['doc_mask'], max_batch_size=MAX_GRAD_ACCUM_SIZE)
             count = len(record['query_id']) // 2
             scores = scores.reshape(count, 2)
-            loss = torch.mean(1. - scores.softmax(dim=1)[:, 0]) # pariwse softmax
+            loss = torch.mean(1. - scores.softmax(dim=1)[:, 0]) # pairwise softmax
             loss.backward()
             total_loss += loss.item()
             total += count
@@ -75,12 +76,13 @@ def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
                 optimizer.step()
                 optimizer.zero_grad()
             pbar.update(count)
-            if total >= BATCH_SIZE * BATCHES_PER_EPOCH:
+            if total >= BATCH_SIZE * BATCHES_PER_TRAIN_EPOCH:
                 return total_loss
 
 
 def validate(model, no_cuda, dataset, run, qrelf, epoch, model_out_dir):
     #VALIDATION_METRIC = 'P.20'
+    # Leo's choice to use map
     VALIDATION_METRIC = 'map'
     runf = os.path.join(model_out_dir, f'{epoch}.run')
     run_model(model, no_cuda, dataset, run, runf)
@@ -88,7 +90,6 @@ def validate(model, no_cuda, dataset, run, qrelf, epoch, model_out_dir):
 
 
 def run_model(model, no_cuda, dataset, run, runf, desc='valid'):
-    BATCH_SIZE = 16
     rerank_run = {}
     with torch.no_grad(), tqdm(total=sum(len(r) for r in run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
@@ -96,7 +97,8 @@ def run_model(model, no_cuda, dataset, run, runf, desc='valid'):
             scores = model(records['query_tok'],
                            records['query_mask'],
                            records['doc_tok'],
-                           records['doc_mask'])
+                           records['doc_mask'],
+                           max_batch_size=MAX_GRAD_ACCUM_SIZE)
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
@@ -126,6 +128,7 @@ def main_cli():
     parser.add_argument('--model_out_dir', required=True)
     parser.add_argument('--no_cuda', action='store_true')
     args = parser.parse_args()
+
     model = MODEL_MAP[args.model]()
     if not args.no_cuda:
         model = model.cuda()
@@ -136,7 +139,7 @@ def main_cli():
     if args.initial_bert_weights is not None:
         model.load(args.initial_bert_weights.name)
     os.makedirs(args.model_out_dir, exist_ok=True)
-    main(model, args.no_cuda, dataset, train_pairs, qrels, valid_run, args.qrels.name, args.model_out_dir)
+    main(model, args.no_cuda, dataset, train_pairs, qrels, valid_run, qrelf=args.qrels.name, model_out_dir=args.model_out_dir)
 
 
 if __name__ == '__main__':

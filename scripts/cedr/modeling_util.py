@@ -28,6 +28,7 @@ class CustomBertModel(pytorch_pretrained_bert.BertModel):
         return [embedding_output] + encoded_layers
 
 def subbatch(toks, maxlen):
+    assert(maxlen > 0)
     _, DLEN = toks.shape[:2]
     SUBBATCH = math.ceil(DLEN / maxlen)
     S = math.ceil(DLEN / SUBBATCH) if SUBBATCH > 0 else 0 # minimize the size given the number of subbatch

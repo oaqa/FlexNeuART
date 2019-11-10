@@ -26,6 +26,10 @@ class BertEncoder(torch.nn.Module):
     self.CHANNELS = 12 + 1  # from bert-base-uncased
     self.BERT_SIZE = 768  # from bert-base-uncased
     self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
+    # Let's disable BERT training
+    for param in self.bert.parameters():
+      param.requires_grad = False
+
     self.tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(self.BERT_MODEL)
 
     self.dropout = torch.nn.Dropout(dropout)
@@ -33,9 +37,9 @@ class BertEncoder(torch.nn.Module):
     self.fc = torch.nn.Linear(self.BERT_SIZE, dim)
 
 
-  def forward(self, toks, mask):
-      cls_reps, _ = self.encode_bert(toks, mask)
-      return self.fc(self.dropout(cls_reps[-1]))
+  def forward(self, toks, mask, max_batch_size):
+      cls_reps = self.encode_bert(toks, mask, max_batch_size)
+      return self.fc(self.dropout(cls_reps))
 
   def save(self, path):
     state = self.state_dict(keep_vars=True)
@@ -49,13 +53,18 @@ class BertEncoder(torch.nn.Module):
   def load(self, path):
     self.load_state_dict(torch.load(path), strict=False)
 
-  def encode_bert(self, toks, mask):
+  def encode_bert(self, toks, mask, max_batch_size):
     BATCH, LEN = toks.shape
-    DIFF = 1  # = [CLS]
+
+    if LEN <= 0:
+      print('Got empty sequence! Generating zero-vector batch')
+      return torch.zeros((BATCH, self.dim))
+
     maxlen = self.bert.config.max_position_embeddings
-    MAX_TOK_LEN = maxlen - LEN - DIFF
+    MAX_TOK_LEN = maxlen - 1 # minus one is for [CLS]
 
     subbatch_toks, sbcount = modeling_util.subbatch(toks, MAX_TOK_LEN)
+    #print('### ', sbcount, 'toks.shape=', toks.shape, 'subbatch_toks.shape=', subbatch_toks.shape, ' maxlen=', MAX_TOK_LEN)
     subbatch_mask, _ = modeling_util.subbatch(mask, MAX_TOK_LEN)
 
     CLSS = torch.full_like(subbatch_toks[:, :1], self.tokenizer.vocab['[CLS]'])
@@ -65,7 +74,7 @@ class BertEncoder(torch.nn.Module):
     toks_4model = torch.cat([CLSS, subbatch_toks], dim=1)
     mask_4model = torch.cat([ONES, subbatch_mask], dim=1)
     # While encoding queries & documents separately we have only one type of the segment
-    segment_ids = torch.zeros_like(mask_4model)
+    segment_ids = torch.zeros_like(mask_4model).long()
     # Original CEDR developer Sean MacAvaney's comment: remove padding (will be masked anyway)
     # Leo's comment: Although, we modified the token-merging procedure,
     # it is likely still a useful thing to do.
@@ -74,24 +83,31 @@ class BertEncoder(torch.nn.Module):
     assert(toks_4model.shape == mask_4model.shape)
     assert(segment_ids.shape == mask_4model.shape)
 
-    # execute BERT model
-    results = self.bert(toks_4model, segment_ids.long(), mask_4model)
+    # execute BERT model without exceeding BATCH capacity
+    results_split = []
+    subbatch_size, _ = toks_4model.shape
+    split_qty = (subbatch_size + max_batch_size - 1) // max_batch_size
+    for i in range(split_qty):
+      start = i * max_batch_size
+      end = min(start +  max_batch_size, subbatch_size)
+      #print('@@@', start, end, subbatch_size)
+      split_res = self.bert(toks_4model[start:end,:], segment_ids[start:end,:], mask_4model[start:end,:])
+      # We care only about the last layer
+      results_split.append(split_res[-1])
 
-    # extract relevant subsequences
-    unsubbatch_results = [modeling_util.un_subbatch(r, toks, MAX_TOK_LEN) for r in results]
+    results = torch.cat(results_split, dim = 0)
+
+    # extract relevant subsequences: results already have only last-layer tensors
+    unsubbatch_results = modeling_util.un_subbatch(results, toks, MAX_TOK_LEN)
 
     # build aggregate CLS representation by averaging CLS representations within each subbatch
-    cls_results = []
-    for layer in unsubbatch_results:
-      cls_output = layer[:, 0]
-      cls_result = []
-      for i in range(cls_output.shape[0] // BATCH):
-        cls_result.append(cls_output[i * BATCH:(i + 1) * BATCH])
-      cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
-      cls_results.append(cls_result)
 
-    return cls_results, unsubbatch_results
+    cls_output = unsubbatch_results[:, 0]
+    cls_result = []
+    for i in range(cls_output.shape[0] // BATCH):
+      cls_result.append(cls_output[i * BATCH:(i + 1) * BATCH])
 
+    return torch.stack(cls_result, dim=2).mean(dim=2)
 
 
 class DuetBertRanker(torch.nn.Module):
@@ -124,9 +140,9 @@ class DuetBertRanker(torch.nn.Module):
           self.query_encoder.load(query_path)
           self.doc_encoder.load(doc_path)
 
-    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
-        query_vec = self.query_encoder(query_tok, query_mask)
-        doc_vec = self.doc_encoder(doc_tok, doc_mask)
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size):
+        query_vec = self.query_encoder(query_tok, query_mask, max_batch_size)
+        doc_vec = self.doc_encoder(doc_tok, doc_mask, max_batch_size)
         # Returnining batched dot-product
         return torch.einsum('bi, bi -> b', query_vec, doc_vec)
 

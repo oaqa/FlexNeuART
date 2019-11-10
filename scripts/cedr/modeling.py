@@ -90,7 +90,7 @@ class VanillaBertRanker(BertRanker):
         self.dropout = torch.nn.Dropout(0.1)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
 
-    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size=None):
         cls_reps, _, _ = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
         return self.cls(self.dropout(cls_reps[-1]))
 
@@ -113,7 +113,7 @@ class CedrPacrrRanker(BertRanker):
         self.linear2 = torch.nn.Linear(32, 32)
         self.linear3 = torch.nn.Linear(32, 1)
 
-    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size=None):
         cls_reps, query_reps, doc_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
         simmat = self.simmat(query_reps, doc_reps, query_tok, doc_tok)
         scores = [ng(simmat) for ng in self.ngrams]
@@ -136,7 +136,7 @@ class CedrKnrmRanker(BertRanker):
         self.kernels = modeling_util.KNRMRbfKernelBank(MUS, SIGMAS)
         self.combine = torch.nn.Linear(self.kernels.count() * self.CHANNELS + self.BERT_SIZE, 1)
 
-    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size=None):
         cls_reps, query_reps, doc_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
         simmat = self.simmat(query_reps, doc_reps, query_tok, doc_tok)
         kernels = self.kernels(simmat)
@@ -165,7 +165,7 @@ class CedrDrmmRanker(BertRanker):
         self.hidden_1 = torch.nn.Linear(NBINS * self.CHANNELS + self.BERT_SIZE, HIDDEN)
         self.hidden_2 = torch.nn.Linear(HIDDEN, 1)
 
-    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size=None):
         cls_reps, query_reps, doc_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
         simmat = self.simmat(query_reps, doc_reps, query_tok, doc_tok)
         histogram = self.histogram(simmat, doc_tok, query_tok)

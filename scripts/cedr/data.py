@@ -101,11 +101,11 @@ def iter_valid_records(model, no_cuda, dataset, run, batch_size):
         batch['query_tok'].append(query_tok)
         batch['doc_tok'].append(doc_tok)
         if len(batch['query_id']) == batch_size:
-            yield _pack_n_ship(batch)
+            yield _pack_n_ship(batch, no_cuda)
             batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
     # final batch
     if len(batch['query_id']) > 0:
-        yield _pack_n_ship(no_cuda, batch)
+        yield _pack_n_ship(batch, no_cuda)
 
 
 def _iter_valid_records(model, dataset, run):

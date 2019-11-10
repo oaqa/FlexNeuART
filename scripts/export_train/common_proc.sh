@@ -6,7 +6,7 @@ checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
 
 sampleNegQty=10
 candTrainQty=500
-candTestQty=50
+candTestQty=20
 
 POS_ARGS=()
 thread_qty=1
