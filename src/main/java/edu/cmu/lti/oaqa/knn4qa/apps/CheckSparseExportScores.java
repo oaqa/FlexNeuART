@@ -42,7 +42,7 @@ import no.uib.cipr.matrix.DenseVector;
 /**
  * A class to help check that the inner product of vectors exported NMSLIB 
  * binary sparse space reproduces the original features scores (or 
- * are very close).
+ * are very close). This application is used for debugging scorers.
  * 
  * @author Leonid Boytsov
  *
@@ -146,7 +146,7 @@ public class CheckSparseExportScores {
       Map<String, String> queryFields = null;
         
       try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-        for (int queryNo = 0; ((queryFields = inp.readNext()) != null) && queryNo < args.mMaxNumQuery; 
+        for (int queryNo = 0; ((queryFields = inp.readNext().mStringDict) != null) && queryNo < args.mMaxNumQuery; 
               ++queryNo) {
           
           String queryId = queryFields.get(Const.TAG_DOCNO);

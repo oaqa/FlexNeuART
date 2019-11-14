@@ -15,20 +15,20 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MiscHelper {
-  
-  public static BufferedWriter createBufferedFileWriter(String outputFile) throws IOException {
-    return new BufferedWriter(new FileWriter(new File(outputFile)));
-  }
-  
-  public static BufferedReader createBufferedFileReader(String inputFile) throws IOException {
-    return new BufferedReader(new FileReader(new File(inputFile)));
-  }
+/**
+ * An extended index entry, which keeps a dictionary
+ * whose elements are either strings or arrays of strings.
+ * 
+ * @author Leonid Boytsov
+ *
+ */
+public class ExtendedIndexEntry {
+
+  public Map<String, String>    mStringDict = new HashMap<String, String>();
+  public Map<String, ArrayList<String>> mStringArrDict = new  HashMap<String, ArrayList<String>>();
+
 }

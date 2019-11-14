@@ -17,8 +17,11 @@ package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
 
 import com.google.gson.*;
 
@@ -39,8 +42,29 @@ public class JSONUtils {
    * @param doc     an input JSON entry
    * @return a map with (key, value) pairs.
    */
-  public static HashMap<String, String> parseJSONIndexEntry(String doc) {
-    return mGson.fromJson(doc, HashMap.class);
+  public static synchronized ExtendedIndexEntry parseJSONIndexEntry(String doc) throws Exception {
+    ExtendedIndexEntry res = new ExtendedIndexEntry();
+    //return mGson.fromJson(doc, HashMap.class);
+    JsonElement root = mParser.parse(doc);
+    JsonObject obj = root.getAsJsonObject();
+    for (Entry<String, JsonElement> e : obj.entrySet()) {
+      String key = e.getKey();
+      JsonElement val = e.getValue();
+      if (val.isJsonPrimitive()) {
+        res.mStringDict.put(key, val.getAsString());
+      } else if (val.isJsonArray()) {
+        JsonArray arr = val.getAsJsonArray();
+        ArrayList<String> lst = new ArrayList<String>();
+        for (JsonElement e1 : arr) {
+          lst.add(e1.getAsString());
+        }
+        res.mStringArrDict.put(key, lst);
+      } else {
+        throw new Exception("Unsupported JSON, invalid value for key: '" + key + "' " +
+                           "Invalid JSON: " + doc);
+      }
+    }
+    return res;
   }
   
   /**
@@ -49,7 +73,7 @@ public class JSONUtils {
    * @param fields  (key, value) pairs; key is a field name, value is a text of the field.
    * @return    a simple dictionary JSON entry.
    */
-  public static String genJSONIndexEntry(Map <String,String> fields) {
+  public static synchronized String genJSONIndexEntry(Map <String,String> fields) {
     return mGson.toJson(fields, fields.getClass());
   }
   
@@ -75,19 +99,39 @@ public class JSONUtils {
         "}";
     String doc2 = "{\n" + 
         "\"DOCNO\" : \"doc2\",\n" + 
-        "\"text\" : \"val2\"\n" + 
+        "\"text\" : \"val2\",\n" + 
+        "\"answer_list\" : [\"1\",\"2\",\"3\"]\n" +
         "}";
-    Map<String, String> e = parseJSONIndexEntry(doc2);
-    System.out.println(e.get("DOCNO"));
-    System.out.println(e.get("text"));
+    ExtendedIndexEntry e;
+    try {
+      e = parseJSONIndexEntry(doc1);
+    } catch (Exception e2) {
+      // TODO Auto-generated catch block
+      e2.printStackTrace();
+      return;
+    }
+    System.out.println(e.mStringDict.get("DOCNO"));
+    System.out.println(e.mStringDict.get("text"));
+    System.out.println("============");
+    try {
+      e = parseJSONIndexEntry(doc2);
+    } catch (Exception e2) {
+      // TODO Auto-generated catch block
+      e2.printStackTrace();
+    }
+    System.out.println(e.mStringDict.get("DOCNO"));
+    System.out.println(e.mStringDict.get("text"));
+    System.out.println(e.mStringArrDict.get("answer_list"));
+    System.out.println("============");
     
-    e = new HashMap<String, String>();
-    e.put("DOCNO", "doc0");
-    e.put("text", "This is a short text. This is a second text sentence.");
+    HashMap<String, String> e1 = new HashMap<String, String>();
+    e1.put("DOCNO", "doc0");
+    e1.put("text", "This is a short text. This is a second text sentence.");
     
-    System.out.print(genJSONIndexEntry(e));
+    System.out.print(genJSONIndexEntry(e1));
     System.out.println("###");
   }
   
   final static Gson mGson = new Gson();
+  final static JsonParser mParser = new JsonParser();
 }

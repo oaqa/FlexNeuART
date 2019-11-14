@@ -100,7 +100,7 @@ public class ExportToNMSLIBSparse {
         Map<String, String> queryFields = null;   
         
         try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-          while ((queryFields = inp.readNext()) != null) {
+          while ((queryFields = inp.readNext().mStringDict) != null) {
             parsedQueries.add(queryFields);
           }
         }

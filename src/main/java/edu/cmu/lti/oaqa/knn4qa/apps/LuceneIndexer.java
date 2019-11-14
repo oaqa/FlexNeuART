@@ -156,7 +156,7 @@ public class LuceneIndexer {
         try (DataEntryReader inp = new DataEntryReader(inputFileName)) {
           Map<String, String> docFields = null;
           
-          for (; ((docFields = inp.readNext()) != null) && docNum < maxNumRec; ) {
+          for (; ((docFields = inp.readNext().mStringDict) != null) && docNum < maxNumRec; ) {
             ++docNum;
             
             String id = docFields.get(Const.TAG_DOCNO);

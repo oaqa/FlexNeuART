@@ -41,6 +41,7 @@ import no.uib.cipr.matrix.DenseVector;
  * A class to help check that the inner product of vectors exported NMSLIB dense/sparse
  * fusion space (sparse_dense_fusion) reproduce the original features scores (or 
  * are very close). This checker works only for *SINGLE-FEATURE* extractor.
+ * This application is used for debugging scorers.
  * 
  * @author Leonid Boytsov
  *
@@ -132,7 +133,7 @@ public class CheckDenseSparseExportScores {
       Map<String, String> queryFields = null;
              
       try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-        for (int queryNo = 0; ((queryFields = inp.readNext()) != null) && queryNo < args.mMaxNumQuery;  ++queryNo) {
+        for (int queryNo = 0; ((queryFields = inp.readNext().mStringDict) != null) && queryNo < args.mMaxNumQuery;  ++queryNo) {
           
           String queryId = queryFields.get(Const.TAG_DOCNO);
           

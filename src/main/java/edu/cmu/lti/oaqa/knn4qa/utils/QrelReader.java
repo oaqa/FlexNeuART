@@ -29,7 +29,7 @@ public class QrelReader {
    *  Reads TREC qrels from a file.
    */
   public QrelReader(String fileName) throws IOException {
-    for (String s: FileUtils.readLines(new File(fileName))) {
+    for (String s: FileUtils.readLines(new File(fileName), Const.ENCODING)) {
       s = s.trim();
       if (s.isEmpty()) continue;
       String parts[] = s.split("\\s+");

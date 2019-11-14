@@ -69,7 +69,7 @@ public class DataEntryReader implements java.lang.AutoCloseable {
    * @return a null if we reached the end of the file, or (key, value) map that represents entry data.
    * @throws Exception 
    */
-  public Map<String, String> readNext() throws Exception {
+  public ExtendedIndexEntry readNext() throws Exception {
    
     if (mIsJson) {
       String doc = JSONUtils.readNextJSONEntry(mInp);
@@ -82,7 +82,12 @@ public class DataEntryReader implements java.lang.AutoCloseable {
       if (doc == null) {
         return null;
       }
-      return XmlHelper.parseXMLIndexEntry(doc);   
+      Map<String, String> e = XmlHelper.parseXMLIndexEntry(doc);   
+      
+      ExtendedIndexEntry res = new ExtendedIndexEntry();
+      res.mStringDict = e;
+      
+      return res;
     }
   }
   

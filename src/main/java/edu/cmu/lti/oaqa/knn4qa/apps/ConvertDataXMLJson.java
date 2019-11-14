@@ -61,7 +61,7 @@ public class ConvertDataXMLJson {
         try (DataEntryReader inp = new DataEntryReader(args.mInputFileName)) {
           Map<String, String> docFields = null;   
           
-          while ((docFields = inp.readNext()) != null) {
+          while ((docFields = inp.readNext().mStringDict) != null) {
             out.writeEntry(docFields);
           }
         }
