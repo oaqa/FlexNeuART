@@ -133,7 +133,7 @@ public class CheckDenseSparseExportScores {
       Map<String, String> queryFields = null;
              
       try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-        for (int queryNo = 0; ((queryFields = inp.readNext().mStringDict) != null) && queryNo < args.mMaxNumQuery;  ++queryNo) {
+        for (int queryNo = 0; ((queryFields = inp.readNext()) != null) && queryNo < args.mMaxNumQuery;  ++queryNo) {
           
           String queryId = queryFields.get(Const.TAG_DOCNO);
           

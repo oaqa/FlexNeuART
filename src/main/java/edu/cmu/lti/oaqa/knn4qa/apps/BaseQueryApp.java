@@ -763,7 +763,7 @@ public abstract class BaseQueryApp {
       try (DataEntryReader inp = new DataEntryReader(mQueryFile)) {
         Map<String, String> queryFields = null;      
         
-        for (; ((queryFields = inp.readNext().mStringDict) != null) && queryQty < mMaxNumQuery; ) {
+        for (; ((queryFields = inp.readNext()) != null) && queryQty < mMaxNumQuery; ) {
            
           mParsedQueries.add(queryFields);
           ++queryQty;

@@ -21,11 +21,15 @@ import java.io.InputStreamReader;
 import java.util.Map;
 
 /**
- * An auto-closable resource class that reads possibly compressed entries in either JSONL or 
+ * <p>An auto-closable resource class that reads possibly compressed entries in either JSONL or 
  * series-of-XML entries format. If, after removing the .gz or bz2. suffix,
  * the file has a .txt extension, it is assumed to be a series of XML entries.
  * If we move an optional .gz or .bz2 suffix and obtain a .jsonl suffix,
- * the input is assumed to be in a JSONL format.
+ * the input is assumed to be in a JSONL format.</p>
+ * 
+ * <p>All formats represent key-value pairs, where keys are always strings.
+ * In XML values are only strings. In JSONL, values can be sometimes arrays of strings.
+ * </p>
  * 
  * @author Leonid Boytsov
  *
@@ -64,12 +68,14 @@ public class DataEntryReader implements java.lang.AutoCloseable {
   }
   
   /**
-   * Read, parse, and validate the next entry.
+   * Read, parse, and validate the next entry. This function
+   * returns an extended version of the data entry,
+   * which can include fields with arrays of strings as values.
    * 
    * @return a null if we reached the end of the file, or (key, value) map that represents entry data.
    * @throws Exception 
    */
-  public ExtendedIndexEntry readNext() throws Exception {
+  public ExtendedIndexEntry readNextExt() throws Exception {
    
     if (mIsJson) {
       String doc = JSONUtils.readNextJSONEntry(mInp);
@@ -89,6 +95,20 @@ public class DataEntryReader implements java.lang.AutoCloseable {
       
       return res;
     }
+  }
+  
+  /**
+   * Read, parse, and validate the next entry. This function
+   * returns only a simple part of the data entry,
+   * which can include only fields with strings as values (arrays
+   * of strings values are ignored by this function).
+   * 
+   * @return a null if we reached the end of the file, or (key, value) map that represents entry data.
+   * @throws Exception 
+   */
+  public Map<String, String> readNext() throws Exception {
+    ExtendedIndexEntry res = readNextExt();
+    return res == null ? null : res.mStringDict;
   }
   
   @Override

@@ -120,7 +120,7 @@ public class AnswerBasedQrelGenerator {
       int queryQty=0;
       
       for (; 
-          ((inpEntry = inp.readNext()) != null) && queryQty < args.mMaxNumQuery; 
+          ((inpEntry = inp.readNextExt()) != null) && queryQty < args.mMaxNumQuery; 
           ++queryQty) {
         
         queryFields = inpEntry.mStringDict;

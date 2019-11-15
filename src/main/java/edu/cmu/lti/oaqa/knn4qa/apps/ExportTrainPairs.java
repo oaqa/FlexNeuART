@@ -188,7 +188,7 @@ public class ExportTrainPairs {
         DataEntryReader inp = new DataEntryReader(queryFile);
         
         int queryQty = 0; // Reset for each type of queries (train vs. test)
-        for (; ((docFields = inp.readNext().mStringDict) != null) && queryQty < maxNumQuery; ) {
+        for (; ((docFields = inp.readNext()) != null) && queryQty < maxNumQuery; ) {
 
           ++queryQty;
           

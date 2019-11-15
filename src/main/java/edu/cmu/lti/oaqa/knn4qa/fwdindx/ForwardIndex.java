@@ -263,7 +263,7 @@ public abstract class ForwardIndex {
  
         Map<String, String>         docFields = null;
         
-        for (;mDocQty < maxNumRec && ((docFields = inp.readNext().mStringDict) != null) ;) {
+        for (;mDocQty < maxNumRec && ((docFields = inp.readNext()) != null) ;) {
           
           String docId = docFields.get(Const.TAG_DOCNO);
           

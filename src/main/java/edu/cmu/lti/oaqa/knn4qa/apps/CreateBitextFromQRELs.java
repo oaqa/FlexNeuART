@@ -141,7 +141,7 @@ public class CreateBitextFromQRELs {
       
       DataEntryReader inp = new DataEntryReader(args.mQueryFile);
       
-      for (; ((docFields = inp.readNext().mStringDict) != null) && queryQty < args.mMaxNumQuery; ) {
+      for (; ((docFields = inp.readNext()) != null) && queryQty < args.mMaxNumQuery; ) {
 
         ++queryQty;
         

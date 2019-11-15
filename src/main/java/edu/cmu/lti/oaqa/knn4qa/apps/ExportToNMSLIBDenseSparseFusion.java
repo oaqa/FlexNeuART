@@ -94,7 +94,7 @@ public class ExportToNMSLIBDenseSparseFusion {
         Map<String, String> queryFields = null;   
         
         try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-          while ((queryFields = inp.readNext().mStringDict) != null) {
+          while ((queryFields = inp.readNext()) != null) {
             parsedQueries.add(queryFields);
           }
         }
