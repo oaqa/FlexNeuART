@@ -199,6 +199,7 @@ public class LuceneIndexer {
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
     } catch(Exception e) {
+    	e.printStackTrace();
       System.err.println("Terminating due to an exception: " + e);
       System.exit(1);
     } 

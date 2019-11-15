@@ -27,8 +27,9 @@ class BertEncoder(torch.nn.Module):
     self.BERT_SIZE = 768  # from bert-base-uncased
     self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
     # Let's disable BERT training
-    for param in self.bert.parameters():
-      param.requires_grad = False
+    if False:
+      for param in self.bert.parameters():
+        param.requires_grad = False
 
     self.tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(self.BERT_MODEL)
 
@@ -54,14 +55,21 @@ class BertEncoder(torch.nn.Module):
     self.load_state_dict(torch.load(path), strict=False)
 
   def encode_bert(self, toks, mask, max_batch_size):
+    maxlen = self.bert.config.max_position_embeddings
+
+    MAX_TOK_LEN = maxlen - 1 # minus one is for [CLS]
+
+    # This is a crutch to avoid using too much memory
+    # Shorten the stuff
     BATCH, LEN = toks.shape
+    if LEN > 2*MAX_TOK_LEN:
+      toks = toks[:, :2*MAX_TOK_LEN, :]
+      mask = mask[:, :2*MAX_TOK_LEN, :]
 
     if LEN <= 0:
       print('Got empty sequence! Generating zero-vector batch')
       return torch.zeros((BATCH, self.dim))
 
-    maxlen = self.bert.config.max_position_embeddings
-    MAX_TOK_LEN = maxlen - 1 # minus one is for [CLS]
 
     subbatch_toks, sbcount = modeling_util.subbatch(toks, MAX_TOK_LEN)
     #print('### ', sbcount, 'toks.shape=', toks.shape, 'subbatch_toks.shape=', subbatch_toks.shape, ' maxlen=', MAX_TOK_LEN)
@@ -144,5 +152,6 @@ class DuetBertRanker(torch.nn.Module):
         query_vec = self.query_encoder(query_tok, query_mask, max_batch_size)
         doc_vec = self.doc_encoder(doc_tok, doc_mask, max_batch_size)
         # Returnining batched dot-product
-        return torch.einsum('bi, bi -> b', query_vec, doc_vec)
+        res = torch.einsum('bi, bi -> b', query_vec, doc_vec)
+        return res
 

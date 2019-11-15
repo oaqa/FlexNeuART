@@ -4,6 +4,7 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import os
+import gc
 import argparse
 import subprocess
 import random
@@ -19,10 +20,11 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
 random.seed(SEED)
 
-BATCH_SIZE = 64
-MAX_GRAD_ACCUM_SIZE = 4
-BATCHES_PER_TRAIN_EPOCH = 32
-GRAD_ACC_SIZE = 2
+BATCH_SIZE = 2
+BATCH_SIZE_EVAL = 8
+MAX_GRAD_ACCUM_SIZE = 2
+BATCHES_PER_TRAIN_EPOCH = 8192
+GRAD_ACC_SIZE = 1
 
 MODEL_MAP = {
     'vanilla_bert': modeling.VanillaBertRanker,
@@ -72,6 +74,7 @@ def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
             loss.backward()
             total_loss += loss.item()
             total += count
+            gc.collect()
             if total % BATCH_SIZE == 0:
                 optimizer.step()
                 optimizer.zero_grad()
@@ -93,12 +96,13 @@ def run_model(model, no_cuda, dataset, run, runf, desc='valid'):
     rerank_run = {}
     with torch.no_grad(), tqdm(total=sum(len(r) for r in run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
-        for records in data.iter_valid_records(model, no_cuda, dataset, run, BATCH_SIZE):
+        for records in data.iter_valid_records(model, no_cuda, dataset, run, BATCH_SIZE_EVAL):
             scores = model(records['query_tok'],
                            records['query_mask'],
                            records['doc_tok'],
                            records['doc_mask'],
                            max_batch_size=MAX_GRAD_ACCUM_SIZE)
+            gc.collect()
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
