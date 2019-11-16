@@ -31,11 +31,8 @@ open (QRELS) || die "$0: cannot open \"$QRELS\": !$\n";
 while (<QRELS>) {
   s/[\r\n]//g;
   ($topic, $zero, $docno, $judgment) = split (' ');
-  $topic =~ s/^.*\-//;
-  die "$0: format error on line $. of \"$QRELS\"\n"
-    unless
-      $topic =~ /^[0-9]+$/ && $zero == 0
-      && $judgment =~ /^-?[0-9]+$/ && $judgment <= $MAX_JUDGMENT;
+  die "$0: QREL format error on line $. of \"$QRELS\"\n"
+    unless $zero eq "0" && $judgment =~ /^-?[0-9]+$/ && $judgment <= $MAX_JUDGMENT;
   if ($judgment > 0) {
     $qrels[$#qrels + 1]= "$topic $docno $judgment";
     $seen{$topic} = 1;
@@ -51,21 +48,19 @@ open (RUN) || die "$0: cannot open \"$RUN\": !$\n";
 while (<RUN>) {
   s/[\r\n]//g;
   ($topic, $q0, $docno, $rank, $score, $runid) = split (' ');
-  $topic =~ s/^.*\-//;
-  die "$0: format error on line $. of \"$RUN\"\n"
-    unless
-      $topic =~ /^[0-9]+$/ && $q0 eq "Q0" && $rank =~ /^[0-9]+$/ && $runid;
+  die "$0: RUN format error on line $. of \"$RUN\"\n"
+    unless $q0 eq "Q0" && $rank =~ /^[0-9]+$/ && $runid;
   $run[$#run + 1] = "$topic $docno $score";
 }
 
 @run = sort runOrder (@run);
 
 # Process qrels: store judgments and compute ideal gains
-$topicCurrent = -1;
+$topicCurrent = "";
 for ($i = 0; $i <= $#qrels; $i++) {
   ($topic, $docno, $judgment) = split (' ', $qrels[$i]);
-  if ($topic != $topicCurrent) {
-    if ($topicCurrent >= 0) {
+  if ($topic ne $topicCurrent) {
+    if ($topicCurrent ne "") {
       $ideal{$topicCurrent} = &dcg($K, @gain);
       $#gain = -1;
     }
@@ -74,18 +69,18 @@ for ($i = 0; $i <= $#qrels; $i++) {
   next if $judgment < 0;
   $judgment{"$topic:$docno"} = $gain[$#gain + 1] = $judgment;
 }
-if ($topicCurrent >= 0) {
+if ($topicCurrent ne "") {
   $ideal{$topicCurrent} = &dcg($K, @gain);
   $#gain = -1;
 }
 
 # Process runs: compute measures for each topic and average
 print "runid,topic,ndcg\@$K,err\@$K\n";
-$topicCurrent = -1;
+$topicCurrent = "";
 for ($i = 0; $i <= $#run; $i++) {
   ($topic, $docno, $score) = split (' ', $run[$i]);
-  if ($topic != $topicCurrent) {
-    if ($topicCurrent >= 0) {
+  if ($topic ne $topicCurrent) {
+    if ($topicCurrent ne "") {
       &topicDone ($runid, $topicCurrent, @gain);
       $#gain = -1;
     }
@@ -95,7 +90,7 @@ for ($i = 0; $i <= $#run; $i++) {
   $j = 0 unless $j;
   $gain[$#gain + 1] = $j;
 }
-if ($topicCurrent >= 0) {
+if ($topicCurrent ne "") {
   &topicDone ($runid, $topicCurrent, @gain);
   $#gain = -1;
 }
@@ -114,9 +109,9 @@ sub qrelsOrder {
   my ($topicA, $docnoA, $judgmentA) = split (' ', $a);
   my ($topicB, $docnoB, $judgmentB) = split (' ', $b);
 
-  if ($topicA < $topicB) {
+  if ($topicA lt $topicB) {
     return -1;
-  } elsif ($topicA > $topicB) {
+  } elsif ($topicA gt $topicB) {
     return 1;
   } else {
     return $judgmentB <=> $judgmentA;
@@ -128,9 +123,9 @@ sub runOrder {
   my ($topicA, $docnoA, $scoreA) = split (' ', $a);
   my ($topicB, $docnoB, $scoreB) = split (' ', $b);
 
-  if ($topicA < $topicB) {
+  if ($topicA lt $topicB) {
     return -1;
-  } elsif ($topicA > $topicB) {
+  } elsif ($topicA gt $topicB) {
     return 1;
   } elsif ($scoreA < $scoreB) {
     return 1;
