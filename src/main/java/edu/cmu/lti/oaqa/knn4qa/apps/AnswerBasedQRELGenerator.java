@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.knn4qa.cand_providers.LuceneCandidateProvider;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
@@ -61,9 +60,10 @@ import edu.cmu.lti.oaqa.knn4qa.utils.MiscHelper;
  * @author Leonid Boytsov
  *
  */
-public class AnswerBasedQrelGenerator {
-  final static Logger logger = LoggerFactory.getLogger(AnswerBasedQrelGenerator.class);
+public class AnswerBasedQRELGenerator {
+  final static Logger logger = LoggerFactory.getLogger(AnswerBasedQRELGenerator.class);
 
+  
   public static final class Args {
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
     String mMemFwdIndex;
@@ -82,11 +82,18 @@ public class AnswerBasedQrelGenerator {
     
     @Option(name = "-" + CommonParams.MAX_CAND_QTY_PARAM, required = true, usage = CommonParams.MAX_CAND_QTY_DESC)
     int mCandQty;
+    
+    @Option(name = "-" +  CommonParams.THREAD_QTY_PARAM, usage =  CommonParams.THREAD_QTY_DESC)
+    int mThreadQty = 1;
   }
+  
 
+  
   public static void main(String argv[]) {
     Args args = new Args();
     CmdLineParser parser = null;
+    
+   
     
     try {
  
@@ -98,8 +105,6 @@ public class AnswerBasedQrelGenerator {
       parser.printUsage(System.err);
       System.exit(1);
     }
-    
-    BufferedWriter out = null;
     
     try {
       out = MiscHelper.createBufferedFileWriter(args.mOutFile);
@@ -114,65 +119,34 @@ public class AnswerBasedQrelGenerator {
       ForwardIndex fwdIndexText = resourceManager.getFwdIndex(Const.TEXT_FIELD_NAME);
       
       DataEntryReader inp = new DataEntryReader(args.mQueryFile);
-      Map<String, String> queryFields = null;  
       ExtendedIndexEntry inpEntry = null;
-        
-      int queryQty=0;
+
+      AnswBasedQRELGenWorker[] workers = new AnswBasedQRELGenWorker[args.mThreadQty];
       
-      for (; 
+      for (int i = 0; i < args.mThreadQty; ++i) {
+        workers[i] = new AnswBasedQRELGenWorker(logger, candProv, fwdIndexText, args.mCandQty); 
+      }
+      
+      for (int queryQty = 0; 
           ((inpEntry = inp.readNextExt()) != null) && queryQty < args.mMaxNumQuery; 
           ++queryQty) {
-        
-        queryFields = inpEntry.mStringDict;
-        
-        String queryFieldText = queryFields.get(Const.TEXT_FIELD_NAME);
-        if (queryFieldText == null) {
-          queryFieldText = "";
-        }
-        queryFieldText = queryFieldText.trim();
-        if (queryFieldText.isEmpty()) {
-          logger.info("Query #" + (queryQty + 1) + " is empty, ignoring.");
-          continue;
-        }
-        String queryId = queryFields.get(Const.TAG_DOCNO);
-        if (queryId == null || queryId.isEmpty()) {
-          logger.info("Query #" + (queryQty + 1) + " has no field: " + Const.TAG_DOCNO + ", ignoring.");
-          continue;
-        }
-        
-        CandidateInfo cands = candProv.getCandidates(queryQty, queryFields, args.mCandQty);
-        
-        ArrayList<String> answList = inpEntry.mStringArrDict.get(Const.ANSWER_LIST_FIELD_NAME);
-        if (answList == null || answList.isEmpty()) {
-          logger.info("Query #" + (queryQty + 1) + " has no answers, ignoring.");
-          continue;
-        }
-        
-        for (CandidateEntry e : cands.mEntries) {
-          String text = fwdIndexText.getDocEntryParsedText(e.mDocId);
-          if (text == null) {
-            logger.warn("No text for doc: " + e.mDocId + 
-                " did you create a positional forward index for the field " + Const.TEXT_FIELD_NAME);
-          }
-          text = " " + text.trim() + " "; // adding sentinels
-          boolean hasAnsw = false; 
-          for (String answ : answList) {
-            if (answ == null) continue;
-            answ = answ.trim();
-            if (text.contains(answ)) {
-              hasAnsw = true;
-              break;
-            }
-          }
-          if (hasAnsw) {
-            EvalUtils.saveQrelOneEntry(out, queryId, e.mDocId, Const.MAX_RELEV_GRADE);
-          }
-        } 
-
-        if (queryQty % 100 == 0) logger.info("Processed " + queryQty + " queries");
-      }
-      logger.info("Processed " + queryQty + " queries");
+        workers[queryQty % args.mThreadQty].addQuery(inpEntry, queryQty);
+      }    
       inp.close();
+      
+      // Start threads
+      for (AnswBasedQRELGenWorker e : workers) e.start();
+      // Wait till they finish
+      for (AnswBasedQRELGenWorker e : workers) e.join(0);  
+      
+      for (AnswBasedQRELGenWorker e : workers) {
+        if (e.isFailure()) {
+          System.err.println("At least one thread failed!");
+          System.exit(1);
+        }
+      }
+      
+      logger.info("Processed " + mQueryQty + " queries");
       
     } catch (Exception e) {
       e.printStackTrace();
@@ -190,4 +164,108 @@ public class AnswerBasedQrelGenerator {
     }
   }
 
+  public static synchronized void save(String queryId, ArrayList<String> docIds) throws IOException {
+    for (String did : docIds) {
+      EvalUtils.saveQrelOneEntry(out, queryId, did, Const.MAX_RELEV_GRADE);
+    }
+    mQueryQty += 1;
+    if (mQueryQty % 100 == 0) {
+      logger.info("Processed " + mQueryQty + " queries");
+    }
+  }
+  
+  static BufferedWriter out = null;
+  static int mQueryQty = 0;
+}
+
+class AnswBasedQRELGenWorker extends Thread {
+  public AnswBasedQRELGenWorker(Logger logger,
+                LuceneCandidateProvider provider, ForwardIndex fwdIndex, int candQty) {
+    mCandProvider = provider;
+    mFwdIndex = fwdIndex;
+    mCandQty = candQty;
+    mLogger = logger;
+  }
+  
+  public void addQuery(ExtendedIndexEntry e, int queryId) {
+    mQueries.add(e);
+    mQueryIds.add(queryId);
+  }
+  
+  @Override
+  public void run() {
+
+    try {
+      ArrayList<String> relDocIds = new ArrayList<String>();
+      
+      for (int eid = 0; eid < mQueries.size(); ++eid) {
+        ExtendedIndexEntry inpEntry = mQueries.get(eid);     
+        Map<String, String> queryFields = inpEntry.mStringDict;
+        
+        String queryId = queryFields.get(Const.TAG_DOCNO);
+        
+        if (queryId == null || queryId.isEmpty()) {
+          mLogger.info("Query " + mQueryIds.get(eid) + " no field: " + Const.TAG_DOCNO + ", ignoring.");
+          continue;
+        }
+        
+        String queryFieldText = queryFields.get(Const.TEXT_FIELD_NAME);
+        if (queryFieldText == null) {
+          queryFieldText = "";
+        }
+        queryFieldText = queryFieldText.trim();
+        if (queryFieldText.isEmpty()) {
+          mLogger.info("Query " + queryId + " is empty, ignoring.");
+          continue;
+        }
+
+        CandidateInfo cands = mCandProvider.getCandidates(mQueryIds.get(eid), queryFields, mCandQty);
+        
+        ArrayList<String> answList = inpEntry.mStringArrDict.get(Const.ANSWER_LIST_FIELD_NAME);
+        if (answList == null || answList.isEmpty()) {
+          mLogger.info("Query " + queryId + " has no answers, ignoring.");
+          continue;
+        }
+        
+        relDocIds.clear();
+
+        for (CandidateEntry e : cands.mEntries) {
+          String text = mFwdIndex.getDocEntryParsedText(e.mDocId);
+          if (text == null) {
+            mLogger.warn("No text for doc: " + e.mDocId + 
+                        " did you create a positional forward index for the field " + Const.TEXT_FIELD_NAME);
+          }
+          text = " " + text.trim() + " "; // adding sentinels
+          boolean hasAnsw = false; 
+          for (String answ : answList) {
+            if (answ == null) continue;
+            answ = answ.trim();
+            if (text.contains(answ)) {
+              hasAnsw = true;
+              break;
+            }
+          }
+          if (hasAnsw) {
+            relDocIds.add(e.mDocId);
+          }
+        }
+        AnswerBasedQRELGenerator.save(queryId, relDocIds);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      mFail=true;
+    }
+  }
+  
+  public boolean isFailure() {
+    return mFail;
+  }
+  
+  final LuceneCandidateProvider mCandProvider;
+  final ForwardIndex mFwdIndex;
+  final int mCandQty;
+  final ArrayList<ExtendedIndexEntry> mQueries = new ArrayList<ExtendedIndexEntry>();
+  final ArrayList<Integer> mQueryIds = new ArrayList<Integer>();
+  final Logger mLogger;
+  boolean mFail = false;
 }

@@ -85,7 +85,7 @@ public abstract class ExportTrainBase {
     mQrelsTest = qrelsTest;
     
   }
-  
+
 
   /**
    * Read and process document text if necessary. For raw indices, no processing is needed.
