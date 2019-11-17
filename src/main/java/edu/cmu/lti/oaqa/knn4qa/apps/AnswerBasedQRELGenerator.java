@@ -134,6 +134,8 @@ public class AnswerBasedQRELGenerator {
       }    
       inp.close();
       
+      logger.info("Finished loading queries!");
+        
       // Start threads
       for (AnswBasedQRELGenWorker e : workers) e.start();
       // Wait till they finish
