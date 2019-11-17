@@ -2,6 +2,12 @@
 
 SERVER_LOG_NAME="server.log"
 
+# This command would cause recompilation, 
+# but due to -o and -q switch it:
+# 1) It works offline (i.e, it doesn't print a bunch of annoying messages caused by Maven re-checking dependencies status)
+# 3) Works in a quite mode, i.e., doesn't print other warnings and stuff.
+export MVN_RUN_CMD="mvn -q -o compile exec:java "
+
 function execAndCheck {
   cmd0="$1"
   desc="$2"

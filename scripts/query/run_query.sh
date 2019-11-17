@@ -1,5 +1,6 @@
 #/bin/bash
-. scripts/common_proc.sh
+source scripts/common_proc.sh
 setJavaMem 5 9
-cmd="mvn compile exec:java -Dexec.mainClass=edu.cmu.lti.oaqa.knn4qa.apps.QueryAppMultThread -Dexec.args='$@' "
-execAndCheck "$cmd"
+bash_cmd="$MVN_RUN_CMD -Dexec.mainClass=edu.cmu.lti.oaqa.knn4qa.apps.QueryAppMultThread -Dexec.args='$@' "
+bash -c "$bash_cmd"
+exit $?

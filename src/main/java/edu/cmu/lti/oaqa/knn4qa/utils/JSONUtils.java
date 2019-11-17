@@ -27,8 +27,10 @@ import com.google.gson.*;
 
 
 /**
- * A bunch of useful functions to work with JSONL files to
- * store indexable data. 
+ * A bunch of useful functions to work with JSONL files that
+ * keeps indexable data. Each line in such JSONL file is 
+ * a dictionary with string keys. Values are either strings,
+ * or arrays of strings.
  * 
  * @author Leonid Boytsov
  * 
@@ -92,44 +94,12 @@ public class JSONUtils {
     return docLine.trim();
   }
   
-  public static void main(String [] args) {
-    String doc1 = "{\n" + 
-        "\"DOCNO\" : \"doc1\",\n" + 
-        "\"text\" : \"val1\"\n" + 
-        "}";
-    String doc2 = "{\n" + 
-        "\"DOCNO\" : \"doc2\",\n" + 
-        "\"text\" : \"val2\",\n" + 
-        "\"answer_list\" : [\"1\",\"2\",\"3\"]\n" +
-        "}";
-    ExtendedIndexEntry e;
-    try {
-      e = parseJSONIndexEntry(doc1);
-    } catch (Exception e2) {
-      // TODO Auto-generated catch block
-      e2.printStackTrace();
-      return;
-    }
-    System.out.println(e.mStringDict.get("DOCNO"));
-    System.out.println(e.mStringDict.get("text"));
-    System.out.println("============");
-    try {
-      e = parseJSONIndexEntry(doc2);
-    } catch (Exception e2) {
-      // TODO Auto-generated catch block
-      e2.printStackTrace();
-    }
-    System.out.println(e.mStringDict.get("DOCNO"));
-    System.out.println(e.mStringDict.get("text"));
-    System.out.println(e.mStringArrDict.get("answer_list"));
-    System.out.println("============");
-    
+  public static void main(String [] args) { 
     HashMap<String, String> e1 = new HashMap<String, String>();
     e1.put("DOCNO", "doc0");
     e1.put("text", "This is a short text. This is a second text sentence.");
     
     System.out.print(genJSONIndexEntry(e1));
-    System.out.println("###");
   }
   
   final static Gson mGson = new Gson();
