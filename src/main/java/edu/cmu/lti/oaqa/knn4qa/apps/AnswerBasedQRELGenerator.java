@@ -124,7 +124,7 @@ public class AnswerBasedQRELGenerator {
       AnswBasedQRELGenWorker[] workers = new AnswBasedQRELGenWorker[args.mThreadQty];
       
       for (int i = 0; i < args.mThreadQty; ++i) {
-        workers[i] = new AnswBasedQRELGenWorker(logger, candProv, fwdIndexText, args.mCandQty); 
+        workers[i] = new AnswBasedQRELGenWorker(candProv, fwdIndexText, args.mCandQty); 
       }
       
       for (int queryQty = 0; 
@@ -173,6 +173,7 @@ public class AnswerBasedQRELGenerator {
     mQueryQty += 1;
     if (mQueryQty % 100 == 0) {
       logger.info("Processed " + mQueryQty + " queries");
+      System.out.println("Processed " + mQueryQty + " queries");
     }
   }
   
@@ -181,12 +182,12 @@ public class AnswerBasedQRELGenerator {
 }
 
 class AnswBasedQRELGenWorker extends Thread {
-  public AnswBasedQRELGenWorker(Logger logger,
-                LuceneCandidateProvider provider, ForwardIndex fwdIndex, int candQty) {
+	final static Logger logger = LoggerFactory.getLogger(AnswBasedQRELGenWorker.class);
+	
+  public AnswBasedQRELGenWorker(LuceneCandidateProvider provider, ForwardIndex fwdIndex, int candQty) {
     mCandProvider = provider;
     mFwdIndex = fwdIndex;
     mCandQty = candQty;
-    mLogger = logger;
   }
   
   public void addQuery(ExtendedIndexEntry e, int queryId) {
@@ -202,12 +203,12 @@ class AnswBasedQRELGenWorker extends Thread {
       
       for (int eid = 0; eid < mQueries.size(); ++eid) {
         ExtendedIndexEntry inpEntry = mQueries.get(eid);     
-        Map<String, String> queryFields = inpEntry.mStringDict;
+        Map<String, String> queryFields = inpEntry.mStringDict;        
         
         String queryId = queryFields.get(Const.TAG_DOCNO);
         
         if (queryId == null || queryId.isEmpty()) {
-          mLogger.info("Query " + mQueryIds.get(eid) + " no field: " + Const.TAG_DOCNO + ", ignoring.");
+          logger.info("Query " + mQueryIds.get(eid) + " no field: " + Const.TAG_DOCNO + ", ignoring.");
           continue;
         }
         
@@ -217,7 +218,7 @@ class AnswBasedQRELGenWorker extends Thread {
         }
         queryFieldText = queryFieldText.trim();
         if (queryFieldText.isEmpty()) {
-          mLogger.info("Query " + queryId + " is empty, ignoring.");
+          logger.info("Query " + queryId + " is empty, ignoring.");
           continue;
         }
 
@@ -225,7 +226,7 @@ class AnswBasedQRELGenWorker extends Thread {
         
         ArrayList<String> answList = inpEntry.mStringArrDict.get(Const.ANSWER_LIST_FIELD_NAME);
         if (answList == null || answList.isEmpty()) {
-          mLogger.info("Query " + queryId + " has no answers, ignoring.");
+          logger.info("Query " + queryId + " has no answers, ignoring.");
           continue;
         }
         
@@ -234,7 +235,7 @@ class AnswBasedQRELGenWorker extends Thread {
         for (CandidateEntry e : cands.mEntries) {
           String text = mFwdIndex.getDocEntryParsedText(e.mDocId);
           if (text == null) {
-            mLogger.warn("No text for doc: " + e.mDocId + 
+            logger.warn("No text for doc: " + e.mDocId + 
                         " did you create a positional forward index for the field " + Const.TEXT_FIELD_NAME);
           }
           text = " " + text.trim() + " "; // adding sentinels
@@ -268,6 +269,5 @@ class AnswBasedQRELGenWorker extends Thread {
   final int mCandQty;
   final ArrayList<ExtendedIndexEntry> mQueries = new ArrayList<ExtendedIndexEntry>();
   final ArrayList<Integer> mQueryIds = new ArrayList<Integer>();
-  final Logger mLogger;
   boolean mFail = false;
 }
