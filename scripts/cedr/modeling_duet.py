@@ -36,6 +36,7 @@ class BertEncoder(torch.nn.Module):
     self.dropout = torch.nn.Dropout(dropout)
     # A fully-connected layer that transforms internal BERT representation
     self.fc = torch.nn.Linear(self.BERT_SIZE, dim)
+    torch.nn.init.xavier_uniform_(self.fc.weight) 
 
 
   def forward(self, toks, mask, max_batch_size):

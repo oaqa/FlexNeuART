@@ -89,6 +89,7 @@ class VanillaBertRanker(BertRanker):
         super().__init__()
         self.dropout = torch.nn.Dropout(0.1)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
+        torch.nn.init.xavier_uniform_(self.cls.weight)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size=None):
         cls_reps, _, _ = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)

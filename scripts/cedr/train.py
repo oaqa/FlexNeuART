@@ -20,11 +20,13 @@ torch.manual_seed(SEED)
 torch.cuda.manual_seed_all(SEED)
 random.seed(SEED)
 
-BATCH_SIZE = 2
-BATCH_SIZE_EVAL = 8
-MAX_GRAD_ACCUM_SIZE = 2
-BATCHES_PER_TRAIN_EPOCH = 8192
-GRAD_ACC_SIZE = 1
+BATCH_SIZE = 32
+GRAD_ACC_SIZE = 16
+MAX_SUBBATCH_SIZE = GRAD_ACC_SIZE
+BATCH_SIZE_EVAL = GRAD_ACC_SIZE
+#BATCHES_PER_TRAIN_EPOCH = 8192
+#BATCHES_PER_TRAIN_EPOCH = 128
+BATCHES_PER_TRAIN_EPOCH = 2048
 
 MODEL_MAP = {
     'vanilla_bert': modeling.VanillaBertRanker,
@@ -35,10 +37,9 @@ MODEL_MAP = {
 }
 
 
-def main(model, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
+def main(model, max_epoch, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
     LR = 0.001
     BERT_LR = 2e-5
-    MAX_EPOCH = 100
 
     params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
     non_bert_params = {'params': [v for k, v in params if not k.startswith('bert.')]}
@@ -47,7 +48,7 @@ def main(model, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_ou
 
     epoch = 0
     top_valid_score = None
-    for epoch in range(MAX_EPOCH):
+    for epoch in range(max_epoch):
         loss = train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels)
         print(f'train epoch={epoch} loss={loss}')
         valid_score = validate(model, no_cuda, dataset, valid_run, qrelf, epoch, model_out_dir)
@@ -59,7 +60,7 @@ def main(model, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_ou
 
 
 def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
-    total = 0
+    total_prev = total = 0
     model.train()
     total_loss = 0.
     with tqdm('training', total=BATCH_SIZE * BATCHES_PER_TRAIN_EPOCH, ncols=80, desc='train', leave=False) as pbar:
@@ -67,7 +68,8 @@ def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
             scores = model(record['query_tok'],
                            record['query_mask'],
                            record['doc_tok'],
-                           record['doc_mask'], max_batch_size=MAX_GRAD_ACCUM_SIZE)
+                           record['doc_mask'], 
+                           max_batch_size=MAX_SUBBATCH_SIZE)
             count = len(record['query_id']) // 2
             scores = scores.reshape(count, 2)
             loss = torch.mean(1. - scores.softmax(dim=1)[:, 0]) # pairwise softmax
@@ -75,9 +77,11 @@ def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
             total_loss += loss.item()
             total += count
             gc.collect()
-            if total % BATCH_SIZE == 0:
+            if total  - total_prev >= BATCH_SIZE:
+                #print(total, 'optimizer step!')
                 optimizer.step()
                 optimizer.zero_grad()
+                total_prev = total
             pbar.update(count)
             if total >= BATCH_SIZE * BATCHES_PER_TRAIN_EPOCH:
                 return total_loss
@@ -101,7 +105,7 @@ def run_model(model, no_cuda, dataset, run, runf, desc='valid'):
                            records['query_mask'],
                            records['doc_tok'],
                            records['doc_mask'],
-                           max_batch_size=MAX_GRAD_ACCUM_SIZE)
+                           max_batch_size=MAX_SUBBATCH_SIZE)
             gc.collect()
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
@@ -114,7 +118,7 @@ def run_model(model, no_cuda, dataset, run, runf, desc='valid'):
 
 
 def trec_eval(qrelf, runf, metric):
-    trec_eval_f = 'bin/trec_eval'
+    trec_eval_f = 'trec_eval/trec_eval'
     output = subprocess.check_output([trec_eval_f, '-m', metric, qrelf, runf]).decode().rstrip()
     output = output.replace('\t', ' ').split('\n')
     assert len(output) == 1
@@ -130,6 +134,7 @@ def main_cli():
     parser.add_argument('--valid_run', type=argparse.FileType('rt'), required=True)
     parser.add_argument('--initial_bert_weights', type=argparse.FileType('rb'), default=None)
     parser.add_argument('--model_out_dir', required=True)
+    parser.add_argument('--max_epoch', type=int, default=10)
     parser.add_argument('--no_cuda', action='store_true')
     args = parser.parse_args()
 
@@ -143,7 +148,7 @@ def main_cli():
     if args.initial_bert_weights is not None:
         model.load(args.initial_bert_weights.name)
     os.makedirs(args.model_out_dir, exist_ok=True)
-    main(model, args.no_cuda, dataset, train_pairs, qrels, valid_run, qrelf=args.qrels.name, model_out_dir=args.model_out_dir)
+    main(model, args.max_epoch, args.no_cuda, dataset, train_pairs, qrels, valid_run, qrelf=args.qrels.name, model_out_dir=args.model_out_dir)
 
 
 if __name__ == '__main__':
