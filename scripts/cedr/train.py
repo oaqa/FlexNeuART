@@ -1,5 +1,7 @@
-# This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
-# (c) Georgetown IR lab
+# This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
+# It has some substantial modifications + it relies on our custom BERT
+# library: https://github.com/searchivarius/pytorch-pretrained-BERT-mod
+# (c) Georgetown IR lab & Carnegie Mellon University
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
@@ -7,26 +9,49 @@ import os
 import gc
 import argparse
 import subprocess
-import random
-from tqdm import tqdm
+
 import torch
 import modeling
 import modeling_duet
+import utils
 import data
 
+from tqdm import tqdm
+from collections import namedtuple
 
-SEED = 42
-torch.manual_seed(SEED)
-torch.cuda.manual_seed_all(SEED)
-random.seed(SEED)
 
-BATCH_SIZE = 32
-GRAD_ACC_SIZE = 16
-MAX_SUBBATCH_SIZE = GRAD_ACC_SIZE
-BATCH_SIZE_EVAL = GRAD_ACC_SIZE
-#BATCHES_PER_TRAIN_EPOCH = 8192
-#BATCHES_PER_TRAIN_EPOCH = 128
-BATCHES_PER_TRAIN_EPOCH = 2048
+class MarginRankingLossWrapper:
+  @staticmethod
+  def name():
+    return 'pairwise_margin'
+
+  '''This is a wrapper class for the margin ranking loss.
+     It expects that positive/negative scores are arranged in pairs'''
+  def __init__(self, margin):
+    self.loss = torch.nn.MarginRankingLoss(margin)
+
+  def compute(self, scores):
+    pos_doc_scores = scores[:, 0]
+    neg_doc_scores = scores[:, 1]
+    ones = torch.ones_like(pos_doc_scores)
+    zeros = torch.zeros_like(pos_doc_scores)
+    return self.loss.forward(pos_doc_scores, neg_doc_scores, target=ones)
+
+
+class PairwiseSoftmaxLoss:
+  @staticmethod
+  def name():
+    return 'pairwise_softmax'
+
+  '''This is a wrapper class for the pairwise softmax ranking loss.
+     It expects that positive/negative scores are arranged in pairs'''
+  def compute(self, scores):
+    return torch.mean(1. - scores.softmax(dim=1)[:, 0]) # pairwise softmax
+
+TrainParams = namedtuple('TrainParams',
+                    ['init_lr', 'init_bert_lr', 'epoch_lr_decay',
+                     'batches_per_train_epoch', 'batch_size', 'batch_size_eval', 'subbatch_size', 'backprop_batch_size',
+                     'max_epoch', 'no_cuda'])
 
 MODEL_MAP = {
     'vanilla_bert': modeling.VanillaBertRanker,
@@ -37,75 +62,93 @@ MODEL_MAP = {
 }
 
 
-def main(model, max_epoch, no_cuda, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
-    LR = 0.001
-    BERT_LR = 2e-5
+def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
+    lr = train_params.init_lr
+    bert_lr = train_params.init_bert_lr
+    decay = train_params.epoch_lr_decay
 
-    params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
-    non_bert_params = {'params': [v for k, v in params if not k.startswith('bert.')]}
-    bert_params = {'params': [v for k, v in params if k.startswith('bert.')], 'lr': BERT_LR}
-    optimizer = torch.optim.Adam([non_bert_params, bert_params], lr=LR)
-
-    epoch = 0
     top_valid_score = None
-    for epoch in range(max_epoch):
-        loss = train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels)
-        print(f'train epoch={epoch} loss={loss}')
-        valid_score = validate(model, no_cuda, dataset, valid_run, qrelf, epoch, model_out_dir)
+
+    for epoch in range(train_params.max_epoch):
+
+        params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
+        non_bert_params = {'params': [v for k, v in params if not k.startswith('bert.')]}
+        bert_params = {'params': [v for k, v in params if k.startswith('bert.')], 'lr': bert_lr}
+
+        optimizer = torch.optim.Adam([non_bert_params, bert_params], lr=lr)
+        loss = train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pairs, qrels)
+        print(f'train epoch={epoch} loss={loss} lr={lr} bert_lr={bert_lr}')
+        valid_score = validate(model, train_params, dataset, valid_run, qrelf, epoch, model_out_dir)
         print(f'validation epoch={epoch} score={valid_score}')
         if top_valid_score is None or valid_score > top_valid_score:
             top_valid_score = valid_score
             print('new top validation score, saving weights')
             model.save(os.path.join(model_out_dir, 'weights.p'))
 
+        lr *= decay
+        bert_lr *= decay
 
-def train_iteration(model, no_cuda, optimizer, dataset, train_pairs, qrels):
-    total_prev = total = 0
+
+def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pairs, qrels):
+
     model.train()
     total_loss = 0.
-    with tqdm('training', total=BATCH_SIZE * BATCHES_PER_TRAIN_EPOCH, ncols=80, desc='train', leave=False) as pbar:
-        for record in data.iter_train_pairs(model, no_cuda, dataset, train_pairs, qrels, GRAD_ACC_SIZE):
+    total_prev_qty = total_qty = 0. # This is a total number of records processed, it can be different from
+                                    # the total number of training pairs
+
+    bpte = train_params.batches_per_train_epoch
+    batch_size = train_params.batch_size
+    max_train_qty = data.train_item_qty(train_pairs) if bpte <= 0 else bpte * batch_size
+
+    with tqdm('training', total=max_train_qty, ncols=80, desc='train', leave=False) as pbar:
+        for record in data.iter_train_pairs(model, train_params.no_cuda, dataset, train_pairs, qrels,
+                                            train_params.backprop_batch_size):
             scores = model(record['query_tok'],
                            record['query_mask'],
                            record['doc_tok'],
                            record['doc_mask'], 
-                           max_batch_size=MAX_SUBBATCH_SIZE)
+                           max_subbatch_size=train_params.subbatch_size)
             count = len(record['query_id']) // 2
             scores = scores.reshape(count, 2)
-            loss = torch.mean(1. - scores.softmax(dim=1)[:, 0]) # pairwise softmax
+            loss = loss_obj.compute(scores)
             loss.backward()
             total_loss += loss.item()
-            total += count
+            total_qty += count
             gc.collect()
-            if total  - total_prev >= BATCH_SIZE:
+            if total_qty  - total_prev_qty >= batch_size:
                 #print(total, 'optimizer step!')
                 optimizer.step()
                 optimizer.zero_grad()
-                total_prev = total
+                total_prev_qty = total_qty
             pbar.update(count)
-            if total >= BATCH_SIZE * BATCHES_PER_TRAIN_EPOCH:
-                return total_loss
+            if total_qty >= max_train_qty:
+                break
+
+    return total_loss / float(total_qty)
 
 
-def validate(model, no_cuda, dataset, run, qrelf, epoch, model_out_dir):
+def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
     #VALIDATION_METRIC = 'P.20'
     # Leo's choice to use map
     VALIDATION_METRIC = 'map'
     runf = os.path.join(model_out_dir, f'{epoch}.run')
-    run_model(model, no_cuda, dataset, run, runf)
+    run_model(model, train_params, dataset, run, runf)
     return trec_eval(qrelf, runf, VALIDATION_METRIC)
 
 
-def run_model(model, no_cuda, dataset, run, runf, desc='valid'):
+def run_model(model, train_params, dataset, run, runf, desc='valid'):
     rerank_run = {}
     with torch.no_grad(), tqdm(total=sum(len(r) for r in run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
-        for records in data.iter_valid_records(model, no_cuda, dataset, run, BATCH_SIZE_EVAL):
+        for records in data.iter_valid_records(model,
+                                               train_params.no_cuda,
+                                               dataset, run,
+                                               train_params.batch_size_eval):
             scores = model(records['query_tok'],
                            records['query_mask'],
                            records['doc_tok'],
                            records['doc_mask'],
-                           max_batch_size=MAX_SUBBATCH_SIZE)
+                           max_subbatch_size=train_params.subbatch_size)
             gc.collect()
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
@@ -136,9 +179,45 @@ def main_cli():
     parser.add_argument('--model_out_dir', required=True)
     parser.add_argument('--max_epoch', type=int, default=10)
     parser.add_argument('--no_cuda', action='store_true')
+    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--loss_margin', type=float, default=0.0, help='Margin in the margin loss')
+    parser.add_argument('--init_lr', type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
+    parser.add_argument('--init_bert_lr', type=float, default=0.0005, help='Initial learning rate for BERT parameters')
+    parser.add_argument('--epoch_lr_decay', type=float, default=0.9, help='Per-epoch learning rate decay')
+    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+    parser.add_argument('--batch_size_eval', type=int, default=64, help='batch size for evaluation')
+    parser.add_argument('--subbatch_size', type=int, default=8, help='sub-batch size')
+    parser.add_argument('--backprop_batch_size', type=int, default=8, help='batch size for each backprop step')
+    parser.add_argument('--batches_per_train_epoch', type=int, default=0,
+                        help='# of random batches per epoch: 0 tells to use all data')
+    parser.add_argument('--no_use_checkpoint', action='store_true', help='do not use checkpointing')
+    parser.add_argument('--loss_func', type=str, default=PairwiseSoftmaxLoss.name(),
+                                                help='Loss functions: ' +
+                                                ','.join([PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]))
     args = parser.parse_args()
 
+    utils.set_all_seeds(args.seed)
+
+    loss_name = args.loss_func
+    if loss_name == PairwiseSoftmaxLoss.name():
+      loss_obj = PairwiseSoftmaxLoss()
+    elif loss_name == MarginRankingLossWrapper.name():
+      loss_obj = MarginRankingLossWrapper(margin = args.loss_margin)
+    else:
+      raise Exception('Unsupported loss: ' + loss_name)
+
+    train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr, epoch_lr_decay=args.epoch_lr_decay,
+                         backprop_batch_size=args.backprop_batch_size,
+                         batches_per_train_epoch=args.batches_per_train_epoch,
+                         batch_size=args.batch_size, batch_size_eval=args.batch_size_eval,
+                         subbatch_size=args.subbatch_size,
+                         max_epoch=args.max_epoch, no_cuda=args.no_cuda)
+
+    print('Training parameters:')
+    print(train_params)
+
     model = MODEL_MAP[args.model]()
+    model.set_use_checkpoint(not args.no_use_checkpoint)
     if not args.no_cuda:
         model = model.cuda()
     dataset = data.read_datafiles(args.datafiles)
@@ -148,7 +227,8 @@ def main_cli():
     if args.initial_bert_weights is not None:
         model.load(args.initial_bert_weights.name)
     os.makedirs(args.model_out_dir, exist_ok=True)
-    main(model, args.max_epoch, args.no_cuda, dataset, train_pairs, qrels, valid_run, qrelf=args.qrels.name, model_out_dir=args.model_out_dir)
+    main(model, loss_obj, train_params,
+         dataset, train_pairs, qrels, valid_run, qrelf=args.qrels.name, model_out_dir=args.model_out_dir)
 
 
 if __name__ == '__main__':

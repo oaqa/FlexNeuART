@@ -39,9 +39,9 @@ class BertEncoder(torch.nn.Module):
     torch.nn.init.xavier_uniform_(self.fc.weight) 
 
 
-  def forward(self, toks, mask, max_batch_size):
-      cls_reps = self.encode_bert(toks, mask, max_batch_size)
-      return self.fc(self.dropout(cls_reps))
+  def forward(self, toks, mask, max_subbatch_size):
+    cls_reps = self.encode_bert(toks, mask, max_subbatch_size)
+    return self.fc(self.dropout(cls_reps))
 
   def save(self, path):
     state = self.state_dict(keep_vars=True)
@@ -55,7 +55,7 @@ class BertEncoder(torch.nn.Module):
   def load(self, path):
     self.load_state_dict(torch.load(path), strict=False)
 
-  def encode_bert(self, toks, mask, max_batch_size):
+  def encode_bert(self, toks, mask, max_subbatch_size):
     maxlen = self.bert.config.max_position_embeddings
 
     MAX_TOK_LEN = maxlen - 1 # minus one is for [CLS]
@@ -95,10 +95,10 @@ class BertEncoder(torch.nn.Module):
     # execute BERT model without exceeding BATCH capacity
     results_split = []
     subbatch_size, _ = toks_4model.shape
-    split_qty = (subbatch_size + max_batch_size - 1) // max_batch_size
+    split_qty = (subbatch_size + max_subbatch_size - 1) // max_subbatch_size
     for i in range(split_qty):
-      start = i * max_batch_size
-      end = min(start +  max_batch_size, subbatch_size)
+      start = i * max_subbatch_size
+      end = min(start + max_subbatch_size, subbatch_size)
       #print('@@@', start, end, subbatch_size)
       split_res = self.bert(toks_4model[start:end,:], segment_ids[start:end,:], mask_4model[start:end,:])
       # We care only about the last layer
@@ -134,6 +134,10 @@ class DuetBertRanker(torch.nn.Module):
       toks = [self.tokenizer.vocab[t] for t in toks]
       return toks
 
+    def set_use_checkpoint(self, use_checkpoint):
+        self.query_encoder.set_use_checkpoint(use_checkpoint)
+        self.doc_encoder.set_use_checkpoint(use_checkpoint)
+
     def save(self, path):
         self.query_encoder.save(path + '_query')
         self.doc_encoder.save(path + '_doc')
@@ -149,9 +153,9 @@ class DuetBertRanker(torch.nn.Module):
           self.query_encoder.load(query_path)
           self.doc_encoder.load(doc_path)
 
-    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size):
-        query_vec = self.query_encoder(query_tok, query_mask, max_batch_size)
-        doc_vec = self.doc_encoder(doc_tok, doc_mask, max_batch_size)
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_subbatch_size):
+        query_vec = self.query_encoder(query_tok, query_mask, max_subbatch_size)
+        doc_vec = self.doc_encoder(doc_tok, doc_mask, max_subbatch_size)
         # Returnining batched dot-product
         res = torch.einsum('bi, bi -> b', query_vec, doc_vec)
         return res

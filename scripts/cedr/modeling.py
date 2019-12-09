@@ -19,6 +19,9 @@ class BertRanker(torch.nn.Module):
         self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
         self.tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(self.BERT_MODEL)
 
+    def set_use_checkpoint(self, use_checkpoint):
+        self.bert.set_use_checkpoint(use_checkpoint)
+
     def forward(self, **inputs):
         raise NotImplementedError
 
@@ -91,7 +94,7 @@ class VanillaBertRanker(BertRanker):
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
 
-    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_batch_size=None):
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_subbatch_size=None):
         cls_reps, _, _ = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
         return self.cls(self.dropout(cls_reps[-1]))
 

@@ -27,11 +27,10 @@ checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
 
-
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/cedr_train"
 
 if [ ! -d "$outDir" ] ; then
-  mkdir "$outDir"
+  mkdir -p "$outDir"
 fi
 
 cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"

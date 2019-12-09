@@ -63,6 +63,8 @@ def iter_train_pairs(model, no_cuda, dataset, train_pairs, qrels, batch_size):
             batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
 
 
+def train_item_qty(train_pairs):
+    return len(list(train_pairs.keys()))
 
 def _iter_train_pairs(model, dataset, train_pairs, qrels):
     ds_queries, ds_docs = dataset
