@@ -77,9 +77,9 @@ def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, 
 
         optimizer = torch.optim.Adam([non_bert_params, bert_params], lr=lr)
         loss = train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pairs, qrels)
-        print(f'train epoch={epoch} loss={loss} lr={lr} bert_lr={bert_lr}')
+        print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
         valid_score = validate(model, train_params, dataset, valid_run, qrelf, epoch, model_out_dir)
-        print(f'validation epoch={epoch} score={valid_score}')
+        print(f'validation epoch={epoch} score={valid_score:.4g}')
         if top_valid_score is None or valid_score > top_valid_score:
             top_valid_score = valid_score
             print('new top validation score, saving weights')
@@ -181,8 +181,8 @@ def main_cli():
     parser.add_argument('--no_cuda', action='store_true')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--loss_margin', type=float, default=0.0, help='Margin in the margin loss')
-    parser.add_argument('--init_lr', type=float, default=0.01, help='Initial learning rate for BERT-unrelated parameters')
-    parser.add_argument('--init_bert_lr', type=float, default=0.005, help='Initial learning rate for BERT parameters')
+    parser.add_argument('--init_lr', type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
+    parser.add_argument('--init_bert_lr', type=float, default=0.00005, help='Initial learning rate for BERT parameters')
     parser.add_argument('--epoch_lr_decay', type=float, default=0.9, help='Per-epoch learning rate decay')
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--batch_size_eval', type=int, default=64, help='batch size for evaluation')
@@ -215,6 +215,7 @@ def main_cli():
 
     print('Training parameters:')
     print(train_params)
+    print('Loss function:', loss_obj.name())
 
     model = MODEL_MAP[args.model]()
     model.set_use_checkpoint(not args.no_use_checkpoint)
