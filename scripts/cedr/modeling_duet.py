@@ -13,11 +13,11 @@ import modeling_util
 #
 # TODO: We will at some point need to refactor and extract hard-coded constants to a separate file
 #
-class BertEncoder(torch.nn.Module):
+class BertSepObjEncoder(torch.nn.Module):
   '''
     This class uses a BERT model with an additional fully-connected layer applied
-    to the output of the CLS token to produce a dense vector
-    of a given dimensionality.
+    to the output of the CLS token to produce a dense vector of a given dimensionality.
+    It is assumed that we will encode each textual object (query or document) separately.
   '''
   def __init__(self, dim, dropout):
     super().__init__()
@@ -38,6 +38,9 @@ class BertEncoder(torch.nn.Module):
     self.fc = torch.nn.Linear(self.BERT_SIZE, dim)
     torch.nn.init.xavier_uniform_(self.fc.weight) 
 
+
+  def set_use_checkpoint(self, use_checkpoint):
+    self.bert.set_use_checkpoint(use_checkpoint)
 
   def forward(self, toks, mask, max_subbatch_size):
     cls_reps = self.encode_bert(toks, mask, max_subbatch_size)
@@ -122,8 +125,8 @@ class BertEncoder(torch.nn.Module):
 class DuetBertRanker(torch.nn.Module):
     def __init__(self, dim=128, dropout=0.1):
         super().__init__()
-        self.query_encoder = BertEncoder(dim=dim, dropout=dropout)
-        self.doc_encoder = BertEncoder(dim=dim, dropout=dropout)
+        self.query_encoder = BertSepObjEncoder(dim=dim, dropout=dropout)
+        self.doc_encoder = BertSepObjEncoder(dim=dim, dropout=dropout)
         self.tokenizer = self.query_encoder.tokenizer
 
     # TODO this is a copy-paste of the BertRanker class tokenize
