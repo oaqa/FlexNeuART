@@ -51,7 +51,7 @@ class PairwiseSoftmaxLoss:
 TrainParams = namedtuple('TrainParams',
                     ['init_lr', 'init_bert_lr', 'epoch_lr_decay',
                      'batches_per_train_epoch', 'batch_size', 'batch_size_eval', 'subbatch_size', 'backprop_batch_size',
-                     'max_epoch', 'no_cuda'])
+                     'max_epoch', 'no_cuda', 'print_grads'])
 
 MODEL_MAP = {
     'vanilla_bert': modeling.VanillaBertRanker,
@@ -100,6 +100,13 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
     batch_size = train_params.batch_size
     max_train_qty = data.train_item_qty(train_pairs) if bpte <= 0 else bpte * batch_size
 
+    optimizer.zero_grad()
+
+    if train_params.print_grads:
+      print('Gradient sums before training')
+      for k, v in model.named_parameters():
+        print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
+
     with tqdm('training', total=max_train_qty, ncols=80, desc='train', leave=False) as pbar:
         for record in data.iter_train_pairs(model, train_params.no_cuda, dataset, train_pairs, qrels,
                                             train_params.backprop_batch_size):
@@ -112,8 +119,15 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
             scores = scores.reshape(count, 2)
             loss = loss_obj.compute(scores)
             loss.backward()
-            total_loss += loss.item()
             total_qty += count
+
+            if train_params.print_grads:
+              print(f'Records processed {total_qty} Gradient sums:')
+              for k, v in model.named_parameters():
+                print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
+
+            total_loss += loss.item()
+
             gc.collect()
             if total_qty  - total_prev_qty >= batch_size:
                 #print(total, 'optimizer step!')
@@ -179,6 +193,7 @@ def main_cli():
     parser.add_argument('--model_out_dir', required=True)
     parser.add_argument('--max_epoch', type=int, default=10)
     parser.add_argument('--no_cuda', action='store_true')
+    parser.add_argument('--print_grads', action='store_true')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--loss_margin', type=float, default=0.0, help='Margin in the margin loss')
     parser.add_argument('--init_lr', type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
@@ -186,8 +201,8 @@ def main_cli():
     parser.add_argument('--epoch_lr_decay', type=float, default=0.9, help='Per-epoch learning rate decay')
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--batch_size_eval', type=int, default=64, help='batch size for evaluation')
-    parser.add_argument('--subbatch_size', type=int, default=8, help='sub-batch size')
-    parser.add_argument('--backprop_batch_size', type=int, default=8, help='batch size for each backprop step')
+    parser.add_argument('--subbatch_size', type=int, default=12, help='sub-batch size')
+    parser.add_argument('--backprop_batch_size', type=int, default=12, help='batch size for each backprop step')
     parser.add_argument('--batches_per_train_epoch', type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
     parser.add_argument('--no_use_checkpoint', action='store_true', help='do not use checkpointing')
@@ -211,7 +226,8 @@ def main_cli():
                          batches_per_train_epoch=args.batches_per_train_epoch,
                          batch_size=args.batch_size, batch_size_eval=args.batch_size_eval,
                          subbatch_size=args.subbatch_size,
-                         max_epoch=args.max_epoch, no_cuda=args.no_cuda)
+                         max_epoch=args.max_epoch, no_cuda=args.no_cuda,
+                         print_grads=args.print_grads)
 
     print('Training parameters:')
     print(train_params)
