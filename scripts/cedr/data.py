@@ -77,7 +77,7 @@ def _iter_train_pairs(model, dataset, train_pairs, qrels):
                 continue
             pos_id = random.choice(pos_ids)
             pos_ids_lookup = set(pos_ids)
-            pos_ids = set(pos_ids)
+
             neg_ids = [did for did in train_pairs[qid] if did not in pos_ids_lookup]
             if len(neg_ids) == 0:
                 continue
