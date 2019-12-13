@@ -173,7 +173,6 @@ public class AnswerBasedQRELGenerator {
     mQueryQty += 1;
     if (mQueryQty % 100 == 0) {
       logger.info("Processed " + mQueryQty + " queries");
-      System.out.println("Processed " + mQueryQty + " queries");
     }
   }
   

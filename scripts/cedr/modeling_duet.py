@@ -63,12 +63,7 @@ class BertSepObjEncoder(torch.nn.Module):
 
     MAX_TOK_LEN = maxlen - 1 # minus one is for [CLS]
 
-    # This is a crutch to avoid using too much memory
-    # Shorten the stuff
     BATCH, LEN = toks.shape
-    if LEN > 2*MAX_TOK_LEN:
-      toks = toks[:, :2*MAX_TOK_LEN, :]
-      mask = mask[:, :2*MAX_TOK_LEN, :]
 
     if LEN <= 0:
       print('Got empty sequence! Generating zero-vector batch')
