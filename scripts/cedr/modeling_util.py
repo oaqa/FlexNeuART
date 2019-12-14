@@ -13,7 +13,7 @@ class CustomBertModel(pytorch_pretrained_bert.BertModel):
     """
     Based on pytorch_pretrained_bert.BertModel, but also outputs un-contextualized embeddings.
     """
-    def forward(self, input_ids, token_type_ids, attention_mask):
+    def forward(self, input_ids, token_type_ids, attention_mask, output_all_encoded_layers=True):
         """
         Based on pytorch_pretrained_bert.BertModel
         """
@@ -23,7 +23,7 @@ class CustomBertModel(pytorch_pretrained_bert.BertModel):
         extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
-        encoded_layers = self.encoder(embedding_output, extended_attention_mask, output_all_encoded_layers=True)
+        encoded_layers = self.encoder(embedding_output, extended_attention_mask, output_all_encoded_layers=output_all_encoded_layers)
 
         return [embedding_output] + encoded_layers
 

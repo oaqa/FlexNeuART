@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
 # It has some substantial modifications + it relies on our custom BERT
 # library: https://github.com/searchivarius/pytorch-pretrained-BERT-mod
@@ -51,7 +52,8 @@ class PairwiseSoftmaxLoss:
 TrainParams = namedtuple('TrainParams',
                     ['init_lr', 'init_bert_lr', 'epoch_lr_decay',
                      'batches_per_train_epoch', 'batch_size', 'batch_size_eval', 'subbatch_size', 'backprop_batch_size',
-                     'max_epoch', 'no_cuda', 'print_grads'])
+                     'epoch_qty', 'no_cuda', 'print_grads',
+                     'shuffle_train'])
 
 MODEL_MAP = {
     'vanilla_bert': modeling.VanillaBertRanker,
@@ -69,7 +71,7 @@ def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, 
 
     top_valid_score = None
 
-    for epoch in range(train_params.max_epoch):
+    for epoch in range(train_params.epoch_qty):
 
         params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
         non_bert_params = {'params': [v for k, v in params if not k.startswith('bert.')]}
@@ -108,8 +110,8 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
         print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
 
     with tqdm('training', total=max_train_qty, ncols=80, desc='train', leave=False) as pbar:
-        for record in data.iter_train_pairs(model, train_params.no_cuda, dataset, train_pairs, qrels,
-                                            train_params.backprop_batch_size):
+        for record in data.iter_train_pairs(model, train_params.no_cuda, dataset, train_pairs, train_params.shuffle_train,
+                                            qrels, train_params.backprop_batch_size):
             scores = model(record['query_tok'],
                            record['query_mask'],
                            record['doc_tok'],
@@ -191,11 +193,11 @@ def main_cli():
     parser.add_argument('--valid_run', type=argparse.FileType('rt'), required=True)
     parser.add_argument('--initial_bert_weights', type=argparse.FileType('rb'), default=None)
     parser.add_argument('--model_out_dir', required=True)
-    parser.add_argument('--max_epoch', type=int, default=10)
+    parser.add_argument('--epoch_qty', type=int, default=10, help='# of epochs')
     parser.add_argument('--no_cuda', action='store_true')
     parser.add_argument('--print_grads', action='store_true')
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--loss_margin', type=float, default=0.0, help='Margin in the margin loss')
+    parser.add_argument('--loss_margin', type=float, default=1, help='Margin in the margin loss')
     parser.add_argument('--init_lr', type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
     parser.add_argument('--init_bert_lr', type=float, default=0.00005, help='Initial learning rate for BERT parameters')
     parser.add_argument('--epoch_lr_decay', type=float, default=0.9, help='Per-epoch learning rate decay')
@@ -206,6 +208,7 @@ def main_cli():
     parser.add_argument('--batches_per_train_epoch', type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
     parser.add_argument('--no_use_checkpoint', action='store_true', help='do not use checkpointing')
+    parser.add_argument('--no_shuffle_train', action='store_true', help='disabling shuffling of training data')
     parser.add_argument('--loss_func', type=str, default=PairwiseSoftmaxLoss.name(),
                                                 help='Loss functions: ' +
                                                 ','.join([PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]))
@@ -226,8 +229,9 @@ def main_cli():
                          batches_per_train_epoch=args.batches_per_train_epoch,
                          batch_size=args.batch_size, batch_size_eval=args.batch_size_eval,
                          subbatch_size=args.subbatch_size,
-                         max_epoch=args.max_epoch, no_cuda=args.no_cuda,
-                         print_grads=args.print_grads)
+                         epoch_qty=args.epoch_qty, no_cuda=args.no_cuda,
+                         print_grads=args.print_grads,
+                         shuffle_train=not args.no_shuffle_train)
 
     print('Training parameters:')
     print(train_params)

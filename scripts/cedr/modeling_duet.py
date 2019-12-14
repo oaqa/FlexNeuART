@@ -10,6 +10,8 @@ import torch.nn.functional as F
 import pytorch_pretrained_bert
 import modeling_util
 
+USE_SUBSUB_BATCH=False
+
 #
 # TODO: We will at some point need to refactor and extract hard-coded constants to a separate file
 #
@@ -19,10 +21,11 @@ class BertSepObjEncoder(torch.nn.Module):
     to the output of the CLS token to produce a dense vector of a given dimensionality.
     It is assumed that we will encode each textual object (query or document) separately.
   '''
-  def __init__(self, dim, dropout):
+  def __init__(self, dim, dropout, l2_normalize=False):
     super().__init__()
 
     self.BERT_MODEL = 'bert-base-uncased'
+    self.l2_normalize = l2_normalize
     self.CHANNELS = 12 + 1  # from bert-base-uncased
     self.BERT_SIZE = 768  # from bert-base-uncased
     self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
@@ -44,7 +47,10 @@ class BertSepObjEncoder(torch.nn.Module):
 
   def forward(self, toks, mask, max_subbatch_size):
     cls_reps = self.encode_bert(toks, mask, max_subbatch_size)
-    return self.fc(self.dropout(cls_reps))
+    out_fc = self.fc(self.dropout(cls_reps))
+    if self.l2_normalize:
+      out_fc = torch.nn.functional.normalize(out_fc, dim=-1, p=2)
+    return out_fc
 
   def save(self, path):
     state = self.state_dict(keep_vars=True)
@@ -91,25 +97,31 @@ class BertSepObjEncoder(torch.nn.Module):
     assert(segment_ids.shape == mask_4model.shape)
 
     # execute BERT model without exceeding BATCH capacity
-    results_split = []
-    subbatch_size, _ = toks_4model.shape
-    split_qty = (subbatch_size + max_subbatch_size - 1) // max_subbatch_size
-    for i in range(split_qty):
-      start = i * max_subbatch_size
-      end = min(start + max_subbatch_size, subbatch_size)
-      #print('@@@', start, end, subbatch_size)
-      split_res = self.bert(toks_4model[start:end,:], segment_ids[start:end,:], mask_4model[start:end,:])
-      # We care only about the last layer
-      results_split.append(split_res[-1])
+    if USE_SUBSUB_BATCH:
+      results_split = []
+      subbatch_size, _ = toks_4model.shape
+      split_qty = (subbatch_size + max_subbatch_size - 1) // max_subbatch_size
+      for i in range(split_qty):
+        start = i * max_subbatch_size
+        end = min(start + max_subbatch_size, subbatch_size)
+        #print('@@@', start, end, subbatch_size)
+        split_res = self.bert(toks_4model[start:end,:], segment_ids[start:end,:], mask_4model[start:end,:])
+        # We care only about the last layer
+        results_split.append(split_res[-1])
 
-    results = torch.cat(results_split, dim = 0)
+      results = torch.cat(results_split, dim = 0)
+      # extract relevant subsequences: results already have only last-layer tensors
+      unsubbatch_results = modeling_util.un_subbatch(results, toks, MAX_TOK_LEN)
+      cls_output = unsubbatch_results[:, 0]
+    else:
+      results = self.bert(toks_4model, segment_ids, mask_4model, output_all_encoded_layers=False)[-1]
+      unsubbatch_results = modeling_util.un_subbatch(results, toks, MAX_TOK_LEN)
+      cls_output = unsubbatch_results[:, 0]
+      
 
-    # extract relevant subsequences: results already have only last-layer tensors
-    unsubbatch_results = modeling_util.un_subbatch(results, toks, MAX_TOK_LEN)
 
     # build aggregate CLS representation by averaging CLS representations within each subbatch
 
-    cls_output = unsubbatch_results[:, 0]
     cls_result = []
     for i in range(cls_output.shape[0] // BATCH):
       cls_result.append(cls_output[i * BATCH:(i + 1) * BATCH])
@@ -152,9 +164,11 @@ class DuetBertRanker(torch.nn.Module):
           self.doc_encoder.load(doc_path)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask, max_subbatch_size):
-        query_vec = self.query_encoder(query_tok, query_mask, max_subbatch_size)
-        doc_vec = self.doc_encoder(doc_tok, doc_mask, max_subbatch_size)
-        # Returnining batched dot-product
-        res = torch.einsum('bi, bi -> b', query_vec, doc_vec)
-        return res
+      query_vec = self.query_encoder(query_tok, query_mask, max_subbatch_size)
+      doc_vec = self.doc_encoder(doc_tok, doc_mask, max_subbatch_size)
+
+      # Returnining batched dot-product
+      res = torch.einsum('bi, bi -> b', query_vec, doc_vec)
+
+      return res
 

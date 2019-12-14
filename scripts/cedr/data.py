@@ -51,9 +51,9 @@ def read_pairs_dict(file):
     return result
 
 
-def iter_train_pairs(model, no_cuda, dataset, train_pairs, qrels, batch_size):
+def iter_train_pairs(model, no_cuda, dataset, train_pairs, do_shuffle, qrels, batch_size):
     batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
-    for qid, did, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, qrels):
+    for qid, did, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
         batch['query_id'].append(qid)
         batch['doc_id'].append(did)
         batch['query_tok'].append(query_tok)
@@ -66,11 +66,12 @@ def iter_train_pairs(model, no_cuda, dataset, train_pairs, qrels, batch_size):
 def train_item_qty(train_pairs):
     return len(list(train_pairs.keys()))
 
-def _iter_train_pairs(model, dataset, train_pairs, qrels):
+def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
     ds_queries, ds_docs = dataset
     while True:
         qids = list(train_pairs.keys())
-        random.shuffle(qids)
+        if do_shuffle:
+            random.shuffle(qids)
         for qid in qids:
             pos_ids = [did for did in train_pairs[qid] if qrels.get(qid, {}).get(did, 0) > 0]
             if len(pos_ids) == 0:
