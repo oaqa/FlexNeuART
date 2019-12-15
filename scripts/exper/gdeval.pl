@@ -28,10 +28,12 @@ $RUN = $ARGV[1];
 
 # Read qrels file, check format, and sort
 open (QRELS) || die "$0: cannot open \"$QRELS\": !$\n";
+$ln=0;
 while (<QRELS>) {
+  $ln++;
   s/[\r\n]//g;
   ($topic, $zero, $docno, $judgment) = split (' ');
-  die "$0: QREL format error on line $. of \"$QRELS\"\n"
+  die "$0: QREL format error on line $ln of \"$QRELS\"\n"
     unless $zero eq "0" && $judgment =~ /^-?[0-9]+$/ && $judgment <= $MAX_JUDGMENT;
   if ($judgment > 0) {
     $qrels[$#qrels + 1]= "$topic $docno $judgment";
@@ -45,11 +47,13 @@ $topics = 0;
 $runid = "?????";
 # Read run rile, check format, and sort
 open (RUN) || die "$0: cannot open \"$RUN\": !$\n";
+$ln=0;
 while (<RUN>) {
+  $ln++;
   s/[\r\n]//g;
   ($topic, $q0, $docno, $rank, $score, $runid) = split (' ');
-  die "$0: RUN format error on line $. of \"$RUN\"\n"
-    unless $q0 eq "Q0" && $rank =~ /^[0-9]+$/ && $runid;
+  die "$0: RUN format error on line $ln of \"$RUN\"\n"
+    unless $q0 == $q0 && $rank =~ /^[0-9]+$/ && $runid;
   $run[$#run + 1] = "$topic $docno $score";
 }
 

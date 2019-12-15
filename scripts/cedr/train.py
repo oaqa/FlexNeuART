@@ -20,6 +20,8 @@ import data
 from tqdm import tqdm
 from collections import namedtuple
 
+USE_MAP=False
+
 
 class MarginRankingLossWrapper:
   @staticmethod
@@ -144,12 +146,15 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
 
 
 def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
-    #VALIDATION_METRIC = 'P.20'
-    # Leo's choice to use map
-    VALIDATION_METRIC = 'map'
     runf = os.path.join(model_out_dir, f'{epoch}.run')
     run_model(model, train_params, dataset, run, runf)
-    return trec_eval(qrelf, runf, VALIDATION_METRIC)
+    if USE_MAP:
+      #VALIDATION_METRIC = 'P.20'
+      # Leo's choice to use map for trec_eval
+      VALIDATION_METRIC = 'map'
+      return trec_eval(qrelf, runf, 'map')
+    else:
+      return gdeval(qrelf, runf, 'ndcg')
 
 
 def run_model(model, train_params, dataset, run, runf, desc='valid'):
@@ -174,6 +179,19 @@ def run_model(model, train_params, dataset, run, runf, desc='valid'):
             scores = list(sorted(rerank_run[qid].items(), key=lambda x: (x[1], x[0]), reverse=True))
             for i, (did, score) in enumerate(scores):
                 runfile.write(f'{qid} 0 {did} {i+1} {score} run\n')
+
+def gdeval(qrelf, runf, metric):
+    gval_f = 'scripts/exper/gdeval.pl'
+    output = subprocess.check_output([gval_f, qrelf, runf]).decode().rstrip()
+    output = output.split('\n')
+    last = output[-1].split(',')
+    metric = metric.lower()
+    if metric == 'err':
+      return float(last[-1])
+    elif metric == 'ndcg':
+      return float(last[-2])
+    else:
+      raise Exception('Invalid gdeval metric: ' + metric)
 
 
 def trec_eval(qrelf, runf, metric):
