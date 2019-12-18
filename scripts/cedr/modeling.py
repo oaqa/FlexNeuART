@@ -19,8 +19,8 @@ class BertRanker(torch.nn.Module):
         self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
         self.tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(self.BERT_MODEL)
 
-    def set_use_checkpoint(self, use_checkpoint):
-        self.bert.set_use_checkpoint(use_checkpoint)
+    def set_grad_checkpoint_param(self, param):
+        self.bert.set_grad_checkpoint_param(param)
 
     def forward(self, **inputs):
         raise NotImplementedError

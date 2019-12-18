@@ -220,7 +220,8 @@ def main_cli():
     parser.add_argument('--backprop_batch_size', type=int, default=12, help='batch size for each backprop step')
     parser.add_argument('--batches_per_train_epoch', type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
-    parser.add_argument('--use_checkpoint', action='store_true', help='use checkpointing')
+    parser.add_argument('--grad_checkpoint_param', type=int, default=0,
+                       help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
     parser.add_argument('--no_shuffle_train', action='store_true', help='disabling shuffling of training data')
     parser.add_argument('--loss_func', type=str, default=PairwiseSoftmaxLoss.name(),
                                                 help='Loss functions: ' +
@@ -250,7 +251,7 @@ def main_cli():
     print('Loss function:', loss_obj.name())
 
     model = MODEL_MAP[args.model]()
-    model.set_use_checkpoint(args.use_checkpoint)
+    model.set_grad_checkpoint_param(args.grad_checkpoint_param)
     if not args.no_cuda:
         model = model.cuda()
     dataset = data.read_datafiles(args.datafiles)
