@@ -13,7 +13,7 @@ import subprocess
 
 import torch
 import modeling
-import modeling_duet
+import modeling_dssm
 import utils
 import data
 
