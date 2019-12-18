@@ -53,7 +53,7 @@ class PairwiseSoftmaxLoss:
 
 TrainParams = namedtuple('TrainParams',
                     ['init_lr', 'init_bert_lr', 'epoch_lr_decay',
-                     'batches_per_train_epoch', 'batch_size', 'batch_size_eval', 'subbatch_size', 'backprop_batch_size',
+                     'batches_per_train_epoch', 'batch_size', 'batch_size_eval', 'backprop_batch_size',
                      'epoch_qty', 'no_cuda', 'print_grads',
                      'shuffle_train'])
 
@@ -62,7 +62,7 @@ MODEL_MAP = {
     'cedr_pacrr': modeling.CedrPacrrRanker,
     'cedr_knrm': modeling.CedrKnrmRanker,
     'cedr_drmm': modeling.CedrDrmmRanker,
-    'dssm_bert' : modeling_duet.DssmBertRanker
+    'dssm_bert' : modeling_dssm.DssmBertRanker
 }
 
 
@@ -117,8 +117,7 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
             scores = model(record['query_tok'],
                            record['query_mask'],
                            record['doc_tok'],
-                           record['doc_mask'], 
-                           max_subbatch_size=train_params.subbatch_size)
+                           record['doc_mask'])
             count = len(record['query_id']) // 2
             scores = scores.reshape(count, 2)
             loss = loss_obj.compute(scores)
@@ -167,8 +166,7 @@ def run_model(model, train_params, dataset, run, runf, desc='valid'):
             scores = model(records['query_tok'],
                            records['query_mask'],
                            records['doc_tok'],
-                           records['doc_mask'],
-                           max_subbatch_size=train_params.subbatch_size)
+                           records['doc_mask'])
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
@@ -219,7 +217,6 @@ def main_cli():
     parser.add_argument('--epoch_lr_decay', type=float, default=0.9, help='Per-epoch learning rate decay')
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--batch_size_eval', type=int, default=64, help='batch size for evaluation')
-    parser.add_argument('--subbatch_size', type=int, default=12, help='sub-batch size')
     parser.add_argument('--backprop_batch_size', type=int, default=12, help='batch size for each backprop step')
     parser.add_argument('--batches_per_train_epoch', type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
@@ -244,7 +241,6 @@ def main_cli():
                          backprop_batch_size=args.backprop_batch_size,
                          batches_per_train_epoch=args.batches_per_train_epoch,
                          batch_size=args.batch_size, batch_size_eval=args.batch_size_eval,
-                         subbatch_size=args.subbatch_size,
                          epoch_qty=args.epoch_qty, no_cuda=args.no_cuda,
                          print_grads=args.print_grads,
                          shuffle_train=not args.no_shuffle_train)
