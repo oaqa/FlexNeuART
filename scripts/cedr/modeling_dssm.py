@@ -129,7 +129,7 @@ class BertSepObjEncoder(torch.nn.Module):
     return torch.stack(cls_result, dim=2).mean(dim=2)
 
 
-class DuetBertRanker(torch.nn.Module):
+class DssmBertRanker(torch.nn.Module):
     def __init__(self, dim=128, dropout=0.1):
         super().__init__()
         self.query_encoder = BertSepObjEncoder(dim=dim, dropout=dropout)
