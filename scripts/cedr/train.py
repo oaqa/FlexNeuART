@@ -132,7 +132,6 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
 
             total_loss += loss.item()
 
-            gc.collect()
             if total_qty  - total_prev_qty >= batch_size:
                 #print(total, 'optimizer step!')
                 optimizer.step()
@@ -170,7 +169,6 @@ def run_model(model, train_params, dataset, run, runf, desc='valid'):
                            records['doc_tok'],
                            records['doc_mask'],
                            max_subbatch_size=train_params.subbatch_size)
-            gc.collect()
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
@@ -225,7 +223,7 @@ def main_cli():
     parser.add_argument('--backprop_batch_size', type=int, default=12, help='batch size for each backprop step')
     parser.add_argument('--batches_per_train_epoch', type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
-    parser.add_argument('--no_use_checkpoint', action='store_true', help='do not use checkpointing')
+    parser.add_argument('--use_checkpoint', action='store_true', help='use checkpointing')
     parser.add_argument('--no_shuffle_train', action='store_true', help='disabling shuffling of training data')
     parser.add_argument('--loss_func', type=str, default=PairwiseSoftmaxLoss.name(),
                                                 help='Loss functions: ' +
@@ -256,7 +254,7 @@ def main_cli():
     print('Loss function:', loss_obj.name())
 
     model = MODEL_MAP[args.model]()
-    model.set_use_checkpoint(not args.no_use_checkpoint)
+    model.set_use_checkpoint(args.use_checkpoint)
     if not args.no_cuda:
         model = model.cuda()
     dataset = data.read_datafiles(args.datafiles)
