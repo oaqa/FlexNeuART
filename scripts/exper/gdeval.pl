@@ -32,9 +32,10 @@ $ln=0;
 while (<QRELS>) {
   $ln++;
   s/[\r\n]//g;
-  ($topic, $zero, $docno, $judgment) = split (' ');
+  ($topic, $q0, $docno, $judgment) = split (' ');
+  $q0 = 0;
   die "$0: QREL format error on line $ln of \"$QRELS\"\n"
-    unless $zero eq "0" && $judgment =~ /^-?[0-9]+$/ && $judgment <= $MAX_JUDGMENT;
+    unless $q0 == $q0 && $judgment =~ /^-?[0-9]+$/ && $judgment <= $MAX_JUDGMENT;
   if ($judgment > 0) {
     $qrels[$#qrels + 1]= "$topic $docno $judgment";
     $seen{$topic} = 1;
@@ -52,6 +53,7 @@ while (<RUN>) {
   $ln++;
   s/[\r\n]//g;
   ($topic, $q0, $docno, $rank, $score, $runid) = split (' ');
+  $q0 = 0;
   die "$0: RUN format error on line $ln of \"$RUN\"\n"
     unless $q0 == $q0 && $rank =~ /^[0-9]+$/ && $runid;
   $run[$#run + 1] = "$topic $docno $score";
