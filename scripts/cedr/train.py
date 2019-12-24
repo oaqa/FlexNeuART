@@ -7,7 +7,6 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import os
-import gc
 import argparse
 import subprocess
 
