@@ -9,6 +9,13 @@ SERVER_LOG_NAME="server.log"
 #export MVN_RUN_CMD="mvn -q -o compile exec:java "
 export MVN_RUN_CMD="mvn -o compile exec:java "
 
+# The safest way to use bash is to rely on "set -euxo pipefail"
+# However, it causes multiple issues, e.g.:
+#   1) $k variables are unbounded when parameters are unspecified. If you set
+#      -u it makes parsing arguments more difficult.
+#   2) When we use grep for flow control "set -e" will cause scripts to fail when
+#      the grep fails.
+# Info: https://coderwall.com/p/fkfaqq/safer-bash-scripts-with-set-euxo-pipefail
 function execAndCheck {
   cmd0="$1"
   desc="$2"

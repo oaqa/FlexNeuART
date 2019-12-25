@@ -5,7 +5,6 @@
 POS_ARGS=()
 
 numCoresCPU=`getNumCpuCores`
-check "getting the number of CPU cores, do you have /proc/cpu/info?"
 threadQty=$numCoresCPU
 
 nmslibURI=""
