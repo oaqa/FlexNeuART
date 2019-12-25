@@ -40,8 +40,8 @@ class BertSepObjEncoder(torch.nn.Module):
     torch.nn.init.xavier_uniform_(self.fc.weight) 
 
 
-  def set_use_checkpoint(self, use_checkpoint):
-    self.bert.set_use_checkpoint(use_checkpoint)
+  def set_grad_checkpoint_param(self, param):
+    self.bert.set_grad_checkpoint_param(param)
 
   def forward(self, toks, mask):
     cls_reps = self.encode_bert(toks, mask)
@@ -122,9 +122,9 @@ class DssmBertRanker(torch.nn.Module):
       toks = [self.tokenizer.vocab[t] for t in toks]
       return toks
 
-    def set_use_checkpoint(self, use_checkpoint):
-        self.query_encoder.set_use_checkpoint(use_checkpoint)
-        self.doc_encoder.set_use_checkpoint(use_checkpoint)
+    def set_grad_checkpoint_param(self, param):
+        self.query_encoder.set_grad_checkpoint_param(param)
+        self.doc_encoder.set_grad_checkpoint_param(param)
 
     def save(self, path):
         self.query_encoder.save(path + '_query')
