@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
   parser.add_argument('--model', metavar='model type',
                       required=True, type=str,
-                      help=' type, e.g., vanilla_bert')
+                      help='type, e.g., vanilla_bert')
 
   parser.add_argument('--debug_print', action='store_true',
                       help='Provide debug output')
