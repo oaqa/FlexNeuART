@@ -1,6 +1,7 @@
 #!/bin/bash -e
 source scripts/common_proc.sh
 source scripts/config.sh
+source scripts/config_opts.sh
 
 # The output directory name is hard-coded
 

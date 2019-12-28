@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 . scripts/common_proc.sh
 . scripts/config.sh
 
@@ -6,50 +6,145 @@
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FEAT_EXPER_SUBDIR"
 checkVarNonEmpty "EXPER_DESC_SUBDIR"
+checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
+checkVarNonEmpty "DEFAULT_NUM_TREES"
+checkVarNonEmpty "DEFAULT_METRIC_TYPE"
 
-collect=$1
+numRandRestart=$DEFAULT_NUM_RAND_RESTART
+numTrees=$DEFAULT_NUM_TREES
+metricType=$DEFAULT_METRIC_TYPE
+
+maxQueryQtyTrain=""
+maxQueryQtyTest=""
+useLMARTOpt=""
+
+checkVarNonEmpty "DEFAULT_TRAIN_CAND_QTY"
+checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
+
+trainCandQty=$DEFAULT_TRAIN_CAND_QTY
+testCandQtyList=$DEFAULT_TEST_CAND_QTY_LIST
+
+parallelExperQty=1
+numCpuCores=""
+
+function usage {
+  msg=$1
+  echo $msg
+  cat <<EOF
+Usage: <collection> <feature desc. file in subdir $EXPER_DESC_SUBDIR> [additional options]
+Additional options:
+  -max_num_query_test   max. # of test queries
+  -num_cpu_cores        # of available CPU cores
+  -parallel_exper_qty   # of experiments to run in parallel (default $parallelExperQty)
+  -thread_qty           # of threads
+  -use_lmart            use Lambda-MART instead of coordinate ascent
+  -num_trees            # of trees in Lambda-MART (default $numTrees)
+  -num_rand_restart     # of random restart for coordinate ascent (default $numRandRestart)
+  -train_cand_qty       # of candidates for training (default $trainCandQty)
+  -test_cand_qty_list   a comma-separate list of # candidates for testing (default $testCandQtyList)
+  -metric_type          evaluation metric (default $metricType)
+  -max_num_query_train  max. # of training queries
+EOF
+}
+
+while [ $# -ne 0 ] ; do
+  OPT_VALUE=""
+  OPT=""
+  echo $1|grep "^-" >/dev/null
+  if [ $? = 0 ] ; then
+    OPT_NAME="$1"
+    OPT_VALUE="$2"
+    if [ "$OPT_NAME" = "-use_lmart" ] ; then
+      useLMARTOpt="-use_lmart"
+      # option without an argument
+      shift 1
+    elif [ "$OPT_NAME" = "-h" -o "$OPT_NAME" = "-help" ] ; then
+      usage
+      exit 1
+    else
+      OPT_VALUE="$2"
+      OPT="$1 $2"
+      if [ "$OPT_VALUE" = "" ] ; then
+        echo "Option $OPT_NAME requires an argument." >&2
+        exit 1
+      fi
+      shift 2
+      case $OPT_NAME in
+        -thread_qty)
+          threadQty=$OPT_VALUE
+          ;;
+        -num_rand_restart)
+          numRandRestart=$OPT_VALUE
+          ;;
+        -num_cpu_cores)
+          numCpuCores=$OPT_VALUE
+          ;;
+        -train_cand_qty)
+          trainCandQty=$OPT_VALUE
+          ;;
+        -test_cand_qty_list)
+          testCandQtyList=$OPT_VALUE
+          ;;
+        -num_trees)
+          numTrees=$OPT_VALUE
+          ;;
+        -parallel_exper_qty)
+          parallelExperQty=$OPT_VALUE
+          ;;
+        -metric_type)
+          metricType=$OPT_VALUE
+          ;;
+        -max_num_query_train)
+          maxQueryQtyTrain=$OPT_VALUE
+          ;;
+        -max_num_query_test)
+          maxQueryQtyTest=$OPT_VALUE
+          ;;
+        *)
+          echo "Invalid option: $OPT_NAME" >&2
+          exit 1
+          ;;
+      esac
+    fi
+
+
+  else
+    POS_ARGS=(${POS_ARGS[*]} $1)
+    shift 1
+  fi
+done
+
+
+collect=${POS_ARGS[0]}
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection, e.g., squad (1st arg)"
+  usage "Specify a collection, e.g., squad (1st arg)"
   exit 1
 fi
 
-FEATURE_DESC_FILE=$2
-if [ "$FEATURE_DESC_FILE" = "" ] ; then
-  echo "Specify a feature description file (2d arg)"
+featDescFile=${POS_ARGS[1]}
+if [ "$featDescFile" = "" ] ; then
+  usage "Specify a feature description file (2d arg)"
   exit 1
 fi
 
-PARALLEL_EXPER_QTY=$3
-if [ "$PARALLEL_EXPER_QTY" = "" ] ; then
-  echo "Specify a number of experiments that are run in parallel (3d arg)!"
+if [ "$numCpuCores" = "" ] ; then
+  numCpuCores=`getNumCpuCores`
+fi
+if [ "$numCpuCores" = "" ] ; then
+  usage "Cannot guess # of CPU cores, please, provide # of CPUs cores"
   exit 1
 fi
 
-MAX_QUERY_QTY="$4"
+threadQty=$(($numCpuCores/$parallelExperQty))
 
-NUM_CPU_CORES="$5"
-
-if [ "$NUM_CPU_CORES" = "" ] ; then
-  NUM_CPU_CORES=`getNumCpuCores`
-fi
-if [ "$NUM_CPU_CORES" = "" ] ; then
-  echo "Bug: NUM_CPU_CORES is unset!"
-  exit 1
-fi
-
-THREAD_QTY=$(($NUM_CPU_CORES/$PARALLEL_EXPER_QTY))
-
-echo "The number of CPU cores:      $NUM_CPU_CORES"
-echo "The number of || experiments: $PARALLEL_EXPER_QTY"
-echo "The number of threads:        $THREAD_QTY"
-echo "Max # of queries to use:      $MAX_QUERY_QTY"
+echo "The number of CPU cores:      $numCpuCores"
+echo "The number of || experiments: $parallelExperQty"
+echo "The number of threads:        $threadQty"
 
 experDescLoc="$COLLECT_ROOT/$collect/$EXPER_DESC_SUBDIR"
 
-. scripts/config_cand_qty.sh
-
-checkVarNonEmpty "FEATURE_DESC_FILE"
-experDescPath=$experDescLoc/$FEATURE_DESC_FILE
+checkVarNonEmpty "featDescFile"
+experDescPath=$experDescLoc/$featDescFile
 if [ ! -f "$experDescPath" ] ; then
   echo "Not a file '$experDescPath'"
   exit 1
@@ -67,8 +162,17 @@ fi
 nTotal=0
 nRunning=0
 
-echo "Number of parallel experiments:                             $PARALLEL_EXPER_QTY"
-echo "Number of threads in feature extractors/query applications: $THREAD_QTY"
+echo "Experiment descriptor file:                                 $experDescPath"
+echo "Number of parallel experiments:                             $parallelExperQty"
+echo "Number of threads in feature extractors/query applications: $threadQty"
+
+maxQueryQtyParams=""
+if [ "$maxQueryQtyTrain" != "" ] ; then
+  maxQueryQtyParams="$maxQueryQtyParams -max_num_query_train $maxQueryQtyTrain "
+fi
+if [ "$maxQueryQtyTest" != "" ] ; then
+  maxQueryQtyParams="$maxQueryQtyParams -max_num_query_test $maxQueryQtyTest "
+fi
 
 n=`wc -l "$experDescPath"|awk '{print $1}'`
 n=$(($n+1))
@@ -111,14 +215,19 @@ for ((ivar=1;ivar<$n;++ivar))
         fi
       fi
 
-      scripts/exper/run_one_lucene_exper.sh \
+      scripts/exper/run_one_feature_exper.sh \
       $collect "$experDirUnique" \
-      "$extrConfigPath" \
-      "$MAX_QUERY_QTY"  \
       "$testSet" \
-      "$THREAD_QTY" \
-      "$NUM_RET_LIST" \
-      "$N_TRAIN"  &> $experDirUnique/exper.log &
+      $trainCandQty \
+      $testCandQtyList \
+      -extr_type "$extrConfigPath" \
+      $maxQueryQtyParams \
+      -thread_qty $threadQty \
+      -num_rand_restart $numRandRestart \
+      -num_trees $numTrees \
+      -metric_type $metricType \
+      $useLMARTOpt \
+      &> $experDirUnique/exper.log &
 
       pid=$!
       childPIDs+=($pid)
@@ -126,13 +235,13 @@ for ((ivar=1;ivar<$n;++ivar))
       nRunning=$(($nRunning+1))
       nrun=$(($nrun+1))
     fi
-    if [ "$nRunning" -ge $PARALLEL_EXPER_QTY ] ; then
-      wait_children ${childPIDs[*]}
+    if [ "$nRunning" -ge $parallelExperQty ] ; then
+      waitChildren ${childPIDs[*]}
       childPIDs=()
       nRunning=0
     fi
   done
-wait_children ${childPIDs[*]}
+waitChildren ${childPIDs[*]}
 echo "============================================"
 echo "$nrun experiments executed"
 echo "$nfail experiments failed"

@@ -12,8 +12,9 @@ nmslibURI=""
 extrTypeIntermParam=""
 modelIntermParam=""
 candQtyParam=""
+
 # Shouldn't delete these runs by default!
-delete_trec_runs="0"
+deleteTrecRuns="0"
 nmslibAddParams=""
 nmslibExtrType=""
 modelFile=""
@@ -22,20 +23,43 @@ maxNumQueryParam=""
 compScores="1"
 runId=$FAKE_RUN_ID
 
+function usage {
+  msg=$1
+  echo $msg
+  cat <<EOF
+Usage: <collection> <test part> <cand. provider> <a subdir to store results> <extractor path> \\
+       <comma-separated list for # candidate records> [additional options]
+Additional options:
+  -thread_qty           # of threads
+  -delete_trec_runs     delete TREC run files
+  -skip_eval            skip evaluation
+  -model_file           model path
+  -max_num_query        max. # of test queries
+  -run_id               TREC file run id
+  -nmslib_addr          NMSLIB address
+  -knn_interleave       NMSLIB interleaving parameter
+  -extr_type_nmslib     NMSLIB extractor type
+  -model_interm         intermediate model path
+  -extr_type_interm     intermediate extractor type
+  -cand_qty             # of candidate records for intermediate model
+EOF
+}
+
 while [ $# -ne 0 ] ; do
+  OPT_VALUE=""
+  OPT=""
   echo $1|grep "^-" >/dev/null 
   if [ $? = 0 ] ; then
     OPT_NAME="$1"
     if [ "$OPT_NAME" = "-delete_trec_runs" -o "$OPT_NAME" = "-knn_interleave" ] ; then
-      OPT_VALUE=""
-      OPT=""
       # option without an argument
       shift 1
     elif [ "$OPT_NAME" = "-skip_eval" ] ; then
-      OPT_VALUE=""
-      OPT=""
       # option without an argument
       shift 1
+    elif [ "$OPT_NAME" = "-h" -o "$OPT_NAME" = "-help" ] ; then
+      usage
+      exit 1
     else
       OPT_VALUE="$2"
       OPT="$1 $2"
@@ -80,7 +104,7 @@ while [ $# -ne 0 ] ; do
         candQtyParam=$OPT
        ;; 
       -delete_trec_runs)
-        delete_trec_runs="1"
+        deleteTrecRuns="1"
        ;; 
       *)
         echo "Invalid option: $OPT_NAME" >&2
@@ -95,38 +119,38 @@ done
 
 collect=${POS_ARGS[0]}
 if [ "$collect" = "" ] ; then
-  echo "Specify a sub-collection, e.g., squad (1st arg)"
+  usage "Specify a sub-collection, e.g., squad (1st arg)"
   exit 1
 fi
 
 testPart=${POS_ARGS[1]}
 if [ "$testPart" = "" ] ; then
-  echo "Specify a test part, e.g., dev1 (2d arg)"
+  usage "Specify a test part, e.g., dev1 (2d arg)"
   exit 1 
 fi
 
 candProvType=${POS_ARGS[2]}
 if [ "$candProvType" = "" ] ; then
-  echo "Specify a candidate type: lucene, nmslib (3d arg)"
+  usage "Specify a candidate type: lucene, nmslib (3d arg)"
   exit 1 
 fi
 
 experSubDir=${POS_ARGS[3]}
 if [ "$experSubDir" = "" ] ; then
-  echo "Specify a sub-directory to store final results (4th positional arg)!"
+  usage "Specify a sub-directory to store final results (4th positional arg)!"
   exit 1
 fi
 
 extrType="${POS_ARGS[4]}"
 
 if [ "$extrType" = "" ] ; then
-  echo "Specify a feature extractor path or none (5th positional arg)"
+  usage "Specify a feature extractor path or none (5th positional arg)"
   exit 1
 fi
 
 if [ "$extrType" != "none" ] ; then
   if [ "$modelFile" = "" ] ; then
-    echo "Specify a model file (-model_file)!"
+    usage "Specify a model file (-model_file)!"
     exit 1
   fi
 fi
@@ -134,7 +158,7 @@ fi
 nTestStr="${POS_ARGS[5]}"
 
 if [ "$nTestStr" = "" ] ; then
-  echo "Specify a comma-separated list of candidate records # retrieved for testing for each query (5th positional arg)!"
+  echo "Specify a comma-separated list for # candidate records (5th positional arg)!"
   exit 1
 fi
 
@@ -271,17 +295,18 @@ resourceDirParams=" -fwd_index_dir \"$fwdIndexDir\" -embed_dir \"$embedDir\" -gi
 
 trecRunPrefix="$trecRunDir/run"
 
-# Despite all the efforts these quotes won't preserve spaces :-( due to quirks of passing arguments
-cmd="scripts/query/run_query.sh  -u \"$URI\"  -cand_prov $candProvType -thread_qty $threadQty \
+
+# Do it only after argument parsing
+set -eo pipefail
+
+scripts/query/run_query.sh  -u "$URI"  -cand_prov $candProvType -thread_qty $threadQty \
   -run_id $runId \
   $nmslibAddParams \
   $resourceDirParams \
   $extrFinalParam \
-  -q \"$inputDataDir/$testPart/$queryFileName\"  -n $nTestStr \
-  -o \"$trecRunPrefix\"  -save_stat_file \"$statFile\" \
-  $candQtyParam $maxNumQueryParam $extrTypeIntermParam $modelIntermParam"
-
-execAndCheck "$cmd 2>&1|tee $query_log_file"
+  -q "$inputDataDir/$testPart/$queryFileName"  -n $nTestStr \
+  -o "$trecRunPrefix"  -save_stat_file "$statFile" \
+  $candQtyParam $maxNumQueryParam $extrTypeIntermParam $modelIntermParam |tee $query_log_file"
 
 if [ "$compScores" = "1" ] ; then 
 
@@ -296,26 +321,22 @@ if [ "$compScores" = "1" ] ; then
     reportPref="${reportDir}/out_${oneN}"
   
     scripts/exper/eval_output.py "$qrels" "${trecRunPrefix}_${oneN}" "$reportPref" "$oneN"
-    check "eval_output.py"
   done
 fi
   
-if [ "$delete_trec_runs" = "1" ] ; then
+if [ "$deleteTrecRuns" = "1" ] ; then
   echo "Deleting trec runs from the directory: ${trecRunDir}"
   rm ${trecRunDir}/*
   # There should be at least one run, so, if rm fails, it fails because files can't be deleted
-  check "rm ${trecRunDir}/*" 
 else
   echo "Bzipping trec runs in the directory: ${trecRunDir}"
   rm -f ${trecRunDir}/*.bz2
   bzip2 ${trecRunDir}/*
   # There should be at least one run, so, if rm fails, it fails because files can't be deleted
-  check "bzip2 ${trecRunDir}/*" 
 fi
 
 if [ "$compScores" = "1" ] ; then 
   echo "Bzipping trec_eval output in the directory: ${reportDir}"
   rm -f ${reportDir}/*.trec_eval.bz2
   bzip2 ${reportDir}/*.trec_eval
-  check "bzip2 ${reportDir}/*.trec_eval"
 fi

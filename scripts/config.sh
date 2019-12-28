@@ -1,7 +1,4 @@
 
-# There's also an additional config file: config_cand_qty.sh
-# that is used by a model-training/experimentation script
-
 # Point COLLECT_ROOT to the location you want to use as
 # the root directory for all collections/indices.
 
@@ -86,8 +83,9 @@ GIZA_SUBDIR="giza"
 GIZA_ITER_QTY=5
 
 # Coordinate ascent (LETOR algorithm) training parameters
-METRIC_TYPE="NDCG@20"
-NUM_RAND_RESTART=10
+DEFAULT_METRIC_TYPE="NDCG@20"
+DEFAULT_NUM_RAND_RESTART=10
+DEFAULT_NUM_TREES=100
 
 # QREL file name
 QREL_FILE="qrels.txt"
@@ -96,3 +94,7 @@ FAKE_RUN_ID="fake_run"
 
 # This value should match Lucene's query field
 QUERY_FIELD_NAME=text
+
+
+DEFAULT_TRAIN_CAND_QTY=20
+DEFAULT_TEST_CAND_QTY_LIST=10,50,100,250

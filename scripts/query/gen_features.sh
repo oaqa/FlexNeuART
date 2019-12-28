@@ -5,7 +5,9 @@ source scripts/config.sh
 checkVarNonEmpty "FAKE_RUN_ID"
 
 POS_ARGS=()
+
 thread_qty=1
+
 while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
   if [ $? = 0 ] ; then
@@ -162,6 +164,9 @@ echo "FULL OUTPUT FILE PREFIX:"
 echo "$full_out_pref"
 echo "==============================================="
 
+# Do it only after argument parsing
+set -eo pipefail
+
 scripts/query/run_multhread_feat.sh \
 -u "$URI" \
 -run_id "$FAKE_RUN_ID" \
@@ -179,7 +184,4 @@ scripts/query/run_multhread_feat.sh \
 -thread_qty $thread_qty  \
 $query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
-if [ "${PIPESTATUS[0]}" != "0" ] ; then
-  echo "run_multhread_feat.sh failed!"
-  exit 1
-fi
+
