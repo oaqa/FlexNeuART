@@ -21,6 +21,7 @@ useLMART="0"
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
+checkVarNonEmtpy "NO_FEAT_EXTRACTOR"
 
 numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
@@ -38,6 +39,9 @@ while [ $# -ne 0 ] ; do
     if [ "$OPT_NAME" = "-use_lmart" ] ; then
       useLMART="1"
       # option without an argument
+      shift 1
+    elif [ "$OPT_NAME" = "-no_regen_feat" ] ; then
+      regenFeat="0"
       shift 1
     else
       OPT_VALUE="$2"
@@ -230,7 +234,9 @@ queryLogFile=${trecRunDir}/query.log
 
 resourceDirParams=" -fwd_index_dir \"$fwdIndexDir\" -embed_dir \"$embedDir\" -giza_root_dir \"$gizaRootDir\" -giza_iter_qty $GIZA_ITER_QTY "
 
-if [ "$extrType" != "" -a "$extrType" != "none" ] ; then
+# Don't quote $resourceDirParams, $maxQueryQtyTrainParam, $maxQueryQtyTestParam, and other *Param*
+
+if [ "$extrType" != "" -a "$extrType" != "$NO_FEAT_EXTRACTOR" ] ; then
   if [ "$trainCandQty" = "" ] ; then
     echo "Specify the numbers of candidate records retrieved for the training subset for each query (-train_cand_qty)!"
     exit 1
@@ -243,7 +249,8 @@ if [ "$extrType" != "" -a "$extrType" != "none" ] ; then
                                   "$QREL_FILE" \
                                   "$TRAIN_SUBDIR" \
                                   lucene "$URI" "$trainCandQty" \
-                                  "$extrType" "$experDir" "$maxQueryQtyTrainParam"  \
+                                  "$extrType" "$experDir" \
+                                  $maxQueryQtyTrainParam  \
                                   -out_pref "$outPrefTrain" \
                                   -thread_qty "$threadQty" \
                                   -query_cache_file "$cacheFileTrain" 2>&1
@@ -255,10 +262,13 @@ if [ "$extrType" != "" -a "$extrType" != "none" ] ; then
     model_log_file="$experDir/model.log"
     echo > $model_log_file
 
+    checkVarNonEmpty "metricType"
+
     # Here we rely on the naming convention of the feature-generation app, which generates
     # output for every value of the number of candidate records (for training).
     # We simply specify only one value in this case, namely, $trainCandQty
     if [ "$useLMART" = "1" ] ; then
+      checkVarNonEmpty "numTrees"
       scripts/letor/ranklib_train_lmart.sh "${fullOutPrefTrain}_${trainCandQty}.feat" \
                                             "$modelFile" \
                                             "$numTrees" "$metricType" 2>&1 | tee -a "$model_log_file"
@@ -268,7 +278,6 @@ if [ "$extrType" != "" -a "$extrType" != "none" ] ; then
                                             "$numRandRestart" "$metricType" 2>&1 | tee -a "$model_log_file"
     fi
 
-    # Don't quote $resourceDirParams
     if [ "$testModelResults" = "1" ] ; then
       # This part is for debug purposes only
       checkVarNonEmpty "trainCandQty"
@@ -279,7 +288,7 @@ if [ "$extrType" != "" -a "$extrType" != "none" ] ; then
                                   -thread_qty "$threadQty"  \
                                   $resourceDirParams \
                                   -extr_type_final "$extrType" -model_final "$modelFile" \
-                                  "$maxQueryQtyTrainParam" \
+                                  $maxQueryQtyTrainParam \
                                   -query_cache_file "$cacheFileTrain" 2>&1
 
       scripts/exper/eval_output.py "$inputDataDir/$TRAIN_SUBDIR/$QREL_FILE" \
@@ -299,7 +308,7 @@ if [ "$extrType" != "" -a "$extrType" != "none" ] ; then
                                 -o $trecRunDir/run   -thread_qty "$threadQty" \
                                 $resourceDirParams \
                                 -extr_type_final "$extrType" -model_final "$modelFile" \
-                                "$maxQueryQtyTestParam" \
+                                $maxQueryQtyTestParam \
                                 -query_cache_file "$cacheFileTest" 2>&1|tee "$queryLogFile"
   fi
 else
@@ -310,7 +319,7 @@ else
                                 -n "$testCandQtyList" \
                                 -run_id "$FAKE_RUN_ID" \
                                 -o "$trecRunDir/run" -thread_qty "$threadQty" \
-                                "$maxQueryQtyTestParam" \
+                                $maxQueryQtyTestParam \
                                 -query_cache_file "$cacheFileTest" 2>&1|tee "$queryLogFile"
   fi
 fi

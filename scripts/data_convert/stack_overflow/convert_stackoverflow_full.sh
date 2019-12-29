@@ -22,12 +22,11 @@ if [ "$output" = "" ] ; then
   exit 1
 fi
 
+# Do it only after argument parsing
+set -eo pipefail
 
-scripts/data/run_convert_stackoverflow_step1.sh -input "$input" -output "${interm}1" 
-check "scripts/data/run_convert_stackoverflow_step1.sh -input \"$input\" -output \"${interm}1\" "
+scripts/data/run_convert_stackoverflow_step1.sh -input "$input" -output "${interm}1"
 
 sort -k 1,1 -n -s "${interm}1" > "${interm}2"
-check "sort -k 1,1 -n -s \"$input\" > \"${interm}2\""
 
 scripts/data/run_convert_stackoverflow_step2.sh -input "${interm}2" -output "$output" -exclude_code
-check "scripts/data/run_convert_stackoverflow_step2.sh -input \"${interm}2\" -output \"$output\" -exclude_code"

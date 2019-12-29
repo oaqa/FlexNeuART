@@ -73,6 +73,7 @@ BITEXT_TRAIN_SUBDIR="train_bitext"
 LM_FINETUNE_SUBDIR="lm_finetune_data"
 LM_FINETUNE_SET_PREF="set"
 
+NO_FEAT_EXTRACTOR="none" # A special marker to disable the use
 FEAT_EXPER_SUBDIR="$EXPER_SUBDIR/feat_exper"
 FINAL_EXPER_SUBDIR="$EXPER_SUBDIR/final_exper"
 

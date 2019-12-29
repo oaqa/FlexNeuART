@@ -36,7 +36,6 @@ class MarginRankingLossWrapper:
     pos_doc_scores = scores[:, 0]
     neg_doc_scores = scores[:, 1]
     ones = torch.ones_like(pos_doc_scores)
-    zeros = torch.zeros_like(pos_doc_scores)
     return self.loss.forward(pos_doc_scores, neg_doc_scores, target=ones)
 
 

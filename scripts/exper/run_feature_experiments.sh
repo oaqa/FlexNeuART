@@ -9,6 +9,7 @@ checkVarNonEmpty "EXPER_DESC_SUBDIR"
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
+checkVarNonEmpty "NO_FEAT_EXTRACTOR"
 
 numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
@@ -16,7 +17,7 @@ metricType=$DEFAULT_METRIC_TYPE
 
 maxQueryQtyTrain=""
 maxQueryQtyTest=""
-useLMARTOpt=""
+useLMARTParam=""
 
 checkVarNonEmpty "DEFAULT_TRAIN_CAND_QTY"
 checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
@@ -24,8 +25,13 @@ checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
 trainCandQty=$DEFAULT_TRAIN_CAND_QTY
 testCandQtyList=$DEFAULT_TEST_CAND_QTY_LIST
 
+noRegenFeatParam=""
+
+useSeparateShell=0
 parallelExperQty=1
 numCpuCores=""
+
+threadQty=""
 
 function usage {
   msg=$1
@@ -36,6 +42,7 @@ Additional options:
   -max_num_query_test   max. # of test queries
   -num_cpu_cores        # of available CPU cores
   -parallel_exper_qty   # of experiments to run in parallel (default $parallelExperQty)
+  -no_regen_feat        do not regenerate features
   -thread_qty           # of threads
   -use_lmart            use Lambda-MART instead of coordinate ascent
   -num_trees            # of trees in Lambda-MART (default $numTrees)
@@ -55,8 +62,11 @@ while [ $# -ne 0 ] ; do
     OPT_NAME="$1"
     OPT_VALUE="$2"
     if [ "$OPT_NAME" = "-use_lmart" ] ; then
-      useLMARTOpt="-use_lmart"
+      useLMARTParam="-use_lmart"
       # option without an argument
+      shift 1
+    elif [ "$OPT_NAME" = "-no_regen_feat" ] ; then
+      noRegenFeatParam="$OPT_NAME"
       shift 1
     elif [ "$OPT_NAME" = "-h" -o "$OPT_NAME" = "-help" ] ; then
       usage
@@ -90,6 +100,9 @@ while [ $# -ne 0 ] ; do
           ;;
         -parallel_exper_qty)
           parallelExperQty=$OPT_VALUE
+          if [ "$parallelExperQty" != "1" ] ; then
+            useSeparateShell=1
+          fi
           ;;
         -metric_type)
           metricType=$OPT_VALUE
@@ -135,7 +148,12 @@ if [ "$numCpuCores" = "" ] ; then
   exit 1
 fi
 
-threadQty=$(($numCpuCores/$parallelExperQty))
+if [ "$threadQty" = "" ] ; then
+  threadQty=$(($numCpuCores/$parallelExperQty))
+  if [ "$threadQty" = "0" ] ; then
+    threadQty=1
+  fi
+fi
 
 echo "The number of CPU cores:      $numCpuCores"
 echo "The number of || experiments: $parallelExperQty"
@@ -174,6 +192,8 @@ if [ "$maxQueryQtyTest" != "" ] ; then
   maxQueryQtyParams="$maxQueryQtyParams -max_num_query_test $maxQueryQtyTest "
 fi
 
+# Don't quote $maxQueryQtyParams and other *Param*
+
 n=`wc -l "$experDescPath"|awk '{print $1}'`
 n=$(($n+1))
 childPIDs=()
@@ -190,11 +210,16 @@ for ((ivar=1;ivar<$n;++ivar))
         echo "Missing feature-extractor config file (1st field) in line $line, file $experDescPath"
         exit 1
       fi
-      extrConfigPath="$experDescLoc/$extrConfigFile"
-      if [ ! -f "$extrConfigPath" ] ; then
-        echo "Missing feature-extractor configuration file: $extrConfigPath"
-        exit 1
+      if [ "$extrConfigFile" = "$NO_FEAT_EXTRACTOR" ] ; then
+        extrConfigPath=$NO_FEAT_EXTRACTOR
+      else
+        extrConfigPath="$experDescLoc/$extrConfigFile"
+        if [ ! -f "$extrConfigPath" -a ! f ] ; then
+          echo "Missing feature-extractor configuration file: $extrConfigPath"
+          exit 1
+        fi
       fi
+
       testSet=`echo $line|awk '{print $2}'`
       if [ "$testSet" = "" ] ; then
         echo "Missing test set (e.g., dev1) (2d field) in line $line, file $experDescPath"
@@ -215,7 +240,9 @@ for ((ivar=1;ivar<$n;++ivar))
         fi
       fi
 
-      scripts/exper/run_one_feature_exper.sh \
+
+cmd=`cat <<EOF
+    scripts/exper/run_one_feature_exper.sh \
       $collect "$experDirUnique" \
       "$testSet" \
       $trainCandQty \
@@ -226,8 +253,15 @@ for ((ivar=1;ivar<$n;++ivar))
       -num_rand_restart $numRandRestart \
       -num_trees $numTrees \
       -metric_type $metricType \
-      $useLMARTOpt \
-      &> $experDirUnique/exper.log &
+      $useLMARTParam $noRegenFeatParam &> $experDirUnique/exper.log
+EOF
+`
+
+      if [ "$useSeparateShell" = "1" ] ; then
+         bash -c "$cmd" &
+      else
+         bash -c "$cmd"
+      fi
 
       pid=$!
       childPIDs+=($pid)
