@@ -27,6 +27,7 @@ testCandQtyList=$DEFAULT_TEST_CAND_QTY_LIST
 
 noRegenFeatParam=""
 
+deleteTrecRunsParam="" # Shouldn't delete these runs by default
 useSeparateShell=1
 parallelExperQty=1
 numCpuCores=""
@@ -42,6 +43,7 @@ Additional options:
   -max_num_query_test   max. # of test queries
   -num_cpu_cores        # of available CPU cores
   -parallel_exper_qty   # of experiments to run in parallel (default $parallelExperQty)
+  -delete_trec_runs     delete TREC run files
   -no_separate_shell    use this for debug purposes only
   -no_regen_feat        do not regenerate features
   -thread_qty           # of threads
@@ -89,6 +91,9 @@ while [ $# -ne 0 ] ; do
           ;;
         -num_rand_restart)
           numRandRestart=$OPT_VALUE
+          ;;
+        -delete_trec_runs)
+          deleteTrecRunsParam=$OPT
           ;;
         -num_cpu_cores)
           numCpuCores=$OPT_VALUE
@@ -254,6 +259,7 @@ cmd=`cat <<EOF
       -num_rand_restart $numRandRestart \
       -num_trees $numTrees \
       -metric_type $metricType \
+      $deleteTrecRunsParam \
       $useLMARTParam $noRegenFeatParam &> $experDirUnique/exper.log
 EOF
 `

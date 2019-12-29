@@ -13,8 +13,8 @@ extrTypeIntermParam=""
 modelIntermParam=""
 candQtyParam=""
 
-# Shouldn't delete these runs by default!
-deleteTrecRuns="0"
+
+deleteTrecRuns=0 # Shouldn't delete these runs by default
 nmslibAddParams=""
 nmslibExtrType=""
 modelFile=""

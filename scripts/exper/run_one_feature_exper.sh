@@ -16,6 +16,9 @@ maxQueryQtyTrain=""
 maxQueryQtyTest=""
 maxQueryQtyTrainParam=""
 maxQueryQtyTestParam=""
+
+deleteTrecRuns=0 # Shouldn't delete these runs by default
+
 useLMART="0"
 
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
@@ -57,6 +60,9 @@ while [ $# -ne 0 ] ; do
           ;;
         -num_rand_restart)
           numRandRestart=$OPT_VALUE
+          ;;
+        -delete_trec_runs)
+          deleteTrecRuns="1"
           ;;
         -extr_type)
           extrType=$OPT_VALUE
@@ -234,14 +240,16 @@ queryLogFile=${trecRunDir}/query.log
 
 resourceDirParams=" -fwd_index_dir \"$fwdIndexDir\" -embed_dir \"$embedDir\" -giza_root_dir \"$gizaRootDir\" -giza_iter_qty $GIZA_ITER_QTY "
 
-# Don't quote $resourceDirParams, $maxQueryQtyTrainParam, $maxQueryQtyTestParam, and other *Param*
+# Don't quote $modelParams,$resourceDirParams, $maxQueryQtyTrainParam, $maxQueryQtyTestParam,
+# and other *Param*
+
+modelParams=""
 
 if [ "$extrType" != "" -a "$extrType" != "$NO_FEAT_EXTRACTOR" ] ; then
   if [ "$trainCandQty" = "" ] ; then
     echo "Specify the numbers of candidate records retrieved for the training subset for each query (-train_cand_qty)!"
     exit 1
   fi
-
 
   if [ "$regenFeat" = "1" ] ; then
     # gen_features.sh provides a list of resource directories on its own
@@ -257,6 +265,7 @@ if [ "$extrType" != "" -a "$extrType" != "$NO_FEAT_EXTRACTOR" ] ; then
   fi
 
   modelFile="${fullOutPrefTrain}_${trainCandQty}.model"
+  modelParams="$resourceDirParams -extr_type_final \"$extrType\" -model_final \"$modelFile\""
 
   if [ "$recompModel" = "1" ] ; then
     model_log_file="$experDir/model.log"
@@ -278,6 +287,8 @@ if [ "$extrType" != "" -a "$extrType" != "$NO_FEAT_EXTRACTOR" ] ; then
                                             "$numRandRestart" "$metricType" 2>&1 | tee -a "$model_log_file"
     fi
 
+
+
     if [ "$testModelResults" = "1" ] ; then
       # This part is for debug purposes only
       checkVarNonEmpty "trainCandQty"
@@ -286,8 +297,7 @@ if [ "$extrType" != "" -a "$extrType" != "$NO_FEAT_EXTRACTOR" ] ; then
                                   -run_id "$FAKE_RUN_ID" \
                                   -o "$trecRunDir/run_check_train_metrics" \
                                   -thread_qty "$threadQty"  \
-                                  $resourceDirParams \
-                                  -extr_type_final "$extrType" -model_final "$modelFile" \
+                                  $modelParams \
                                   $maxQueryQtyTrainParam \
                                   -query_cache_file "$cacheFileTrain" 2>&1
 
@@ -298,31 +308,21 @@ if [ "$extrType" != "" -a "$extrType" != "$NO_FEAT_EXTRACTOR" ] ; then
       exit 0
     fi
   fi
-
-  if [ "$rerunLucene" = 1 ] ; then
-
-    # Don't quote $resourceDirParams
-    scripts/query/run_query.sh  -u "$URI" -cand_prov lucene -q "$inputDataDir/$testPart/$queryFileName"  \
-                                -n "$testCandQtyList" \
-                                -run_id "$FAKE_RUN_ID" \
-                                -o $trecRunDir/run   -thread_qty "$threadQty" \
-                                $resourceDirParams \
-                                -extr_type_final "$extrType" -model_final "$modelFile" \
-                                $maxQueryQtyTestParam \
-                                -query_cache_file "$cacheFileTest" 2>&1|tee "$queryLogFile"
-  fi
-else
-  if [ "$rerunLucene" = 1 ] ; then
-
-    # Don't quote $resourceDirParams
-    scripts/query/run_query.sh  -u "$URI" -cand_prov lucene -q "$inputDataDir/$testPart/$queryFileName"  \
-                                -n "$testCandQtyList" \
-                                -run_id "$FAKE_RUN_ID" \
-                                -o "$trecRunDir/run" -thread_qty "$threadQty" \
-                                $maxQueryQtyTestParam \
-                                -query_cache_file "$cacheFileTest" 2>&1|tee "$queryLogFile"
-  fi
 fi
+
+
+if [ "$rerunLucene" = 1 ] ; then
+
+  # Don't quote $resourceDirParams
+  scripts/query/run_query.sh  -u "$URI" -cand_prov lucene -q "$inputDataDir/$testPart/$queryFileName"  \
+                              -n "$testCandQtyList" \
+                              -run_id "$FAKE_RUN_ID" \
+                              -o "$trecRunDir/run" -thread_qty "$threadQty" \
+                              $maxQueryQtyTestParam \
+                              $modelParams \
+                              -query_cache_file "$cacheFileTest" 2>&1|tee "$queryLogFile"
+fi
+
 
 qrels="$inputDataDir/$testPart/$QREL_FILE"
 
@@ -338,9 +338,16 @@ for oneN in $testCandQtyListSpaceSep ; do
   check "eval_output.py"
 done
 
-echo "Deleting trec runs from the directory: ${trecRunDir}"
-# There should be at least one run, so, if rm fails, it fails because files can't be deleted
-rm ${trecRunDir}/*
+if [ "$deleteTrecRuns" = "1" ] ; then
+  echo "Deleting trec runs from the directory: ${trecRunDir}"
+  rm ${trecRunDir}/*
+  # There should be at least one run, so, if rm fails, it fails because files can't be deleted
+else
+  echo "Bzipping trec runs in the directory: ${trecRunDir}"
+  rm -f ${trecRunDir}/*.bz2
+  bzip2 ${trecRunDir}/*
+  # There should be at least one run, so, if rm fails, it fails because files can't be deleted
+fi
 echo "Bzipping trec_eval output in the directory: ${reportDir}"
 bzip2 ${reportDir}/*.trec_eval
 echo "Bzipping gdeval output in the directory: ${reportDir}"
