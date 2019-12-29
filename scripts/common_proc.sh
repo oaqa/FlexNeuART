@@ -9,6 +9,19 @@ SERVER_LOG_NAME="server.log"
 #export MVN_RUN_CMD="mvn -q -o compile exec:java "
 export MVN_RUN_CMD="mvn -o compile exec:java "
 
+
+# I think the use of check, checkPip, and execAndCheck should be limited,
+# especially for execAndCheck, as it prevents proper escaping of arguments (with say spaces).
+# It is advised to use "set -euxo pipefail" or "set -euxo pipefail" after all arguments are parsed
+# and grep command isn't used for control flow. However, I envision in some cases execAndCheck can still
+# be useful.
+#
+# Notes:
+# 1. set -u aborts execution when uninitialized variables are used
+# 2. set -eo pipefail aborts execution when the command fails, including all the piped commands
+# 3. set -x prints executed commands
+#
+# Info: https://coderwall.com/p/fkfaqq/safer-bash-scripts-with-set-euxo-pipefail
 function execAndCheck {
   cmd0="$1"
   desc="$2"
@@ -46,16 +59,7 @@ function check {
   fi
 }
 
-function checkVarNonEmpty {
-  name="$1"
-  val="${!name}"
-  if [ "$val" = "" ] ; then
-    echo "Variable $name is not set!"
-    exit 1
-  fi
-}
-
-function check_pipe {
+function checkPipe {
   f="${PIPESTATUS[*]}"
   name=$1
   if [ "$f" != "0 0" ] ; then
@@ -66,7 +70,18 @@ function check_pipe {
   fi
 }
 
-function wait_children {
+
+function checkVarNonEmpty {
+  name="$1"
+  val="${!name}"
+  if [ "$val" = "" ] ; then
+    echo "Variable $name is not set!"
+    exit 1
+  fi
+}
+
+
+function waitChildren {
   pidLIST=($@)
   echo "Waiting for ${#pidLIST[*]} child processes"
   for pid in ${pidLIST[*]} ; do
@@ -79,11 +94,6 @@ function wait_children {
       echo "Process with pid=$pid finished successfully."
     fi
   done
-}
-
-function save_server_logs {
-  me=`basename "$0"`
-  mv $SERVER_LOG_NAME $SERVER_LOG_NAME.$me
 }
 
 function getOS {

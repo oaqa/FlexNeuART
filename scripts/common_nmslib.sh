@@ -1,6 +1,5 @@
 
-NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
-check "getting the number of CPU cores, do you have /proc/cpu/info?"
+NUM_CPU_CORES=`getNumCpuCores`
 
 THREAD_QTY=$NUM_CPU_CORES
 max_num_query_param=""

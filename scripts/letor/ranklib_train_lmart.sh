@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 train_file="$1"
 if [ "$train_file" = "" ] ; then
   echo "Specify training feature-file (1st arg)"

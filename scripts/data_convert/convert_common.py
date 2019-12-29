@@ -21,7 +21,9 @@ TITLE_FIELD_NAME = 'title'
 TITLE_UNLEMM_FIELD_NAME = 'title_unlemm'
 TEXT_RAW_FIELD_NAME = 'text_raw'
 
-ANSWER_LIST_FIELD_NAME = 'answer_list' 
+ANSWER_LIST_FIELD_NAME = 'answer_list'
+
+DEFAULT_ENCODING = 'utf-8'
 
 # bitext naming conventions
 BITEXT_QUESTION_PREFIX = 'question_'
@@ -175,11 +177,11 @@ def wikiExtractorFileIterator(rootDir):
 
 def procWikipediaRecord(recStr):
   """A procedure to parse a single Wikipedia page record
-     from the wikiextractor output, which we assume is UTF-8 encoded.
+     from the wikiextractor output, which we assume it to have DEFAULT_ENCODING encoding.
 
   :param recStr:  One page content including encosing tags <doc> ... </doc>
   """
-  doc = BeautifulSoup(recStr, 'lxml', from_encoding='utf-8')
+  doc = BeautifulSoup(recStr, 'lxml', from_encoding=DEFAULT_ENCODING)
 
   docRoot = doc.find('doc')
   if docRoot is None:
@@ -243,3 +245,4 @@ def qrelEntry(questId, answId, relGrade):
   :return: QREL entry
   """
   return f'{questId} 0 {answId} {relGrade}'
+
