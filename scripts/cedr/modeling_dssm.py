@@ -36,7 +36,7 @@ class BertSepObjEncoder(torch.nn.Module):
 
     self.dropout = torch.nn.Dropout(dropout)
     # A fully-connected layer that transforms internal BERT representation
-    self.fc = torch.nn.Linear(self.BERT_SIZE, dim)
+    self.fc = torch.nn.Linear(self.BERT_SIZE, dim, bias=False)
     torch.nn.init.xavier_uniform_(self.fc.weight) 
 
 
@@ -110,8 +110,8 @@ class BertSepObjEncoder(torch.nn.Module):
 class DssmBertRanker(torch.nn.Module):
     def __init__(self, dim=128, dropout=0.1):
         super().__init__()
-        self.query_encoder = BertSepObjEncoder(dim=dim, dropout=dropout)
-        self.doc_encoder = BertSepObjEncoder(dim=dim, dropout=dropout)
+        self.query_encoder = BertSepObjEncoder(dim=dim, dropout=dropout, l2_normalize=True)
+        self.doc_encoder = BertSepObjEncoder(dim=dim, dropout=dropout, l2_normalize=True)
         self.tokenizer = self.query_encoder.tokenizer
 
     # TODO this is a copy-paste of the BertRanker class tokenize
