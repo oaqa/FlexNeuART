@@ -27,7 +27,7 @@ testCandQtyList=$DEFAULT_TEST_CAND_QTY_LIST
 
 noRegenFeatParam=""
 
-useSeparateShell=0
+useSeparateShell=1
 parallelExperQty=1
 numCpuCores=""
 
@@ -42,6 +42,7 @@ Additional options:
   -max_num_query_test   max. # of test queries
   -num_cpu_cores        # of available CPU cores
   -parallel_exper_qty   # of experiments to run in parallel (default $parallelExperQty)
+  -no_separate_shell    use this for debug purposes only
   -no_regen_feat        do not regenerate features
   -thread_qty           # of threads
   -use_lmart            use Lambda-MART instead of coordinate ascent
@@ -67,6 +68,9 @@ while [ $# -ne 0 ] ; do
       shift 1
     elif [ "$OPT_NAME" = "-no_regen_feat" ] ; then
       noRegenFeatParam="$OPT_NAME"
+      shift 1
+    elif [ "$OPT_NAME" = "-no_separate_shell" ] ; then
+      useSeparateShell=0
       shift 1
     elif [ "$OPT_NAME" = "-h" -o "$OPT_NAME" = "-help" ] ; then
       usage
@@ -100,9 +104,6 @@ while [ $# -ne 0 ] ; do
           ;;
         -parallel_exper_qty)
           parallelExperQty=$OPT_VALUE
-          if [ "$parallelExperQty" != "1" ] ; then
-            useSeparateShell=1
-          fi
           ;;
         -metric_type)
           metricType=$OPT_VALUE
@@ -256,18 +257,19 @@ cmd=`cat <<EOF
       $useLMARTParam $noRegenFeatParam &> $experDirUnique/exper.log
 EOF
 `
-
       if [ "$useSeparateShell" = "1" ] ; then
-         bash -c "$cmd" &
+        bash -c "$cmd" &
+
+        pid=$!
+        childPIDs+=($pid)
+        echo "Started a process $pid, working dir: $experDirUnique"
+        nRunning=$(($nRunning+1))
+        nrun=$(($nrun+1))
       else
-         bash -c "$cmd"
+        echo "Starting a process, working dir: $experDirUnique"
+        bash -c "$cmd"
       fi
 
-      pid=$!
-      childPIDs+=($pid)
-      echo "Started a process $pid, working dir: $experDirUnique"
-      nRunning=$(($nRunning+1))
-      nrun=$(($nrun+1))
     fi
     if [ "$nRunning" -ge $parallelExperQty ] ; then
       waitChildren ${childPIDs[*]}
