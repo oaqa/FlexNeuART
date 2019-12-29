@@ -71,6 +71,9 @@ while [ $# -ne 0 ] ; do
     elif [ "$OPT_NAME" = "-no_regen_feat" ] ; then
       noRegenFeatParam="$OPT_NAME"
       shift 1
+    elif [ "$OPT_NAME" = "-delete_trec_runs" ] ; then
+      deleteTrecRunsParam=$OPT_NAME
+      shift 1
     elif [ "$OPT_NAME" = "-no_separate_shell" ] ; then
       useSeparateShell=0
       shift 1
@@ -91,9 +94,6 @@ while [ $# -ne 0 ] ; do
           ;;
         -num_rand_restart)
           numRandRestart=$OPT_VALUE
-          ;;
-        -delete_trec_runs)
-          deleteTrecRunsParam=$OPT
           ;;
         -num_cpu_cores)
           numCpuCores=$OPT_VALUE

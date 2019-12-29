@@ -46,6 +46,9 @@ while [ $# -ne 0 ] ; do
     elif [ "$OPT_NAME" = "-no_regen_feat" ] ; then
       regenFeat="0"
       shift 1
+    elif [ "$OPT_NAME" = "-delete_trec_runs" ] ; then
+      deleteTrecRuns="1"
+      shift 1
     else
       OPT_VALUE="$2"
       OPT="$1 $2"
@@ -60,9 +63,6 @@ while [ $# -ne 0 ] ; do
           ;;
         -num_rand_restart)
           numRandRestart=$OPT_VALUE
-          ;;
-        -delete_trec_runs)
-          deleteTrecRuns="1"
           ;;
         -extr_type)
           extrType=$OPT_VALUE
