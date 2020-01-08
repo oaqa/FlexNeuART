@@ -35,9 +35,9 @@ echo -e "extractor_type\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tReca
 
 n=`wc -l "$experDescPath"|awk '{print $1}'`
 n=$(($n+1))
-for ((i=1;i<$n;++i))
+for ((ivar=1;ivar<$n;++ivar))
   do
-    line=`head -$i "$experDescPath"|tail -1`
+    line=`head -$ivar "$experDescPath"|tail -1`
     line=$(removeComment "$line")
     if [ "$line" !=  "" ]
     then
@@ -54,15 +54,32 @@ for ((i=1;i<$n;++i))
       pd=$PWD
       cd $experDirUnique/rep
       check "cd $experDirUnique/rep"
+
+      # Let's read timings
+      query_time="N/A"
+      stat_file="stat_file"
+      if [ -f "$stat_file" ] ; then
+        fn=`head -1 $stat_file|cut -f 1`
+        if [ "$fn" != "QueryTime" ] ; then
+          "Wrong format of the file (expecting that the first field is QueryTime, but got: '$fn'): $stat_file"
+          exit 1
+        fi
+        query_time=`head -2 $stat_file|tail -1|cut -f 1`
+        if [ "$query_time" = "" ] ; then
+          "Cannot retrieve QueryTime from line 2 in the file: $stat_file"
+          exit 1
+        fi
+      fi
+
       for f in `ls -tr out_${FILT_N}.rep` ; do 
         top_k=`echo $f|sed 's/out_//'|sed 's/.rep//'`
-        query_qty=`get_metric_value "$f" "# of queries"`
-        ndcg20=`get_metric_value "$f" "NDCG@20"`
-        err20=`get_metric_value "$f" "ERR@20"`
-        p20=`get_metric_value "$f" "P@20"`
-        map=`get_metric_value "$f" "MAP"`
-        mrr=`get_metric_value "$f" "Reciprocal rank"`
-        recall=`get_metric_value "$f" "Recall"`
+        query_qty=`grepFileForVal "$f" "# of queries"`
+        ndcg20=`grepFileForVal "$f" "NDCG@20"`
+        err20=`grepFileForVal "$f" "ERR@20"`
+        p20=`grepFileForVal "$f" "P@20"`
+        map=`grepFileForVal "$f" "MAP"`
+        mrr=`grepFileForVal "$f" "Reciprocal rank"`
+        recall=`grepFileForVal "$f" "Recall"`
         echo -e "$extrType\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
       done
       cd $pd

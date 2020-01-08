@@ -1,8 +1,28 @@
-# Some common function to share
+# Some common/constants function to share
 
-SERVER_LOG_NAME="server.log"
 
-# This command would cause recompilation, 
+CAND_PROV_LUCENE="lucene"
+
+
+# Just lowercasing, solution https://stackoverflow.com/a/2264537
+function lower {
+  arg="$1"
+  echo "$arg" | tr '[:upper:]' '[:lower:]'
+}
+
+# Replace a series of white-space with a single space
+function whiteSpacesToSpace {
+  echo $1 | sed -E 's/[[:space:]]+/ /g'
+}
+
+# Extract a field from the list of white-space separated fields
+function extractFieldValue {
+  fn="$2"
+  line=`whiteSpacesToSpace "$1"`
+  echo "$line" | cut -d " " -f $fn
+}
+
+# This command may initiate compilation,
 # but due to -o and -q switch it:
 # 1) It works offline (i.e, it doesn't print a bunch of annoying messages caused by Maven re-checking dependencies status)
 # 3) Works in a quite mode, i.e., doesn't print other warnings and stuff.
@@ -10,7 +30,7 @@ SERVER_LOG_NAME="server.log"
 export MVN_RUN_CMD="mvn -o compile exec:java "
 
 
-# I think the use of check, checkPip, and execAndCheck should be limited,
+# I think the use of check, checkPipe, and execAndCheck should be limited,
 # especially for execAndCheck, as it prevents proper escaping of arguments (with say spaces).
 # It is advised to use "set -euxo pipefail" or "set -euxo pipefail" after all arguments are parsed
 # and grep command isn't used for control flow. However, I envision in some cases execAndCheck can still
@@ -124,10 +144,21 @@ function setJavaMem {
   echo "MAVEN_OPTS=$MAVEN_OPTS"
 }
 
-function get_metric_value {
+# grep*ForVal functions extract values of a given key
+# from a string/file in a stupid one-entry-per-line format,
+# where each line has the format (there can be spaces around :)
+# key:value
+
+function grepFileForVal {
   fileName="$1"
   metrName="$2"
-  fgrep "$metrName" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
+  fgrep "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
+}
+
+function grepStrForVal {
+  str="$1"
+  metrName="$2"
+   echo "$str" | fgrep "$metrName" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
 }
 
 function getNumCpuCores {
@@ -239,7 +270,9 @@ function getCatCmd {
   fi
   echo $catCommand
 }
-function getExperDirUnique {
+
+
+function getExperDirBase {
   experDir="$1"
   testSet="$2"
   experSubdir="$3"

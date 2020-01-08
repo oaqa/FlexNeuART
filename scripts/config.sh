@@ -16,7 +16,7 @@ COLLECT_ROOT="collections"
 #     <Collection sub-directory>
 #         $INPUT_RAW_SUBDIR (optional)
 #         $INPUT_DATA_SUBDIR
-#             $TRAIN_SUBDIR
+#             $DEFAULT_TRAIN_SUBDIR (can be overriden)
 #             $DEV_SUBDIR (optional)
 #             $DEV1_SUBDIR (optional)
 #             $DEV2_SUBDIR (optional)
@@ -55,14 +55,15 @@ FWD_INDEX_SUBDIR="forward_index"
 LUCENE_INDEX_SUBDIR="lucene_index"
 
 # By default training scripts cache candidate
-# documents obtained from Lucene to speed up training
-LUCENE_CACHE_SUBDIR="lucene_cache"
+# documents obtained from Lucene or any other
+# candidate generator to speed up training
+CACHE_SUBDIR="cache"
 
 # Embeddings are stored within the derived-data sub-directory
 EMBED_SUBDIR="embeddings"
 
 # This is a bunch of sub-directories for input data
-TRAIN_SUBDIR="train"
+DEFAULT_TRAIN_SUBDIR="train" # This only a default that can be overriden
 # The dev* directories can be optional, there can be, e.g., dev1, dev2 or just a single dev
 DEV_SUBDIR="dev"
 DEV1_SUBDIR="dev1"
@@ -72,10 +73,6 @@ BITEXT_TRAIN_SUBDIR="train_bitext"
 # A directory with data for BERT LM fine-tuning
 LM_FINETUNE_SUBDIR="lm_finetune_data"
 LM_FINETUNE_SET_PREF="set"
-
-NO_FEAT_EXTRACTOR="none" # A special marker to disable the use
-FEAT_EXPER_SUBDIR="$EXPER_SUBDIR/feat_exper"
-FINAL_EXPER_SUBDIR="$EXPER_SUBDIR/final_exper"
 
 # Parallel corpora sub-directory
 BITEXT_SUBDIR="bitext"
@@ -96,6 +93,18 @@ FAKE_RUN_ID="fake_run"
 # This value should match Lucene's query field
 QUERY_FIELD_NAME=text
 
-
+DEFAULT_INTERM_CAND_QTY=1000
 DEFAULT_TRAIN_CAND_QTY=20
 DEFAULT_TEST_CAND_QTY_LIST=10,50,100,250
+
+# Report/trec_run sub-dirs and files
+LETOR_SUBDIR="letor"
+TRECRUNS_SUBDIR="trec_runs"
+REP_SUBDIR="rep"
+
+STAT_FILE="$REP_SUBDIR/stat_file"
+
+SEP_DEBUG_LINE="================================================================================"
+
+TEST_SET_PARAM="testSet"
+EXPER_SUBDIR_PARAM="experSubdir"

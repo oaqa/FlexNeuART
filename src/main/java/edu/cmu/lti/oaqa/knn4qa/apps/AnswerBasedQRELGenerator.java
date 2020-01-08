@@ -110,9 +110,7 @@ public class AnswerBasedQRELGenerator {
       out = MiscHelper.createBufferedFileWriter(args.mOutFile);
       
       LuceneCandidateProvider candProv = 
-          new LuceneCandidateProvider(args.mProviderURI,
-                                      BM25SimilarityLucene.DEFAULT_BM25_K1, 
-                                      BM25SimilarityLucene.DEFAULT_BM25_B);
+          new LuceneCandidateProvider(args.mProviderURI, null);
       
       
       FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mMemFwdIndex, null, null);

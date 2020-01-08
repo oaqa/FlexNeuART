@@ -17,21 +17,82 @@ package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+
+import edu.cmu.lti.oaqa.knn4qa.apps.CommonParams;
+import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 public abstract class CandidateProvider {
+  final static Logger logger = LoggerFactory.getLogger(CandidateProvider.class);
+  
   public final static String ID_FIELD_NAME    = Const.TAG_DOCNO;
   public final static String QUERY_FIELD_NAME = Const.TEXT_FIELD_NAME;
   
+  // If you add a new provider, update CAND_PROVID_DESC below
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
-  
-
+  public static final String CAND_TYPE_GALAGO      = "galago";
+ 
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
-      CandidateProvider.CAND_TYPE_NMSLIB;
+      CandidateProvider.CAND_TYPE_NMSLIB + "," + 
+      CandidateProvider.CAND_TYPE_GALAGO;
+  
+  
+  /**
+   * Create an array of candidate providers. If the provider is thread-safe,
+   * only one object will be created.
+   * 
+   * @param resourceManager	resource
+   * @param provType				provider type
+   * @param provURI					provider URI (index location or TCP/IP address)
+   * @param configName			configuration file name (can be null)
+   * @param threadQty				number of threads
+   * 
+   * @return	an array of providers or null if the provider type is not recognized
+   */
+  public static CandidateProvider[] createCandProviders(FeatExtrResourceManager resourceManager,
+														String provType,
+														String provURI,
+														String configName,
+														int threadQty) throws Exception {
+    logger.info(String.format("Provider type: %s URI: %s config file: %s # of threads",
+                              provType, provURI, configName != null ? configName : "none", threadQty));
+    
+  	CandidateProvider[] res = new CandidateProvider[threadQty];
+  	
+  	CandProvAddConfig addConf = CandProvAddConfig.readConfig(configName, provType);
+  	
+  	
+    if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
+      res[0] = new LuceneCandidateProvider(provURI, addConf);
+      for (int ic = 1; ic < threadQty; ++ic) 
+        res[ic] = res[0];
+    
+    } else if (provType.equals(CandidateProvider.CAND_TYPE_NMSLIB)) {
+      /*
+       * NmslibKNNCandidateProvider isn't thread-safe,
+       * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
+       * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
+       */
+
+      for (int ic = 0; ic < threadQty; ++ic) {
+        res[ic] = new NmslibKNNCandidateProvider(provURI, resourceManager, addConf);
+      }
+             
+    } else {
+      return null;
+    }
+  	
+  	return res;
+  }
   
   /**
    * @return  true if {@link #getCandidates(int, Map, int)} can be called by 

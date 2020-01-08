@@ -144,7 +144,7 @@ public class LuceneIndexer {
           https://lucene.apache.org/core/6_0_0/core/org/apache/lucene/index/IndexWriterConfig.OpenMode.html#CREATE
       */
       indexConf.setOpenMode(OpenMode.CREATE); 
-      indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.RAM_BUFFER_SIZE);
+      indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.DEFAULT_RAM_BUFFER_SIZE);
       System.out.println("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec);
       indexConf.setOpenMode(OpenMode.CREATE);
       IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      

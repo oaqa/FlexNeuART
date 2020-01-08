@@ -119,7 +119,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
     https://lucene.apache.org/core/6_0_0/core/org/apache/lucene/index/IndexWriterConfig.OpenMode.html#CREATE
     */
     indexConf.setOpenMode(OpenMode.CREATE); 
-    indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.RAM_BUFFER_SIZE);
+    indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.DEFAULT_RAM_BUFFER_SIZE);
     
     indexConf.setOpenMode(OpenMode.CREATE);
     mIndexWriter = new IndexWriter(indexDir, indexConf);  

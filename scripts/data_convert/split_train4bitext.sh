@@ -12,6 +12,7 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
+checkVarNonEmpty "DEFAULT_TRAIN_SUBDIR"
 
 smallTrainQty=$2
 
@@ -42,8 +43,8 @@ if [ ! -d "$inputDataDir/$BITEXT_TRAIN_SUBDIR" ] ; then
   mkdir "$inputDataDir/$BITEXT_TRAIN_SUBDIR"
 fi
 
-fullQueryPath=$inputDataDir/$TRAIN_SUBDIR/$queryFileName
-cp "$inputDataDir/$TRAIN_SUBDIR/$QREL_FILE" "$inputDataDir/$BITEXT_TRAIN_SUBDIR"
+fullQueryPath=$inputDataDir/$DEFAULT_TRAIN_SUBDIR/$queryFileName
+cp "$inputDataDir/$DEFAULT_TRAIN_SUBDIR/$QREL_FILE" "$inputDataDir/$BITEXT_TRAIN_SUBDIR"
 qty=`wc -l "$fullQueryPath"|awk '{print $1}'` 
 qtyBitext=$(($qty-$smallTrainQty))
 echo "# of queries: $qty # of queries for bi-text part: $qtyBitext"

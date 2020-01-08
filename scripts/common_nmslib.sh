@@ -1,4 +1,6 @@
 
+SERVER_LOG_NAME="server.log"
+
 NUM_CPU_CORES=`getNumCpuCores`
 
 THREAD_QTY=$NUM_CPU_CORES

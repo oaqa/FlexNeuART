@@ -9,14 +9,13 @@ checkVarNonEmpty "EXPER_DESC_SUBDIR"
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
-checkVarNonEmpty "NO_FEAT_EXTRACTOR"
+checkVarNonEmpty "CAND_PROV_LUCENE"
+checkVarNonEmpty "EXPER_SUBDIR"
 
 numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
 metricType=$DEFAULT_METRIC_TYPE
-
-maxQueryQtyTrain=""
-maxQueryQtyTest=""
+""
 useLMARTParam=""
 
 checkVarNonEmpty "DEFAULT_TRAIN_CAND_QTY"
@@ -25,9 +24,9 @@ checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
 trainCandQty=$DEFAULT_TRAIN_CAND_QTY
 testCandQtyList=$DEFAULT_TEST_CAND_QTY_LIST
 
-noRegenFeatParam=""
 
-deleteTrecRunsParam="" # Shouldn't delete these runs by default
+globalParams=""
+
 useSeparateShell=1
 parallelExperQty=1
 numCpuCores=""
@@ -42,17 +41,19 @@ Usage: <collection> <feature desc. file in subdir $EXPER_DESC_SUBDIR> [additiona
 Additional options:
   -max_num_query_test   max. # of test queries
   -num_cpu_cores        # of available CPU cores
+  -thread_qty           # of threads
   -parallel_exper_qty   # of experiments to run in parallel (default $parallelExperQty)
   -delete_trec_runs     delete TREC run files
   -no_separate_shell    use this for debug purposes only
-  -no_regen_feat        do not regenerate features
-  -thread_qty           # of threads
+  -reuse_feat           reuse previously generated features
   -use_lmart            use Lambda-MART instead of coordinate ascent
   -num_trees            # of trees in Lambda-MART (default $numTrees)
   -num_rand_restart     # of random restart for coordinate ascent (default $numRandRestart)
   -train_cand_qty       # of candidates for training (default $trainCandQty)
   -test_cand_qty_list   a comma-separate list of # candidates for testing (default $testCandQtyList)
   -metric_type          evaluation metric (default $metricType)
+  -skip_eval            skip/disable evaluation, just produce TREC runs
+  -test_model_results   additionally test model performance on the training set
   -max_num_query_train  max. # of training queries
 EOF
 }
@@ -66,16 +67,27 @@ while [ $# -ne 0 ] ; do
     OPT_VALUE="$2"
     if [ "$OPT_NAME" = "-use_lmart" ] ; then
       useLMARTParam="-use_lmart"
-      # option without an argument
+      # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-no_regen_feat" ] ; then
+    elif [ "$OPT_NAME" = "-reuse_feat" ] ; then
       noRegenFeatParam="$OPT_NAME"
+      # option without an argument shift by 1
+      shift 1
+    elif [ "$OPT_NAME" = "-test_model_results" ] ; then
+      noRegenFeatParam="$OPT_NAME"
+      # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-delete_trec_runs" ] ; then
       deleteTrecRunsParam=$OPT_NAME
+      # option without an argument shift by 1
+      shift 1
+    elif [ "$OPT_NAME" = "-skip_eval" ] ; then
+      skipEvalParam=$OPT_NAME
+      # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-no_separate_shell" ] ; then
       useSeparateShell=0
+      # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-h" -o "$OPT_NAME" = "-help" ] ; then
       usage
@@ -87,7 +99,7 @@ while [ $# -ne 0 ] ; do
         echo "Option $OPT_NAME requires an argument." >&2
         exit 1
       fi
-      shift 2
+      shift 2 # option with an argument: shift by two
       case $OPT_NAME in
         -thread_qty)
           threadQty=$OPT_VALUE
@@ -114,10 +126,10 @@ while [ $# -ne 0 ] ; do
           metricType=$OPT_VALUE
           ;;
         -max_num_query_train)
-          maxQueryQtyTrain=$OPT_VALUE
+          maxQueryQtyParams=" $maxQueryQtyParams $OPT"
           ;;
         -max_num_query_test)
-          maxQueryQtyTest=$OPT_VALUE
+          maxQueryQtyParams=" $maxQueryQtyParams $OPT"
           ;;
         *)
           echo "Invalid option: $OPT_NAME" >&2
@@ -165,22 +177,14 @@ echo "The number of CPU cores:      $numCpuCores"
 echo "The number of || experiments: $parallelExperQty"
 echo "The number of threads:        $threadQty"
 
-experDescLoc="$COLLECT_ROOT/$collect/$EXPER_DESC_SUBDIR"
+collectRoot="$COLLECT_ROOT/$collect"
+experDescLoc="$collectRoot/$EXPER_DESC_SUBDIR"
 
 checkVarNonEmpty "featDescFile"
 experDescPath=$experDescLoc/$featDescFile
 if [ ! -f "$experDescPath" ] ; then
   echo "Not a file '$experDescPath'"
   exit 1
-fi
-
-experDir="$COLLECT_ROOT/$collect/$FEAT_EXPER_SUBDIR"
-if [ ! -d "$experDir" ] ; then
-  mkdir -p $experDir
-  if [ "$?" != "0" ] ; then
-    echo "Cannot create '$experDir'"
-    exit 1
-  fi
 fi
 
 nTotal=0
@@ -190,77 +194,38 @@ echo "Experiment descriptor file:                                 $experDescPath
 echo "Number of parallel experiments:                             $parallelExperQty"
 echo "Number of threads in feature extractors/query applications: $threadQty"
 
-maxQueryQtyParams=""
-if [ "$maxQueryQtyTrain" != "" ] ; then
-  maxQueryQtyParams="$maxQueryQtyParams -max_num_query_train $maxQueryQtyTrain "
-fi
-if [ "$maxQueryQtyTest" != "" ] ; then
-  maxQueryQtyParams="$maxQueryQtyParams -max_num_query_test $maxQueryQtyTest "
-fi
+tmpConf=`mktemp`
 
-# Don't quote $maxQueryQtyParams and other *Param*
-
-n=`wc -l "$experDescPath"|awk '{print $1}'`
-n=$(($n+1))
 childPIDs=()
 nrun=0
 nfail=0
-for ((ivar=1;ivar<$n;++ivar))
+for ((ivar=1;;++ivar))
   do
-    line=$(head -$ivar "$experDescPath"|tail -1)
-    line=$(removeComment "$line")
-    if [ "$line" !=  "" ]
+    scripts/exper/parse_exper_conf.py "$experDescPath" $ivar "$tmpConf"
+    $cont=`cat $tmpConf`
+
+
+    if [ "$cont" =  "" ]
     then
-      extrConfigFile=`echo $line|awk '{print $1}'`
-      if [ "$extrConfigFile" = "" ] ; then
-        echo "Missing feature-extractor config file (1st field) in line $line, file $experDescPath"
-        exit 1
-      fi
-      if [ "$extrConfigFile" = "$NO_FEAT_EXTRACTOR" ] ; then
-        extrConfigPath=$NO_FEAT_EXTRACTOR
-      else
-        extrConfigPath="$experDescLoc/$extrConfigFile"
-        if [ ! -f "$extrConfigPath" -a ! f ] ; then
-          echo "Missing feature-extractor configuration file: $extrConfigPath"
-          exit 1
-        fi
-      fi
+      echo "Failed to get entry $ivar from experiment config $experDescPath"
+      exit 1
+    elif [ "$cont" != "#OOR" ] ; then # not out of range
 
-      testSet=`echo $line|awk '{print $2}'`
-      if [ "$testSet" = "" ] ; then
-        echo "Missing test set (e.g., dev1) (2d field) in line $line, file $experDescPath"
-        exit 1
-      fi
-      experSubdir=`echo $line|awk '{print $3}'`
-      if [ "$testSet" = "" ] ; then
-        echo "Missing experimental sub-dir (3d field) in line $line, file $experDescPath"
-        exit 1
-      fi
-      # Each experiment should run in its separate sub-directory
-      experDirUnique=$(getExperDirUnique "$experDir" "$testSet" "$experSubdir")
-      if [ ! -d "$experDirUnique" ] ; then
-        mkdir -p "$experDirUnique"
-        if [ "$?" != "0" ] ; then
-          echo "Failed to create $experDirUnique"
-          exit 1
-        fi
-      fi
+      parsedConf=`echo $line|scripts/exper/parse_oneline_conf.py`
+
+      confParams=""
 
 
-cmd=`cat <<EOF
-    scripts/exper/run_one_feature_exper.sh \
-      $collect "$experDirUnique" \
-      "$testSet" \
-      $trainCandQty \
-      $testCandQtyList \
-      -extr_type "$extrConfigPath" \
-      $maxQueryQtyParams \
-      -thread_qty $threadQty \
-      -num_rand_restart $numRandRestart \
-      -num_trees $numTrees \
-      -metric_type $metricType \
-      $deleteTrecRunsParam \
-      $useLMARTParam $noRegenFeatParam &> $experDirUnique/exper.log
+      # Each experiment should run in its own sub-directory
+      getExperDirBase=$(getExperDirBase "$COLLECTION_ROOT/$EXPER_SUBDIR" "$testSet" "$experSubdir")
+
+# Don't quote $globalParams or any other "*Param*
+    cmd=`cat <<EOF
+          scripts/exper/run_one_feature_exper.sh \
+              "$collect" \
+              "$getExperDirBase" \
+              "$testSet" \
+              $globalParams $confParams &> $getExperDir/exper.log
 EOF
 `
       if [ "$useSeparateShell" = "1" ] ; then
@@ -268,11 +233,11 @@ EOF
 
         pid=$!
         childPIDs+=($pid)
-        echo "Started a process $pid, working dir: $experDirUnique"
+        echo "Started a process $pid, working dir: $getExperDir"
         nRunning=$(($nRunning+1))
         nrun=$(($nrun+1))
       else
-        echo "Starting a process, working dir: $experDirUnique"
+        echo "Starting a process, working dir: $getExperDir"
         bash -c "$cmd"
       fi
 
@@ -284,11 +249,12 @@ EOF
     fi
   done
 waitChildren ${childPIDs[*]}
-echo "============================================"
+echo "$SEP_DEBUG_LINE"
 echo "$nrun experiments executed"
 echo "$nfail experiments failed"
 if [ "$nfail" -gt "0" ] ; then
   echo "Check the log in working directories!!!"
 fi
-echo "============================================"
+echo "$SEP_DEBUG_LINE"
+rm "$tmpConf"
 

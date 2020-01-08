@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,25 +28,49 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
+import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 import com.google.common.base.Splitter;
 
 public class LuceneCandidateProvider extends CandidateProvider {
+	public static final String B_PARAM = "b";
+	public static final String K1_PARAM = "k1";
+
+	final Logger logger = LoggerFactory.getLogger(LuceneCandidateProvider.class);
+	
   // 8 GB is quite reasonable, but if you increase this value, 
   // you may need to modify the following line in *.sh files
   // export MAVEN_OPTS="-Xms8192m -server"
-  public static double RAM_BUFFER_SIZE = 1024 * 8; // 8 GB
+  public static double DEFAULT_RAM_BUFFER_SIZE = 1024 * 8; // 8 GB
   
   @Override
   public String getName() {
     return this.getClass().getName();
   }  
   
-  public LuceneCandidateProvider(String indexDirName,
-                                 float k1, float b) throws Exception {
+  /**
+   * Constructor.
+   * 
+   * @param indexDirName    Lucene index directory
+   * @param addConf         additional/optional configuration: can be null
+   * @throws Exception
+   */
+  public LuceneCandidateProvider(String indexDirName, CandProvAddConfig addConf) throws Exception {
+  	
+  	float k1 = BM25SimilarityLucene.DEFAULT_BM25_K1;
+  	float b = BM25SimilarityLucene.DEFAULT_BM25_B;
+  	
+  	if (addConf != null) {
+    	k1 = addConf.getParam(K1_PARAM, k1);
+    	b = addConf.getParam(B_PARAM, b);
+  	}
+  	
+  	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g", K1_PARAM, k1, B_PARAM, b));
+  	
     File indexDir = new File(indexDirName);
     mSimilarity = new BM25Similarity(k1, b);
     

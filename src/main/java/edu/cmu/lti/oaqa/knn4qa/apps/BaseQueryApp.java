@@ -35,7 +35,7 @@ import edu.cmu.lti.oaqa.knn4qa.cand_providers.*;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
+
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 import edu.cmu.lti.oaqa.knn4qa.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.knn4qa.utils.QrelReader;
@@ -463,13 +463,12 @@ public abstract class BaseQueryApp {
     mMultNumRetr = multNumRetr;
     mOnlyLucene = onlyLucene;
 
+    mOptions.addOption(CommonParams.CAND_PROVID_ADD_CONF_PARAM,   null, true,  CommonParams.CAND_PROVID_ADD_CONF_DESC);
     if (onlyLucene) {
       mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,      null, true, CommonParams.LUCENE_INDEX_LOCATION_DESC);
     } else {
       mOptions.addOption(CommonParams.CAND_PROVID_PARAM,       null, true, CandidateProvider.CAND_PROVID_DESC);
       mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,      null, true, CommonParams.PROVIDER_URI_DESC);
-      mOptions.addOption(CommonParams.MIN_SHOULD_MATCH_PCT_PARAM, null, true, CommonParams.MIN_SHOULD_MATCH_PCT_DESC);
-      mOptions.addOption(CommonParams.KNN_INTERLEAVE_PARAM,     null, false, CommonParams.KNN_INTERLEAVE_DESC);
     }
     
     mOptions.addOption(CommonParams.RUN_ID_PARAM,              null, true, CommonParams.RUN_ID_DESC);
@@ -510,7 +509,6 @@ public abstract class BaseQueryApp {
     
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM,     null, true,  CommonParams.EXTRACTOR_TYPE_FINAL_DESC);
     mOptions.addOption(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM,    null, true,  CommonParams.EXTRACTOR_TYPE_INTERM_DESC);
-    mOptions.addOption(CommonParams.EXTRACTOR_TYPE_NMSLIB_PARAM,   null, true,  CommonParams.EXTRACTOR_TYPE_NMSLIB_DESC);
     
     mUseIntermModel = useIntermModel;
     mUseFinalModel = useFinalModel;
@@ -537,6 +535,7 @@ public abstract class BaseQueryApp {
       mCandProviderType = mCmd.getOptionValue(CommonParams.CAND_PROVID_PARAM);
       if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_DESC);
     }
+    mCandProviderConfigName = mCmd.getOptionValue(CommonParams.CAND_PROVID_ADD_CONF_PARAM);
     mRunId = mCmd.getOptionValue(CommonParams.RUN_ID_PARAM);
     if (mRunId == null) showUsageSpecify(CommonParams.RUN_ID_PARAM);
     
@@ -608,7 +607,6 @@ public abstract class BaseQueryApp {
     mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
     
     mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
-    mKnnInterleave = mCmd.hasOption(CommonParams.KNN_INTERLEAVE_PARAM);
 
     mFwdIndexPref = mCmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
     mExtrTypeInterm = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM);
@@ -643,21 +641,10 @@ public abstract class BaseQueryApp {
         logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
       }
     }
-    mExtrTypeNmslib = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_NMSLIB_PARAM);
+
     mSaveStatFile = mCmd.getOptionValue(CommonParams.SAVE_STAT_FILE_PARAM);
     if (mSaveStatFile != null)
       logger.info("Saving some vital stats to '" + mSaveStatFile);
-    
-    tmpn = mCmd.getOptionValue(CommonParams.MIN_SHOULD_MATCH_PCT_PARAM);
-    if (null != tmpn) {
-      try {
-        mMinShouldMatchPCT = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("The percentage of query word to match isn't integer: '" + tmpn + "'");
-      }
-      if (mMinShouldMatchPCT <0 || mMinShouldMatchPCT >= 100)
-        showUsage("The percentage of query word to match isn't an integer from 0 to 100: '" + tmpn + "'");
-    }
 
   }
   
@@ -666,59 +653,28 @@ public abstract class BaseQueryApp {
    * @throws Exception 
    */
   void initExtractors() throws Exception {
-    if (mExtrTypeFinal != null || mExtrTypeInterm != null || mExtrTypeNmslib != null) {
-      mResourceManager = new FeatExtrResourceManager(mFwdIndexPref, mGizaRootDir, mEmbedDir);
-      if (mExtrTypeFinal != null)
-        mExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
-      if (mExtrTypeInterm != null)
-        mExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
-      if (mExtrTypeNmslib != null)
-        mExtrNmslib = new CompositeFeatureExtractor(mResourceManager, mExtrTypeNmslib);
-    }
+    mResourceManager = new FeatExtrResourceManager(mFwdIndexPref, mGizaRootDir, mEmbedDir);
+
+    if (mExtrTypeFinal != null)
+      mExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
+    if (mExtrTypeInterm != null)
+      mExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
+
   }
   
   /**
-   * This function initializes the provider, it should be called after {@link #initExtractors()}.
-   * 
-   * <b>Providers will try re-use resources created by extractors. Hence, they should be initialized
-   * after extractors.</b>
+   * This function initializes the provider candidate provider. 
+   * It should be called after {@link #initExtractors()}, which will create
+   * an appropriate resource manager.
    * 
    * @throws Exception
    */
   void initProvider() throws Exception {
-    mCandProviders = new CandidateProvider[mThreadQty];
-    
-    if (mCandProviderType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
-      mCandProviders[0] = new LuceneCandidateProvider(mProviderURI,
-                                                      BM25SimilarityLucene.DEFAULT_BM25_K1, 
-                                                      BM25SimilarityLucene.DEFAULT_BM25_B);
-      for (int ic = 1; ic < mThreadQty; ++ic) 
-        mCandProviders[ic] = mCandProviders[0];
-    
-    } else if (mCandProviderType.equals(CandidateProvider.CAND_TYPE_NMSLIB)) {
-      /*
-       * NmslibKNNCandidateProvider isn't really thread-safe,
-       * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
-       * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
-       */
-      if (mExtrNmslib == null) {
-        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_NMSLIB_PARAM);
-      }
-      
-      if (!(mExtrNmslib instanceof CompositeFeatureExtractor)) {
-        throw new Exception("NMSLIB needs to be used only with a composite feature extractor!");
-      }
-      CompositeFeatureExtractor compExtractor = (CompositeFeatureExtractor)mExtrNmslib;
-
-      for (int ic = 0; ic < mThreadQty; ++ic) {
-        mCandProviders[ic] = new NmslibKNNCandidateProvider(mProviderURI, 
-                                                            mResourceManager,
-                                                            compExtractor,
-                                                            mKnnInterleave
-                                                            );
-      }
-             
-    } else {
+    mCandProviders = CandidateProvider.createCandProviders(mResourceManager, 
+    														mCandProviderType, 
+    														mProviderURI, 
+    														mCandProviderConfigName, mThreadQty);    
+    if (mCandProviders == null) {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
   }
@@ -850,10 +806,10 @@ public abstract class BaseQueryApp {
   String       mQueryFile;
   Integer      mMaxCandRet;
   Integer      mMaxNumRet;
-  int          mMinShouldMatchPCT = 0;  
   int          mMaxNumQuery = Integer.MAX_VALUE;
   ArrayList<Integer> mNumRetArr= new ArrayList<Integer>();
   String       mCandProviderType;
+  String       mCandProviderConfigName;
   String       mQrelFile;
   QrelReader   mQrels;
   int          mThreadQty = 1;
@@ -864,7 +820,6 @@ public abstract class BaseQueryApp {
   String       mFwdIndexPref;
   String       mExtrTypeFinal;
   String       mExtrTypeInterm;
-  String       mExtrTypeNmslib;
   DenseVector  mModelInterm;
   Ranker       mModelFinal;
   boolean      mKnnInterleave = false;
@@ -876,7 +831,6 @@ public abstract class BaseQueryApp {
   
   FeatureExtractor mExtrInterm;
   FeatureExtractor mExtrFinal;
-  FeatureExtractor mExtrNmslib;
   
   String   mAppName;
   Options  mOptions = new Options();

@@ -227,9 +227,7 @@ public class ExportTrainPairs {
       if (null == providerURI) {
         showUsageSpecify(CommonParams.PROVIDER_URI_DESC);  
       }
-      LuceneCandidateProvider candProv = new LuceneCandidateProvider(providerURI,
-                                                                    BM25SimilarityLucene.DEFAULT_BM25_K1, 
-                                                                    BM25SimilarityLucene.DEFAULT_BM25_B);
+      LuceneCandidateProvider candProv = new LuceneCandidateProvider(providerURI, null);
       
       FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(fwdIndex, null, null);
  
