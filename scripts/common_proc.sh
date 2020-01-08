@@ -158,7 +158,7 @@ function grepFileForVal {
 function grepStrForVal {
   str="$1"
   metrName="$2"
-   echo "$str" | fgrep "$metrName" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
+  echo "$str" | fgrep "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
 }
 
 function getNumCpuCores {

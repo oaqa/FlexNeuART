@@ -12,6 +12,9 @@ checkVarNonEmpty "DEFAULT_METRIC_TYPE"
 checkVarNonEmpty "CAND_PROV_LUCENE"
 checkVarNonEmpty "EXPER_SUBDIR"
 
+checkVarNonEmpty "TEST_SET_PARAM"
+checkVarNonEmpty "EXPER_SUBDIR_PARAM"
+
 numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
 metricType=$DEFAULT_METRIC_TYPE
@@ -46,9 +49,6 @@ Additional options:
   -delete_trec_runs     delete TREC run files
   -no_separate_shell    use this for debug purposes only
   -reuse_feat           reuse previously generated features
-  -use_lmart            use Lambda-MART instead of coordinate ascent
-  -num_trees            # of trees in Lambda-MART (default $numTrees)
-  -num_rand_restart     # of random restart for coordinate ascent (default $numRandRestart)
   -train_cand_qty       # of candidates for training (default $trainCandQty)
   -test_cand_qty_list   a comma-separate list of # candidates for testing (default $testCandQtyList)
   -metric_type          evaluation metric (default $metricType)
@@ -58,6 +58,8 @@ Additional options:
 EOF
 }
 
+SET GLOBAL PARAMS
+
 while [ $# -ne 0 ] ; do
   OPT_VALUE=""
   OPT=""
@@ -65,24 +67,20 @@ while [ $# -ne 0 ] ; do
   if [ $? = 0 ] ; then
     OPT_NAME="$1"
     OPT_VALUE="$2"
-    if [ "$OPT_NAME" = "-use_lmart" ] ; then
-      useLMARTParam="-use_lmart"
-      # option without an argument shift by 1
-      shift 1
-    elif [ "$OPT_NAME" = "-reuse_feat" ] ; then
-      noRegenFeatParam="$OPT_NAME"
+    if [ "$OPT_NAME" = "-reuse_feat" ] ; then
+      globalParams+=" $OPT_NAME"
       # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-test_model_results" ] ; then
-      noRegenFeatParam="$OPT_NAME"
+      globalParams+=" $OPT_NAME"
       # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-delete_trec_runs" ] ; then
-      deleteTrecRunsParam=$OPT_NAME
+      globalParams+=" $OPT_NAME"
       # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-skip_eval" ] ; then
-      skipEvalParam=$OPT_NAME
+      globalParams+=" $OPT_NAME"
       # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-no_separate_shell" ] ; then
@@ -103,33 +101,29 @@ while [ $# -ne 0 ] ; do
       case $OPT_NAME in
         -thread_qty)
           threadQty=$OPT_VALUE
-          ;;
-        -num_rand_restart)
-          numRandRestart=$OPT_VALUE
+          globalParams+=" $OPT"
           ;;
         -num_cpu_cores)
           numCpuCores=$OPT_VALUE
+          globalParams+=" $OPT"
           ;;
         -train_cand_qty)
-          trainCandQty=$OPT_VALUE
+          globalParams+=" $OPT"
           ;;
         -test_cand_qty_list)
-          testCandQtyList=$OPT_VALUE
-          ;;
-        -num_trees)
-          numTrees=$OPT_VALUE
+          globalParams+=" $OPT"
           ;;
         -parallel_exper_qty)
-          parallelExperQty=$OPT_VALUE
+          globalParams+=" $OPT"
           ;;
         -metric_type)
-          metricType=$OPT_VALUE
+          globalParams+=" $OPT"
           ;;
         -max_num_query_train)
-          maxQueryQtyParams=" $maxQueryQtyParams $OPT"
+          globalParams+=" $OPT"
           ;;
         -max_num_query_test)
-          maxQueryQtyParams=" $maxQueryQtyParams $OPT"
+          globalParams+=" $OPT"
           ;;
         *)
           echo "Invalid option: $OPT_NAME" >&2
@@ -137,8 +131,6 @@ while [ $# -ne 0 ] ; do
           ;;
       esac
     fi
-
-
   else
     POS_ARGS=(${POS_ARGS[*]} $1)
     shift 1
@@ -196,58 +188,90 @@ echo "Number of threads in feature extractors/query applications: $threadQty"
 
 tmpConf=`mktemp`
 
+jsonParamMap=(\
+  cand_prov_add_conf candProvAddConfParam \
+  cand_prov_uri candProvURI \
+  num_rand_restart numRandRestart \
+  train_part trainPart \
+  extr_type extrType \
+  extr_type_interm  extrTypeInterm \
+  model_interm modelInterm \
+  model_final modelFinal \
+  train_cand_qty trainCandQty \
+  cand_prov candProv \
+  cand_qty candQty \
+  test_cand_qty_list testCandQtyList \
+  num_trees numTrees \
+)
+
 childPIDs=()
 nrun=0
 nfail=0
-for ((ivar=1;;++ivar))
-  do
-    scripts/exper/parse_exper_conf.py "$experDescPath" $ivar "$tmpConf"
-    $cont=`cat $tmpConf`
+for ((ivar=1;;++ivar)) ; do
 
+  parsedConfig=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))"`
 
-    if [ "$cont" =  "" ]
-    then
-      echo "Failed to get entry $ivar from experiment config $experDescPath"
+  if [ "$parsedConfig" = "" ] ; then
+    echo "Failed to get entry $ivar from experiment config $experDescPath"
+    exit 1
+  elif [ "$arsedConfig" = "#OOR" ] ; then # out of range
+    ivar=-100 # this will terminate the loop
+  else
+    testSet=`grepStrForVal $TEST_SET_PARAM "$parsedConfig"`
+    experSubdir=`grepStrForVal $EXPER_SUBDIR_PARAM "$parsedConfig"`
+
+    if [ "$testSet" = "" ] ; then
+      echo "Missing $TEST_SET_PARAM config # $ivar"
       exit 1
-    elif [ "$cont" != "#OOR" ] ; then # not out of range
+    fi
+    if [ "$experSubdir" = "" ] ; then
+      echo "Missing $EXPER_SUBDIR_PARAM config # $ivar"
+      exit 1
+    fi
 
-      parsedConf=`echo $line|scripts/exper/parse_oneline_conf.py`
+    # Each experiment should run in its own sub-directory
+    getExperDirBase=$(getExperDirBase "$COLLECTION_ROOT/$EXPER_SUBDIR" "$testSet" "$experSubdir")
 
-      confParams=""
+    singleConfParams=""
 
-
-      # Each experiment should run in its own sub-directory
-      getExperDirBase=$(getExperDirBase "$COLLECTION_ROOT/$EXPER_SUBDIR" "$testSet" "$experSubdir")
+    for ((i=0;i<${#jsonParamMap[*]};i+=2)) ; do
+      paramName=${jsonParamMap[$i]}
+      jsonParamName=${jsonParamMap[$(($i+1))]}
+      val=`grepStrForVal "$jsonParamName"  "$parsedConfig"`
+      if [ "$val" != "" ] ; then
+        singleConfParams+=" $paramName \"$val\""
+      fi
+    done
 
 # Don't quote $globalParams or any other "*Param*
-    cmd=`cat <<EOF
-          scripts/exper/run_one_feature_exper.sh \
-              "$collect" \
-              "$getExperDirBase" \
-              "$testSet" \
-              $globalParams $confParams &> $getExperDir/exper.log
+  cmd=`cat <<EOF
+        scripts/exper/run_one_feature_exper.sh \
+            "$collect" \
+            "$getExperDirBase" \
+            "$testSet" \
+            $globalParams $singleConfParams &> $getExperDir/exper.log
 EOF
 `
-      if [ "$useSeparateShell" = "1" ] ; then
-        bash -c "$cmd" &
+    if [ "$useSeparateShell" = "1" ] ; then
+      bash -c "$cmd" &
 
-        pid=$!
-        childPIDs+=($pid)
-        echo "Started a process $pid, working dir: $getExperDir"
-        nRunning=$(($nRunning+1))
-        nrun=$(($nrun+1))
-      else
-        echo "Starting a process, working dir: $getExperDir"
-        bash -c "$cmd"
-      fi
+      pid=$!
+      childPIDs+=($pid)
+      echo "Started a process $pid, working dir: $getExperDir"
+      nRunning=$(($nRunning+1))
+      nrun=$(($nrun+1))
+    else
+      echo "Starting a process, working dir: $getExperDir"
+      bash -c "$cmd"
+    fi
 
-    fi
-    if [ "$nRunning" -ge $parallelExperQty ] ; then
-      waitChildren ${childPIDs[*]}
-      childPIDs=()
-      nRunning=0
-    fi
-  done
+  fi
+  if [ "$nRunning" -ge $parallelExperQty ] ; then
+    waitChildren ${childPIDs[*]}
+    childPIDs=()
+    nRunning=0
+  fi
+done
 waitChildren ${childPIDs[*]}
 echo "$SEP_DEBUG_LINE"
 echo "$nrun experiments executed"

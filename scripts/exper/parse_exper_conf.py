@@ -21,8 +21,8 @@ import re
 def replaceCharsNL(s):
   return re.sub(r'[\n\r]', ' ', s)
 
-if len(sys.argv) != 4:
-  print('Usage <input JSON> <entry ID> <output file>')
+if len(sys.argv) != 3:
+  print('Usage <input JSON> <entry ID>')
   sys.exit(1)
 
 inpData=json.load(open(sys.argv[1]))
@@ -45,5 +45,4 @@ else:
 
   res='\n'.join(resList)
 
-with open(outFile, 'w') as f:
-  f.write(res)
+print(res)
