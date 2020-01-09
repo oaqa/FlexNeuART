@@ -4,8 +4,6 @@
 
 
 checkVarNonEmpty "COLLECT_ROOT"
-checkVarNonEmpty "FEAT_EXPER_SUBDIR"
-checkVarNonEmpty "EXPER_DESC_SUBDIR"
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
@@ -36,6 +34,9 @@ numCpuCores=""
 
 threadQty=""
 
+defaultTestSet=""
+defaultTrainSet=""
+
 function usage {
   msg=$1
   echo $msg
@@ -49,12 +50,15 @@ Additional options:
   -delete_trec_runs     delete TREC run files
   -no_separate_shell    use this for debug purposes only
   -reuse_feat           reuse previously generated features
+  -test_part            default test set, e.g., dev1
+  -train_part           default train set, e.g., train
   -train_cand_qty       # of candidates for training (default $trainCandQty)
   -test_cand_qty_list   a comma-separate list of # candidates for testing (default $testCandQtyList)
   -metric_type          evaluation metric (default $metricType)
   -skip_eval            skip/disable evaluation, just produce TREC runs
   -test_model_results   additionally test model performance on the training set
   -max_num_query_train  max. # of training queries
+  -debug_print          print every executed command
 EOF
 }
 
@@ -69,6 +73,11 @@ while [ $# -ne 0 ] ; do
     OPT_VALUE="$2"
     if [ "$OPT_NAME" = "-reuse_feat" ] ; then
       globalParams+=" $OPT_NAME"
+      # option without an argument shift by 1
+      shift 1
+    elif [ "$OPT_NAME" = "-debug_print" ] ; then
+      globalParams+=" $OPT_NAME"
+      set -x
       # option without an argument shift by 1
       shift 1
     elif [ "$OPT_NAME" = "-test_model_results" ] ; then
@@ -125,6 +134,12 @@ while [ $# -ne 0 ] ; do
         -max_num_query_test)
           globalParams+=" $OPT"
           ;;
+        -test_part)
+          defaultTestSet=$OPT_VALUE
+          ;;
+        -train_part)
+          defaultTrainSet=$OPT_VALUE
+          ;;
         *)
           echo "Invalid option: $OPT_NAME" >&2
           exit 1
@@ -144,9 +159,12 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
+
+collectRoot="$COLLECT_ROOT/$collect"
+
 featDescFile=${POS_ARGS[1]}
 if [ "$featDescFile" = "" ] ; then
-  usage "Specify a feature description file (2d arg)"
+  usage "Specify a feature description file *RELATIVE* to $collectRoot (2d arg)"
   exit 1
 fi
 
@@ -169,11 +187,9 @@ echo "The number of CPU cores:      $numCpuCores"
 echo "The number of || experiments: $parallelExperQty"
 echo "The number of threads:        $threadQty"
 
-collectRoot="$COLLECT_ROOT/$collect"
-experDescLoc="$collectRoot/$EXPER_DESC_SUBDIR"
 
 checkVarNonEmpty "featDescFile"
-experDescPath=$experDescLoc/$featDescFile
+experDescPath=$collectRoot/$featDescFile
 if [ ! -f "$experDescPath" ] ; then
   echo "Not a file '$experDescPath'"
   exit 1
@@ -182,12 +198,18 @@ fi
 nTotal=0
 nRunning=0
 
+echo "$SEP_DEBUG_LINE"
+
 echo "Experiment descriptor file:                                 $experDescPath"
+echo "Default test set:                                           $defaultTestSet"
 echo "Number of parallel experiments:                             $parallelExperQty"
 echo "Number of threads in feature extractors/query applications: $threadQty"
 
+echo "$SEP_DEBUG_LINE"
+
 tmpConf=`mktemp`
 
+# Mapping between JSON field names and corresponding script parameters
 jsonParamMap=(\
   cand_prov_add_conf candProvAddConfParam \
   cand_prov_uri candProvURI \
@@ -204,6 +226,9 @@ jsonParamMap=(\
   num_trees numTrees \
 )
 
+# Some locations are always relative to the collection root
+adjustLocForParams=(extrType extrTypeInterm modelInterm modelFinal)
+
 childPIDs=()
 nrun=0
 nfail=0
@@ -214,7 +239,7 @@ for ((ivar=1;;++ivar)) ; do
   if [ "$parsedConfig" = "" ] ; then
     echo "Failed to get entry $ivar from experiment config $experDescPath"
     exit 1
-  elif [ "$arsedConfig" = "#OOR" ] ; then # out of range
+  elif [ "$parsedConfig" = "#OOR" ] ; then # out of range
     ivar=-100 # this will terminate the loop
   else
     testSet=`grepStrForVal $TEST_SET_PARAM "$parsedConfig"`
@@ -238,8 +263,17 @@ for ((ivar=1;;++ivar)) ; do
       paramName=${jsonParamMap[$i]}
       jsonParamName=${jsonParamMap[$(($i+1))]}
       val=`grepStrForVal "$jsonParamName"  "$parsedConfig"`
+      for adjParamName in ${adjustLocForParams[*]} ; do
+        if [ "$adjParamName" = "$jsonParamName" ] ; then
+          val="$collectRoot/$val"
+        fi
+      done
+      # Overriding the value of the default training set
+      if [ "$paramName" = "train_set" -a "$val" = "" ] ; then
+        val="$defaultTrainSet"
+      fi
       if [ "$val" != "" ] ; then
-        singleConfParams+=" $paramName \"$val\""
+        singleConfParams+=" -${paramName} \"$val\""
       fi
     done
 

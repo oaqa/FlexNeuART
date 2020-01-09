@@ -73,6 +73,8 @@ while [ $# -ne 0 ] ; do
       useLMART="1"
       # option without an argument shift by 1
       shift 1
+    elif [ "$OPT_NAME" = "-debug_print" ] ; then
+      set -x
     elif [ "$OPT_NAME" = "-reuse_feat" ] ; then
       regenFeat="0"
       # option without an argument shift by 1
