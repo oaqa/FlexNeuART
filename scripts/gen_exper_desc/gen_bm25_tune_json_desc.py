@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, json
+import sys
 sys.path.append('scripts')
 from gen_exper_desc.common_gen_desc import *
 
