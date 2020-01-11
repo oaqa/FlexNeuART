@@ -2,21 +2,23 @@
 . scripts/common_proc.sh
 . scripts/config.sh
 
+# Be careful when you rename parameter names, certain things
+# are used in Python scripts
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
 checkVarNonEmpty "CAND_PROV_LUCENE"
-checkVarNonEmpty "EXPER_SUBDIR"
 
-checkVarNonEmpty "TEST_SET_PARAM"
+checkVarNonEmpty "TEST_PART_PARAM"
 checkVarNonEmpty "EXPER_SUBDIR_PARAM"
+checkVarNonEmpty "TEST_ONLY_PARAM"
 
 numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
 metricType=$DEFAULT_METRIC_TYPE
-""
+
 useLMARTParam=""
 
 checkVarNonEmpty "DEFAULT_TRAIN_CAND_QTY"
@@ -25,7 +27,7 @@ checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
 trainCandQty=$DEFAULT_TRAIN_CAND_QTY
 testCandQtyList=$DEFAULT_TEST_CAND_QTY_LIST
 
-
+debugPrint="0"
 globalParams=""
 
 useSeparateShell=1
@@ -34,14 +36,14 @@ numCpuCores=""
 
 threadQty=""
 
-defaultTestSet=""
-defaultTrainSet=""
+defaultTestPart=""
+defaultTrainPart=""
 
 function usage {
   msg=$1
   echo $msg
   cat <<EOF
-Usage: <collection> <feature desc. file in subdir $EXPER_DESC_SUBDIR> [additional options]
+Usage: <collection> <feature desc. file relative to collection root> [additional options]
 Additional options:
   -max_num_query_test   max. # of test queries
   -num_cpu_cores        # of available CPU cores
@@ -62,109 +64,110 @@ Additional options:
 EOF
 }
 
-SET GLOBAL PARAMS
+globalParams=""
 
 while [ $# -ne 0 ] ; do
-  OPT_VALUE=""
-  OPT=""
+  optValue=""
+  opt=""
   echo $1|grep "^-" >/dev/null
   if [ $? = 0 ] ; then
-    OPT_NAME="$1"
-    OPT_VALUE="$2"
-    if [ "$OPT_NAME" = "-reuse_feat" ] ; then
-      globalParams+=" $OPT_NAME"
+    optName="$1"
+    optValue="$2"
+    if [ "$optName" = "-reuse_feat" ] ; then
+      globalParams+=" $optName"
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-debug_print" ] ; then
-      globalParams+=" $OPT_NAME"
+    elif [ "$optName" = "-debug_print" ] ; then
+      globalParams+=" $optName"
       set -x
+      debuPrint=1
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-test_model_results" ] ; then
-      globalParams+=" $OPT_NAME"
+    elif [ "$optName" = "-test_model_results" ] ; then
+      globalParams+=" $optName"
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-delete_trec_runs" ] ; then
-      globalParams+=" $OPT_NAME"
+    elif [ "$optName" = "-delete_trec_runs" ] ; then
+      globalParams+=" $optName"
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-skip_eval" ] ; then
-      globalParams+=" $OPT_NAME"
+    elif [ "$optName" = "-skip_eval" ] ; then
+      globalParams+=" $optName"
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-no_separate_shell" ] ; then
+    elif [ "$optName" = "-no_separate_shell" ] ; then
       useSeparateShell=0
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-h" -o "$OPT_NAME" = "-help" ] ; then
+    elif [ "$optName" = "-h" -o "$optName" = "-help" ] ; then
       usage
       exit 1
     else
-      OPT_VALUE="$2"
-      OPT="$1 $2"
-      if [ "$OPT_VALUE" = "" ] ; then
-        echo "Option $OPT_NAME requires an argument." >&2
+      optValue="$2"
+      opt="$1 $2"
+      if [ "$optValue" = "" ] ; then
+        echo "Option $optName requires an argument." >&2
         exit 1
       fi
       shift 2 # option with an argument: shift by two
-      case $OPT_NAME in
+      case $optName in
         -thread_qty)
-          threadQty=$OPT_VALUE
-          globalParams+=" $OPT"
+          threadQty=$optValue
+          globalParams+=" $opt"
           ;;
         -num_cpu_cores)
-          numCpuCores=$OPT_VALUE
-          globalParams+=" $OPT"
+          numCpuCores=$optValue
+          globalParams+=" $opt"
           ;;
         -train_cand_qty)
-          globalParams+=" $OPT"
+          globalParams+=" $opt"
           ;;
         -test_cand_qty_list)
-          globalParams+=" $OPT"
+          globalParams+=" $opt"
           ;;
         -parallel_exper_qty)
-          globalParams+=" $OPT"
+          globalParams+=" $opt"
           ;;
         -metric_type)
-          globalParams+=" $OPT"
+          globalParams+=" $opt"
           ;;
         -max_num_query_train)
-          globalParams+=" $OPT"
+          globalParams+=" $opt"
           ;;
         -max_num_query_test)
-          globalParams+=" $OPT"
+          globalParams+=" $opt"
           ;;
         -test_part)
-          defaultTestSet=$OPT_VALUE
+          defaultTestPart=$optValue
           ;;
         -train_part)
-          defaultTrainSet=$OPT_VALUE
+          defaultTrainPart=$optValue
           ;;
         *)
-          echo "Invalid option: $OPT_NAME" >&2
+          echo "Invalid option: $optName" >&2
           exit 1
           ;;
       esac
     fi
   else
-    POS_ARGS=(${POS_ARGS[*]} $1)
+    posArgs=(${posArgs[*]} $1)
     shift 1
   fi
 done
 
 
-collect=${POS_ARGS[0]}
+collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
   usage "Specify a collection, e.g., squad (1st arg)"
   exit 1
 fi
 
 
-collectRoot="$COLLECT_ROOT/$collect"
+collectSubdir="$COLLECT_ROOT/$collect"
 
-featDescFile=${POS_ARGS[1]}
+featDescFile=${posArgs[1]}
 if [ "$featDescFile" = "" ] ; then
-  usage "Specify a feature description file *RELATIVE* to $collectRoot (2d arg)"
+  usage "Specify a feature description file *RELATIVE* to $collectSubdir (2d arg)"
   exit 1
 fi
 
@@ -189,7 +192,7 @@ echo "The number of threads:        $threadQty"
 
 
 checkVarNonEmpty "featDescFile"
-experDescPath=$collectRoot/$featDescFile
+experDescPath=$collectSubdir/$featDescFile
 if [ ! -f "$experDescPath" ] ; then
   echo "Not a file '$experDescPath'"
   exit 1
@@ -201,7 +204,7 @@ nRunning=0
 echo "$SEP_DEBUG_LINE"
 
 echo "Experiment descriptor file:                                 $experDescPath"
-echo "Default test set:                                           $defaultTestSet"
+echo "Default test set:                                           $defaultTestPart"
 echo "Number of parallel experiments:                             $parallelExperQty"
 echo "Number of threads in feature extractors/query applications: $threadQty"
 
@@ -223,7 +226,7 @@ jsonParamMap=(\
   cand_prov candProv \
   cand_qty candQty \
   test_cand_qty_list testCandQtyList \
-  num_trees numTrees \
+  num_trees numTrees
 )
 
 # Some locations are always relative to the collection root
@@ -234,19 +237,23 @@ nrun=0
 nfail=0
 for ((ivar=1;;++ivar)) ; do
 
-  parsedConfig=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))"`
+  stat=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
 
-  if [ "$parsedConfig" = "" ] ; then
+  if [ "stat" = "#ERR" ] ; then
     echo "Failed to get entry $ivar from experiment config $experDescPath"
     exit 1
-  elif [ "$parsedConfig" = "#OOR" ] ; then # out of range
-    ivar=-100 # this will terminate the loop
+  elif [ "$stat" = "#END" ] ; then # out of range
+    break
   else
-    testSet=`grepStrForVal $TEST_SET_PARAM "$parsedConfig"`
-    experSubdir=`grepStrForVal $EXPER_SUBDIR_PARAM "$parsedConfig"`
+    testPart=`grepFileForVal "$tmpConf" $TEST_PART_PARAM`
+    experSubdir=`grepFileForVal "$tmpConf" $EXPER_SUBDIR_PARAM`
+    testOnly=`grepFileForVal "$tmpConf" $TEST_ONLY_PARAM`
 
-    if [ "$testSet" = "" ] ; then
-      echo "Missing $TEST_SET_PARAM config # $ivar"
+    if [ "$testPart" = "" ] ; then
+      testPart=$defaultTestPart
+    fi
+    if [ "$testPart" = "" ] ; then
+      echo "Specify $TEST_PART_PARAM in config # $ivar or set the script parameter -test_part"
       exit 1
     fi
     if [ "$experSubdir" = "" ] ; then
@@ -255,49 +262,66 @@ for ((ivar=1;;++ivar)) ; do
     fi
 
     # Each experiment should run in its own sub-directory
-    getExperDirBase=$(getExperDirBase "$COLLECTION_ROOT/$EXPER_SUBDIR" "$testSet" "$experSubdir")
+    experDirBase=`getExperDirBase "$collectSubdir" "$testPart" "$experSubdir"`
+
+    if [ -d "$experDirBase" ] ; then
+      echo "Experimental directory already exists: $experDirBase"
+      exit 1
+    fi
+    mkdir -p "$experDirBase"
 
     singleConfParams=""
+
+    if [ "$testOnly" = "1" ] ; then
+      singleConfParams+=" -test_only"
+    fi
 
     for ((i=0;i<${#jsonParamMap[*]};i+=2)) ; do
       paramName=${jsonParamMap[$i]}
       jsonParamName=${jsonParamMap[$(($i+1))]}
-      val=`grepStrForVal "$jsonParamName"  "$parsedConfig"`
-      for adjParamName in ${adjustLocForParams[*]} ; do
-        if [ "$adjParamName" = "$jsonParamName" ] ; then
-          val="$collectRoot/$val"
-        fi
-      done
+      paramVal=`grepFileForVal "$tmpConf" "$jsonParamName"`
       # Overriding the value of the default training set
-      if [ "$paramName" = "train_set" -a "$val" = "" ] ; then
-        val="$defaultTrainSet"
+      if [ "$paramName" = "train_part" -a "$paramVal" = "" ] ; then
+        paramVal="$defaultTrainPart"
       fi
-      if [ "$val" != "" ] ; then
-        singleConfParams+=" -${paramName} \"$val\""
+      if [ "$paramVal" != "" ] ; then
+        for adjParamName in ${adjustLocForParams[*]} ; do
+          if [ "$adjParamName" = "$jsonParamName" ] ; then
+            paramVal="$collectSubdir/$paramVal"
+          fi
+        done
+      fi
+
+      if [ "$paramVal" != "" ] ; then
+        singleConfParams+=" -${paramName} \"$paramVal\""
       fi
     done
 
 # Don't quote $globalParams or any other "*Param*
   cmd=`cat <<EOF
-        scripts/exper/run_one_feature_exper.sh \
+        scripts/exper/run_one_experiment.sh \
             "$collect" \
-            "$getExperDirBase" \
-            "$testSet" \
-            $globalParams $singleConfParams &> $getExperDir/exper.log
+            "$experDirBase" \
+            "$testPart" \
+            $globalParams $singleConfParams
 EOF
 `
+    logFileName="$experDirBase/exper.log"
     if [ "$useSeparateShell" = "1" ] ; then
-      bash -c "$cmd" &
+      bash -c "$cmd"  &> "logFileName" &
 
       pid=$!
       childPIDs+=($pid)
-      echo "Started a process $pid, working dir: $getExperDir"
-      nRunning=$(($nRunning+1))
-      nrun=$(($nrun+1))
+      echo "Started a process $pid, working dir: $experDirBase"
+      echo "Process log file: $logFileName"
     else
-      echo "Starting a process, working dir: $getExperDir"
-      bash -c "$cmd"
+      echo "Starting a process, working dir: $experDirBase"
+      echo "Process log file: $logFileName"
+      bash -c "$cmd"  2>&1 |tee "logFileName"
+      checkPipe
     fi
+    nRunning=$(($nRunning+1))
+    nrun=$(($nrun+1))
 
   fi
   if [ "$nRunning" -ge $parallelExperQty ] ; then

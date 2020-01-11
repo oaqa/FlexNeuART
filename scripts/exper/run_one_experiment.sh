@@ -12,7 +12,7 @@ regenFeat="1"
 recompModel="1" # for debug only
 testModelResults="0"
 
-POS_ARGS=()
+posArgs=()
 
 threadQty=1
 maxQueryQtyTrain=""
@@ -62,122 +62,129 @@ testCandQtyList="$DEFAULT_TEST_CAND_QTY_LIST"
 
 
 skipEval=0
+testOnly=0
 
 while [ $# -ne 0 ] ; do
-  OPT_VALUE=""
-  OPT=""
+  optValue=""
+  opt=""
   echo $1|grep "^-" >/dev/null
   if [ $? = 0 ] ; then
-    OPT_NAME="$1"
-    if [ "$OPT_NAME" = "-use_lmart" ] ; then
+    optName="$1"
+    if [ "$optName" = "-use_lmart" ] ; then
       useLMART="1"
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-debug_print" ] ; then
+    elif [ "$optName" = "-debug_print" ] ; then
       set -x
-    elif [ "$OPT_NAME" = "-reuse_feat" ] ; then
+      # option without an argument shift by 1
+      shift 1
+    elif [ "$optName" = "-reuse_feat" ] ; then
       regenFeat="0"
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-skip_eval" ] ; then
+    elif [ "$optName" = "-skip_eval" ] ; then
       skipEval=1
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-test_model_results" ] ; then
+    elif [ "$optName" = "-test_model_results" ] ; then
       testModelResults="1"
       # option without an argument shift by 1
       shift 1
-    elif [ "$OPT_NAME" = "-delete_trec_runs" ] ; then
+    elif [ "$optName" = "-delete_trec_runs" ] ; then
       deleteTrecRuns="1"
       # option without an argument shift by 1
       shift 1
+    elif [ "$optName" = "-test_only" ] ; then
+      testOnly=1
+      # option without an argument shift by 1
+      shift 1
     else
-      OPT_VALUE="$2"
-      OPT="$1 $2"
-      if [ "$OPT_VALUE" = "" ] ; then
-        echo "Option $OPT_NAME requires an argument." >&2
+      optValue="$2"
+      opt="$1 $2"
+      if [ "$optValue" = "" ] ; then
+        echo "Option $optName requires an argument." >&2
         exit 1
       fi
       shift 2 # option with an argument shift by two
-      case $OPT_NAME in
+      case $optName in
         -thread_qty)
-          threadQty=$OPT_VALUE
+          threadQty=$optValue
           ;;
         -cand_prov_add_conf)
-          candProvAddConfParam=$OPT
+          candProvAddConfParam=$opt
           ;;
         -cand_prov_uri)
-          candProvURI=$OPT
+          candProvURI=$opt
           ;;
         -num_rand_restart)
-          numRandRestart=$OPT_VALUE
+          numRandRestart=$optValue
           ;;
         -train_part)
-          trainPart=$OPT_VALUE
+          trainPart=$optValue
           ;;
         -extr_type)
-          extrType=$OPT_VALUE
+          extrType=$optValue
           ;;
         -model_interm)
-          modelIntermParam=$OPT
+          modelIntermParam=$opt
           ;;
         -model_final)
-          modelFinal=$OPT_VALUE
+          modelFinal=$optValue
           ;;
         -train_cand_qty)
-          trainCandQty=$OPT_VALUE
+          trainCandQty=$optValue
           ;;
         -cand_prov)
-          candProvType=$OPT_VALUE
+          candProvType=$optValue
           ;;
         -cand_qty)
-          candQtyParam=$OPT
+          candQtyParam=$opt
           ;;
         -test_cand_qty_list)
-          testCandQtyList=$OPT_VALUE
+          testCandQtyList=$optValue
           ;;
         -extr_type_interm)
-          extrTypeIntermParam=$OPT
+          extrTypeIntermParam=$opt
         ;;
         -num_trees)
-          numTrees=$OPT_VALUE
+          numTrees=$optValue
           ;;
         -metric_type)
-          metricType=$OPT_VALUE
+          metricType=$optValue
           ;;
         -max_num_query_train)
-          maxQueryQtyTrain=$OPT_VALUE
+          maxQueryQtyTrain=$optValue
           maxQueryQtyTrainParam=" -max_num_query $maxQueryQtyTrain"
           ;;
         -max_num_query_test)
-          maxQueryQtyTest=$OPT_VALUE
+          maxQueryQtyTest=$optValue
           maxQueryQtyTestParam=" -max_num_query $maxQueryQtyTest"
           ;;
         *)
-          echo "Invalid option: $OPT_NAME" >&2
+          echo "Invalid option: $optName" >&2
           exit 1
           ;;
       esac
     fi
   else
-    POS_ARGS=(${POS_ARGS[*]} $1)
+    posArgs=(${posArgs[*]} $1)
     shift 1
   fi
 done
 
-collect=${POS_ARGS[0]}
+collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
   echo "Specify a sub-collection, e.g., squad (1st arg)"
   exit 1
 fi
 
-experDirBase=${POS_ARGS[1]}
+experDirBase=${posArgs[1]}
 if [ "$experDirBase" = "" ] ; then
   echo "Specify a working directory (2d arg)!"
   exit 1
 fi
 
-testPart=${POS_ARGS[2]}
+testPart=${posArgs[2]}
 if [ "$testPart" = "" ] ; then
   echo "Specify a test part, e.g., dev1 (3d arg)"
   exit 1
@@ -185,18 +192,25 @@ fi
 
 testCandQtyListSpaceSep=`echo $testCandQtyList|sed 's/,/ /g'`
 
-testOnly=1
-
 if [ "$modelFinal" != "" -a "$extrType" = "" ] ; then
   echo "You specified the final model, but not the extractor type!"
   exit 1
 fi
 
-if [ "$modelFinal" = "" -a "$extrType" != "" ] ; then
-  testOnly=0
-
+if [ "$testOnly" = "0" ] ; then
   # Should be set to a default value in the beginning
   checkVarNonEmpty "trainPart"
+  echo "Running training in addition to test b/c we have an extractor, but not the final model!"
+   if [ "$extrType" = "" ] ; then
+    echo "In the training mode, you need to specify the feature extractor -extr_type!"
+    exit 1
+  fi
+else
+  echo "Running in test only model"
+  if [ "$modelFinal" == "" -a "$extrType" != "" ] ; then
+    echo "You specified the extractor type, but not the final model!"
+    exit 1
+  fi
 fi
 
 # Do it only after argument parsing
@@ -212,8 +226,14 @@ reportDir="$experDirBase/$REP_SUBDIR"
 
 checkVarNonEmpty "experDirBase"
 if [ -d "$experDirBase" ] ; then
-  echo "Refuse to override an already created experimental directory (delete manually if necessary): $experDirBase"
-  exit 1
+  # Be very careful with this sort of deletions,
+  # double-check it's not empty again
+  if [ "$experDirBase" != "" ] ; then
+    rm -rf "$experDirBase/*"
+  else
+    echo "Bug: empty experDirBase here!"
+    exit 1
+  fi
 fi
 
 mkdir -p "$letorDir"
@@ -257,11 +277,15 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-# We, unfortunately, can reliably use cache only for the Lucene provider
-if [ "$candProvType" = "$CAND_PROV_LUCENE" -a "$candProvURI" = "" ] ; then
+# We, unfortunately, can reliably use cache only for
+# the default Lucene provider without explicitly specified URI &
+# config file
+if [ "$candProvType" = "$CAND_PROV_LUCENE" \
+      -a "$candProvAddConf" = "" \
+      -a "$candProvURI" = "" ] ; then
 
-  candProvURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR/$candProvType"
-  cacheDir="$COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR/$candProvType"
+  candProvURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
+  cacheDir="$COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR"
 
   if [ ! -d "$cacheDir" ] ; then
     mkdir -p "$cacheDir"
@@ -308,7 +332,7 @@ fi
 #             $maxQueryQtyTestParam,
 # as we llas other *Param*
 
-commonAddParams="\"$candQtyParam\" $candProvAddConfParam \
+commonAddParams="$candQtyParam $candProvAddConfParam \
  -thread_qty "$threadQty" \
 $extrTypeIntermParam $modelIntermParam \
 $commonResourceParams"
@@ -322,6 +346,9 @@ queryLogFile=${trecRunDir}/query.log
 
 
 if [ "$testOnly" = "0" ] ; then
+  if [ "$modelFinal" != "" ] ; then
+    echo "Bug: here the modelFinal variable should be empty!"
+  fi
   modelFinal="${fullOutPrefTrain}_${trainCandQty}.model"
 fi
 if [ "$modelFinal" != "" ] ; then
@@ -389,7 +416,7 @@ if [ "$testOnly" = "0" ] ; then
   fi
 
   if [ "$regenFeat" = "1" ] ; then
-    checkVarNonEmpty "$extrType"
+    checkVarNonEmpty "extrType"
 
     scripts/query/run_multhread_feat.sh -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$FAKE_RUN_ID" \
@@ -409,7 +436,7 @@ if [ "$testOnly" = "0" ] ; then
     echo > $modelLogFile
 
     checkVarNonEmpty "metricType"
-    checkVarNonEmpty "modelFile"
+    checkVarNonEmpty "modelFinal"
 
     # Here we rely on the naming convention of the feature-generation app, which generates
     # output for every value of the number of candidate records (for training).
@@ -448,8 +475,6 @@ if [ "$testOnly" = "0" ] ; then
   fi
 fi
 
-checkVarNonEmpty "modelParams"
-
 statFile="$reportDir/$STAT_FILE"
 $resourceDirParams
 scripts/query/run_query.sh  -u "$candProvURI" -cand_prov "$candProvType" \
@@ -458,6 +483,7 @@ scripts/query/run_query.sh  -u "$candProvURI" -cand_prov "$candProvType" \
                             -run_id "$FAKE_RUN_ID" \
                             -o "$trecRunDir/run"  -save_stat_file "$statFile" \
                             $commonAddParams \
+                            $maxQueryQtyTestParam \
                             $modelFinalParams \
                             $queryCacheParamTest 2>&1|tee "$queryLogFile"
 

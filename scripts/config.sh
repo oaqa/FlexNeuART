@@ -24,12 +24,12 @@ COLLECT_ROOT="collections"
 #                                   scripts/data_convert/split_train4bitext.sh
 #                                   from the train subdir data)
 #
-#         $EXPER_SUBDIR
-#
 #         $DERIVED_DATA_SUBDIR
 #             $BITEXT_SUBDIR (optional)
 #             $EMBED_SUBDIR (optional)
 #             $LM_FINETUNE_SUBDIR (optional)
+#
+#         $EXPER_SUBDIR
 #
 #         $FWD_INDEX_SUBDIR
 #         $LUCENE_INDEX_SUBDIR
@@ -50,11 +50,10 @@ EXPER_SUBDIR="results"
 # Index directories.
 FWD_INDEX_SUBDIR="forward_index"
 LUCENE_INDEX_SUBDIR="lucene_index"
-
 # By default training scripts cache candidate
 # documents obtained from Lucene or any other
 # candidate generator to speed up training
-CACHE_SUBDIR="cache"
+LUCENE_CACHE_SUBDIR="lucene_cache"
 
 # Embeddings are stored within the derived-data sub-directory
 EMBED_SUBDIR="embeddings"
@@ -99,9 +98,26 @@ LETOR_SUBDIR="letor"
 TRECRUNS_SUBDIR="trec_runs"
 REP_SUBDIR="rep"
 
-STAT_FILE="$REP_SUBDIR/stat_file"
+STAT_FILE="stat_file"
 
 SEP_DEBUG_LINE="================================================================================"
 
-TEST_SET_PARAM="testSet"
+TEST_PART_PARAM="testPart"
 EXPER_SUBDIR_PARAM="experSubdir"
+TEST_ONLY_PARAM="testOnly"
+
+
+
+function getExperDirBase {
+  collectSubdir="$1"
+  testSet="$2"
+  experSubdir="$3"
+
+  checkVarNonEmpty "collectSubdir"
+  checkVarNonEmpty "testSet"
+  checkVarNonEmpty "experSubdir"
+  checkVarNonEmpty "EXPER_SUBDIR"
+
+  echo "$collectSubdir/$EXPER_SUBDIR/$testSet/$experSubdir"
+
+}

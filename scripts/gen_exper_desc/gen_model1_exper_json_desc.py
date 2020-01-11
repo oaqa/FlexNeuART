@@ -9,8 +9,9 @@ from gen_exper_desc.common_gen_desc import *
 class ExtrJsonGEN:
 
   def __call__(self):
-    for e in self.paramConf:
-      yield e
+    testOnly=False
+    for fid, extrType in self.paramConf:
+      yield fid, extrType, testOnly
 
   def __init__(self, k1, b, textFieldName=TEXT_FIELD_NAME, textUlemmFieldName=TEXT_UNLEMM_FIELD_NAME):
     self.k1 = k1
@@ -40,11 +41,11 @@ class ExtrJsonGEN:
       extrList = [{
                     "type": "Model1Similarity",
                     "params": {
-                      "fieldName": "text_unlemm",
-                      "gizaIterQty": "5",
-                      "probSelfTran": probSelfTran,
-                      "lambda": lamb,
-                      "minModel1Prob": "2.5e-3f"
+                      "indexFieldName": textUlemmFieldName,
+                      "gizaIterQty"   : "5",
+                      "probSelfTran"  : probSelfTran,
+                      "lambda"        : lamb,
+                      "minModel1Prob" : "2.5e-3f"
                     }
                   }
                   ]
@@ -52,10 +53,10 @@ class ExtrJsonGEN:
       extrList.append({
                       "type" : "TFIDFSimilarity",
                       "params" : {
-                        "fieldName" : "text",
-                        "similType" : "bm25",
-                        "k1"        : self.k1,
-                        "b"         : self.b
+                        "indexFieldName"  : textFieldName,
+                        "similType"       : "bm25",
+                        "k1"              : self.k1,
+                        "b"               : self.b
                       }
                     })
 
@@ -74,7 +75,7 @@ class ExtrJsonGEN:
       extrList = [{
         "type": "Model1Similarity",
         "params": {
-          "fieldName": "text_unlemm",
+          "indexFieldName": textUlemmFieldName,
           "gizaIterQty": "5",
           "probSelfTran": str(probSelfTran) + "f",  # for float in Java
           "lambda": lamb,
@@ -86,7 +87,7 @@ class ExtrJsonGEN:
       extrList.append({
         "type": "TFIDFSimilarity",
         "params": {
-          "fieldName": "text",
+          "indexFieldName": textUlemmFieldName,
           "similType": "bm25",
           "k1": self.k1,
           "b": self.b

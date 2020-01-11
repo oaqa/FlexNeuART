@@ -68,7 +68,11 @@ public abstract class CandidateProvider {
     
   	CandidateProvider[] res = new CandidateProvider[threadQty];
   	
-  	CandProvAddConfig addConf = CandProvAddConfig.readConfig(configName, provType);
+  	CandProvAddConfig addConf = null;
+  	
+  	if (configName != null) {
+  	  addConf = CandProvAddConfig.readConfig(configName, provType);
+  	}
   	
   	
     if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {

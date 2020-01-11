@@ -77,6 +77,10 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     String host = null;
     int    port = -1;
     
+    if (addConf == null) {
+      throw new Exception(this.getClass().getName() + " requres a non-null configuration");
+    }
+    
     String extrType = addConf.getReqParamStr(EXTRACTOR_TYPE_PARAM);
     boolean sparseInterleave = addConf.getParamBool(SPARSE_INTERLEAVE_PARAM);
     

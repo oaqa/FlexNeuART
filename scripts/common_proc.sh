@@ -152,13 +152,7 @@ function setJavaMem {
 function grepFileForVal {
   fileName="$1"
   metrName="$2"
-  fgrep "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
-}
-
-function grepStrForVal {
-  str="$1"
-  metrName="$2"
-  echo "$str" | fgrep "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
+  fgrep "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//' |sed 's/\s*$//'
 }
 
 function getNumCpuCores {
@@ -271,20 +265,6 @@ function getCatCmd {
   echo $catCommand
 }
 
-
-function getExperDirBase {
-  experDir="$1"
-  testSet="$2"
-  experSubdir="$3"
-
-  checkVarNonEmpty "experDir"
-  checkVarNonEmpty "testSet"
-  checkVarNonEmpty "experSubdir"
- 
-  echo "$experDir/$testSet/$experSubdir"
-  
-}
-
 function removeComment {
   line="$1"
 
@@ -297,3 +277,87 @@ function removeComment {
 
   echo $line
 }
+
+
+#
+#
+#boolOpts=(\
+#"opt1" "flag1" "help msg" \
+#"opt2" "flag2" "help msg" \
+#)
+#
+#paramOpts=(\
+#"opt3" "var3" "help msg" \
+#"opt4" "var4" "help msg" \
+#)
+#
+
+function genUsage {
+  posArgsUsage=$1
+  errorMsg=$2
+
+  boolOptsQty=${#boolOpts[*]}
+  paramOptsQty=${#paramOpts[*]}
+
+  if [ "$errorMsg" != "" ] ; then
+    echo "$errorMsg"
+  fi
+
+  if [ "$boolOptsQty" != "0" -o "$paramOptsQty" != "0" ] ; then
+
+    echo "Usage: $posArgsUsage [additional options]"
+    echo "Additional options:"
+
+
+    for ((i=0;i<$boolOptsQty;i+=3)) ; do
+      echo "-${boolOpts[$i]} ${boolOpts[$i+2]}"
+    done
+
+    for ((i=0;i<$paramOptsQty;i+=3)) ; do
+      echo "-${paramOpts[$i]} ${paramOpts[$i+2]}"
+    done
+  fi
+}
+
+function parseArgs {
+  posArgs=()
+
+  boolOptsQty=${#boolOpts[*]}
+  paramOptsQty=${#paramOpts[*]}
+
+  for ((i=1;i<$boolOptsQty;i+=3)) ; do
+    eval "${boolOpts[$i]}=0"
+  done
+
+  while [ $# -ne 0 ] ; do
+    i=0
+    f=0
+    for ((i=0;i<$boolOptsQty;i+=3)) ; do
+      if [ "-${boolOpts[$i]}" = "$1" ] ; then
+        eval "${boolOpts[$i+1]}=1"
+        shift 1
+        f=1
+        break
+      fi
+    done
+    if [ "$f" = "1" ] ; then
+      continue
+    fi
+    for ((i=0;i<$paramOptsQty;i+=3)) ; do
+      if [ "-${paramOpts[$i]}" = "$1" ] ; then
+        eval "${paramOpts[$i+1]}=\"$2\""
+        shift 2
+        f=1
+        break
+      fi
+    done
+    if [ "$f" = "1" ] ; then
+      continue
+    fi
+    posArgs=(${posArgs[*]} $1)
+    shift 1
+  done
+}
+
+
+parseArgs $@

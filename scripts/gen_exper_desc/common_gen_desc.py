@@ -3,9 +3,10 @@ import sys
 import argparse
 import json
 
-TEST_SET_PARAM="testSet"
-EXPER_SUBDIR_PARAM="experSubdir"
+# These parameter names must match parameter names in config.sh
 EXTR_TYPE_PARAM="extrType"
+EXPER_SUBDIR_PARAM="experSubdir"
+TEST_ONLY_PARAM="testOnly"
 
 class BaseParser:
   def initAddArgs(self):
@@ -54,11 +55,12 @@ def genDescriptors(args, extrJsonGenFunc, jsonDescName, jsonSubDir):
   if not os.path.exists(outJsonSubDir):
     os.makedirs(outJsonSubDir)
 
-  for fileId, jsonDesc in extrJsonGenFunc():
+  for fileId, jsonDesc, testOnly in extrJsonGenFunc():
     jsonFileName = fileId + '.json'
 
     descDataJSON.append({EXPER_SUBDIR_PARAM: os.path.join(jsonSubDir, fileId),
-                         EXTR_TYPE_PARAM: os.path.join(args.rel_desc_path, jsonSubDir, jsonFileName)})
+                         EXTR_TYPE_PARAM: os.path.join(args.rel_desc_path, jsonSubDir, jsonFileName),
+                         TEST_ONLY_PARAM: int(testOnly)})
 
     with open(os.path.join(outJsonSubDir, jsonFileName), 'w') as of:
       json.dump(jsonDesc, of, indent=2)
