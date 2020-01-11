@@ -4,7 +4,7 @@ sys.path.append('scripts')
 from gen_exper_desc.common_gen_desc import *
 from data_convert.convert_common import *
 
-class ExtrJsonGEN:
+class ExtrJsonRerankGEN:
   def __init__(self, fieldName):
     self.fieldName = fieldName
 
@@ -35,7 +35,9 @@ class ExtrJsonGEN:
         yield fid, jsonDesc, testOnly
 
 parser = BaseParser('BM25 tuning param generator')
+parser.parseArgs()
 
-genDescriptors(parser.args, ExtrJsonGEN(TEXT_FIELD_NAME), 'bm25tune.json', 'bm25tune')
+genRerankDescriptors(parser.getArgs(), ExtrJsonRerankGEN(TEXT_FIELD_NAME),
+                     'bm25tune.json', 'bm25tune')
 
 

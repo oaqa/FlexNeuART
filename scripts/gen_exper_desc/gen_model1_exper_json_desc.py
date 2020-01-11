@@ -98,8 +98,9 @@ class ExtrJsonGEN:
 
 
 parser = ParserWithBM25Coeff('Model1 tuning param generator')
-args = parser.args
-genDescriptors(args, ExtrJsonGEN(k1=args.k1, b=args.b), 'model1tune.json', 'model1tune')
+parser.parseArgs()
+args = parser.getArgs()
+genRerankDescriptors(args, ExtrJsonGEN(k1=args.k1, b=args.b), 'model1tune.json', 'model1tune')
 
 
 

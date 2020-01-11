@@ -10,20 +10,22 @@ checkVarNonEmpty "STAT_FILE"
 
 boolOpts=(\
 "h" "help" "print help" \
-"debug_print" "debug" "print every executed command"
+"debug_print" "debug" "print every executed command" \
 )
 
 paramOpts=(\
 "test_part" "defaultTestPart" "default test set, e.g., dev1" \
+"flt_cand_qty" "fltN" "a filter to include runs only with this # of candidates" \
+"print_best_metr" "printBestMetr" "print only best result according to the specified metric" \
 )
 
-parseArgs $@
+parseArguments $@
 
-usageMain="<collection> <feature desc. file relative to collection root> <filter for cand. qty>"
+usageMain="<collection> <feature desc. file relative to collection root> <output file>"
 
 if [ "$help" = "1" ] ; then
   genUsage $usageMain
-  exit 0
+  exit 1
 fi
 
 collect=${posArgs[0]}
@@ -47,21 +49,46 @@ if [ ! -f "$experDescPath" ] ; then
   exit 1
 fi
 
-fltN="${posArgs[2]}"
+outFile="${posArgs[2]}"
+if [ "$outFile" = "" ] ; then
+    genUsage "$usageMain" "Missing output file!"
+    exit 1
+fi
+# Must make it absolute path
+outFile="$PWD/$outFile"
+
 if [ "$fltN" = "" ] ; then
+  if [ "$printBestMetr" != "" ] ; then
+    genUsage "$usageMain" "Finding for best-parameter config. requires you specify the filter for # of candidates!"
+    exit 1
+  fi
   fltN="*"
+  echo "Including runs for all candidate record numbers"
+else
+  echo "Including only runs that generated $fltN candidate records"
 fi
 
 if [ "$debug" = "1" ] ; then
   set -x
 fi
 
-
 tmpConf=`mktemp`
 
-echo -e "extractor_type\ttop_k\tquery_qty\tNDCG@20\tERR@20\tP@20\tMAP\tMRR\tRecall"
+metrList=("NDCG@20" "ERR@20" "P@20" "MAP" "MRR" "Recall")
+
+header="test_part\texper_subdir\ttop_k\tquery_qty"
+
+for mname in ${metrList[*]} ; do
+  header+="\t$mname"
+done
+
+echo -e "$header" > "$outFile"
 
 ivar=0
+
+bestVal="1e-100"
+bestSubdir=""
+
 for ((ivar=1;;++ivar)) ; do
 
   stat=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
@@ -114,18 +141,32 @@ for ((ivar=1;;++ivar)) ; do
     for f in `ls -tr out_${fltN}.rep` ; do
       top_k=`echo $f|sed 's/out_//'|sed 's/.rep//'`
       query_qty=`grepFileForVal "$f" "# of queries"`
-      ndcg20=`grepFileForVal "$f" "NDCG@20"`
-      err20=`grepFileForVal "$f" "ERR@20"`
-      p20=`grepFileForVal "$f" "P@20"`
-      map=`grepFileForVal "$f" "MAP"`
-      mrr=`grepFileForVal "$f" "Reciprocal rank"`
-      recall=`grepFileForVal "$f" "Recall"`
-      echo -e "$extrType\t$top_k\t$query_qty\t$ndcg20\t$err20\t$p20\t$map\t$mrr\t$recall"
+
+      row="$testPart\t$experSubdir\t$top_k\t$query_qty"
+      for mname in ${metrList[*]} ; do
+        val=`grepFileForVal "$f" "$mname"`
+        if [ "$mname" = "$printBestMetr" ] ; then
+          cmp=`isGreater "$val" "$bestVal"`
+          if [ "$bestSubdir" = "" -o "$cmp" = "1" ] ; then
+            bestSubdir=$experSubdir
+            bestVal=$val
+          fi
+        fi
+        row+="\t$val"
+      done
+
+      echo -e "$row" >> "$outFile"
     done
     cd $pd
     check "cd $pd"
   fi
 done
+
+if [ "$printBestMetr" != "" ] ; then
+  echo "Best results for metric $printBestMetr:"
+  echo "Value: $bestVal"
+  echo "Result sub-dir: $bestSubdir"
+fi
 
 
 rm "$tmpConf"

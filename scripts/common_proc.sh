@@ -281,14 +281,20 @@ function removeComment {
 
 #
 #
+# The genUsage and parseArguments
+# make assumptions about how parameter-describing
+# variables are stored and presented.
+# For simplicity, it expects the following
+# arrays to exist:
+#
 #boolOpts=(\
-#"opt1" "flag1" "help msg" \
-#"opt2" "flag2" "help msg" \
+#"opt1" "variable name 1" "help msg" \
+#"opt2" "variable name 2" "help msg" \
 #)
 #
 #paramOpts=(\
-#"opt3" "var3" "help msg" \
-#"opt4" "var4" "help msg" \
+#"opt3" "variable name 3" "help msg" \
+#"opt4" "variable name 4" "help msg" \
 #)
 #
 
@@ -319,7 +325,7 @@ function genUsage {
   fi
 }
 
-function parseArgs {
+function parseArguments {
   posArgs=()
 
   boolOptsQty=${#boolOpts[*]}
@@ -351,6 +357,7 @@ function parseArgs {
         break
       fi
     done
+
     if [ "$f" = "1" ] ; then
       continue
     fi
@@ -359,5 +366,9 @@ function parseArgs {
   done
 }
 
-
-parseArgs $@
+# Hacky function to obtain 1, if the first # is greater than another
+function isGreater {
+  val1=$1
+  val2=$2
+  python -c "print(int($val1 > $val2))"
+}
