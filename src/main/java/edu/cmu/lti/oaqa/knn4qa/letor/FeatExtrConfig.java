@@ -27,7 +27,7 @@ import org.apache.commons.io.FileUtils;
 
 class OneFeatExtrConf extends KeyValueConfig {
   
-	String                  type;
+  String                  type;
   
   @Override
   public String getName() {

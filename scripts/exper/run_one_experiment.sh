@@ -111,6 +111,7 @@ while [ $# -ne 0 ] ; do
           threadQty=$optValue
           ;;
         -cand_prov_add_conf)
+          candProvAddConf=$optValue
           candProvAddConfParam=$opt
           ;;
         -cand_prov_uri)
@@ -280,40 +281,42 @@ fi
 # We, unfortunately, can reliably use cache only for
 # the default Lucene provider without explicitly specified URI &
 # config file
-if [ "$candProvType" = "$CAND_PROV_LUCENE" \
-      -a "$candProvAddConf" = "" \
-      -a "$candProvURI" = "" ] ; then
+if [ "$candProvType" = "$CAND_PROV_LUCENE" -a "$candProvURI" = "" ] ; then\
 
   candProvURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
-  cacheDir="$COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR"
 
-  if [ ! -d "$cacheDir" ] ; then
-    mkdir -p "$cacheDir"
-  fi
+  # No caching for explicit config!
+  if [ "$candProvAddConf" = "" ] ; then
+    cacheDir="$COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR"
 
-  for part in "$trainPart" "$testPart" ; do
-    if [ "$part" != "" ]; then
-      if [ ! -d "$cacheDir/$part" ] ; then
-        mkdir -p "$cacheDir/$part"
+    if [ ! -d "$cacheDir" ] ; then
+      mkdir -p "$cacheDir"
+    fi
+
+    for part in "$trainPart" "$testPart" ; do
+      if [ "$part" != "" ]; then
+        if [ ! -d "$cacheDir/$part" ] ; then
+          mkdir -p "$cacheDir/$part"
+        fi
       fi
-    fi
-  done
+    done
 
-  if [ "$testOnly" = "0" ] ; then
-    if [ "$maxQueryQtyTrain" = "" ] ; then
-      cacheFileTrain="$cacheDir/$trainPart/all_queries_$testCandQtyList"
+    if [ "$testOnly" = "0" ] ; then
+      if [ "$maxQueryQtyTrain" = "" ] ; then
+        cacheFileTrain="$cacheDir/$trainPart/all_queries_$testCandQtyList"
+      else
+        cacheFileTrain="$cacheDir/$trainPart/max_query_qty=${maxQueryQtyTrain}_$testCandQtyList"
+      fi
+      queryCacheParamTrain=" -query_cache_file \"$cacheFileTrain\""
+    fi
+
+    if [ "$maxQueryQtyTest" = "" ] ; then
+      cacheFileTest="$cacheDir/$testPart/all_queries_$testCandQtyList"
     else
-      cacheFileTrain="$cacheDir/$trainPart/max_query_qty=${maxQueryQtyTrain}_$testCandQtyList"
+      cacheFileTest="$cacheDir/$testPart/max_query_qty=${maxQueryQtyTrain}_$testCandQtyList"
     fi
-    queryCacheParamTrain=" -query_cache_file \"$cacheFileTrain\""
+    queryCacheParamTest="-query_cache_file \"$cacheFileTest\""
   fi
-
-  if [ "$maxQueryQtyTest" = "" ] ; then
-    cacheFileTest="$cacheDir/$testPart/all_queries_$testCandQtyList"
-  else
-    cacheFileTest="$cacheDir/$testPart/max_query_qty=${maxQueryQtyTrain}_$testCandQtyList"
-  fi
-  queryCacheParamTest="-query_cache_file \"$cacheFileTest\""
 else
   if [ "$candProvURI" = "" ] ; then
     echo "You must specify -cand_prov_uri for the provider $candProvType"

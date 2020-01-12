@@ -152,7 +152,11 @@ function setJavaMem {
 function grepFileForVal {
   fileName="$1"
   metrName="$2"
-  fgrep "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//' |sed 's/\s*$//'
+  ignoreCase="$3"
+  if [ "$ignoreCase" ] ; then
+    caseFlag='-i'
+  fi
+  fgrep $caseFlag "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//' |sed 's/\s*$//'
 }
 
 function getNumCpuCores {

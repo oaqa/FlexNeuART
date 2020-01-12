@@ -74,7 +74,7 @@ fi
 
 tmpConf=`mktemp`
 
-metrList=("NDCG@20" "ERR@20" "P@20" "MAP" "MRR" "Recall")
+metrList=("ndcg@20" "err@20" "p@20" "map" "mrr" "recall")
 
 header="test_part\texper_subdir\ttop_k\tquery_qty"
 
@@ -144,7 +144,7 @@ for ((ivar=1;;++ivar)) ; do
 
       row="$testPart\t$experSubdir\t$top_k\t$query_qty"
       for mname in ${metrList[*]} ; do
-        val=`grepFileForVal "$f" "$mname"`
+        val=`grepFileForVal "$f" "$mname" "1"`
         if [ "$mname" = "$printBestMetr" ] ; then
           cmp=`isGreater "$val" "$bestVal"`
           if [ "$bestSubdir" = "" -o "$cmp" = "1" ] ; then

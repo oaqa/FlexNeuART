@@ -23,10 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.knn4qa.apps.CommonParams;
-import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
-import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 public abstract class CandidateProvider {
@@ -38,12 +35,10 @@ public abstract class CandidateProvider {
   // If you add a new provider, update CAND_PROVID_DESC below
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
-  public static final String CAND_TYPE_GALAGO      = "galago";
  
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
-      CandidateProvider.CAND_TYPE_NMSLIB + "," + 
-      CandidateProvider.CAND_TYPE_GALAGO;
+      CandidateProvider.CAND_TYPE_NMSLIB;
   
   
   /**

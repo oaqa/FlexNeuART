@@ -3,7 +3,7 @@ package edu.cmu.lti.oaqa.knn4qa.utils;
 import java.util.Map;
 
 public abstract class KeyValueConfig {
-	public abstract String getName();
+  public abstract String getName();
 	
   protected Map<String, String>     params;
   

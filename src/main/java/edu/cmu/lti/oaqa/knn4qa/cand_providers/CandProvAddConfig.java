@@ -16,6 +16,7 @@
 package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
 import java.io.File;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
@@ -37,7 +38,12 @@ public class CandProvAddConfig extends KeyValueConfig {
 	
 	protected String mProvName;
 
-	@Override
+	public CandProvAddConfig(Map<String, String> conf, String provName) {
+      mProvName = provName;
+      this.params = conf;
+    }
+
+    @Override
 	public String getName() {
 		return "candiate provider " + mProvName;
 	}
@@ -55,9 +61,22 @@ public class CandProvAddConfig extends KeyValueConfig {
   public static CandProvAddConfig readConfig(String inputFile, String provName) throws Exception {
     Gson gson = new Gson();    
 
-    CandProvAddConfig res = gson.fromJson(FileUtils.readFileToString(new File(inputFile), Const.ENCODING), 
-    																			CandProvAddConfig.class);
-    return res;
+    Map<String, String> conf = gson.fromJson(FileUtils.readFileToString(new File(inputFile), Const.ENCODING), Map.class);
+    return new CandProvAddConfig(conf, provName);
+  }
+  
+  /**
+   * Just a stupid testing function.
+   * 
+   * @param args
+   * @throws Exception
+   */
+  public static void main(String[] args) throws Exception {
+    String inputFile = args[0];
+   
+    CandProvAddConfig tmp = readConfig(inputFile, CandidateProvider.CAND_TYPE_LUCENE);
+    System.out.println(tmp.getAllParams());
+    
   }
   
 

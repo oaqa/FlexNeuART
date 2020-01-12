@@ -230,7 +230,7 @@ jsonParamMap=(\
 )
 
 # Some locations are always relative to the collection root
-adjustLocForParams=(extrType extrTypeInterm modelInterm modelFinal)
+adjustLocForParams=(extrType extrTypeInterm modelInterm modelFinal candProvAddConfParam)
 
 childPIDs=()
 nrun=0
@@ -308,7 +308,7 @@ EOF
 `
     logFileName="$experDirBase/exper.log"
     if [ "$useSeparateShell" = "1" ] ; then
-      bash -c "$cmd"  &> "logFileName" &
+      bash -c "$cmd"  &> "$logFileName" &
 
       pid=$!
       childPIDs+=($pid)
@@ -317,7 +317,7 @@ EOF
     else
       echo "Starting a process, working dir: $experDirBase"
       echo "Process log file: $logFileName"
-      bash -c "$cmd"  2>&1 |tee "logFileName"
+      bash -c "$cmd"  2>&1 |tee "$logFileName"
       checkPipe
     fi
     nRunning=$(($nRunning+1))
