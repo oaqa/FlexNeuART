@@ -69,10 +69,10 @@ globalParams=""
 while [ $# -ne 0 ] ; do
   optValue=""
   opt=""
-  echo $1|grep "^-" >/dev/null
-  if [ $? = 0 ] ; then
+  if [[ "$1" = -* ]] ; then
     optName="$1"
     optValue="$2"
+    echo "@@ $1 -> $2"
     if [ "$optName" = "-reuse_feat" ] ; then
       globalParams+=" $optName"
       # option without an argument shift by 1
@@ -126,7 +126,7 @@ while [ $# -ne 0 ] ; do
           globalParams+=" $opt"
           ;;
         -parallel_exper_qty)
-          globalParams+=" $opt"
+          parallelExperQty="$optValue"
           ;;
         -metric_type)
           globalParams+=" $opt"

@@ -32,9 +32,8 @@ export MVN_RUN_CMD="mvn -o compile exec:java "
 
 # I think the use of check, checkPipe, and execAndCheck should be limited,
 # especially for execAndCheck, as it prevents proper escaping of arguments (with say spaces).
-# It is advised to use "set -euxo pipefail" or "set -euxo pipefail" after all arguments are parsed
-# and grep command isn't used for control flow. However, I envision in some cases execAndCheck can still
-# be useful.
+# It is advised to use "set -euxo pipefail" or "set -euxo pipefail" after are done using grep
+# for some sort of control flow. Thus, there are cases when execAndCheck is still useful.
 #
 # Notes:
 # 1. set -u aborts execution when uninitialized variables are used
@@ -340,30 +339,34 @@ function parseArguments {
   done
 
   while [ $# -ne 0 ] ; do
-    i=0
-    f=0
-    for ((i=0;i<$boolOptsQty;i+=3)) ; do
-      if [ "-${boolOpts[$i]}" = "$1" ] ; then
-        eval "${boolOpts[$i+1]}=1"
-        shift 1
-        f=1
-        break
+    if [[ "$1" = -* ]] ; then
+      i=0
+      f=0
+      for ((i=0;i<$boolOptsQty;i+=3)) ; do
+        if [ "-${boolOpts[$i]}" = "$1" ] ; then
+          eval "${boolOpts[$i+1]}=1"
+          shift 1
+          f=1
+          break
+        fi
+      done
+      if [ "$f" = "1" ] ; then
+        continue
       fi
-    done
-    if [ "$f" = "1" ] ; then
-      continue
-    fi
-    for ((i=0;i<$paramOptsQty;i+=3)) ; do
-      if [ "-${paramOpts[$i]}" = "$1" ] ; then
-        eval "${paramOpts[$i+1]}=\"$2\""
-        shift 2
-        f=1
-        break
-      fi
-    done
+      for ((i=0;i<$paramOptsQty;i+=3)) ; do
+        if [ "-${paramOpts[$i]}" = "$1" ] ; then
+          eval "${paramOpts[$i+1]}=\"$2\""
+          shift 2
+          f=1
+          break
+        fi
+      done
 
-    if [ "$f" = "1" ] ; then
-      continue
+      if [ "$f" = "1" ] ; then
+        continue
+      fi
+      echo "Invalid option: $1"
+      exit 1
     fi
     posArgs=(${posArgs[*]} $1)
     shift 1

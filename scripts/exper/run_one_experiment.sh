@@ -67,8 +67,7 @@ testOnly=0
 while [ $# -ne 0 ] ; do
   optValue=""
   opt=""
-  echo $1|grep "^-" >/dev/null
-  if [ $? = 0 ] ; then
+  if [[ "$1" = -* ]] ; then
     optName="$1"
     if [ "$optName" = "-use_lmart" ] ; then
       useLMART="1"
