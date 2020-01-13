@@ -8,6 +8,15 @@
         "k1": "0.4",
         "b": "0.75"
       }
+    },
+    {
+      "type": "TFIDFSimilarity",
+      "params": {
+        "indexFieldName": "text_unlemm",
+        "similType": "bm25",
+        "k1": "0.4",
+        "b": "0.75"
+      }
     }
   ]
 }

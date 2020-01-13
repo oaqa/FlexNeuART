@@ -1,0 +1,9 @@
+[
+  {
+    "experSubdir": "feat_exper/interm_extr",
+    "extrTypeInterm" : "exper_desc/bm25tune/bm25_k1=0.4_b=0.75.json",
+    "modelInterm" : "exper_desc/one_feat.model",
+    "extrType" : "exper_desc/misc_extr_conf/two_field.json",
+    "testOnly": 0
+  }
+]

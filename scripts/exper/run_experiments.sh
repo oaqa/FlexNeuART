@@ -270,7 +270,7 @@ for ((ivar=1;;++ivar)) ; do
     fi
     mkdir -p "$experDirBase"
 
-    singleConfParams=""
+    singleConfParams="-thread_qty $threadQty"
 
     if [ "$testOnly" = "1" ] ; then
       singleConfParams+=" -test_only"

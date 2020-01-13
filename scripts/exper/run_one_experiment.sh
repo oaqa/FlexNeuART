@@ -45,7 +45,7 @@ checkVarNonEmpty "CAND_PROV_LUCENE"
 candProvType="$CAND_PROV_LUCENE"
 
 candProvURI=""
-candQtyParam=""
+candQty="$DEFAULT_INTERM_CAND_QTY"
 candProvAddConf=""
 candProvAddConfParam=""
 
@@ -139,7 +139,7 @@ while [ $# -ne 0 ] ; do
           candProvType=$optValue
           ;;
         -cand_qty)
-          candQtyParam=$opt
+          candQty=$optValue
           ;;
         -test_cand_qty_list)
           testCandQtyList=$optValue
@@ -281,7 +281,7 @@ fi
 # We, unfortunately, can reliably use cache only for
 # the default Lucene provider without explicitly specified URI &
 # config file
-if [ "$candProvType" = "$CAND_PROV_LUCENE" -a "$candProvURI" = "" ] ; then\
+if [ "$candProvType" = "$CAND_PROV_LUCENE" -a "$candProvURI" = "" ] ; then
 
   candProvURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
 
@@ -335,7 +335,7 @@ fi
 #             $maxQueryQtyTestParam,
 # as we llas other *Param*
 
-commonAddParams="$candQtyParam $candProvAddConfParam \
+commonAddParams="-cand_qty $candQty $candProvAddConfParam \
  -thread_qty "$threadQty" \
 $extrTypeIntermParam $modelIntermParam \
 $commonResourceParams"
@@ -430,7 +430,7 @@ if [ "$testOnly" = "0" ] ; then
                                     -extr_type_final \"$extrType\" \
                                      $commonAddParams \
                                      $maxQueryQtyTrainParam  \
-                                     $cacheFileParamTrain 2>&1 | tee "${fullOutPrefTrain}_${n}.log"
+                                     $queryCacheParamTrain 2>&1 | tee "${fullOutPrefTrain}_${n}.log"
 
   fi
 
