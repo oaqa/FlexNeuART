@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-import sys, pickle
+import sys
+import pickle
 import argparse
+import torch
 import numpy as np
 
 sys.path.append('scripts/py_featextr_server')
@@ -13,17 +15,17 @@ from base_server import *
 import train
 import data
 
-# Let's use a small number so that we can run two servers on a single GPU
-DEFAULT_BATCH_SIZE=8 
+DEFAULT_BATCH_SIZE=64 
 
 class CedrQueryHandler(BaseQueryHandler):
   # Exclusive==True means that only one getScores
   # function is executed at at time
-  def __init__(self, modelType, modelWeights=None, batchSize=DEFAULT_BATCH_SIZE, debugPrint=False):
+  def __init__(self, modelType, modelWeights=None, batchSize=DEFAULT_BATCH_SIZE, noCuda=False, debugPrint=False):
     super().__init__(exclusive=True)
 
     self.debugPrint = debugPrint
     self.batchSize = batchSize
+    self.noCuda = noCuda
     self.model = train.MODEL_MAP[modelType]().cuda()
     if modelWeights is not None:
       if self.debugPrint:
@@ -52,18 +54,20 @@ class CedrQueryHandler(BaseQueryHandler):
 
       # based on the code from run_model function (train.py)
       dataSet = queryData, docData 
-      for records in data.iter_valid_records(self.model, dataSet, run, self.batchSize):
-        scores = self.model(records['query_tok'],
-                            records['query_mask'],
-                            records['doc_tok'],
-                            records['doc_mask'])
-        for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
-          score = score.item() # From tensor to value
-          if self.debugPrint:
-            print(score, did, docData[did])
-          # Note that each element must be an array, b/c
-          # we can generate more than one feature per document!
-          sampleRet[did] = [score]
+      # must disable gradient computation to greatly reduce memory requirements and speed up things
+      with torch.no_grad():
+        for records in data.iter_valid_records(self.model, self.noCuda, dataSet, run, self.batchSize):
+          scores = self.model(records['query_tok'],
+                              records['query_mask'],
+                              records['doc_tok'],
+                              records['doc_mask'])
+          for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
+            score = score.item() # From tensor to value
+            if self.debugPrint:
+              print(score, did, docData[did])
+            # Note that each element must be an array, b/c
+            # we can generate more than one feature per document!
+            sampleRet[did] = [score]
 
     if self.debugPrint:
       print('All scores:', sampleRet)
@@ -76,7 +80,7 @@ if __name__ == '__main__':
 
   parser.add_argument('--model', metavar='model type',
                       required=True, type=str,
-                      help=' type, e.g., vanilla_bert')
+                      help='type, e.g., vanilla_bert')
 
   parser.add_argument('--debug_print', action='store_true',
                       help='Provide debug output')

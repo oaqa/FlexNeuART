@@ -49,6 +49,10 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class NmslibKNNCandidateProvider  extends CandidateProvider {
+  
+  public final static String EXTRACTOR_TYPE_PARAM = "extrType";
+  public final static String SPARSE_INTERLEAVE_PARAM = "sparseInterleave";
+  
   Splitter splitOnColon = Splitter.on(':');	
   final private Client 			              mKNNClient;
   final private FeatExtrResourceManager       mResourceManager;
@@ -62,19 +66,25 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
    * 
    * @param knnServiceURL       an address/port for the NMSLIB server.
    * @param resourceManager     a resource manager.
-   * @param featExtr            a composite feature extractor.
-   * @param sparseInterleave    Use the interleaved representation for the query
-   *                            instead of a sparse-dense fusion space representation.
+   * @param addConf             additional (but mandatory) paramters
    * 
    * @throws Exception
    */
   public NmslibKNNCandidateProvider(String knnServiceURL, 
-                                    FeatExtrResourceManager resourceManager, 
-                                    CompositeFeatureExtractor featExtr,
-                                    boolean sparseInterleave) throws Exception {
+                                    FeatExtrResourceManager resourceManager,
+                                    CandProvAddConfig addConf) throws Exception {
 
     String host = null;
     int    port = -1;
+    
+    if (addConf == null) {
+      throw new Exception(this.getClass().getName() + " requres a non-null configuration");
+    }
+    
+    String extrType = addConf.getReqParamStr(EXTRACTOR_TYPE_PARAM);
+    boolean sparseInterleave = addConf.getParamBool(SPARSE_INTERLEAVE_PARAM);
+    
+    CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, extrType);
     
     mResourceManager = resourceManager;   
     

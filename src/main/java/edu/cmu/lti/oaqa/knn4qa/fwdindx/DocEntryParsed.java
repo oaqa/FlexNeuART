@@ -28,6 +28,16 @@ import edu.cmu.lti.oaqa.knn4qa.utils.Const;
  *
  */
 public class DocEntryParsed {
+
+	public static final String DOCLEN_QTY_PREFIX = "@ ";
+  
+
+  public final int mWordIds[]; // unique word IDs
+  public final int mQtys[];    // # of word occurrences corresponding to {@link mWordIds} 
+  // A sequence of word IDs (as they appear in the corresponding field), this array CAN BE NULL.
+  public final int mWordIdSeq[]; 
+  public final int mDocLen; // document length in # of words
+	
   public DocEntryParsed(int uniqQty, int [] wordIdSeq, boolean bStoreWordIdSeq) {
     mWordIds = new int [uniqQty];
     mQtys    = new int [uniqQty];
@@ -203,7 +213,7 @@ public class DocEntryParsed {
   	int totalSize = 4 + // # of (word id, qty) pairs 
   								  4 + // # the length of a word sequence
   								mWordIds.length * 8 + // id + qty
-  								mDocLen * 4;
+  								mDocLen * (mWordIdSeq != null ? 4 : 0);
   	ByteBuffer out = ByteBuffer.allocate(totalSize);
   	out.order(Const.BYTE_ORDER);
   	out.putInt(mWordIds.length);
@@ -278,12 +288,4 @@ public class DocEntryParsed {
 		return true;
 	}
 
-
-	public static final String DOCLEN_QTY_PREFIX = "@ ";
-  
-
-  public final int mWordIds[]; // unique word ids
-  public final int mQtys[];    // # of word occurrences corresponding to memorized ids
-  public final int mWordIdSeq[]; // a sequence of word IDs (can contain repeats), this array CAN BE NULL
-  public final int mDocLen; // document length in # of words
 }

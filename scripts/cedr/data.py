@@ -1,7 +1,8 @@
 #
 # This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
 # (c) Georgetown IR lab
-# It's distributed under the MIT License 
+# It's distributed under the MIT License
+# MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import random
 from tqdm import tqdm
@@ -50,31 +51,34 @@ def read_pairs_dict(file):
     return result
 
 
-def iter_train_pairs(model, dataset, train_pairs, qrels, batch_size):
+def iter_train_pairs(model, no_cuda, dataset, train_pairs, do_shuffle, qrels, batch_size):
     batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
-    for qid, did, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, qrels):
+    for qid, did, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
         batch['query_id'].append(qid)
         batch['doc_id'].append(did)
         batch['query_tok'].append(query_tok)
         batch['doc_tok'].append(doc_tok)
         if len(batch['query_id']) // 2 == batch_size:
-            yield _pack_n_ship(batch)
+            yield _pack_n_ship(batch, no_cuda)
             batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
 
 
+def train_item_qty(train_pairs):
+    return len(list(train_pairs.keys()))
 
-def _iter_train_pairs(model, dataset, train_pairs, qrels):
+def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
     ds_queries, ds_docs = dataset
     while True:
         qids = list(train_pairs.keys())
-        random.shuffle(qids)
+        if do_shuffle:
+            random.shuffle(qids)
         for qid in qids:
             pos_ids = [did for did in train_pairs[qid] if qrels.get(qid, {}).get(did, 0) > 0]
             if len(pos_ids) == 0:
                 continue
             pos_id = random.choice(pos_ids)
             pos_ids_lookup = set(pos_ids)
-            pos_ids = set(pos_ids)
+
             neg_ids = [did for did in train_pairs[qid] if did not in pos_ids_lookup]
             if len(neg_ids) == 0:
                 continue
@@ -92,7 +96,7 @@ def _iter_train_pairs(model, dataset, train_pairs, qrels):
             yield qid, neg_id, query_tok, model.tokenize(neg_doc)
 
 
-def iter_valid_records(model, dataset, run, batch_size):
+def iter_valid_records(model, no_cuda, dataset, run, batch_size):
     batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
     for qid, did, query_tok, doc_tok in _iter_valid_records(model, dataset, run):
         batch['query_id'].append(qid)
@@ -100,11 +104,11 @@ def iter_valid_records(model, dataset, run, batch_size):
         batch['query_tok'].append(query_tok)
         batch['doc_tok'].append(doc_tok)
         if len(batch['query_id']) == batch_size:
-            yield _pack_n_ship(batch)
+            yield _pack_n_ship(batch, no_cuda)
             batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
     # final batch
     if len(batch['query_id']) > 0:
-        yield _pack_n_ship(batch)
+        yield _pack_n_ship(batch, no_cuda)
 
 
 def _iter_valid_records(model, dataset, run):
@@ -120,21 +124,21 @@ def _iter_valid_records(model, dataset, run):
             yield qid, did, query_tok, doc_tok
 
 
-def _pack_n_ship(batch):
+def _pack_n_ship(batch, no_cuda):
     QLEN = 20
     MAX_DLEN = 800
     DLEN = min(MAX_DLEN, max(len(b) for b in batch['doc_tok']))
     return {
         'query_id': batch['query_id'],
         'doc_id': batch['doc_id'],
-        'query_tok': _pad_crop(batch['query_tok'], QLEN),
-        'doc_tok': _pad_crop(batch['doc_tok'], DLEN),
-        'query_mask': _mask(batch['query_tok'], QLEN),
-        'doc_mask': _mask(batch['doc_tok'], DLEN),
+        'query_tok': _pad_crop(no_cuda, batch['query_tok'], QLEN),
+        'doc_tok': _pad_crop(no_cuda, batch['doc_tok'], DLEN),
+        'query_mask': _mask(no_cuda, batch['query_tok'], QLEN),
+        'doc_mask': _mask(no_cuda, batch['doc_tok'], DLEN),
     }
 
 
-def _pad_crop(items, l):
+def _pad_crop(no_cuda, items, l):
     result = []
     for item in items:
         if len(item) < l:
@@ -142,10 +146,13 @@ def _pad_crop(items, l):
         if len(item) > l:
             item = item[:l]
         result.append(item)
-    return torch.tensor(result).long().cuda()
+    res = torch.tensor(result).long()
+    if not no_cuda:
+        res = res.cuda()
+    return res
 
 
-def _mask(items, l):
+def _mask(no_cuda, items, l):
     result = []
     for item in items:
         if len(item) < l:
@@ -153,4 +160,7 @@ def _mask(items, l):
         if len(item) >= l:
             item = [1. for _ in item[:l]]
         result.append(item)
-    return torch.tensor(result).float().cuda()
+    res = torch.tensor(result).float()
+    if not no_cuda:
+        res = res.cuda()
+    return res

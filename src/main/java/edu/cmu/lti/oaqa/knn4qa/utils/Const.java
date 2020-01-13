@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 /**
  * 
- * The file with various Solr-related constants and helper functions.
+ * The file with various constants and helper functions.
  * 
  * @author Leonid Boytsov
  *
@@ -46,6 +46,8 @@ public class Const {
   
   public static final String TEXT_FIELD_NAME = "text";
   
+  public static final String ANSWER_LIST_FIELD_NAME = "answer_list";
+  
   public static final String BITEXT_QUEST_PREFIX = "question_";
   public static final String BITEXT_ANSW_PREFIX = "answer_";
   
@@ -64,5 +66,7 @@ public class Const {
   public static final int PROGRESS_REPORT_QTY = 10000;
   
   public static final String FAKE_RUN_ID = "fake_run";
+  
+  public static final int MAX_RELEV_GRADE = 4;
   
 }

@@ -54,7 +54,7 @@ def parseGdevalResults(lines):
 if len(sys.argv) != 3 and len(sys.argv) != 5:
   Usage(None)
 
-trecEvalBin='trec_eval-9.0.4/trec_eval'
+trecEvalBin='trec_eval/trec_eval'
 gdevalScript='scripts/exper/gdeval.pl'
 
 qrelFile=sys.argv[1]

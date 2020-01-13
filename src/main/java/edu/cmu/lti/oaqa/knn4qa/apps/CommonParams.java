@@ -15,6 +15,7 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.apps;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 
 public class CommonParams {
@@ -58,17 +59,14 @@ public class CommonParams {
   public static final String FLT_FWD_INDEX_PARAM = "flt_fwd_index_header";
   public static final String FLT_FWD_INDEX_DESC = "A forward index header file used for filtering";
 
-  public final static String CAND_PROVID_DESC = "candidate record provider type, e.g., lucene, nmslib";
+  public final static String CAND_PROVID_DESC = "candidate record provider type: " + CandidateProvider.CAND_PROVID_DESC;
   public final static String CAND_PROVID_PARAM = "cand_prov";
   
-  public final static String MIN_SHOULD_MATCH_PCT_PARAM = "min_should_match_pct";
-  public final static String MIN_SHOULD_MATCH_PCT_DESC  = "a percentage of query word (an integer from 0 to 100) that must match a document word";
+  public final static String CAND_PROVID_ADD_CONF_DESC = "JSON with additional candidate provider parameters";
+  public final static String CAND_PROVID_ADD_CONF_PARAM = "cand_prov_add_conf";
 
   public final static String EXTRACTOR_TYPE_FINAL_PARAM = "extr_type_final";
   public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type/json"; 
-  
-  public final static String EXTRACTOR_TYPE_NMSLIB_PARAM = "extr_type_nmslib";
-  public final static String EXTRACTOR_TYPE_NMSLIB_DESC = "Extrator type/json to generate NMSLIB query vectors"; 
                                   
   public final static String EXTRACTOR_TYPE_INTERM_PARAM = "extr_type_interm";  
   public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type/json";
@@ -87,9 +85,6 @@ public class CommonParams {
  
   public static final String EMBED_DIR_PARAM = "embed_dir";
   public static final String EMBED_DIR_DESC = "a root dir for embeddings";
-  
-  public final static String KNN_INTERLEAVE_DESC  = "Used sparse interlleaved vectors for NMSLIB";
-  public final static String KNN_INTERLEAVE_PARAM = "knn_interleave";    
 
   public final static String INPUT_DATA_DIR_DESC = "A data directory (to be used for indexing/querying)";
   public final static String INPUT_DATA_DIR_PARAM = "input_data_dir";

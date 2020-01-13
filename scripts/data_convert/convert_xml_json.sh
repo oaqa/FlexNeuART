@@ -1,4 +1,6 @@
 #!/bin/bash -e
+# This is a script to convert legacy XML fiels from old branches (cikm2016, bigger_reruns, postdoc)
+# into a new JSONL format
 source scripts/common_proc.sh
 source scripts/config.sh
 

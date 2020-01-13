@@ -227,9 +227,7 @@ public class ExportTrainPairs {
       if (null == providerURI) {
         showUsageSpecify(CommonParams.PROVIDER_URI_DESC);  
       }
-      LuceneCandidateProvider candProv = new LuceneCandidateProvider(providerURI,
-                                                                    BM25SimilarityLucene.DEFAULT_BM25_K1, 
-                                                                    BM25SimilarityLucene.DEFAULT_BM25_B);
+      LuceneCandidateProvider candProv = new LuceneCandidateProvider(providerURI, null);
       
       FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(fwdIndex, null, null);
  
@@ -247,10 +245,10 @@ public class ExportTrainPairs {
       }
       oneExport.startOutput();
       
-      Worker[] workers = new Worker[threadQty];
+      ExportTrainPairsWorker[] workers = new ExportTrainPairsWorker[threadQty];
       
       for (int threadId = 0; threadId < threadQty; ++threadId) {               
-        workers[threadId] = new Worker(oneExport);
+        workers[threadId] = new ExportTrainPairsWorker(oneExport);
       }
       
       int threadId = 0;
@@ -262,9 +260,16 @@ public class ExportTrainPairs {
       }
       
       // Start threads
-      for (Worker e : workers) e.start();
+      for (ExportTrainPairsWorker e : workers) e.start();
       // Wait till they finish
-      for (Worker e : workers) e.join(0);  
+      for (ExportTrainPairsWorker e : workers) e.join(0);  
+      
+      for (ExportTrainPairsWorker e : workers) {
+        if (e.isFailure()) {
+          System.err.println("At least one thread failed!");
+          System.exit(1);
+        }
+      }
       
       oneExport.finishOutput();
       
@@ -278,9 +283,9 @@ public class ExportTrainPairs {
   static String   mAppName = "Export training data";
 }
 
-class Worker extends Thread  {
+class ExportTrainPairsWorker extends Thread  {
   
-  public Worker(ExportTrainBase exporter) {
+  public ExportTrainPairsWorker(ExportTrainBase exporter) {
     mExporter = exporter;
   }
   

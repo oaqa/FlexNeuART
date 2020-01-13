@@ -34,7 +34,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
  */
 public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
-  public static final int COMMIT_INTERV = 500000;
+  public static final int COMMIT_INTERV = 2000000;
   
   protected String mBinFile = null;
 
@@ -62,16 +62,13 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   @Override
   protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {
-  	synchronized (this) {
-  		mDocIds.add(docId);
-  	}
-    mDbMap.put(docId, doc.toBinary());
+  	mDocIds.add(docId);
+  	byte binDoc[] = doc.toBinary();
+    mDbMap.put(docId, binDoc);
     
-    synchronized (this) {
-	    if (mDocIds.size() % COMMIT_INTERV == 0) {
-	      System.out.println("Committing");
-	      mDb.commit();
-	    }
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      System.out.println("Committing");
+      mDb.commit();
     }
   }
   
@@ -86,17 +83,13 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
 
 	@Override
 	protected void addDocEntryRaw(String docId, String docText) throws IOException {
-		synchronized (this) {
-			mDocIds.add(docId);
-		}
+		mDocIds.add(docId);
     mDbMap.put(docId, CompressUtils.comprStr(docText));
     
-    synchronized (this) {
-	    if (mDocIds.size() % COMMIT_INTERV == 0) {
-	      System.out.println("Committing");
-	      mDb.commit();
-	    }
-    }
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      System.out.println("Committing");
+      mDb.commit();
+    }    
    }
   
   @Override

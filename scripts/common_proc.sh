@@ -1,7 +1,47 @@
-# Some common function to share
+# Some common/constants function to share
 
-SERVER_LOG_NAME="server.log"
 
+CAND_PROV_LUCENE="lucene"
+
+
+# Just lowercasing, solution https://stackoverflow.com/a/2264537
+function lower {
+  arg="$1"
+  echo "$arg" | tr '[:upper:]' '[:lower:]'
+}
+
+# Replace a series of white-space with a single space
+function whiteSpacesToSpace {
+  echo $1 | sed -E 's/[[:space:]]+/ /g'
+}
+
+# Extract a field from the list of white-space separated fields
+function extractFieldValue {
+  fn="$2"
+  line=`whiteSpacesToSpace "$1"`
+  echo "$line" | cut -d " " -f $fn
+}
+
+# This command may initiate compilation,
+# but due to -o and -q switch it:
+# 1) It works offline (i.e, it doesn't print a bunch of annoying messages caused by Maven re-checking dependencies status)
+# 3) Works in a quite mode, i.e., doesn't print other warnings and stuff.
+#export MVN_RUN_CMD="mvn -q -o compile exec:java "
+export MVN_RUN_CMD="mvn -o compile exec:java "
+
+
+# I think the use of check, checkPipe, and execAndCheck should be limited,
+# especially for execAndCheck, as it prevents proper escaping of arguments (with say spaces).
+# It is advised to use "set -euxo pipefail" or "set -euxo pipefail" after all arguments are parsed
+# and grep command isn't used for control flow. However, I envision in some cases execAndCheck can still
+# be useful.
+#
+# Notes:
+# 1. set -u aborts execution when uninitialized variables are used
+# 2. set -eo pipefail aborts execution when the command fails, including all the piped commands
+# 3. set -x prints executed commands
+#
+# Info: https://coderwall.com/p/fkfaqq/safer-bash-scripts-with-set-euxo-pipefail
 function execAndCheck {
   cmd0="$1"
   desc="$2"
@@ -39,16 +79,7 @@ function check {
   fi
 }
 
-function checkVarNonEmpty {
-  name="$1"
-  val="${!name}"
-  if [ "$val" = "" ] ; then
-    echo "Variable $name is not set!"
-    exit 1
-  fi
-}
-
-function check_pipe {
+function checkPipe {
   f="${PIPESTATUS[*]}"
   name=$1
   if [ "$f" != "0 0" ] ; then
@@ -59,7 +90,18 @@ function check_pipe {
   fi
 }
 
-function wait_children {
+
+function checkVarNonEmpty {
+  name="$1"
+  val="${!name}"
+  if [ "$val" = "" ] ; then
+    echo "Variable $name is not set!"
+    exit 1
+  fi
+}
+
+
+function waitChildren {
   pidLIST=($@)
   echo "Waiting for ${#pidLIST[*]} child processes"
   for pid in ${pidLIST[*]} ; do
@@ -74,11 +116,6 @@ function wait_children {
   done
 }
 
-function save_server_logs {
-  me=`basename "$0"`
-  mv $SERVER_LOG_NAME $SERVER_LOG_NAME.$me
-}
-
 function getOS {
   uname|awk '{print $1}'
 }
@@ -86,6 +123,7 @@ function getOS {
 function setJavaMem {
   F1="$1"
   F2="$2"
+  NO_MAX="$3"
   OS=$(getOS)
   if [ "$OS" = "Linux" ] ; then
     MEM_SIZE_MX_KB=`free|grep Mem|awk '{print $2}'`
@@ -96,17 +134,29 @@ function setJavaMem {
     echo "Unsupported OS: $OS" 1>&2
     exit 1
   fi
-  # No mx
   MEM_SIZE_MIN_KB=$(($F1*$MEM_SIZE_MX_KB/$F2))
   MEM_SIZE_MAX_KB=$((7*$MEM_SIZE_MX_KB/8))
-  export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
+  if [ "$NO_MAX" = "1" ] ; then
+    export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -server"
+  else
+    export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
+  fi
   echo "MAVEN_OPTS=$MAVEN_OPTS"
 }
 
-function get_metric_value {
+# grep*ForVal functions extract values of a given key
+# from a string/file in a stupid one-entry-per-line format,
+# where each line has the format (there can be spaces around :)
+# key:value
+
+function grepFileForVal {
   fileName="$1"
   metrName="$2"
-  fgrep "$metrName" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//'
+  ignoreCase="$3"
+  if [ "$ignoreCase" ] ; then
+    caseFlag='-i'
+  fi
+  fgrep $caseFlag "$metrName:" "$fileName" | awk -F: '{print $2}' | sed 's/^\s*//' |sed 's/\s*$//'
 }
 
 function getNumCpuCores {
@@ -218,18 +268,6 @@ function getCatCmd {
   fi
   echo $catCommand
 }
-function getExperDirUnique {
-  experDir="$1"
-  testSet="$2"
-  experSubdir="$3"
-
-  checkVarNonEmpty "experDir"
-  checkVarNonEmpty "testSet"
-  checkVarNonEmpty "experSubdir"
- 
-  echo "$experDir/$testSet/$experSubdir"
-  
-}
 
 function removeComment {
   line="$1"
@@ -242,4 +280,99 @@ function removeComment {
 
 
   echo $line
+}
+
+
+#
+#
+# The genUsage and parseArguments
+# make assumptions about how parameter-describing
+# variables are stored and presented.
+# For simplicity, it expects the following
+# arrays to exist:
+#
+#boolOpts=(\
+#"opt1" "variable name 1" "help msg" \
+#"opt2" "variable name 2" "help msg" \
+#)
+#
+#paramOpts=(\
+#"opt3" "variable name 3" "help msg" \
+#"opt4" "variable name 4" "help msg" \
+#)
+#
+
+function genUsage {
+  posArgsUsage=$1
+  errorMsg=$2
+
+  boolOptsQty=${#boolOpts[*]}
+  paramOptsQty=${#paramOpts[*]}
+
+  if [ "$errorMsg" != "" ] ; then
+    echo "$errorMsg"
+  fi
+
+  if [ "$boolOptsQty" != "0" -o "$paramOptsQty" != "0" ] ; then
+
+    echo "Usage: $posArgsUsage [additional options]"
+    echo "Additional options:"
+
+
+    for ((i=0;i<$boolOptsQty;i+=3)) ; do
+      echo "-${boolOpts[$i]} ${boolOpts[$i+2]}"
+    done
+
+    for ((i=0;i<$paramOptsQty;i+=3)) ; do
+      echo "-${paramOpts[$i]} ${paramOpts[$i+2]}"
+    done
+  fi
+}
+
+function parseArguments {
+  posArgs=()
+
+  boolOptsQty=${#boolOpts[*]}
+  paramOptsQty=${#paramOpts[*]}
+
+  for ((i=1;i<$boolOptsQty;i+=3)) ; do
+    eval "${boolOpts[$i]}=0"
+  done
+
+  while [ $# -ne 0 ] ; do
+    i=0
+    f=0
+    for ((i=0;i<$boolOptsQty;i+=3)) ; do
+      if [ "-${boolOpts[$i]}" = "$1" ] ; then
+        eval "${boolOpts[$i+1]}=1"
+        shift 1
+        f=1
+        break
+      fi
+    done
+    if [ "$f" = "1" ] ; then
+      continue
+    fi
+    for ((i=0;i<$paramOptsQty;i+=3)) ; do
+      if [ "-${paramOpts[$i]}" = "$1" ] ; then
+        eval "${paramOpts[$i+1]}=\"$2\""
+        shift 2
+        f=1
+        break
+      fi
+    done
+
+    if [ "$f" = "1" ] ; then
+      continue
+    fi
+    posArgs=(${posArgs[*]} $1)
+    shift 1
+  done
+}
+
+# Hacky function to obtain 1, if the first # is greater than another
+function isGreater {
+  val1=$1
+  val2=$2
+  python -c "print(int($val1 > $val2))"
 }

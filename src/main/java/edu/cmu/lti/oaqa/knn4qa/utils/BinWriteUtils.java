@@ -17,7 +17,6 @@ package edu.cmu.lti.oaqa.knn4qa.utils;
 
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TrulySparseVector;
 
@@ -44,7 +43,7 @@ public class BinWriteUtils {
   }
   
   /**
-   * Converts a 64-bit integer to a sequence of bytes in a given order.
+   * Converts a 64-bit integer to a sequence of bytes.
    * 
    * @param v
    * @return

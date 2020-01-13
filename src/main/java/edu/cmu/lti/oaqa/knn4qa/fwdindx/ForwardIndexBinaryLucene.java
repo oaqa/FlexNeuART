@@ -50,7 +50,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryLucene.class);
-  public static final int COMMIT_INTERV = 500000;
+  public static final int COMMIT_INTERV = 2000000;
   
   protected String mBinDir;
 
@@ -87,7 +87,7 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     https://lucene.apache.org/core/6_0_0/core/org/apache/lucene/index/IndexWriterConfig.OpenMode.html#CREATE
     */
     indexConf.setOpenMode(OpenMode.CREATE); 
-    indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.RAM_BUFFER_SIZE);
+    indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.DEFAULT_RAM_BUFFER_SIZE);
     
     indexConf.setOpenMode(OpenMode.CREATE);
     mIndexWriter = new IndexWriter(indexDir, indexConf);  
@@ -143,13 +143,11 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     luceneDoc.add(new StringField(Const.TAG_DOCNO, docId, Field.Store.YES));
     luceneDoc.add(new StoredField(Const.TAG_DOC_ENTRY, docText));
     
-    synchronized (this) {
-    	mDocIds.add(docId);
-    
-	    if (mDocIds.size() % COMMIT_INTERV == 0) {
-	      logger.info("Committing");
-	      mIndexWriter.commit();
-	    }
+  	mDocIds.add(docId);
+  
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      logger.info("Committing");
+      mIndexWriter.commit();
     }
     
     // Index writers should be completely thread-safe 

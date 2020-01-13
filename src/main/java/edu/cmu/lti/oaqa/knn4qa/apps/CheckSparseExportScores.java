@@ -42,7 +42,7 @@ import no.uib.cipr.matrix.DenseVector;
 /**
  * A class to help check that the inner product of vectors exported NMSLIB 
  * binary sparse space reproduces the original features scores (or 
- * are very close).
+ * are very close). This application is used for debugging scorers.
  * 
  * @author Leonid Boytsov
  *

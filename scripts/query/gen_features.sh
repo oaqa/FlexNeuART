@@ -3,9 +3,12 @@ source scripts/common_proc.sh
 source scripts/config.sh
 
 checkVarNonEmpty "FAKE_RUN_ID"
+checkVarNonEmpty "SEP_DEBUG_LINE"
 
 POS_ARGS=()
+
 thread_qty=1
+
 while [ $# -ne 0 ] ; do
   echo $1|grep "^-" >/dev/null 
   if [ $? = 0 ] ; then
@@ -119,18 +122,10 @@ if [ "$out_pref" = "" ] ; then
 fi
 full_out_pref="$out_dir/$out_pref"
 
-checkVarNonEmpty "COLLECT_ROOT"
-checkVarNonEmpty "EMBED_SUBDIR"
-checkVarNonEmpty "FWD_INDEX_SUBDIR"
-checkVarNonEmpty "INPUT_DATA_SUBDIR"
-checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-checkVarNonEmpty "GIZA_SUBDIR"
-checkVarNonEmpty "GIZA_ITER_QTY"
+source scripts/set_common_resource_vars.sh
 
-inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
+checkVarNonEmpty "inputDataDir" # set by set_common_resource_vars.sh
+checkVarNonEmpty "commonResourceParams"  # set by set_common_resource_vars.sh
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
@@ -140,9 +135,17 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-echo "==============================================="
-echo "PARAMETER REVIEW"
-echo "==============================================="
+echo "$SEP_DEBUG_LINE"
+
+echo "Parameter and settings review"
+
+echo "$SEP_DEBUG_LINE"
+
+echo "Data directory:          $inputDataDir"
+echo "Data file name:          $queryFileName"
+
+echo "$SEP_DEBUG_LINE"
+
 echo "Thread qty:              $thread_qty"
 echo "max_num_query_param:     $max_num_query_param"
 echo "extr_type_interm:        $extr_type_interm_param"
@@ -150,17 +153,18 @@ echo "model_interm_param:      $model_interm_param"
 echo "cand_qty_param:          $cand_qty_param"
 echo "query_cache_file_param:  $query_cache_file_param"
 echo "Positional arguments:    ${POS_ARGS[*]}"
-echo "==============================================="
-echo "Data directory:          $inputDataDir"
-echo "Data file name:          $queryFileName"
-echo "Forward index directory: $fwdIndexDir"
-echo "Embedding directory:     $embedDir"
-echo "GIZA root directory:     $gizaRootDir"
+
+
+
 echo "OUTPUT FILE PREFIX:"
 echo "$out_pref"
 echo "FULL OUTPUT FILE PREFIX:"
 echo "$full_out_pref"
-echo "==============================================="
+
+echo "$SEP_DEBUG_LINE"
+
+# Do it only after argument parsing
+set -eo pipefail
 
 scripts/query/run_multhread_feat.sh \
 -u "$URI" \
@@ -171,15 +175,10 @@ scripts/query/run_multhread_feat.sh \
  "$max_num_query_param" \
 -n "$n" \
 -f "$full_out_pref" \
--fwd_index_dir "$fwdIndexDir" \
--giza_root_dir "$gizaRootDir" -giza_iter_qty $GIZA_ITER_QTY \
--embed_dir "$embedDir" \
+$commonResourceParams \
 -extr_type_final $extr_type_final \
-"$extr_type_interm_param" "$model_interm_param" "$cand_qty_param" \
+$extr_type_interm_param $model_interm_param $cand_qty_param \
 -thread_qty $thread_qty  \
 $query_cache_file_param \
 2>&1 | tee "${full_out_pref}_${n}.log"
-if [ "${PIPESTATUS[0]}" != "0" ] ; then
-  echo "run_multhread_feat.sh failed!"
-  exit 1
-fi
+

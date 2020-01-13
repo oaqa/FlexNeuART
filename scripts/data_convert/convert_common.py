@@ -1,6 +1,7 @@
 import gzip, bz2
 import collections
 import re
+import os
 from bs4 import BeautifulSoup
 
 SPACY_MODEL = 'en_core_web_sm'
@@ -16,7 +17,13 @@ DOCID_FIELD = 'DOCNO'
 
 TEXT_FIELD_NAME = 'text'
 TEXT_UNLEMM_FIELD_NAME = 'text_unlemm'
+TITLE_FIELD_NAME = 'title'
+TITLE_UNLEMM_FIELD_NAME = 'title_unlemm'
 TEXT_RAW_FIELD_NAME = 'text_raw'
+
+ANSWER_LIST_FIELD_NAME = 'answer_list'
+
+DEFAULT_ENCODING = 'utf-8'
 
 # bitext naming conventions
 BITEXT_QUESTION_PREFIX = 'question_'
@@ -153,6 +160,37 @@ def removeTags(str):
   """Just remove anything that looks like a tag"""
   return re.sub(r'</?[a-z]+\s*/?>', '', str)
 
+def wikiExtractorFileIterator(rootDir):
+  """Iterate over all files produced by the wikiextractor and return file names.
+  """
+  dirList1Sorted = list(os.listdir(rootDir))
+  dirList1Sorted.sort()
+  for dn in dirList1Sorted:
+    fullDirName = os.path.join(rootDir, dn)
+    if os.path.isdir(fullDirName):
+      dirList2Sorted = list(os.listdir(fullDirName))
+      dirList2Sorted.sort()
+      for fn in dirList2Sorted:
+        if fn.startswith('wiki_'):
+          yield os.path.join(fullDirName, fn)
+  
+
+def procWikipediaRecord(recStr):
+  """A procedure to parse a single Wikipedia page record
+     from the wikiextractor output, which we assume it to have DEFAULT_ENCODING encoding.
+
+  :param recStr:  One page content including encosing tags <doc> ... </doc>
+  """
+  doc = BeautifulSoup(recStr, 'lxml', from_encoding=DEFAULT_ENCODING)
+
+  docRoot = doc.find('doc')
+  if docRoot is None:
+    raise Exception('Invalid format, missing <doc> tag')
+
+  WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed', 'id url title content')
+
+  return WikipediaRecordParsed(id=docRoot['id'], url=docRoot['url'], title=docRoot['title'], content=docRoot.text)
+
 def procYahooAnswersRecord(recStr):
   """A procedure to parse a single Yahoo-answers format entry.
 
@@ -207,3 +245,4 @@ def qrelEntry(questId, answId, relGrade):
   :return: QREL entry
   """
   return f'{questId} 0 {answId} {relGrade}'
+

@@ -50,7 +50,7 @@ for line in inpFile:
   text_raw = (title.strip() + ' ' + body.strip()).lower()
   doc = {DOCID_FIELD : did,
          TEXT_FIELD_NAME : text,
-         'title' : title_unlemm,
+         TITLE_UNLEMM_FIELD_NAME : title_unlemm,
          'body' : body_unlemm,
          TEXT_RAW_FIELD_NAME : text_raw}
   docStr = json.dumps(doc) + '\n'
