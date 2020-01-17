@@ -51,7 +51,10 @@ class PairwiseSoftmaxLoss:
 
 TrainParams = namedtuple('TrainParams',
                     ['init_lr', 'init_bert_lr', 'epoch_lr_decay',
-                     'batches_per_train_epoch', 'batch_size', 'batch_size_eval', 'backprop_batch_size',
+                     'batches_per_train_epoch',
+                     'batch_size', 'batch_size_eval',
+                     'max_query_len', 'max_doc_len',
+                     'backprop_batch_size',
                      'epoch_qty', 'no_cuda', 'print_grads',
                      'shuffle_train'])
 
@@ -111,7 +114,8 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
 
     with tqdm('training', total=max_train_qty, ncols=80, desc='train', leave=False) as pbar:
         for record in data.iter_train_pairs(model, train_params.no_cuda, dataset, train_pairs, train_params.shuffle_train,
-                                            qrels, train_params.backprop_batch_size):
+                                            qrels, train_params.backprop_batch_size,
+                                            train_params.max_query_len, train_params.max_doc_len):
             scores = model(record['query_tok'],
                            record['query_mask'],
                            record['doc_tok'],
@@ -160,7 +164,8 @@ def run_model(model, train_params, dataset, run, runf, desc='valid'):
         for records in data.iter_valid_records(model,
                                                train_params.no_cuda,
                                                dataset, run,
-                                               train_params.batch_size_eval):
+                                               train_params.batch_size_eval,
+                                               train_params.max_query_len, train_params.max_doc_len):
             scores = model(records['query_tok'],
                            records['query_mask'],
                            records['doc_tok'],
@@ -214,6 +219,8 @@ def main_cli():
     parser.add_argument('--init_bert_lr', type=float, default=0.00005, help='Initial learning rate for BERT parameters')
     parser.add_argument('--epoch_lr_decay', type=float, default=0.9, help='Per-epoch learning rate decay')
     parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+    parser.add_argument('--max_query_len', type=int, default=32, help='max. query length')
+    parser.add_argument('--max_doc_len', type=int, default=2048, help='max. document length')
     parser.add_argument('--batch_size_eval', type=int, default=64, help='batch size for evaluation')
     parser.add_argument('--backprop_batch_size', type=int, default=12, help='batch size for each backprop step')
     parser.add_argument('--batches_per_train_epoch', type=int, default=0,
@@ -240,6 +247,7 @@ def main_cli():
                          backprop_batch_size=args.backprop_batch_size,
                          batches_per_train_epoch=args.batches_per_train_epoch,
                          batch_size=args.batch_size, batch_size_eval=args.batch_size_eval,
+                         max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
                          epoch_qty=args.epoch_qty, no_cuda=args.no_cuda,
                          print_grads=args.print_grads,
                          shuffle_train=not args.no_shuffle_train)
