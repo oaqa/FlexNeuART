@@ -89,6 +89,7 @@ class BertRanker(torch.nn.Module):
             cls_results.append(cls_result)
 
         print('!!!', batch_coeff.cpu())
+        print('@@@', doc_tok.shape)
 
         return cls_results, query_results, doc_results
 
