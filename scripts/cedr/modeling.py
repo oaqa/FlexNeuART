@@ -51,7 +51,7 @@ class BertRanker(torch.nn.Module):
 
         doc_toks, sbcount = modeling_util.subbatch(doc_tok, max_doc_tok_len)
         doc_mask, _ = modeling_util.subbatch(doc_mask, max_doc_tok_len)
-        batch_coeff = modeling_util.get_batch_avg_coeff(doc_mask, max_doc_tok_len)
+        batch_coeff = modeling_util.get_batch_avg_coeff(doc_mask, max_doc_tok_len).view(batch_qty, 1)
 
         query_toks = torch.cat([query_tok] * sbcount, dim=0)
         query_mask = torch.cat([query_mask] * sbcount, dim=0)
@@ -82,7 +82,10 @@ class BertRanker(torch.nn.Module):
             cls_result = []
             for i in range(cls_output.shape[0] // batch_qty):
                 cls_result.append(cls_output[i*batch_qty:(i+1)*batch_qty])
-            cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
+            #cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
+            cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
+            assert(cls_result.size()[0] == batch_qty)
+            cls_result *= batch_coeff
             cls_results.append(cls_result)
 
         print('!!!', batch_coeff.cpu())
