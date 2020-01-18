@@ -27,6 +27,11 @@ class CustomBertModel(pytorch_pretrained_bert.BertModel):
 
         return [embedding_output] + encoded_layers
 
+# This function should produce averaging coefficients compatiable
+# with the split in get_batch_avg_coeff
+def get_batch_avg_coeff(mask, maxlen):
+    return 1.0/torch.ceil(torch.sum(mask, dim=-1) / maxlen)
+
 def subbatch(toks, maxlen):
     assert(maxlen > 0)
     _, DLEN = toks.shape[:2]
