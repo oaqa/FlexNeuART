@@ -1,0 +1,23 @@
+#!/bin/bash -e
+# Downloading and re-packing the MSMARCO passage collection.
+dstDir="$1"
+
+[ "$dstDir" != "" ] || { echo "Specify destination directory (1st arg)" ; exit 1 ; }
+
+[ -d "$dstDir" ] || { echo "Not a directory: $dstDir (1st arg)" ; exit 1 ; }
+
+source scripts/common_proc.sh
+
+cd "$dstDir"
+
+
+
+for fn in msmarco-docdev-qrels.tsv.gz \
+          msmarco-docs.tsv.gz	\
+          msmarco-doctrain-queries.tsv.gz \
+          msmarco-docdev-queries.tsv.gz \
+          msmarco-doctrain-qrels.tsv.gz ; do  
+  uri=https://msmarco.blob.core.windows.net/msmarcoranking/$fn
+  echo "Downloading $uri"
+  wget "$uri"
+done
