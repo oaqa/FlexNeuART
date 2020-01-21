@@ -16,7 +16,9 @@ for fn in msmarco-docdev-qrels.tsv.gz \
           msmarco-docs.tsv.gz	\
           msmarco-doctrain-queries.tsv.gz \
           msmarco-docdev-queries.tsv.gz \
-          msmarco-doctrain-qrels.tsv.gz ; do  
+          msmarco-doctrain-qrels.tsv.gz \
+          msmarco-test2019-queries.tsv.gz \
+          ; do
   uri=https://msmarco.blob.core.windows.net/msmarcoranking/$fn
   echo "Downloading $uri"
   wget "$uri"
