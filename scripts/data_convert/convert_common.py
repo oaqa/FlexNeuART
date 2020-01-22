@@ -12,7 +12,7 @@ REPORT_QTY=10000
 
 # A size of the chunk passed used in imap
 # it should be sufficiently large, but not too large
-IMAP_PROC_CHUNK_QTY=128
+IMAP_PROC_CHUNK_QTY=256
 
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_JSON = 'QuestionFields.jsonl'

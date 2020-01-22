@@ -15,8 +15,9 @@ parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
 parser.add_argument('--max_doc_size', metavar='max doc size bytes', help='the threshold for the document size, if a document is larger it is truncated',
                     type=int, default=MAX_DOC_SIZE)
+# Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
-                    type=int, default=multiprocessing.cpu_count())
+                    type=int, default=multiprocessing.cpu_count()-1)
 
 
 args = parser.parse_args()
