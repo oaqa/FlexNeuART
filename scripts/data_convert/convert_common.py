@@ -5,6 +5,7 @@ import os
 from bs4 import BeautifulSoup
 
 SPACY_MODEL = 'en_core_web_sm'
+# Constants defined here mostly can't be modified as they should be in sync with Java and bash code
 STOPWORD_FILE = 'data/stopwords.txt'
 MAX_DOC_SIZE=16536 # 16 K should be more than enough!
 REPORT_QTY=10000

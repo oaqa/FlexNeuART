@@ -5,7 +5,7 @@
 checkVarNonEmpty "ANSWER_FILE"
 checkVarNonEmpty "QUESTION_FILE"
 checkVarNonEmpty "inputDataDir"
-checkVarNonEmtpy "QREL_FILE"
+checkVarNonEmpty "QREL_FILE"
 
 for part in docs train dev test2019 ; do
   mkdir -p "$inputDataDir/$part"
