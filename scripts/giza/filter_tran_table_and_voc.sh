@@ -8,9 +8,11 @@ checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "GIZA_SUBDIR"
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection, e.g., squad (1st arg)"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

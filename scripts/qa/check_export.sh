@@ -2,11 +2,13 @@
 source scripts/common_proc.sh
 source scripts/config.sh
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 # It's best to use with a our SQUAD test collection
 
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection, e.g, squad (1st arg)"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

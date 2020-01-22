@@ -174,7 +174,7 @@ done
 
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  echo "Specify a sub-collection, e.g., squad (1st arg)"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

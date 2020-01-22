@@ -2,6 +2,9 @@
 
 
 CAND_PROV_LUCENE="lucene"
+ANSWER_FILE="AnswerFields.jsonl"
+QUESTION_FILE="QuestionFields.jsonl"
+SAMPLE_COLLECT_ARG="Specify a collection sub-directory, e.g., msmarco_pass"
 
 
 # Just lowercasing, solution https://stackoverflow.com/a/2264537
@@ -159,17 +162,7 @@ function grepFileForVal {
 }
 
 function getNumCpuCores {
-  OS=$(getOS)
-  if [ "$OS" = "Linux" ] ; then
-    NUM_CPU_CORES=`scripts/exper/get_cpu_cores.py`
-    check "getting the number of CPU cores, do you have /proc/cpu/info?"
-  elif [ "$OS" = "Darwin" ] ; then
-    NUM_CPU_CORES=4
-  else
-    echo "Cannot guess the # of cores for OS: $OS" 1>&2
-    exit 1
-  fi
-  echo $NUM_CPU_CORES
+  python -c 'import multiprocessing; print(multiprocessing.cpu_count())'
 }
 
 # This function:
@@ -183,8 +176,8 @@ function getIndexQueryDataInfo {
   indexDirs=""
   oldFile="SolrAnswerFile.txt"
   oldQueryFile="SolrQuestionFile.txt"
-  newFile="AnswerFields.jsonl"
-  newQueryFile="QuestionFields.jsonl"
+  newFile=$ANSWER_FILE
+  newQueryFile=$QUESTION_FILE
   dataFileName=""
   queryFileName=""
   currDir="$PWD"

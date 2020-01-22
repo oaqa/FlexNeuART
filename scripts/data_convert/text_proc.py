@@ -46,6 +46,10 @@ class SpacyTextParser:
     self._lowerCase = lowerCase
 
 
+  @staticmethod
+  def _basic_clean(text):
+    return text.replace("’", "'")
+
   def __call__(self, text): 
     """A thin wrapper that merely calls spacy.
 
@@ -53,9 +57,7 @@ class SpacyTextParser:
     :return         a spacy Doc object 
     """
 
-    text = text.replace("’", "'")
-
-    return self._nlp(text)
+    return self._nlp(SpacyTextParser._basic_clean(text))
 
   
   def procText(self, text):

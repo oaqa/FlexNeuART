@@ -2,9 +2,12 @@
 # A script to create a Lucene index
 source scripts/common_proc.sh
 source scripts/config.sh
+
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg), e.g., squad"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

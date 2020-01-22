@@ -15,6 +15,8 @@ checkVarNonEmpty "TEST_PART_PARAM"
 checkVarNonEmpty "EXPER_SUBDIR_PARAM"
 checkVarNonEmpty "TEST_ONLY_PARAM"
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
 metricType=$DEFAULT_METRIC_TYPE
@@ -158,7 +160,7 @@ done
 
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  usage "Specify a collection, e.g., squad (1st arg)"
+  usage "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

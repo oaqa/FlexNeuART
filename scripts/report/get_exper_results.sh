@@ -8,6 +8,8 @@ checkVarNonEmpty "TEST_PART_PARAM"
 checkVarNonEmpty "TEST_PART_PARAM"
 checkVarNonEmpty "STAT_FILE"
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 boolOpts=(\
 "h" "help" "print help" \
 "debug_print" "debug" "print every executed command" \
@@ -30,7 +32,7 @@ fi
 
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  genUsage "$usageMain" "Specify a collection, e.g., squad (1st arg)"
+  genUsage "$usageMain" "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

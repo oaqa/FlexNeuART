@@ -5,6 +5,8 @@ source scripts/config.sh
 checkVarNonEmpty "FAKE_RUN_ID"
 checkVarNonEmpty "SEP_DEBUG_LINE"
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 POS_ARGS=()
 
 thread_qty=1
@@ -66,7 +68,7 @@ fi
 
 collect=${POS_ARGS[0]}
 if [ "$collect" = "" ] ; then
-  echo "Specify a sub-collection (1st positional arg): e.g., manner, compr"
+  echo "$SAMPLE_COLLECT_ARG (1st positional arg)"
   exit 1
 fi
 

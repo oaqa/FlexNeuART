@@ -9,11 +9,13 @@ checkVarNonEmpty "LM_FINETUNE_SUBDIR"
 checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
 checkVarNonEmpty "LM_FINETUNE_SET_PREF"
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 # A convenient wrapper for the corresponding Python script
 
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st arg), e.g., squad"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

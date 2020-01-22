@@ -1,27 +1,29 @@
 #!/bin/bash -e
 # The main script to convert MSMARCO document collection
-source scripts/common_proc.sh
-src=$1
-if [ "$src" = "" ] ; then
-  echo "Specify the source directory (1st arg)"
-  exit 1
-fi
-dst=$2
-if [ "$dst" = "" ] ; then
-  echo "Specify the target directory (2d arg)"
-  exit 1
-fi
+. scripts/data_convert/common_conv.sh
+
+checkVarNonEmpty "ANSWER_FILE"
+checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "inputDataDir"
+checkVarNonEmtpy "QREL_FILE"
 
 for part in docs train dev test2019 ; do
-  mkdir -p $dst/input_data/$part
+  mkdir -p "$inputDataDir/$part"
 done
+
+python -u scripts/data_convert/msmarco_adhoc/convert_docs.py \
+    --input "$src/msmarco-docs.tsv.gz"  \
+    --output "$inputDataDir/docs/${ANSWER_FILE}.gz"
 
 for part in train dev ; do
-  zcat $src/msmarco-doc${part}-qrels.tsv.gz > $dst/input_data/$part/qrels.txt
-  scripts/data_convert/msmarco_adhoc/convert_queries.py --input  $src/msmarco-doc${part}-queries.tsv.gz --output $dst/input_data/$part/QuestionFields.jsonl
+  zcat $inputDataDir/msmarco-doc${part}-qrels.tsv.gz > "$inputDataDir/$part/$QREL_FILE"
+  scripts/data_convert/msmarco_adhoc/convert_queries.py \
+    --input  "$src/msmarco-doc${part}-queries.tsv.gz" \
+    --output "$inputDataDir/$part/$QUESTION_FILE"
 done
 
-scripts/data_convert/msmarco_adhoc/convert_queries.py --input  $src/msmarco-test2019-queries.tsv.gz --output $dst/input_data/test2019/QuestionFields.jsonl
+scripts/data_convert/msmarco_adhoc/convert_queries.py \
+    --input  "$src/msmarco-test2019-queries.tsv.gz" \
+    --output "$inputDataDir/test2019/$QUESTION_FILE"
 
-python -u scripts/data_convert/msmarco_adhoc/convert_docs.py --input $src/msmarco-docs.tsv.gz  --output $dst/input_data/docs/AnswerFields.jsonl.gz 
 

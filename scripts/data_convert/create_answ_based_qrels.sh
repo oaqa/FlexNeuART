@@ -8,10 +8,12 @@ checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 # This script runs annotation pipelines for a given collection
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection, e.g., squad (1st arg)"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

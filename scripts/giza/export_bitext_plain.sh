@@ -2,9 +2,11 @@
 . scripts/common_proc.sh
 . scripts/config.sh
 
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+
 collect=$1
 if [ "$collect" = "" ] ; then
-  echo "Specify a collection, e.g., squad (1st arg)"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 
