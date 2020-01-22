@@ -10,6 +10,10 @@ STOPWORD_FILE = 'data/stopwords.txt'
 MAX_DOC_SIZE=16536 # 16 K should be more than enough!
 REPORT_QTY=10000
 
+# A size of the chunk passed used in imap
+# it should be sufficiently large, but not too large
+IMAP_PROC_CHUNK_QTY=128
+
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_JSON = 'QuestionFields.jsonl'
 ANSWER_FILE_JSON = 'AnswerFields.jsonl.gz' # We'd like to keep it compressed
