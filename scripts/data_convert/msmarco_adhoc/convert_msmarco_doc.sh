@@ -16,7 +16,7 @@ python -u scripts/data_convert/msmarco_adhoc/convert_docs.py \
     --output "$inputDataDir/docs/${ANSWER_FILE}.gz"
 
 for part in train dev ; do
-  zcat $inputDataDir/msmarco-doc${part}-qrels.tsv.gz > "$inputDataDir/$part/$QREL_FILE"
+  zcat $src/msmarco-doc${part}-qrels.tsv.gz > "$inputDataDir/$part/$QREL_FILE"
   scripts/data_convert/msmarco_adhoc/convert_queries.py \
     --input  "$src/msmarco-doc${part}-queries.tsv.gz" \
     --output "$inputDataDir/$part/$QUESTION_FILE"
