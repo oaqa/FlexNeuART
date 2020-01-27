@@ -2,39 +2,20 @@ import gzip, bz2
 import collections
 import re
 import os
+import json
 from bs4 import BeautifulSoup
 
-SPACY_MODEL = 'en_core_web_sm'
-# Constants defined here mostly can't be modified as they should be in sync with Java and bash code
-STOPWORD_FILE = 'data/stopwords.txt'
-MAX_DOC_SIZE=16536 # 16 K should be more than enough!
-REPORT_QTY=10000
+from config import *
 
-# A size of the chunk passed used in imap
-# it should be sufficiently large, but not too large
-IMAP_PROC_CHUNK_QTY=256
+WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed',
+                                               'id url title content')
 
-QREL_FILE = 'qrels.txt'
-QUESTION_FILE_JSON = 'QuestionFields.jsonl'
-ANSWER_FILE_JSON = 'AnswerFields.jsonl.gz' # We'd like to keep it compressed
+YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
+                                              'uri subject content bestAnswerId answerList')
 
-DOCID_FIELD = 'DOCNO'
+QrelEntry = collections.namedtuple('QrelEntry',
+                                   'queryId docId relGrade')
 
-TEXT_FIELD_NAME = 'text'
-TEXT_UNLEMM_FIELD_NAME = 'text_unlemm'
-TITLE_FIELD_NAME = 'title'
-TITLE_UNLEMM_FIELD_NAME = 'title_unlemm'
-TEXT_RAW_FIELD_NAME = 'text_raw'
-
-ANSWER_LIST_FIELD_NAME = 'answer_list'
-
-DEFAULT_ENCODING = 'utf-8'
-
-# bitext naming conventions
-BITEXT_QUESTION_PREFIX = 'question_'
-BITEXT_ANSWER_PREFIX = 'answer_'
-
-MAX_RELEV_GRADE=4
 
 # Replace \n and \r characters with spaces
 def replaceCharsNL(s):
@@ -192,8 +173,6 @@ def procWikipediaRecord(recStr):
   if docRoot is None:
     raise Exception('Invalid format, missing <doc> tag')
 
-  WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed', 'id url title content')
-
   return WikipediaRecordParsed(id=docRoot['id'], url=docRoot['url'], title=docRoot['title'], content=docRoot.text)
 
 def procYahooAnswersRecord(recStr):
@@ -235,19 +214,115 @@ def procYahooAnswersRecord(recStr):
         bestAnswerId = len(answList)
       answList.append(removeTags(answText))
 
-  YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed', 'uri subject content bestAnswerId answerList')
-
   return YahooAnswerRecParsed(uri=uri, subject=subject.strip(), content=content.strip(),
                               bestAnswerId=bestAnswerId, answerList=answList)
 
 
-def qrelEntry(questId, answId, relGrade):
-  """Produces one QREL entry
+def readQueries(fileName):
+  """Read queries from a JSONL file and checks the document ID is set.
 
-  :param questId:  question ID
-  :param answId:   answer ID
-  :param relGrade: relevance grade
-  :return: QREL entry
+  :param fileName:
+  :return: an array where each entry is a parsed query JSON.
   """
-  return f'{questId} 0 {answId} {relGrade}'
 
+  ln = 0
+  res = []
+  with open(fileName) as f:
+    for line in f:
+      ln += 1
+      line = line.strip()
+      if not line:
+        continue
+      try:
+        data = json.loads(line)
+      except:
+        raise Exception('Error parsing JSON in line: %d' % ln)
+
+      if not DOCID_FIELD in data:
+        raise Exception('Missing %s field in JSON in line: %d' % (DOCID_FIELD, ln))
+
+      res.append(data)
+
+  return res
+
+
+def writeQueries(queryList, fileName):
+  """Write queries to a JSONL file.
+
+  :param queryList: an array of parsed JSON query entries
+  :param fileName: an output file
+  """
+  with open(fileName, 'w') as f:
+    for e in queryList:
+      f.write(json.dumps(e))
+      f.write('\n')
+
+
+def genQrelStr(queryId, docId, relGrade):
+  """Produces a string representing one QREL entry
+
+  :param queryId:   question/query ID
+  :param docId:     relevanet document/answer ID
+  :param relGrade:  relevance grade
+
+  :return: a string representing one QREL entry
+  """
+  return f'{queryId} 0 {docId} {relGrade}'
+
+
+def qrelEntry2Str(qrelEntry):
+  """Convert a parsed QREL entry to string.
+
+  :param qrelEntry: input of the type QrelEntry
+  :return:  string representation.
+  """
+  return genQrelStr(qrelEntry.queryId, qrelEntry.docId, qrelEntry.relGrade)
+
+def parseQrelEntry(line):
+  """Parse one QREL entry
+  :param line  a single line with a QREL entry
+
+  :return a parsed QrelEntry entry.
+  """
+
+  line = line.strip()
+  parts = line.split()
+  if len(parts) != 4:
+    raise Exception('QREL entry format error, expecting just 4 white-space separted field in the entry: ' + line)
+
+  return QrelEntry(queryId=parts[0], docId=parts[2], relGrade=parts[3])
+
+
+def readQrels(fileName):
+  """Read and parse QRELs.
+
+  :param fileName: input file name
+  :return: an array of parsed QREL entries
+  """
+  ln = 0
+  res = []
+
+  with open(fileName) as f:
+    for line in f:
+      ln += 1
+      line = line.strip()
+      if not line:
+        continue
+      try:
+        e = parseQrelEntry(line)
+        res.append(e)
+      except:
+        raise Exception('Error parsing QRELs in line: %d' % ln)
+
+  return res
+
+def writeQrels(qrelList, fileName):
+  """Write a list of QRELs to a file.
+
+  :param qrelList:  a list of parsed QRELs
+  :param fileName:  an output file name
+  """
+  with open(fileName, 'w') as f:
+    for e in qrelList:
+      f.write(qrelEntry2Str(e))
+      f.write('\n')

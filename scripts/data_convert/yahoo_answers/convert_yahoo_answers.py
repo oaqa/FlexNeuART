@@ -88,7 +88,7 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
       dataAnswFile.write(docStr)
 
       relGrade = MAX_RELEV_GRADE - int(i != rec.bestAnswerId)
-      qrelFile.write(qrelEntry(qid, aid, relGrade) + '\n')
+      qrelFile.write(genQrelStr(qid, aid, relGrade) + '\n')
 
       if biQuestFiles and biAnswFiles:
         biQuestFiles[TEXT_FIELD_NAME].write(question_lemmas + '\n')

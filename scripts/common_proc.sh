@@ -1,5 +1,5 @@
-# Some common/constants function to share
-
+# Some common/constants function to share,
+# This should be consistent with common_proc.sh and config.py
 
 CAND_PROV_LUCENE="lucene"
 ANSWER_FILE="AnswerFields.jsonl"

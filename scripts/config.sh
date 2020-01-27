@@ -1,7 +1,7 @@
+# This should be consistent with common_proc.sh and config.py
 
 # Point COLLECT_ROOT to the location you want to use as
 # the root directory for all collections/indices.
-
 
 COLLECT_ROOT="collections"
 

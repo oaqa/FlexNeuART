@@ -51,16 +51,16 @@ fi
 
 queryFileParam=" -q \"$inputDataDir/$testPart/$queryFileName\" "
 
-scripts/data/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text_unpruned.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+scripts/qa/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text_unpruned.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/data/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY   -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+scripts/qa/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY   -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/data/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+scripts/qa/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/data/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+scripts/qa/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/data/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -model_file $cdir/bm25=text+model1=text+embed=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+scripts/qa/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -model_file $cdir/bm25=text+model1=text+embed=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/data/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF $resourceDirParams $queryFileParam
+scripts/qa/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF $resourceDirParams $queryFileParam
 
 echo "ALL CHECKS ARE DONE!"

@@ -19,7 +19,6 @@ parser.add_argument('--max_doc_size', metavar='max doc size bytes', help='the th
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
                     type=int, default=multiprocessing.cpu_count()-1)
 
-
 args = parser.parse_args()
 print(args)
 
@@ -30,7 +29,7 @@ maxDocSize = args.max_doc_size
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
 print(stopWords)
 
-class Worker:
+class DocParseWorker:
   def __init__(self, stopWords, spacyModel):
     self.nlp = SpacyTextParser(spacyModel, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
 
@@ -63,7 +62,7 @@ proc_qty=args.proc_qty
 print(f'Spanning {proc_qty} processes')
 pool = multiprocessing.Pool(processes=proc_qty)
 ln = 0
-for docStr in pool.imap(Worker(stopWords, SPACY_MODEL), inpFile, IMAP_PROC_CHUNK_QTY):
+for docStr in pool.imap(DocParseWorker(stopWords, SPACY_MODEL), inpFile, IMAP_PROC_CHUNK_QTY):
   ln = ln + 1
   if docStr is not None:
     outFile.write(docStr)

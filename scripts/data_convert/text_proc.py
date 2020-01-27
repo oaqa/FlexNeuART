@@ -91,3 +91,61 @@ class SpacyTextParser:
       tokens.append(text)
 
     return ' '.join(lemmas), ' '.join(tokens)
+
+
+"""A parent class of all token extractors.
+Token extractors can be merely white-space tokenizers,
+but they can also be more sophisticated processors."""
+class TokenExtractor:
+  def __init__(self):
+    pass
+
+  def __call_(self, text):
+    """Process input text, return a list of extracted tokens.
+
+    :param text:  input text.
+    :return:  a list of tokens.
+    """
+    raise NotImplemented
+
+
+class WhiteSpaceTokenExtractor(TokenExtractor):
+  def __init__(self, lowerCase):
+    self._lowerCase = lowerCase
+
+  def __call_(self, text):
+    if self._lowerCase:
+      text = text.lower()
+    return text.split()
+
+class SpacyTokenExtractor(TokenExtractor):
+  def __init__(self, spacyModel, stopwords, lemmatize,
+               lowerCase=True, keepOnlyAlphaNum=True):
+    self._lemmatize = lemmatize
+
+    self._nlp = SpacyTextParser(spacyModel,
+                                stopwords,
+                                keepOnlyAlphaNum=keepOnlyAlphaNum, lowerCase=lowerCase)
+
+  def __call__(self, text):
+    lemmas, unlemm = self._nlp.procText(text)
+
+    return lemmas if self._lemmatize else unlemm
+
+
+TOKEN_EXTR_TYPES = {'WhiteSpaceTokenExtractor' : WhiteSpaceTokenExtractor,
+                    'SpacyTokenExtractor' : SpacyTokenExtractor}
+
+class TokenExtrFactory:
+  @staticmethod
+  def create(tokExtrType, **kwargs):
+    if not tokExtrType in TOKEN_EXTR_TYPES:
+      raise Exception('Unrecognized token extractor type: ' + tokExtrType)
+    return TOKEN_EXTR_TYPES[tokExtrType](**kwargs)
+
+
+
+
+
+
+

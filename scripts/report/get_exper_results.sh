@@ -1,6 +1,6 @@
 #!/bin/bash
 . scripts/common_proc.sh
-source scripts/config.sh
+. scripts/config.sh
 
 checkVarNonEmpty "REP_SUBDIR"
 checkVarNonEmpty "COLLECT_ROOT"

@@ -1,6 +1,9 @@
 #!/bin/bash -e
-# The main script to convert document collection in the Yahoo Answers format
-# Assumption:
+# The main script to convert document collection in the Yahoo Answers format,
+# which as previously split by the script:
+# scripts/data_convert/yahoo_answers/split_yahoo_answers_input.sh
+#
+# This script makes the following assumption:
 #
 # Data files end with <underscore> <part name> .gz  e.g., comprehensive-Oct2007_dev1.gz
 #
