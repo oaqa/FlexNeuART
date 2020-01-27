@@ -13,7 +13,10 @@ scripts/data_convert/msmarco_adhoc/convert_msmarco_doc.sh \
   msmarco_doc
 ```
 # Optionally splitting the train and development parts
-scripts/data_convert/split_train4bitext.sh msmarco_doc 10000
+```commandline
+scripts/data_convert/split_queries.sh msmarco_doc dev dev1 dev2 -part1_qty 3000
+```
+
 
 # Indexing
 Create a Lucene index:
