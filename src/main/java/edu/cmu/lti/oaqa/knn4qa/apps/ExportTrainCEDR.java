@@ -129,25 +129,32 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
     for (String docId : docIds) {
       String text = getDocText(docId);
       
-      if (!text.isEmpty()) {
+      if (text == null) {
+        logger.warn("Ignoring document " + docId + " b/c of null field");
+        continue;
+      }
       
-        if (!mSeenDocIds.contains(docId)) {
-            // documents can sure repeat, but a data file needs to have only one copy
-            mDataDocs.write("doc\t" + docId + "\t" + StringUtils.replaceWhiteSpaces(text) + Const.NL);
-            mSeenDocIds.add(docId);
-        }
+      if (text.isEmpty()) {
+        logger.warn("Ignoring document " + docId + " b/c of empty field");
+        continue;
+      }
       
-        ++pos;
-        float score = -pos; // the higher is the position, the lower is the "score"
-        //Actually I don't even need the relevance flag here
-        //int relFlag = relDocIds.contains(docId) ? 1 : 0;
-        if (isTestQuery) {
-          EvalUtils.saveTrecOneEntry(mTestRun, 
-                                     queryId, docId, 
-                                     pos, score, Const.FAKE_RUN_ID); 
-        } else {
-          mQueryDocTrainPairs.write(queryId + "\t" + docId + Const.NL);
-        }
+      if (!mSeenDocIds.contains(docId)) {
+          // documents can sure repeat, but a data file needs to have only one copy
+          mDataDocs.write("doc\t" + docId + "\t" + StringUtils.replaceWhiteSpaces(text) + Const.NL);
+          mSeenDocIds.add(docId);
+      }
+    
+      ++pos;
+      float score = -pos; // the higher is the position, the lower is the "score"
+      //Actually I don't even need the relevance flag here
+      //int relFlag = relDocIds.contains(docId) ? 1 : 0;
+      if (isTestQuery) {
+        EvalUtils.saveTrecOneEntry(mTestRun, 
+                                   queryId, docId, 
+                                   pos, score, Const.FAKE_RUN_ID); 
+      } else {
+        mQueryDocTrainPairs.write(queryId + "\t" + docId + Const.NL);
       }
     }
   }

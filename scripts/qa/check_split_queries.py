@@ -73,7 +73,7 @@ for part in range(0,2):
 
 diff = queryIdSet.symmetric_difference(fullQueryIdSet)
 
-print('# of queries in the original folder: %d # of queries in split folders: %d # of query in the symmetric diff. %d'
+print('# of queries in the original folder: %d # of queries in split folders: %d # of queries in the symmetric diff. %d'
       % (len(queryIdSet), len(fullQueryIdSet), len(diff)))
 
 if len(queryIdSet) != len(fullQueryIdSet) or len(diff) > 0:
