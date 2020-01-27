@@ -13,8 +13,12 @@ scripts/data_convert/msmarco_adhoc/convert_msmarco_doc.sh \
   msmarco_doc
 ```
 # Optionally splitting the train and development parts
-```commandline
-scripts/data_convert/split_queries.sh msmarco_doc dev dev1 dev2 -part1_qty 3000
+```
+scripts/data_convert/split_queries.sh \
+  msmarco_doc dev dev1 dev2 -part1_qty 3000
+
+scripts/data_convert/split_queries.sh \
+  msmarco_doc train train1 train_bitext -part1_qty 10000
 ```
 
 
