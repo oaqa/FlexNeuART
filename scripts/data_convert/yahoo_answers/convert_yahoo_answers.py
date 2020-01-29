@@ -3,11 +3,16 @@ import sys, os
 import json
 import argparse
 
+# This collection converts data in a quasi Yahoo Answers format (with preamble removed).
+# It expects a collection either produced by other programs such as
+# 1) a Stack Overflow converter script: scripts/data_convert/stack_overflow/convert_stackoverflow_full.sh
+# 2) Yahoo Answers collection splitter:
+
 sys.path.append('scripts')
 from data_convert.text_proc import *
 from data_convert.convert_common import *
 
-parser = argparse.ArgumentParser(description='Convert a collection in Yahoo Answers format.')
+parser = argparse.ArgumentParser(description='Convert a previously split collection in Yahoo Answers format.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--out_main_path', metavar='main output directory',
@@ -16,7 +21,6 @@ parser.add_argument('--out_main_path', metavar='main output directory',
 parser.add_argument('--out_bitext_path', metavar='optional bitext output directory',
                     help='An optional output directory to store bitext',
                     type=str, default='')
-
 
 args = parser.parse_args()
 print(args)
