@@ -225,6 +225,8 @@ def main_cli():
     parser.add_argument('--backprop_batch_size', type=int, default=12, help='batch size for each backprop step')
     parser.add_argument('--batches_per_train_epoch', type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
+    parser.add_argument('--max_query_eval', type=int, default=0,
+                        help='max # of evaluation queries: 0 tells to use all data')
     parser.add_argument('--grad_checkpoint_param', type=int, default=0,
                        help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
     parser.add_argument('--no_shuffle_train', action='store_true', help='disabling shuffling of training data')
@@ -264,6 +266,11 @@ def main_cli():
     qrels = data.read_qrels_dict(args.qrels)
     train_pairs = data.read_pairs_dict(args.train_pairs)
     valid_run = data.read_run_dict(args.valid_run)
+    max_query_eval=args.max_query_eval
+    if max_query_eval is not None:
+      keys = list(valid_run.keys())[0:max_query_eval]
+      valid_run = {k:valid_run[k] for k in keys}
+      
     if args.initial_bert_weights is not None:
         model.load(args.initial_bert_weights.name)
     os.makedirs(args.model_out_dir, exist_ok=True)
