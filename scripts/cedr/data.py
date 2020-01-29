@@ -8,6 +8,7 @@ import random
 from tqdm import tqdm
 import torch
 
+from common_eval import *
 
 def read_datafiles(files):
     queries = {}
@@ -26,21 +27,6 @@ def read_datafiles(files):
                 docs[c_id] = c_text
     return queries, docs
 
-
-def read_qrels_dict(file):
-    result = {}
-    for line in tqdm(file, desc='loading qrels (by line)', leave=False):
-        qid, _, docid, score = line.split()
-        result.setdefault(qid, {})[docid] = int(score)
-    return result
-
-
-def read_run_dict(file):
-    result = {}
-    for line in tqdm(file, desc='loading run (by line)', leave=False):
-        qid, _, docid, rank, score, _ = line.split()
-        result.setdefault(qid, {})[docid] = float(score)
-    return result
 
 
 def read_pairs_dict(file):

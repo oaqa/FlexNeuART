@@ -6,16 +6,13 @@ import json
 from bs4 import BeautifulSoup
 
 from config import *
+from common_eval import *
 
 WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed',
                                                'id url title content')
 
 YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
                                               'uri subject content bestAnswerId answerList')
-
-QrelEntry = collections.namedtuple('QrelEntry',
-                                   'queryId docId relGrade')
-
 
 # Replace \n and \r characters with spaces
 def replaceCharsNL(s):
@@ -257,72 +254,3 @@ def writeQueries(queryList, fileName):
       f.write(json.dumps(e))
       f.write('\n')
 
-
-def genQrelStr(queryId, docId, relGrade):
-  """Produces a string representing one QREL entry
-
-  :param queryId:   question/query ID
-  :param docId:     relevanet document/answer ID
-  :param relGrade:  relevance grade
-
-  :return: a string representing one QREL entry
-  """
-  return f'{queryId} 0 {docId} {relGrade}'
-
-
-def qrelEntry2Str(qrelEntry):
-  """Convert a parsed QREL entry to string.
-
-  :param qrelEntry: input of the type QrelEntry
-  :return:  string representation.
-  """
-  return genQrelStr(qrelEntry.queryId, qrelEntry.docId, qrelEntry.relGrade)
-
-def parseQrelEntry(line):
-  """Parse one QREL entry
-  :param line  a single line with a QREL entry
-
-  :return a parsed QrelEntry entry.
-  """
-
-  line = line.strip()
-  parts = line.split()
-  if len(parts) != 4:
-    raise Exception('QREL entry format error, expecting just 4 white-space separted field in the entry: ' + line)
-
-  return QrelEntry(queryId=parts[0], docId=parts[2], relGrade=parts[3])
-
-
-def readQrels(fileName):
-  """Read and parse QRELs.
-
-  :param fileName: input file name
-  :return: an array of parsed QREL entries
-  """
-  ln = 0
-  res = []
-
-  with open(fileName) as f:
-    for line in f:
-      ln += 1
-      line = line.strip()
-      if not line:
-        continue
-      try:
-        e = parseQrelEntry(line)
-        res.append(e)
-      except:
-        raise Exception('Error parsing QRELs in line: %d' % ln)
-
-  return res
-
-def writeQrels(qrelList, fileName):
-  """Write a list of QRELs to a file.
-
-  :param qrelList:  a list of parsed QRELs
-  :param fileName:  an output file name
-  """
-  with open(fileName, 'w') as f:
-    for e in qrelList:
-      f.write(qrelEntry2Str(e))
-      f.write('\n')

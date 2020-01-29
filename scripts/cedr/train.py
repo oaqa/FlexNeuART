@@ -16,11 +16,12 @@ import modeling_dssm
 import utils
 import data
 
+from common_eval import *
+
 from tqdm import tqdm
 from collections import namedtuple
 
 USE_MAP=False
-
 
 class MarginRankingLossWrapper:
   @staticmethod
@@ -177,7 +178,7 @@ def run_model(model, train_params, dataset, run, runf, desc='valid'):
         for qid in rerank_run:
             scores = list(sorted(rerank_run[qid].items(), key=lambda x: (x[1], x[0]), reverse=True))
             for i, (did, score) in enumerate(scores):
-                runfile.write(f'{qid} 0 {did} {i+1} {score} run\n')
+                runfile.write(genRunEntryStr(qid, did, i+1, score, FAKE_RUN_ID) + '\n')
 
 def gdeval(qrelf, runf, metric):
     gval_f = 'scripts/exper/gdeval.pl'
@@ -263,11 +264,11 @@ def main_cli():
     if not args.no_cuda:
         model = model.cuda()
     dataset = data.read_datafiles(args.datafiles)
-    qrels = data.read_qrels_dict(args.qrels)
+    qrels = readQrelsDict(args.qrels)
     train_pairs = data.read_pairs_dict(args.train_pairs)
-    valid_run = data.read_run_dict(args.valid_run)
+    valid_run = readRunDict(args.valid_run)
     max_query_eval=args.max_query_eval
-    if max_query_eval is not None:
+    if max_query_eval > 0:
       keys = list(valid_run.keys())[0:max_query_eval]
       valid_run = {k:valid_run[k] for k in keys}
       
