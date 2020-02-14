@@ -10,6 +10,8 @@ import torch.nn.functional as F
 import pytorch_pretrained_bert
 import modeling_util
 
+USE_BATCH_COEFF=False
+
 class BertRanker(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -51,7 +53,9 @@ class BertRanker(torch.nn.Module):
 
         doc_toks, sbcount = modeling_util.subbatch(doc_tok, max_doc_tok_len)
         doc_mask, _ = modeling_util.subbatch(doc_mask, max_doc_tok_len)
-        batch_coeff = modeling_util.get_batch_avg_coeff(doc_mask, max_doc_tok_len).view(batch_qty, 1)
+        if USE_BATCH_COEFF:
+          batch_coeff = modeling_util.get_batch_avg_coeff(doc_mask, max_doc_tok_len)
+          batch_coeff = batch_coeff.view(batch_qty, 1)
 
         query_toks = torch.cat([query_tok] * sbcount, dim=0)
         query_mask = torch.cat([query_mask] * sbcount, dim=0)
@@ -82,14 +86,17 @@ class BertRanker(torch.nn.Module):
             cls_result = []
             for i in range(cls_output.shape[0] // batch_qty):
                 cls_result.append(cls_output[i*batch_qty:(i+1)*batch_qty])
-            #cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
-            cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
-            assert(cls_result.size()[0] == batch_qty)
-            cls_result *= batch_coeff
+            if USE_BATCH_COEFF:
+              cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
+              assert(cls_result.size()[0] == batch_qty)
+              cls_result *= batch_coeff
+            else:
+              cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
             cls_results.append(cls_result)
 
-        print('!!!', batch_coeff.cpu())
-        print('@@@', doc_tok.shape)
+        if USE_BATCH_COEFF:
+          print('!!!', batch_coeff.cpu())
+          print('@@@', doc_tok.shape)
 
         return cls_results, query_results, doc_results
 

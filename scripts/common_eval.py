@@ -1,6 +1,5 @@
 import collections
 import numpy as np
-import sklearn as skl
 from tqdm import tqdm
 
 FAKE_RUN_ID="fake_run"
@@ -112,9 +111,19 @@ def readRunDict(fileName):
   :return:
   """
   result = {}
-  for line in tqdm(fileName, desc='loading run (by line)', leave=False):
-      qid, _, docid, rank, score, _ = line.split()
+  with open(fileName) as f:
+    for ln,line in enumerate(tqdm(f, desc='loading run (by line)', leave=False)):
+      line = line.strip()
+      if not line:
+        continue
+      fld = line.split()
+      if len(fld) != 6:
+        ln += 1
+        raise Exception(f'Invalid line {ln} in run file {fileName} expected 6 white-space separated fields by got: {line}')
+       
+      qid, _, docid, rank, score, _ = fld
       result.setdefault(qid, {})[docid] = float(score)
+
   return result
 
 
@@ -123,7 +132,7 @@ def evalRun(runFileName, qrelFileName, metricFunc, topK, isBinary, debug=False):
 
   :param runFileName:   a run file name
   :param qrelFileName:  a QREL file name
-  :param metricFunc:    an sklearn metric function
+  :param metricFunc:    a metric function or class instance with overloaded __call__
   :param topK:          a cutoff (include only this number of entries
   :param isBinary:      true if relevance grades need to be binarized
   :return:  the average metric value
@@ -131,25 +140,27 @@ def evalRun(runFileName, qrelFileName, metricFunc, topK, isBinary, debug=False):
 
   resArr = []
 
-  print(f'Evaluating run {runFileName} with QREL file {qrelFileName} using metric function {metricFunc}')
   run = readRunDict(runFileName)
   qrels = readQrelsDict(qrelFileName)
   for qid, scoreDict in run.items():
     tmp = [(score, did) for did, score in scoreDict.items()]
     y_true = []
     y_pred = []
+    rel_qty = 0
     for score, did in sorted(tmp, reverse=True):
       y_pred.append(score)
       rel = 0
       if qid in qrels and did in qrels[qid]:
-        rel = qrels[qid]
+        rel = qrels[qid][did]
       if isBinary:
         rel = int(rel > 0)
       y_true.append(rel)
+      if rel > 0:
+        rel_qty += 1
     if topK is not None and topK > 0:
       y_true = y_true[0:topK]
       y_pred = y_pred[0:topK]
-    val = metricFunc(y_true, y_pred)
+    val = metricFunc(y_true, y_pred) if rel_qty > 0 else 0
     if debug:
       print('%s %g' % (qid, val))
     resArr.append(val)

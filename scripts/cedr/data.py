@@ -7,6 +7,9 @@
 import random
 from tqdm import tqdm
 import torch
+import sys
+
+sys.path.append('scripts')
 
 from common_eval import *
 
