@@ -9,7 +9,6 @@
 import os
 import sys
 import argparse
-import subprocess
 
 sys.path.append('scripts')
 
@@ -19,17 +18,9 @@ import modeling_dssm
 import utils
 import data
 
-from matchzoo_metrics.mean_average_precision import MeanAveragePrecision
-from matchzoo_metrics.discounted_cumulative_gain import DiscountedCumulativeGain
 
 from common_eval import *
 
-METRIC_MAP='map'
-MAP_TOP_K=10000
-METRIC_NDCG='ndcg@20'
-NDCG_TOP_K=20
-
-METRIC_LIST=[METRIC_MAP, METRIC_NDCG]
 
 from tqdm import tqdm
 from collections import namedtuple
@@ -161,34 +152,27 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
 
 
 def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
-    runf = os.path.join(model_out_dir, f'{epoch}.run')
-    run_model(model, train_params, dataset, run, runf)
+
+    rerank_run = run_model(model, train_params, dataset, run)
     eval_metric = train_params.eval_metric
-    print(f'Evaluating run {runf} with QREL file {qrelf} using metric {eval_metric}')
-    if train_params.use_external_eval:
-      if eval_metric == METRIC_MAP:
-        VALIDATION_METRIC = 'map'
-        return trec_eval(qrelf, runf, 'map')
-      elif train_params.eval_metric == METRIC_NDCG:
-        return gdeval(qrelf, runf, 'ndcg')
-      else:
-        raise Exception('Unsupported metric: ' + train_params.eval_metric)
-    else:
-      if eval_metric == METRIC_MAP:
-        return evalRun(runf, qrelf, MeanAveragePrecision(), MAP_TOP_K, True, debug=False)
-      elif train_params.eval_metric == METRIC_NDCG:
-        return evalRun(runf, qrelf, DiscountedCumulativeGain(), NDCG_TOP_K, True, debug=False)
-      else:
-        raise Exception('Unsupported metric: ' + train_params.eval_metric)
+
+    print(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
+
+    runf = os.path.join(model_out_dir, f'{epoch}.run')
+
+    return getEvalResults(train_params.use_external_eval,
+                          eval_metric,
+                          rerank_run, runf, qrelf)
 
 
-def run_model(model, train_params, dataset, run, runf, desc='valid'):
+
+def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
-    with torch.no_grad(), tqdm(total=sum(len(r) for r in run.values()), ncols=80, desc=desc, leave=False) as pbar:
+    with torch.no_grad(), tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
         for records in data.iter_valid_records(model,
                                                train_params.no_cuda,
-                                               dataset, run,
+                                               dataset, orig_run,
                                                train_params.batch_size_eval,
                                                train_params.max_query_len, train_params.max_doc_len):
             scores = model(records['query_tok'],
@@ -198,44 +182,9 @@ def run_model(model, train_params, dataset, run, runf, desc='valid'):
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
-    with open(runf, 'wt') as runfile:
-        for qid in rerank_run:
-            scores = list(sorted(rerank_run[qid].items(), key=lambda x: (x[1], x[0]), reverse=True))
-            for i, (did, score) in enumerate(scores):
-                runfile.write(genRunEntryStr(qid, did, i+1, score, FAKE_RUN_ID) + '\n')
 
-def gdeval(qrelf, runf, metric):
-    gval_f = 'scripts/exper/gdeval.pl'
-    output = subprocess.check_output([gval_f, qrelf, runf]).decode().rstrip()
-    output = output.split('\n')
-    last = output[-1].split(',')
-    metric = metric.lower()
-    if metric == 'err':
-      return float(last[-1])
-    elif metric == 'ndcg':
-      return float(last[-2])
-    else:
-      raise Exception('Invalid gdeval metric: ' + metric)
+    return rerank_run
 
-import multiprocessing
-from multiprocessing import Process, Queue
-
-def trec_eval_call(q, qrelf, runf, metric):
-    trec_eval_f = 'trec_eval/trec_eval'
-    output = subprocess.check_output([trec_eval_f, '-m', metric, qrelf, runf]).decode().rstrip()
-    output = output.replace('\t', ' ').split('\n')
-    assert len(output) == 1
-    q.put(float(output[0].split()[2]))
-
-def trec_eval(qrelf, runf, metric):
-    q = Queue()
-    # Before calling check_output we need to start a light-weight version
-    # of the child process, otherwise we could run out of memory
-    p = Process(target=trec_eval_call, args=(q, qrelf, runf, metric))
-    p.start()
-    res = q.get()
-    p.join()
-    return res
 
 
 def main_cli():
