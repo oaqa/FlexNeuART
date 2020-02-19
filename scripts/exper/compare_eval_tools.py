@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# This script compares output from trec_eval with our reimplementation
 import sys
 import argparse
 import tempfile
