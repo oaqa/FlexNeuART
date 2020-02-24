@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import pytorch_pretrained_bert
 import modeling_util
 
-USE_BATCH_COEFF=False
+USE_BATCH_COEFF=True
 
 class BertRanker(torch.nn.Module):
     def __init__(self):
@@ -52,7 +52,7 @@ class BertRanker(torch.nn.Module):
         max_doc_tok_len = maxlen - max_qlen - DIFF
 
         doc_toks, sbcount = modeling_util.subbatch(doc_tok, max_doc_tok_len)
-        doc_mask, _ = modeling_util.subbatch(doc_mask, max_doc_tok_len)
+        doc_masks, _ = modeling_util.subbatch(doc_mask, max_doc_tok_len)
         if USE_BATCH_COEFF:
           batch_coeff = modeling_util.get_batch_avg_coeff(doc_mask, max_doc_tok_len)
           batch_coeff = batch_coeff.view(batch_qty, 1)
@@ -67,7 +67,7 @@ class BertRanker(torch.nn.Module):
 
         # build BERT input sequences
         toks = torch.cat([CLSS, query_toks, SEPS, doc_toks, SEPS], dim=1)
-        mask = torch.cat([ONES, query_mask, ONES, doc_mask, ONES], dim=1)
+        mask = torch.cat([ONES, query_mask, ONES, doc_masks, ONES], dim=1)
         segment_ids = torch.cat([NILS] * (2 + max_qlen) + [ONES] * (1 + doc_toks.shape[1]), dim=1)
         toks[toks == -1] = 0 # remove padding (will be masked anyway)
 
@@ -86,17 +86,18 @@ class BertRanker(torch.nn.Module):
             cls_result = []
             for i in range(cls_output.shape[0] // batch_qty):
                 cls_result.append(cls_output[i*batch_qty:(i+1)*batch_qty])
+            # Leonid Boytsov: though proper batch-specific scaling should be 
+            # be necessary, there's in practice no deterioration due to
+            # imperfect scaling introduced by simple averaging.
             if USE_BATCH_COEFF:
               cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
               assert(cls_result.size()[0] == batch_qty)
+              assert(batch_coeff.size()[0] == batch_qty)
+
               cls_result *= batch_coeff
             else:
               cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
             cls_results.append(cls_result)
-
-        if USE_BATCH_COEFF:
-          print('!!!', batch_coeff.cpu())
-          print('@@@', doc_tok.shape)
 
         return cls_results, query_results, doc_results
 
