@@ -29,6 +29,7 @@ class VocabBuilder:
       for text in pbar:
         toks = list(VocabBuilder.tokenize(nlp, lemmatize, text))
         self.global_counter.update(toks)
+        self.local_counter.update(list(set(toks)))
         self.tot_qty += len(toks)
         self.doc_qty += 1
 
