@@ -215,18 +215,14 @@ def procYahooAnswersRecord(recStr):
                               bestAnswerId=bestAnswerId, answerList=answList)
 
 
-def readQueries(fileName):
-  """Read queries from a JSONL file and checks the document ID is set.
-
-  :param fileName:
-  :return: an array where each entry is a parsed query JSON.
+def jsonlGen(fileName):
+  """A generator that produces parsed doc/query entries one by one.
+    :param fileName: an input file name
   """
 
-  ln = 0
-  res = []
-  with open(fileName) as f:
-    for line in f:
-      ln += 1
+  with FileWrapper(fileName) as f:
+    for i, line in enumerate(f):
+      ln = i + 1
       line = line.strip()
       if not line:
         continue
@@ -238,9 +234,16 @@ def readQueries(fileName):
       if not DOCID_FIELD in data:
         raise Exception('Missing %s field in JSON in line: %d' % (DOCID_FIELD, ln))
 
-      res.append(data)
+      yield data
 
-  return res
+
+def readQueries(fileName):
+  """Read queries from a JSONL file and checks the document ID is set.
+
+  :param fileName: an input file name
+  :return: an array where each entry is a parsed query JSON.
+  """
+  return list(jsonlGen(fileName))
 
 
 def writeQueries(queryList, fileName):

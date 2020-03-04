@@ -1,46 +1,10 @@
 import sys
 sys.path.append('scripts')
-from pytools import memoize_method
-from collections import Counter
-from data_convert.text_proc import *
-from data_convert.convert_common import *
+from data import *
 
 from pytools import memoize_method
 import torch
 import tqdm
-import pickle
-
-# Create vocabulary from text
-class VocabBuilder:
-  @staticmethod
-  def tokenize(nlp, lemmatize, text):
-    lemmas, unlemm = nlp.procText(text)
-    return lemmas if lemmatize else unlemm
-
-  def __init__(self, data_desc, dataset, lemmatize, stopwords):
-    self.global_counter = Counter()
-    self.local_counter = Counter()
-    self.doc_qty = 0
-    self.tot_qty = 0
-
-    nlp = SpacyTextParser(SPACY_MODEL, stopwords, keepOnlyAlphaNum=True, lowerCase=True)
-
-    with tqdm.tqdm(dataset, desc='Building vocabulary for: ' + data_desc) as pbar:
-      for text in pbar:
-        toks = list(VocabBuilder.tokenize(nlp, lemmatize, text))
-        self.global_counter.update(toks)
-        self.local_counter.update(list(set(toks)))
-        self.tot_qty += len(toks)
-        self.doc_qty += 1
-
-  def save(self, file_name):
-    with open(file_name, 'wb') as f:
-      pickle.dump(self, f)
-
-  @staticmethod
-  def load(file_name):
-    return pickle.load(open(file_name, 'rb'))
-
 
 
 class Model1Ranker(torch.nn.Module):
