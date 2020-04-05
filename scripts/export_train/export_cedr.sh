@@ -27,7 +27,7 @@ checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
 
-outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/cedr_train"
+outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/cedr_train/$indexFieldName"
 
 if [ ! -d "$outDir" ] ; then
   mkdir -p "$outDir"
