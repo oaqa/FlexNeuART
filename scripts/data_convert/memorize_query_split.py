@@ -10,7 +10,7 @@ sys.path.append('scripts')
 from config import *
 from convert_common import readQueries
 
-parser = argparse.ArgumentParser('Comparing external and internal eval tools')
+parser = argparse.ArgumentParser('Memorize the query splits')
 
 parser.add_argument('--data_dir',
                     metavar='data directory',
