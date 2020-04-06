@@ -51,8 +51,8 @@ public class DocEntryParsed {
   public DocEntryParsed(int uniqQty, int [] wordIdSeq, int docLen) {
     mWordIds = new int [uniqQty];
     mQtys    = new int [uniqQty];
-    // Empty array should be treated as null
-    if (wordIdSeq != null && wordIdSeq.length > 0) {
+    // We do not treat empty arrays as null anymore
+    if (wordIdSeq != null) {
       mWordIdSeq = wordIdSeq;
       if (wordIdSeq.length != docLen) {
       	throw new RuntimeException("Bug: different lengths docLen=" + docLen + " wordIdSeq.length=" + wordIdSeq.length);
@@ -93,7 +93,8 @@ public class DocEntryParsed {
       mQtys[i] = wordQtys.get(i);
     }
     
-    if (bStoreWordIdSeq && !wordIdSeq.isEmpty()) {
+    if (bStoreWordIdSeq) {
+    	// Let's keep empty sequences as empty arrays rather than null pointers
       mWordIdSeq = new int [wordIdSeq.size()];
       for (int k = 0; k < wordIdSeq.size(); ++k) {
         mWordIdSeq[k] = wordIdSeq.get(k);
@@ -243,10 +244,12 @@ public class DocEntryParsed {
   	int uniqueQty = in.getInt();
   	int docLen = in.getInt();
   	int wordIdSeq[] = null;
+
   	if (docLen < 0) {
   		docLen = -docLen;
-  	} else if (docLen > 0) {
-  		// If docLen == 0, let's keep the array null rather than empty
+  	} else if (docLen >= 0) {
+  		// If docLen == 0, let's keep the empty array, or it will "upset" a lot of downstream code
+  		// that doesn't expect null
   		wordIdSeq = new int[docLen];
   	}
   	

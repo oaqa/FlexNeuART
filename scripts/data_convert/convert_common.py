@@ -14,6 +14,9 @@ WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed',
 YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
                                               'uri subject content bestAnswerId answerList')
 
+BERT_TOK_OPT = 'bert_tokenize'
+BERT_TOK_OPT_HELP = 'Apply the BERT tokenizer and store result in a separate field'
+
 # Replace \n and \r characters with spaces
 def replaceCharsNL(s):
   return re.sub(r'[\n\r]', ' ', s)

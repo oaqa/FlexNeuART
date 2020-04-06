@@ -11,6 +11,8 @@ REPORT_QTY=10000
 # it should be sufficiently large, but not too large
 IMAP_PROC_CHUNK_QTY=256
 
+BERT_BASE_MODEL='bert-base-uncased'
+
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_JSON = 'QuestionFields.jsonl'
 ANSWER_FILE_JSON = 'AnswerFields.jsonl.gz' # We'd like to keep it compressed
@@ -19,6 +21,7 @@ DOCID_FIELD = 'DOCNO'
 
 TEXT_FIELD_NAME = 'text'
 TEXT_UNLEMM_FIELD_NAME = 'text_unlemm'
+TEXT_BERT_TOKENIZED_NAME = 'text_bert_tok'
 TITLE_FIELD_NAME = 'title'
 TITLE_UNLEMM_FIELD_NAME = 'title_unlemm'
 TEXT_RAW_FIELD_NAME = 'text_raw'

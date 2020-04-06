@@ -156,6 +156,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
       } else {
         mQueryDocTrainPairs.write(queryId + "\t" + docId + Const.NL);
       }
+      mOutNum++;
     }
   }
   

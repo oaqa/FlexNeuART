@@ -9,13 +9,14 @@ import torch
 import torch.nn.functional as F
 import pytorch_pretrained_bert
 import modeling_util
+from config import *
 
-USE_BATCH_COEFF=True
+USE_BATCH_COEFF=False
 
 class BertRanker(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.BERT_MODEL = 'bert-base-uncased'
+        self.BERT_MODEL = BERT_BASE_MODEL
         self.CHANNELS = 12 + 1 # from bert-base-uncased
         self.BERT_SIZE = 768 # from bert-base-uncased
         self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)

@@ -460,6 +460,10 @@ public abstract class ForwardIndex {
       return null;
     }
     StringBuffer sb = new StringBuffer();
+
+    if (e.mWordIdSeq == null) {
+    	throw new Exception("Positional information is missing in the index!");
+    }
     
     for (int i = 0; i < e.mWordIdSeq.length; ++i) {
       if (i > 0) {

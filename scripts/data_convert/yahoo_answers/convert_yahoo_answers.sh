@@ -33,7 +33,7 @@ bitextPart=$3
 
 inputRawDir="$COLLECT_ROOT/$collect/$INPUT_RAW_SUBDIR"
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-biTextSubir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
+biTextSubDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
 
 if [ ! -d "$inputRawDir" ] ; then
   echo "Directory doesn't exist: $inputRawDir"
@@ -65,12 +65,12 @@ for part in $partList ; do
   echo $inputFile
   biTextOpt=""
   if [ "$bitextPart" = "$part" ] ; then
-    if [ -d "$biTextSubir" ] ; then
-      rm -f "$biTextSubir"/*
+    if [ -d "$biTextSubDir" ] ; then
+      rm -f "$biTextSubDir"/*
     else
-      mkdir -p "$biTextSubir"
+      mkdir -p "$biTextSubDir"
     fi
-    biTextOpt="--out_bitext_path $biTextSubir"
+    biTextOpt="--out_bitext_path $biTextSubDir"
   fi
   outMainPath="$inputDataDir"/"$part"/
   if [ -d "$outMainPath" ] ; then

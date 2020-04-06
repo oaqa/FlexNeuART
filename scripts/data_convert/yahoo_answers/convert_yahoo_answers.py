@@ -2,6 +2,7 @@
 import sys, os
 import json
 import argparse
+import pytorch_pretrained_bert
 
 # This collection converts data in a quasi Yahoo Answers format (with preamble removed).
 # It expects a collection either produced by other programs such as
@@ -21,19 +22,33 @@ parser.add_argument('--out_main_path', metavar='main output directory',
 parser.add_argument('--out_bitext_path', metavar='optional bitext output directory',
                     help='An optional output directory to store bitext',
                     type=str, default='')
+parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
 
 args = parser.parse_args()
 print(args)
+arg_vars = vars(args)
 
 inpFileName = args.input
 
 outMainDir = args.out_main_path
 outBitextDir = args.out_bitext_path
 
-if not os.path.exists(outMainDir):
-  os.makedirs(outMainDir)
+bertTokenizer = None
+
 
 fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
+# It doesn't make sense to have bitext data for a raw-text field,
+# because MGIZA needs data to be white-space tokenized,
+# however, it makes sense to create a bitext set for a BERT-tokenized field.
+bitext_fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME]
+
+if BERT_TOK_OPT in arg_vars:
+  print('BERT-tokenizing input into the field' + TEXT_BERT_TOKENIZED_NAME)
+  bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+  bitext_fields.append(TEXT_BERT_TOKENIZED_NAME)
+
+if not os.path.exists(outMainDir):
+  os.makedirs(outMainDir)
 
 biQuestFiles = {}
 biAnswFiles = {}
@@ -51,7 +66,7 @@ if outBitextDir:
   if not os.path.exists(outBitextDir):
     os.makedirs(outBitextDir)
 
-  for fn in fields:
+  for fn in bitext_fields:
     biQuestFiles[fn]=open(os.path.join(outBitextDir, BITEXT_QUESTION_PREFIX + fn), 'w')
     biAnswFiles[fn]=open(os.path.join(outBitextDir, BITEXT_ANSWER_PREFIX + fn), 'w')
 
@@ -67,6 +82,9 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
     qid = rec.uri
 
     question_lemmas, question_unlemm = nlp.procText(question)
+    question_bert_tok = None
+    if bertTokenizer:
+      question_bert_tok = ' '.join(bertTokenizer.tokenize(question))
 
     question = question.lower() # after NLP
 
@@ -74,6 +92,8 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
           TEXT_FIELD_NAME : question_lemmas,
           TEXT_UNLEMM_FIELD_NAME : question_unlemm,
           TEXT_RAW_FIELD_NAME : question}
+    if question_bert_tok is not None:
+      doc[TEXT_BERT_TOKENIZED_NAME] = question_bert_tok
     docStr = json.dumps(doc) + '\n'
     dataQuestFile.write(docStr)
 
@@ -82,12 +102,20 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
       answ = rec.answerList[i]
       answ_lemmas, answ_unlemm = nlp.procText(answ)
 
+      answ_bert_tok = None
+      if bertTokenizer:
+        answ_bert_tok = ' '.join(bertTokenizer.tokenize(answ))
+
       answ = answ.lower() # after NLP
 
       doc = {DOCID_FIELD : aid,
              TEXT_FIELD_NAME: answ_lemmas,
              TEXT_UNLEMM_FIELD_NAME: answ_unlemm,
              TEXT_RAW_FIELD_NAME: answ}
+
+      if answ_bert_tok is not None:
+        doc[TEXT_BERT_TOKENIZED_NAME] = answ_bert_tok
+
       docStr = json.dumps(doc) + '\n'
       dataAnswFile.write(docStr)
 
@@ -97,11 +125,15 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
       if biQuestFiles and biAnswFiles:
         biQuestFiles[TEXT_FIELD_NAME].write(question_lemmas + '\n')
         biQuestFiles[TEXT_UNLEMM_FIELD_NAME].write(question_lemmas + '\n')
-        biQuestFiles[TEXT_RAW_FIELD_NAME].write(question + '\n')
 
         biAnswFiles[TEXT_FIELD_NAME].write(answ_lemmas + '\n')
         biAnswFiles[TEXT_UNLEMM_FIELD_NAME].write(answ_lemmas + '\n')
-        biAnswFiles[TEXT_RAW_FIELD_NAME].write(answ + '\n')
+
+        if bertTokenizer is not None:
+          biQuestFiles[TEXT_BERT_TOKENIZED_NAME].write(question_bert_tok + '\n')
+          biAnswFiles[TEXT_BERT_TOKENIZED_NAME].write(answ_bert_tok + '\n')
+
+
 
 
     if ln % REPORT_QTY == 0:

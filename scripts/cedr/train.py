@@ -7,6 +7,7 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import os
+import gc
 import sys
 import argparse
 
@@ -57,7 +58,7 @@ LOSS_FUNC_LIST=[PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]
 TrainParams = namedtuple('TrainParams',
                     ['init_lr', 'init_bert_lr', 'epoch_lr_decay',
                      'batches_per_train_epoch',
-                     'batch_size', 'batch_size_eval',
+                     'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
                      'backprop_batch_size',
                      'epoch_qty', 'no_cuda', 'print_grads',
@@ -72,6 +73,10 @@ MODEL_MAP = {
     'dssm_bert' : modeling_dssm.DssmBertRanker
 }
 
+
+def clean_memory():
+  gc.collect()
+  torch.cuda.empty_cache()
 
 def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
     lr = train_params.init_lr
@@ -101,6 +106,8 @@ def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, 
 
 
 def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pairs, qrels):
+
+    clean_memory()
 
     model.train()
     total_loss = 0.
@@ -165,15 +172,15 @@ def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
                           rerank_run, runf, qrelf)
 
 
-
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
+    clean_memory()
     with torch.no_grad(), tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
         for records in data.iter_valid_records(model,
                                                train_params.no_cuda,
                                                dataset, orig_run,
-                                               train_params.batch_size_eval,
+                                               train_params.batch_size_val,
                                                train_params.max_query_len, train_params.max_doc_len):
             scores = model(records['query_tok'],
                            records['query_mask'],
@@ -226,17 +233,17 @@ def main_cli():
     parser.add_argument('--max_doc_len', metavar='max. document length',
                         type=int, default=2048,
                         help='max. document length')
-    parser.add_argument('--batch_size_eval', metavar='eval batch size',
-                        type=int, default=64, help='batch size for evaluation')
+    parser.add_argument('--batch_size_val', metavar='val batch size',
+                        type=int, default=32, help='validation batch size')
     parser.add_argument('--backprop_batch_size', metavar='backprop batch size',
                         type=int, default=12,
                         help='batch size for each backprop step')
     parser.add_argument('--batches_per_train_epoch', metavar='# of rand. batches per epoch',
                         type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
-    parser.add_argument('--max_query_eval', metavar='max # of eval queries',
+    parser.add_argument('--max_query_val', metavar='max # of val queries',
                         type=int, default=0,
-                        help='max # of evaluation queries: 0 tells to use all data')
+                        help='max # of validation queries: 0 tells to use all data')
     parser.add_argument('--grad_checkpoint_param', type=int, default=0,
                         metavar='grad. checkpoint param',
                        help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
@@ -265,7 +272,7 @@ def main_cli():
     train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr, epoch_lr_decay=args.epoch_lr_decay,
                          backprop_batch_size=args.backprop_batch_size,
                          batches_per_train_epoch=args.batches_per_train_epoch,
-                         batch_size=args.batch_size, batch_size_eval=args.batch_size_eval,
+                         batch_size=args.batch_size, batch_size_val=args.batch_size_val,
                          max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
                          epoch_qty=args.epoch_qty, no_cuda=args.no_cuda,
                          use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
@@ -284,10 +291,10 @@ def main_cli():
     qrels = readQrelsDict(args.qrels.name)
     train_pairs = data.read_pairs_dict(args.train_pairs)
     valid_run = readRunDict(args.valid_run.name)
-    max_query_eval=args.max_query_eval
+    max_query_val=args.max_query_val
     query_ids = list(valid_run.keys())
-    if max_query_eval > 0:
-      valid_run = {k:valid_run[k] for k in query_ids[0:max_query_eval]}
+    if max_query_val > 0:
+      valid_run = {k:valid_run[k] for k in query_ids[0:max_query_val]}
     print('# of eval. queries:', len(query_ids), ' in the file', args.valid_run.name)
       
     if args.initial_bert_weights is not None:

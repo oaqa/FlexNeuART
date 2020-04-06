@@ -26,9 +26,9 @@ scripts/data_convert/yahoo_answers/split_yahoo_answers_input.sh \
 ```
 
 
-Create input data in the JSON format, note the last argument defines a 
+Finally, we can create input data in the JSON format. Note that the last argument defines a 
 part of the collection that is used to create a parallel corpus (i.e,
-a bitext):
+a bitext), which is generated in addition to JSON input files:
 ```
 scripts/data_convert/yahoo_answers/convert_yahoo_answers.sh \
   manner \
@@ -44,15 +44,19 @@ scripts/index/create_lucene_index.sh manner
 
 
 Create a forward index, mapdb, generates the fastest (but not the
-smallest forward index), ``parsedBOW`` denotes 
-indexing without keeping positional information (i.e.,
-a bag-of-words indexing):
+smallest forward index):
 ```
 scripts/index/create_fwd_index.sh \
   manner \
   mapdb \
-  'text:parsedBOW text_unlemm:parsedBOW text_raw:raw'
+  'text:parsedBOW text_unlemm:parsedText text_raw:raw'
 ```
+More detailed explanation of index types is below. Note that
+there are two types of the field: a parsed text field and a raw field.
+The indexer white-space tokenizes text fields and compiles token statistics. 
+1. `parsedBOW` index keeps only a bag-of-words;
+2. `parsedText` keeps the original word sequence;
+3. `raw` is the index that stores text "as is" without any changes.
 
 # Generating & using optional (derived) data
 
@@ -69,13 +73,49 @@ scripts/export_train/export_cedr.sh \
   manner \
   text_raw \
   bitext \
-  dev1 \
+  dev2 \
+  -thread_qty 4 \
   -sample_neg_qty 20
 ```
 In this case, the output goes to:
 ```
 <collections root>/manner/derived_data/cedr_train/text_raw
 ```
+Note that we use `dev2` here, so that we can use `dev1` **to evaluate fusion results**.
+
+Afterwards, one can train using the following commands. Setting convenience variables:
+```
+export train_subdir=cedr_train/text_raw
+export dpath=<collections root>/manner
+export mtype=vanilla_bert
+export max_doc_len=512
+export max_query_len=64
+export grad_checkpoint_param=0
+export backprop_batch_size=1
+export batches_per_epoch=1024
+export batch_size_val=16
+export max_query_val=5000
+
+
+```
+Starting a training script:
+```
+python -u scripts/cedr/train.py \
+    --model $mtype \
+    --datafiles $dpath/derived_data/$train_subdir/data_query.tsv  \
+                    $dpath/derived_data/$train_subdir/data_docs.tsv \
+    --train_pairs $dpath/derived_data/$train_subdir/train_pairs.tsv \
+   --valid_run $dpath/derived_data/$train_subdir/test_run.txt \
+   --qrels $dpath/derived_data//$train_subdir/qrels.txt \
+   --initial_bert_weights $dpath/derived_data/lm_finetune_model/pytorch_model.bin \
+   --model_out_dir $dpath/derived_data/ir_models/$mtype \
+   --batches_per_train_epoch $batches_per_epoch --init_lr 1e-3 --init_bert_lr 2e-5 \
+    --epoch_qty 30 --epoch_lr_decay 0.9 \
+    --backprop_batch_size $backprop_batch_size --batch_size 32 --batch_size_val $batch_size_val \
+    --grad_checkpoint_param $grad_checkpoint_param \
+    --max_doc_len $max_doc_len --max_query_len $max_query_len
+``` 
+
 
 ## Generating a vocabulary file
 

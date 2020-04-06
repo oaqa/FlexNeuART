@@ -19,6 +19,9 @@ checkVarNonEmpty "$candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
 
+echo "Train split: $partTrain"
+echo "Eval split: $partTest"
+
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/match_zoo_train"
 
 if [ ! -d "$outDir" ] ; then

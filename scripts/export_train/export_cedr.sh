@@ -27,6 +27,9 @@ checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
 
+echo "Train split: $partTrain"
+echo "Eval split: $partTest"
+
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/cedr_train/$indexFieldName"
 
 if [ ! -d "$outDir" ] ; then
@@ -52,10 +55,8 @@ $maxNumQueryTrainParam \
 \
 -thread_qty $threadQty \
 \
--index_field $indexFieldName \
 -fwd_index_dir  "$fwdIndexDir" \
 \
--query_field $QUERY_FIELD_NAME \
 -u "$luceneIndexDir" \
 \
 -sample_neg_qty $sampleNegQty \
