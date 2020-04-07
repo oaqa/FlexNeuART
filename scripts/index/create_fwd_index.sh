@@ -63,7 +63,7 @@ for fieldDef in $fieldListDef ; do
     echo "Invalid field definition $fieldDef (should be two colon-separated values, e.g, text:parsedBOW)"
     exit 1
   fi
-  scripts/index/run_buildfwd_index.sh \
+  target/appassembler/bin/BuildFwdIndexApp  \
     -fwd_index_type $fwdIndexType \
     -fwd_index_store_type $fwdIndexStoreType \
     -input_data_dir "$inputDataDir"  \

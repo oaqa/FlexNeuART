@@ -268,6 +268,10 @@
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.LuceneIndexer</mainClass>
                   <id>LuceneIndexer</id>
                 </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.BuildFwdIndexApp</mainClass>
+                  <id>BuildFwdIndexApp</id>
+                </program>
               </programs>
             </configuration>
           </plugin>
