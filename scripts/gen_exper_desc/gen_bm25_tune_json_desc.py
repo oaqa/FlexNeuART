@@ -1,8 +1,30 @@
 #!/usr/bin/env python
 import sys
+import os
+import shutil
+
 sys.path.append('scripts')
+
 from gen_exper_desc.common_gen_desc import *
 from data_convert.convert_common import *
+
+MODEL_SRC_PATH='scripts/exper/sample_exper_desc/one_feat.model'
+MODEL_DST_REL_PATH='models'
+MODEL_DST_NAME = 'one_feat.model'
+
+parser = BaseParser('BM25 tuning param generator')
+parser.parseArgs()
+
+args = parser.getArgs()
+args_var = vars(args)
+
+outdir = args_var[OUT_DIR_PARAM]
+outModelDir = os.path.join(outdir, MODEL_DST_REL_PATH)
+if not os.path.exists(outModelDir):
+  os.makedirs(outModelDir)
+shutil.copyfile(MODEL_SRC_PATH, os.path.join(outModelDir, MODEL_DST_NAME))
+
+modelRelName = os.path.join(args_var[REL_DESC_PATH_PARAM], MODEL_DST_REL_PATH, MODEL_DST_NAME)
 
 class ExtrJsonRerankGEN:
   def __init__(self, fieldName):
@@ -31,13 +53,12 @@ class ExtrJsonRerankGEN:
                     ]
                     }
 
-        testOnly=False
-        yield fid, jsonDesc, testOnly
+        # Test only is true, b/c there's nothing to train, but we need to provide the model
+        testOnly=True
+        yield fid, jsonDesc, testOnly, modelRelName 
 
-parser = BaseParser('BM25 tuning param generator')
-parser.parseArgs()
 
-genRerankDescriptors(parser.getArgs(), ExtrJsonRerankGEN(TEXT_FIELD_NAME),
+genRerankDescriptors(args, ExtrJsonRerankGEN(TEXT_FIELD_NAME),
                      'bm25tune.json', 'bm25tune')
 
 

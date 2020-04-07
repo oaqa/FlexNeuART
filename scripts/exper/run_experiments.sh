@@ -74,7 +74,6 @@ while [ $# -ne 0 ] ; do
   if [[ "$1" = -* ]] ; then
     optName="$1"
     optValue="$2"
-    echo "@@ $1 -> $2"
     if [ "$optName" = "-reuse_feat" ] ; then
       globalParams+=" $optName"
       # option without an argument shift by 1

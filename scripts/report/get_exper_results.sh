@@ -76,12 +76,13 @@ fi
 
 tmpConf=`mktemp`
 
-metrList=("ndcg@20" "err@20" "p@20" "map" "mrr" "recall")
+metrListGrep=("ndcg@20" "err@20" "p@20" "map" "Reciprocal rank" "recall")
+metrListPrint=("ndcg@20" "err@20" "p@20" "map" "mrr" "recall")
 
 header="test_part\texper_subdir\ttop_k\tquery_qty"
 
-for mname in ${metrList[*]} ; do
-  header+="\t$mname"
+for ((i=0;i<${#metrListPrint[*]};i++)) ; do
+  header+="\t${metrListPrint[$i]}"
 done
 
 echo -e "$header" > "$outFile"
@@ -145,9 +146,11 @@ for ((ivar=1;;++ivar)) ; do
       query_qty=`grepFileForVal "$f" "# of queries"`
 
       row="$testPart\t$experSubdir\t$top_k\t$query_qty"
-      for mname in ${metrList[*]} ; do
-        val=`grepFileForVal "$f" "$mname" "1"`
-        if [ "$mname" = "$printBestMetr" ] ; then
+      for ((i=0;i<${#metrListGrep[*]};i++)) ; do
+        metrGrepName=${metrListGrep[$i]}
+        metrPrintName=${metrListPrint[$i]}
+        val=`grepFileForVal "$f" "$metrGrepName" "1"`
+        if [ "$metrGrepName" = "$printBestMetr" -o "$metrPrintName" = "$printBestMetr" ] ; then
           cmp=`isGreater "$val" "$bestVal"`
           if [ "$bestSubdir" = "" -o "$cmp" = "1" ] ; then
             bestSubdir=$experSubdir

@@ -11,7 +11,7 @@ class ExtrJsonGEN:
   def __call__(self):
     testOnly=False
     for fid, extrType in self.paramConf:
-      yield fid, extrType, testOnly
+      yield fid, extrType, testOnly, None
 
   def __init__(self, k1, b, textFieldName=TEXT_FIELD_NAME, textUlemmFieldName=TEXT_UNLEMM_FIELD_NAME):
     self.k1 = k1

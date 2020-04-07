@@ -1,6 +1,9 @@
 # Basic data preparation
 This example covers a Manner subset of the Yahoo Answers Comprehensive.
-However, a similar procedure can be applied to a bigger collection.
+However, a similar procedure can be applied to a bigger collection. All
+experiments assume the variable `COLLECT_ROOT` in the script `scripts/config.sh` 
+is set to `collections` and that all collections are stored in the `collections`
+sub-directory (relative to the source code root).
 
 
 Create raw-data directory and store raw data there:
@@ -79,14 +82,14 @@ scripts/export_train/export_cedr.sh \
 ```
 In this case, the output goes to:
 ```
-<collections root>/manner/derived_data/cedr_train/text_raw
+collections/manner/derived_data/cedr_train/text_raw
 ```
 Note that we use `dev2` here, so that we can use `dev1` **to evaluate fusion results**.
 
 Afterwards, one can train using the following commands. Setting convenience variables:
 ```
 export train_subdir=cedr_train/text_raw
-export dpath=<collections root>/manner
+export dpath=collections/manner
 export mtype=vanilla_bert
 export max_doc_len=512
 export max_query_len=64
@@ -137,10 +140,45 @@ so one needs to download and compile MGIZA:
 scripts/giza/create_tran.sh \
   manner \
   text_unlemm \
-  <MGIZA DIRECTORY>/mgiza/
+  <MGIZA DIRECTORY>
+```
+
+It further needs to cleaned-up and converted to a binary format.
+```
+export min_tran_prob=0.001
+export top_word_qty=100000
+
+
+scripts/giza/filter_tran_table_and_voc.sh \
+  manner \
+  text_unlemm \
+  $min_tran_prob \
+  $top_word_qty
 ```
 
 
+# Running basic experiments
+## Generate descriptors to tune BM25
 
+```
+mkdir -p collections/manner/exper_desc
+```
 
+```
+scripts/gen_exper_desc/gen_bm25_tune_json_desc.py \
+  --outdir collections/manner/exper_desc/ \
+  --exper_subdir bm25tune \
+  --rel_desc_path exper_desc
+```
+The main experimental descriptor is going to be stored in 
+`collections/manner/exper_desc/bm25tune.json`,
+whereas auxiliary descriptors are stored in `collections/manner/exper_desc/bm25tune/`
+
+Now we can run tuning experiments where we train on `train` and test on `dev1`:
+```
+scripts/exper/run_experiments.sh \
+  manner \
+  exper_desc/bm25tune.json \
+  -test_part dev1
+```
 
