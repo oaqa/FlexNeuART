@@ -52,7 +52,7 @@ smallest forward index):
 scripts/index/create_fwd_index.sh \
   manner \
   mapdb \
-  'text:parsedBOW text_unlemm:parsedText text_raw:raw'
+  'text:parsedBOW text_unlemm:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
 More detailed explanation of index types is below. Note that
 there are two types of the field: a parsed text field and a raw field.
@@ -180,5 +180,26 @@ scripts/exper/run_experiments.sh \
   manner \
   exper_desc/bm25tune.json \
   -test_part dev1
+```
+
+Obtain experimental results and find the best configuration 
+with respect to the Mean Average Precision (MAP):
+```
+scripts/report/get_exper_results.sh \
+  manner \
+  exper_desc/bm25tune.json \
+  bm25tune.tsv \
+  -test_part dev1 \
+  -flt_cand_qty 250 \
+  -print_best_metr map
+```
+The results are saved to `bm25tune.tsv` and include only runs
+with top *k*=250 candidates. The result extraction script
+will print something like this:
+```
+Including only runs that generated 250 candidate records
+Best results for metric map:
+Value: 0.116200
+Result sub-dir: bm25tune/bm25tune/bm25_k1=0.4_b=0.6
 ```
 

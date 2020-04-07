@@ -43,7 +43,7 @@ fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
 bitext_fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME]
 
 if BERT_TOK_OPT in arg_vars:
-  print('BERT-tokenizing input into the field' + TEXT_BERT_TOKENIZED_NAME)
+  print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
   bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
   bitext_fields.append(TEXT_BERT_TOKENIZED_NAME)
 
