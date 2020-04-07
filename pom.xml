@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.cmu.lti.oaqa</groupId>
   <artifactId>knn4qa</artifactId>
-  <version>3.0-SNAPSHOT</version>
+  <version>3.0</version>
   <inceptionYear>2015</inceptionYear>
   <name>Exploring if k-NN search can be useful for non-factoid QA.</name>
   <packaging>jar</packaging>
@@ -246,15 +246,32 @@
    <pluginManagement>
     <plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <configuration>
-          <usedDependencies>
-          </usedDependencies>
-        </configuration>
-      </plugin>
-      
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <configuration>
+              <usedDependencies>
+              </usedDependencies>
+            </configuration>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>appassembler-maven-plugin</artifactId>
+            <version>2.0.0</version>
+            <configuration>
+              <extraJvmArguments>-Xms512M -Xmx31G</extraJvmArguments>
+              <repositoryLayout>flat</repositoryLayout>
+              <useWildcardClassPath>true</useWildcardClassPath>
+              <programs>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.LuceneIndexer</mainClass>
+                  <id>LuceneIndexer</id>
+                </program>
+              </programs>
+            </configuration>
+          </plugin>
+            
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-compiler-plugin</artifactId>

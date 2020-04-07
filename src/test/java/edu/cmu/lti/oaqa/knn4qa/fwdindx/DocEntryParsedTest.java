@@ -23,78 +23,98 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 
 public class DocEntryParsedTest {
-	
-	void doTest(DocEntryParsed src) throws Exception {
-		byte [] bin = src.toBinary();
-		
-		DocEntryParsed dst = DocEntryParsed.fromBinary(bin);
-		if (!src.equals(dst)) {
-			System.out.println("Decoded is different from source!");
-			System.out.println("Source: " + src);
-			System.out.println("Decoded: " + dst);
-			System.out.println("Source == null " + (src == null));
-			System.out.println("Decoded == null " + (dst == null));
-		}
-		assertTrue(src.equals(dst));
-	}
-	
-	ArrayList<Integer> getArray(int [] arr) {
-		ArrayList<Integer> res = new ArrayList<Integer>();
-		for (int e : arr) {
-			res.add(e);
-		}
-		return res;
-	}
-	
-	
-	@Test
-  public void test1() {
-		int wordIds[] = {1, 2, 3, 4, 5, 101, 1001};
-		int qtys[] = {2, 3, 5, 7, 2, 4, 5};
-		int wordIdsSeq[] = {1, 10, 15, 3, 4, -1, 22, 128, -1, 1024, 1025, 1027, 1029};
-		
-		try {
-			doTest(new DocEntryParsed(getArray(wordIds), getArray(qtys), getArray(wordIdsSeq), true));
-			doTest(new DocEntryParsed(getArray(wordIds), getArray(qtys), getArray(wordIdsSeq), false));
+  
+  void doTestAll(DocEntryParsed src) throws Exception {
+    doTestBinary(src);
+    doTestText(src);
+  }
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
-	}
-	
-	@Test
+  void doTestBinary(DocEntryParsed src) throws Exception {
+    byte [] bin = src.toBinary();
+
+    DocEntryParsed dst = DocEntryParsed.fromBinary(bin);
+    if (!src.equals(dst)) {
+      System.out.println("Decoded is different from source (binary)!");
+      System.out.println("Source: " + src);
+      System.out.println("Decoded: " + dst);
+      System.out.println("Source == null " + (src == null));
+      System.out.println("Decoded == null " + (dst == null));
+    }
+    assertTrue(src.equals(dst));
+  }
+  
+  void doTestText(DocEntryParsed src) throws Exception {
+    String str = src.toString();
+
+    DocEntryParsed dst = DocEntryParsed.fromString(str);
+    if (!src.equals(dst)) {
+      System.out.println("Decoded is different from source (binary)!");
+      System.out.println("Source: " + src);
+      System.out.println("Decoded: " + dst);
+      System.out.println("Source == null " + (src == null));
+      System.out.println("Decoded == null " + (dst == null));
+    }
+    assertTrue(src.equals(dst));
+  }
+
+  ArrayList<Integer> getArray(int [] arr) {
+    ArrayList<Integer> res = new ArrayList<Integer>();
+    for (int e : arr) {
+      res.add(e);
+    }
+    return res;
+  }
+
+
+  @Test
+  public void test1() {
+    int wordIds[] = {1, 2, 3, 4, 5, 101, 1001};
+    int qtys[] = {2, 3, 5, 7, 2, 4, 5};
+    int wordIdsSeq[] = {1, 10, 15, 3, 4, -1, 22, 128, -1, 1024, 1025, 1027, 1029};
+
+    try {
+      doTestAll(new DocEntryParsed(getArray(wordIds), getArray(qtys), getArray(wordIdsSeq), true));
+      doTestAll(new DocEntryParsed(getArray(wordIds), getArray(qtys), getArray(wordIdsSeq), false));
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail();
+    }
+  }
+
+  @Test
   public void test2() {
-		
-		try {
-			ArrayList<Integer> wordIds = new ArrayList<Integer>();
-			ArrayList<Integer> qtys = new ArrayList<Integer>();
-			ArrayList<Integer> wordIdsSeq = new ArrayList<Integer>();
-			
-			for (int uniqQty = 0; uniqQty < 10; ++uniqQty) {
-				for (int docLen = 0; docLen < 10; ++docLen) {
-					wordIds.clear();
-					qtys.clear();
-					wordIdsSeq.clear();
-					
-					for (int i = 0; i < uniqQty; ++i) {
-						wordIds.add(i);
-						qtys.add(i * 5);
-					}
-					for (int i = 0; i < docLen; ++i) {
-						wordIdsSeq.add(i*10);
-					}
-					
-					doTest(new DocEntryParsed(wordIds, qtys, wordIdsSeq, true));
-					doTest(new DocEntryParsed(wordIds, qtys, wordIdsSeq, false));
-				}
-			}
-			
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail();
-		}
-	}
+
+    try {
+      ArrayList<Integer> wordIds = new ArrayList<Integer>();
+      ArrayList<Integer> qtys = new ArrayList<Integer>();
+      ArrayList<Integer> wordIdsSeq = new ArrayList<Integer>();
+
+      // Make sure, we test empty sequences as well!
+      for (int uniqQty = 0; uniqQty < 20; ++uniqQty) {
+        for (int docLen = 0; docLen < 200; ++docLen) {
+          wordIds.clear();
+          qtys.clear();
+          wordIdsSeq.clear();
+
+          for (int i = 0; i < uniqQty; ++i) {
+            wordIds.add(i);
+            qtys.add(i * 5);
+          }
+          for (int i = 0; i < docLen; ++i) {
+            wordIdsSeq.add(i*10);
+          }
+
+          doTestAll(new DocEntryParsed(wordIds, qtys, wordIdsSeq, true));
+          doTestAll(new DocEntryParsed(wordIds, qtys, wordIdsSeq, false));
+        }
+      }
+
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail();
+    }
+  }
 
 }

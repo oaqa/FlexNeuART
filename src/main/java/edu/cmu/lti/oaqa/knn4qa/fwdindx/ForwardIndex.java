@@ -92,9 +92,9 @@ public abstract class ForwardIndex {
   
   // If multiple indices are present, this array defines the priority of choosing which to use.
   public static final ForwardIndexType mIndexTypes[] = {ForwardIndexType.inmem, 
-  																											ForwardIndexType.mapdb, 
-  																											ForwardIndexType.lucene, 
-  																											ForwardIndexType.flatdata};
+  														ForwardIndexType.mapdb, 
+  														ForwardIndexType.lucene, 
+  														ForwardIndexType.flatdata};
   
   public enum ForwardIndexStorageType {
     raw,

@@ -22,14 +22,18 @@ import java.util.Arrays;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
 
 /**
- * One document entry in the forward in-memory index.
+ * One document entry in the forward in-memory index. We regret this 
+ * class was not conveniently split into two classes. However, such
+ * a refactoring will break quite a few of LOCs, so we at least postpone it.
+ * Furthermore, saving to/restoring from a text format should be retired.
  * 
  * @author Leonid Boytsov
  *
  */
 public class DocEntryParsed {
 
-	public static final String DOCLEN_QTY_PREFIX = "@ ";
+  public static final String DOCLEN_QTY_PREFIX = "@ ";
+  public static final int[] EMPTY_INT_ARRAY = new int[0];
   
 
   public final int mWordIds[]; // unique word IDs
@@ -44,7 +48,7 @@ public class DocEntryParsed {
     if (bStoreWordIdSeq)
       mWordIdSeq = wordIdSeq;
     else
-      mWordIdSeq = null;
+      mWordIdSeq = EMPTY_INT_ARRAY;
     mDocLen = wordIdSeq.length;
   }
 
@@ -58,14 +62,14 @@ public class DocEntryParsed {
       	throw new RuntimeException("Bug: different lengths docLen=" + docLen + " wordIdSeq.length=" + wordIdSeq.length);
       }
     } else {
-      mWordIdSeq = null;
+      mWordIdSeq = EMPTY_INT_ARRAY;
     }
     mDocLen = docLen;
   }
   
   public DocEntryParsed(ArrayList<Integer> wordIds, 
-                  			ArrayList<Integer> wordQtys,
-                  			int                docLen) {
+                  		ArrayList<Integer> wordQtys,
+                  		int                docLen) {
     mWordIds = new int [wordIds.size()];
     mQtys    = new int [wordIds.size()];
     
@@ -73,7 +77,8 @@ public class DocEntryParsed {
       mWordIds[i] = wordIds.get(i);
       mQtys[i] = wordQtys.get(i);
     }
-    mWordIdSeq = null;
+    
+    mWordIdSeq = EMPTY_INT_ARRAY;
     mDocLen = docLen;
   }
 
@@ -100,7 +105,7 @@ public class DocEntryParsed {
         mWordIdSeq[k] = wordIdSeq.get(k);
       }
     } else {
-      mWordIdSeq = null;
+      mWordIdSeq = EMPTY_INT_ARRAY;
     }
     mDocLen = wordIdSeq.size();
   }
@@ -117,7 +122,9 @@ public class DocEntryParsed {
       sb.append(String.format("%d:%d",mWordIds[i] , mQtys[i]));
     }
     sb.append('\n');
-    if (mWordIdSeq != null) {
+    // Do not create an empty string for the empty sequence,
+    // add a special marker with the document length
+    if (mWordIdSeq != null && mWordIdSeq.length > 0) {
       for (int i = 0; i < mWordIdSeq.length; ++i) {
         if (i > 0) sb.append(' ');
         sb.append(mWordIdSeq[i]);
@@ -202,8 +209,7 @@ public class DocEntryParsed {
       }
       
       return new DocEntryParsed(wordIds, wordQtys, wordIdSeq, true);
-    }    
-    
+    }       
   }
 
   
@@ -211,24 +217,29 @@ public class DocEntryParsed {
    * Generate a binary representation of a document entry.
    */
   public byte[] toBinary() {
+    
+    if (mWordIdSeq.length > 0 &&
+        mWordIdSeq.length != mDocLen) {
+      throw new RuntimeException("Bug: different lengths docLen=" + mDocLen + 
+                                  " wordIdSeq.length=" + mWordIdSeq.length);
+    }
+    
   	int totalSize = 4 + // # of (word id, qty) pairs 
-  								  4 + // # the length of a word sequence
-  								mWordIds.length * 8 + // id + qty
-  								mDocLen * (mWordIdSeq != null ? 4 : 0);
+  					4 + // # the length of a word sequence
+  					mWordIds.length * 8 + // id + qty
+  					mWordIdSeq.length * 4;
   	ByteBuffer out = ByteBuffer.allocate(totalSize);
   	out.order(Const.BYTE_ORDER);
   	out.putInt(mWordIds.length);
   	// minus indicates there will be no word id sequence
-  	out.putInt(mWordIdSeq != null ? mDocLen : -mDocLen);
+  	out.putInt(mWordIdSeq.length > 0 ? mDocLen : -mDocLen);
   	for (int i = 0; i < mWordIds.length; ++i) {
       out.putInt(mWordIds[i]);
       out.putInt(mQtys[i]);
     }
-  	
-    if (mWordIdSeq != null) {
-      for (int i = 0; i < mWordIdSeq.length; ++i) {
-      	out.putInt(mWordIdSeq[i]);
-      }
+
+    for (int i = 0; i < mWordIdSeq.length; ++i) {
+    	out.putInt(mWordIdSeq[i]);
     }
   	
   	return out.array();
@@ -246,11 +257,12 @@ public class DocEntryParsed {
   	int wordIdSeq[] = null;
 
   	if (docLen < 0) {
-  		docLen = -docLen;
-  	} else if (docLen >= 0) {
-  		// If docLen == 0, let's keep the empty array, or it will "upset" a lot of downstream code
-  		// that doesn't expect null
-  		wordIdSeq = new int[docLen];
+  	  docLen = -docLen;
+  	} else if (docLen > 0) {
+  	   // At this point, unfortunately, we do not know 
+  	  wordIdSeq = new int[docLen];
+  	} else {
+  	  // If docLen == 0, the constructor will init. mWordIdSeq to an empty array
   	}
   	
   	DocEntryParsed res = new DocEntryParsed(uniqueQty, wordIdSeq, docLen);
@@ -261,34 +273,35 @@ public class DocEntryParsed {
   		res.mWordIds[i] = in.getInt();
   		res.mQtys[i] = in.getInt();
   	}
-  	if (res.mWordIdSeq != null) {
-  		for (int i = 0; i < docLen; ++i) {
-  			res.mWordIdSeq[i] = in.getInt();
-  		}
+  	if (res.mWordIdSeq == null) {
+  	  throw new Exception("Bug: we should not get null here, as a constructor should use the empty array instead!");
   	}
+	for (int i = 0; i < res.mWordIdSeq.length; ++i) {
+	  res.mWordIdSeq[i] = in.getInt();
+	}
   	
   	return res;
   	
   }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DocEntryParsed other = (DocEntryParsed) obj;
-		if (mDocLen != other.mDocLen)
-			return false;
-		if (!Arrays.equals(mQtys, other.mQtys))
-			return false;
-		if (!Arrays.equals(mWordIdSeq, other.mWordIdSeq))
-			return false;
-		if (!Arrays.equals(mWordIds, other.mWordIds))
-			return false;
-		return true;
-	}
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    DocEntryParsed other = (DocEntryParsed) obj;
+    if (mDocLen != other.mDocLen)
+      return false;
+    if (!Arrays.equals(mQtys, other.mQtys))
+      return false;
+    if (!Arrays.equals(mWordIdSeq, other.mWordIdSeq))
+      return false;
+    if (!Arrays.equals(mWordIds, other.mWordIds))
+      return false;
+    return true;
+  }
 
 }

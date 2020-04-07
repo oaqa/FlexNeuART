@@ -40,7 +40,13 @@ scripts/data_convert/yahoo_answers/convert_yahoo_answers.sh \
 ```
 
 # Indexing
-Create a Lucene index:
+Before creating Lucene index (if collections was resplit), please,
+first delete Lucene caches:
+```
+rm -rf collections/manner/lucene_cache/
+```
+
+Then, you can create a Lucene index:
 ```
 scripts/index/create_lucene_index.sh manner
 ```
