@@ -75,6 +75,7 @@ for part in $partList ; do
   python -u scripts/data_convert/yahoo_answers/convert_yahoo_answers.py \
             --input "$inputRawDir"/"$inputFile" \
             --out_main_path $outMainPath \
+            --bert_tokenize \
             $biTextOpt
 done
 
