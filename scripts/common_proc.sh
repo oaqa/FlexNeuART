@@ -139,11 +139,11 @@ function setJavaMem {
   MEM_SIZE_MIN_KB=$(($F1*$MEM_SIZE_MX_KB/$F2))
   MEM_SIZE_MAX_KB=$((7*$MEM_SIZE_MX_KB/8))
   if [ "$NO_MAX" = "1" ] ; then
-    export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -server"
+    export JAVA_OPTS="-Xms${MEM_SIZE_MIN_KB}k -server"
   else
-    export MAVEN_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
+    export JAVA_OPTS="-Xms${MEM_SIZE_MIN_KB}k -Xmx${MEM_SIZE_MAX_KB}k -server"
   fi
-  echo "MAVEN_OPTS=$MAVEN_OPTS"
+  echo "JAVA_OPTS=$JAVA_OPTS"
 }
 
 # grep*ForVal functions extract values of a given key
