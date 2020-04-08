@@ -260,3 +260,6 @@ def writeQueries(queryList, fileName):
       f.write(json.dumps(e))
       f.write('\n')
 
+
+def unique(arr):
+    return list(set(arr))
