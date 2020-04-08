@@ -60,7 +60,7 @@ for subDir in $dirList ; do
 
   echo "Processing sub-dir $subDir"
 
-  scripts/data_convert/run_answ_based_qrel_gen.sh \
+  target/appassembler/bin/AnswerBasedQRELGenerator \
       -cand_qty $candQty \
       -thread_qty $threadQty \
       -fwd_index_dir $fwdIndexDir \

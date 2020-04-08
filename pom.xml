@@ -323,6 +323,10 @@
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CreateBitextFromQRELs</mainClass>
                   <id>CreateBitextFromQRELs</id>
                 </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.AnswerBasedQRELGenerator</mainClass>
+                  <id>AnswerBasedQRELGenerator</id>
+                </program>
               </programs>
             </configuration>
           </plugin>
