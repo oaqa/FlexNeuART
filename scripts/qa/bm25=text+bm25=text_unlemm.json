@@ -4,7 +4,7 @@
             "params": {
                 "k1": "0.4",
                 "b":  "0.6",
-                "fieldName": "text",
+                "indexFieldName": "text",
                 "similType": "bm25"
             },
             "type": "TFIDFSimilarity"
@@ -13,7 +13,7 @@
             "params": {
                 "k1": "0.4",
                 "b":  "0.6",
-                "fieldName": "text_unlemm",
+                "indexFieldName": "text_unlemm",
                 "similType": "bm25"
             },
             "type": "TFIDFSimilarity"

@@ -52,7 +52,8 @@ public class DataEntryReader implements java.lang.AutoCloseable {
     if (fileNameNoCompr.endsWith(".txt")) {
       return false;
     }
-    throw new IllegalArgumentException("Unexpected extension (not jsonl or txt) in: " + fileName);
+    throw new IllegalArgumentException("Unexpected extension (not jsonl or txt) in: " + fileName + 
+                                      " after suffix removal: " + fileNameNoCompr);
   }
 
   /**

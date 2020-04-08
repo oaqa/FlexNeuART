@@ -4,7 +4,8 @@ source scripts/config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-# It's best to use with a our SQUAD test collection
+# It's intended to use with a our SQUAD test collection:
+# wget boytsov.info/datasets/flecsneurt-demo-2020-04-07.tar.bz2 
 
 collect=$1
 if [ "$collect" = "" ] ; then
@@ -14,7 +15,7 @@ fi
 
 testPart=$2
 if [ "$testPart" = "" ] ; then
-  echo "Specify a test part, e.g, ev1 (2d arg)"
+  echo "Specify a test part, e.g, $DEV1_SUBDIR (2d arg)"
   exit 1
 fi
 
@@ -39,7 +40,7 @@ fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 
-resourceDirParams=" -fwd_index_dir \"$fwdIndexDir\" -embed_dir \"$embedDir\" -giza_root_dir \"$gizaRootDir\" "
+resourceDirParams=" -fwd_index_dir $fwdIndexDir -embed_dir $embedDir -giza_root_dir $gizaRootDir "
 
 retVal=""
 getIndexQueryDataInfo "$inputDataDir"
@@ -49,18 +50,18 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-queryFileParam=" -q \"$inputDataDir/$testPart/$queryFileName\" "
+queryFileParam=" -q $inputDataDir/$testPart/$queryFileName "
 
-scripts/qa/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text_unpruned.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+target/appassembler/bin/CheckSparseExportScores -extr_json $cdir/bm25=text+model1=text_unpruned.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/qa/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY   -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+target/appassembler/bin/CheckDenseSparseExportScores -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY   -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/qa/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+target/appassembler/bin/CheckSparseExportScores -extr_json $cdir/bm25=text+model1=text.json -model_file $cdir/bm25=text+model1=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/qa/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+target/appassembler/bin/CheckDenseSparseExportScores -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/qa/run_check_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -model_file $cdir/bm25=text+model1=text+embed=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
+target/appassembler/bin/CheckSparseExportScores -extr_json $cdir/bm25=text+model1=text+embed=text.json -model_file $cdir/bm25=text+model1=text+embed=text.model -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF  $resourceDirParams $queryFileParam
 
-scripts/qa/run_check_dense_sparse_export_scores.sh -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF $resourceDirParams $queryFileParam
+target/appassembler/bin/CheckDenseSparseExportScores -extr_json $cdir/bm25=text+model1=text+embed=text.json -max_num_doc $MAX_NUM_DOC -max_num_query $MAX_NUM_QUERY -eps_diff $EPS_DIFF $resourceDirParams $queryFileParam
 
 echo "ALL CHECKS ARE DONE!"

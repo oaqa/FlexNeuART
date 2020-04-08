@@ -303,6 +303,14 @@
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ConvertStackOverflowStep2</mainClass>
                   <id>ConvertStackOverflowStep2</id>
                 </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CheckDenseSparseExportScores</mainClass>
+                  <id>CheckDenseSparseExportScores</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CheckSparseExportScores</mainClass>
+                  <id>CheckSparseExportScores</id>
+                </program>
               </programs>
             </configuration>
           </plugin>

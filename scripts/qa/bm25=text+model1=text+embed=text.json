@@ -5,14 +5,14 @@
   "params" : {
     "k1"        : "0.4",
     "b"         : "0.6",
-    "fieldName" : "text",
+    "indexFieldName" : "text",
     "similType" : "bm25"
   }
  },
  {
  "type" : "Model1Similarity", 
   "params" : {
-    "fieldName" : "text",
+    "indexFieldName" : "text",
     "gizaIterQty" : "5",
     "probSelfTran" : "0.05f",
     "lambda" : "0.1f",
@@ -25,7 +25,7 @@
  {
   "type" : "avgWordEmbed",
   "params" : {
-    "fieldName" : "text",
+    "indexFieldName" : "text",
     "queryEmbedFile" : "starspace/starspace_unlemm.query",
     "docEmbedFile"   : "starspace/starspace_unlemm.answer",
     "useIDFWeight"   : "True",
