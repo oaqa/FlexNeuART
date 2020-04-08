@@ -420,6 +420,8 @@ if [ "$testOnly" = "0" ] ; then
   if [ "$regenFeat" = "1" ] ; then
     checkVarNonEmpty "extrType"
 
+    # This APP can require a lot of memory
+    setJavaMem 5 9
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$FAKE_RUN_ID" \
                                     -q "$inputDataDir/$trainPart/$queryFileName" \

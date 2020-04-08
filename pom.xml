@@ -286,6 +286,14 @@
                 <program>
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.QueryAppMultThread</mainClass>
                   <id>QueryAppMultThread</id>
+                </program> 
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.FilterTranTable</mainClass>
+                  <id>FilterTranTable</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.FilterVocabulary</mainClass>
+                  <id>FilterVocabulary</id>
                 </program>
               </programs>
             </configuration>
