@@ -38,7 +38,7 @@ fi
 
 cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"
 
-scripts/export_train/run_export_train_text_pairs.sh \
+target/appassembler/bin/ExportTrainPairs \
 -export_fmt cedr  \
 -cand_train_qty $candTrainQty -cand_test_qty $candTestQty \
 $maxNumQueryTestParam \

@@ -28,7 +28,7 @@ if [ ! -d "$outDir" ] ; then
   mkdir "$outDir"
 fi
 
-scripts/data/run_export_train_text_pairs.sh \
+target/appassembler/bin/ExportTrainPairs \
 -export_fmt match_zoo  \
 \
 -cand_train_qty $candTrain -cand_test_qty $candTestQty \

@@ -327,6 +327,10 @@
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.AnswerBasedQRELGenerator</mainClass>
                   <id>AnswerBasedQRELGenerator</id>
                 </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ExportTrainPairs</mainClass>
+                  <id>ExportTrainPairs</id>
+                </program>
               </programs>
             </configuration>
           </plugin>
