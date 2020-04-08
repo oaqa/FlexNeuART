@@ -67,7 +67,7 @@ fi
 
 partPref=$inputDataDir/$BITEXT_TRAIN_SUBDIR
 
-scripts/data/run_export_bitext.sh -fwd_index_dir $indexDir \
+target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
                                   -embed_dir $embedDir \
                                   -index_field $field \
                                   -query_field $query_field \

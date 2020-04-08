@@ -64,7 +64,7 @@ DEFAULT_TRAIN_SUBDIR="train" # This only a default that can be overriden
 DEV_SUBDIR="dev"
 DEV1_SUBDIR="dev1"
 DEV2_SUBDIR="dev2"
-BITEXT_TRAIN_SUBDIR="train_bitext"
+BITEXT_TRAIN_SUBDIR="bitext"
 
 # A directory with data for BERT LM fine-tuning
 LM_FINETUNE_SUBDIR="lm_finetune_data"

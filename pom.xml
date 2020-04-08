@@ -311,6 +311,18 @@
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CheckSparseExportScores</mainClass>
                   <id>CheckSparseExportScores</id>
                 </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ExportToNMSLIBDenseSparseFusion</mainClass>
+                  <id>ExportToNMSLIBDenseSparseFusion</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ExportToNMSLIBSparse</mainClass>
+                  <id>ExportToNMSLIBSparse</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CreateBitextFromQRELs</mainClass>
+                  <id>CreateBitextFromQRELs</id>
+                </program>
               </programs>
             </configuration>
           </plugin>
