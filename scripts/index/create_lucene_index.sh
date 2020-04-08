@@ -42,4 +42,6 @@ if [ "$dataFileName" = "" ] ; then
 else
   echo "Using the data input file: $dataFileName"
 fi
+# This APP can be memory greedy
+setJavaMem 4 8
 target/appassembler/bin/LuceneIndexer -input_data_dir "$inputDataDir" -index_dir "$indexDir" -data_sub_dirs "$dirList" -data_file "$dataFileName"

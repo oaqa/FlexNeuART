@@ -168,7 +168,7 @@ echo "$SEP_DEBUG_LINE"
 # Do it only after argument parsing
 set -eo pipefail
 
-scripts/query/run_multhread_feat.sh \
+target/appassembler/bin/GenFeaturesAppMultThread \
 -u "$URI" \
 -run_id "$FAKE_RUN_ID" \
 -cand_prov $cand_type \

@@ -272,6 +272,18 @@
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.BuildFwdIndexApp</mainClass>
                   <id>BuildFwdIndexApp</id>
                 </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ConvertDataXMLJson</mainClass>
+                  <id>ConvertDataXMLJson</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.GenFeaturesAppMultThread</mainClass>
+                  <id>GenFeaturesAppMultThread</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.QueryAppMultThread</mainClass>
+                  <id>QueryAppMultThread</id>
+                </program>
               </programs>
             </configuration>
           </plugin>

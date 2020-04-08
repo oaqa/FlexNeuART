@@ -420,7 +420,7 @@ if [ "$testOnly" = "0" ] ; then
   if [ "$regenFeat" = "1" ] ; then
     checkVarNonEmpty "extrType"
 
-    scripts/query/run_multhread_feat.sh -u "$candProvURI" -cand_prov "$candProvType" \
+    target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$FAKE_RUN_ID" \
                                     -q "$inputDataDir/$trainPart/$queryFileName" \
                                     -qrel_file "$inputDataDir/$trainPart/$QREL_FILE" \
@@ -458,7 +458,7 @@ if [ "$testOnly" = "0" ] ; then
     if [ "$testModelResults" = "1" ] ; then
       # This part is for debug purposes only
       checkVarNonEmpty "trainCandQty"
-      scripts/query/run_query.sh  -u "$candProvURI" -cand_prov "$candProvType" \
+      target/appassembler/bin/QueryAppMultThread  -u "$candProvURI" -cand_prov "$candProvType" \
                                   -q "$inputDataDir/$trainPart/$queryFileName" \
                                   -n "$trainCandQty" \
                                   -run_id "$FAKE_RUN_ID" \
@@ -479,7 +479,8 @@ fi
 
 statFile="$reportDir/$STAT_FILE"
 $resourceDirParams
-scripts/query/run_query.sh  -u "$candProvURI" -cand_prov "$candProvType" \
+target/appassembler/bin/QueryAppMultThread \
+                            -u "$candProvURI" -cand_prov "$candProvType" \
                             -q "$inputDataDir/$testPart/$queryFileName"  \
                             -n "$testCandQtyList" \
                             -run_id "$FAKE_RUN_ID" \

@@ -10,7 +10,6 @@ checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-# This script runs annotation pipelines for a given collection
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "$SAMPLE_COLLECT_ARG (1st arg)"

@@ -4,7 +4,6 @@ source scripts/config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-# This script runs annotation pipelines for a given collection
 collect=$1
 if [ "$collect" = "" ] ; then
   echo "$SAMPLE_COLLECT_ARG (1st arg)"
@@ -63,6 +62,11 @@ for fieldDef in $fieldListDef ; do
     echo "Invalid field definition $fieldDef (should be two colon-separated values, e.g, text:parsedBOW)"
     exit 1
   fi
+
+  # This APP can require a lot of memory
+  NO_MAX=0
+  setJavaMem 6 8 $NO_MAX
+
   target/appassembler/bin/BuildFwdIndexApp  \
     -fwd_index_type $fwdIndexType \
     -fwd_index_store_type $fwdIndexStoreType \
