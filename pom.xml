@@ -295,6 +295,14 @@
                   <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.FilterVocabulary</mainClass>
                   <id>FilterVocabulary</id>
                 </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ConvertStackOverflowStep1</mainClass>
+                  <id>ConvertStackOverflowStep1</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ConvertStackOverflowStep2</mainClass>
+                  <id>ConvertStackOverflowStep2</id>
+                </program>
               </programs>
             </configuration>
           </plugin>

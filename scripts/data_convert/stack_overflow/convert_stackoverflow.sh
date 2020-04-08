@@ -25,8 +25,8 @@ fi
 # Do it only after argument parsing
 set -eo pipefail
 
-scripts/data/run_convert_stackoverflow_step1.sh -input "$input" -output "${interm}1"
+target/appassembler/bin/ConvertStackOverflowStep1 -input "$input" -output "${interm}1"
 
 sort -k 1,1 -n -s "${interm}1" > "${interm}2"
 
-scripts/data/run_convert_stackoverflow_step2.sh -input "${interm}2" -output "$output" -exclude_code
+target/appassembler/bin/ConvertStackOverflowStep2 -input "${interm}2" -output "$output" -exclude_code
