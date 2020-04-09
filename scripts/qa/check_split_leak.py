@@ -138,7 +138,7 @@ print('# of data points to index', len(index))
 M = 30
 efC = 200
 
-indexTimeParams = {'M': M, 'efConstruction': efC, 'post' : 0}
+indexTimeParams = {'M': M, 'efConstruction': efC, 'indexThreadQty': 0, 'post' : 0}
 
 # Create an index
 start = time.time()
@@ -163,7 +163,7 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
         qbatch.append(strToNMSLIBVect(e[TEXT_RAW_FIELD_NAME]))
 
     if qbatch:
-        nbrs = index.knnQueryBatch(qbatch, k=K, num_threads=numThreads)
+        nbrs = index.knnQueryBatch(qbatch, k=K, num_threads=0)
         assert(len(nbrs))
         for i in range(len(qbatch)):
             qnum1 = start + i
