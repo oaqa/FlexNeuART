@@ -124,7 +124,7 @@ index = nmslib.init(method='hnsw',
                     space='jaccard_sparse',
                     data_type=nmslib.DataType.OBJECT_AS_STRING)
 
-for start in tqdm(range(0, len(sampleQueryList2), QUERY_BATCH_SIZE), desc='index. 2d query set'):
+for start in tqdm(range(0, len(sampleQueryList2), QUERY_BATCH_SIZE), desc='injest query set'):
     dbatch = []
     for e in sampleQueryList2[start:start + QUERY_BATCH_SIZE]:
         dbatch.append(strToNMSLIBVect(e[TEXT_RAW_FIELD_NAME]))
