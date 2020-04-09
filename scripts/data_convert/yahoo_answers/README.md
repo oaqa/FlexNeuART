@@ -26,8 +26,7 @@ scripts/data_convert/yahoo_answers/split_yahoo_answers_input.sh \
   -o collections/manner/input_raw/manner-v2.0 \
   -n dev1,dev2,test,train,bitext \
   -p 0.05,0.05,0.1,0.1,0.7
-```
-
+``` 
 
 Finally, we can create input data in the JSON format. Note that the last argument defines a 
 part of the collection that is used to create a parallel corpus (i.e,

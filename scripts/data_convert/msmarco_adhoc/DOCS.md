@@ -1,4 +1,5 @@
-# Basic data preparation
+# MSMARCO TREC 2019 document ranking
+## Basic data preparation
 Create raw-data directory and download data:
 ```
 mkdir -p collections/msmarco_doc/input_raw
@@ -14,7 +15,7 @@ scripts/data_convert/msmarco_adhoc/convert_msmarco_doc.sh \
   collections/msmarco_doc/input_raw  \
   msmarco_doc
 ```
-# Optionally splitting the train and development parts
+## Optionally splitting the train and development parts
 ```
 scripts/data_convert/split_queries.sh \
   msmarco_doc dev dev1 dev2 -part1_qty 3000
@@ -28,7 +29,7 @@ scripts/qa/check_split_queries.sh   \
 ```
 
 
-# Indexing
+## Indexing
 Create a Lucene index:
 ```
 scripts/index/create_lucene_index.sh msmarco_doc
