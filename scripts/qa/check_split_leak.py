@@ -68,6 +68,7 @@ parser.add_argument('-k', metavar='k-NN k',
                     type=int, default=1)
 parser.add_argument('--min_jacc', metavar='min jaccard to compare answers',
                     type=float, default=1.0)
+parser.add_argument("--use_hnsw", action="store_true")
 
 
 
@@ -120,7 +121,24 @@ for fn in [apath1, apath2]:
     print('Read %d answers from %s' % (qty, fn))
 
 
-index = nmslib.init(method='hnsw',
+
+
+if args.use_hnsw:
+    methodName = 'hnsw'
+    M = 30
+    efC = 200
+
+    indexTimeParams = {'M': M, 'efConstruction': efC, 'indexThreadQty': 0, 'post' : 0}
+    efS = 1000
+    queryTimeParams = {'efSearch': efS}
+else:
+    methodName = 'brute_force'
+    indexTimeParams = {}
+    queryTimeParams = {}
+
+print('k-NN search method', methodName)
+
+index = nmslib.init(method=methodName,
                     space='jaccard_sparse',
                     data_type=nmslib.DataType.OBJECT_AS_STRING)
 
@@ -135,10 +153,6 @@ for start in tqdm(range(0, len(sampleQueryList2), QUERY_BATCH_SIZE), desc='injes
 
 print('# of data points to index', len(index))
 
-M = 30
-efC = 200
-
-indexTimeParams = {'M': M, 'efConstruction': efC, 'indexThreadQty': 0, 'post' : 0}
 
 # Create an index
 start = time.time()
@@ -149,8 +163,7 @@ print('Indexing time = %f' % (end-start))
 
 K = args.k
 print('K=', K)
-efS = 1000
-queryTimeParams = {'efSearch': efS}
+
 print('Setting query-time parameters', queryTimeParams)
 index.setQueryTimeParams(queryTimeParams)
 
