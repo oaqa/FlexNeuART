@@ -34,7 +34,7 @@ import edu.cmu.lti.oaqa.knn4qa.utils.CompressUtils;
  */
 public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
-  public static final int COMMIT_INTERV = 2000000;
+  public static final int COMMIT_INTERV = 1000;
   
   protected String mBinFile = null;
 
