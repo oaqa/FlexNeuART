@@ -21,4 +21,4 @@ wget https://msmarco.blob.core.windows.net/msmarcoranking/qrels.train.tsv
 
 wget https://msmarco.blob.core.windows.net/msmarcoranking/collection.tar.gz
 tar zxvf collection.tar.gz
-gzip collection.tar
+gzip collection.tsv
