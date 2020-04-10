@@ -10,6 +10,18 @@ import nmslib
 import time
 import numpy as np
 
+# This utility scripts checks for possible leakage across different data splits.
+# Specifically, we search for very similar question-answer pairs, which might
+# be duplicates or near duplicates. Hence, we check the following:
+# 1. Are there very similar questions?
+# 2. For sufficiently similar questions, e.g., Jaccard >= 0.75, we check the similarity
+#    among all relevant answers.
+# By default this method uses brute-force search with the Jaccard similarity.
+# The exhaustiveness of the search ensures we won't miss anything. However, for quicker-and-easier
+# checks, one can use HNSW with sufficently high values of M (>= 30), efConstruction (>=200),
+# and efSearch (>=1000). These parameters might need to be bumped up for "harder" collections
+# and brute-force search is certainly a safer option.
+
 sys.path.append('scripts')
 from data_convert.convert_common import *
 

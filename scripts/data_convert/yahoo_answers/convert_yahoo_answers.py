@@ -82,11 +82,12 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
     qid = rec.uri
 
     question_lemmas, question_unlemm = nlp.procText(question)
-    question_bert_tok = None
-    if bertTokenizer:
-      question_bert_tok = ' '.join(bertTokenizer.tokenize(question))
 
     question = question.lower() # after NLP
+
+    question_bert_tok = None
+    if bertTokenizer:
+      question_bert_tok = getRetokenized(bertTokenizer, question)
 
     doc = {DOCID_FIELD : qid,
           TEXT_FIELD_NAME : question_lemmas,
@@ -102,11 +103,13 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
       answ = rec.answerList[i]
       answ_lemmas, answ_unlemm = nlp.procText(answ)
 
-      answ_bert_tok = None
-      if bertTokenizer:
-        answ_bert_tok = ' '.join(bertTokenizer.tokenize(answ))
 
       answ = answ.lower() # after NLP
+
+      # Doing it after lower-casing
+      answ_bert_tok = None
+      if bertTokenizer:
+        answ_bert_tok = getRetokenized(bertTokenizer, answ)
 
       doc = {DOCID_FIELD : aid,
              TEXT_FIELD_NAME: answ_lemmas,

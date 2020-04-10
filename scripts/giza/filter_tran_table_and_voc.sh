@@ -40,9 +40,9 @@ dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field.orig"
 dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field"
 
 echo "========================================================================================================================="
-echo " This script takes the data created by scripts/giza/create_tran.sh which is placed in the directory:"
+echo " This script uses (but doesn't modify) the data created by scripts/giza/create_tran.sh which is placed in the directory:"
 echo "$dirSrc"
-echo "It keeps the data to be filtered. The filtering result is stored in the following directory:"
+echo "The filtered output is stored in the following directory:"
 echo "$dirDst"
 echo "========================================================================================================================="
 

@@ -3,6 +3,7 @@ import sys
 import json
 import argparse
 import multiprocessing
+import pytorch_pretrained_bert
 
 sys.path.append('scripts')
 from data_convert.text_proc import *
@@ -18,9 +19,11 @@ parser.add_argument('--max_doc_size', metavar='max doc size bytes', help='the th
 # Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
                     type=int, default=multiprocessing.cpu_count()-1)
+parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
 
 args = parser.parse_args()
 print(args)
+arg_vars = vars(args)
 
 inpFile = FileWrapper(args.input)
 outFile = FileWrapper(args.output, 'w')
@@ -28,6 +31,10 @@ maxDocSize = args.max_doc_size
 
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
 print(stopWords)
+
+if BERT_TOK_OPT in arg_vars:
+  print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
+  bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 
 class DocParseWorker:
   def __init__(self, stopWords, spacyModel):
@@ -55,6 +62,8 @@ class DocParseWorker:
            TITLE_UNLEMM_FIELD_NAME : title_unlemm,
            'body' : body_unlemm,
            TEXT_RAW_FIELD_NAME : text_raw}
+    addRetokenizedField(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bertTokenizer)
+
     docStr = json.dumps(doc) + '\n'
     return docStr
 

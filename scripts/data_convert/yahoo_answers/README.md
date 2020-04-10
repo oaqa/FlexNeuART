@@ -38,6 +38,45 @@ scripts/data_convert/yahoo_answers/convert_yahoo_answers.sh \
   bitext
 ```
 
+As a sanity check, it is recommended to run the following script:
+```
+scripts/report/get_basic_collect_stat.sh manner
+```
+For the manner collection, the results should be something like this:
+```
+Checking data sub-directory: bitext
+Found indexable data file: bitext/AnswerFields.jsonl.gz
+Checking data sub-directory: dev1
+Found indexable data file: dev1/AnswerFields.jsonl.gz
+Checking data sub-directory: dev2
+Found indexable data file: dev2/AnswerFields.jsonl.gz
+Checking data sub-directory: test
+Found indexable data file: test/AnswerFields.jsonl.gz
+Checking data sub-directory: train
+Found indexable data file: train/AnswerFields.jsonl.gz
+Found query file: bitext/QuestionFields.jsonl
+Found query file: dev1/QuestionFields.jsonl
+Found query file: dev2/QuestionFields.jsonl
+Found query file: test/QuestionFields.jsonl
+Found query file: train/QuestionFields.jsonl
+getIndexQueryDataInfo return value:  bitext,dev1,dev2,test,train AnswerFields.jsonl.gz ,bitext,dev1,dev2,test,train QuestionFields.jsonl
+Using the data input files: AnswerFields.jsonl.gz, QuestionFields.jsonl
+Index dirs: bitext dev1 dev2 test train
+Query dirs:  bitext dev1 dev2 test train
+Queries/questions:
+bitext 99950
+dev1 7034
+dev2 7150
+test 14214
+train 14279
+Documents/passages/answers:
+bitext 452952
+dev1 32515
+dev2 32618
+test 63860
+train 67840
+```
+
 # Indexing
 Before creating Lucene index (if collections was resplit), please,
 first delete Lucene caches:
@@ -81,7 +120,7 @@ scripts/export_train/export_cedr.sh \
   manner \
   text_raw \
   bitext \
-  dev2 \
+  dev1 \
   -thread_qty 4 \
   -sample_neg_qty 20
 ```

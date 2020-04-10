@@ -32,25 +32,25 @@ class FileWrapper:
       :param  fileName a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
       :param  flags    open flags such as 'r' or 'w'
     """
-    if fileName.endswith('.gz'): 
-      self._file = gzip.open(fileName, flags) 
+    if fileName.endswith('.gz'):
+      self._file = gzip.open(fileName, flags)
       self._isCompr = True
-    elif fileName.endswith('.bz2'): 
-      self._file = bz2.open(fileName, flags) 
+    elif fileName.endswith('.bz2'):
+      self._file = bz2.open(fileName, flags)
       self._isCompr = True
-    else: 
+    else:
       self._file = open(fileName, flags)
       self._isCompr = False
 
   def write(self, s):
     if self._isCompr:
-      self._file.write(s.encode())  
+      self._file.write(s.encode())
     else:
       self._file.write(s)
 
   def read(self, s):
     if self._isCompr:
-      return self._file.read().decode()  
+      return self._file.read().decode()
     else:
       return self._file.read()
 
@@ -159,7 +159,7 @@ def wikiExtractorFileIterator(rootDir):
       for fn in dirList2Sorted:
         if fn.startswith('wiki_'):
           yield os.path.join(fullDirName, fn)
-  
+
 
 def procWikipediaRecord(recStr):
   """A procedure to parse a single Wikipedia page record
@@ -262,4 +262,33 @@ def writeQueries(queryList, fileName):
 
 
 def unique(arr):
-    return list(set(arr))
+  return list(set(arr))
+
+
+def getRetokenized(tokenizer, text):
+  """Obtain a space separated re-tokenized text.
+  :param tokenizer:  a tokenizer that has the function
+                     tokenize that returns an array of tokens.
+  :param text:       a text to re-tokenize.
+  """
+  return ' '.join(tokenizer.tokenize(text))
+
+
+def addRetokenizedField(dataEntry,
+                        srcField,
+                        dstField,
+                        tokenizer):
+  """
+  Create a re-tokenized field from an existing one.
+
+  :param dataEntry:   a dictionary of entries (keys are field names, values are text items)
+  :param srcField:    a source field
+  :param dstField:    a target field
+  :param tokenizer:    a tokenizer to use, if None, nothing is done
+  """
+  if tokenizer is not None:
+    dst = ''
+    if srcField in dataEntry:
+      dst = getRetokenized(dataEntry[srcField])
+
+    dataEntry[dstField] = dst
