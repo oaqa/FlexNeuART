@@ -26,7 +26,7 @@ shutil.copyfile(MODEL_SRC_PATH, os.path.join(outModelDir, MODEL_DST_NAME))
 
 modelRelName = os.path.join(args_var[REL_DESC_PATH_PARAM], MODEL_DST_REL_PATH, MODEL_DST_NAME)
 
-class ExtrJsonRerankGEN:
+class ExtrBM25JsonGEN:
   def __init__(self, fieldName):
     self.fieldName = fieldName
 
@@ -58,7 +58,7 @@ class ExtrJsonRerankGEN:
         yield fid, jsonDesc, testOnly, modelRelName 
 
 
-genRerankDescriptors(args, ExtrJsonRerankGEN(TEXT_FIELD_NAME),
+genRerankDescriptors(args, ExtrBM25JsonGEN(TEXT_FIELD_NAME),
                      'bm25tune.json', 'bm25tune')
 
 

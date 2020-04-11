@@ -8,7 +8,7 @@ from data_convert.convert_common import *
 
 
 parser = argparse.ArgumentParser('Build vocabularies from several processed fiels')
-parser.add_argument('--field', metavar='field', help='a JSON field to use', required=True)
+parser.add_argument('--field_name', metavar='field name', help='a JSON field to use', required=True)
 parser.add_argument('--input', metavar='input files', help='input JSON files (possibly compressed)',
                     type=str, nargs='+', required=True)
 parser.add_argument('--output', metavar='output file', help='output file',

@@ -87,6 +87,6 @@ execAndCheck "scripts/giza/filter_long.py \"${source_dir}/answer_${field}\"   \"
 
 execAndCheck "scripts/giza/run_mgiza.sh \"$mgizaDir\" $dir \"$full_target_dir/source\" \"$full_target_dir/target\" $GIZA_ITER_QTY"
 
-rm `ls $dir/*|grep -v output.t1.$stepQ|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
+rm `ls $full_target_dir/*|grep -v output.t1.$stepQ|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
 
 rm -f $target_dir/source $target_dir/target

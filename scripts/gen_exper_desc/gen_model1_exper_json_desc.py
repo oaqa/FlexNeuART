@@ -6,14 +6,14 @@ sys.path.append('scripts')
 from data_convert.convert_common import *
 from gen_exper_desc.common_gen_desc import *
 
-class ExtrJsonGEN:
+class ExtrModel1JsonGEN:
 
   def __call__(self):
     testOnly=False
     for fid, extrType in self.paramConf:
       yield fid, extrType, testOnly, None
 
-  def __init__(self, k1, b, textFieldName=TEXT_FIELD_NAME, textUlemmFieldName=TEXT_UNLEMM_FIELD_NAME):
+  def __init__(self, k1, b, bitextFieldName, textFieldName=TEXT_FIELD_NAME):
     self.k1 = k1
     self.b = b
 
@@ -36,12 +36,12 @@ class ExtrJsonGEN:
 
     for probSelfTran, lamb in paramArr:
 
-      fid = f'bm25={textFieldName}+model1={textUlemmFieldName}+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
+      fid = f'bm25={textFieldName}+model1={bitextFieldName}+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
 
       extrList = [{
                     "type": "Model1Similarity",
                     "params": {
-                      "indexFieldName": textUlemmFieldName,
+                      "indexFieldName": bitextFieldName,
                       "gizaIterQty"   : "5",
                       "probSelfTran"  : probSelfTran,
                       "lambda"        : lamb,
@@ -69,13 +69,13 @@ class ExtrJsonGEN:
     paramArr.append((0.9, 0.0, 1e-4))
 
     for probSelfTran, lamb, minModel1Prob in paramArr:
-      fid = f'bm25={textFieldName}+model1={textUlemmFieldName}+lambda=%g+probSelfTran=%g+minTranProb=%g' % (
+      fid = f'bm25={textFieldName}+model1={bitextFieldName}+lambda=%g+probSelfTran=%g+minTranProb=%g' % (
             lamb, probSelfTran, minModel1Prob)
 
       extrList = [{
         "type": "Model1Similarity",
         "params": {
-          "indexFieldName": textUlemmFieldName,
+          "indexFieldName": bitextFieldName,
           "gizaIterQty": "5",
           "probSelfTran": str(probSelfTran) + "f",  # for float in Java
           "lambda": lamb,
@@ -87,7 +87,7 @@ class ExtrJsonGEN:
       extrList.append({
         "type": "TFIDFSimilarity",
         "params": {
-          "indexFieldName": textUlemmFieldName,
+          "indexFieldName": bitextFieldName,
           "similType": "bm25",
           "k1": self.k1,
           "b": self.b
@@ -97,10 +97,27 @@ class ExtrJsonGEN:
       self.paramConf.append( (fid, {"extractors": extrList}) )
 
 
-parser = ParserWithBM25Coeff('Model1 tuning param generator')
+class ParserWithModel1Coeff(BaseParser):
+  def initAddArgs(self):
+    self.parser.add_argument('--b', metavar='BM25 b',
+                        help='BM25 parameter b',
+                        type=int, required=True)
+    self.parser.add_argument('--k1', metavar='BM25 k1',
+                             help='BM25 parameter b',
+                             type=int, required=True)
+    self.parser.add_argument('--field_name',
+                             metavar='BITEXT field name',
+                             help='a field for BITEXT data', required=True)
+
+  def __init__(self, progName):
+    super().__init__(progName)
+
+parser = ParserWithModel1Coeff('Model1 tuning param generator')
 parser.parseArgs()
 args = parser.getArgs()
-genRerankDescriptors(args, ExtrJsonGEN(k1=args.k1, b=args.b), 'model1tune.json', 'model1tune')
+genRerankDescriptors(args,
+                     ExtrModel1JsonGEN(k1=args.k1, b=args.b, bitextFieldName=args.field_name),
+                     'model1tune.json', 'model1tune')
 
 
 
