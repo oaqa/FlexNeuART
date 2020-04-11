@@ -115,9 +115,10 @@ class ParserWithModel1Coeff(BaseParser):
 parser = ParserWithModel1Coeff('Model1 tuning param generator')
 parser.parseArgs()
 args = parser.getArgs()
+fieldName = args.field_name
 genRerankDescriptors(args,
-                     ExtrModel1JsonGEN(k1=args.k1, b=args.b, bitextFieldName=args.field_name),
-                     'model1tune.json', 'model1tune')
+                     ExtrModel1JsonGEN(k1=args.k1, b=args.b, bitextFieldName=fieldName),
+                     f'model1tune_{fieldName}.json', 'model1tune')
 
 
 
