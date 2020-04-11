@@ -101,10 +101,10 @@ class ParserWithModel1Coeff(BaseParser):
   def initAddArgs(self):
     self.parser.add_argument('-b', metavar='BM25 b',
                         help='BM25 parameter b',
-                        type=int, required=True)
+                        type=float, required=True)
     self.parser.add_argument('-k1', metavar='BM25 k1',
                              help='BM25 parameter b',
-                             type=int, required=True)
+                             type=float, required=True)
     self.parser.add_argument('--field_name',
                              metavar='BITEXT field name',
                              help='a field for BITEXT data', required=True)
