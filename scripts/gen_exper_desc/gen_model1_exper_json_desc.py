@@ -118,7 +118,7 @@ args = parser.getArgs()
 fieldName = args.field_name
 genRerankDescriptors(args,
                      ExtrModel1JsonGEN(k1=args.k1, b=args.b, bitextFieldName=fieldName),
-                     f'model1tune_{fieldName}.json', 'model1tune')
+                     f'model1tune_{fieldName}.json', 'model1tune_{fieldName}')
 
 
 
