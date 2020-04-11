@@ -97,12 +97,12 @@ class ExtrModel1JsonGEN:
       self.paramConf.append( (fid, {"extractors": extrList}) )
 
 
-class ParserWithModel1Coeff(BaseParser):
+class ParserWithModel1Coeff(ParserWithBM25Coeff):
   def initAddArgs(self):
-    self.parser.add_argument('--b', metavar='BM25 b',
+    self.parser.add_argument('-b', metavar='BM25 b',
                         help='BM25 parameter b',
                         type=int, required=True)
-    self.parser.add_argument('--k1', metavar='BM25 k1',
+    self.parser.add_argument('-k1', metavar='BM25 k1',
                              help='BM25 parameter b',
                              type=int, required=True)
     self.parser.add_argument('--field_name',

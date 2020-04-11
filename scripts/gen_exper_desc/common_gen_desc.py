@@ -46,19 +46,6 @@ class BaseParser:
     print(self.args)
 
 
-class ParserWithBM25Coeff(BaseParser):
-  def initAddArgs(self):
-    self.parser.add_argument('--b', metavar='BM25 b',
-                        help='BM25 parameter b',
-                        type=int, required=True)
-    self.parser.add_argument('--k1', metavar='BM25 k1',
-                             help='BM25 parameter b',
-                             type=int, required=True)
-
-  def __init__(self, progName):
-    super().__init__(progName)
-
-
 def genRerankDescriptors(args, extrJsonGenFunc, jsonDescName, jsonSubDir):
   """
   A generic function to write a bunch of experimental descrptors (for the re-ranking only scenario).

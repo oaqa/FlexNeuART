@@ -289,6 +289,6 @@ def addRetokenizedField(dataEntry,
   if tokenizer is not None:
     dst = ''
     if srcField in dataEntry:
-      dst = getRetokenized(dataEntry[srcField])
+      dst = getRetokenized(tokenizer, dataEntry[srcField])
 
     dataEntry[dstField] = dst
