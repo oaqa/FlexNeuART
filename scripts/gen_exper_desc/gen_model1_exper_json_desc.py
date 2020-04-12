@@ -32,7 +32,7 @@ class ExtrModel1JsonGEN:
 
     paramArr.append((0.9, 0.01))
     paramArr.append((0.9, 0.001))
-    paramArr.append((0.9, 0.0))
+    paramArr.append((0.9, 0.0001))
 
     for probSelfTran, lamb in paramArr:
 
