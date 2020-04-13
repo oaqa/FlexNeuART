@@ -200,6 +200,16 @@ scripts/giza/filter_tran_table_and_voc.sh \
   $top_word_qty
 ```
 
+and
+
+```
+scripts/giza/filter_tran_table_and_voc.sh \
+  manner \
+  text_bert_tok \
+  $min_tran_prob \
+  $top_word_qty
+```
+
 
 # Running basic experiments
 ## Generate descriptors to tune BM25

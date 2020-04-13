@@ -2,7 +2,7 @@
 threadQty=1
 
 checkVarNonEmpty "DEV1_SUBDIR"
-checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
+checkVarNonEmpty "BITEXT_SUBDIR"
 
 sampleNegQty=10
 candTrainQty=500
@@ -68,7 +68,7 @@ if [ "$indexFieldName" = "" ] ; then
 fi
 partTrain=${POS_ARGS[2]}
 if [ "$partTrain" = "" ] ; then
-  echo "Specify the training sub-dir, e.g., $BITEXT_TRAIN_SUBDIR (3d positional arg)"
+  echo "Specify the training sub-dir, e.g., $DEFAULT_TRAIN_SUBDIR (3d positional arg)"
   exit 1
 fi
 partTest=${POS_ARGS[3]}

@@ -23,9 +23,9 @@ scripts/qa/check_split_queries.sh \
   msmarco_doc dev dev1 dev2
 
 scripts/data_convert/split_queries.sh \
-  msmarco_doc train train1 train_bitext -part1_qty 10000
+  msmarco_doc train train1 bitext -part1_qty 10000
 scripts/qa/check_split_queries.sh   \
-  msmarco_doc train train1 train_bitext
+  msmarco_doc train train1 bitext
 ```
 
 
@@ -38,6 +38,6 @@ scripts/index/create_lucene_index.sh msmarco_doc
 Create a forward index:
 ```
 scripts/index/create_fwd_index.sh msmarco_doc mapdb \
-  'title:parsedBOW text:parsedText body:parsedText text_raw:raw'
+  'title:parsedBOW text:parsedText body:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
  

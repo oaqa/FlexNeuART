@@ -20,7 +20,7 @@ COLLECT_ROOT="collections"
 #             $DEV_SUBDIR (optional)
 #             $DEV1_SUBDIR (optional)
 #             $DEV2_SUBDIR (optional)
-#             $BITEXT_TRAIN_SUBDIR (optional, can also be created using
+#             $BITEXT_SUBDIR (optional, can also be created using
 #                                   scripts/data_convert/split_train4bitext.sh
 #                                   from the train subdir data)
 #
@@ -64,7 +64,6 @@ DEFAULT_TRAIN_SUBDIR="train" # This only a default that can be overriden
 DEV_SUBDIR="dev"
 DEV1_SUBDIR="dev1"
 DEV2_SUBDIR="dev2"
-BITEXT_TRAIN_SUBDIR="bitext"
 
 # A directory with data for BERT LM fine-tuning
 LM_FINETUNE_SUBDIR="lm_finetune_data"

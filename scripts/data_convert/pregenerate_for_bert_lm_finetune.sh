@@ -6,7 +6,7 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "LM_FINETUNE_SUBDIR"
-checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
+checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "LM_FINETUNE_SET_PREF"
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
@@ -21,7 +21,7 @@ fi
 
 part=$2
 if [ "$part" = "" ] ; then
-  echo "Specify a part to be used (1st arg), e.g., $BITEXT_TRAIN_SUBDIR"
+  echo "Specify a part to be used (1st arg), e.g., $BITEXT_SUBDIR"
   exit 1
 fi
 

@@ -32,7 +32,7 @@ fi
 
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  genUsage "$usageMain" "$SAMPLE_COLLECT_ARG (1st arg)"
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 

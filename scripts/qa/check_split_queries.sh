@@ -19,25 +19,25 @@ fi
 
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  genUsage "$usageMain" "$SAMPLE_COLLECT_ARG (1st arg)"
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 
 inputSubdir=${posArgs[1]}
 if [ "$inputSubdir" = "" ] ; then
-  genUsage "$usageMain" "input subdir (2d arg)"
+  genUsage "$usageMain" "Specify input subdir (2d arg)"
   exit 1
 fi
 
 outSubdir1=${posArgs[2]}
 if [ "$outSubdir1" = "" ] ; then
-  genUsage "$usageMain" "1st output subdir (3d arg)"
+  genUsage "$usageMain" "Specify 1st output subdir (3d arg)"
   exit 1
 fi
 
 outSubdir2=${posArgs[3]}
 if [ "$outSubdir1" = "" ] ; then
-  genUsage "$usageMain" "1st output subdir (4th arg)"
+  genUsage "$usageMain" "Specify 1st output subdir (4th arg)"
   exit 1
 fi
 

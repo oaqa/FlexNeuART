@@ -17,7 +17,6 @@ checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-checkVarNonEmpty "BITEXT_TRAIN_SUBDIR"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
@@ -65,7 +64,7 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-partPref=$inputDataDir/$BITEXT_TRAIN_SUBDIR
+partPref=$inputDataDir/$BITEXT_SUBDIR
 
 target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
                                   -embed_dir $embedDir \
