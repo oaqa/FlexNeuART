@@ -24,7 +24,7 @@ indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 
 if [ ! -d "$outDir" ] ; then
-  mkdir "$outDir"
+  mkdir -p "$outDir"
 fi
 
 field=$2
