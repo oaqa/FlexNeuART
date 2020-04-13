@@ -39,7 +39,7 @@ rm -rf $COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR/
 scripts/index/create_lucene_index.sh $collect
 
 scripts/index/create_fwd_index.sh \
-  $COLLECT_ROOT mapdb \
+  $collect mapdb \
   'text:parsedBOW text_unlemm:parsedText text_bert_tok:parsedText text_raw:raw'
 
 
@@ -58,7 +58,7 @@ for fieldName in text_unlemm text_bert_tok ; do
 
   scripts/giza/create_tran.sh \
     $collect \
-    fieldName \
+    $fieldName \
     "$mgizaDir"
 
   scripts/giza/filter_tran_table_and_voc.sh \

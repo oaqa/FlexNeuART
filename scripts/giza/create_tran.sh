@@ -37,7 +37,6 @@ checkVarNonEmpty "GIZA_ITER_QTY"
 checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-checkVarNonEmpty "GIZA_ITER_QTY"
 
 export source_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
 export target_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
@@ -72,6 +71,8 @@ check "cd $target_dir"
 full_target_dir="$PWD"
 cd -
 
+set pipefile
+
 echo "Full target dir: $full_target_dir"
 
 # Note that answers are the source corpus and questions are the target one!
@@ -87,6 +88,8 @@ execAndCheck "scripts/giza/filter_long.py \"${source_dir}/answer_${field}\"   \"
 
 execAndCheck "scripts/giza/run_mgiza.sh \"$mgizaDir\" $dir \"$full_target_dir/source\" \"$full_target_dir/target\" $GIZA_ITER_QTY"
 
-rm `ls $full_target_dir/*|grep -v output.t1.$stepQ|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
+pushd "$full_target_dir/${field}.orig"
+rm `ls *|grep -v output.t1.${GIZA_ITER_QTY}|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
+popd
 
 rm -f $target_dir/source $target_dir/target

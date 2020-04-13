@@ -19,7 +19,7 @@ print(args)
 
 
 vocab=VocabBuilder()
-field = args.field
+field = args.field_name
 
 for fn in args.input:
   for docEntry in tqdm(jsonlGen(fn), desc='Processing: ' + fn):
