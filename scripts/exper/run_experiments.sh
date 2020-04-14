@@ -266,8 +266,8 @@ for ((ivar=1;;++ivar)) ; do
     experDirBase=`getExperDirBase "$collectSubdir" "$testPart" "$experSubdir"`
 
     if [ -d "$experDirBase" ] ; then
-      echo "Experimental directory already exists: $experDirBase"
-      exit 1
+      echo "Experimental directory already exists (ignoring): $experDirBase"
+      continue
     fi
     mkdir -p "$experDirBase"
 

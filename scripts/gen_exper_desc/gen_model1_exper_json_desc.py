@@ -21,7 +21,7 @@ class ExtrModel1JsonGEN:
 
     paramArr = []
 
-    for probSelfTran in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5]:
+    for probSelfTran in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5, 0.55, 0.6, 0.7, 0.75]:
       for lamb in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5]:
         paramArr.append( (probSelfTran, lamb))
 
