@@ -64,7 +64,7 @@ class ExtrBM25JsonGEN:
         testOnly=True
         yield fid, jsonDesc, testOnly, modelRelName 
 
-prefix = f'bm25_{fieldName}'
+prefix = f'bm25tune_{fieldName}'
 genRerankDescriptors(args, ExtrBM25JsonGEN(fieldName),
                      f'{prefix}.json', prefix)
 
