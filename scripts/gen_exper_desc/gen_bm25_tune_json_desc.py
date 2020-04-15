@@ -44,7 +44,7 @@ class ExtrBM25JsonGEN:
         k1 = 0.4 + 0.2 * k1i
         bstr = '%g' % b
         k1str = '%g' % k1
-        fid = 'bm25_k1=%s_b=%s' % (k1str, bstr)
+        fid = 'bm25tune_%s_k1=%s_b=%s' % (fieldName, k1str, bstr)
 
         jsonDesc = {
                     "extractors" : [
