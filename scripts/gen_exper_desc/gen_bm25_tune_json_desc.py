@@ -12,12 +12,19 @@ MODEL_SRC_PATH='scripts/exper/sample_exper_desc/one_feat.model'
 MODEL_DST_REL_PATH='models'
 MODEL_DST_NAME = 'one_feat.model'
 
-parser = BaseParser('BM25 tuning param generator')
+class ParserBM25Coeff(BaseParser):
+  def initAddArgs(self):
+    self.parser.add_argument('--field_name',
+                             metavar='BM25 field name',
+                             help='a field for BM25 score', required=True)
+
+parser = ParserBM25Coeff('BM25 tuning param generator')
 parser.parseArgs()
 
 args = parser.getArgs()
 args_var = vars(args)
 
+fieldName = args.field_name
 outdir = args_var[OUT_DIR_PARAM]
 outModelDir = os.path.join(outdir, MODEL_DST_REL_PATH)
 if not os.path.exists(outModelDir):
@@ -57,8 +64,8 @@ class ExtrBM25JsonGEN:
         testOnly=True
         yield fid, jsonDesc, testOnly, modelRelName 
 
-
-genRerankDescriptors(args, ExtrBM25JsonGEN(TEXT_FIELD_NAME),
-                     'bm25tune.json', 'bm25tune')
+prefix = f'bm25_{fieldName}'
+genRerankDescriptors(args, ExtrBM25JsonGEN(fieldName),
+                     f'{prefix}.json', prefix)
 
 
