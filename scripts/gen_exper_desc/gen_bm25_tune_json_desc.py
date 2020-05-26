@@ -38,16 +38,15 @@ shutil.copyfile(MODEL_SRC_PATH, os.path.join(outModelDir, MODEL_DST_NAME))
 modelRelName = os.path.join(args_var[REL_DESC_PATH_PARAM], MODEL_DST_REL_PATH, MODEL_DST_NAME)
 
 fieldNameDesc = indexFieldName
-if queryFieldName is not None:
-    fileNameDesc = '%s_%s' % (queryFieldName, indexFieldName)
+if queryFieldName is None:
+  queryFieldName = indexFieldName
+
+fileNameDesc = '%s_%s' % (queryFieldName, indexFieldName)
 
 class ExtrBM25JsonGEN:
   def __init__(self, indexFieldName, queryFieldName):
     self.indexFieldName = indexFieldName
     self.queryFieldName = queryFieldName
-    if self.queryFieldName is None:
-        self.queryFieldName = self.indexFieldName
-
 
   def __call__(self):
 
