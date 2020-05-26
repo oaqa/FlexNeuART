@@ -61,8 +61,8 @@ class ExtrBM25JsonGEN:
                     {
                       "type" : "TFIDFSimilarity",
                       "params" : {
-                        "indexFieldName" : self.indexFieldName,
                         "queryFieldName": self.queryFieldName,
+                        "indexFieldName" : self.indexFieldName,
                         "similType" : "bm25",
                         "k1"        : k1str,
                         "b"         : bstr
