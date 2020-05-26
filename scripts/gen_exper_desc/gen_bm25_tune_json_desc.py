@@ -37,11 +37,9 @@ shutil.copyfile(MODEL_SRC_PATH, os.path.join(outModelDir, MODEL_DST_NAME))
 
 modelRelName = os.path.join(args_var[REL_DESC_PATH_PARAM], MODEL_DST_REL_PATH, MODEL_DST_NAME)
 
-fieldNameDesc = indexFieldName
 if queryFieldName is None:
   queryFieldName = indexFieldName
 
-fileNameDesc = '%s_%s' % (queryFieldName, indexFieldName)
 
 class ExtrBM25JsonGEN:
   def __init__(self, indexFieldName, queryFieldName):
@@ -56,7 +54,7 @@ class ExtrBM25JsonGEN:
         k1 = 0.4 + 0.2 * k1i
         bstr = '%g' % b
         k1str = '%g' % k1
-        fid = 'bm25tune_%s_k1=%s_b=%s' % (fieldNameDesc, k1str, bstr)
+        fid = 'bm25tune_k1=%s_b=%s' % (k1str, bstr)
 
         jsonDesc = {
                     "extractors" : [
@@ -77,6 +75,7 @@ class ExtrBM25JsonGEN:
         testOnly=True
         yield fid, jsonDesc, testOnly, modelRelName 
 
+fileNameDesc = '%s_%s' % (queryFieldName, indexFieldName)
 prefix = f'bm25tune_{fileNameDesc}'
 genRerankDescriptors(args, ExtrBM25JsonGEN(indexFieldName, queryFieldName),
                      f'{prefix}.json', prefix)

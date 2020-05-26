@@ -67,7 +67,7 @@ def genRerankDescriptors(args, extrJsonGenFunc, jsonDescName, jsonSubDir):
   for fileId, jsonDesc, testOnly, modelFinal in extrJsonGenFunc():
     jsonFileName = fileId + '.json'
 
-    desc = {EXPER_SUBDIR_PARAM: os.path.join(args.exper_subdir, fileId),
+    desc = {EXPER_SUBDIR_PARAM: os.path.join(args.exper_subdir, jsonSubDir, fileId),
             EXTR_TYPE_PARAM: os.path.join(args_var[REL_DESC_PATH_PARAM], jsonSubDir, jsonFileName),
             TEST_ONLY_PARAM: int(testOnly)}
     if modelFinal is not None:
