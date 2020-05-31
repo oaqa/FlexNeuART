@@ -15,18 +15,6 @@ scripts/data_convert/msmarco_adhoc/convert_msmarco_doc.sh \
   collections/msmarco_doc/input_raw  \
   msmarco_doc
 ```
-## Optionally splitting the train and development parts
-```
-scripts/data_convert/split_queries.sh \
-  msmarco_doc dev dev1 dev2 -part1_qty 3000
-scripts/qa/check_split_queries.sh \
-  msmarco_doc dev dev1 dev2
-
-scripts/data_convert/split_queries.sh \
-  msmarco_doc train train1 bitext -part1_qty 10000
-scripts/qa/check_split_queries.sh   \
-  msmarco_doc train train1 bitext
-```
 
 
 ## Indexing
@@ -40,4 +28,15 @@ Create a forward index:
 scripts/index/create_fwd_index.sh msmarco_doc mapdb \
   'title:parsedBOW text:parsedText body:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
- 
+ ## Optionally splitting the train and development parts
+```
+scripts/data_convert/split_queries.sh \
+  msmarco_doc dev dev1 dev2 -part1_qty 3000
+scripts/qa/check_split_queries.sh \
+  msmarco_doc dev dev1 dev2
+
+scripts/data_convert/split_queries.sh \
+  msmarco_doc train train1 bitext -part1_qty 10000
+scripts/qa/check_split_queries.sh   \
+  msmarco_doc train train1 bitext
+```

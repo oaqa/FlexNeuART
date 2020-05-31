@@ -21,7 +21,7 @@ class ExtrModel1JsonGEN:
 
     paramArr = []
 
-    for probSelfTran in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5]:
+    for probSelfTran in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5, 0.55, 0.6, 0.7, 0.75]:
       for lamb in [0.05, 0.1, 0.15, 0.25, 0.3, 0.35, 0.45, 0.5]:
         paramArr.append( (probSelfTran, lamb))
 
@@ -63,10 +63,10 @@ class ExtrModel1JsonGEN:
       self.paramConf.append( (fid, {"extractors": extrList}) )
 
     paramArr = []
-    paramArr.append((0.9, 0.0, 1e-3))
-    paramArr.append((0.9, 0.0, 5e-4))
-    paramArr.append((0.9, 0.0, 2.5e-4))
-    paramArr.append((0.9, 0.0, 1e-4))
+    paramArr.append((0.9, 0.00001, 1e-3))
+    paramArr.append((0.9, 0.00001, 1e-4))
+    paramArr.append((0.9, 0.00001, 5e-4))
+    paramArr.append((0.9, 0.00001, 2.5e-4))
 
     for probSelfTran, lamb, minModel1Prob in paramArr:
       fid = f'bm25={textFieldName}+model1={bitextFieldName}+lambda=%g+probSelfTran=%g+minTranProb=%g' % (
