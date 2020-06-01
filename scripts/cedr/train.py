@@ -113,7 +113,7 @@ def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, 
 
 def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pairs, qrels):
 
-    clean_memory(train_pairs.device_name)
+    clean_memory(train_params.device_name)
 
     model.train()
     total_loss = 0.
