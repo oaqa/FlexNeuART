@@ -180,7 +180,7 @@ def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
 
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
-    clean_memory()
+    clean_memory(train_params.device_name)
     with torch.no_grad(), tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
         for records in data.iter_valid_records(model,
@@ -286,7 +286,7 @@ def main_cli():
                          batches_per_train_epoch=args.batches_per_train_epoch,
                          batch_size=args.batch_size, batch_size_val=args.batch_size_val,
                          max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
-                         epoch_qty=args.epoch_qty, device_name=args.device_name,
+                         epoch_qty=args.epoch_qty, device_name=device_name,
                          use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                          print_grads=args.print_grads,
                          shuffle_train=not args.no_shuffle_train)
