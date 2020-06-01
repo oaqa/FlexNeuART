@@ -11,6 +11,8 @@ import gc
 import sys
 import argparse
 
+DEVICE_CPU = 'cpu'
+
 sys.path.append('scripts')
 
 import torch
@@ -61,7 +63,8 @@ TrainParams = namedtuple('TrainParams',
                      'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
                      'backprop_batch_size',
-                     'epoch_qty', 'no_cuda', 'print_grads',
+                     'epoch_qty',
+                     'device_name', 'print_grads',
                      'shuffle_train',
                      'use_external_eval', 'eval_metric'])
 
@@ -74,9 +77,12 @@ MODEL_MAP = {
 }
 
 
-def clean_memory():
-  gc.collect()
-  torch.cuda.empty_cache()
+def clean_memory(device_name):
+    print('Clearning memory device:', device_name)
+    gc.collect()
+    if device_name != DEVICE_CPU:
+        with torch.cuda.device(device_name):
+            torch.cuda.empty_cache()
 
 def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, qrelf, model_out_dir):
     lr = train_params.init_lr
@@ -107,7 +113,7 @@ def main(model, loss_obj, train_params, dataset, train_pairs, qrels, valid_run, 
 
 def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pairs, qrels):
 
-    clean_memory()
+    clean_memory(train_pairs.device_name)
 
     model.train()
     total_loss = 0.
@@ -126,7 +132,7 @@ def train_iteration(model, loss_obj, train_params, optimizer, dataset, train_pai
         print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
 
     with tqdm('training', total=max_train_qty, ncols=80, desc='train', leave=False) as pbar:
-        for record in data.iter_train_pairs(model, train_params.no_cuda, dataset, train_pairs, train_params.shuffle_train,
+        for record in data.iter_train_pairs(model, train_params.device_name, dataset, train_pairs, train_params.shuffle_train,
                                             qrels, train_params.backprop_batch_size,
                                             train_params.max_query_len, train_params.max_doc_len):
             scores = model(record['query_tok'],
@@ -178,7 +184,7 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
     with torch.no_grad(), tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
         model.eval()
         for records in data.iter_valid_records(model,
-                                               train_params.no_cuda,
+                                               train_params.device_name,
                                                dataset, orig_run,
                                                train_params.batch_size_val,
                                                train_params.max_query_len, train_params.max_doc_len):
@@ -215,6 +221,8 @@ def main_cli():
     parser.add_argument('--epoch_qty', metavar='# of epochs', help='# of epochs',
                         type=int, default=10)
     parser.add_argument('--no_cuda', action='store_true')
+    parser.add_argument('--device_name', metavar='CUDA device name', default='cuda:0',
+                        help='The name of the CUDA device to use (ignored if --no_cuda is set)')
     parser.add_argument('--print_grads', action='store_true')
     parser.add_argument('--seed', metavar='random seed', help='random seed',
                         type=int, default=42)
@@ -269,12 +277,16 @@ def main_cli():
     else:
       raise Exception('Unsupported loss: ' + loss_name)
 
+    device_name = args.device_name
+    if args.no_cuda:
+        device_name = DEVICE_CPU
+
     train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr, epoch_lr_decay=args.epoch_lr_decay,
                          backprop_batch_size=args.backprop_batch_size,
                          batches_per_train_epoch=args.batches_per_train_epoch,
                          batch_size=args.batch_size, batch_size_val=args.batch_size_val,
                          max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
-                         epoch_qty=args.epoch_qty, no_cuda=args.no_cuda,
+                         epoch_qty=args.epoch_qty, device_name=args.device_name,
                          use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                          print_grads=args.print_grads,
                          shuffle_train=not args.no_shuffle_train)
@@ -282,11 +294,12 @@ def main_cli():
     print('Training parameters:')
     print(train_params)
     print('Loss function:', loss_obj.name())
+    print('Device name:', device_name)
 
     model = MODEL_MAP[args.model]()
     model.set_grad_checkpoint_param(args.grad_checkpoint_param)
-    if not args.no_cuda:
-        model = model.cuda()
+
+    model.to(device_name)
     dataset = data.read_datafiles(args.datafiles)
     qrels = readQrelsDict(args.qrels.name)
     train_pairs = data.read_pairs_dict(args.train_pairs)

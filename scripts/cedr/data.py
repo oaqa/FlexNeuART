@@ -43,7 +43,7 @@ def read_pairs_dict(file):
     return result
 
 
-def iter_train_pairs(model, no_cuda, dataset, train_pairs, do_shuffle, qrels,
+def iter_train_pairs(model, device_name, dataset, train_pairs, do_shuffle, qrels,
                      batch_size, max_query_len, max_doc_len):
     batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
     for qid, did, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
@@ -52,7 +52,7 @@ def iter_train_pairs(model, no_cuda, dataset, train_pairs, do_shuffle, qrels,
         batch['query_tok'].append(query_tok)
         batch['doc_tok'].append(doc_tok)
         if len(batch['query_id']) // 2 == batch_size:
-            yield _pack_n_ship(batch, no_cuda, max_query_len, max_doc_len)
+            yield _pack_n_ship(batch, device_name, max_query_len, max_doc_len)
             batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
 
 
@@ -89,7 +89,7 @@ def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
             yield qid, neg_id, query_tok, model.tokenize(neg_doc)
 
 
-def iter_valid_records(model, no_cuda, dataset, run,
+def iter_valid_records(model, device_name, dataset, run,
                        batch_size, max_query_len, max_doc_len):
     batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
     for qid, did, query_tok, doc_tok in _iter_valid_records(model, dataset, run):
@@ -98,11 +98,11 @@ def iter_valid_records(model, no_cuda, dataset, run,
         batch['query_tok'].append(query_tok)
         batch['doc_tok'].append(doc_tok)
         if len(batch['query_id']) == batch_size:
-            yield _pack_n_ship(batch, no_cuda, max_query_len, max_doc_len)
+            yield _pack_n_ship(batch, device_name, max_query_len, max_doc_len)
             batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
     # final batch
     if len(batch['query_id']) > 0:
-        yield _pack_n_ship(batch, no_cuda, max_query_len, max_doc_len)
+        yield _pack_n_ship(batch, device_name, max_query_len, max_doc_len)
 
 
 def _iter_valid_records(model, dataset, run):
@@ -118,19 +118,19 @@ def _iter_valid_records(model, dataset, run):
             yield qid, did, query_tok, doc_tok
 
 
-def _pack_n_ship(batch, no_cuda, max_query_len, max_doc_len):
+def _pack_n_ship(batch, device_name, max_query_len, max_doc_len):
     dlen = min(max_doc_len, max(len(b) for b in batch['doc_tok']))
     return {
         'query_id': batch['query_id'],
         'doc_id': batch['doc_id'],
-        'query_tok': _pad_crop(no_cuda, batch['query_tok'], max_query_len),
-        'doc_tok': _pad_crop(no_cuda, batch['doc_tok'], dlen),
-        'query_mask': _mask(no_cuda, batch['query_tok'], max_query_len),
-        'doc_mask': _mask(no_cuda, batch['doc_tok'], dlen),
+        'query_tok': _pad_crop(device_name, batch['query_tok'], max_query_len),
+        'doc_tok': _pad_crop(device_name, batch['doc_tok'], dlen),
+        'query_mask': _mask(device_name, batch['query_tok'], max_query_len),
+        'doc_mask': _mask(device_name, batch['doc_tok'], dlen),
     }
 
 
-def _pad_crop(no_cuda, items, l):
+def _pad_crop(device_name, items, l):
     result = []
     for item in items:
         if len(item) < l:
@@ -139,12 +139,11 @@ def _pad_crop(no_cuda, items, l):
             item = item[:l]
         result.append(item)
     res = torch.tensor(result).long()
-    if not no_cuda:
-        res = res.cuda()
-    return res
+
+    return res.to(device_name)
 
 
-def _mask(no_cuda, items, l):
+def _mask(device_name, items, l):
     result = []
     for item in items:
         if len(item) < l:
@@ -153,9 +152,8 @@ def _mask(no_cuda, items, l):
             item = [1. for _ in item[:l]]
         result.append(item)
     res = torch.tensor(result).float()
-    if not no_cuda:
-        res = res.cuda()
-    return res
+
+    return res.to(device_name)
 
 
 # Create vocabulary from whilte-spaced text
