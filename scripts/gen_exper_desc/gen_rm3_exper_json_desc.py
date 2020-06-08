@@ -15,43 +15,6 @@ MODEL_SRC_PATH='scripts/exper/sample_exper_desc/one_feat.model'
 MODEL_DST_REL_PATH='models'
 MODEL_DST_NAME = 'one_feat.model'
 
-class ExtrRM3GEN:
-  def __call__(self):
-    testOnly=True
-    for fid, extrType in self.paramConf:
-      yield fid, extrType, testOnly, None
-
-  def __init__(self, k1, b, indexFieldName, queryFieldName):
-    self.paramConf = []
-
-    paramArr = []
-
-    for origWeight in [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-      for topDocQty in [1, 2, 4, 8, 16]:
-        for topTermQty in [1, 2, 4, 8, 16]:
-          paramArr.append( (origWeight, topDocQty, topTermQty))
-
-
-    for origWeight, topDocQty, topTermQty in paramArr:
-      bstr = '%g' % b
-      k1str = '%g' % k1
-      fid = f'rm3={indexFieldName}+{queryFieldName}_origWeight={origWeight}_topDocQty={topDocQty}_topTermQty={topTermQty}_k1={k1str}_{bstr}'
-
-      extrList = [{
-                "type": "RM3Similarity",
-                "params": {
-                    "queryFieldName": queryFieldName,
-                    "indexFieldName" : indexFieldName,
-                    "k1"        : k1str,
-                    "b"         : bstr,
-                    "origWeight": origWeight,
-                    "topDocQty" : topDocQty,
-                    "topTermQty": topTermQty
-                }}]
-
-      self.paramConf.append( (fid, {"extractors": extrList}) )
-
-
 class ParserRM3Coeff(BaseParser):
   def initAddArgs(self):
     self.parser.add_argument('-b', metavar='BM25 b',
@@ -84,6 +47,42 @@ if not os.path.exists(outModelDir):
 shutil.copyfile(MODEL_SRC_PATH, os.path.join(outModelDir, MODEL_DST_NAME))
 
 modelRelName = os.path.join(args_var[REL_DESC_PATH_PARAM], MODEL_DST_REL_PATH, MODEL_DST_NAME)
+
+class ExtrRM3GEN:
+  def __call__(self):
+    testOnly=True
+    for fid, extrType in self.paramConf:
+      yield fid, extrType, testOnly, modelRelName
+
+  def __init__(self, k1, b, indexFieldName, queryFieldName):
+    self.paramConf = []
+
+    paramArr = []
+
+    for origWeight in [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+      for topDocQty in [1, 2, 4, 8, 16]:
+        for topTermQty in [1, 2, 4, 8, 16]:
+          paramArr.append( (origWeight, topDocQty, topTermQty))
+
+
+    for origWeight, topDocQty, topTermQty in paramArr:
+      bstr = '%g' % b
+      k1str = '%g' % k1
+      fid = f'rm3={indexFieldName}+{queryFieldName}_origWeight={origWeight}_topDocQty={topDocQty}_topTermQty={topTermQty}_k1={k1str}_{bstr}'
+
+      extrList = [{
+                "type": "RM3Similarity",
+                "params": {
+                    "queryFieldName": queryFieldName,
+                    "indexFieldName" : indexFieldName,
+                    "k1"        : k1str,
+                    "b"         : bstr,
+                    "origWeight": origWeight,
+                    "topDocQty" : topDocQty,
+                    "topTermQty": topTermQty
+                }}]
+
+      self.paramConf.append( (fid, {"extractors": extrList}) )
 
 if queryFieldName is None:
   queryFieldName = indexFieldName
