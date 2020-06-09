@@ -17,7 +17,6 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
@@ -33,9 +32,6 @@ import no.uib.cipr.matrix.DenseVector;
  * largely as described in 
  * Condensed List Relevance Models, Fernando Diaz, ICTIR 2015.
  * but with a BM25 scorer instead of the QL.
- * However, the paper might have an error in Eq. (4), b/c
- * it seems that the first term should be one summand
- * from Eq. (2).
  * 
  * @author Leonid Boytsov
  *
@@ -46,6 +42,8 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
   public static String TOP_DOC_QTY_PARAM = "topDocQty";
   public static String TOP_TERM_QTY_PARAM = "topTermQty";
   public static String ORIG_WEIGHT_PARAM = "origWeight";
+  
+  public static Boolean DEBUG_PRINT = false;
 
   public FeatExtractorRM3Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);
@@ -71,60 +69,112 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
 
   @Override
   public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData) throws Exception {
-    float zNorm = 0;
+    
     int docQty = arrDocIds.size();
     DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
-    HashSet<String> topTerms = new HashSet<String>();
-    ArrayList<IdValPair> topDocTerms = new ArrayList<IdValPair>();
-    for (int i = 0; i < Math.min(mTopDocQty, docQty); ++i) {
+    HashMap<Integer, Float>     topTerms = new HashMap<Integer, Float>();
+    ArrayList<IdValPair>        topDocTerms = new ArrayList<IdValPair>();
+    ArrayList<DocEntryParsed>   queryDocEntries = new ArrayList<DocEntryParsed>();
+    ArrayList<Float>            topDocScore = new ArrayList<Float>();
+    
+    if (DEBUG_PRINT) {
+      System.out.println("==========");
+      for (int qid : queryEntry.mWordIds) {
+        if (qid >= 0) {
+          System.out.println(mFieldIndex.getWord(qid));
+        }
+      }
+    }
+    
+    int topQty = Math.min(mTopDocQty, docQty);
+    
+    float topDocScoreNorm = 0;
+    for (int i = 0; i < docQty; ++i) {
       String docId = arrDocIds.get(i);
       DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
       
       if (docEntry == null) {
         throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
       }
+      queryDocEntries.add(docEntry);
       
-      // 1. Update normalization constant
-      zNorm += mSimilObj.compute(queryEntry, docEntry);
+      if (i < topQty) {
+        // Compute and memorize a document score with respect to the query
+        float score = mSimilObj.compute(queryEntry, docEntry);
+        topDocScore.add(score);
+        // Update the normalization constant
+        topDocScoreNorm += score;
+      }
+    }
+    float invTopDocScoreNorm = (float) (1.0/Math.max(topDocScoreNorm, 1e-9));
+    if (DEBUG_PRINT) 
+      System.out.println(String.format("!!!! %f %f", topDocScoreNorm, invTopDocScoreNorm));
+    
+    for (int i = 0; i < topQty; ++i) {
+      DocEntryParsed docEntry = queryDocEntries.get(i);
+          
+      float queryWeight = topDocScore.get(i);
+      
       // 2. Extract top terms.
       topDocTerms.clear();
       for (int iDoc = 0; iDoc < docEntry.mWordIds.length; ++iDoc) {
         int wordId = docEntry.mWordIds[iDoc];
-        float score = mSimilObj.getDocTermScore(docEntry, iDoc);
-        topDocTerms.add(new IdValPair(wordId, score));
-      }
-      topDocTerms.sort(mScoreSorter);
-      for (int k = 0; k < Math.min(mTopTermQty, topDocTerms.size()); ++k) {
-        topTerms.add(mFieldIndex.getWord(topDocTerms.get(k).mId));
+        float termScore = queryWeight * invTopDocScoreNorm * mSimilObj.getDocTermScore(docEntry, iDoc);
+        topDocTerms.add(new IdValPair(wordId, termScore));
       }
     }
+    
+    topDocTerms.sort(mScoreSorter);
+    float topDocTermNorm = 0;
+    for (int k = 0; k < Math.min(topDocTerms.size(), mTopTermQty); ++k) {
+      IdValPair e = topDocTerms.get(k);
+      topDocTermNorm += e.mVal;
+    }
+    float invTopDocTermNorm = (float) (1.0/Math.max(topDocTermNorm, 1e-9));
+    
+    for (int k = 0; k < Math.min(topDocTerms.size(), mTopTermQty); ++k) {
+      IdValPair e = topDocTerms.get(k);
+      
+      float score = e.mVal * invTopDocTermNorm;
+ 
+      if (DEBUG_PRINT) 
+        System.out.println(String.format("%s %g", mFieldIndex.getWord(e.mId), score));
+      
+      topTerms.put(e.mId, score);
+    }
+    
     /*
      * To prevent division by zero if we have no candidate entries or there're no
      * common terms between queries and documents.
      */
-    zNorm = 1.0f / Math.max(zNorm, Float.MIN_NORMAL);
-    
-    String [] topTermWordArr = {};
-    DocEntryParsed queryRM1Entry = mFieldIndex.createDocEntryParsed(topTerms.toArray(topTermWordArr), false);
-    
+    topDocScoreNorm = 1.0f / Math.max(topDocScoreNorm, Float.MIN_NORMAL);
+
     HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty());
     
-    for (String docId : arrDocIds) {
+    for (int i = 0; i < docQty; ++i) {
+      String docId = arrDocIds.get(i);
       DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
-      
-      if (docEntry == null) {
-        throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
-      }
-      
+
       DenseVector v = res.get(docId);
       if (v == null) {
         throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
       }
+            
+      float rm1score = 0;
+      for (int wid : docEntry.mWordIds) {
+        Float termScore = topTerms.get(wid);
+        if (termScore != null) {
+          rm1score += termScore;
+        }
+      }
       
-      float score = mSimilObj.compute(queryEntry, docEntry) * (
-                    mOrigWeight  + (1-mOrigWeight) * zNorm * mSimilObj.compute(queryRM1Entry, docEntry));
+      float origScore =  mSimilObj.compute(queryEntry, docEntry);
+      float finalScore = origScore* mOrigWeight + (1-mOrigWeight) * rm1score;
       
-      v.set(0, score);
+      if (DEBUG_PRINT) 
+        System.out.println(String.format("### %g %g -> %g", origScore, rm1score, finalScore));
+      
+      v.set(0, finalScore);
     }
     
     return res;
