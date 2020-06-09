@@ -32,6 +32,7 @@ import no.uib.cipr.matrix.DenseVector;
  * largely as described in 
  * Condensed List Relevance Models, Fernando Diaz, ICTIR 2015.
  * but with a BM25 scorer instead of the QL.
+ * That is we replace  p(w|D) with BM25 scores. 
  * 
  * @author Leonid Boytsov
  *
@@ -113,17 +114,18 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
     for (int i = 0; i < topQty; ++i) {
       DocEntryParsed docEntry = queryDocEntries.get(i);
           
-      float queryWeight = topDocScore.get(i);
+      float docWeight = topDocScore.get(i);
       
-      // 2. Extract top terms.
+      // Re-weight all terms using relative document weight
       topDocTerms.clear();
       for (int iDoc = 0; iDoc < docEntry.mWordIds.length; ++iDoc) {
         int wordId = docEntry.mWordIds[iDoc];
-        float termScore = queryWeight * invTopDocScoreNorm * mSimilObj.getDocTermScore(docEntry, iDoc);
+        float termScore = docWeight * invTopDocScoreNorm * mSimilObj.getDocTermScore(docEntry, iDoc);
         topDocTerms.add(new IdValPair(wordId, termScore));
       }
     }
     
+    // Extract terms with top weights
     topDocTerms.sort(mScoreSorter);
     float topDocTermNorm = 0;
     for (int k = 0; k < Math.min(topDocTerms.size(), mTopTermQty); ++k) {
