@@ -59,9 +59,9 @@ class ExtrRM3GEN:
 
     paramArr = []
 
-    for origWeight in [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-      for topDocQty in [1, 2, 4, 8, 16]:
-        for topTermQty in [1, 2, 4, 8, 16]:
+    for origWeight in [0.5, 0.6, 0.7, 0.8, 0.9]:
+      for topDocQty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+        for topTermQty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
           paramArr.append( (origWeight, topDocQty, topTermQty))
 
 
