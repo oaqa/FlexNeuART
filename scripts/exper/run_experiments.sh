@@ -233,6 +233,7 @@ jsonParamMap=(\
   cand_prov candProv \
   cand_qty candQty \
   test_cand_qty_list testCandQtyList \
+  use_lmart useLMART \
   num_trees numTrees
 )
 
