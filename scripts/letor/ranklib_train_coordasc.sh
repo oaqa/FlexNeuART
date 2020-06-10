@@ -31,4 +31,4 @@ echo "Train file: '$train_file' Model file: '$model_file' Metric type: $metric_t
 
 java -jar lib/RankLib.jar -train  "${train_file}" -ranker 4  -save "${model_file}" \
      -metric2t $metric_type  -metric2T $metric_type  \
-     -r $rand_rest"
+     -r $rand_rest
