@@ -243,7 +243,6 @@ mkdir -p "$reportDir"
 
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
-checkVarNonEmpty "LUCENE_CACHE_SUBDIR"
 
 checkVarNonEmpty "FAKE_RUN_ID"
 
@@ -277,53 +276,21 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-# We, unfortunately, can reliably use cache only for
-# the default Lucene provider without explicitly specified URI &
-# config file
+# Caching is only marginally useful.
+# However, when enabled it can accidentally screw up things quite a bit 
+queryCacheParamTrain=""
+queryCacheParamTest=""
+
 if [ "$candProvType" = "$CAND_PROV_LUCENE" -a "$candProvURI" = "" ] ; then
 
   candProvURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
 
-  # No caching for explicit config!
-  if [ "$candProvAddConf" = "" ] ; then
-    cacheDir="$COLLECT_ROOT/$collect/$LUCENE_CACHE_SUBDIR"
-
-    if [ ! -d "$cacheDir" ] ; then
-      mkdir -p "$cacheDir"
-    fi
-
-    for part in "$trainPart" "$testPart" ; do
-      if [ "$part" != "" ]; then
-        if [ ! -d "$cacheDir/$part" ] ; then
-          mkdir -p "$cacheDir/$part"
-        fi
-      fi
-    done
-
-    if [ "$testOnly" = "0" ] ; then
-      if [ "$maxQueryQtyTrain" = "" ] ; then
-        cacheFileTrain="$cacheDir/$trainPart/all_queries_$testCandQtyList"
-      else
-        cacheFileTrain="$cacheDir/$trainPart/max_query_qty=${maxQueryQtyTrain}_$testCandQtyList"
-      fi
-      queryCacheParamTrain=" -query_cache_file \"$cacheFileTrain\""
-    fi
-
-    if [ "$maxQueryQtyTest" = "" ] ; then
-      cacheFileTest="$cacheDir/$testPart/all_queries_$testCandQtyList"
-    else
-      cacheFileTest="$cacheDir/$testPart/max_query_qty=${maxQueryQtyTrain}_$testCandQtyList"
-    fi
-    queryCacheParamTest="-query_cache_file \"$cacheFileTest\""
-  fi
 else
   if [ "$candProvURI" = "" ] ; then
     echo "You must specify -cand_prov_uri for the provider $candProvType"
     exit 1
   fi
 
-  queryCacheParamTrain=""
-  queryCacheParamTest=""
 fi
 
 

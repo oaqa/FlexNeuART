@@ -33,7 +33,6 @@ COLLECT_ROOT="collections"
 #
 #         $FWD_INDEX_SUBDIR
 #         $LUCENE_INDEX_SUBDIR
-#         $LUCENE_CACHE_SUBDIR
 #
 
 # Original input data directory
@@ -50,10 +49,6 @@ EXPER_SUBDIR="results"
 # Index directories.
 FWD_INDEX_SUBDIR="forward_index"
 LUCENE_INDEX_SUBDIR="lucene_index"
-# By default training scripts cache candidate
-# documents obtained from Lucene or any other
-# candidate generator to speed up training
-LUCENE_CACHE_SUBDIR="lucene_cache"
 
 # Embeddings are stored within the derived-data sub-directory
 EMBED_SUBDIR="embeddings"
