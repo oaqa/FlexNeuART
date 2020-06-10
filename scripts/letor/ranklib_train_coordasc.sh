@@ -27,11 +27,8 @@ if [ "$metric_type" = "" ] ; then
   exit 1
 fi
 
-norm_type="$5"
-norm=""
-if [ "$norm_type" != "" ] ; then
-  norm="-norm $norm_type"
-fi
-echo "Train file: '$train_file' Model file: '$model_file' Normalization parameter: $norm"
+echo "Train file: '$train_file' Model file: '$model_file' Metric type: $metric_type"
 
-java -jar lib/RankLib.jar -train  "${train_file}" -ranker 4  -metric2t $metric_type -gmax 1 -save "${model_file}" $norm -r $rand_rest
+java -jar lib/RankLib.jar -train  "${train_file}" -ranker 4  -save "${model_file}" \
+     -metric2t $metric_type  -metric2T $metric_type  \
+     -r $rand_rest"

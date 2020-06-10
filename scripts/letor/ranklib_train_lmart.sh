@@ -34,4 +34,6 @@ if [ "$norm_type" != "" ] ; then
 fi
 echo "Train file: '$train_file' Model file: '$model_file' Normalization parameter: $norm"
 
-java -jar lib/RankLib.jar  -train  "${train_file}" -ranker 6 -tree "$tree" -metric2t P@1 -gmax 1 -save "${model_file}" $norm  -metric2t $metric_type  #-kcv 5
+java -jar lib/RankLib.jar  -train  "${train_file}" -ranker 6 -save "${model_file}" \
+     -metric2t $metric_type  -metric2T $metric_type  \
+     -tree "$tree"
