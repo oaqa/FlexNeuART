@@ -5,6 +5,12 @@
 # Be careful when you rename parameter names, certain things
 # are used in Python scripts
 
+# Notes on the number candidates generated
+# 1. if the user doesn't specify the # of candidates explicitly (candQty in JSON), it's set to the maximum # of answers to produce
+# 2. if there's an intermediate re-ranker it re-ranks all retrieved candidates. However, if the number of candidates
+#    is smaller than the maximum number of entries to produce (defined by test_cand_qty_list), then the list of
+#    candidates is truncated *AFTER* being resorted using an intermediate re-ranker.
+
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
