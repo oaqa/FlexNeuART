@@ -288,6 +288,10 @@ for ((ivar=1;;++ivar)) ; do
       paramName=${jsonParamMap[$i]}
       jsonParamName=${jsonParamMap[$(($i+1))]}
       paramVal=`grepFileForVal "$tmpConf" "$jsonParamName"`
+      # useLMART requires special treatment
+      if [ "$paramName" = "use_lmart" -a "$paramVal" != "1" ] ; then
+        paramVal=""
+      fi
       # Overriding the value of the default training set
       if [ "$paramName" = "train_part" -a "$paramVal" = "" ] ; then
         paramVal="$defaultTrainPart"
