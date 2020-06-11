@@ -12,6 +12,9 @@ import pickle
 
 from collections import Counter
 
+DEFAULT_MAX_QUERY_LEN=32
+DEFAULT_MAX_DOC_LEN=512 - DEFAULT_MAX_QUERY_LEN - 4
+
 sys.path.append('scripts')
 
 from common_eval import *

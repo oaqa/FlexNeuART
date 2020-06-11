@@ -237,9 +237,10 @@ def main_cli():
     parser.add_argument('--batch_size', metavar='batch size',
                         type=int, default=32, help='batch size')
     parser.add_argument('--max_query_len', metavar='max. query length',
-                        type=int, default=32, help='max. query length')
+                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
+                        help='max. query length')
     parser.add_argument('--max_doc_len', metavar='max. document length',
-                        type=int, default=2048,
+                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
                         help='max. document length')
     parser.add_argument('--batch_size_val', metavar='val batch size',
                         type=int, default=32, help='validation batch size')
