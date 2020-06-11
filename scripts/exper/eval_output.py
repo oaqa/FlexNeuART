@@ -78,6 +78,7 @@ outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8'
 resGdeval = parseGdevalResults(outputGdeval)
 outputTrecEval = sp.check_output([trecEvalBin,
                                   "-m", "ndcg_cut",
+                                  "-m", "official",
                                   "-q", qrelFile, trecOut]).decode('utf-8').replace('\t', ' ').split('\n')
 resTrecEval = parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK, P20, NDCG10, NDCG20]))
 
@@ -146,8 +147,8 @@ if outPrefix != '':
     fRep.close()
     fTSV = open(outPrefix + '.tsv', 'a')
     fTSV.write(
-        "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Label", "queryQty", "NDCG@10", "NDCG@20", "ERR@20", "P@20", "MAP", "MRR", "Recall"))
-    fTSV.write("%s\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n" % (
+        "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Label", "queryQty", "NDCG@10", "NDCG@20", "ERR@20", "P@20", "MAP", "MRR", "Recall"))
+    fTSV.write("%s\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n" % (
     label, queryQty, overallNDCG10, overallNDCG20, overallERR20, overallP20, overallMAP, overallRecipRank, overallRecall))
     fTSV.close()
 
