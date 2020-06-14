@@ -10,7 +10,7 @@ boolOpts=(\
 )
 
 paramOpts=(\
-"bitext_part" "bitextDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
+"bitext_part" "$bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
 )
 
 parseArguments $@
@@ -22,7 +22,7 @@ if [ "$help" = "1" ] ; then
   exit 1
 fi
 
-if [ "$bitextDir" = "" ] ; then
+if [ "$bitextSubDir" = "" ] ; then
   bitextSubDir=$BITEXT_SUBDIR
 fi
 
