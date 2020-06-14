@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Convert MSMARCO passage collection
 import sys
 import json
 import argparse
