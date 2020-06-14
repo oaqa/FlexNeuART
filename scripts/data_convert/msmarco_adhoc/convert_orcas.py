@@ -66,7 +66,7 @@ for line in inpFile:
     query_toks = query_lemmas.split()
     if len(query_toks) >= minQueryTokQty:
 
-        qrelList.add(QrelEntry(queryId=qid, docId=did, relGrade=1))
+        qrelList.append(QrelEntry(queryId=qid, docId=did, relGrade=1))
 
         # Entries are sorted by the query ID
         if prevQid != qid:
