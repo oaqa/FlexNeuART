@@ -15,7 +15,7 @@ paramOpts=(\
 
 parseArguments $@
 
-usageMain="<collection> <output dir> <index field> <query field> <max query to doc word ratio>"
+usageMain="<collection> <index field> <query field> <max query to doc word ratio>"
 
 if [ "$help" = "1" ] ; then
   genUsage $usageMain
