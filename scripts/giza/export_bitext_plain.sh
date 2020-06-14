@@ -74,7 +74,7 @@ fi
 echo "=========================================================================="
 echo "Data directory:          $inputDataDir"
 echo "Forward index directory: $indexDir"
-echo "Bitext directory:        $bitextSubDir"
+echo "Bitext sub-directory:    $bitextSubDir"
 echo "Embedding directory:     $embedDir"
 echo "Max ratio:               $maxRatio"
 echo "=========================================================================="

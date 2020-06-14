@@ -70,7 +70,7 @@ for line in inpFile:
 
         # Entries are sorted by the query ID
         if prevQid != qid:
-            doc = {DOCID_FIELD: did,
+            doc = {DOCID_FIELD: qid,
                    TEXT_FIELD_NAME: query_lemmas,
                    TEXT_UNLEMM_FIELD_NAME: query_unlemm,
                    TEXT_RAW_FIELD_NAME: query.lower()}
