@@ -74,7 +74,7 @@ fi
 echo "=========================================================================="
 echo "Data directory:          $inputDataDir"
 echo "Forward index directory: $indexDir"
-echo "Bitext directory:        $bitextSubDir
+echo "Bitext directory:        $bitextSubDir"
 echo "Embedding directory:     $embedDir"
 echo "Max ratio:               $maxRatio"
 echo "=========================================================================="
@@ -87,7 +87,7 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-partPref=$inputDataDir/$bitextSubDir
+partPref="$inputDataDir/$bitextSubDir"
 
 target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
                                   -embed_dir $embedDir \
