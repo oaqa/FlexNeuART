@@ -10,7 +10,7 @@ boolOpts=(\
 )
 
 paramOpts=(\
-"bitext_part" "$bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
+"bitext_part" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
 )
 
 parseArguments $@
