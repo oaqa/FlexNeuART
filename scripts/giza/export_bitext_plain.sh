@@ -3,11 +3,30 @@
 . scripts/config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+checkVarNonEmpty "BITEXT_SUBDIR"
 
-collect=$1
-if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (1st arg)"
+boolOpts=(\
+"h" "help" "print help"
+)
+
+paramOpts=(\
+"bitext_part" "bitextDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
+)
+
+parseArguments $@
+
+usageMain="<collection> <output dir> <index field> <query field> <max query to doc word ratio>"
+
+if [ "$help" = "1" ] ; then
+  genUsage $usageMain
   exit 1
+fi
+
+collect=${posArgs[0]}
+
+if [ "$collect" = "" ] ; then
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
+  exit
 fi
 
 checkVarNonEmpty "COLLECT_ROOT"
@@ -27,31 +46,35 @@ if [ ! -d "$outDir" ] ; then
   mkdir -p "$outDir"
 fi
 
-field=$2
+field=${posArgs[1]}
 
 if [ "$field" = "" ] ; then
-  echo "Specify a document/index field: e.g., text_unlemm (2d arg)"
+  genUsage "$usageMain" "Specify a document/index field: e.g., text_unlemm (2d arg)"
   exit 1
 fi
 
-query_field=$3
+query_field=${posArgs[2]}
 
 if [ "$query_field" = "" ] ; then
-  echo "Specify a query field, e.g., text (3d arg)"
+  genUsage "$usageMain" "Specify a query field, e.g., text (3d arg)"
   exit 1
 fi
 
-maxRatio=$4
+maxRatio=${posArgs[3]}
 
 if [ "$maxRatio" = "" ] ; then
-  echo "Specify max. ratio of # words in docs to # of words in queries (4th arg)"
+  genUsage "$usageMain" "Specify max. ratio of # words in docs to # of words in queries (4th arg)"
   exit 1
 fi
 
+if [ "bitextDir" = "" ] ; then
+  bitextDir=$BITEXT_SUBDIR
+fi
 
 echo "=========================================================================="
 echo "Data directory:          $inputDataDir"
 echo "Forward index directory: $indexDir"
+echo "Bitext directory:        $bitextDir
 echo "Embedding directory:     $embedDir"
 echo "Max ratio:               $maxRatio"
 echo "=========================================================================="
@@ -64,7 +87,7 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-partPref=$inputDataDir/$BITEXT_SUBDIR
+partPref=$inputDataDir/$bitextDir
 
 target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
                                   -embed_dir $embedDir \
