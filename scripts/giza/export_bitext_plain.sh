@@ -22,6 +22,10 @@ if [ "$help" = "1" ] ; then
   exit 1
 fi
 
+if [ "$bitextDir" = "" ] ; then
+  bitextSubDir=$BITEXT_SUBDIR
+fi
+
 collect=${posArgs[0]}
 
 if [ "$collect" = "" ] ; then
@@ -38,7 +42,7 @@ checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
+outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bitextSubDir"
 indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 
@@ -67,14 +71,10 @@ if [ "$maxRatio" = "" ] ; then
   exit 1
 fi
 
-if [ "bitextDir" = "" ] ; then
-  bitextDir=$BITEXT_SUBDIR
-fi
-
 echo "=========================================================================="
 echo "Data directory:          $inputDataDir"
 echo "Forward index directory: $indexDir"
-echo "Bitext directory:        $bitextDir
+echo "Bitext directory:        $bitextSubDir
 echo "Embedding directory:     $embedDir"
 echo "Max ratio:               $maxRatio"
 echo "=========================================================================="
@@ -87,7 +87,7 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-partPref=$inputDataDir/$bitextDir
+partPref=$inputDataDir/$bitextSubDir
 
 target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
                                   -embed_dir $embedDir \
