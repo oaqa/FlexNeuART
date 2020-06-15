@@ -1,26 +1,51 @@
 #!/bin/bash -e
+# A script to derive Model 1 translation probabilities using MGIZA.
+
 . scripts/common_proc.sh
 . scripts/config.sh
 
+
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-collect=$1
+checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "GIZA_ITER_QTY"
+checkVarNonEmpty "GIZA_SUBDIR"
+checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
+
+boolOpts=(\
+"h" "help" "print help"
+)
+
+paramOpts=(\
+"bitext_subdir" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR" \
+"giza_subdir" "gizaSubDir" "GIZA sub-dir to store translation table, if not specified we use $GIZA_SUBDIR"
+)
+
+parseArguments $@
+
+usageMain="<collection> <field> <MGIZA directory>"
+
+if [ "$help" = "1" ] ; then
+  genUsage $usageMain
+  exit 1
+fi
+
+collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (1st arg)"
-  exit 1
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
+  exit
 fi
 
-field=$2
-
+field=${posArgs[1]}
 if [ "$field" = "" ] ; then
-  echo "Specify a field: e.g., text (2d arg)"
+  genUsage "$usageMain" "Specify a field: e.g., text (2d arg)"
   exit 1
 fi
 
-mgizaDir="$3"
-
+mgizaDir=${posArgs[2]}
 if [ "$mgizaDir" = "" ] ; then
- echo "Specify MGIZA dir (3d arg)"
+ genUsage "$usageMain" "Specify MGIZA dir (3d arg)"
  exit 1
 fi
 
@@ -30,19 +55,17 @@ if [ ! -d "$mgizaDir" ] ; then
 fi
 
 VOC_ONLY="0"
-SYMMETRIZE=1 # Nearly always work better
+SYMMETRIZE=1 # Nearly always works better
 
-checkVarNonEmpty "COLLECT_ROOT"
-checkVarNonEmpty "GIZA_ITER_QTY"
-checkVarNonEmpty "GIZA_SUBDIR"
-checkVarNonEmpty "BITEXT_SUBDIR"
-checkVarNonEmpty "DERIVED_DATA_SUBDIR"
+export source_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bitextSubDir"
+export target_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir"
 
-export source_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR"
-export target_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
-
-echo "Source dir prefix=$source_dir" 
-echo "Target dir prefix=$target_dir" 
+echo "=========================================================================="
+echo "Giza (output) sub-directory:  $gizaSubDir"
+echo "Bitext sub-directory:         $bitextSubDir"
+echo "Source dir prefix:            $source_dir"
+echo "Target dir prefix:            $target_dir"
+echo "=========================================================================="
 
 if [ ! -d "$source_dir" ] ; then
   echo "Directory does not exist: $source_dir!"
@@ -82,7 +105,7 @@ echo "Full target dir: $full_target_dir"
 # However, a better performance is achieved with a symmetrized approach.
 
 # 1. Filtering out sentences where the difference in the number of words is too large 
-# 2. Applying symmetrizing if needed
+# 2. Applying symmetrization if requested
 MAX_FERTILITY=9
 execAndCheck "scripts/giza/filter_long.py \"${source_dir}/answer_${field}\"   \"${source_dir}/question_${field}\" \"$MAX_FERTILITY\" \"$full_target_dir/source\" \"$full_target_dir/target\" \"$SYMMETRIZE\""
 

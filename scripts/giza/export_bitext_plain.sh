@@ -1,6 +1,14 @@
 #!/bin/bash -e
+# This script creates a parallel corpus from a set of queries, documents, and QRELs.
+# Because computing translation probabilities via expectation-maximization
+# requires parallel chunks of text to be of a similar length, documents are
+# split into chunks and the query is repeated paired with each such chunk.
+# There is a parameter defining how much longer document chunks can be compared
+# to queries (in terms of the relative number of words)
+
 . scripts/common_proc.sh
 . scripts/config.sh
+
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "BITEXT_SUBDIR"
@@ -10,7 +18,7 @@ boolOpts=(\
 )
 
 paramOpts=(\
-"bitext_part" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
+"bitext_subdir" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
 )
 
 parseArguments $@
