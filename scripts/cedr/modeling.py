@@ -14,11 +14,29 @@ from config import *
 USE_BATCH_COEFF=False
 
 class BertRanker(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, is_large):
+        """Bert ranker constructor
+
+        :param is_large: True if we need the large BERT model.
+                         otherwise, the base version would be used.
+        """
         super().__init__()
-        self.BERT_MODEL = BERT_BASE_MODEL
-        self.CHANNELS = 12 + 1 # from bert-base-uncased
-        self.BERT_SIZE = 768 # from bert-base-uncased
+        if not is_large:
+            self.BERT_MODEL = BERT_BASE_MODEL
+            self.CHANNELS = 12 + 1 # from bert-base-uncased
+            self.BERT_SIZE = 768 # from bert-base-uncased
+        else:
+            self.BERT_MODEL = BERT_LARGE_MODEL
+            self.CHANNELS = 24 + 1 # from bert-base-uncased
+            self.BERT_SIZE = 1024 # from bert-base-uncased
+
+        print('Model type:', self.BERT_MODEL,
+              '# of channels:', self.CHANNELS,
+              'hidden layer size:', self.BERT_SIZE)
+
+        # Large and base BERT have the same tokenizers:
+        # https://github.com/huggingface/transformers/issues/424
+
         self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
         self.tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(self.BERT_MODEL)
 
@@ -91,22 +109,25 @@ class BertRanker(torch.nn.Module):
             # be necessary, there's in practice no deterioration due to
             # imperfect scaling introduced by simple averaging.
             if USE_BATCH_COEFF:
-              cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
-              assert(cls_result.size()[0] == batch_qty)
-              assert(batch_coeff.size()[0] == batch_qty)
+                cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
+                assert(cls_result.size()[0] == batch_qty)
+                assert(batch_coeff.size()[0] == batch_qty)
 
-              cls_result *= batch_coeff
+                cls_result *= batch_coeff
             else:
-              cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
+                cls_result = torch.stack(cls_result, dim=2).mean(dim=2)
+
             cls_results.append(cls_result)
 
         return cls_results, query_results, doc_results
 
 
 class VanillaBertRanker(BertRanker):
-    def __init__(self):
-        super().__init__()
-        self.dropout = torch.nn.Dropout(0.1)
+
+    def __init__(self, is_large, dropout):
+        super().__init__(is_large)
+        self.dropout = torch.nn.Dropout(dropout)
+        print('Dropout', self.dropout)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
 
@@ -114,9 +135,10 @@ class VanillaBertRanker(BertRanker):
         cls_reps, _, _ = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
         return self.cls(self.dropout(cls_reps[-1]))
 
+
 class CedrPacrrRanker(BertRanker):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, is_large):
+        super().__init__(is_large)
         QLEN = 20
         KMAX = 2
         NFILTERS = 32
@@ -147,8 +169,8 @@ class CedrPacrrRanker(BertRanker):
 
 
 class CedrKnrmRanker(BertRanker):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, is_large):
+        super().__init__(is_large)
         MUS = [-0.9, -0.7, -0.5, -0.3, -0.1, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
         SIGMAS = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.001]
         self.bert_ranker = VanillaBertRanker()
@@ -175,8 +197,8 @@ class CedrKnrmRanker(BertRanker):
 
 
 class CedrDrmmRanker(BertRanker):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, is_large):
+        super().__init__(is_large)
         NBINS = 11
         HIDDEN = 5
         self.bert_ranker = VanillaBertRanker()

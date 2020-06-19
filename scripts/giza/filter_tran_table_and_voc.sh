@@ -10,34 +10,55 @@ checkVarNonEmpty "GIZA_SUBDIR"
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-collect=$1
-if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (1st arg)"
+boolOpts=(\
+"h" "help" "print help"
+)
+
+paramOpts=(\
+   "giza_subdir" "gizaSubDir" "GIZA sub-dir to store translation table, if not specified we use $GIZA_SUBDIR"
+)
+
+parseArguments $@
+
+usageMain="<collection> <field> <min. probability> <max freq. word qty>"
+
+if [ "$help" = "1" ] ; then
+  genUsage $usageMain
   exit 1
 fi
 
-field="$2"
+if [ "$gizaSubDir" = "" ] ; then
+  gizaSubDir=$GIZA_SUBDIR
+fi
+
+collect=${posArgs[0]}
+if [ "$collect" = "" ] ; then
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
+  exit
+fi
+
+field=${posArgs[1]}
 if [ "$field" = "" ] ; then
-  echo "Specify a field name: text (2d arg)"
+  genUsage "$usageMain" "Specify a field: e.g., text (2d arg)"
   exit 1
 fi
 
 filterDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR"
 
-minProb="$3"
+minProb="${posArgs[2]}"
 if [ "$minProb" = "" ] ; then
-  echo "Specify the minimum translation probability (3d arg)"
+  genUsage "$usageMain" "Specify the minimum translation probability (3d arg)"
   exit 1
 fi
 
-maxWordQty="$4"
+maxWordQty="${posArgs[3]}"
 if [ "$maxWordQty" = "" ] ; then
-  echo "Specify the maximum number of (most frequent) words to use (4th arg)"
+  genUsage "$usageMain" "Specify the maximum number of (most frequent) words to use (4th arg)"
   exit 1
 fi
 
-dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field.orig"
-dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field"
+dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field"
 
 echo "========================================================================================================================="
 echo " This script uses (but doesn't modify) the data created by scripts/giza/create_tran.sh which is placed in the directory:"
@@ -96,8 +117,8 @@ function do_filter() {
   check "filter_tran_table"
 }
 
-dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field.orig"
-dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field"
+dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field"
 
 if [ ! -d "$dirSrc" ] ; then
   echo "Error, '$dirDst' doesn't exist"

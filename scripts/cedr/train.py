@@ -69,7 +69,7 @@ TrainParams = namedtuple('TrainParams',
                      'use_external_eval', 'eval_metric'])
 
 MODEL_MAP = {
-    'vanilla_bert': modeling.VanillaBertRanker,
+    VANILLA_BERT: modeling.VanillaBertRanker,
     'cedr_pacrr': modeling.CedrPacrrRanker,
     'cedr_knrm': modeling.CedrKnrmRanker,
     'cedr_drmm': modeling.CedrDrmmRanker,
@@ -221,6 +221,7 @@ def main_cli():
     parser.add_argument('--epoch_qty', metavar='# of epochs', help='# of epochs',
                         type=int, default=10)
     parser.add_argument('--no_cuda', action='store_true')
+    parser.add_argument('--bert_large', action='store true', help='Using the BERT large mode instead of a base one')
     parser.add_argument('--device_name', metavar='CUDA device name', default='cuda:0',
                         help='The name of the CUDA device to use (ignored if --no_cuda is set)')
     parser.add_argument('--print_grads', action='store_true')
@@ -228,6 +229,9 @@ def main_cli():
                         type=int, default=42)
     parser.add_argument('--loss_margin', metavar='loss margin', help='Margin in the margin loss',
                         type=float, default=1)
+    parser.add_argument('--bert_vanilla_dropout', type=float, default=0.1,
+                        metavar='BERT vanilla droput',
+                        help='BERT vanilla droput')
     parser.add_argument('--init_lr', metavar='init learn. rate',
                         type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
     parser.add_argument('--init_bert_lr', metavar='init BERT learn. rate',
@@ -297,7 +301,10 @@ def main_cli():
     print('Loss function:', loss_obj.name())
     print('Device name:', device_name)
 
-    model = MODEL_MAP[args.model]()
+    add_args = {}
+    if args.model == VANILLA_BERT:
+        add_args['dropout'] = args.bert_vanilla_dropout
+    model = MODEL_MAP[args.model](args.bert_large, *add_args)
     model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
     model.to(device_name)

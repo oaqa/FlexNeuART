@@ -10,6 +10,7 @@ sys.path.append('scripts/data')
 sys.path.append('scripts/cedr')
 
 from base_server import *
+from config import VANILLA_BERT
 
 
 # CEDR imports
@@ -22,9 +23,11 @@ DEFAULT_BATCH_SIZE = 32
 class CedrQueryHandler(BaseQueryHandler):
     # Exclusive==True means that only one getScores
     # function is executed at at time
-    def __init__(self, modelType, modelWeights, batchSize, deviceName,
-                        maxQueryLen, maxDocLen,
-                        debugPrint=False):
+    def __init__(self,
+                    modelType, isBertLarge,
+                    modelWeights, batchSize, deviceName,
+                    maxQueryLen, maxDocLen,
+                    debugPrint=False):
         super().__init__(exclusive=True)
 
         self.debugPrint = debugPrint
@@ -35,7 +38,11 @@ class CedrQueryHandler(BaseQueryHandler):
         self.deviceName = deviceName
         print('Maximum query/document len %d/%d device: %s' % (self.maxQueryLen, self.maxDocLen, self.deviceName))
 
-        self.model = train.MODEL_MAP[modelType]()
+        add_args = {}
+        if modelType == VANILLA_BERT:
+            add_args['dropout'] = 0 # Don't really matter since the model is going to be in eval model anyways
+
+        self.model = train.MODEL_MAP[modelType](isBertLarge, add_args)
         self.model.to(self.deviceName)
         if modelWeights is not None:
             if self.debugPrint:
@@ -127,6 +134,7 @@ if __name__ == '__main__':
 
     multiThreaded = False  #
     startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(modelType=args.model,
+                                                                           isBertLarge=args.bert_large,
                                                                            modelWeights=args.model_weights,
                                                                            batchSize=args.batch_size,
                                                                            debugPrint=args.debug_print,
