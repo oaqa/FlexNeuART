@@ -11,6 +11,8 @@ REPORT_QTY=10000
 # it should be sufficiently large, but not too large
 IMAP_PROC_CHUNK_QTY=256
 
+DEVICE_CPU = 'cpu'
+
 VANILLA_BERT = 'vanilla_bert'
 BERT_BASE_MODEL='bert-base-uncased'
 BERT_LARGE_MODEL='bert-large-uncased'

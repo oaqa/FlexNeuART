@@ -101,6 +101,8 @@ if __name__ == '__main__':
                         required=True, type=str,
                         help='type, e.g., vanilla_bert')
 
+    parser.add_argument('--bert_large', action='store_true', help='Using the BERT large mode instead of a base one')
+
     parser.add_argument('--debug_print', action='store_true',
                         help='Provide debug output')
 
@@ -126,6 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_query_len', metavar='max. query length',
                         type=int, default=data.DEFAULT_MAX_QUERY_LEN,
                         help='max. query length')
+
     parser.add_argument('--max_doc_len', metavar='max. document length',
                         type=int, default=data.DEFAULT_MAX_DOC_LEN,
                         help='max. document length')
