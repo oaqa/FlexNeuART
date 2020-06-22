@@ -64,7 +64,8 @@ setDirId=0
 for setFile in "$outLMDir/$LM_FINETUNE_SET_PREF"* ; do
 
   outDir="$outLMDir/${LM_FINETUNE_SUBDIR}_pregen$setDirId"
-
+  # The type of the model only affects tokenization, which is the
+  # same for BERT large and small
   scripts/pytorch-transformers/pregenerate_training_data.py \
     --epochs_to_generate 1 --bert_model bert-base-uncased \
     --train_corpus "$setFile" \
