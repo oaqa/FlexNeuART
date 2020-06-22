@@ -35,6 +35,9 @@ if [ "$gizaSubDir" = "" ] ; then
   gizaSubDir=$GIZA_SUBDIR
 fi
 
+if [ "bitextSubDir" = "" ] ; then
+  bitextSubDir=$BITEXT_SUBDIR
+fi
 
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
