@@ -4,14 +4,18 @@ SPACY_MODEL = 'en_core_web_sm'
 
 # Constants defined here mostly can't be modified as they should be in sync with Java and bash code
 STOPWORD_FILE = 'data/stopwords.txt'
-MAX_DOC_SIZE=16536 # 16 K should be more than enough!
+MAX_DOC_SIZE=16536 # 16 K of text is enough for most applications
 REPORT_QTY=10000
 
 # A size of the chunk passed used in imap
 # it should be sufficiently large, but not too large
 IMAP_PROC_CHUNK_QTY=256
 
+DEVICE_CPU = 'cpu'
+
+VANILLA_BERT = 'vanilla_bert'
 BERT_BASE_MODEL='bert-base-uncased'
+BERT_LARGE_MODEL='bert-large-uncased'
 
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_JSON = 'QuestionFields.jsonl'

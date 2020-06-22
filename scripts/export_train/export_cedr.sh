@@ -61,8 +61,6 @@ $maxNumQueryTrainParam \
 \
 -u "$luceneIndexDir" \
 \
--sample_neg_qty $sampleNegQty \
-\
 -query_file_train "$inputDataDir/$partTrain/QuestionFields.jsonl" \
 -qrel_file_train "$inputDataDir/$partTrain/$QREL_FILE" \
 -query_file_test "$inputDataDir/$partTest/QuestionFields.jsonl" \

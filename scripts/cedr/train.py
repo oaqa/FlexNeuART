@@ -11,8 +11,6 @@ import gc
 import sys
 import argparse
 
-DEVICE_CPU = 'cpu'
-
 sys.path.append('scripts')
 
 import torch
@@ -23,7 +21,7 @@ import data
 
 
 from common_eval import *
-
+from config import VANILLA_BERT, DEVICE_CPU
 
 from tqdm import tqdm
 from collections import namedtuple
@@ -69,7 +67,7 @@ TrainParams = namedtuple('TrainParams',
                      'use_external_eval', 'eval_metric'])
 
 MODEL_MAP = {
-    'vanilla_bert': modeling.VanillaBertRanker,
+    VANILLA_BERT: modeling.VanillaBertRanker,
     'cedr_pacrr': modeling.CedrPacrrRanker,
     'cedr_knrm': modeling.CedrKnrmRanker,
     'cedr_drmm': modeling.CedrDrmmRanker,
@@ -202,70 +200,105 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
 
 def main_cli():
     parser = argparse.ArgumentParser('CEDR model training and validation')
+
     parser.add_argument('--model', metavar='model', help='a model to use',
                         choices=MODEL_MAP.keys(), default='vanilla_bert')
+
     parser.add_argument('--datafiles', metavar='data files', help='data files: docs & queries',
                         type=argparse.FileType('rt'), nargs='+', required=True)
+
     parser.add_argument('--qrels', metavar='QREL file', help='QREL file',
                         type=argparse.FileType('rt'), required=True)
+
     parser.add_argument('--train_pairs', metavar='paired train data', help='paired train data',
                         type=argparse.FileType('rt'), required=True)
+
     parser.add_argument('--valid_run', metavar='validation file', help='validation file',
                         type=argparse.FileType('rt'), required=True)
+
     parser.add_argument('--initial_bert_weights',
                         metavar='initial BERT weights', help='initial BERT weights',
                         type=argparse.FileType('rb'), default=None)
+
     parser.add_argument('--model_out_dir',
                         metavar='model out dir', help='an output directory for the trained model',
                         required=True)
+
     parser.add_argument('--epoch_qty', metavar='# of epochs', help='# of epochs',
                         type=int, default=10)
+
     parser.add_argument('--no_cuda', action='store_true')
+
+    parser.add_argument('--bert_large', action='store_true', help='Using the BERT large mode instead of a base one')
+
     parser.add_argument('--device_name', metavar='CUDA device name', default='cuda:0',
                         help='The name of the CUDA device to use (ignored if --no_cuda is set)')
+
     parser.add_argument('--print_grads', action='store_true')
+
     parser.add_argument('--seed', metavar='random seed', help='random seed',
                         type=int, default=42)
+
     parser.add_argument('--loss_margin', metavar='loss margin', help='Margin in the margin loss',
                         type=float, default=1)
+
+    parser.add_argument('--bert_vanilla_dropout', type=float, default=0.1,
+                        metavar='BERT vanilla droput',
+                        help='BERT vanilla droput')
+
     parser.add_argument('--init_lr', metavar='init learn. rate',
                         type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
+
     parser.add_argument('--init_bert_lr', metavar='init BERT learn. rate',
                         type=float, default=0.00005, help='Initial learning rate for BERT parameters')
+
     parser.add_argument('--epoch_lr_decay', metavar='epoch LR decay',
                         type=float, default=0.9, help='Per-epoch learning rate decay')
+
     parser.add_argument('--batch_size', metavar='batch size',
                         type=int, default=32, help='batch size')
+
     parser.add_argument('--max_query_len', metavar='max. query length',
                         type=int, default=data.DEFAULT_MAX_QUERY_LEN,
                         help='max. query length')
+
     parser.add_argument('--max_doc_len', metavar='max. document length',
                         type=int, default=data.DEFAULT_MAX_DOC_LEN,
                         help='max. document length')
+
     parser.add_argument('--batch_size_val', metavar='val batch size',
                         type=int, default=32, help='validation batch size')
+
     parser.add_argument('--backprop_batch_size', metavar='backprop batch size',
                         type=int, default=12,
                         help='batch size for each backprop step')
+
     parser.add_argument('--batches_per_train_epoch', metavar='# of rand. batches per epoch',
                         type=int, default=0,
                         help='# of random batches per epoch: 0 tells to use all data')
+
     parser.add_argument('--max_query_val', metavar='max # of val queries',
                         type=int, default=0,
                         help='max # of validation queries: 0 tells to use all data')
+
     parser.add_argument('--grad_checkpoint_param', type=int, default=0,
                         metavar='grad. checkpoint param',
                        help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
+
     parser.add_argument('--no_shuffle_train', action='store_true',
                         help='disabling shuffling of training data')
+
     parser.add_argument('--use_external_eval', action='store_true',
                         help='use external eval tools: gdeval or trec_eval')
+
     parser.add_argument('--eval_metric', choices=METRIC_LIST, default=METRIC_LIST[0],
                         help='Metric list: ' +  ','.join(METRIC_LIST), 
                         metavar='eval metric')
+
     parser.add_argument('--loss_func', choices=LOSS_FUNC_LIST,
                         default=PairwiseSoftmaxLoss.name(),
                         help='Loss functions: ' +  ','.join(LOSS_FUNC_LIST))
+
     args = parser.parse_args()
 
     utils.set_all_seeds(args.seed)
@@ -297,7 +330,10 @@ def main_cli():
     print('Loss function:', loss_obj.name())
     print('Device name:', device_name)
 
-    model = MODEL_MAP[args.model]()
+    add_args = {}
+    if args.model == VANILLA_BERT:
+        add_args['dropout'] = args.bert_vanilla_dropout
+    model = MODEL_MAP[args.model](args.bert_large, **add_args)
     model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
     model.to(device_name)

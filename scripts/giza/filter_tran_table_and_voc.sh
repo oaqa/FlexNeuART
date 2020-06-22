@@ -57,8 +57,8 @@ if [ "$maxWordQty" = "" ] ; then
   exit 1
 fi
 
-dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field.orig"
-dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field"
+dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field"
 
 echo "========================================================================================================================="
 echo " This script uses (but doesn't modify) the data created by scripts/giza/create_tran.sh which is placed in the directory:"
@@ -117,8 +117,8 @@ function do_filter() {
   check "filter_tran_table"
 }
 
-dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field.orig"
-dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR/$field"
+dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field"
 
 if [ ! -d "$dirSrc" ] ; then
   echo "Error, '$dirDst' doesn't exist"
