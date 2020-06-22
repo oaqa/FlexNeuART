@@ -23,6 +23,7 @@ P20 = 'P_20'
 
 NDCG10 = 'ndcg_cut_10'
 NDCG20 = 'ndcg_cut_20'
+NDCG100 = 'ndcg_cut_100'
 
 ERR20 = 'err20'
 
@@ -80,7 +81,7 @@ outputTrecEval = sp.check_output([trecEvalBin,
                                   "-m", "ndcg_cut",
                                   "-m", "official",
                                   "-q", qrelFile, trecOut]).decode('utf-8').replace('\t', ' ').split('\n')
-resTrecEval = parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK, P20, NDCG10, NDCG20]))
+resTrecEval = parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK, P20, NDCG10, NDCG20, NDCG100]))
 
 overallNumRel = resTrecEval['all'][NUM_REL]
 overallNumRelRet = resTrecEval['all'][NUM_REL_RET]
@@ -91,6 +92,7 @@ overallRecipRank = resTrecEval['all'][RECIP_RANK]
 
 overallNDCG10 = resTrecEval['all'][NDCG10]
 overallNDCG20 = resTrecEval['all'][NDCG20]
+overallNDCG100 = resTrecEval['all'][NDCG100]
 
 overallERR20 = resGdeval['amean'][ERR20]
 
@@ -129,6 +131,8 @@ reportText += "NDCG@10:         %f" % overallNDCG10
 reportText += "\n"
 reportText += "NDCG@20:         %f" % overallNDCG20
 reportText += "\n"
+reportText += "NDCG@100:        %f" % overallNDCG100
+reportText += "\n"
 reportText += "ERR@20:          %f" % overallERR20
 reportText += "\n"
 reportText += "P@20:            %f" % overallP20
@@ -147,9 +151,9 @@ if outPrefix != '':
     fRep.close()
     fTSV = open(outPrefix + '.tsv', 'a')
     fTSV.write(
-        "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Label", "queryQty", "NDCG@10", "NDCG@20", "ERR@20", "P@20", "MAP", "MRR", "Recall"))
+        "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Label", "queryQty", "NDCG@10", "NDCG@20", "NDCG@100", "ERR@20", "P@20", "MAP", "MRR", "Recall"))
     fTSV.write("%s\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n" % (
-    label, queryQty, overallNDCG10, overallNDCG20, overallERR20, overallP20, overallMAP, overallRecipRank, overallRecall))
+    label, queryQty, overallNDCG10, overallNDCG20, overallNDCG100, overallERR20, overallP20, overallMAP, overallRecipRank, overallRecall))
     fTSV.close()
 
     fTrecEval = open(outPrefix + '.trec_eval', 'w')
