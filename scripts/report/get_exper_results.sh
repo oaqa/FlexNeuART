@@ -76,8 +76,28 @@ fi
 
 tmpConf=`mktemp`
 
-metrListGrep=("ndcg@20" "err@20" "p@20" "map" "Reciprocal rank" "recall")
-metrListPrint=("ndcg@20" "err@20" "p@20" "map" "mrr" "recall")
+# Include all NDCG cuts from trec_eval
+metrListGrep=(\
+"ndcg@5" \
+"ndcg@10" \
+"ndcg@20" \
+"ndcg@30" \
+"ndcg@100" \
+"ndcg@200" \
+"ndcg@500" \
+"ndcg@1000" \
+"err@20" "p@20" "map" "Reciprocal rank" "recall")
+
+metrListPrint=(\
+"ndcg@5" \
+"ndcg@10" \
+"ndcg@20" \
+"ndcg@30" \
+"ndcg@100" \
+"ndcg@200" \
+"ndcg@500" \
+"ndcg@1000" \
+"err@20" "p@20" "map" "mrr" "recall")
 
 header="test_part\texper_subdir\ttop_k\tquery_qty"
 
