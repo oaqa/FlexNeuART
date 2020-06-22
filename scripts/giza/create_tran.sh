@@ -31,6 +31,11 @@ if [ "$help" = "1" ] ; then
   exit 1
 fi
 
+if [ "$gizaSubDir" = "" ] ; then
+  gizaSubDir=$GIZA_SUBDIR
+fi
+
+
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
   genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
