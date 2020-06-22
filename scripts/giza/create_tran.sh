@@ -35,7 +35,7 @@ if [ "$gizaSubDir" = "" ] ; then
   gizaSubDir=$GIZA_SUBDIR
 fi
 
-if [ "bitextSubDir" = "" ] ; then
+if [ "$bitextSubDir" = "" ] ; then
   bitextSubDir=$BITEXT_SUBDIR
 fi
 
