@@ -32,14 +32,14 @@ METRIC_DICT = {
     GDEVAL_NDCG20   :  GDEVAL_NDCG20_REPORT
 }
 
-FINAL_METR_ORDERED_LIST=[GDEVAL_NDCG20]
+FINAL_METR_ORDERED_LIST=[]
 
 for k in [10, 20, 100]:
     nkey = f'ndcg_cut_{k}'
     METRIC_DICT[nkey] = f'NDCG@{k}'
     FINAL_METR_ORDERED_LIST.append(nkey)
 
-FINAL_METR_ORDERED_LIST.extend([ERR20, P20, MAP, RECIP_RANK, RECALL])
+FINAL_METR_ORDERED_LIST.extend([ERR20, P20, MAP, RECIP_RANK, RECALL, GDEVAL_NDCG20])
 
 # Recall is computed from NUM_REL and NUM_REL_RET
 TREC_EVAL_METR = [k for k in METRIC_DICT.keys() if k not in[RECALL]]
@@ -102,7 +102,7 @@ outputTrecEval = sp.check_output([trecEvalBin,
 resTrecEvalAll = parseTrecEvalResults(outputTrecEval, TREC_EVAL_METR)
 resTrecEval=resTrecEvalAll['all']
 
-print('trec_eval results parsed:', resTrecEval)
+#print('trec_eval results parsed:', resTrecEval)
 
 # Some manipulations are required for these metrics
 res = {RECALL : float(resTrecEval[NUM_REL_RET]) / resTrecEval[NUM_REL]}
@@ -115,7 +115,8 @@ for k in FINAL_METR_ORDERED_LIST:
 outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8').split('\n')
 resGdevalAll = parseGdevalResults(outputGdeval)
 resGdeval=resGdevalAll['amean']
-print('gdeval results parsed:', resGdeval)
+
+#print('gdeval results parsed:', resGdeval)
 
 res[ERR20] = resGdeval[ERR20]
 res[GDEVAL_NDCG20] = resGdeval[GDEVAL_NDCG20]
@@ -144,7 +145,7 @@ for k in FINAL_METR_ORDERED_LIST:
     maxl = max(len(METRIC_DICT[k]), maxl)
 
 for k in FINAL_METR_ORDERED_LIST:
-    name = METRIC_DICT[k] + ':' + ''.join([' '] * (maxl - len(METRIC_DICT[k])))
+    name = METRIC_DICT[k] + ': ' + ''.join([' '] * (maxl - len(METRIC_DICT[k])))
     reportText += (name + '%f') % res[k] + '\n'
 
 sys.stdout.write(reportText)
