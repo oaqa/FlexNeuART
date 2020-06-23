@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-import argparse
 import sys
-import math
-import numpy as np
 import subprocess as sp
-
 
 def Usage(err):
     if not err is None:
@@ -14,22 +10,45 @@ def Usage(err):
     sys.exit(1)
 
 
-MAP = 'map'
-RECIP_RANK = 'recip_rank'
-NUM_RET = 'num_ret'
 NUM_REL = 'num_rel'
 NUM_REL_RET = 'num_rel_ret'
-P20 = 'P_20'
 
-NDCG10 = 'ndcg_cut_10'
-NDCG20 = 'ndcg_cut_20'
-NDCG100 = 'ndcg_cut_100'
+ERR20       = 'err20'
+P20         = 'P_20'
 
-ERR20 = 'err20'
+MAP         = 'map'
+RECIP_RANK  = 'recip_rank'
+RECALL      = 'recall'
+
+GDEVAL_NDCG20           = 'ndcg20'
+GDEVAL_NDCG20_REPORT    = 'GDEVAL NDCG@20'
+
+METRIC_DICT = {
+    MAP             : 'MAP',
+    RECIP_RANK      : 'MRR',
+    ERR20           : 'ERR@20',
+    P20             : 'P20',
+    RECALL          : 'Recall',
+    GDEVAL_NDCG20   :  GDEVAL_NDCG20_REPORT
+}
+
+FINAL_METR_ORDERED_LIST=[GDEVAL_NDCG20]
+
+for k in [10, 20, 100]:
+    nkey = f'ndcg_cut_{k}'
+    METRIC_DICT[nkey] = f'NDCG@{k}'
+    FINAL_METR_ORDERED_LIST.append(nkey)
+
+FINAL_METR_ORDERED_LIST.extend([ERR20, P20, MAP, RECIP_RANK, RECALL])
+
+# Recall is computed from NUM_REL and NUM_REL_RET
+TREC_EVAL_METR = [k for k in METRIC_DICT.keys() if k not in[RECALL]]
+NUM_REL_TREC_EVAL_METRICS = [NUM_REL, NUM_REL_RET]
+TREC_EVAL_METR.extend(NUM_REL_TREC_EVAL_METRICS)
 
 
 def parseTrecEvalResults(lines, metrics):
-    prevId = ''
+    metrics = set(metrics)
     res = dict()
     for s in lines:
         if s == '': continue
@@ -56,7 +75,7 @@ def parseGdevalResults(lines):
         if (len(arr) != 4):
             raise Exception("wrong-format line: '%s'" % s)
         (runid, qid, val1, val2) = arr
-        res[qid] = {ERR20: float(val2)}
+        res[qid] = {GDEVAL_NDCG20: float(val1), ERR20: float(val2)}
     return res
 
 
@@ -75,74 +94,58 @@ if len(sys.argv) >= 4:
     if len(sys.argv) != 5: Usage("Specify the 4th arg")
     label = sys.argv[4]
 
-outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8').split('\n')
-resGdeval = parseGdevalResults(outputGdeval)
 outputTrecEval = sp.check_output([trecEvalBin,
                                   "-m", "ndcg_cut",
                                   "-m", "official",
                                   "-q", qrelFile, trecOut]).decode('utf-8').replace('\t', ' ').split('\n')
-resTrecEval = parseTrecEvalResults(outputTrecEval, set([MAP, NUM_REL, NUM_REL_RET, RECIP_RANK, P20, NDCG10, NDCG20, NDCG100]))
 
-overallNumRel = resTrecEval['all'][NUM_REL]
-overallNumRelRet = resTrecEval['all'][NUM_REL_RET]
-overallRecall = float(overallNumRelRet) / overallNumRel
-overallMAP = resTrecEval['all'][MAP]
-overallP20 = resTrecEval['all'][P20]
-overallRecipRank = resTrecEval['all'][RECIP_RANK]
+resTrecEvalAll = parseTrecEvalResults(outputTrecEval, TREC_EVAL_METR)
+resTrecEval=resTrecEvalAll['all']
 
-overallNDCG10 = resTrecEval['all'][NDCG10]
-overallNDCG20 = resTrecEval['all'][NDCG20]
-overallNDCG100 = resTrecEval['all'][NDCG100]
+print('trec_eval results parsed:', resTrecEval)
 
-overallERR20 = resGdeval['amean'][ERR20]
+# Some manipulations are required for these metrics
+res = {RECALL : float(resTrecEval[NUM_REL_RET]) / resTrecEval[NUM_REL]}
 
-# valsMAP   =[]
-# valsRecipRank   =[]
-# valsRecall =[]
+# Just "pass-through" metric with results coming directly from trec_eval
+for k in FINAL_METR_ORDERED_LIST:
+    if k in resTrecEval:
+        res[k] = resTrecEval[k]
+
+outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8').split('\n')
+resGdevalAll = parseGdevalResults(outputGdeval)
+resGdeval=resGdevalAll['amean']
+print('gdeval results parsed:', resGdeval)
+
+res[ERR20] = resGdeval[ERR20]
+res[GDEVAL_NDCG20] = resGdeval[GDEVAL_NDCG20]
 
 queryQty = 0
 
-# May actually delete it at some point, it doesn't do much
-# Previously it was used to compute percentiles
-for qid, entry in resTrecEval.items():
+# Previously it was used to compute percentiles,
+# currently it just prints a warning and computes the number of queries
+for qid, entry in resTrecEvalAll.items():
     if qid == 'all': continue
     queryQty += 1
-    # valsMAP.append(entry[MAP])
-    # valsRecipRank.append(entry[RECIP_RANK])
 
     numRel = entry[NUM_REL]
-    numRelRet = entry[NUM_REL_RET]
 
-    #
-    # Actually, for various reasons qrel may not have relevant answers for a given
-    # query, although, this should happen very rarely
-    #
     if numRel <= 0:
         print("Warning: No relevant documents for qid=%s numRel=%d" % (qid, numRel))
-    # valsRecall.append(numRel/numRelRet)
 
-if len(resTrecEval) != len(resGdeval):
-    print("Warning: The number of entries returned by trec_eval and gdeval are different!")
 
-reportText = ""
-reportText += "# of queries:    %d" % queryQty
-reportText += "\n"
-reportText += "NDCG@10:         %f" % overallNDCG10
-reportText += "\n"
-reportText += "NDCG@20:         %f" % overallNDCG20
-reportText += "\n"
-reportText += "NDCG@100:        %f" % overallNDCG100
-reportText += "\n"
-reportText += "ERR@20:          %f" % overallERR20
-reportText += "\n"
-reportText += "P@20:            %f" % overallP20
-reportText += "\n"
-reportText += "MAP:             %f" % overallMAP
-reportText += "\n"
-reportText += "Reciprocal rank: %f" % overallRecipRank
-reportText += "\n"
-reportText += "Recall:          %f" % overallRecall
-reportText += "\n"
+if len(resTrecEvalAll) != len(resGdevalAll):
+    print("Warning: The number of query entries returned by trec_eval and gdeval are different!")
+
+reportText = f"# of queries:    {queryQty}\n"
+
+maxl = 0
+for k in FINAL_METR_ORDERED_LIST:
+    maxl = max(len(METRIC_DICT[k]), maxl)
+
+for k in FINAL_METR_ORDERED_LIST:
+    name = METRIC_DICT[k] + ':' + ''.join([' '] * (maxl - len(k)))
+    reportText += (name + '%f') % res[k] + '\n'
 
 sys.stdout.write(reportText)
 if outPrefix != '':
@@ -150,10 +153,17 @@ if outPrefix != '':
     fRep.write(reportText)
     fRep.close()
     fTSV = open(outPrefix + '.tsv', 'a')
-    fTSV.write(
-        "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % ("Label", "queryQty", "NDCG@10", "NDCG@20", "NDCG@100", "ERR@20", "P@20", "MAP", "MRR", "Recall"))
-    fTSV.write("%s\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n" % (
-    label, queryQty, overallNDCG10, overallNDCG20, overallNDCG100, overallERR20, overallP20, overallMAP, overallRecipRank, overallRecall))
+
+    header = ["Label", "queryQty"]
+    data = [label, str(queryQty)]
+
+    for k in FINAL_METR_ORDERED_LIST:
+        header.append(METRIC_DICT[k])
+        data.append('%f' % res[k])
+
+    fTSV.write('\t'.join(header) + '\n')
+    fTSV.write('\t'.join(data) + '\n')
+
     fTSV.close()
 
     fTrecEval = open(outPrefix + '.trec_eval', 'w')
