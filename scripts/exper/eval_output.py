@@ -144,7 +144,7 @@ for k in FINAL_METR_ORDERED_LIST:
     maxl = max(len(METRIC_DICT[k]), maxl)
 
 for k in FINAL_METR_ORDERED_LIST:
-    name = METRIC_DICT[k] + ':' + ''.join([' '] * (maxl - len(k)))
+    name = METRIC_DICT[k] + ':' + ''.join([' '] * (maxl - len(METRIC_DICT[k])))
     reportText += (name + '%f') % res[k] + '\n'
 
 sys.stdout.write(reportText)
