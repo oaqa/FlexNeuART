@@ -20,6 +20,12 @@ boolOpts=(\
 "bert_large" "bertLarge" "use LARGE BERT model"
 )
 
+paramOpts=(\
+"grad_accum_steps" "gradAccumSteps" "# of gradient accumulation steps"
+"epoch_qty" "epochQty" "# of epochs"
+"batch_size" "batchSize" "batch size"
+)
+
 parseArguments $@
 
 usageMain="<collection> <BERT model sub-directory>"
@@ -41,18 +47,30 @@ if [ "$bertModelTopSubDir" = "" ] ; then
   exit 1
 fi
 
+if [ "$batchSize" = "" ] ; then
+  batchSize=32
+fi
+
+if [ "$epochQty" = "" ] ; then
+  epochQty="1"
+fi
+
 if [ "$bertLarge" = "1" ] ; then
   initModel="bert-large-uncased"
   # Without fp16 the batch size needs to be 32
   #batchSize=64
   #fp16flags=" --fp16 "
-  batchSize=16
+  if [ "$gradAccumSteps" = "" ] ; then
+    gradAccumSteps=4
+  fi
 else
   initModel="bert-base-uncased"
   # Without fp16 the batch size needs to be 32
   #batchSize=64
   #fp16flags=" --fp16 "
-  batchSize=32
+  if [ "$gradAccumSteps" = "" ] ; then
+    gradAccumSteps=1
+  fi
 fi
 
 outLMDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$LM_FINETUNE_SUBDIR"
@@ -61,6 +79,9 @@ modelDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bertModelTopSubDir/$initM
 
 echo "=========================================================================="
 echo "Output directory:          $outLMDir"
+echo "Batch size:                $batchSize"
+echo "# of grad. accum. steps:   $gradAccumSteps"
+echo "# of epochs:               $epochQty"
 echo "=========================================================================="
 
 if [ -d "$modelDir" ] ; then
@@ -85,8 +106,9 @@ for lmDataDir in "$outLMDir/${LM_FINETUNE_SUBDIR}_pregen"* ; do
   # Note the lowercaseness 
   scripts/cedr/finetune_on_pregenerated.py \
       --do_lower_case \
+      --gradient_accumulation_steps $gradAccumSteps \
       --pregenerated_data "$lmDataDir" \
-      --epochs 1 \
+      --epochs $epochQty \
       $fp16flags \
       --train_batch_size $batchSize \
       --bert_model "$initModel" \

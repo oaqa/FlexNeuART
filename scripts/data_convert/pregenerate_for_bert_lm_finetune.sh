@@ -13,16 +13,37 @@ checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
 # A convenient wrapper for the corresponding Python script
 
-collect=$1
-if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (1st arg)"
+boolOpts=(\
+"h" "help" "print help"
+)
+
+paramOpts=(\
+"epoch_qty" "epochQty" "# of epochs"
+)
+
+parseArguments $@
+
+usageMain="<collection> <part to be used, e.g., $BITEXT_SUBDIR>"
+
+if [ "$help" = "1" ] ; then
+  genUsage $usageMain
   exit 1
 fi
 
-part=$2
+collect=${posArgs[0]}
+if [ "$collect" = "" ] ; then
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
+  exit
+fi
+
+part=${posArgs[1]}
 if [ "$part" = "" ] ; then
-  echo "Specify a part to be used (1st arg), e.g., $BITEXT_SUBDIR"
+  echo "$usageMain" "Specify a part to be used (2d arg), e.g., $BITEXT_SUBDIR"
   exit 1
+fi
+
+if [ "$epochQty" = "" ] ; then
+  epochQty="1"
 fi
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
@@ -30,6 +51,7 @@ outLMDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$LM_FINETUNE_SUBDIR"
 
 echo "=========================================================================="
 echo "Data directory:            $inputDataDir"
+echo "# of epochs:               $epochQty"
 echo "Output directory:          $outLMDir"
 echo "=========================================================================="
 
@@ -68,7 +90,8 @@ for setFile in "$outLMDir/$LM_FINETUNE_SET_PREF"* ; do
   # (given that the case is fixed) which is the same for 
   # BERT large and small
   scripts/data_convert/pregenerate_training_data.py \
-    --epochs_to_generate 1 --bert_model bert-base-uncased \
+    --epochs_to_generate $epochQty \
+    --bert_model bert-base-uncased \
     --train_corpus "$setFile" \
     --output_dir "$outDir"
 
