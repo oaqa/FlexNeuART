@@ -41,7 +41,7 @@ if [ "$bertModelTopSubDir" = "" ] ; then
   exit 1
 fi
 
-if [ "$bertLarge" ] ; then
+if [ "$bertLarge" = "1" ] ; then
   initModel="bert-large-uncased"
   # Without fp16 the batch size needs to be 32
   #batchSize=64
