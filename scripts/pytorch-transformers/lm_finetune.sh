@@ -10,22 +10,54 @@ checkVarNonEmpty "LM_FINETUNE_SET_PREF"
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-# A convenient wrapper for the corresponding Python script
+#--bert_large
 
-collect=$1
-if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (1st arg)"
+# A convenience wrapper for the corresponding Python script,
+# which "knows" locations of collection sub-directories.
+
+boolOpts=(\
+"h" "help" "print help"
+"bert_large" "bertLarge" "use LARGE BERT model"
+)
+
+parseArguments $@
+
+usageMain="<collection> <BERT model sub-directory>"
+
+if [ "$help" = "1" ] ; then
+  genUsage $usageMain
   exit 1
 fi
-bertModelSubDir=$2
-if [ "$bertModelSubDir" = "" ] ; then
-  echo "Specify BERT model sub-directory"
+
+collect=${posArgs[0]}
+if [ "$collect" = "" ] ; then
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
+  exit
+fi
+
+bertModelTopSubDir=${posArgs[1]}
+if [ "$bertModelTopSubDir" = "" ] ; then
+  echo "$usageMain" "Specify BERT model sub-directory root (2d arg)"
   exit 1
+fi
+
+if [ "$bertLarge" ] ; then
+  initModel="bert-large-uncased"
+  # Without fp16 the batch size needs to be 32
+  #batchSize=64
+  #fp16flags=" --fp16 "
+  batchSize=16
+else
+  initModel="bert-base-uncased"
+  # Without fp16 the batch size needs to be 32
+  #batchSize=64
+  #fp16flags=" --fp16 "
+  batchSize=32
 fi
 
 outLMDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$LM_FINETUNE_SUBDIR"
 
-modelDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bertModelSubDir"
+modelDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bertModelTopSubDir/$initModel"
 
 echo "=========================================================================="
 echo "Output directory:          $outLMDir"
@@ -39,11 +71,6 @@ else
 fi
 retVal=""
 
-initModel="bert-base-uncased"
-# Without fp16 the batch size needs to be 32
-#batchSize=64
-#fp16flags=" --fp16 "
-batchSize=32
 setId=0
 for lmDataDir in "$outLMDir/${LM_FINETUNE_SUBDIR}_pregen"* ; do
   echo "Finetuning using data in $lmDataDir"

@@ -26,34 +26,38 @@ from config import VANILLA_BERT, DEVICE_CPU
 from tqdm import tqdm
 from collections import namedtuple
 
+
 class MarginRankingLossWrapper:
-  @staticmethod
-  def name():
-    return 'pairwise_margin'
+    @staticmethod
+    def name():
+        return 'pairwise_margin'
 
-  '''This is a wrapper class for the margin ranking loss.
-     It expects that positive/negative scores are arranged in pairs'''
-  def __init__(self, margin):
-    self.loss = torch.nn.MarginRankingLoss(margin)
+    '''This is a wrapper class for the margin ranking loss.
+       It expects that positive/negative scores are arranged in pairs'''
 
-  def compute(self, scores):
-    pos_doc_scores = scores[:, 0]
-    neg_doc_scores = scores[:, 1]
-    ones = torch.ones_like(pos_doc_scores)
-    return self.loss.forward(pos_doc_scores, neg_doc_scores, target=ones)
+    def __init__(self, margin):
+        self.loss = torch.nn.MarginRankingLoss(margin)
+
+    def compute(self, scores):
+        pos_doc_scores = scores[:, 0]
+        neg_doc_scores = scores[:, 1]
+        ones = torch.ones_like(pos_doc_scores)
+        return self.loss.forward(pos_doc_scores, neg_doc_scores, target=ones)
 
 
 class PairwiseSoftmaxLoss:
-  @staticmethod
-  def name():
-    return 'pairwise_softmax'
+    @staticmethod
+    def name():
+        return 'pairwise_softmax'
 
-  '''This is a wrapper class for the pairwise softmax ranking loss.
-     It expects that positive/negative scores are arranged in pairs'''
-  def compute(self, scores):
-    return torch.mean(1. - scores.softmax(dim=1)[:, 0]) # pairwise softmax
+    '''This is a wrapper class for the pairwise softmax ranking loss.
+       It expects that positive/negative scores are arranged in pairs'''
 
-LOSS_FUNC_LIST=[PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]
+    def compute(self, scores):
+        return torch.mean(1. - scores.softmax(dim=1)[:, 0])  # pairwise softmax
+
+
+LOSS_FUNC_LIST = [PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]
 
 TrainParams = namedtuple('TrainParams',
                     ['init_lr', 'init_bert_lr', 'epoch_lr_decay',
