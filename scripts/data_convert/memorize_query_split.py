@@ -27,16 +27,15 @@ print(args)
 out_dir = args.out_dir
 
 if not os.path.exists(out_dir):
-  os.makedirs(out_dir)
+    os.makedirs(out_dir)
 
 for subDir in os.listdir(args.data_dir):
-  qf = os.path.join(args.data_dir, subDir, QUESTION_FILE_JSON)
-  if os.path.exists(qf):
-    print('Reading:', qf)
-    res = []
-    for e in readQueries(qf):
-        res.append(e[DOCID_FIELD])
+    qf = os.path.join(args.data_dir, subDir, QUESTION_FILE_JSON)
+    if os.path.exists(qf):
+        print('Reading:', qf)
+        res = []
+        for e in readQueries(qf):
+            res.append(e[DOCID_FIELD])
 
-    print('Read', len(res), 'queries')
-    np.save(os.path.join(out_dir, subDir + '.npy'),np.array(res))
-
+        print('Read', len(res), 'queries')
+        np.save(os.path.join(out_dir, subDir + '.npy'), np.array(res))

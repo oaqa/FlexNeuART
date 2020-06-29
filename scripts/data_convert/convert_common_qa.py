@@ -5,9 +5,8 @@ import json
 import argparse
 import numpy as np
 
-sys.path.append('scripts')
-from data_convert.text_proc import *
-from data_convert.convert_common import *
+from scripts.data_convert.text_proc import *
+from scripts.data_convert.convert_common import *
 
 def doOutput(nlp, qlist, qids, outPref):
   if len(qids):
