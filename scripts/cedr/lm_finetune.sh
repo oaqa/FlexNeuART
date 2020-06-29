@@ -82,7 +82,9 @@ for lmDataDir in "$outLMDir/${LM_FINETUNE_SUBDIR}_pregen"* ; do
     mkdir -p "$outDir"
   fi
 
-  scripts/pytorch-transformers/finetune_on_pregenerated.py \
+  # Note the lowercaseness 
+  scripts/cedr/finetune_on_pregenerated.py \
+      --do_lower_case \
       --pregenerated_data "$lmDataDir" \
       --epochs 1 \
       $fp16flags \

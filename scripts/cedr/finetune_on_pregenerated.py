@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser
 from pathlib import Path
-import os
 import torch
 import logging
 import json
@@ -14,10 +13,9 @@ from torch.utils.data import DataLoader, Dataset, RandomSampler
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
-from pytorch_transformers import WEIGHTS_NAME, CONFIG_NAME
-from pytorch_transformers.modeling_bert import BertForPreTraining
-from pytorch_transformers.tokenization_bert import BertTokenizer
-from pytorch_transformers.optimization import AdamW, WarmupLinearSchedule
+from pytorch_pretrained_bert.modeling import BertForPreTraining
+from pytorch_pretrained_bert.tokenization import BertTokenizer
+from pytorch_pretrained_bert.optimization import BertAdam, WarmupLinearSchedule
 
 InputFeatures = namedtuple("InputFeatures", "input_ids input_mask segment_ids lm_label_ids is_next")
 
@@ -156,14 +154,11 @@ def main():
                         help="Loss scaling to improve fp16 numeric stability. Only used when fp16 set to True.\n"
                         "0 (default value): dynamic loss scaling.\n"
                         "Positive power of 2: static loss scaling value.\n")
-    parser.add_argument("--warmup_steps", 
-                        default=0, 
-                        type=int,
-                        help="Linear warmup over warmup_steps.")
-    parser.add_argument("--adam_epsilon", 
-                        default=1e-8, 
+    parser.add_argument("--warmup_proportion",
+                        default=0.1,
                         type=float,
-                        help="Epsilon for Adam optimizer.")
+                        help="Proportion of training to perform linear learning rate warmup for. "
+                             "E.g., 0.1 = 10%% of training.")
     parser.add_argument("--learning_rate",
                         default=3e-5,
                         type=float,
@@ -203,7 +198,6 @@ def main():
         n_gpu = 1
         # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.distributed.init_process_group(backend='nccl')
-
     logging.info("device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
         device, n_gpu, bool(args.local_rank != -1), args.fp16))
 
@@ -275,9 +269,13 @@ def main():
             optimizer = FP16_Optimizer(optimizer, dynamic_loss_scale=True)
         else:
             optimizer = FP16_Optimizer(optimizer, static_loss_scale=args.loss_scale)
+        warmup_linear = WarmupLinearSchedule(warmup=args.warmup_proportion,
+                                             t_total=num_train_optimization_steps)
     else:
-        optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
-    scheduler = WarmupLinearSchedule(optimizer, warmup_steps=args.warmup_steps, t_total=num_train_optimization_steps)
+        optimizer = BertAdam(optimizer_grouped_parameters,
+                             lr=args.learning_rate,
+                             warmup=args.warmup_proportion,
+                             t_total=num_train_optimization_steps)
 
     global_step = 0
     logging.info("***** Running training *****")
@@ -299,8 +297,7 @@ def main():
             for step, batch in enumerate(train_dataloader):
                 batch = tuple(t.to(device) for t in batch)
                 input_ids, input_mask, segment_ids, lm_label_ids, is_next = batch
-                outputs = model(input_ids, segment_ids, input_mask, lm_label_ids, is_next)
-                loss = outputs[0]
+                loss = model(input_ids, segment_ids, input_mask, lm_label_ids, is_next)
                 if n_gpu > 1:
                     loss = loss.mean() # mean() to average on multi-gpu.
                 if args.gradient_accumulation_steps > 1:
@@ -316,16 +313,22 @@ def main():
                 mean_loss = tr_loss * args.gradient_accumulation_steps / nb_tr_steps
                 pbar.set_postfix_str(f"Loss: {mean_loss:.5f}")
                 if (step + 1) % args.gradient_accumulation_steps == 0:
-                    scheduler.step()  # Update learning rate schedule
+                    if args.fp16:
+                        # modify learning rate with special warm up BERT uses
+                        # if args.fp16 is False, BertAdam is used that handles this automatically
+                        lr_this_step = args.learning_rate * warmup_linear.get_lr(global_step/num_train_optimization_steps,
+                                                                                 args.warmup_proportion)
+                        for param_group in optimizer.param_groups:
+                            param_group['lr'] = lr_this_step
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
 
     # Save a trained model
-    if  n_gpu > 1 and torch.distributed.get_rank() == 0  or n_gpu <=1 :
-        logging.info("** ** * Saving fine-tuned model ** ** * ")
-        model.save_pretrained(args.output_dir)
-        tokenizer.save_pretrained(args.output_dir)
+    logging.info("** ** * Saving fine-tuned model ** ** * ")
+    model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+    output_model_file = args.output_dir / "pytorch_model.bin"
+    torch.save(model_to_save.state_dict(), str(output_model_file))
 
 
 if __name__ == '__main__':
