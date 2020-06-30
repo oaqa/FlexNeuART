@@ -38,6 +38,7 @@ arg_vars = vars(args)
 inpFile = FileWrapper(args.input)
 
 fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
+print(f'Read {fltDocId} document IDs from {args.filter_fwd_file}')
 
 outFileQueries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w')
 outFileQrelsName = os.path.join(args.out_dir, QREL_FILE)
