@@ -1,5 +1,5 @@
 ## FlexNeuART
-FlexNeuART (Flexible classical and NeuAral Retrieval Toolkit) is a substantially reworked `knn4qa` package. FlexNeuART under active development. Description of the `knn4qa` is given below.
+FlexNeuART (Flexible classical and NeurAl Retrieval Toolkit) is a substantially reworked `knn4qa` package. FlexNeuART under active development. Description of the `knn4qa` is given below.
 
 ## Previous work (as a knn4qa package)
 
