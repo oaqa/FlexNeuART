@@ -1,13 +1,17 @@
 #!/usr/bin/env python
+#
+# Checking correctness of split for queries and corresponding QREL files.
+# Basically this is to double-check if the split queries script did the right job.
+#
 import sys
 import os
-import json
 import argparse
-import random
-import math
 
-sys.path.append('scripts')
-from data_convert.convert_common import *
+
+sys.path.append('.')
+
+from scripts.data_convert.convert_common import readQueries, readQrels, qrelEntry2Str
+from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(
   description='Checking correctness of split for queries and corresponding QREL files.')
