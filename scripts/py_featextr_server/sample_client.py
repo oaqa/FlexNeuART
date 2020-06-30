@@ -1,20 +1,19 @@
 #!/usr/bin/env python
+# This is a sample client that retrieves query-document scores from a sample server
 
 import sys
-import glob
 
-sys.path.append('scripts/py_featextr_server')
-sys.path.append('scripts/py_featextr_server/gen-py')
+sys.path.append('.')
 
-from protocol.ExternalScorer import Client
-from protocol.ttypes import WordEntryInfo, TextEntryParsed, TextEntryRaw, ScoringException
+from scripts.py_featextr_server.python_generated.protocol.ExternalScorer import Client
+from scripts.py_featextr_server.python_generated.protocol.ttypes import \
+    WordEntryInfo, TextEntryParsed, TextEntryRaw
 
-from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-from base_server import *
+from scripts.py_featextr_server.base_server import SAMPLE_PORT, SAMPLE_HOST
 
 # Make socket
 transport = TSocket.TSocket(SAMPLE_HOST, SAMPLE_PORT)
@@ -34,17 +33,15 @@ transport.open()
 query = TextEntryParsed("query_id", [])
 docs = []
 for did in ['1', '2', '3']:
-  docs.append(TextEntryParsed(did, [WordEntryInfo(word="did: " + did, IDF=0.3, qty=3)]))
+    docs.append(TextEntryParsed(did, [WordEntryInfo(word="did: " + did, IDF=0.3, qty=3)]))
 
 print('Calling using parsed text')
 print(client.getScoresFromParsed(query, docs))
 
-
 query = TextEntryRaw("query_id", "some query text")
 docs = []
 for did in ['1', '2', '3']:
-  docs.append(TextEntryRaw(did, "some document text: " + did))
+    docs.append(TextEntryRaw(did, "some document text: " + did))
 
 print('Calling using raw text')
 print(client.getScoresFromRaw(query, docs))
-

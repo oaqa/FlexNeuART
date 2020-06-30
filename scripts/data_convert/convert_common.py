@@ -297,3 +297,32 @@ def addRetokenizedField(dataEntry,
             dst = getRetokenized(tokenizer, dataEntry[srcField])
 
         dataEntry[dstField] = dst
+
+
+def readDocIdsFromForwardFileHeader(fwdFileName):
+    """Read document IDs from the textual header
+       of a forward index. Some basic integrity checkes are done.
+
+       :param   fwdFileName: input file name
+       :return  a list of document IDs.
+    """
+    f = open(fwdFileName)
+    lines = [s.strip() for s in f]
+    f.close()
+    docQty, _ = lines[0].split()
+    docQty = int(docQty)
+
+    assert len(lines) > docQty + 2, f"File {fwdFileName} is too short: length isn't consistent with the header info"
+    assert lines[1] == "", f"The second line in {fwdFileName} isn't empty as expected!"
+    assert lines[-1] == "", f"The last line in {fwdFileName} isn't empty as expected!"
+    k = 2
+    while k < len(lines) and lines[k] != '':
+        k = k + 1
+    assert lines[k] == ''  # We check that the last line is empty, we must find the empty line!
+    k = k + 1
+
+    assert k + docQty + 1 == len(lines)
+    res = lines[k:len(lines) - 1]
+    assert len(res) == docQty
+
+    return res

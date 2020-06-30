@@ -7,15 +7,24 @@ import json
 import argparse
 import pytorch_pretrained_bert
 
-sys.path.append('scripts')
-from data_convert.text_proc import *
-from data_convert.convert_common import *
-from config import *
-from common_eval import *
+sys.path.append('.')
+
+from scripts.data_convert.text_proc import SpacyTextParser
+from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
+    FileWrapper, readStopWords, addRetokenizedField, readDocIdsFromForwardFileHeader
+
+from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
+    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
+    TEXT_RAW_FIELD_NAME, \
+    REPORT_QTY, SPACY_MODEL, QUESTION_FILE_JSON, QREL_FILE
+
+from scripts.common_eval import QrelEntry, writeQrels
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc queries.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
+parser.add_argument('--filter_fwd_file', metavar='filtering forward file header',
+                    type=str, required=True, help='all document IDs not belonging to the file are ignored')
 parser.add_argument('--out_dir', metavar='output directory', help='output directory',
                     type=str, required=True)
 parser.add_argument('--min_query_token_qty', type=int, default=0,
@@ -27,6 +36,8 @@ print(args)
 arg_vars = vars(args)
 
 inpFile = FileWrapper(args.input)
+
+fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
 
 outFileQueries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w')
 outFileQrelsName = os.path.join(args.out_dir, QREL_FILE)
@@ -60,6 +71,9 @@ for line in inpFile:
         continue
 
     qid, query, did, _  = fields
+
+    if not did in fltDocId:
+        continue
 
     query_lemmas, query_unlemm = nlp.procText(query)
 

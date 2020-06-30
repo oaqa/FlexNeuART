@@ -1,24 +1,19 @@
 #!/usr/bin/env python
 import sys
-import pickle
 import argparse
 import torch
-import numpy as np
 
-sys.path.append('scripts/py_featextr_server')
-sys.path.append('scripts/data')
-sys.path.append('scripts/cedr')
+sys.path.append('.')
 
-from base_server import *
-from config import VANILLA_BERT
-
+from scripts.py_featextr_server.base_server import BaseQueryHandler, startQueryServer
+from scripts.config import VANILLA_BERT
 
 # CEDR imports
-import train
-import data
+
+import scripts.cedr.train as train
+import scripts.cedr.data as data
 
 DEFAULT_BATCH_SIZE = 32
-
 
 class CedrQueryHandler(BaseQueryHandler):
     # Exclusive==True means that only one getScores

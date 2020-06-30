@@ -1,3 +1,4 @@
+# A base class that provides a MatchZoo reader from white-space tokenized text
 import pandas as pd
 
 from matchzoo.preprocessors.basic_preprocessor import BasicPreprocessor
@@ -14,7 +15,6 @@ class WhiteSpaceTokenize:
         :return tokens: tokenized tokens as a list.
         """
         return input_.strip().split()
-
 
 class WhiteSpacePreprocessor(BasicPreprocessor):
     def _default_units(cls) -> list:

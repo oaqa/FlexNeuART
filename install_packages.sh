@@ -1,4 +1,10 @@
 #!/bin/bash -e
+source scripts/common_proc.sh
+source scripts/config.sh
+
+# Don't install Matchzoo packages by default
+USE_MATCHZOO=0
+
 plist=(\
 lxml             "" \
 numpy            "" \
@@ -6,6 +12,17 @@ bs4              "" \
 thrift           "0.13.0" \
 spacy            "2.2.3" \
 )
+
+if [ "$USE_MATCHZOO" = "1" ] ; then
+  echo "Adding matchzoo packages"
+  plist+=(\
+          matchzoo         "" \
+          keras            "2.3.0" \
+          tensorflow       "")
+fi
+
+echo "Python packages to install:"
+echo ${plist[*]}
 
 cd trec_eval
 make
