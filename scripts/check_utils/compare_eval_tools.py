@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # This script compares output from trec_eval with our reimplementation
+# Sample QREL & RUNS can be found in this directory.
 import sys
 import argparse
 import tempfile
