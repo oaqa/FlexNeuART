@@ -1,4 +1,7 @@
-## k-NN for question answering (QA) and information retrieval (IR)
+## FlexNeuART
+FlexNeuART is a substantially reworked `knn4qa` package. FlexNeuART under active development. Description of the `knn4qa` is given below.
+
+## Previous work (as a knn4qa package)
 
 This is a learning-to-rank pipeline, which is a part of the project where we study applicability of k-nearest neighbor search methods to IR and QA applications. This project is supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
 
