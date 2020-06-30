@@ -9,6 +9,7 @@ import pytorch_pretrained_bert
 import nmslib
 import time
 import numpy as np
+from tqdm import tqdm
 
 # This utility scripts checks for possible leakage across different data splits.
 # Specifically, we search for very similar question-answer pairs, which might
@@ -22,15 +23,18 @@ import numpy as np
 # and efSearch (>=1000). These parameters might need to be bumped up for "harder" collections
 # and brute-force search is certainly a safer option.
 
-sys.path.append('scripts')
-from data_convert.convert_common import *
+sys.path.append('.')
+
+from scripts.data_convert.convert_common import unique, readQueries, readQrelsDict, jsonlGen
+from scripts.config import BERT_BASE_MODEL, QUESTION_FILE_JSON, ANSWER_FILE_JSON, QREL_FILE, \
+    DOCID_FIELD, TEXT_RAW_FIELD_NAME
+
 
 QUERY_BATCH_SIZE=32
 QUANTILE_QTY=20
 PRINT_TOO_CLOSE_THRESHOLD=0.9 # We want to inspect answers that are too close
 
 np.random.seed(0)
-
 
 def jaccard(toks1, toks2):
     set1 = set(toks1)
@@ -131,8 +135,6 @@ for fn in [apath1, apath2]:
         answDictText[answId] = answText
 
     print('Read %d answers from %s' % (qty, fn))
-
-
 
 
 if args.use_hnsw:

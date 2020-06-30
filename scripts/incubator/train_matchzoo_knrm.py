@@ -3,7 +3,6 @@ import os, sys
 import pickle
 import matchzoo as mz
 from matchzoo.data_pack import pack, DataPack
-from matchzoo.preprocessors.basic_preprocessor import BasePreprocessor, BasicPreprocessor
 
 from matchzoo.models.knrm import KNRM
 
@@ -16,7 +15,9 @@ gloveEmbedding = mz.datasets.embeddings.load_glove_embedding(dimension=300)
 print("embedding loaded")
 
 sys.path.append('.')
-from scripts.data.matchzoo_reader import *
+
+from scripts.data_convert.matchzoo_reader \
+    import readWhiteSpacedMatchZooData, WhiteSpacePreprocessor
 
 colName = sys.argv[1]
 modelFile = sys.argv[2]

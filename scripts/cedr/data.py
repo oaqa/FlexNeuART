@@ -1,13 +1,12 @@
 #
-# This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
-# (c) Georgetown IR lab
+# This code is a modified version of CEDR: https://github.com/Georgetown-IR-Lab/cedr
+# (c) Georgetown IR lab & Carnegie Mellon University
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import random
 from tqdm import tqdm
 import torch
-import sys
 import pickle
 
 from collections import Counter
@@ -15,9 +14,6 @@ from collections import Counter
 DEFAULT_MAX_QUERY_LEN=32
 DEFAULT_MAX_DOC_LEN=512 - DEFAULT_MAX_QUERY_LEN - 4
 
-sys.path.append('scripts')
-
-from common_eval import *
 
 def read_datafiles(files):
     queries = {}
@@ -35,7 +31,6 @@ def read_datafiles(files):
             if c_type == 'doc':
                 docs[c_id] = c_text
     return queries, docs
-
 
 
 def read_pairs_dict(file):
@@ -61,6 +56,7 @@ def iter_train_pairs(model, device_name, dataset, train_pairs, do_shuffle, qrels
 
 def train_item_qty(train_pairs):
     return len(list(train_pairs.keys()))
+
 
 def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
     ds_queries, ds_docs = dataset

@@ -5,9 +5,9 @@ import argparse
 import tempfile
 import os
 
-sys.path.append('scripts')
+sys.path.append('.')
 
-from common_eval import *
+from scripts.common_eval import *
 
 parser = argparse.ArgumentParser('Comparing external and internal eval tools')
 

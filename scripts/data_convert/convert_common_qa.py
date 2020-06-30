@@ -5,8 +5,12 @@ import json
 import argparse
 import numpy as np
 
-from scripts.data_convert.text_proc import *
-from scripts.data_convert.convert_common import *
+from scripts.config import SPACY_MODEL
+from scripts.data_convert.text_proc import SpacyTextParser
+from scripts.data_convert.convert_common import readStopWords
+from scripts.config import DOCID_FIELD, QUESTION_FILE_JSON, TEXT_FIELD_NAME, \
+                            TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME, \
+                            ANSWER_LIST_FIELD_NAME, STOPWORD_FILE
 
 def doOutput(nlp, qlist, qids, outPref):
   if len(qids):

@@ -15,40 +15,40 @@ import json
 import sys
 import re
 
-ERROR_STR='#ERR'
-END_STR='#END'
+ERROR_STR = '#ERR'
+END_STR = '#END'
+
 
 # Replace \n and \r characters with spaces
 # This is a copy-pasted function, but I want to keep
 # this simple script to be really light-weight without dependencies
 def replaceCharsNL(s):
-  return re.sub(r'[\n\r]', ' ', s)
+    return re.sub(r'[\n\r]', ' ', s)
+
 
 if len(sys.argv) != 4:
-  sys.stderr.write('Usage <input JSON> <entry ID> <out file>\n')
-  print(ERROR_STR)
-  sys.exit(1)
+    sys.stderr.write('Usage <input JSON> <entry ID> <out file>\n')
+    print(ERROR_STR)
+    sys.exit(1)
 
-outFile=sys.argv[3]
+outFile = sys.argv[3]
 
-inpData=json.load(open(sys.argv[1]))
+inpData = json.load(open(sys.argv[1]))
 if type(inpData) != type([]):
-  sys.stderr.write('Wrong root-level data type, expecting a list')
-  print(ERROR_STR)
-  sys.exit(1)
+    sys.stderr.write('Wrong root-level data type, expecting a list')
+    print(ERROR_STR)
+    sys.exit(1)
 
 entryId = int(sys.argv[2])
 
 if entryId < 0 or entryId >= len(inpData):
-  print(END_STR)
-  sys.exit(0)
+    print(END_STR)
+    sys.exit(0)
 else:
-  resList=[]
+    resList = []
 
-  with open(outFile, 'w') as of:
-    for key, value in inpData[entryId].items():
-      key = replaceCharsNL(str(key))
-      value = replaceCharsNL(str(value))
-      of.write(f'{key}:{value}\n')
-
-
+    with open(outFile, 'w') as of:
+        for key, value in inpData[entryId].items():
+            key = replaceCharsNL(str(key))
+            value = replaceCharsNL(str(value))
+            of.write(f'{key}:{value}\n')

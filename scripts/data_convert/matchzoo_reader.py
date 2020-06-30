@@ -1,7 +1,6 @@
 import pandas as pd
 
-from matchzoo.preprocessors.basic_preprocessor import BasePreprocessor, BasicPreprocessor
-
+from matchzoo.preprocessors.basic_preprocessor import BasicPreprocessor
 
 class WhiteSpaceTokenize:
     """Process unit for text tokenization."""

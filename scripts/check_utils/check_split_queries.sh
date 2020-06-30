@@ -46,6 +46,6 @@ checkVarNonEmpty "INPUT_DATA_SUBDIR"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 
-scripts/qa/check_split_queries.py \
+scripts/check_utils/check_split_queries.py \
 --data_dir "$inputDataDir" \
 --input_subdir $inputSubdir --out_subdir1 $outSubdir1 --out_subdir2 $outSubdir2 

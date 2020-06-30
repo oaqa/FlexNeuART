@@ -1,6 +1,7 @@
 #!/usr/bin/env python
+#
 # This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
-# It has some substantial modifications + it relies on our custom BERT
+# It has some modifications/extensions and it relies on our custom BERT
 # library: https://github.com/searchivarius/pytorch-pretrained-BERT-mod
 # (c) Georgetown IR lab & Carnegie Mellon University
 # It's distributed under the MIT License
@@ -10,18 +11,17 @@ import os
 import gc
 import sys
 import argparse
-
-sys.path.append('scripts')
-
 import torch
-import modeling
-import modeling_dssm
-import utils
-import data
 
+sys.path.append('.')
 
-from common_eval import *
-from config import VANILLA_BERT, DEVICE_CPU
+import scripts.cedr.modeling as modeling
+import scripts.cedr.modeling_dssm as modeling_dssm
+import scripts.cedr.utils as utils
+import scripts.cedr.data as data
+
+from scripts.common_eval import METRIC_LIST, readQrelsDict, readRunDict, getEvalResults
+from scripts.config import VANILLA_BERT, DEVICE_CPU
 
 from tqdm import tqdm
 from collections import namedtuple

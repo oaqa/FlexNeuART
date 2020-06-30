@@ -1,14 +1,14 @@
 #!/usr/bin/env python
+# A simple script to memorize an existing query split.
 import argparse
-import json
 import os
 import sys
 import numpy as np
 
-sys.path.append('scripts')
+sys.path.append('.')
 
-from config import *
-from convert_common import readQueries
+from scripts.config import QUESTION_FILE_JSON, DOCID_FIELD
+from scripts.data_convert.convert_common import readQueries
 
 parser = argparse.ArgumentParser('Memorize the query splits')
 

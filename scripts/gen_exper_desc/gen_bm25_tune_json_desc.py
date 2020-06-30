@@ -3,10 +3,9 @@ import sys
 import os
 import shutil
 
-sys.path.append('scripts')
+sys.path.append('.')
 
-from gen_exper_desc.common_gen_desc import *
-from data_convert.convert_common import *
+from scripts.gen_exper_desc.common_gen_desc import genRerankDescriptors, BaseParser, OUT_DIR_PARAM, REL_DESC_PATH_PARAM
 
 MODEL_SRC_PATH = 'scripts/exper/sample_exper_desc/one_feat.model'
 MODEL_DST_REL_PATH = 'models'

@@ -27,7 +27,7 @@ MAX_NUM_DOC=50
 MAX_NUM_QUERY=100
 EPS_DIFF=1e-5
 
-cdir=scripts/qa/desc
+cdir=scripts/check_utils/desc
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "EMBED_SUBDIR"

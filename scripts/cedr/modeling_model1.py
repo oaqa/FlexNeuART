@@ -1,47 +1,51 @@
-import sys
-sys.path.append('scripts')
-from data import *
-
 from pytools import memoize_method
 import torch
 import tqdm
+from collections import Counter
 
+from scripts.data_convert.text_proc import SpacyTextParser
+from scripts.cedr.data import VocabBuilder
+from scripts.config import SPACY_MODEL
+
+# This is work in progress, don't use!!!
+# This is work in progress, don't use!!!
+# This is work in progress, don't use!!!
 
 class Model1Ranker(torch.nn.Module):
-  def __init__(self, dataset, lemmatize=False, stopwords=None, dim=128, top_k=50000, dropout=0.1):
-    super().__init__()
+    def __init__(self, dataset, lemmatize=False, stopwords=None, dim=128, top_k=50000, dropout=0.1):
+        super().__init__()
 
-    self.dataset = dataset
-    self.doc_voc = None
-    self.query_voc = None
-    self.lemmatize = lemmatize
-    self.dropout = dropout
-    self.init_from_train(dataset, dim, top_k)
-    self.stopwords = list(stopwords) if stopwords is not None else []
-    self.nlp = SpacyTextParser(SPACY_MODEL, self.stopwords, keepOnlyAlphaNum=True, lowerCase=True)
+        self.dataset = dataset
+        self.doc_voc = None
+        self.query_voc = None
+        self.lemmatize = lemmatize
+        self.dropout = dropout
+        self.init_from_train(dataset, dim, top_k)
+        self.stopwords = list(stopwords) if stopwords is not None else []
+        self.nlp = SpacyTextParser(SPACY_MODEL, self.stopwords, keepOnlyAlphaNum=True, lowerCase=True)
 
-  @memoize_method
-  def tokenize(self, text):
-    return VocabBuilder.tokenize(self.nlp, self.lemmatize, text)
+    @memoize_method
+    def tokenize(self, text):
+        return VocabBuilder.tokenize(self.nlp, self.lemmatize, text)
 
-  def _compile_vocab(self, data, pbar_desc):
-    res = Counter()
-    qty = 0
-    with tqdm.tqdm(data, desc='Building vocabulary for: ' + pbar_desc) as pbar:
-      for text in pbar:
-        toks = list(set(self.tokenize(text)))
-        res.update(toks)
-        qty += 1
+    def _compile_vocab(self, data, pbar_desc):
+        res = Counter()
+        qty = 0
+        with tqdm.tqdm(data, desc='Building vocabulary for: ' + pbar_desc) as pbar:
+            for text in pbar:
+                toks = list(set(self.tokenize(text)))
+                res.update(toks)
+                qty += 1
 
-    return res, qty
+        return res, qty
 
-  # 1. Gather collection statistics
-  # 2. Initialize query & document embeddings
-  #    bitext_data
-  def init_from_train(self, bitext_data, dim, top_k):
-    queries, docs = bitext_data
-    # both queries and docs are dictionaries
+    # 1. Gather collection statistics
+    # 2. Initialize query & document embeddings
+    #    bitext_data
+    def init_from_train(self, bitext_data, dim, top_k):
+        queries, docs = bitext_data
+        # both queries and docs are dictionaries
 
-  def load(self, path):
-    raise NotImplemented
-    #self.load_state_dict(torch.load(path), strict=False)
+    def load(self, path):
+        raise NotImplemented
+        # self.load_state_dict(torch.load(path), strict=False)

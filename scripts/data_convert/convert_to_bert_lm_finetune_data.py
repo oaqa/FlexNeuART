@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-
 # A generic script to generate data for finetuning BERT LM model from input JSONL file.
 import sys
 import argparse
 import json
+
+sys.path.append('.')
 
 from scripts.data_convert.text_proc import *
 from scripts.data_convert.convert_common import *

@@ -12,10 +12,12 @@ def isAlphaNum(s):
     return s and (ALPHANUM_TOKENS.match(s) is not None)
 
 
-"""A wrapper class to handle basic Stanza-based text processing.
-   Stanza is a new version of the Stanford Core NLP package"""
-
-
+"""
+    A wrapper class to handle basic Stanza-based text processing.
+    Stanza is a new version of the Stanford Core NLP package.
+    However, it seems to be a tad too slow so Stanza installation is not 
+    required and StanzaTextParser is not imported by default.
+"""
 class StanzaTextParser:
     def __init__(self, lang, stopWords,
                  removePunct=True,

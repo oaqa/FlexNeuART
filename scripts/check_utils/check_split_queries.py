@@ -2,15 +2,16 @@
 #
 # Checking correctness of split for queries and corresponding QREL files.
 # Basically this is to double-check if the split queries script did the right job.
+# Don't use it directly use the wrapper shell script check_split_queries.sh instead.
 #
 import sys
 import os
 import argparse
 
-
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import readQueries, readQrels, qrelEntry2Str
+from scripts.data_convert.convert_common import readQueries
+from scripts.common_eval import  readQrels, qrelEntry2Str
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(

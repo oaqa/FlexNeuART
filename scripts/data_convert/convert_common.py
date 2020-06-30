@@ -2,11 +2,11 @@ import gzip, bz2
 import collections
 import re
 import os
+import sys
 import json
 from bs4 import BeautifulSoup
 
-from scripts.config import *
-from scripts.common_eval import *
+from scripts.config import DEFAULT_ENCODING, STOPWORD_FILE, DOCID_FIELD
 
 WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed',
                                                'id url title content')

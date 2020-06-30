@@ -1,3 +1,9 @@
+# EDITING TODOS
+1. Have a separate more in-depth tutorial on running epxeriments (covering
+parameters and configuration options in descriptors)
+2. Eventually describe the vocabulary creation procedure better,
+or totally remove it.
+
 # Basic data preparation
 This example covers a Manner subset of the Yahoo Answers Comprehensive.
 However, a similar procedure can be applied to a bigger collection. All
@@ -38,7 +44,8 @@ scripts/data_convert/yahoo_answers/convert_yahoo_answers.sh \
   bitext
 ```
 
-As a sanity check, it is recommended to run the following script:
+## Sanity checks
+As a basic sanity check, it is recommended to run the following script:
 ```
 scripts/report/get_basic_collect_stat.sh manner
 ```
@@ -75,6 +82,18 @@ dev1 32515
 dev2 32618
 test 63860
 train 67840
+```
+
+As a more thorough check, we would like to ensure that the split collection
+does not have data leaks, i.e., similar question-answer pairs shared among different splits.
+It is most crucial to check for overlaps between parts ``dev1`` (``dev2``, ``test``) and ``bitext``:
+as well as between any testing subset and ``train``. For example:
+```
+./scripts/qa/check_split_leak.py \
+  --data_dir collections/manner/input_data/ \
+  --input_subdir1 dev1 \
+  --input_subdir2 bitext \
+  -k 1  --min_jacc 0.75 
 ```
 
 # Indexing
@@ -166,7 +185,7 @@ python -u scripts/cedr/train.py \
 
 ## Generating a vocabulary file
 
-**This would need to be refactored**:
+**NOTE: this is currently not used**:
 
 ```
 scripts/cedr/build_vocab.py \
@@ -191,13 +210,6 @@ It further needs to cleaned-up and converted to a binary format.
 ```
 export min_tran_prob=0.001
 export top_word_qty=100000
-
-
-scripts/giza/filter_tran_table_and_voc.sh \
-  manner \
-  text_unlemm \
-  $min_tran_prob \
-  $top_word_qty
 ```
 
 and
@@ -210,20 +222,32 @@ scripts/giza/filter_tran_table_and_voc.sh \
   $top_word_qty
 ```
 
+Note that for BERT-tokenized text, which has less than
+100K unique tokens, the maximum number of most frequent words
+is too high. However, it makes sense for, e.g.,
+unlemmatized text fields with large vocabularies.
 
 # Running basic experiments
-## Generate descriptors to tune BM25
 
+First let us generate the directory to store experiment descriptors:
 ```
 mkdir -p collections/manner/exper_desc
 ```
 
+
+## Tuning BM25
+A tuning procedure simply executes a number of descriptor files
+with various BM25 parameters. To create descriptors one runs:
+
 ```
 scripts/gen_exper_desc/gen_bm25_tune_json_desc.py \
+  --index_field_name text \
+  --query_field_name text \
   --outdir collections/manner/exper_desc/ \
   --exper_subdir bm25tune \
   --rel_desc_path exper_desc
 ```
+
 The main experimental descriptor is going to be stored in 
 `collections/manner/exper_desc/bm25tune.json`,
 whereas auxiliary descriptors are stored in `collections/manner/exper_desc/bm25tune/`
@@ -232,16 +256,30 @@ Now we can run tuning experiments where we train on `train` and test on `dev1`:
 ```
 scripts/exper/run_experiments.sh \
   manner \
-  exper_desc/bm25tune.json \
+  exper_desc/bm25tune_text_text.json \
   -test_part dev1
 ```
+
+By default, experiments are run in the background: In fact, there
+can be more than one experiment run. However, for debugging purposes,
+one can run experiments in the foreground by specifying the
+option `-no_separate_shell`.
+
+Furthermore, he script `scripts/exper/run_experiments.sh` has a number of parameters,
+which might be worth tweaking.
+In particular, for "shallow" relevance pools, one
+can use default number of candidates (which is small).
+However, for queries with a lot of relevance judgments,
+it makes sense to increase the number of top candidate
+entries that are used to obtain a fusion model 
+(parameter ``-train_cand_qty``).
 
 Obtain experimental results and find the best configuration 
 with respect to the Mean Average Precision (MAP):
 ```
 scripts/report/get_exper_results.sh \
   manner \
-  exper_desc/bm25tune.json \
+  exper_desc/bm25tune_text_text.json \
   bm25tune.tsv \
   -test_part dev1 \
   -flt_cand_qty 250 \
@@ -257,3 +295,47 @@ Value: 0.116200
 Result sub-dir: bm25tune/bm25tune/bm25_k1=0.4_b=0.6
 ```
 
+## Tuning RM3
+
+RM3 component is a pseudo-relevance feedback via re-ranking.
+The whole process is quite similar to BM25 tuning descriptors:
+
+```
+scripts/gen_exper_desc/gen_rm3_exper_json_desc.py \
+  -k1 0.4 -b 0.6  \
+  --index_field_name text \
+  --query_field_name text \
+  --outdir collections/manner/exper_desc/ \
+  --exper_subdir rm3 \
+  --rel_desc_path exper_desc
+```
+
+Now we can run tuning experiments where we train on `train` and test on `dev1`:
+```
+scripts/exper/run_experiments.sh \
+  manner \
+  exper_desc/rm3tune_text_text.json \
+  -test_part dev1
+```
+
+## Tuning IBM Model 1
+
+IBM Model 1 has quite a few parameters and can benefit from tuning as well.
+Rather than tuning IBM Model 1 alone, we tune its fusion with the field
+```text```.
+Model 1 descriptors are going to be created for the field ```text_bert_tok ```:
+```
+scripts/gen_exper_desc/gen_model1_exper_json_desc.py \
+  -k1 0.4 -b 0.6  \
+  --field_name text_bert_tok \
+  --outdir collections/manner/exper_desc/ \
+  --rel_desc_path exper_desc
+```
+
+Now we can run tuning experiments where we train on `train` and test on `dev1`:
+```
+scripts/exper/run_experiments.sh \
+  manner \
+  exper_desc/model1tune_text_bert_tok.json \
+  -test_part dev1
+```

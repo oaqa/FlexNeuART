@@ -1,6 +1,9 @@
+#!/usr/bin/env python
 #
-# This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
-# (c) Georgetown IR lab
+# This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
+# It has some modifications/extensions and it relies on our custom BERT
+# library: https://github.com/searchivarius/pytorch-pretrained-BERT-mod
+# (c) Georgetown IR lab & Carnegie Mellon University
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
@@ -8,8 +11,9 @@ from pytools import memoize_method
 import torch
 import torch.nn.functional as F
 import pytorch_pretrained_bert
-import modeling_util
-from config import *
+
+import scripts.ceder.modeling_util as modeling_util
+from scripts.config import BERT_LARGE_MODEL, BERT_BASE_MODEL
 
 USE_BATCH_COEFF=False
 

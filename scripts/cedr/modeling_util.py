@@ -1,6 +1,9 @@
+#!/usr/bin/env python
 #
-# This code is taken from CEDR: https://github.com/Georgetown-IR-Lab/cedr
-# (c) Georgetown IR lab
+# This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
+# It has some modifications/extensions and it relies on our custom BERT
+# library: https://github.com/searchivarius/pytorch-pretrained-BERT-mod
+# (c) Georgetown IR lab & Carnegie Mellon University
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
@@ -8,6 +11,7 @@ import math
 import torch
 
 import pytorch_pretrained_bert
+
 
 class CustomBertModel(pytorch_pretrained_bert.BertModel):
     """
@@ -27,10 +31,12 @@ class CustomBertModel(pytorch_pretrained_bert.BertModel):
 
         return [embedding_output] + encoded_layers
 
+
 # This function should produce averaging coefficients compatiable
 # with the split in get_batch_avg_coeff
 def get_batch_avg_coeff(mask, maxlen):
     return 1.0/torch.ceil(torch.sum(mask, dim=-1) / maxlen)
+
 
 def subbatch(toks, maxlen):
     assert(maxlen > 0)

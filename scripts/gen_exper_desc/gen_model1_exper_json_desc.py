@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import os, sys, json, re
 
-sys.path.append('scripts')
+sys.path.append('.')
 
-from data_convert.convert_common import *
-from gen_exper_desc.common_gen_desc import *
-
+from scripts.gen_exper_desc.common_gen_desc import genRerankDescriptors, BaseParser
+from scripts.config import TEXT_FIELD_NAME
 
 class ExtrModel1JsonGEN:
 
