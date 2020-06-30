@@ -20,7 +20,7 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
 
 from scripts.common_eval import QrelEntry, writeQrels
 
-parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc queries.')
+parser = argparse.ArgumentParser(description='Convert MSMARCO-ORCAS queries & qrels.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--filter_fwd_file', metavar='filtering forward file header',
@@ -38,6 +38,10 @@ arg_vars = vars(args)
 inpFile = FileWrapper(args.input)
 
 fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
+print(f'Read {len(fltDocId)} document IDs from {args.filter_fwd_file}')
+
+if not os.path.exists(args.out_dir):
+    os.makedirs(args.out_dir)
 
 outFileQueries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w')
 outFileQrelsName = os.path.join(args.out_dir, QREL_FILE)
