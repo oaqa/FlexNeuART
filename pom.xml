@@ -59,12 +59,6 @@
       <version>4.3.1</version>
     </dependency>
 
-    <dependency>
-      <artifactId>guava</artifactId>
-      <groupId>com.google.guava</groupId>
-      <version>19.0</version>
-    </dependency>
-
     <!-- some Apache commons -->
     <dependency>
       <groupId>commons-configuration</groupId>
