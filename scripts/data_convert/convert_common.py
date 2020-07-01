@@ -304,7 +304,7 @@ def readDocIdsFromForwardFileHeader(fwdFileName):
        of a forward index. Some basic integrity checkes are done.
 
        :param   fwdFileName: input file name
-       :return  a list of document IDs.
+       :return  a set of document IDs.
     """
     f = open(fwdFileName)
     lines = [s.strip() for s in f]
@@ -325,4 +325,4 @@ def readDocIdsFromForwardFileHeader(fwdFileName):
     res = lines[k:len(lines) - 1]
     assert len(res) == docQty
 
-    return res
+    return set(res)

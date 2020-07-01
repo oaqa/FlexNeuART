@@ -37,8 +37,10 @@ arg_vars = vars(args)
 
 inpFile = FileWrapper(args.input)
 
+# fltDocId is a set
 fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
 print(f'Read {len(fltDocId)} document IDs from {args.filter_fwd_file}')
+
 
 if not os.path.exists(args.out_dir):
     os.makedirs(args.out_dir)
