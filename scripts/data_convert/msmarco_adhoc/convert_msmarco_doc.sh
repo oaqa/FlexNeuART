@@ -13,6 +13,14 @@ for part in docs train dev test2019 ; do
   mkdir -p "$inputDataDir/$part"
 done
 
+
+for year in 2019 2020 ; do
+  python -u scripts/data_convert/msmarco_adhoc/convert_queries.py \
+    $BERT_TOK_OPT \
+    --input  "$src/msmarco-test${year}-queries.tsv" \
+    --output "$inputDataDir/test${year}/$QUESTION_FILE"
+done
+
 python -u scripts/data_convert/msmarco_adhoc/convert_docs.py \
     $BERT_TOK_OPT \
     --input "$src/msmarco-docs.tsv.gz"  \
@@ -25,10 +33,5 @@ for part in train dev ; do
     --input  "$src/msmarco-doc${part}-queries.tsv.gz" \
     --output "$inputDataDir/$part/$QUESTION_FILE"
 done
-
-scripts/data_convert/msmarco_adhoc/convert_queries.py \
-    $BERT_TOK_OPT \
-    --input  "$src/msmarco-test2019-queries.tsv.gz" \
-    --output "$inputDataDir/test2019/$QUESTION_FILE"
 
 

@@ -10,8 +10,10 @@ source scripts/common_proc.sh
 
 cd "$dstDir"
 
-wget https://msmarco.blob.core.windows.net/msmarcoranking/msmarco-test2019-queries.tsv.gz
-gunzip msmarco-test2019-queries.tsv.gz
+for year in 2019 2020 ; do
+  wget https://msmarco.blob.core.windows.net/msmarcoranking/msmarco-test${year}-queries.tsv.gz
+  gunzip msmarco-test${year}-queries.tsv.gz
+done
 
 wget https://msmarco.blob.core.windows.net/msmarcoranking/queries.tar.gz
 tar zxvf queries.tar.gz
