@@ -9,10 +9,9 @@ checkVarNonEmpty "QREL_FILE"
 
 BERT_TOK_OPT=" --bert_tokenize"
 
-for part in docs train dev test2019 ; do
+for part in docs train dev test2019 test2020 ; do
   mkdir -p "$inputDataDir/$part"
 done
-
 
 for year in 2019 2020 ; do
   python -u scripts/data_convert/msmarco_adhoc/convert_queries.py \

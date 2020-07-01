@@ -24,3 +24,7 @@ for fn in msmarco-docdev-qrels.tsv.gz \
   echo "Downloading $uri"
   wget "$uri"
 done
+
+for year in 2019 2020 ; do
+  gunzip msmarco-test${year}-queries.tsv.gz
+done

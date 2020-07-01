@@ -10,7 +10,7 @@ checkVarNonEmpty "inputDataDir"
 
 BERT_TOK_OPT=" --bert_tokenize"
 
-for part in pass train dev eval test2019 ; do
+for part in pass train dev eval test2019 test2020 ; do
   mkdir -p $inputDataDir/$part
 done
 
