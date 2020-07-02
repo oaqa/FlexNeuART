@@ -12,7 +12,7 @@ import torch
 import torch.nn.functional as F
 import pytorch_pretrained_bert
 
-import scripts.ceder.modeling_util as modeling_util
+import scripts.cedr.modeling_util as modeling_util
 from scripts.config import BERT_LARGE_MODEL, BERT_BASE_MODEL
 
 USE_BATCH_COEFF=False
