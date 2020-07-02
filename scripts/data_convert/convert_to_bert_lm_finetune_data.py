@@ -6,8 +6,9 @@ import json
 
 sys.path.append('.')
 
-from scripts.data_convert.text_proc import *
-from scripts.data_convert.convert_common import *
+from scripts.data_convert.text_proc import SpacyTextParser
+from scripts.data_convert.convert_common import FileWrapper, replaceCharsNL
+from scripts.config import SPACY_MODEL, TEXT_RAW_FIELD_NAME, REPORT_QTY
 
 parser = argparse.ArgumentParser(description='Convert text BERT LM finetuning data file.')
 parser.add_argument('--input', metavar='input JSON(L) file, can be compressed', help='input file',
