@@ -35,9 +35,11 @@ class CedrQueryHandler(BaseQueryHandler):
 
         add_args = {}
         if modelType == VANILLA_BERT:
-            add_args['dropout'] = 0 # Don't really matter since the model is going to be in eval model anyways
+            # Don't really matter since the model is going to be in eval model anyways
+            # but the constructor has the dropout argument
+            add_args['dropout'] = 0
 
-        self.model = train.MODEL_MAP[modelType](isBertLarge, add_args)
+        self.model = train.MODEL_MAP[modelType](isBertLarge, **add_args)
         self.model.to(self.deviceName)
         if modelWeights is not None:
             if self.debugPrint:

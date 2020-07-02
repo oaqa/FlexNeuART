@@ -15,9 +15,9 @@ import torch
 
 sys.path.append('.')
 
+import scripts.utils as utils
 import scripts.cedr.modeling as modeling
 import scripts.cedr.modeling_dssm as modeling_dssm
-import scripts.cedr.utils as utils
 import scripts.cedr.data as data
 
 from scripts.common_eval import METRIC_LIST, readQrelsDict, readRunDict, getEvalResults
