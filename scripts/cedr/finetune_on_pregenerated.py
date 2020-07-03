@@ -132,10 +132,6 @@ def main():
                         help="Store training data as on-disc memmaps to massively reduce memory usage")
 
     parser.add_argument("--epochs", type=int, default=3, help="Number of epochs to train for")
-    parser.add_argument("--local_rank",
-                        type=int,
-                        default=-1,
-                        help="local_rank for distributed training on gpus")
     parser.add_argument("--no_cuda",
                         action='store_true',
                         help="Whether not to use CUDA when available")
@@ -168,6 +164,12 @@ def main():
                         type=int,
                         default=42,
                         help="random seed for initialization")
+    parser.add_argument('--grad_checkpoint_param', type=int, default=0,
+                        metavar='grad. checkpoint param',
+                        help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
+    parser.add_argument('--device_name', metavar='CUDA device name or cpu', default='cuda:0',
+                        help='The name of the CUDA device to use')
+
     args = parser.parse_args()
 
     assert args.pregenerated_data.is_dir(), \
@@ -190,17 +192,10 @@ def main():
     else:
         num_data_epochs = args.epochs
 
-    if args.local_rank == -1 or args.no_cuda:
-        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        n_gpu = torch.cuda.device_count()
-    else:
-        torch.cuda.set_device(args.local_rank)
-        device = torch.device("cuda", args.local_rank)
-        n_gpu = 1
-        # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
-        torch.distributed.init_process_group(backend='nccl')
-    logging.info("device: {} n_gpu: {}, distributed training: {}, 16-bits training: {}".format(
-        device, n_gpu, bool(args.local_rank != -1), args.fp16))
+
+    device = torch.device(args.device_name if not args.no_cuda else "cpu")
+
+    logging.info("device: {} , 16-bits training: {}".format(device, args.fp16))
 
     if args.gradient_accumulation_steps < 1:
         raise ValueError("Invalid gradient_accumulation_steps parameter: {}, should be >= 1".format(
@@ -211,7 +206,7 @@ def main():
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    if n_gpu > 0:
+    if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
 
     if args.output_dir.is_dir() and list(args.output_dir.iterdir()):
@@ -227,23 +222,13 @@ def main():
 
     num_train_optimization_steps = int(
         total_train_examples / args.train_batch_size / args.gradient_accumulation_steps)
-    if args.local_rank != -1:
-        num_train_optimization_steps = num_train_optimization_steps // torch.distributed.get_world_size()
 
     # Prepare model
     model = BertForPreTraining.from_pretrained(args.bert_model)
     if args.fp16:
         model.half()
     model.to(device)
-    if args.local_rank != -1:
-        try:
-            from apex.parallel import DistributedDataParallel as DDP
-        except ImportError:
-            raise ImportError(
-                "Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
-        model = DDP(model)
-    elif n_gpu > 1:
-        model = torch.nn.DataParallel(model)
+    model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
     # Prepare optimizer
     param_optimizer = list(model.named_parameters())
@@ -287,10 +272,8 @@ def main():
     for epoch in range(args.epochs):
         epoch_dataset = PregeneratedDataset(epoch=epoch, training_path=args.pregenerated_data, tokenizer=tokenizer,
                                             num_data_epochs=num_data_epochs, reduce_memory=args.reduce_memory)
-        if args.local_rank == -1:
-            train_sampler = RandomSampler(epoch_dataset)
-        else:
-            train_sampler = DistributedSampler(epoch_dataset)
+        train_sampler = RandomSampler(epoch_dataset)
+
         train_dataloader = DataLoader(epoch_dataset, sampler=train_sampler, batch_size=args.train_batch_size)
         tr_loss = 0
         nb_tr_examples, nb_tr_steps = 0, 0
@@ -299,8 +282,7 @@ def main():
                 batch = tuple(t.to(device) for t in batch)
                 input_ids, input_mask, segment_ids, lm_label_ids, is_next = batch
                 loss = model(input_ids, segment_ids, input_mask, lm_label_ids, is_next)
-                if n_gpu > 1:
-                    loss = loss.mean() # mean() to average on multi-gpu.
+
                 if args.gradient_accumulation_steps > 1:
                     loss = loss / args.gradient_accumulation_steps
                 if args.fp16:

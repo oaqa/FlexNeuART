@@ -24,6 +24,8 @@ paramOpts=(\
 "grad_accum_steps" "gradAccumSteps" "# of gradient accumulation steps"
 "epoch_qty" "epochQty" "# of epochs"
 "batch_size" "batchSize" "batch size"
+"device_name" "deviceName" "cuda device"
+"grad_checkpoint_param" "gradCheckpointParam" "gradient checkpointing param"
 )
 
 parseArguments $@
@@ -47,6 +49,13 @@ if [ "$bertModelTopSubDir" = "" ] ; then
   exit 1
 fi
 
+if [ "$deviceName" = "" ] ; then
+  deviceName="cuda:0"
+fi
+
+  # Without fp16 the batch size needs to be 32
+  #batchSize=64
+  #fp16flags=" --fp16 "
 if [ "$batchSize" = "" ] ; then
   batchSize=32
 fi
@@ -57,19 +66,22 @@ fi
 
 if [ "$bertLarge" = "1" ] ; then
   initModel="bert-large-uncased"
-  # Without fp16 the batch size needs to be 32
-  #batchSize=64
-  #fp16flags=" --fp16 "
+
   if [ "$gradAccumSteps" = "" ] ; then
-    gradAccumSteps=4
+    gradAccumSteps=1
+  fi
+  # BERT large is too large for Titan 1080ti
+  if [ "$gradCheckpointParam" = "" ] ; then
+    gradCheckpointParam="2"
   fi
 else
   initModel="bert-base-uncased"
-  # Without fp16 the batch size needs to be 32
-  #batchSize=64
-  #fp16flags=" --fp16 "
+
   if [ "$gradAccumSteps" = "" ] ; then
     gradAccumSteps=1
+  fi
+  if [ "$gradCheckpointParam" = "" ] ; then
+    gradCheckpointParam="0"
   fi
 fi
 
@@ -80,7 +92,9 @@ modelDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bertModelTopSubDir/$initM
 echo "=========================================================================="
 echo "Output directory:          $outLMDir"
 echo "Batch size:                $batchSize"
+echo "CUDA device:               $deviceName"
 echo "# of grad. accum. steps:   $gradAccumSteps"
+echo "Grad. checkpoint param:    $gradCheckpointParam"
 echo "# of epochs:               $epochQty"
 echo "=========================================================================="
 
@@ -106,6 +120,8 @@ for lmDataDir in "$outLMDir/${LM_FINETUNE_SUBDIR}_pregen"* ; do
   # Note the lowercaseness 
   scripts/cedr/finetune_on_pregenerated.py \
       --do_lower_case \
+      --device_name $deviceName \
+      --grad_checkpoint_param $gradCheckpointParam \
       --gradient_accumulation_steps $gradAccumSteps \
       --pregenerated_data "$lmDataDir" \
       --epochs $epochQty \
