@@ -1,12 +1,11 @@
 #!/bin/bash -e
+# Set this var before common scripts
+outSubdir="cedr_train"
+
 source scripts/common_proc.sh
 source scripts/config.sh
 source scripts/export_train/export_common.sh
 
-CEDR_DOCS_FILE=data_docs.tsv
-CEDR_QUERY_FILE=data_query.tsv
-CEDR_TEST_RUN_FILE=test_run.txt
-CEDR_TRAIN_PAIRS_FILE=train_pairs.tsv
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
@@ -15,10 +14,10 @@ checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "QUERY_FIELD_NAME"
 checkVarNonEmpty "QREL_FILE"
 
-checkVarNonEmpty "CEDR_DOCS_FILE"
-checkVarNonEmpty "CEDR_QUERY_FILE"
-checkVarNonEmpty "CEDR_TEST_RUN_FILE"
-checkVarNonEmpty "CEDR_TRAIN_PAIRS_FILE"
+CEDR_DOCS_FILE="data_docs.tsv"
+CEDR_QUERY_FILE="data_query.tsv"
+CEDR_TEST_RUN_FILE="test_run.txt"
+CEDR_TRAIN_PAIRS_FILE="train_pairs.tsv"
 
 checkVarNonEmpty "indexFieldName"
 checkVarNonEmpty "threadQty"
@@ -26,20 +25,6 @@ checkVarNonEmpty "candTrainQty"
 checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
-
-if [ "$outSubdir" = "" ] ; then
-  outSubdir="cedr_train"
-fi
-
-outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/outSubdir/$indexFieldName"
-
-if [ ! -d "$outDir" ] ; then
-  mkdir -p "$outDir"
-fi
-
-echo "Train split: $partTrain"
-echo "Eval split: $partTest"
-echo "Output directory: $outDir"
 
 cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"
 

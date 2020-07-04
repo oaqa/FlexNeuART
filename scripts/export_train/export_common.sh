@@ -3,7 +3,6 @@
 checkVarNonEmpty "DEV1_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 
-outSubdir=""
 threadQty=1
 sampleNegQty=10
 candTrainQty=500
@@ -91,3 +90,14 @@ checkVarNonEmpty "QREL_FILE"
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 luceneIndexDir="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR/"
+
+
+outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$outSubdir/$indexFieldName"
+
+if [ ! -d "$outDir" ] ; then
+  mkdir "$outDir"
+fi
+
+echo "Train split: $partTrain"
+echo "Eval split: $partTest"
+echo "Output directory: $outDir"
