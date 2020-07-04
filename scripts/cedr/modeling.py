@@ -15,7 +15,7 @@ import pytorch_pretrained_bert
 import scripts.cedr.modeling_util as modeling_util
 from scripts.config import BERT_LARGE_MODEL, BERT_BASE_MODEL
 
-USE_BATCH_COEFF=False
+USE_BATCH_COEFF=True
 
 class BertRanker(torch.nn.Module):
     def __init__(self, is_large):

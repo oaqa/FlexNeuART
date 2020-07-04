@@ -142,14 +142,12 @@ def _pad_crop(device_name, items, l):
     return res.to(device_name)
 
 
-def _mask(device_name, items, l):
+def _mask(device_name, items, max_len):
     result = []
-    for item in items:
-        if len(item) < l:
-            item = [1. for _ in item] + ([0.] * (l - len(item)))
-        if len(item) >= l:
-            item = [1. for _ in item[:l]]
-        result.append(item)
+    for e in items:
+        elen = min(len(e), max_len)
+        result.append([1.] * elen + [0.]*(max_len - elen))
+
     res = torch.tensor(result).float()
 
     return res.to(device_name)
