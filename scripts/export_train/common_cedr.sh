@@ -1,4 +1,0 @@
-CEDR_DOCS_FILE=data_docs.tsv
-CEDR_QUERY_FILE=data_query.tsv
-CEDR_TEST_RUN_FILE=test_run.txt
-CEDR_TRAIN_PAIRS_FILE=train_pairs.tsv
