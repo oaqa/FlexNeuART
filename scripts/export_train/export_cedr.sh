@@ -39,7 +39,7 @@ fi
 
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
-echo "Output directory: outDir"
+echo "Output directory: $outDir"
 
 cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"
 

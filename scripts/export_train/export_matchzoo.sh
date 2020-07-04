@@ -29,7 +29,7 @@ fi
 
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
-echo "Output directory: outDir"
+echo "Output directory: $outDir"
 
 target/appassembler/bin/ExportTrainPairs \
 -export_fmt match_zoo  \
