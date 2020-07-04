@@ -11,7 +11,6 @@ from collections import namedtuple
 from tempfile import TemporaryDirectory
 
 from torch.utils.data import DataLoader, Dataset, RandomSampler
-from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
 from pytorch_pretrained_bert.modeling import BertForPreTraining

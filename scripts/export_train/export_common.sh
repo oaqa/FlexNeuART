@@ -1,15 +1,16 @@
 
-threadQty=1
 
 checkVarNonEmpty "DEV1_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 
+outSubdir=""
+threadQty=1
 sampleNegQty=10
 candTrainQty=500
 candTestQty=10
 
 POS_ARGS=()
-thread_qty=1
+
 while [ $# -ne 0 ] ; do
   # set +e prevents the whole bash script from failing
   set +e
@@ -27,6 +28,9 @@ while [ $# -ne 0 ] ; do
     shift 2
     case $OPT_NAME in
       -thread_qty)
+        outSubdir=$OPT_VALUE
+        ;;
+      -out_subdir)
         threadQty=$OPT_VALUE
         ;;
       -sample_neg_qty)
