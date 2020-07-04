@@ -27,10 +27,10 @@ while [ $# -ne 0 ] ; do
     shift 2
     case $OPT_NAME in
       -thread_qty)
-        outSubdir=$OPT_VALUE
+        threadQty=$OPT_VALUE
         ;;
       -out_subdir)
-        threadQty=$OPT_VALUE
+        outSubdir=$OPT_VALUE
         ;;
       -sample_neg_qty)
         sampleNegQty=$OPT_VALUE
@@ -95,7 +95,7 @@ luceneIndexDir="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR/"
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$outSubdir/$indexFieldName"
 
 if [ ! -d "$outDir" ] ; then
-  mkdir "$outDir"
+  mkdir -p "$outDir"
 fi
 
 echo "Train split: $partTrain"
