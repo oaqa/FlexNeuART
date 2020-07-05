@@ -25,8 +25,9 @@ parser = argparse.ArgumentParser(description='Convert MSMARCO-ORCAS queries & qr
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--filter_query_dir', metavar='filtering query dir',
-                    type=str, default=None, help=f'all queries found in {QUESTION_FILE_JSON} files from these directories are ignored',
-                    nargs='+')
+                    default=[],
+                    help=f'all queries found in {QUESTION_FILE_JSON} files from these directories are ignored',
+                    nargs='*')
 parser.add_argument('--out_dir', metavar='output directory', help='output directory',
                     type=str, required=True)
 parser.add_argument('--min_query_token_qty', type=int, default=0,
