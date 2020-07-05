@@ -42,6 +42,7 @@ if args.filter_fwd_file is not None:
     fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
     print(f'Read {len(fltDocId)} document IDs from {args.filter_fwd_file}')
 else:
+    fltDocId = set()
     print('NOT USING FILTERING BY DOCUMENT IDS!')
 
 
