@@ -89,6 +89,8 @@ for line in inpFile:
 
     query_lemmas, query_unlemm = nlp.procText(query)
 
+    if query_lemmas == '':
+        continue
     if query_lemmas in ignoreQueries:
         print('Ignoring query, which is found in specified query files:', query)
 
