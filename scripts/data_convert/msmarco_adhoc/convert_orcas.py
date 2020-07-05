@@ -41,7 +41,7 @@ inpFile = FileWrapper(args.input)
 
 ignoreQueries = set()
 
-for qfile_dir in args.filter_query_file:
+for qfile_dir in args.filter_query_dir:
     qfile_name = os.path.join(qfile_dir, QUESTION_FILE_JSON)
     for e in readQueries(qfile_name):
         ignoreQueries.add(e[TEXT_FIELD_NAME])
