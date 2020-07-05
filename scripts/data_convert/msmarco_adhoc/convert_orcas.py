@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='Convert MSMARCO-ORCAS queries & qr
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--filter_fwd_file', metavar='filtering forward file header',
-                    type=str, required=True, help='all document IDs not belonging to the file are ignored')
+                    type=str, default=None, help='all document IDs not belonging to the file are ignored')
 parser.add_argument('--out_dir', metavar='output directory', help='output directory',
                     type=str, required=True)
 parser.add_argument('--min_query_token_qty', type=int, default=0,
@@ -38,8 +38,11 @@ arg_vars = vars(args)
 inpFile = FileWrapper(args.input)
 
 # fltDocId is a set
-fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
-print(f'Read {len(fltDocId)} document IDs from {args.filter_fwd_file}')
+if args.filter_fwd_file is not None:
+    fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
+    print(f'Read {len(fltDocId)} document IDs from {args.filter_fwd_file}')
+else:
+    print('NOT USING FILTERING BY DOCUMENT IDS!')
 
 
 if not os.path.exists(args.out_dir):
