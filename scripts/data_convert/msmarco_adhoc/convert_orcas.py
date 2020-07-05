@@ -42,7 +42,7 @@ if args.filter_fwd_file is not None:
     fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
     print(f'Read {len(fltDocId)} document IDs from {args.filter_fwd_file}')
 else:
-    fltDocId = set()
+    fltDocId = None
     print('NOT USING FILTERING BY DOCUMENT IDS!')
 
 
@@ -82,8 +82,9 @@ for line in inpFile:
 
     qid, query, did, _  = fields
 
-    if not did in fltDocId:
-        continue
+    if fltDocId is not None:
+        if not did in fltDocId:
+            continue
 
     query_lemmas, query_unlemm = nlp.procText(query)
 
