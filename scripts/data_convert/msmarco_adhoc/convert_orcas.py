@@ -92,7 +92,7 @@ for line in inpFile:
     if query_lemmas == '':
         continue
     if query_lemmas in ignoreQueries:
-        print('Ignoring query, which is found in specified query files:', query)
+        print(f'Ignoring query, which is found in specified query files. Raw query: {query} lemmatized query {query_lemmas}')
 
     query_toks = query_lemmas.split()
     if len(query_toks) >= minQueryTokQty:
