@@ -121,7 +121,7 @@ for lmDataDir in "$outLMDir/${LM_FINETUNE_SUBDIR}_pregen"* ; do
     weightParam=" --initial_bert_weights  $modelDir/set$prevSetId/pytorch_model.bin"
   fi
 
-  if [ "$setId" -gt "$startSetId" ] ; then
+  if [ "$setId" -ge "$startSetId" ] ; then
 
     # Note the lowercaseness
     scripts/cedr/finetune_on_pregenerated.py \
