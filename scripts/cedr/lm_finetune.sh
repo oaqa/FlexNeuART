@@ -100,10 +100,7 @@ echo "Grad. checkpoint param:    $gradCheckpointParam"
 echo "# of epochs:               $epochQty"
 echo "=========================================================================="
 
-if [ -d "$modelDir" ] ; then
-  echo "Removing previously created model (if exists)"
-  rm -rf "$modelDir"
-else
+if [ ! -d "$modelDir" ] ; then
   mkdir -p "$modelDir"
 fi
 retVal=""
@@ -139,7 +136,7 @@ for lmDataDir in "$outLMDir/${LM_FINETUNE_SUBDIR}_pregen"* ; do
         --bert_model "$bertModel" \
         $weightParam \
         --output_dir "$outDir"
-  else:
+  else
     echo "Skip set; $setId (start set ID $startSetId)"
   fi
 
