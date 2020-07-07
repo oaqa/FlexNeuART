@@ -20,12 +20,14 @@ boolOpts=(\
 "bert_large" "bertLarge" "use LARGE BERT model"
 )
 
+startSetId="0"
 paramOpts=(\
 "grad_accum_steps" "gradAccumSteps" "# of gradient accumulation steps"
 "epoch_qty" "epochQty" "# of epochs"
 "batch_size" "batchSize" "batch size"
 "device_name" "deviceName" "cuda device"
 "grad_checkpoint_param" "gradCheckpointParam" "gradient checkpointing param"
+"start_set_id" "startSetId" "start set id (use to skip initial sets)"
 )
 
 parseArguments $@
@@ -65,7 +67,7 @@ if [ "$epochQty" = "" ] ; then
 fi
 
 if [ "$bertLarge" = "1" ] ; then
-  initModel="bert-large-uncased"
+  bertModel="bert-large-uncased"
 
   if [ "$gradAccumSteps" = "" ] ; then
     gradAccumSteps=1
@@ -75,7 +77,7 @@ if [ "$bertLarge" = "1" ] ; then
     gradCheckpointParam="2"
   fi
 else
-  initModel="bert-base-uncased"
+  bertModel="bert-base-uncased"
 
   if [ "$gradAccumSteps" = "" ] ; then
     gradAccumSteps=1
@@ -87,7 +89,7 @@ fi
 
 outLMDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$LM_FINETUNE_SUBDIR"
 
-modelDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bertModelTopSubDir/$initModel"
+modelDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bertModelTopSubDir/$bertModel"
 
 echo "=========================================================================="
 echo "Output directory:          $outLMDir"
@@ -117,19 +119,29 @@ for lmDataDir in "$outLMDir/${LM_FINETUNE_SUBDIR}_pregen"* ; do
     mkdir -p "$outDir"
   fi
 
-  # Note the lowercaseness 
-  scripts/cedr/finetune_on_pregenerated.py \
-      --do_lower_case \
-      --device_name $deviceName \
-      --grad_checkpoint_param $gradCheckpointParam \
-      --gradient_accumulation_steps $gradAccumSteps \
-      --pregenerated_data "$lmDataDir" \
-      --epochs $epochQty \
-      $fp16flags \
-      --train_batch_size $batchSize \
-      --bert_model "$initModel" \
-      --output_dir "$outDir" 
+  if [ "$setId" -gt "0" ] ; then
+    prevSetId=$(($setId-1))
+    weightParam=" --initial_bert_weights  $modelDir/set$prevSetId/pytorch_model.bin"
+  fi
+
+  if [ "$setId" -gt "$startSetId" ] ; then
+
+    # Note the lowercaseness
+    scripts/cedr/finetune_on_pregenerated.py \
+        --do_lower_case \
+        --device_name $deviceName \
+        --grad_checkpoint_param $gradCheckpointParam \
+        --gradient_accumulation_steps $gradAccumSteps \
+        --pregenerated_data "$lmDataDir" \
+        --epochs $epochQty \
+        $fp16flags \
+        --train_batch_size $batchSize \
+        --bert_model "$bertModel" \
+        $weightParam \
+        --output_dir "$outDir"
+  else:
+    echo "Skip set; $setId (start set ID $startSetId)"
+  fi
 
   setId=$(($setId+1))
-  initModel="$outDir"
 done
