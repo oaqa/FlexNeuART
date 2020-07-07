@@ -231,7 +231,7 @@ def main():
     if args.initial_bert_weights is not None:
         model_file_name = args.initial_bert_weights.name
         print('Loading model', model_file_name)
-        model.load(model_file_name)
+        model.load_state_dict(torch.load(model_file_name), strict=False)
     if args.fp16:
         model.half()
     model.to(device)
