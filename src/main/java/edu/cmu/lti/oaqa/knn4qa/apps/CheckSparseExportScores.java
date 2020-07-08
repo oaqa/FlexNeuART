@@ -25,6 +25,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.knn4qa.letor.FeatExtrResourceManager;
@@ -151,7 +152,8 @@ public class CheckSparseExportScores {
           
           String queryId = queryFields.get(Const.TAG_DOCNO);
          
-          Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(docIdSample, queryFields);
+          Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(
+                            CandidateEntry.createZeroScoreCandListFromDocIds(docIdSample), queryFields);
 
           for (int i = 0; i < docIdSample.size(); ++i) {
             String docId = docIdSample.get(i);

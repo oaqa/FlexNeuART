@@ -122,24 +122,17 @@ class BaseProcessingUnit {
       if (mAppRef.mResultCache != null) 
         mAppRef.mResultCache.addOrReplaceCacheEntry(queryId, qres);
     }
-    CandidateEntry [] resultsAll = qres.mEntries;
+    CandidateEntry [] cands = qres.mEntries;
     
     long end = System.currentTimeMillis();
     long searchTimeMS = end - start;
     
     mAppRef.logger.info(
         String.format("Obtained results for the query # %d queryId='%s', the search took %d ms, we asked for max %d entries got %d", 
-                      queryNum, queryId, searchTimeMS, mAppRef.mMaxCandRet, resultsAll.length));
+                      queryNum, queryId, searchTimeMS, mAppRef.mMaxCandRet, cands.length));
     
     mAppRef.mQueryTimeStat.addValue(searchTimeMS);
     mAppRef.mNumRetStat.addValue(qres.mNumFound);
-    
-    ArrayList<String>           allDocIds = new ArrayList<String>();
-                    
-    for (int rank = 0; rank < resultsAll.length; ++rank) {
-      CandidateEntry e = resultsAll[rank];
-      allDocIds.add(e.mDocId);
-    }
     
     // allDocFeats will be first created by an intermediate re-ranker (if it exists).
     // If there is a final re-ranker, it will overwrite previously created features.
@@ -150,12 +143,12 @@ class BaseProcessingUnit {
     if (mAppRef.mExtrInterm != null) {
       // Compute features once for all documents using an intermediate re-ranker
       start = System.currentTimeMillis();
-      allDocFeats = mAppRef.mExtrInterm.getFeatures(allDocIds, queryFields);
+      allDocFeats = mAppRef.mExtrInterm.getFeatures(cands, queryFields);
       
       DenseVector intermModelWeights = mAppRef.mModelInterm;
 
-      for (int rank = 0; rank < resultsAll.length; ++rank) {
-        CandidateEntry e = resultsAll[rank];
+      for (int rank = 0; rank < cands.length; ++rank) {
+        CandidateEntry e = cands[rank];
         DenseVector feat = allDocFeats.get(e.mDocId);
         e.mScore = (float) feat.dot(intermModelWeights);
         if (Float.isNaN(e.mScore)) {
@@ -169,14 +162,11 @@ class BaseProcessingUnit {
           }
         }
       }
-      Arrays.sort(resultsAll);
+      Arrays.sort(cands);
       // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
-      if (resultsAll.length > maxNumRet) {
-        allDocIds = new ArrayList<String>();
-        CandidateEntry resultsAllTrunc[] = Arrays.copyOf(resultsAll, maxNumRet);
-        resultsAll = resultsAllTrunc;
-        for (int rank = 0; rank < resultsAll.length; ++rank) 
-          allDocIds.add(resultsAll[rank].mDocId);            
+      if (cands.length > maxNumRet) {
+        CandidateEntry resultsAllTrunc[] = Arrays.copyOf(cands, maxNumRet);
+        cands = resultsAllTrunc;          
       }
       end = System.currentTimeMillis();
       long rerankIntermTimeMS = end - start;
@@ -191,8 +181,8 @@ class BaseProcessingUnit {
     //    If, e.g., the rank is 10, then we discard subsets having less than top-10 entries.
     int minRelevRank = Integer.MAX_VALUE;
     if (mAppRef.mQrels != null) {
-      for (int rank = 0; rank < resultsAll.length; ++rank) {
-        CandidateEntry e = resultsAll[rank];
+      for (int rank = 0; rank < cands.length; ++rank) {
+        CandidateEntry e = cands[rank];
         String label = mAppRef.mQrels.get(queryId, e.mDocId);
         e.mRelevGrade = CandidateProvider.parseRelevLabel(label);
         if (e.mRelevGrade >= 1 && minRelevRank == Integer.MAX_VALUE) {
@@ -205,21 +195,21 @@ class BaseProcessingUnit {
     
     // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
     if (mAppRef.mExtrFinal!= null) {
-      if (allDocIds.size() > maxNumRet) {
-        throw new RuntimeException("Bug or you are using old/different cache: allDocIds.size()=" + allDocIds.size() + " > maxNumRet=" + maxNumRet);
+      if (cands.length > maxNumRet) {
+        throw new RuntimeException("Bug or you are using old/different cache: cands.size()=" + cands.length + " > maxNumRet=" + maxNumRet);
       }
       // Compute features once for all documents using a final re-ranker
       start = System.currentTimeMillis();
-      allDocFeats = mAppRef.mExtrFinal.getFeatures(allDocIds, queryFields);
+      allDocFeats = mAppRef.mExtrFinal.getFeatures(cands, queryFields);
       
       Ranker modelFinal = mAppRef.mModelFinal;
       
       if (modelFinal != null) {
         DataPointWrapper featRankLib = new DataPointWrapper();
-        for (int rank = 0; rank < resultsAll.length; ++rank) {
-          CandidateEntry e = resultsAll[rank];
+        for (int rank = 0; rank < cands.length; ++rank) {
+          CandidateEntry e = cands[rank];
           DenseVector feat = allDocFeats.get(e.mDocId);
-          // It looks like eval is thread safe in RankLib 2.5.
+          // It looks like eval is thread safe in RankLib
           featRankLib.assign(feat);                            
           e.mScore = (float) modelFinal.eval(featRankLib);
           if (Float.isNaN(e.mScore)) {
@@ -250,7 +240,7 @@ class BaseProcessingUnit {
     for (int k = 0; k < mAppRef.mNumRetArr.size(); ++k) {
       int numRet = mAppRef.mNumRetArr.get(k);
       if (numRet >= minRelevRank) {
-        CandidateEntry resultsCurr[] = Arrays.copyOf(resultsAll, Math.min(numRet, resultsAll.length));
+        CandidateEntry resultsCurr[] = Arrays.copyOf(cands, Math.min(numRet, cands.length));
         Arrays.sort(resultsCurr);
         synchronized (mWriteLock) {
           mAppRef.procResults(
@@ -264,27 +254,6 @@ class BaseProcessingUnit {
         }
       }
     }                
-  }
-
-  /**
-   * Adds ranks and scores obtained from a candidate provider.
-   * 
-   * @param docFeats        all features
-   * @param resultsAll      result entries
-   */
-  protected void addScoresAndRanks(Map<String, DenseVector>   docFeats, 
-                                 CandidateEntry[]           resultsAll) {
-    for (CandidateEntry  e: resultsAll) {
-      DenseVector oldVect = docFeats.get(e.mDocId);
-      int oldSize = oldVect.size();
-      DenseVector newVect = new DenseVector(oldSize + 2);
-      newVect.set(0, e.mOrigRank);
-      newVect.set(1, e.mOrigScore);
-      for (int vi = 0; vi < oldSize; ++vi)
-        newVect.set(vi + 2, oldVect.get(vi)); 
-      docFeats.replace(e.mDocId, newVect);
-    }    
-    
   }
 }
 

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
@@ -69,9 +70,9 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData) throws Exception {
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
     
-    int docQty = arrDocIds.size();
+    int docQty = cands.length;
     DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
     HashMap<Integer, Float>     topTerms = new HashMap<Integer, Float>();
     ArrayList<IdValPair>        topDocTerms = new ArrayList<IdValPair>();
@@ -91,7 +92,7 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
     
     float topDocScoreNorm = 0;
     for (int i = 0; i < docQty; ++i) {
-      String docId = arrDocIds.get(i);
+      String docId = cands[i].mDocId;
       DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
       
       if (docEntry == null) {
@@ -151,10 +152,10 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
      */
     topDocScoreNorm = 1.0f / Math.max(topDocScoreNorm, Float.MIN_NORMAL);
 
-    HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty());
+    HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty());
     
     for (int i = 0; i < docQty; ++i) {
-      String docId = arrDocIds.get(i);
+      String docId = cands[i].mDocId;
       DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
 
       DenseVector v = res.get(docId);
