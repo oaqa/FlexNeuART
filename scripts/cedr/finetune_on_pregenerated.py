@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # An LM-finetuning script from the older version of the Hugging Face Transformer library
+import argparse
 from argparse import ArgumentParser
 from pathlib import Path
 import torch
@@ -11,7 +12,6 @@ from collections import namedtuple
 from tempfile import TemporaryDirectory
 
 from torch.utils.data import DataLoader, Dataset, RandomSampler
-from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 
 from pytorch_pretrained_bert.modeling import BertForPreTraining
@@ -127,6 +127,9 @@ def main():
     parser.add_argument('--output_dir', type=Path, required=True)
     parser.add_argument("--bert_model", type=str, required=True, help="Bert pre-trained model selected in the list: bert-base-uncased, "
                              "bert-large-uncased, bert-base-cased, bert-base-multilingual, bert-base-chinese.")
+    parser.add_argument('--initial_bert_weights',
+                        metavar='initial BERT weights', help='initial BERT weights',
+                        type=argparse.FileType('rb'), default=None)
     parser.add_argument("--do_lower_case", action="store_true")
     parser.add_argument("--reduce_memory", action="store_true",
                         help="Store training data as on-disc memmaps to massively reduce memory usage")
@@ -225,6 +228,10 @@ def main():
 
     # Prepare model
     model = BertForPreTraining.from_pretrained(args.bert_model)
+    if args.initial_bert_weights is not None:
+        model_file_name = args.initial_bert_weights.name
+        print('Loading model', model_file_name)
+        model.load_state_dict(torch.load(model_file_name), strict=False)
     if args.fp16:
         model.half()
     model.to(device)
