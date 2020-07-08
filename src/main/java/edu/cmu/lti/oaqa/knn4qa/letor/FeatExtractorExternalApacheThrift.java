@@ -197,6 +197,9 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         queryQty = 1;
       }
       float invQueryQty = 1.0f / queryQty;
+      if (mNormByQueryLen) {
+        logger.info(String.format("Query: '%s' Normalization factor: %f", query, invQueryQty));
+      }
       
       for (CandidateEntry e : cands) {
         List<Double> scoreList = scores.get(e.mDocId);
