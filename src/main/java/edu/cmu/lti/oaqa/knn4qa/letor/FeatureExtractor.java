@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import no.uib.cipr.matrix.DenseVector;
@@ -33,12 +34,12 @@ public abstract class FeatureExtractor {
   /**
    * Obtains features for a set of documents, this function should be <b>thread-safe!</b>.
    * 
-   * @param     arrDocIds    an array of document IDs
+   * @param     cands        an array of candidate entries.
    * @param     queryData    a multifield representation of the query (map keys are field names). 
 
    * @return a map docId -> sparse feature vector
    */
-  public abstract Map<String,DenseVector> getFeatures(ArrayList<String>    arrDocIds, 
+  public abstract Map<String,DenseVector> getFeatures(CandidateEntry[]     cands, 
                                                       Map<String, String>  queryData) throws Exception;
   
   /**
@@ -156,11 +157,11 @@ public abstract class FeatureExtractor {
     }
   }
 
-  public static HashMap<String, DenseVector> initResultSet(ArrayList<String> arrDocIds, int featureQty) {
+  public static HashMap<String, DenseVector> initResultSet(CandidateEntry[] cands, int featureQty) {
     HashMap<String, DenseVector> res = new HashMap<String,DenseVector>();
 
-    for (String docId : arrDocIds) {
-      res.put(docId, new DenseVector(featureQty));
+    for (CandidateEntry e : cands) {
+      res.put(e.mDocId, new DenseVector(featureQty));
     }
     
     return res;

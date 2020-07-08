@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.QueryDocSimilarityFunc;
@@ -69,24 +70,24 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
    * @return
    * @throws Exception
    */
-  protected Map<String, DenseVector> getSimpleFeatures(ArrayList<String> arrDocIds, 
+  protected Map<String, DenseVector> getSimpleFeatures(CandidateEntry[] cands, 
                                                        Map<String, String> queryData,
                                                        ForwardIndex fieldIndex, QueryDocSimilarityFunc[] similObj) throws Exception {
-    HashMap<String, DenseVector> res = initResultSet(arrDocIds, similObj.length); 
+    HashMap<String, DenseVector> res = initResultSet(cands, similObj.length); 
     DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryData);
     if (queryEntry == null) return res;
     
-    for (String docId : arrDocIds) {
-      DocEntryParsed docEntry = fieldIndex.getDocEntryParsed(docId);
+    for (CandidateEntry e : cands) {
+      DocEntryParsed docEntry = fieldIndex.getDocEntryParsed(e.mDocId);
       
       if (docEntry == null) {
-        throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
+        throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
       }
 
       
-      DenseVector v = res.get(docId);
+      DenseVector v = res.get(e.mDocId);
       if (v == null) {
-        throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
+        throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", e.mDocId));
       }
       
       for (int k = 0; k < similObj.length; ++k) {      

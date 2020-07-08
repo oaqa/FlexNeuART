@@ -15,6 +15,8 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.cand_providers;
 
+import java.util.ArrayList;
+
 public class CandidateEntry implements Comparable<CandidateEntry>, java.io.Serializable {
   private static final long serialVersionUID = 1L;
   public final String mDocId;
@@ -34,5 +36,21 @@ public class CandidateEntry implements Comparable<CandidateEntry>, java.io.Seria
   public int compareTo(CandidateEntry o) {
     // If mScore is greater => result is -1
     return (int) Math.signum(o.mScore - mScore);
+  }
+  
+  /**
+   * Create a list of candidate entries with zero scores from an array of document IDs.
+   * 
+   * @param docIds
+   * @return
+   */
+  public static CandidateEntry[] createZeroScoreCandListFromDocIds(ArrayList<String> docIds) {
+    CandidateEntry[] res = new CandidateEntry[docIds.size()];
+    
+    for (int i = 0; i < docIds.size(); i++) {
+      res[i] = new CandidateEntry(docIds.get(i), 0);
+    }
+    
+    return res;
   }
 };

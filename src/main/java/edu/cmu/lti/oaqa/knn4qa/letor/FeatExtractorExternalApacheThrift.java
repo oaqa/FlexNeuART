@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
-
+import org.checkerframework.checker.units.qual.m;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,9 @@ import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.TFIDFSimilarity;
 import edu.cmu.lti.oaqa.knn4qa.utils.Const;
+import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 import no.uib.cipr.matrix.DenseVector;
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.letor.external.TextEntryParsed;
@@ -50,6 +52,8 @@ import edu.cmu.lti.oaqa.knn4qa.letor.external.ExternalScorer.Client;
  */
 public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor {
   private static final Logger logger = LoggerFactory.getLogger(FeatExtractorExternalApacheThrift.class);
+
+  public static final String NORM_BY_QUERY_LEN = "normByQueryLen";
   
   public static String EXTR_TYPE = "externalThrift";
   
@@ -74,6 +78,8 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     mHost = conf.getReqParamStr(HOST);
     
     mUnkWord = conf.getReqParamStr(UNK_WORD);
+    
+    mNormByQueryLen = conf.getParamBool(NORM_BY_QUERY_LEN);
     
     mUseWordSeq = conf.getParamBool(POSITIONAL);
     
@@ -121,7 +127,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   }
   
   @Override
-  public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
       throws Exception {
     HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
     
@@ -137,7 +143,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     try {
       Client clnt = new Client(new TBinaryProtocol(transp));
       
-      res = initResultSet(arrDocIds, getFeatureQty()); 
+      res = initResultSet(cands, getFeatureQty()); 
 
       Map<String, List<Double>> scores = null;
       
@@ -153,14 +159,14 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         
         ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
         
-        for (String docId : arrDocIds) {
-          String docEntryRaw = mFieldIndex.getDocEntryRaw(docId);
+        for (CandidateEntry e : cands) {
+          String docEntryRaw = mFieldIndex.getDocEntryRaw(e.mDocId);
 
           if (docEntryRaw == null) {
-            throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
+            throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
           }
 
-          docEntries.add(new TextEntryRaw(docId, docEntryRaw));
+          docEntries.add(new TextEntryRaw(e.mDocId, docEntryRaw));
         }
         scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
       } else {
@@ -169,27 +175,37 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         
         TextEntryParsed queryTextEntry = createTextEntryParsed(queryId, queryEntry);
         ArrayList<TextEntryParsed> docTextEntries = new ArrayList<>();
-        for (String docId : arrDocIds) {
-          DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
+        
+        for (CandidateEntry e : cands) {
+          DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(e.mDocId);
 
           if (docEntry == null) {
-            throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
+            throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
           }
 
-          docTextEntries.add(createTextEntryParsed(docId, docEntry));
+          docTextEntries.add(createTextEntryParsed(e.mDocId, docEntry));
         }
         scores = clnt.getScoresFromParsed(queryTextEntry, docTextEntries);
       }
       
+      String query = queryData.get(Const.TEXT_FIELD_NAME);
+      if (query == null) {
+        query = "";
+      }
+      float queryQty = StringUtils.splitOnWhiteSpace(query).length;
+      if (queryQty <= 1) {
+        queryQty = 1;
+      }
+      float invQueryQty = 1.0f / queryQty;
       
-      for (String docId : arrDocIds) {
-        List<Double> scoreList = scores.get(docId);
+      for (CandidateEntry e : cands) {
+        List<Double> scoreList = scores.get(e.mDocId);
 
         if (scoreList == null) {
-          throw new Exception("Inconsistent data or bug: can't find a score for doc id ='" + docId + "'");
+          throw new Exception("Inconsistent data or bug: can't find a score for doc id ='" + e.mDocId + "'");
         }
         if (scoreList.size() != mFeatQty) {
-          throw new Exception("Inconsistent data or bug for doc id ='" + docId + "' expected " + mFeatQty + 
+          throw new Exception("Inconsistent data or bug for doc id ='" + e.mDocId + "' expected " + mFeatQty + 
               " features, but got: " + scoreList.size());
         }
         
@@ -198,11 +214,14 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         int idx = 0;
         
         for (double v : scoreList) {
+          if (mNormByQueryLen) {
+            v *= invQueryQty;
+          }
           scoreVect.set(idx, v);
           idx++;
         }
         
-        res.put(docId, scoreVect);
+        res.put(e.mDocId, scoreVect);
       }
     } catch (Exception e) {
       logger.error("Caught an exception:" + e);
@@ -223,6 +242,8 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   
   final int                          mFeatQty;
   final boolean                      mUseWordSeq;
+  
+  final boolean                      mNormByQueryLen;
   
   @Override
   public String getName() {

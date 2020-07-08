@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import no.uib.cipr.matrix.DenseVector;
 
 
@@ -49,6 +50,8 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
         fe = new FeatExtrBM25ClosePairSimilarity(resMngr, oneExtrConf); 
       } else if (extrType.equalsIgnoreCase(FeatExtractorRM3Similarity.EXTR_TYPE)) {
         fe = new FeatExtractorRM3Similarity(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(FeatExtrPassRetrScore.EXTR_TYPE)) {
+        fe = new FeatExtrPassRetrScore(resMngr, oneExtrConf);
       } else {
         // TODO ideally need to inform about the set of supported extractors
         throw new Exception("Unsupported extractor type: " + extrType);
@@ -75,17 +78,17 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
       throws Exception {
-    HashMap<String,DenseVector> res = FeatureExtractor.initResultSet(arrDocIds, getFeatureQty());
+    HashMap<String,DenseVector> res = FeatureExtractor.initResultSet(cands, getFeatureQty());
     
     int startFeatId = 0;
     for (SingleFieldFeatExtractor featExtr : mCompExtr) {
-      Map<String,DenseVector> subRes = featExtr.getFeatures(arrDocIds, queryData);
+      Map<String,DenseVector> subRes = featExtr.getFeatures(cands, queryData);
       int compQty = featExtr.getFeatureQty();
-      for (String docId : arrDocIds) {
-        DenseVector dst = res.get(docId);
-        DenseVector src = subRes.get(docId);
+      for (CandidateEntry e: cands) {
+        DenseVector dst = res.get(e.mDocId);
+        DenseVector src = subRes.get(e.mDocId);
         for (int fid = 0; fid < compQty; ++fid) {
           dst.set(startFeatId + fid, src.get(fid));
         }

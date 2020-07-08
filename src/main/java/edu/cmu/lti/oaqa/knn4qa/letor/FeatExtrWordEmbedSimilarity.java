@@ -1,10 +1,9 @@
 package edu.cmu.lti.oaqa.knn4qa.letor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
@@ -85,28 +84,29 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   }
     
   @Override
-  public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData)
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
       throws Exception {
-    HashMap<String, DenseVector> res = initResultSet(arrDocIds, getFeatureQty()); 
+    HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
     DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
     if (queryEntry == null) return res;
     
     float [] queryVect = mQueryEmbed.getDocAverage(queryEntry, mSimilObj, mFieldIndex, 
                                                    mUseIDFWeight, mUseL2Norm);
 
-    for (String docId : arrDocIds) {
-      DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(docId);
+    for (CandidateEntry e : cands) {
+      DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(e.mDocId);
       
       if (docEntry == null) {
-        throw new Exception("Inconsistent data or bug: can't find document with id ='" + docId + "'");
+        throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
       }
       
       float [] docVec = mDocEmbed.getDocAverage(docEntry, mSimilObj, mFieldIndex, 
                                                    mUseIDFWeight, mUseL2Norm);
 
-      DenseVector v = res.get(docId);
+      DenseVector v = res.get(e.mDocId);
       if (v == null) {
-        throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", docId));
+        throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", 
+                                          e.mDocId));
       }
       // For cosine distance, we add one to convert it into the cosine *SIMILARITY*
       // In such a case, it will be equal to the inner product of the exported normalized

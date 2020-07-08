@@ -15,9 +15,9 @@
  */
 package edu.cmu.lti.oaqa.knn4qa.letor;
 
-import java.util.ArrayList;
 import java.util.Map;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25CloseOrderPairSimilQueryNorm;
 import edu.cmu.lti.oaqa.knn4qa.simil_func.BM25ClosePairSimilarityQueryNormBase;
@@ -56,8 +56,8 @@ public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(arrDocIds, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
+    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
   }
 
   @Override

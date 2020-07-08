@@ -3,6 +3,7 @@ package edu.cmu.lti.oaqa.knn4qa.letor;
 import java.util.ArrayList;
 import java.util.Map;
 
+import edu.cmu.lti.oaqa.knn4qa.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.knn4qa.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
@@ -34,7 +35,7 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
 
   @Override
   public abstract Map<String, DenseVector> 
-        getFeatures(ArrayList<String> arrDocIds, Map<String, String> queryData) throws Exception;
+                  getFeatures(CandidateEntry cands[], Map<String, String> queryData) throws Exception;
   
   /**
    * This function produces a query and a document vector whose 

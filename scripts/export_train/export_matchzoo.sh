@@ -1,9 +1,10 @@
 #!/bin/bash -e
+# Set this var before common scripts
+outSubdir="match_zoo_train"
+
 source scripts/common_proc.sh
 source scripts/config.sh
-source scripts/config_opts.sh
-
-# The output directory name is hard-coded
+source scripts/export_train/export_common.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
@@ -18,15 +19,6 @@ checkVarNonEmpty "$candTrainQty"
 checkVarNonEmpty "$candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
-
-echo "Train split: $partTrain"
-echo "Eval split: $partTest"
-
-outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/match_zoo_train"
-
-if [ ! -d "$outDir" ] ; then
-  mkdir "$outDir"
-fi
 
 target/appassembler/bin/ExportTrainPairs \
 -export_fmt match_zoo  \

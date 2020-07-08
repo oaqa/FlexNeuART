@@ -9,9 +9,10 @@ import pytorch_pretrained_bert
 
 sys.path.append('.')
 
+from scripts.config import QUESTION_FILE_JSON
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, readStopWords, addRetokenizedField, readDocIdsFromForwardFileHeader
+    FileWrapper, readStopWords, addRetokenizedField, readQueries
 
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
     TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
@@ -23,8 +24,10 @@ from scripts.common_eval import QrelEntry, writeQrels
 parser = argparse.ArgumentParser(description='Convert MSMARCO-ORCAS queries & qrels.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
-parser.add_argument('--filter_fwd_file', metavar='filtering forward file header',
-                    type=str, required=True, help='all document IDs not belonging to the file are ignored')
+parser.add_argument('--filter_query_dir', metavar='filtering query dir',
+                    default=[],
+                    help=f'all queries found in {QUESTION_FILE_JSON} files from these directories are ignored',
+                    nargs='*')
 parser.add_argument('--out_dir', metavar='output directory', help='output directory',
                     type=str, required=True)
 parser.add_argument('--min_query_token_qty', type=int, default=0,
@@ -37,9 +40,15 @@ arg_vars = vars(args)
 
 inpFile = FileWrapper(args.input)
 
-# fltDocId is a set
-fltDocId = readDocIdsFromForwardFileHeader(args.filter_fwd_file)
-print(f'Read {len(fltDocId)} document IDs from {args.filter_fwd_file}')
+ignoreQueries = set()
+
+for qfile_dir in args.filter_query_dir:
+    qfile_name = os.path.join(qfile_dir, QUESTION_FILE_JSON)
+    for e in readQueries(qfile_name):
+        ignoreQueries.add(e[TEXT_FIELD_NAME])
+    print('Read queries from: ' + qfile_name)
+
+print('A list of queries to ignore has %d entries' % (len(ignoreQueries)))
 
 
 if not os.path.exists(args.out_dir):
@@ -78,10 +87,12 @@ for line in inpFile:
 
     qid, query, did, _  = fields
 
-    if not did in fltDocId:
-        continue
-
     query_lemmas, query_unlemm = nlp.procText(query)
+
+    if query_lemmas == '':
+        continue
+    if query_lemmas in ignoreQueries:
+        print(f"Ignoring query, which is found in specified query files. Raw query: '{query}' lemmatized query '{query_lemmas}'")
 
     query_toks = query_lemmas.split()
     if len(query_toks) >= minQueryTokQty:
