@@ -68,7 +68,7 @@ selQueryIds = set(queryIdList[0:args.qty])
 
 print('We selected %d queries' % len(selQueryIds))
 
-outDir = os.path.join(dataDir, args.out_dir)
+outDir = os.path.join(dataDir, args.out_subdir)
 if not os.path.exists(outDir):
     os.makedirs(outDir)
 
