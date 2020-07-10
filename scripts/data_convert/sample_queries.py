@@ -46,7 +46,7 @@ for data in queryList:
     did = data[DOCID_FIELD]
     queryIdList.append(did)
 
-print('Read all the queries')
+print('Read %d the queries' % (len(queryIdList)))
 
 qrelList = readQrels(os.path.join(dataDir, args.input_subdir, QREL_FILE))
 
@@ -72,7 +72,7 @@ outDir = os.path.join(dataDir, args.out_subdir)
 if not os.path.exists(outDir):
     os.makedirs(outDir)
 
-queriesFiltered = list(filter(lambda e: e.queryId in selQueryIds, queryList))
+queriesFiltered = list(filter(lambda e: e[DOCID_FIELD] in selQueryIds, queryList))
 qrelsFiltered = list(filter(lambda e: e.queryId in selQueryIds, qrelList))
 
 writeQrels(qrelsFiltered,os.path.join(outDir, QREL_FILE))
