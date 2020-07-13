@@ -7,6 +7,7 @@ USE_MATCHZOO=0
 
 plist=(\
 lxml             "" \
+torch            "1.4" \
 torchtext        "" \
 numpy            "" \
 bs4              "" \

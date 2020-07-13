@@ -1,3 +1,4 @@
+#@IgnoreInspection BashAddShebang
 
 
 checkVarNonEmpty "DEV1_SUBDIR"
