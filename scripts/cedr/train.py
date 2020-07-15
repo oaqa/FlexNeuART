@@ -20,7 +20,6 @@ sys.path.append('.')
 import scripts.utils as utils
 import scripts.cedr.data as data
 import scripts.cedr.model_init_utils as model_init_utils
-import scripts.cedr.modeling as modeling
 
 from scripts.common_eval import METRIC_LIST, readQrelsDict, readRunDict, getEvalResults
 from scripts.config import DEVICE_CPU
@@ -96,7 +95,9 @@ def get_lr_desc(optimizer):
     return ' '.join(lr_arr)
 
 
-def train_iteration(model, device_qty, loss_obj,
+def train_iteration(model,
+                    is_master_proc, device_qty,
+                    loss_obj,
                     train_params, max_train_qty,
                     optimizer, scheduler,
                     dataset, train_pairs, qrels):
@@ -121,50 +122,57 @@ def train_iteration(model, device_qty, loss_obj,
 
     batch_id = 0
 
-    with tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False) as pbar:
-        for record in data.iter_train_pairs(model, train_params.device_name, dataset, train_pairs, train_params.shuffle_train,
-                                            qrels, train_params.backprop_batch_size,
-                                            train_params.max_query_len, train_params.max_doc_len):
-            scores = model(record['query_tok'],
-                           record['query_mask'],
-                           record['doc_tok'],
-                           record['doc_mask'])
-            count = len(record['query_id']) // 2
-            scores = scores.reshape(count, 2)
-            loss = loss_obj.compute(scores)
-            loss.backward()
-            total_qty += count
+    if is_master_proc:
+        pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False)
+    else:
+        pbar = None
 
-            if train_params.print_grads:
-              print(f'Records processed {total_qty} Gradient sums:')
-              for k, v in model.named_parameters():
-                print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
+    for record in data.iter_train_pairs(model, train_params.device_name, dataset, train_pairs, train_params.shuffle_train,
+                                        qrels, train_params.backprop_batch_size,
+                                        train_params.max_query_len, train_params.max_doc_len):
+        scores = model(record['query_tok'],
+                       record['query_mask'],
+                       record['doc_tok'],
+                       record['doc_mask'])
+        count = len(record['query_id']) // 2
+        scores = scores.reshape(count, 2)
+        loss = loss_obj.compute(scores)
+        loss.backward()
+        total_qty += count
 
-            total_loss += loss.item()
+        if train_params.print_grads:
+          print(f'Records processed {total_qty} Gradient sums:')
+          for k, v in model.named_parameters():
+            print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
 
-            if total_qty  - total_prev_qty >= batch_size:
-                #print(total, 'optimizer step!')
-                optimizer.step()
-                optimizer.zero_grad()
-                total_prev_qty = total_qty
+        total_loss += loss.item()
 
-                # Scheduler must make a step in each batch! *AFTER* the optimizer makes an update!
-                if scheduler is not None:
-                    scheduler.step()
-                    lr_desc = get_lr_desc(optimizer)
+        if total_qty  - total_prev_qty >= batch_size:
+            #print(total, 'optimizer step!')
+            optimizer.step()
+            optimizer.zero_grad()
+            total_prev_qty = total_qty
 
-                # This must be done in every process, not only in the master process
-                if device_qty > 1:
-                    if batch_id % train_params.batch_sync_qty == 0:
-                        avg_model_params(model)
+            # Scheduler must make a step in each batch! *AFTER* the optimizer makes an update!
+            if scheduler is not None:
+                scheduler.step()
+                lr_desc = get_lr_desc(optimizer)
 
+            # This must be done in every process, not only in the master process
+            if device_qty > 1:
+                if batch_id % train_params.batch_sync_qty == 0:
+                    avg_model_params(model)
 
-                batch_id += 1
+            batch_id += 1
 
+        if pbar is not None:
             pbar.update(count)
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
-            if total_qty >= max_train_qty:
-                break
+        if total_qty >= max_train_qty:
+            break
+
+    if pbar is not None:
+        pbar.close()
 
     return total_loss / float(total_qty)
 
@@ -258,12 +266,15 @@ def do_train(device_qty, master_port, rank, is_master_proc,
         if is_master_proc:
             print('Optimizer', optimizer)
 
-        loss = train_iteration(model=model, device_qty=device_qty, loss_obj=loss_obj,
+        loss = train_iteration(model=model,
+                               is_master_proc=is_master_proc,
+                               device_qty=device_qty, loss_obj=loss_obj,
                                train_params=train_params, max_train_qty=max_train_qty,
                                optimizer=optimizer, scheduler=scheduler,
                                dataset=dataset, train_pairs=train_pairs, qrels=qrels)
 
         # This must be done in every process, not only in the master process
+        # But only if we have more than one device!
         if device_qty > 1:
             avg_model_params(model)
 
