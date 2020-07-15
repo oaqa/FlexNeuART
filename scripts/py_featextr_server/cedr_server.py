@@ -8,10 +8,6 @@ sys.path.append('.')
 from scripts.py_featextr_server.base_server import BaseQueryHandler, startQueryServer
 
 import scripts.cedr.model_init_utils as model_init_utils
-
-# CEDR imports
-
-import scripts.cedr.train as train
 import scripts.cedr.data as data
 
 DEFAULT_BATCH_SIZE = 32

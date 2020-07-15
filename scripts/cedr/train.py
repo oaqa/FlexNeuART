@@ -385,10 +385,6 @@ def main_cli():
                         type=int, default=0,
                         help='max # of validation queries: 0 tells to use all data')
 
-    parser.add_argument('--grad_checkpoint_param', type=int, default=0,
-                        metavar='grad. checkpoint param',
-                       help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
-
     parser.add_argument('--no_shuffle_train', action='store_true',
                         help='disabling shuffling of training data')
 
@@ -417,6 +413,7 @@ def main_cli():
         sys.exit(1)
 
     model = model_init_utils.create_model_from_args(args)
+    model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
     print(model)
 
