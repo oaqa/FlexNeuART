@@ -31,11 +31,13 @@ class CedrQueryHandler(BaseQueryHandler):
         print('Maximum query/document len %d/%d device: %s' % (self.maxQueryLen, self.maxDocLen, self.deviceName))
 
         self.model = model
-        self.model.to(self.deviceName)
+
         if modelWeights is not None:
             if self.debugPrint:
                 print(f'Loading model {modelType} from {modelWeights}')
             self.model.load(modelWeights)
+
+        self.model.to(self.deviceName)
 
         # need to be in the eval mode
         self.model.eval()
@@ -123,7 +125,6 @@ if __name__ == '__main__':
 
     multiThreaded = False  #
     startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(model=model,
-                                                                           isBertLarge=args.bert_large,
                                                                            modelWeights=args.model_weights,
                                                                            batchSize=args.batch_size,
                                                                            debugPrint=args.debug_print,
