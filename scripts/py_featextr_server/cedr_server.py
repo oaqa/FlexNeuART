@@ -33,8 +33,7 @@ class CedrQueryHandler(BaseQueryHandler):
         self.model = model
 
         if modelWeights is not None:
-            if self.debugPrint:
-                print(f'Loading model {modelType} from {modelWeights}')
+            print(f'Loading model {modelType} from {modelWeights}')
             self.model.load(modelWeights)
 
         self.model.to(self.deviceName)
