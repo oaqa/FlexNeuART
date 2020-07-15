@@ -11,6 +11,7 @@ import pickle
 
 from collections import Counter
 
+PAD_CODE=-1
 DEFAULT_MAX_QUERY_LEN=32
 DEFAULT_MAX_DOC_LEN=512 - DEFAULT_MAX_QUERY_LEN - 4
 
@@ -133,7 +134,7 @@ def _pad_crop(device_name, items, l):
     result = []
     for item in items:
         if len(item) < l:
-            item = item + [-1] * (l - len(item))
+            item = item + [PAD_CODE] * (l - len(item))
         if len(item) > l:
             item = item[:l]
         result.append(item)
@@ -153,8 +154,8 @@ def _mask(device_name, items, max_len):
     return res.to(device_name)
 
 
-# Create vocabulary from whilte-spaced text
 class VocabBuilder:
+    """Compile a vocabulary together with token stat. from *WHITE-SPACE* tokenized text."""
     def __init__(self):
         self.total_counter = Counter()
         self.doc_counter = Counter()
@@ -176,7 +177,6 @@ class VocabBuilder:
 
     @staticmethod
     def load(file_name):
-        dt = []
         with open(file_name, 'rb') as f:
             dt = pickle.load(f)
         res = VocabBuilder()

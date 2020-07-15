@@ -13,7 +13,6 @@ IMAP_PROC_CHUNK_QTY=256
 
 DEVICE_CPU = 'cpu'
 
-VANILLA_BERT = 'vanilla_bert'
 BERT_BASE_MODEL='bert-base-uncased'
 BERT_LARGE_MODEL='bert-large-uncased'
 

@@ -6,7 +6,8 @@ import torch
 sys.path.append('.')
 
 from scripts.py_featextr_server.base_server import BaseQueryHandler, startQueryServer
-from scripts.config import VANILLA_BERT
+
+import scripts.cedr.model_init_utils as model_init_utils
 
 # CEDR imports
 
@@ -19,7 +20,7 @@ class CedrQueryHandler(BaseQueryHandler):
     # Exclusive==True means that only one getScores
     # function is executed at at time
     def __init__(self,
-                    modelType, isBertLarge,
+                    model,
                     modelWeights, batchSize, deviceName,
                     maxQueryLen, maxDocLen,
                     debugPrint=False):
@@ -33,13 +34,7 @@ class CedrQueryHandler(BaseQueryHandler):
         self.deviceName = deviceName
         print('Maximum query/document len %d/%d device: %s' % (self.maxQueryLen, self.maxDocLen, self.deviceName))
 
-        add_args = {}
-        if modelType == VANILLA_BERT:
-            # Don't really matter since the model is going to be in eval model anyways
-            # but the constructor has the dropout argument
-            add_args['dropout'] = 0
-
-        self.model = train.MODEL_MAP[modelType](isBertLarge, **add_args)
+        self.model = model
         self.model.to(self.deviceName)
         if modelWeights is not None:
             if self.debugPrint:
@@ -94,11 +89,7 @@ class CedrQueryHandler(BaseQueryHandler):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Serving CEDR models.')
 
-    parser.add_argument('--model', metavar='model type',
-                        required=True, type=str,
-                        help='type, e.g., vanilla_bert')
-
-    parser.add_argument('--bert_large', action='store_true', help='Using the BERT large mode instead of a base one')
+    model_init_utils.add_model_init_basic_args(parser)
 
     parser.add_argument('--debug_print', action='store_true',
                         help='Provide debug output')
@@ -132,8 +123,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    model = model_init_utils.create_model_from_args(args)
+
     multiThreaded = False  #
-    startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(modelType=args.model,
+    startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(model=model,
                                                                            isBertLarge=args.bert_large,
                                                                            modelWeights=args.model_weights,
                                                                            batchSize=args.batch_size,

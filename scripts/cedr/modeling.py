@@ -16,27 +16,32 @@ import scripts.cedr.modeling_util as modeling_util
 from scripts.config import BERT_LARGE_MODEL, BERT_BASE_MODEL
 
 USE_BATCH_COEFF=True
+DEFAULT_BERT_DROPOUT=0.1
+
+def init_bert_params(obj_ref, is_large):
+    if not is_large:
+        obj_ref.BERT_MODEL = BERT_BASE_MODEL
+        obj_ref.CHANNELS = 12 + 1  # from bert-base-uncased
+        obj_ref.BERT_SIZE = 768  # from bert-base-uncased
+    else:
+        obj_ref.BERT_MODEL = BERT_LARGE_MODEL
+        obj_ref.CHANNELS = 24 + 1  # from bert-base-uncased
+        obj_ref.BERT_SIZE = 1024  # from bert-base-uncased
+
+    print('Model type:', obj_ref.BERT_MODEL,
+          '# of channels:', obj_ref.CHANNELS,
+          'hidden layer size:', obj_ref.BERT_SIZE)
+
 
 class BertRanker(torch.nn.Module):
-    def __init__(self, is_large):
+    def __init__(self, bert_large):
         """Bert ranker constructor
 
-        :param is_large: True if we need the large BERT model.
+        :param bert_large: True if we need the large BERT model.
                          otherwise, the base version would be used.
         """
         super().__init__()
-        if not is_large:
-            self.BERT_MODEL = BERT_BASE_MODEL
-            self.CHANNELS = 12 + 1 # from bert-base-uncased
-            self.BERT_SIZE = 768 # from bert-base-uncased
-        else:
-            self.BERT_MODEL = BERT_LARGE_MODEL
-            self.CHANNELS = 24 + 1 # from bert-base-uncased
-            self.BERT_SIZE = 1024 # from bert-base-uncased
-
-        print('Model type:', self.BERT_MODEL,
-              '# of channels:', self.CHANNELS,
-              'hidden layer size:', self.BERT_SIZE)
+        init_bert_params(self, bert_large)
 
         # Large and base BERT have the same tokenizers:
         # https://github.com/huggingface/transformers/issues/424
@@ -128,8 +133,8 @@ class BertRanker(torch.nn.Module):
 
 class VanillaBertRanker(BertRanker):
 
-    def __init__(self, is_large, dropout):
-        super().__init__(is_large)
+    def __init__(self, bert_large=False, dropout=DEFAULT_BERT_DROPOUT):
+        super().__init__(bert_large)
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
@@ -141,8 +146,8 @@ class VanillaBertRanker(BertRanker):
 
 
 class CedrPacrrRanker(BertRanker):
-    def __init__(self, is_large):
-        super().__init__(is_large)
+    def __init__(self, bert_large=False):
+        super().__init__(bert_large)
         QLEN = 20
         KMAX = 2
         NFILTERS = 32
@@ -173,8 +178,8 @@ class CedrPacrrRanker(BertRanker):
 
 
 class CedrKnrmRanker(BertRanker):
-    def __init__(self, is_large):
-        super().__init__(is_large)
+    def __init__(self, bert_large=False):
+        super().__init__(bert_large)
         MUS = [-0.9, -0.7, -0.5, -0.3, -0.1, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
         SIGMAS = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.001]
         self.bert_ranker = VanillaBertRanker()
@@ -201,8 +206,8 @@ class CedrKnrmRanker(BertRanker):
 
 
 class CedrDrmmRanker(BertRanker):
-    def __init__(self, is_large):
-        super().__init__(is_large)
+    def __init__(self, bert_large=False):
+        super().__init__(bert_large)
         NBINS = 11
         HIDDEN = 5
         self.bert_ranker = VanillaBertRanker()
