@@ -413,9 +413,8 @@ def main_cli():
         sys.exit(1)
 
     model = model_init_utils.create_model_from_args(args)
-    model.set_grad_checkpoint_param(args.grad_checkpoint_param)
-
     print(model)
+    model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
     dataset = data.read_datafiles(args.datafiles)
     qrelf = args.qrels.name
