@@ -1,15 +1,11 @@
 import inspect
 
 import scripts.cedr.modeling as modeling
-import scripts.cedr.modeling_model1 as modeling_model1
 
 MODEL_PARAM_LIST = ['dropout', 'bert_large']
 MODEL_PARAM_PREF = 'model.'
 
 VANILLA_BERT = 'vanilla_bert'
-MODEL1_BERT = 'model1_bert'
-MODEL1_LEX  = 'model1_lex'
-MODEL1_BERT_TERM_INDEP = 'model1_bert_termind'
 
 MODEL_MAP = {
     VANILLA_BERT: modeling.VanillaBertRanker,
