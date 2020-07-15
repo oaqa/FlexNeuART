@@ -14,18 +14,20 @@ MODEL_MAP = {
     'cedr_drmm': modeling.CedrDrmmRanker
 }
 
-def add_model_init_basic_args(parser):
+def add_model_init_basic_args(parser, add_train_params):
 
-    parser.add_argument('--model', metavar='model', help='a model to use',
+    parser.add_argument('--model', metavar='model',
+                        help='a model to use: ' + ' '.join(list(MODEL_MAP.keys())),
                         choices=MODEL_MAP.keys(), default='vanilla_bert')
 
 
-    parser.add_argument(f'--{MODEL_PARAM_PREF}dropout', type=float,
-                        default=modeling.DEFAULT_BERT_DROPOUT,
-                        metavar='optional model droput',
-                        help='optional model droput (not for every model)')
+    if add_train_params:
+        parser.add_argument(f'--{MODEL_PARAM_PREF}dropout', type=float,
+                            default=modeling.DEFAULT_BERT_DROPOUT,
+                            metavar='optional model droput',
+                            help='optional model droput (not for every model)')
 
-    parser.add_argument('--{MODEL_PARAM_PREF}bert_large',
+    parser.add_argument(f'--{MODEL_PARAM_PREF}bert_large',
                         action='store_true',
                         help='Using the BERT large mode instead of a base one')
 

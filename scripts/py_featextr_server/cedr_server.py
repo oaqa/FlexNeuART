@@ -89,7 +89,7 @@ class CedrQueryHandler(BaseQueryHandler):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Serving CEDR models.')
 
-    model_init_utils.add_model_init_basic_args(parser)
+    model_init_utils.add_model_init_basic_args(parser, False)
 
     parser.add_argument('--debug_print', action='store_true',
                         help='Provide debug output')

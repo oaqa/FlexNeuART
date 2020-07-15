@@ -147,7 +147,7 @@ def train_iteration(model,
 
         total_loss += loss.item()
 
-        if total_qty  - total_prev_qty >= batch_size:
+        if total_qty - total_prev_qty >= batch_size:
             #print(total, 'optimizer step!')
             optimizer.step()
             optimizer.zero_grad()
@@ -295,7 +295,7 @@ def do_train(device_qty, master_port, rank, is_master_proc,
 def main_cli():
     parser = argparse.ArgumentParser('CEDR model training and validation')
 
-    model_init_utils.add_model_init_basic_args(parser)
+    model_init_utils.add_model_init_basic_args(parser, True)
 
     parser.add_argument('--datafiles', metavar='data files', help='data files: docs & queries',
                         type=argparse.FileType('rt'), nargs='+', required=True)
