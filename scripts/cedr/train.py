@@ -62,7 +62,7 @@ LOSS_FUNC_LIST = [PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]
 
 TrainParams = namedtuple('TrainParams',
                     ['init_lr', 'init_bert_lr', 'epoch_lr_decay', 'weight_decay',
-                     'warmup_schedule', 'batch_sync_qty',
+                     'warmup_pct', 'batch_sync_qty',
                      'batches_per_train_epoch',
                      'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
@@ -255,14 +255,14 @@ def do_train(device_qty, master_port, rank, is_master_proc,
 
         lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
         scheduler = None
-        if train_params.warmup_schedule:
+        if train_params.warmup_pct:
             if is_master_proc:
-                print('Using a warm-up scheduler')
+                print('Using a scheduler with a warm-up for %f steps' % train_params.warmup_pct)
             scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
                                                             total_steps=lr_steps,
                                                             max_lr=[lr, bert_lr],
                                                             anneal_strategy='linear',
-                                                            pct_start=0.1)
+                                                            pct_start=train_params.warmup_pct)
         if is_master_proc:
             print('Optimizer', optimizer)
 
@@ -309,7 +309,7 @@ def main_cli():
     parser.add_argument('--valid_run', metavar='validation file', help='validation file',
                         type=argparse.FileType('rt'), required=True)
 
-    parser.add_argument('--initial_bert_weights',
+    parser.add_argument('--init_model_weights',
                         metavar='initial BERT weights', help='initial BERT weights',
                         type=argparse.FileType('rb'), default=None)
 
@@ -322,7 +322,9 @@ def main_cli():
 
     parser.add_argument('--no_cuda', action='store_true')
 
-    parser.add_argument('--warmup_schedule', action='store_true', help='use a warm-up/cool-down learning-reate schedule')
+    parser.add_argument('--warmup_pct', metavar='warm-up fraction',
+                        default=None, type=float,
+                        help='use a warm-up/cool-down learning-reate schedule')
 
 
     parser.add_argument('--device_name', metavar='CUDA device name', default='cuda:0',
@@ -429,9 +431,9 @@ def main_cli():
 
     print('# of eval. queries:', len(query_ids), ' in the file', args.valid_run.name)
 
-    if args.initial_bert_weights is not None:
-        print('Loading the model from:', args.initial_bert_weights.name)
-        model.load_state_dict(torch.load(args.initial_bert_weights.name), strict=False)
+    if args.init_model_weights is not None:
+        print('Loading the model from:', args.init_model_weights.name)
+        model.load_state_dict(torch.load(args.init_model_weights.name), strict=False)
     os.makedirs(args.model_out_dir, exist_ok=True)
 
     device_qty = args.device_qty
@@ -467,16 +469,16 @@ def main_cli():
         is_master_proc = rank == 0
 
         train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
-                                 warmup_schedule=args.warmup_schedule, batch_sync_qty=args.batch_sync_qty,
-                                 epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
-                                 backprop_batch_size=args.backprop_batch_size,
-                                 batches_per_train_epoch=args.batches_per_train_epoch,
-                                 batch_size=args.batch_size, batch_size_val=args.batch_size_val,
-                                 max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
-                                 epoch_qty=args.epoch_qty, device_name=device_name,
-                                 use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
-                                 print_grads=args.print_grads,
-                                 shuffle_train=not args.no_shuffle_train)
+                                    warmup_pct=args.warmup_pct, batch_sync_qty=args.batch_sync_qty,
+                                    epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
+                                    backprop_batch_size=args.backprop_batch_size,
+                                    batches_per_train_epoch=args.batches_per_train_epoch,
+                                    batch_size=args.batch_size, batch_size_val=args.batch_size_val,
+                                    max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
+                                    epoch_qty=args.epoch_qty, device_name=device_name,
+                                    use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
+                                    print_grads=args.print_grads,
+                                    shuffle_train=not args.no_shuffle_train)
 
         train_pair_qty = len(train_pairs_all)
         if is_distr_train or train_pair_qty < device_qty:

@@ -173,7 +173,8 @@ python -u scripts/cedr/train.py \
     --train_pairs $dpath/derived_data/$train_subdir/train_pairs.tsv \
    --valid_run $dpath/derived_data/$train_subdir/test_run.txt \
    --qrels $dpath/derived_data//$train_subdir/qrels.txt \
-   --initial_bert_weights $dpath/derived_data/lm_finetune_model/pytorch_model.bin \
+   --init_model_weights $dpath/derived_data/lm_finetune_model/pytorch_model.bin \
+   --warmup_pct 0.1 --weight_decay 0 \
    --model_out_dir $dpath/derived_data/ir_models/$mtype \
    --batches_per_train_epoch $batches_per_epoch --init_lr 1e-3 --init_bert_lr 2e-5 \
     --epoch_qty 30 --epoch_lr_decay 0.9 \
