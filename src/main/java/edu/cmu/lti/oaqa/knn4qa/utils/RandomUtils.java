@@ -18,10 +18,14 @@ package edu.cmu.lti.oaqa.knn4qa.utils;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RandomUtils {
+  private static final Logger logger = LoggerFactory.getLogger(RandomUtils.class);
 
   public RandomUtils(int seed) {
+    logger.info(String.format("New random generator with seed: %d", seed));
     mRandGen = new Random(seed);
   }
   

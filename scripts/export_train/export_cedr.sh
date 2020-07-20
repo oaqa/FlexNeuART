@@ -19,6 +19,7 @@ CEDR_QUERY_FILE="data_query.tsv"
 CEDR_TEST_RUN_FILE="test_run.txt"
 CEDR_TRAIN_PAIRS_FILE="train_pairs.tsv"
 
+checkVarNonEmpty "randSeed"
 checkVarNonEmpty "indexFieldName"
 checkVarNonEmpty "threadQty"
 checkVarNonEmpty "candTrainQty"
@@ -31,6 +32,7 @@ cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  
 setJavaMem 1 2
 
 target/appassembler/bin/ExportTrainPairs \
+-seed $randSeed \
 -export_fmt cedr  \
 -cand_train_qty $candTrainQty -cand_test_qty $candTestQty \
 $maxNumQueryTestParam \

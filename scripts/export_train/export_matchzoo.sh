@@ -13,14 +13,16 @@ checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "QUERY_FIELD_NAME"
 checkVarNonEmpty "QREL_FILE"
 
-checkVarNonEmpty "$indexFieldName"
-checkVarNonEmpty "$threadQty"
-checkVarNonEmpty "$candTrainQty"
-checkVarNonEmpty "$candTestQty"
+checkVarNonEmpty "randSeed"
+checkVarNonEmpty "indexFieldName"
+checkVarNonEmpty "threadQty"
+checkVarNonEmpty "candTrainQty"
+checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
 
 target/appassembler/bin/ExportTrainPairs \
+-seed $randSeed \
 -export_fmt match_zoo  \
 \
 -cand_train_qty $candTrain -cand_test_qty $candTestQty \

@@ -11,6 +11,7 @@ threadQty=1
 sampleNegQty=10
 candTrainQty=500
 candTestQty=10
+randSeed=0
 
 boolOpts=("h" "help" "print help")
 
@@ -22,6 +23,7 @@ paramOpts=(
 "cand_test_qty"       "candTestQty"      "A max. # of candidate records to generate test data"
 "max_num_query_train" "maxNumQueryTrain" "Optional max. # of train queries"
 "max_num_query_test"  "maxNumQueryTest"  "Optional max. # of test/dev queries"
+"seed"                "randSeed"         "A random seed (default $randSeed)"
 )
 
 usageMain="<collection> <name of the index field> \
@@ -88,6 +90,7 @@ fi
 echo "========================================================"
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
+echo "Random seed: $randSeed"
 echo "Output directory: $outDir"
 echo "# of threads: $threadQty"
 echo "A # of negative samples per query: $sampleNegQty"

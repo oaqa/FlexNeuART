@@ -25,6 +25,9 @@ public class CommonParams {
   public static final String RUN_ID_PARAM = "run_id";
   public static final String RUN_ID_DESC = "a trec-style run id";
   
+  public static final String RANDOM_SEED_PARAM = "seed";
+  public static final String RANDOM_SEED_DESC = "a random seed";
+  
   public static final String PROVIDER_URI_DESC = "Provider URI: an index location or a query server address";
   public static final String PROVIDER_URI_PARAM = "u";
   

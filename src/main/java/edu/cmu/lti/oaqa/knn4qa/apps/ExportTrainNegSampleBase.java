@@ -58,6 +58,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     
     opts.addOption(MAX_CAND_TRAIN_QTY_PARAM, null, true, MAX_CAND_TRAIN_QTY_DESC);
     opts.addOption(MAX_CAND_TEST_QTY_PARAM, null, true, MAX_CAND_TEST_QTY_DESC);
+    opts.addOption(CommonParams.RANDOM_SEED_PARAM, null, true, CommonParams.RANDOM_SEED_DESC);
   }
   
   @Override
@@ -81,6 +82,18 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
         return MAX_CAND_TRAIN_QTY_PARAM + " isn't integer: '" + tmpn + "'";
       }
     }
+    
+    int seed = 0;
+    tmpn = cmd.getOptionValue(CommonParams.RANDOM_SEED_PARAM);
+    if (null != tmpn) {
+      try {
+        seed = Integer.parseInt(tmpn);
+      } catch (NumberFormatException e) {
+        return CommonParams.RANDOM_SEED_PARAM + " isn't integer: '" + seed + "'";
+      }
+    }
+    
+    mRandUtils = new RandomUtils(seed);
      
     tmpn = cmd.getOptionValue(MAX_CAND_TEST_QTY_PARAM);
     if (null != tmpn) {
@@ -248,5 +261,5 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   int mCandTrainQty = Integer.MAX_VALUE;
   int mCandTestQty = Integer.MAX_VALUE;
   
-  RandomUtils            mRandUtils = new RandomUtils(0);
+  RandomUtils            mRandUtils = null;
 }
