@@ -96,4 +96,3 @@ echo "A max. # of candidate records to generate test data: $candTestQty"
 echo "Max train query # param.: $maxNumQueryTrainParam"
 echo "Max test/dev query # param.: $maxNumQueryTestParam"
 echo "========================================================"
-exit 1
