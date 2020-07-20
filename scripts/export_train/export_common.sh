@@ -4,82 +4,69 @@
 checkVarNonEmpty "DEV1_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 
+# This default is set by a calling script
+checkVarNonEmpty "outSubdir"
+
 threadQty=1
 sampleNegQty=10
 candTrainQty=500
 candTestQty=10
 
-POS_ARGS=()
+boolOpts=("h" "help" "print help")
 
-while [ $# -ne 0 ] ; do
-  # set +e prevents the whole bash script from failing
-  set +e
-  echo $1|grep "^-" >/dev/null
-  retStat=$?
-  set -e
-  if [ $retStat = 0 ] ; then
-    OPT_NAME="$1"
-    OPT_VALUE="$2"
-    OPT="$1 $2"
-    if [ "$OPT_VALUE" = "" ] ; then
-      echo "Option $OPT_NAME requires an argument." >&2
-      exit 1
-    fi
-    shift 2
-    case $OPT_NAME in
-      -thread_qty)
-        threadQty=$OPT_VALUE
-        ;;
-      -out_subdir)
-        outSubdir=$OPT_VALUE
-        ;;
-      -sample_neg_qty)
-        sampleNegQty=$OPT_VALUE
-        ;;
-      -cand_train_qty)
-        candTrainQty=$OPT_VALUE
-        ;;
-      -cand_test_qty)
-        candTestQty=$OPT_VALUE
-        ;;
-      -max_num_query_train)
-        maxNumQueryTrainParam=$OPT
-        ;;
-      -max_num_query_test)
-        maxNumQueryTestParam=$OPT
-        ;;
+paramOpts=(
+"thread_qty"          "threadQty"        "# of threads"
+"out_subdir"          "outSubdir"        "output sub-directory"
+"sample_neg_qty"      "sampleNegQty"     "A # of negative samples per query or -1 to keep all candidate entries"
+"cand_train_qty"      "candTrainQty"     "A max. # of candidate records to generate training data"
+"cand_test_qty"       "candTestQty"      "A max. # of candidate records to generate test data"
+"max_num_query_train" "maxNumQueryTrain" "Optional max. # of train queries"
+"max_num_query_test"  "maxNumQueryTest"  "Optional max. # of test/dev queries"
+)
 
-      *)
-        echo "Invalid option: $OPT_NAME" >&2
-        exit 1
-        ;;
-    esac
-  else
-    POS_ARGS=(${POS_ARGS[*]} $1)
-    shift 1
-  fi
-done
+usageMain="<collection> <name of the index field> \
+<train subdir, e.g., $DEFAULT_TRAIN_SUBDIR> \
+<test subdir, e.g., $DEV1_SUBDIR>"
 
-collect=${POS_ARGS[0]}
+parseArguments $@
+
+if [ "$maxNumQueryTrain" != "" ] ; then
+  maxNumQueryTrainParam=" -max_num_query_train $maxNumQueryTrain "
+fi
+
+if [ "$maxNumQueryTest" != "" ] ; then
+  maxNumQueryTestParam=" -max_num_query_test $maxNumQueryTest "
+fi
+
+if [ "$help" = "1" ] ; then
+  genUsage "$usageMain"
+  exit 1
+fi
+
+collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  echo "Specify sub-collection (1st positional arg), e.g., squad"
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
-indexFieldName=${POS_ARGS[1]}
+
+indexFieldName=${posArgs[1]}
 if [ "$indexFieldName" = "" ] ; then
-  echo "Specify the name of the index field (2d positional arg)"
+  genUsage "$usageMain" "Specify the name of the index field (2d arg)"
   exit 1
 fi
-partTrain=${POS_ARGS[2]}
+
+partTrain=${posArgs[2]}
 if [ "$partTrain" = "" ] ; then
-  echo "Specify the training sub-dir, e.g., $DEFAULT_TRAIN_SUBDIR (3d positional arg)"
+  genUsage "$usageMain" "Specify the training sub-dir, e.g., $DEFAULT_TRAIN_SUBDIR (3d arg)"
   exit 1
 fi
-partTest=${POS_ARGS[3]}
+
+partTest=${posArgs[3]}
 if [ "$partTest" = "" ] ; then
-  echo "Specify the training sub-dir, e.g., $DEV1_SUBDIR (4th positional arg)"
+  genUsage "$usageMain" "Specify the training sub-dir, e.g., $DEV1_SUBDIR (4th arg)"
   exit 1
 fi
+
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
@@ -92,13 +79,21 @@ inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 luceneIndexDir="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR/"
 
-
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$outSubdir/$indexFieldName"
 
 if [ ! -d "$outDir" ] ; then
   mkdir -p "$outDir"
 fi
 
+echo "========================================================"
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
 echo "Output directory: $outDir"
+echo "# of threads: $threadQty"
+echo "A # of negative samples per query: $sampleNegQty"
+echo "A max. # of candidate records to generate training data: $candTrainQty"
+echo "A max. # of candidate records to generate test data: $candTestQty"
+echo "Max train query # param.: $maxNumQueryTrainParam"
+echo "Max test/dev query # param.: $maxNumQueryTestParam"
+echo "========================================================"
+exit 1
