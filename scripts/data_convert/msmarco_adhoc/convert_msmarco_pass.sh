@@ -39,3 +39,4 @@ for part in train dev eval ; do
 done
 
 
+cp "$src/2019qrels-pass.txt" "$inputDataDir/test2019/$QREL_FILE"

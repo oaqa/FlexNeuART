@@ -28,3 +28,5 @@ done
 for year in 2019 2020 ; do
   gunzip msmarco-test${year}-queries.tsv.gz
 done
+
+wget https://trec.nist.gov/data/deep/2019qrels-docs.txt

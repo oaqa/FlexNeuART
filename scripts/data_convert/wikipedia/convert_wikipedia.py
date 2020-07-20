@@ -6,11 +6,11 @@ from multiprocessing import Pool
 
 #
 # Convert a Wikipedia corpus previously processed by a wikiextractor (https://github.com/attardi/wikiextractor)
-# It tries to limit each chunk to have at most given number of BERT tokens.
-# However, for efficiency reasons, this may be not a bullet-proof (and
-# a bit approximate computation), because we split into sentences
-# and the number of BERT tokens for each sentence separately.
-# Indeed, results differ a bit when we try to re-tokenize each sequence
+# It tries to limit each chunk to have at most given number of BERT tokens while keeping
+# original sentences in a single chunk. For efficiency reasons, we result to approximate
+# counting of BERT tokens: We sum up the number of BERT tokens computed separately for each
+# sentence. As a result, there's a tiny chance that the resulting piece is going to have
+# a few more tokens than the specified liimit.
 #
 
 sys.path.append('.')

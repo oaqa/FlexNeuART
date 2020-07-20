@@ -33,4 +33,5 @@ for part in train dev ; do
     --output "$inputDataDir/$part/$QUESTION_FILE"
 done
 
+cp $src/2019qrels-docs.txt "$inputDataDir/test2019/$QREL_FILE"
 
