@@ -158,7 +158,7 @@ function grepFileForVal {
   if [ "$ignoreCase" ] ; then
     caseFlag='-i'
   fi
-  fgrep $caseFlag "$metrName:" "$fileName" | awk -F: '{print $2}' | sed -E 's/^[[:space:]]*//' |sed -E 's/[[:space:]]*$//'
+  fgrep $caseFlag "$metrName:" "$fileName" | cut -d : -f 2- | sed -E 's/^[[:space:]]*//' |sed -E 's/[[:space:]]*$//'
 }
 
 function getNumCpuCores {
