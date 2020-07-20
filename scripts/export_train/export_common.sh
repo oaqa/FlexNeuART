@@ -16,7 +16,7 @@ boolOpts=("h" "help" "print help")
 
 paramOpts=(
 "thread_qty"          "threadQty"        "# of threads"
-"out_subdir"          "outSubdir"        "output sub-directory"
+"out_subdir"          "outSubdir"        "output sub-directory (default $outSubdir)"
 "sample_neg_qty"      "sampleNegQty"     "A # of negative samples per query or -1 to keep all candidate entries"
 "cand_train_qty"      "candTrainQty"     "A max. # of candidate records to generate training data"
 "cand_test_qty"       "candTestQty"      "A max. # of candidate records to generate test data"
