@@ -433,7 +433,7 @@ def main_cli():
 
     if args.init_model_weights is not None:
         print('Loading the model from:', args.init_model_weights.name)
-        model.load_state_dict(torch.load(args.init_model_weights.name), map_location='cpu', strict=False)
+        model.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
     os.makedirs(args.model_out_dir, exist_ok=True)
 
     device_qty = args.device_qty
