@@ -9,7 +9,6 @@ import pytorch_pretrained_bert
 
 sys.path.append('.')
 
-from scripts.config import QUESTION_FILE_JSON
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
     FileWrapper, readStopWords, addRetokenizedField, readQueries
@@ -20,6 +19,8 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
     REPORT_QTY, SPACY_MODEL, QUESTION_FILE_JSON, QREL_FILE
 
 from scripts.common_eval import QrelEntry, writeQrels
+
+ORCAS_QID_PREF='orcas_'
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-ORCAS queries & qrels.')
 parser.add_argument('--input', metavar='input file', help='input file',
@@ -85,7 +86,8 @@ for line in inpFile:
         print(line.replace('\t', '<field delimiter>'))
         continue
 
-    qid, query, did, _  = fields
+    qid_orig, query, did, _  = fields
+    qid = ORCAS_QID_PREF + qid_orig
 
     query_lemmas, query_unlemm = nlp.procText(query)
 
