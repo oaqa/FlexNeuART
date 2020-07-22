@@ -24,7 +24,7 @@ parser.add_argument('--output', metavar='output file', help='output file',
 parser.add_argument('--max_doc_size', metavar='max doc size bytes',
                     help='the threshold for the document size, if a document is larger it is truncated',
                     type=int, default=MAX_DOC_SIZE)
-# Number of cores minus one for the spaning process
+# Default is: Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
                     type=int, default=multiprocessing.cpu_count() - 1)
 parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
@@ -37,6 +37,8 @@ inpFile = FileWrapper(args.input)
 outFile = FileWrapper(args.output, 'w')
 maxDocSize = args.max_doc_size
 
+
+bertTokenizer=None
 if BERT_TOK_OPT in arg_vars:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
     bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
