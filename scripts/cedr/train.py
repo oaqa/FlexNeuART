@@ -28,6 +28,7 @@ from tqdm import tqdm
 from collections import namedtuple
 from multiprocessing import Process
 
+# Important: all the losses should have a reduction type sum!
 class MarginRankingLossWrapper:
     @staticmethod
     def name():
@@ -37,7 +38,7 @@ class MarginRankingLossWrapper:
        It expects that positive/negative scores are arranged in pairs'''
 
     def __init__(self, margin):
-        self.loss = torch.nn.MarginRankingLoss(margin)
+        self.loss = torch.nn.MarginRankingLoss(margin, reduction='sum')
 
     def compute(self, scores):
         pos_doc_scores = scores[:, 0]
@@ -55,7 +56,7 @@ class PairwiseSoftmaxLoss:
        It expects that positive/negative scores are arranged in pairs'''
 
     def compute(self, scores):
-        return torch.mean(1. - scores.softmax(dim=1)[:, 0])  # pairwise softmax
+        return torch.sum(1. - scores.softmax(dim=1)[:, 0])  # pairwise softmax
 
 
 LOSS_FUNC_LIST = [PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]
@@ -67,7 +68,7 @@ TrainParams = namedtuple('TrainParams',
                      'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
                      'backprop_batch_size',
-                     'epoch_qty',
+                     'epoch_qty', 'save_snapshots',
                      'device_name', 'print_grads',
                      'shuffle_train',
                      'use_external_eval', 'eval_metric'])
@@ -285,7 +286,10 @@ def do_train(device_qty, master_port, rank, is_master_proc,
             if top_valid_score is None or valid_score > top_valid_score:
                 top_valid_score = valid_score
                 print('new top validation score, saving weights')
-                model.save(os.path.join(model_out_dir, 'weights.p'))
+                model.save(os.path.join(model_out_dir, 'weights.p.best'))
+
+            if train_params.save_snapshots:
+                model.save(os.path.join(model_out_dir, f'weights.p.{epoch}'))
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
@@ -337,10 +341,14 @@ def main_cli():
     parser.add_argument('--batch_sync_qty', metavar='# of batches before model sync',
                         type=int, default=4, help='Model syncronization frequency for multi-GPU trainig in the # of batche')
 
-    parser.add_argument('--master_port', type=int, metavar='Pytorch master port',
-                        default=None, help='Pytorch master port for multi-GPU training')
+    parser.add_argument('--master_port', type=int, metavar='pytorch master port',
+                        default=None, help='pytorch master port for multi-GPU training')
 
-    parser.add_argument('--print_grads', action='store_true')
+    parser.add_argument('--print_grads', action='store_true',
+                        help='print gradient norms of parameters')
+
+    parser.add_argument('--save_snapshots', action='store_true',
+                        help='save model after each epoch')
 
     parser.add_argument('--seed', metavar='random seed', help='random seed',
                         type=int, default=42)
@@ -356,7 +364,7 @@ def main_cli():
                         type=float, default=0.00005, help='Initial learning rate for BERT parameters')
 
     parser.add_argument('--epoch_lr_decay', metavar='epoch LR decay',
-                        type=float, default=0.9, help='Per-epoch learning rate decay')
+                        type=float, default=1.0, help='Per-epoch learning rate decay')
 
     parser.add_argument('--weight_decay', metavar='weight decay',
                         type=float, default=0.0, help='optimizer weight decay')
@@ -399,7 +407,7 @@ def main_cli():
 
     parser.add_argument('--loss_func', choices=LOSS_FUNC_LIST,
                         default=PairwiseSoftmaxLoss.name(),
-                        help='Loss functions: ' +  ','.join(LOSS_FUNC_LIST))
+                        help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
     args = parser.parse_args()
 
@@ -473,6 +481,7 @@ def main_cli():
                                     epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
                                     backprop_batch_size=args.backprop_batch_size,
                                     batches_per_train_epoch=args.batches_per_train_epoch,
+                                    save_snapshots=args.save_snapshots,
                                     batch_size=args.batch_size, batch_size_val=args.batch_size_val,
                                     max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
                                     epoch_qty=args.epoch_qty, device_name=device_name,

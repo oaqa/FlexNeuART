@@ -24,8 +24,13 @@ vocab = VocabBuilder()
 field = args.field_name
 
 for fn in args.input:
+    ln = 0
     for docEntry in tqdm(jsonlGen(fn), desc='Processing: ' + fn):
+        ln += 1
         if field in docEntry:
             vocab.procDoc(docEntry[field])
+        else:
+            print(f'No field {field} is found in line {ln} file {fn}')
+            sys.exit(1)
 
 vocab.save(args.output)

@@ -18,6 +18,13 @@ from scripts.config import BERT_LARGE_MODEL, BERT_BASE_MODEL
 USE_BATCH_COEFF=True
 DEFAULT_BERT_DROPOUT=0.1
 
+def delete_params_without_grads(state):
+    for key in list(state):
+        if state[key].requires_grad:
+            state[key] = state[key].data
+        else:
+            del state[key]
+
 def init_bert_params(obj_ref, is_large):
     if not is_large:
         obj_ref.BERT_MODEL = BERT_BASE_MODEL
@@ -57,11 +64,7 @@ class BertRanker(torch.nn.Module):
 
     def save(self, path):
         state = self.state_dict(keep_vars=True)
-        for key in list(state):
-            if state[key].requires_grad:
-                state[key] = state[key].data
-            else:
-                del state[key]
+        delete_params_without_grads(state)
         torch.save(state, path)
 
     def load(self, path):
