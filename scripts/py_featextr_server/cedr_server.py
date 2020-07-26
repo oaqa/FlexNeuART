@@ -91,10 +91,6 @@ if __name__ == '__main__':
     parser.add_argument('--debug_print', action='store_true',
                         help='Provide debug output')
 
-    parser.add_argument('--model_weights', metavar='model weights',
-                        default=None, type=str,
-                        help='model weight file')
-
     parser.add_argument('--batch_size', metavar='batch size',
                         default=DEFAULT_BATCH_SIZE, type=int,
                         help='batch size')
@@ -107,24 +103,13 @@ if __name__ == '__main__':
                         default='127.0.0.1', type=str,
                         help='server host addr to bind the port')
 
-    parser.add_argument('--device_name', metavar='CUDA device name or cpu', default='cuda:0',
-                        help='The name of the CUDA device to use')
-
-    parser.add_argument('--max_query_len', metavar='max. query length',
-                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
-                        help='max. query length')
-
-    parser.add_argument('--max_doc_len', metavar='max. document length',
-                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
-                        help='max. document length')
 
     args = parser.parse_args()
 
-    model = model_init_utils.create_model_from_args(args)
+    model = torch.load(args.init_model, map_location='cpu')
 
     multiThreaded = False  #
     startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(model=model,
-                                                                           modelWeights=args.model_weights,
                                                                            batchSize=args.batch_size,
                                                                            debugPrint=args.debug_print,
                                                                            deviceName=args.device_name,

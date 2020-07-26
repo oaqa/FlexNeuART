@@ -286,10 +286,10 @@ def do_train(device_qty, master_port, rank, is_master_proc,
             if top_valid_score is None or valid_score > top_valid_score:
                 top_valid_score = valid_score
                 print('new top validation score, saving weights')
-                model.save(os.path.join(model_out_dir, 'weights.p.best'))
+                torch.save(model, os.path.join(model_out_dir, 'weights.p.best'))
 
             if train_params.save_snapshots:
-                model.save(os.path.join(model_out_dir, f'weights.p.{epoch}'))
+                torch.save(model, os.path.join(model_out_dir, f'weights.p.{epoch}'))
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
@@ -313,10 +313,6 @@ def main_cli():
     parser.add_argument('--valid_run', metavar='validation file', help='validation file',
                         type=argparse.FileType('rt'), required=True)
 
-    parser.add_argument('--init_model_weights',
-                        metavar='initial BERT weights', help='initial BERT weights',
-                        type=argparse.FileType('rb'), default=None)
-
     parser.add_argument('--model_out_dir',
                         metavar='model out dir', help='an output directory for the trained model',
                         required=True)
@@ -330,13 +326,8 @@ def main_cli():
                         default=None, type=float,
                         help='use a warm-up/cool-down learning-reate schedule')
 
-
-    parser.add_argument('--device_name', metavar='CUDA device name', default='cuda:0',
-                        help='The name of the CUDA device to use (ignored for multi-GPU training or if --no_cuda is set)')
-
     parser.add_argument('--device_qty', type=int, metavar='# of device for multi-GPU training',
                         default=1, help='# of GPUs for multi-GPU training')
-
 
     parser.add_argument('--batch_sync_qty', metavar='# of batches before model sync',
                         type=int, default=4, help='Model syncronization frequency for multi-GPU trainig in the # of batche')
@@ -356,7 +347,6 @@ def main_cli():
     parser.add_argument('--loss_margin', metavar='loss margin', help='Margin in the margin loss',
                         type=float, default=1)
 
-
     parser.add_argument('--init_lr', metavar='init learn. rate',
                         type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
 
@@ -371,14 +361,6 @@ def main_cli():
 
     parser.add_argument('--batch_size', metavar='batch size',
                         type=int, default=32, help='batch size')
-
-    parser.add_argument('--max_query_len', metavar='max. query length',
-                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
-                        help='max. query length')
-
-    parser.add_argument('--max_doc_len', metavar='max. document length',
-                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
-                        help='max. document length')
 
     parser.add_argument('--batch_size_val', metavar='val batch size',
                         type=int, default=32, help='validation batch size')
@@ -422,7 +404,20 @@ def main_cli():
         print('Unsupported loss: ' + loss_name)
         sys.exit(1)
 
-    model = model_init_utils.create_model_from_args(args)
+    # If we have the complete model, we just load it,
+    # otherwise we first create a model and load *SOME* of its weights.
+    # For example, if we start from an original BERT model, which has
+    # no extra heads, it we will load only the respective weights and
+    # initialize the weights of the head randomly.
+    if args.init_model is not None:
+        print('Loading a complete model from:', args.init_model.name)
+        model = torch.load(args.init_model.name, map_location='cpu')
+    elif args.init_bert_weights is not None:
+        model = model_init_utils.create_model_from_args(args)
+        print('Loading model weights from:', args.init_bert_weights.name)
+        model.load_state_dict(torch.load(args.init_bert_weights.name, map_location='cpu'), strict=False)
+
+    os.makedirs(args.model_out_dir, exist_ok=True)
     print(model)
     model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
@@ -439,10 +434,6 @@ def main_cli():
 
     print('# of eval. queries:', len(query_ids), ' in the file', args.valid_run.name)
 
-    if args.init_model_weights is not None:
-        print('Loading the model from:', args.init_model_weights.name)
-        model.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
-    os.makedirs(args.model_out_dir, exist_ok=True)
 
     device_qty = args.device_qty
     master_port = args.master_port

@@ -1,6 +1,9 @@
 import inspect
+import argparse
 
+import scripts.cedr.data as data
 import scripts.cedr.modeling as modeling
+import scripts.cedr.modeling_model1 as modeling_model1
 
 MODEL_PARAM_LIST = ['dropout', 'bert_large']
 MODEL_PARAM_PREF = 'model.'
@@ -20,8 +23,29 @@ def add_model_init_basic_args(parser, add_train_params):
                         help='a model to use: ' + ' '.join(list(MODEL_MAP.keys())),
                         choices=MODEL_MAP.keys(), default='vanilla_bert')
 
+    parser.add_argument('--init_model',
+                        metavar='initial model',
+                        help='initial *COMPLETE* model with heads and extra parameters',
+                        type=argparse.FileType('rb'), default=None)
+
+    parser.add_argument('--max_query_len', metavar='max. query length',
+                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
+                        help='max. query length')
+
+    parser.add_argument('--max_doc_len', metavar='max. document length',
+                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
+                        help='max. document length')
+
+
+    parser.add_argument('--device_name', metavar='CUDA device name or cpu', default='cuda:0',
+                        help='The name of the CUDA device to use')
+
 
     if add_train_params:
+        parser.add_argument('--init_bert_weights',
+                            metavar='initial bare-bones BERT weights', help='initial BERT weights',
+                            type=argparse.FileType('rb'), default=None)
+
         parser.add_argument(f'--{MODEL_PARAM_PREF}dropout', type=float,
                             default=modeling.DEFAULT_BERT_DROPOUT,
                             metavar='optional model droput',
@@ -31,9 +55,39 @@ def add_model_init_basic_args(parser, add_train_params):
                             metavar='grad. checkpoint param',
                             help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
 
-    parser.add_argument(f'--{MODEL_PARAM_PREF}bert_large',
-                        action='store_true',
-                        help='Using the BERT large mode instead of a base one')
+        parser.add_argument(f'--{MODEL_PARAM_PREF}bert_large',
+                            action='store_true',
+                            help='use the BERT large mode instead of a base one')
+
+        parser.add_argument(f'--{MODEL_PARAM_PREF}vocab_file',
+                            metavar='vocabulary file',
+                            type=str, default=None,
+                            help='a previously built vocabulary file')
+
+
+        parser.add_argument(f'--{MODEL_PARAM_PREF}prob_network_type',
+                            metavar='prob network type',
+                            default=modeling_model1.ProbNetworkSumFC.name(),
+                            help='a network type to compute probabilities: ' + ' '.join(modeling_model1.PROB_NETWORK_TYPE_NAMES),
+                            choices=modeling_model1.PROB_NETWORK_TYPE_NAMES)
+
+        parser.add_argument(f'--{MODEL_PARAM_PREF}use_fasttext',
+                            action='store_true',
+                            help='use FastText embeddings to initialize lexical Model1 embeddings (dim. defined by FastText)')
+
+        parser.add_argument(f'--{MODEL_PARAM_PREF}no_fasttext_embed_dim',
+                            type=int,
+                            metavar='embedding dim',
+                            default=512,
+                            help='Dimensionality of the lexical neural Model1')
+
+        parser.add_argument(f'--{MODEL_PARAM_PREF}prob_self_tran', type=float, default=0.05,
+                            metavar='self-train prob',
+                            help='self-translation probability of the lexical neural Model1')
+
+        parser.add_argument(f'--{MODEL_PARAM_PREF}proj_dim', type=int, default=128,
+                            metavar='model1 projection dim',
+                            help='neural lexical model1 projection dimensionionality')
 
 
 def get_model_param_dict(args, model_class):
