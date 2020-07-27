@@ -17,7 +17,7 @@ class CedrQueryHandler(BaseQueryHandler):
     # function is executed at at time
     def __init__(self,
                     model,
-                    modelWeights, batchSize, deviceName,
+                    batchSize, deviceName,
                     maxQueryLen, maxDocLen,
                     debugPrint=False):
         super().__init__(exclusive=True)
@@ -31,10 +31,6 @@ class CedrQueryHandler(BaseQueryHandler):
         print('Maximum query/document len %d/%d device: %s' % (self.maxQueryLen, self.maxDocLen, self.deviceName))
 
         self.model = model
-
-        if modelWeights is not None:
-            print(f'Loading model weights from {modelWeights}')
-            self.model.load(modelWeights)
 
         self.model.to(self.deviceName)
 
@@ -105,6 +101,10 @@ if __name__ == '__main__':
 
 
     args = parser.parse_args()
+
+    if args.init_model is None:
+        print('Specify the model file: --init_model')
+        sys.exit(1)
 
     model = torch.load(args.init_model, map_location='cpu')
 
