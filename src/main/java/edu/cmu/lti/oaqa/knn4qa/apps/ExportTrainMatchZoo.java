@@ -108,9 +108,17 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
       
       String text = getDocText(docId);
       
-      if (!text.isEmpty()) {
-        writeField(isTestQuery ? mOutTest : mOutTrain, queryId, queryFieldText, docId, text, relFlag);
+      if (text == null) {
+        logger.warn("Ignoring document " + docId + " b/c of null field");
+        continue;
       }
+      
+      if (text.isEmpty()) {
+        logger.warn("Ignoring document " + docId + " b/c of empty field");
+        continue;
+      }
+      
+      writeField(isTestQuery ? mOutTest : mOutTrain, queryId, queryFieldText, docId, text, relFlag);
     }
   }
   

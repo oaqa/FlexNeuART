@@ -91,12 +91,19 @@ public abstract class ExportTrainBase {
    * Read and process document text if necessary. For raw indices, no processing is needed.
    *   
    * @param docId document ID
-   * @return raw document text or 
+   * @return raw/parsed document text or null (if the document is not found or there is no 
+   *         
    * @throws Exception
    */
   protected String getDocText(String docId) throws Exception {
-    return mFwdIndex.isRaw() ? mFwdIndex.getDocEntryRaw(docId) : 
-                               CandidateProvider.removeAddStopwords(mFwdIndex.getDocEntryParsedText(docId)).trim();
+    if  (mFwdIndex.isRaw()) {
+      return mFwdIndex.getDocEntryRaw(docId);
+    }
+    String text = mFwdIndex.getDocEntryParsedText(docId);
+    if (text == null) {
+      return null;
+    }
+    return CandidateProvider.removeAddStopwords(text).trim();
   }
  
 

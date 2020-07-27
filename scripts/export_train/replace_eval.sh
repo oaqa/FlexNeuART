@@ -15,9 +15,9 @@ checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
 boolOpts=("h" "help" "print help")
 
-usageMain="<collection> <name of the index field> \
-<source sub-dir in $DERIVED_DATA_SUBDIR> \
-<target sub-dir in $DERIVED_DATA_SUBDIR>"
+usageMain="<collection> \
+<source sub-dir in $DERIVED_DATA_SUBDIR> <source sub-dir index field name> \
+<target sub-dir in $DERIVED_DATA_SUBDIR> <target sub-dir index field name>"
 
 parseArguments $@
 
@@ -32,15 +32,15 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-indexFieldName=${posArgs[1]}
-if [ "$indexFieldName" = "" ] ; then
-  genUsage "$usageMain" "Specify the name of the index field (2d arg)"
+srcSubDir=${posArgs[1]}
+if [ "$srcSubDir" = "" ] ; then
+  genUsage "$usageMain" "Specify source sub-dir in $DERIVED_DATA_SUBDIR (2d arg)"
   exit 1
 fi
 
-srcSubDir=${posArgs[2]}
-if [ "$srcSubDir" = "" ] ; then
-  genUsage "$usageMain" "Specify source sub-dir in $DERIVED_DATA_SUBDIR (3d arg)"
+srcIndexFieldName=${posArgs[2]}
+if [ "$srcIndexFieldName" = "" ] ; then
+  genUsage "$usageMain" "Specify the name of the *SOURCE* index field (3rd arg)"
   exit 1
 fi
 
@@ -50,20 +50,37 @@ if [ "dstSubDir" = "" ] ; then
   exit 1
 fi
 
-srcDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$srcSubDir/$indexFieldName"
-dstDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$dstSubDir/$indexFieldName"
+dstIndexFieldName=${posArgs[4]}
+if [ "$dstIndexFieldName" = "" ] ; then
+  genUsage "$usageMain" "Specify the name of the *SOURCE* index field (5th arg)"
+  exit 1
+fi
 
-if [ -d "$srcDir" ] ; then
+srcDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$srcSubDir/$srcIndexFieldName"
+dstDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$dstSubDir/$dstIndexFieldName"
+
+
+echo "======================================================="
+echo "Source directory: $srcDir"
+echo "Target directory: $dstDir"
+echo "======================================================="
+
+set -x
+
+if [ "$srcDir" = "$dstDir" ] ; then
+  echo "Source and target directories should be different"
+  exit 1
+fi
+
+if [ ! -d "$srcDir" ] ; then
   echo "Not a directory: $srcDir"
-  eixt 1
+  exit 1
 fi
 
-if [ -d "$dstDir" ] ; then
+if [ ! -d "$dstDir" ] ; then
   echo "Not a directory: $dstDir"
-  eixt 1
+  exit 1
 fi
-
-echo "We are going to 'transplant' the validation run from $srcDir to $dstDir"
 
 cd "$srcDir"
 cut -f 3 test_run.txt |sort -u > did_list.txt
@@ -81,7 +98,10 @@ cat $srcDirFullPath/data_docs_val.tsv >> data_docs.tsv
 cat $srcDirFullPath/data_query_val.tsv >> data_query.tsv
 
 mv test_run.txt test_run_orig_exported.txt
+cp qrels.txt qrels_run_orig_exported.txt
 
 cp $srcDirFullPath/test_run.txt .
 cat $srcDirFullPath/qrels.txt >> qrels.txt
 
+
+echo "Finished successfully!"
