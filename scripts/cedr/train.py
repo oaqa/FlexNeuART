@@ -283,13 +283,15 @@ def do_train(device_qty, master_port, rank, is_master_proc,
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
             valid_score = validate(model, train_params, dataset, valid_run, qrel_file_name, epoch, model_out_dir)
             print(f'validation epoch={epoch} score={valid_score:.4g}')
+            # Clearing token cache is a necessary evil, or else the saved model file is going to be a bloated beast
+            model.tokenize.clear_cache(model)
             if top_valid_score is None or valid_score > top_valid_score:
                 top_valid_score = valid_score
-                print('new top validation score, saving weights')
-                torch.save(model, os.path.join(model_out_dir, 'weights.p.best'))
+                print('new top validation score, saving the whole model')
+                torch.save(model, os.path.join(model_out_dir, 'model.best'))
 
             if train_params.save_snapshots:
-                torch.save(model, os.path.join(model_out_dir, f'weights.p.{epoch}'))
+                torch.save(model, os.path.join(model_out_dir, f'model.{epoch}'))
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
@@ -416,6 +418,9 @@ def main_cli():
         model = model_init_utils.create_model_from_args(args)
         print('Loading model weights from:', args.init_bert_weights.name)
         model.load_state_dict(torch.load(args.init_bert_weights.name, map_location='cpu'), strict=False)
+    else:
+        print('Creating the model from scratch!')
+        model = model_init_utils.create_model_from_args(args)
 
     os.makedirs(args.model_out_dir, exist_ok=True)
     print(model)
