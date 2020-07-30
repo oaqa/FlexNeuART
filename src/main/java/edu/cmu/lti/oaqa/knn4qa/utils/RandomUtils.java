@@ -44,6 +44,20 @@ public class RandomUtils {
     
     return res;
   }
+  
+  /***
+   * @return returns the next pseudorandom, uniformly distributed float value between 0.0 and 1.0.
+   */
+  public float nextFloat() {
+    return mRandGen.nextFloat() ;
+  }
+  
+  /***
+   * @return returns the next pseudorandom, uniformly distributed int value.
+   */
+  public int nextInt() {
+    return mRandGen.nextInt();
+  }
 
   /**
    * Weighted sampling with replacement.

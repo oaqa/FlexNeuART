@@ -414,10 +414,10 @@ def main_cli():
     if args.init_model is not None:
         print('Loading a complete model from:', args.init_model.name)
         model = torch.load(args.init_model.name, map_location='cpu')
-    elif args.init_bert_weights is not None:
+    elif args.init_model_weights is not None:
         model = model_init_utils.create_model_from_args(args)
-        print('Loading model weights from:', args.init_bert_weights.name)
-        model.load_state_dict(torch.load(args.init_bert_weights.name, map_location='cpu'), strict=False)
+        print('Loading model weights from:', args.init_model_weights.name)
+        model.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
     else:
         print('Creating the model from scratch!')
         model = model_init_utils.create_model_from_args(args)

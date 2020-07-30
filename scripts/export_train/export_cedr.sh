@@ -27,6 +27,10 @@ checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
 
+checkVarNonEmpty "hardNegQty"
+checkVarNonEmpty "sampleMedNegQty"
+checkVarNonEmpty "sampleEasyNegQty"
+
 cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"
 
 setJavaMem 1 2
@@ -42,7 +46,10 @@ $maxNumQueryTrainParam \
 \
 -u "$luceneIndexDir" \
 -thread_qty $threadQty \
--sample_neg_qty $sampleNegQty \
+\
+-hard_neg_qty $hardNegQty \
+-sample_med_neg_qty $sampleMedNegQty \
+-sample_easy_neg_qty $sampleEasyNegQty \
 \
 -index_field $indexFieldName \
 -query_field $QUERY_FIELD_NAME \

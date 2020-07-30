@@ -9,12 +9,16 @@ MODEL_PARAM_LIST = ['dropout', 'bert_large']
 MODEL_PARAM_PREF = 'model.'
 
 VANILLA_BERT = 'vanilla_bert'
+MODEL1_BERT = 'model1_bert'
+MODEL1_LEX  = 'model1_lex'
 
 MODEL_MAP = {
     VANILLA_BERT: modeling.VanillaBertRanker,
     'cedr_pacrr': modeling.CedrPacrrRanker,
     'cedr_knrm': modeling.CedrKnrmRanker,
-    'cedr_drmm': modeling.CedrDrmmRanker
+    'cedr_drmm': modeling.CedrDrmmRanker,
+    MODEL1_BERT: modeling_model1.BertModel1,
+    MODEL1_LEX: modeling_model1.LexicalModel1
 }
 
 def add_model_init_basic_args(parser, add_train_params):
@@ -22,6 +26,10 @@ def add_model_init_basic_args(parser, add_train_params):
     parser.add_argument('--model', metavar='model',
                         help='a model to use: ' + ' '.join(list(MODEL_MAP.keys())),
                         choices=MODEL_MAP.keys(), default='vanilla_bert')
+
+    parser.add_argument('--init_model_weights',
+                        metavar='model weights', help='initial model weights',
+                        type=argparse.FileType('rb'), default=None)
 
     parser.add_argument('--init_model',
                         metavar='initial model',
@@ -42,9 +50,6 @@ def add_model_init_basic_args(parser, add_train_params):
 
 
     if add_train_params:
-        parser.add_argument('--init_bert_weights',
-                            metavar='initial bare-bones BERT weights', help='initial BERT weights',
-                            type=argparse.FileType('rb'), default=None)
 
         parser.add_argument(f'--{MODEL_PARAM_PREF}dropout', type=float,
                             default=modeling.DEFAULT_BERT_DROPOUT,

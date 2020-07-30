@@ -37,11 +37,13 @@ import edu.cmu.lti.oaqa.knn4qa.utils.RandomUtils;
 public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   private static final Logger logger = LoggerFactory.getLogger(ExportTrainNegSampleBase.class);
   
-  private final static String SAMPLE_NEG_QTY = "sample_neg_qty";
+  private final static String MAX_HARD_NEG_QTY              = "hard_neg_qty";
+  private final static String MAX_SAMPLE_MEDIUM_NEG_QTY     = "sample_med_neg_qty";
+  private final static String MAX_SAMPLE_EASY_NEG_QTY       = "sample_easy_neg_qty";
   
   private final static String MAX_CAND_TRAIN_QTY_PARAM    = "cand_train_qty";
   private final static String MAX_CAND_TRAIN_QTY_DESC = 
-                    "A maximum number of candidate records returned by the provider to generate training data.";
+                    "A maximum number of candidate records returned by the provider to generate hard negative samples.";
   
   private final static String MAX_CAND_TEST_QTY_PARAM    = "cand_test_qty";
   private final static String MAX_CAND_TEST_QTY_DESC = 
@@ -50,11 +52,15 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   public ExportTrainNegSampleBase(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
                                   QrelReader qrelsTrain, QrelReader qrelsTest) {
     super(candProv, fwdIndex, qrelsTrain, qrelsTest);
+    
+    mAllDocIds = fwdIndex.getAllDocIds();
   }
 
   //Must be called from ExportTrainBase.addAllOptionDesc
   static void addOptionsDesc(Options opts) {
-    opts.addOption(SAMPLE_NEG_QTY, null, true, "A number of negative samples per query or -1 to keep all candidate entries");
+    opts.addOption(MAX_HARD_NEG_QTY, null, true, "A max. # of *HARD* negative examples (all K top-score candidates) per query");
+    opts.addOption(MAX_SAMPLE_MEDIUM_NEG_QTY, null, true, "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query");
+    opts.addOption(MAX_SAMPLE_EASY_NEG_QTY, null, true, "A max. # of *EASY* negative samples (sampling arbitrary docs) per query");
     
     opts.addOption(MAX_CAND_TRAIN_QTY_PARAM, null, true, MAX_CAND_TRAIN_QTY_DESC);
     opts.addOption(MAX_CAND_TEST_QTY_PARAM, null, true, MAX_CAND_TEST_QTY_DESC);
@@ -64,15 +70,36 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   @Override
   String readAddOptions(CommandLine cmd) {
     
-    String tmpn = cmd.getOptionValue(SAMPLE_NEG_QTY);
+    // Only this sampling parameter should be mandatory
+    String tmpn = cmd.getOptionValue(MAX_SAMPLE_MEDIUM_NEG_QTY);
     if (null == tmpn) {
-      return "Specify option: " + SAMPLE_NEG_QTY;
+      return "Specify option: " + MAX_SAMPLE_MEDIUM_NEG_QTY;
     }
     try {
-      mSampleNegQty = Integer.parseInt(tmpn);
+      mSampleMedNegQty = Math.max(0, Integer.parseInt(tmpn));
     } catch (NumberFormatException e) {
-      return SAMPLE_NEG_QTY + " isn't integer: '" + tmpn + "'";
+      return MAX_SAMPLE_MEDIUM_NEG_QTY + " isn't integer: '" + tmpn + "'";
     }
+    
+    cmd.getOptionValue(MAX_HARD_NEG_QTY);
+    if (null != tmpn) {
+      try {
+        mHardNegQty = Math.max(0, Integer.parseInt(tmpn));
+      } catch (NumberFormatException e) {
+        return MAX_HARD_NEG_QTY + " isn't integer: '" + tmpn + "'";
+      }
+    }
+    
+    cmd.getOptionValue(MAX_SAMPLE_EASY_NEG_QTY);
+    if (null != tmpn) {
+      try {
+        mSampleEasyNegQty = Math.max(0, Integer.parseInt(tmpn));
+      } catch (NumberFormatException e) {
+        return MAX_SAMPLE_EASY_NEG_QTY + " isn't integer: '" + tmpn + "'";
+      }
+    }
+    
+    logger.info(String.format("# of hard %d medium % easy samples per query", mHardNegQty, mSampleMedNegQty, mSampleEasyNegQty));
     
     tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_QTY_PARAM);
     if (null != tmpn) {
@@ -103,6 +130,9 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
         return MAX_CAND_TEST_QTY_PARAM + " isn't integer: '" + tmpn + "'";
       }
     }
+    
+    logger.info(String.format("# top-scoring training candidates to sample/select from %d", mCandTrainQty));
+    logger.info(String.format("# top candidates for validation %d", mCandTestQty));
     
     return "";
   }
@@ -234,32 +264,64 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
     CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandTrainQty);
 
+    // The sampling pool for medium-difficulty items is created from 
+    // 1. negative QREL entries
+    // 2. candidates retrieved
     for (CandidateEntry e : cands.mEntries) {
       
       if (relDocIds.contains(e.mDocId) || othDocIds.contains(e.mDocId)) {
         continue;
       }
-      othDocIds.add(e.mDocId);
-      
+      othDocIds.add(e.mDocId);  
     }
     
     ArrayList<String> allDocIds = new ArrayList<String>(relDocIds);
     
     String othDocIdsArr[] = othDocIds.toArray(new String[0]);
     
-    // Second sample non-relevant ones
-    ArrayList<String> othDocSample = mRandUtils.reservoirSampling(othDocIdsArr, mSampleNegQty);
-      
-    for (String docId : othDocSample) {
-      allDocIds.add(docId);     
+    // Second generate three types of negative samples. There's a chance of repeats
+    // but they shouldn't be frequent for a reasonable set of parameters. So, let's not
+    // bother about this.
+    // 1. Include a given number of top candidate entries
+    for (int i = 0; i < Math.min(cands.mEntries.length, mHardNegQty); i++) {
+      othDocIds.add(cands.mEntries[i].mDocId);
     }
+    
+    // 2. Generate randomly medium-difficulty negative samples from a candidate list and QRELs:
+    //    These are harder than randomly selected (and likely completely non-relevant documents)
+    //    but typically easier than a few top candidates, which have highest retrieval scores.
+    if (mSampleMedNegQty > 0) {
+      ArrayList<String> othDocSample = mRandUtils.reservoirSampling(othDocIdsArr, mSampleMedNegQty);
+        
+      for (String docId : othDocSample) {
+        allDocIds.add(docId);     
+      }
+    }
+    
+    // 3. Generate easy negative samples by randomly selecting document IDs from the set of 
+    //    all document IDs. These samples are very likely to be:
+    //    i) nearly always non-relevant
+    //    ii) have very low query-document score, i.e., they should be easy to distinguish from 
+    //        a majority of relevant documents, which would have rather large query-document 
+    //        similarity scores.
+    
+    for (int k = 0; k < mSampleEasyNegQty; ++k) {
+      int idx = mRandUtils.nextInt() % mAllDocIds.length;
+      String docId = mAllDocIds[idx];
+      allDocIds.add(docId);
+    }
+    
     writeOneEntryData(queryFieldText, false /* this is train query */,
                       queryId, relDocIds, allDocIds);
   }
 
-  int mSampleNegQty = 0;
+  int mHardNegQty = 0;
+  int mSampleMedNegQty = 0;
+  int mSampleEasyNegQty = 0;
+  
   int mCandTrainQty = Integer.MAX_VALUE;
   int mCandTestQty = Integer.MAX_VALUE;
   
   RandomUtils            mRandUtils = null;
+  String []              mAllDocIds = null;
 }

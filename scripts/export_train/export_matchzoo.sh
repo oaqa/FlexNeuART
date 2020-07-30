@@ -21,6 +21,10 @@ checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
 
+checkVarNonEmpty "hardNegQty"
+checkVarNonEmpty "sampleMedNegQty"
+checkVarNonEmpty "sampleEasyNegQty"
+
 target/appassembler/bin/ExportTrainPairs \
 -seed $randSeed \
 -export_fmt match_zoo  \
@@ -37,7 +41,10 @@ $maxNumQueryTrainParam \
 -query_field $QUERY_FIELD_NAME \
 -u "$luceneIndexDir" \
 \
--sample_neg_qty $sampleNegQty \
+-hard_neg_qty $hardNegQty \
+-sample_med_neg_qty $sampleMedNegQty \
+-sample_easy_neg_qty $sampleEasyNegQty \
+\
 -query_file_train "$inputDataDir/$partTrain/QuestionFields.jsonl" \
 -qrel_file_train "$inputDataDir/$partTrain/$QREL_FILE" \
 -query_file_test "$inputDataDir/$partTest/QuestionFields.jsonl" \

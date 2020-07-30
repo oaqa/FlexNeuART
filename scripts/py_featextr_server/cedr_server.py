@@ -103,10 +103,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.init_model is None:
-        print('Specify the model file: --init_model')
-        sys.exit(1)
-
-    model = torch.load(args.init_model, map_location='cpu')
+        if args.model is not None and args.init_model_weights is not None:
+            model = model_init_utils.create_model_from_args(args)
+            print('Loading model weights from:', args.init_model_weights.name)
+            model.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
+        else:
+            print('Specify the model file: --init_model or model type and model weights')
+            sys.exit(1)
+    else:
+        model = torch.load(args.init_model, map_location='cpu')
 
     multiThreaded = False  #
     startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(model=model,

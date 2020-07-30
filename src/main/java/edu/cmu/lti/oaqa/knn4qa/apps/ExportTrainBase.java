@@ -83,7 +83,6 @@ public abstract class ExportTrainBase {
     mFwdIndex = fwdIndex;
     mQrelsTrain = qrelsTrain;
     mQrelsTest = qrelsTest;
-    
   }
 
 

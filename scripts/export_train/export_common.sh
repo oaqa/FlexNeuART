@@ -8,7 +8,9 @@ checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "outSubdir"
 
 threadQty=1
-sampleNegQty=10
+hardNegQty=10
+sampleMedNegQty=20
+sampleEasyNegQty=10
 candTrainQty=500
 candTestQty=10
 randSeed=0
@@ -18,7 +20,9 @@ boolOpts=("h" "help" "print help")
 paramOpts=(
 "thread_qty"          "threadQty"        "# of threads"
 "out_subdir"          "outSubdir"        "output sub-directory (default $outSubdir)"
-"sample_neg_qty"      "sampleNegQty"     "A # of negative samples per query or -1 to keep all candidate entries"
+"hard_neg_qty"        "hardNegQty"       "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
+"sample_med_neg_qty"  "sampleMedNegQty"  "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
+"sample_easy_neg_qty" "sampleEasyNegQty" "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
 "cand_train_qty"      "candTrainQty"     "A max. # of candidate records to generate training data"
 "cand_test_qty"       "candTestQty"      "A max. # of candidate records to generate test data"
 "max_num_query_train" "maxNumQueryTrain" "Optional max. # of train queries"
