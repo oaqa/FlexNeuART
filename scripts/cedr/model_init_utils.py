@@ -3,22 +3,17 @@ import argparse
 
 import scripts.cedr.data as data
 import scripts.cedr.modeling as modeling
-import scripts.cedr.modeling_model1 as modeling_model1
 
 MODEL_PARAM_LIST = ['dropout', 'bert_large']
 MODEL_PARAM_PREF = 'model.'
 
 VANILLA_BERT = 'vanilla_bert'
-MODEL1_BERT = 'model1_bert'
-MODEL1_LEX  = 'model1_lex'
 
 MODEL_MAP = {
     VANILLA_BERT: modeling.VanillaBertRanker,
     'cedr_pacrr': modeling.CedrPacrrRanker,
     'cedr_knrm': modeling.CedrKnrmRanker,
-    'cedr_drmm': modeling.CedrDrmmRanker,
-    MODEL1_BERT: modeling_model1.BertModel1,
-    MODEL1_LEX: modeling_model1.LexicalModel1
+    'cedr_drmm': modeling.CedrDrmmRanker
 }
 
 def add_model_init_basic_args(parser, add_train_params):

@@ -81,7 +81,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
       return MAX_SAMPLE_MEDIUM_NEG_QTY + " isn't integer: '" + tmpn + "'";
     }
     
-    cmd.getOptionValue(MAX_HARD_NEG_QTY);
+    tmpn = cmd.getOptionValue(MAX_HARD_NEG_QTY);
     if (null != tmpn) {
       try {
         mHardNegQty = Math.max(0, Integer.parseInt(tmpn));
@@ -90,7 +90,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
       }
     }
     
-    cmd.getOptionValue(MAX_SAMPLE_EASY_NEG_QTY);
+    tmpn = cmd.getOptionValue(MAX_SAMPLE_EASY_NEG_QTY);
     if (null != tmpn) {
       try {
         mSampleEasyNegQty = Math.max(0, Integer.parseInt(tmpn));
@@ -99,7 +99,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
       }
     }
     
-    logger.info(String.format("# of hard %d medium % easy samples per query", mHardNegQty, mSampleMedNegQty, mSampleEasyNegQty));
+    logger.info(String.format("# of hard/medium/easy samples per query: %d/%d/%d", mHardNegQty, mSampleMedNegQty, mSampleEasyNegQty));
     
     tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_QTY_PARAM);
     if (null != tmpn) {
@@ -306,7 +306,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     //        similarity scores.
     
     for (int k = 0; k < mSampleEasyNegQty; ++k) {
-      int idx = mRandUtils.nextInt() % mAllDocIds.length;
+      int idx = Math.abs(mRandUtils.nextInt()) % mAllDocIds.length;
       String docId = mAllDocIds[idx];
       allDocIds.add(docId);
     }
