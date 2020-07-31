@@ -23,8 +23,7 @@ class MatchZooQueryHandler(BaseQueryHandler):
         self.model.backend.summary()
         self.debugPrint = debugPrint
 
-    # This function needs to be overriden
-    def computeScoresOverride(self, query, docs):
+    def computeScoresFromParsedOverride(self, query, docs):
         queryText = self.concatTextEntryWords(query)
         if self.debugPrint:
             print('getScores', queryText)

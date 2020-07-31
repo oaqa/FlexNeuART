@@ -5,6 +5,7 @@ import torch
 
 sys.path.append('.')
 
+from scripts.py_featextr_server.python_generated.protocol.ttypes import TextEntryRaw
 from scripts.py_featextr_server.base_server import BaseQueryHandler, startQueryServer
 
 import scripts.cedr.model_init_utils as model_init_utils
@@ -37,7 +38,15 @@ class CedrQueryHandler(BaseQueryHandler):
         # need to be in the eval mode
         self.model.eval()
 
-    # This function needs to be overridden
+
+    def computeScoresFromParsedOverride(self, query, docs):
+        queryRaw = TextEntryRaw(query.id, self.concatTextEntryWords(query))
+        docsRaw = []
+        for e in docs:
+            docsRaw.append(TextEntryRaw(e.id, self.concatTextEntryWords(e)))
+
+        return self.computeScoresFromRawOverride(queryRaw, docsRaw)
+
     def computeScoresFromRawOverride(self, query, docs):
         if self.debugPrint:
             print('getScores', query.id, query.text)
