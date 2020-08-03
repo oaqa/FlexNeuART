@@ -1,7 +1,7 @@
 import sys
 
 # Thrift files are generated from
-# ./src/main/java/edu/cmu/lti/oaqa/knn4qa/letor/external/protocol.thrift
+# ./src/main/java/edu/cmu/lti/oaqa/flexneuart/letor/external/protocol.thrift
 #
 
 from scripts.py_featextr_server.python_generated.protocol.ExternalScorer import Processor

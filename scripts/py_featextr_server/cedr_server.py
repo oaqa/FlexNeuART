@@ -115,7 +115,12 @@ if __name__ == '__main__':
         if args.model is not None and args.init_model_weights is not None:
             model = model_init_utils.create_model_from_args(args)
             print('Loading model weights from:', args.init_model_weights.name)
-            model.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
+            # If we load weights here, we must set strict to True:
+            # this would prevent accidental loading of partial models.
+            # Partial models are sure fine to load during training (as a reasonable
+            # initialization), but not during test time.
+            model.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'),
+                                  strict=True)
         else:
             print('Specify the model file: --init_model or model type and model weights')
             sys.exit(1)

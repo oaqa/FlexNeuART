@@ -1,0 +1,65 @@
+ <project name="MyProject" default="dist" basedir=".">
+  <description>
+      simple example build file
+  </description>
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="bin"/>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <delete dir="${build}"/>
+    <mkdir dir="${build}"/>
+<!-- don't delete a directory under svn control
+    <delete dir="${dist}"/>
+    <mkdir dir="${dist}"/>
+ -->
+  </target>
+
+  <path id="compile.classpath">
+  </path>
+
+  <target name="compile" depends="init"
+        description="compile the source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}" 
+	    destdir="${build}">
+	   <exclude name="ciir/umass/edu/tuning/*.java"/>
+	   <exclude name="test/*.java"/>
+           <classpath refid="compile.classpath"/>
+    </javac>
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <pathconvert property="mf.classpath" pathsep=" ">
+        <path refid="compile.classpath" />
+        <flattenmapper />
+    </pathconvert>
+    <!-- Create the distribution directory -->
+    <!--mkdir dir="${dist}/lib"/-->
+    <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+    <manifest file="MANIFEST.MF">
+        <attribute name="Built-By" value="vdang"/>
+        <attribute name="Main-Class" value="ciir.umass.edu.eval.Evaluator"/>
+        <attribute name="Class-Path" value="${mf.classpath}" />
+    </manifest>
+    <jar jarfile="${dist}/RankLib.jar" basedir="${build}" manifest="MANIFEST.MF" />
+  </target>
+
+  <!--copy todir="${dist.lib}">
+    <fileset dir="${lib}">
+        <include name="*.jar"/>
+    </fileset>
+  </copy-->
+
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>

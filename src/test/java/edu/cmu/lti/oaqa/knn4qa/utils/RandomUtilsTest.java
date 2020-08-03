@@ -20,6 +20,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import edu.cmu.lti.oaqa.flexneuart.utils.RandomUtils;
+
 public class RandomUtilsTest {
 
   private static final boolean DEBUG_PRINT = false;

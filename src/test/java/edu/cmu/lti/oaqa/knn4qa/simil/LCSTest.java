@@ -21,11 +21,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.cmu.lti.oaqa.flexneuart.embed.EmbeddingReaderAndRecoder;
+import edu.cmu.lti.oaqa.flexneuart.simil_func.AbstractDistance;
+import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
+import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
-import edu.cmu.lti.oaqa.knn4qa.embed.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.knn4qa.simil_func.AbstractDistance;
-import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 /**
  * @author Leonid Boytsov

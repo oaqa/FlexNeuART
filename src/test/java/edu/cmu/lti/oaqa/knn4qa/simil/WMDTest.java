@@ -23,10 +23,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
+import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
+import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
-import edu.cmu.lti.oaqa.knn4qa.fwdindx.DocEntryParsed;
-import edu.cmu.lti.oaqa.knn4qa.simil_func.DistanceFunctions;
-import edu.cmu.lti.oaqa.knn4qa.utils.StringUtils;
 
 public class WMDTest extends AbstractTest {
   final static Logger mLogger = LoggerFactory.getLogger(WMDTest.class);  

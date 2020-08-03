@@ -22,6 +22,9 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+
 public class CompressUtilsTest {
 
 	void doTestGZIP(String src) {

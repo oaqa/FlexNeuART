@@ -17,6 +17,8 @@ package edu.cmu.lti.oaqa.knn4qa.fwdindx;
 
 import org.junit.Test;
 
+import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
+
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 

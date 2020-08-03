@@ -24,6 +24,9 @@ import java.util.HashMap;
 
 import org.junit.Test;
 
+import edu.cmu.lti.oaqa.flexneuart.utils.ExtendedIndexEntry;
+import edu.cmu.lti.oaqa.flexneuart.utils.JSONUtils;
+
 public class JSONLUtilsTest {
 
   void oneDecodeTest(String textJSON,

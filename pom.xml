@@ -4,10 +4,10 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.cmu.lti.oaqa</groupId>
-  <artifactId>knn4qa</artifactId>
-  <version>3.0</version>
+  <artifactId>FlexNeuART</artifactId>
+  <version>1.0</version>
   <inceptionYear>2015</inceptionYear>
-  <name>Exploring if k-NN search can be useful for non-factoid QA.</name>
+  <name>Flexible classic and NeurAl Retrieval Toolkit</name>
   <packaging>jar</packaging>
 
   <properties>
@@ -182,10 +182,11 @@
       <version>0.12.0</version>
     </dependency>
 
+    <!-- this is a fixed RankLib version -->
     <dependency>
     	<groupId>umass</groupId>
     	<artifactId>RankLib</artifactId>
-    	<version>2.7</version>
+    	<version>2.14.fixed</version>
     </dependency>
 
     <dependency>
@@ -262,68 +263,72 @@
               <useWildcardClassPath>true</useWildcardClassPath>
               <programs>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.LuceneIndexer</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.LuceneIndexer</mainClass>
                   <id>LuceneIndexer</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.BuildFwdIndexApp</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.BuildFwdIndexApp</mainClass>
                   <id>BuildFwdIndexApp</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ConvertDataXMLJson</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ConvertDataXMLJson</mainClass>
                   <id>ConvertDataXMLJson</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.GenFeaturesAppMultThread</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.GenFeaturesAppMultThread</mainClass>
                   <id>GenFeaturesAppMultThread</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.QueryAppMultThread</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.QueryAppMultThread</mainClass>
                   <id>QueryAppMultThread</id>
                 </program> 
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.FilterTranTable</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.FilterTranTable</mainClass>
                   <id>FilterTranTable</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.FilterVocabulary</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.FilterVocabulary</mainClass>
                   <id>FilterVocabulary</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ConvertStackOverflowStep1</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ConvertStackOverflowStep1</mainClass>
                   <id>ConvertStackOverflowStep1</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ConvertStackOverflowStep2</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ConvertStackOverflowStep2</mainClass>
                   <id>ConvertStackOverflowStep2</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CheckDenseSparseExportScores</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.CheckDenseSparseExportScores</mainClass>
                   <id>CheckDenseSparseExportScores</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CheckSparseExportScores</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.CheckSparseExportScores</mainClass>
                   <id>CheckSparseExportScores</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ExportToNMSLIBDenseSparseFusion</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ExportToNMSLIBDenseSparseFusion</mainClass>
                   <id>ExportToNMSLIBDenseSparseFusion</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ExportToNMSLIBSparse</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ExportToNMSLIBSparse</mainClass>
                   <id>ExportToNMSLIBSparse</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.CreateBitextFromQRELs</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.CreateBitextFromQRELs</mainClass>
                   <id>CreateBitextFromQRELs</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.AnswerBasedQRELGenerator</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.AnswerBasedQRELGenerator</mainClass>
                   <id>AnswerBasedQRELGenerator</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.knn4qa.apps.ExportTrainPairs</mainClass>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ExportTrainPairs</mainClass>
                   <id>ExportTrainPairs</id>
+                </program>
+                <program>
+                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.YahooAnswersCollectionSplitter</mainClass>
+                  <id>YahooAnswersCollectionSplitter</id>
                 </program>
               </programs>
             </configuration>
