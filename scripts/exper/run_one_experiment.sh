@@ -309,8 +309,7 @@ fi
 commonAddParams="-cand_qty $candQty $candProvAddConfParam \
  -thread_qty "$threadQty" \
 $extrTypeIntermParam $modelIntermParam \
-$commonResourceParams \
-$maxFinalRerankQtyParam "
+$commonResourceParams" 
 
 outPrefTrain="out_${collect}_${trainPart}"
 outPrefTest="out_${collect}_${testPart}"
@@ -439,6 +438,7 @@ if [ "$testOnly" = "0" ] ; then
                                   -run_id "$FAKE_RUN_ID" \
                                   -o "$trecRunDir/run_check_train_metrics" \
                                   $commonAddParams \
+                                  $maxFinalRerankQtyParam \
                                   $modelFinalParams \
                                   $maxQueryQtyTrainParam \
                                   $cacheFileParamTrain 2>&1
@@ -461,6 +461,7 @@ target/appassembler/bin/QueryAppMultThread \
                             -run_id "$FAKE_RUN_ID" \
                             -o "$trecRunDir/run"  -save_stat_file "$statFile" \
                             $commonAddParams \
+                            $maxFinalRerankQtyParam \
                             $maxQueryQtyTestParam \
                             $modelFinalParams \
                             $queryCacheParamTest 2>&1|tee "$queryLogFile"
