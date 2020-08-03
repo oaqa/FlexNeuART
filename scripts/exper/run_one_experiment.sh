@@ -49,6 +49,8 @@ candQty="$DEFAULT_INTERM_CAND_QTY"
 candProvAddConf=""
 candProvAddConfParam=""
 
+maxFinalRerankQtyParam=""
+
 extrTypeIntermParam=""
 modelIntermParam=""
 
@@ -159,6 +161,9 @@ while [ $# -ne 0 ] ; do
         -max_num_query_test)
           maxQueryQtyTest=$optValue
           maxQueryQtyTestParam=" -max_num_query $maxQueryQtyTest"
+          ;;
+        -max_final_rerank_qty)
+          maxFinalRerankQtyParam=$opt
           ;;
         *)
           echo "Invalid option: $optName" >&2
@@ -304,7 +309,8 @@ fi
 commonAddParams="-cand_qty $candQty $candProvAddConfParam \
  -thread_qty "$threadQty" \
 $extrTypeIntermParam $modelIntermParam \
-$commonResourceParams"
+$commonResourceParams \
+$maxFinalRerankQtyParam "
 
 outPrefTrain="out_${collect}_${trainPart}"
 outPrefTest="out_${collect}_${testPart}"

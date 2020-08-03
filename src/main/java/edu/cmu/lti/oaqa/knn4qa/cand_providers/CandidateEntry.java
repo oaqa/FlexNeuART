@@ -35,6 +35,7 @@ public class CandidateEntry implements Comparable<CandidateEntry>, java.io.Seria
   @Override
   public int compareTo(CandidateEntry o) {
     // If mScore is greater => result is -1
+    // That is the greater entry is ranked earlier
     return (int) Math.signum(o.mScore - mScore);
   }
   

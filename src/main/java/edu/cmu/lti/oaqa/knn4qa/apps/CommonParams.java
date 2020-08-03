@@ -77,6 +77,9 @@ public class CommonParams {
   public final static String MAX_CAND_QTY_PARAM    = "cand_qty";
   public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. ";
   
+  public final static String MAX_FINAL_RERANK_QTY_PARAM    = "max_final_rerank_qty";
+  public final static String MAX_FINAL_RERANK_QTY_DESC     = "A maximum number of records to re-rank using the final re-ranker (candidate or re-ranked by the intermediate re-ranker) ";
+  
   public final static String MAX_NUM_RESULTS_PARAM = "n";
   public final static String MAX_NUM_RESULTS_DESC  = "A comma-separated list of numbers of candidate records (per-query).";
   

@@ -123,6 +123,8 @@ class BaseProcessingUnit {
         mAppRef.mResultCache.addOrReplaceCacheEntry(queryId, qres);
     }
     CandidateEntry [] cands = qres.mEntries;
+    // Let's re-rank candidates just in case the candidate provider fails to retrieve entries in the right order
+    Arrays.sort(cands);
     
     long end = System.currentTimeMillis();
     long searchTimeMS = end - start;
@@ -193,35 +195,65 @@ class BaseProcessingUnit {
       minRelevRank = 0;
     }
     
+    Ranker modelFinal = mAppRef.mModelFinal;
+    int rerankQty = Math.min(cands.length, mAppRef.mMaxFinalRerankQty);
     // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
-    if (mAppRef.mExtrFinal!= null) {
+    if (mAppRef.mExtrFinal!= null && modelFinal != null && 
+        rerankQty > 0 && cands.length > 0) {
+      
       if (cands.length > maxNumRet) {
         throw new RuntimeException("Bug or you are using old/different cache: cands.size()=" + cands.length + " > maxNumRet=" + maxNumRet);
       }
-      // Compute features once for all documents using a final re-ranker
+      // Compute features once for all documents using a final re-ranker.
+      // Note, however, we might choose to re-rank only top candidates not all of them
+      
       start = System.currentTimeMillis();
-      allDocFeats = mAppRef.mExtrFinal.getFeatures(cands, queryFields);
+      CandidateEntry candsToRerank[] = Arrays.copyOf(cands, rerankQty);
+      allDocFeats = mAppRef.mExtrFinal.getFeatures(candsToRerank, queryFields);
       
-      Ranker modelFinal = mAppRef.mModelFinal;
+      DataPointWrapper featRankLib = new DataPointWrapper();
       
-      if (modelFinal != null) {
-        DataPointWrapper featRankLib = new DataPointWrapper();
-        for (int rank = 0; rank < cands.length; ++rank) {
-          CandidateEntry e = cands[rank];
-          DenseVector feat = allDocFeats.get(e.mDocId);
-          // It looks like eval is thread safe in RankLib
-          featRankLib.assign(feat);                            
-          e.mScore = (float) modelFinal.eval(featRankLib);
+      float minTopRerankScore = Float.MAX_VALUE;
+      // Because candidates are sorted, this is going to be the
+      // smallest score among rerankQty top candidates.
+      float minTopOrigScore = cands[rerankQty - 1].mScore;
+      
+      for (int rank = 0; rank < rerankQty; ++rank) {
+        CandidateEntry e = cands[rank];
+        DenseVector feat = allDocFeats.get(e.mDocId);
+        // It looks like eval is thread safe in RankLib
+        featRankLib.assign(feat);                            
+        e.mScore = (float) modelFinal.eval(featRankLib);
+        // Re-ranked scores aren't guaranteed to be ordered, 
+        // so the last candidate won't necessary have the lowest score.
+        // We need to compute the minimum explicitly.
+        minTopRerankScore = Math.min(e.mScore, minTopRerankScore);
+        if (Float.isNaN(e.mScore)) {
           if (Float.isNaN(e.mScore)) {
-            if (Float.isNaN(e.mScore)) {
-              mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryId);
-              mAppRef.logger.info("NAN scores, feature vector:");
-              mAppRef.logger.info(feat.toString());
-              throw new Exception("NAN score encountered (intermediate reranker)!");
-            }
+            mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryId);
+            mAppRef.logger.info("NAN scores, feature vector:");
+            mAppRef.logger.info(feat.toString());
+            throw new Exception("NAN score encountered (intermediate reranker)!");
           }
-        }            
-      }          
+        }    
+      }
+      
+      if (rerankQty < cands.length) {
+        
+        // If the we don't re-rank tail entries, their scores still have to be adjusted
+        // so that the order is preserved and all the scores are below the minimum score
+        // for all the re-ranked entries
+        for (int rank = rerankQty; rank < cands.length; ++rank) {
+          CandidateEntry e = cands[rank];
+          float currScore = e.mScore;
+          // currScore must be <= minTopOrigScore, so we could get only
+          // smaller values compared to the top-k cohort
+          e.mScore = minTopRerankScore + currScore - minTopOrigScore;
+          if (e.mScore > minTopRerankScore) {
+            throw new RuntimeException("Shouldn't happen: it's a ranking bug!");
+          }
+        }
+      }
       
       end = System.currentTimeMillis();
       long rerankFinalTimeMS = end - start;
@@ -234,6 +266,8 @@ class BaseProcessingUnit {
     /* 
      * After computing scores based on the final model, elements need to be resorted.
      * However, this needs to be done *SEPARATELY* for each of the subset of top-K results.
+     * This simulates a setup when for each number of candidates we carry out a
+     * separate retrieval and re-ranking procedure.
      */
     
 
@@ -489,6 +523,7 @@ public abstract class BaseQueryApp {
     if (mUseFinalModel) {
       mOptions.addOption(CommonParams.MODEL_FILE_FINAL_PARAM,  null, true, CommonParams.MODEL_FILE_FINAL_DESC);
     }
+    mOptions.addOption(CommonParams.MAX_FINAL_RERANK_QTY_PARAM, null, true, CommonParams.MAX_CAND_QTY_DESC);
   }
   
   /**
@@ -522,9 +557,19 @@ public abstract class BaseQueryApp {
     }
     tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_RESULTS_PARAM);
     if (null == tmpn) showUsageSpecify(CommonParams.MAX_NUM_RESULTS_DESC);
+    tmpn = mCmd.getOptionValue(CommonParams.MAX_FINAL_RERANK_QTY_PARAM);
+    if (tmpn != null) {
+      try {
+        mMaxFinalRerankQty = Integer.parseInt(tmpn);
+      } catch (NumberFormatException e) {
+        showUsage("Maximum number of entries to re-rank (using a final re-ranker) isn't integer: '" + tmpn + "'");
+      } 
+    }
     
-    logger.info(String.format("Candidate provider type: %s URI: %s Query file: %s Maximum # of queries: %d # of cand. records: %s", 
-        mCandProviderType, mProviderURI, mQueryFile, mMaxNumQuery, tmpn));
+    logger.info(
+        String.format(
+            "Candidate provider type: %s URI: %s Query file: %s Max. # of queries: %d # of cand. records: %d Max. # to re-rank w/ final re-ranker: %d", 
+        mCandProviderType, mProviderURI, mQueryFile, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
     mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
     if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
     
@@ -774,6 +819,7 @@ public abstract class BaseQueryApp {
   String       mProviderURI;
   String       mQueryFile;
   Integer      mMaxCandRet;
+  int          mMaxFinalRerankQty = Integer.MAX_VALUE;
   Integer      mMaxNumRet;
   int          mMaxNumQuery = Integer.MAX_VALUE;
   ArrayList<Integer> mNumRetArr= new ArrayList<Integer>();

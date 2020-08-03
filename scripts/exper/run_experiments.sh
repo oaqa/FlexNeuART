@@ -53,22 +53,23 @@ function usage {
   cat <<EOF
 Usage: <collection> <feature desc. file relative to collection root> [additional options]
 Additional options:
-  -max_num_query_test   max. # of test queries
-  -num_cpu_cores        # of available CPU cores
-  -thread_qty           # of threads
-  -parallel_exper_qty   # of experiments to run in parallel (default $parallelExperQty)
-  -delete_trec_runs     delete TREC run files
-  -no_separate_shell    use this for debug purposes only
-  -reuse_feat           reuse previously generated features
-  -test_part            default test set, e.g., dev1
-  -train_part           default train set, e.g., train
-  -train_cand_qty       # of candidates for training (default $trainCandQty)
-  -test_cand_qty_list   a comma-separate list of # candidates for testing (default $testCandQtyList)
-  -metric_type          evaluation metric (default $metricType)
-  -skip_eval            skip/disable evaluation, just produce TREC runs
-  -test_model_results   additionally test model performance on the training set
-  -max_num_query_train  max. # of training queries
-  -debug_print          print every executed command
+  -max_num_query_test     max. # of test queries
+  -test_part              default test set, e.g., dev1
+  -train_part             default train set, e.g., train
+  -train_cand_qty         # of candidates for training (default $trainCandQty)
+  -max_final_rerank_qty   max. # of records to re-rank using the final re-ranker
+  -test_cand_qty_list     a comma-separate list of # candidates for testing (default $testCandQtyList)
+  -metric_type            evaluation metric (default $metricType)
+  -skip_eval              skip/disable evaluation, just produce TREC runs
+  -test_model_results     additionally test model performance on the training set
+  -max_num_query_train    max. # of training queries
+  -num_cpu_cores          # of available CPU cores
+  -thread_qty             # of threads
+  -parallel_exper_qty     # of experiments to run in parallel (default $parallelExperQty)
+  -reuse_feat             reuse previously generated features
+  -delete_trec_runs       delete TREC run files
+  -no_separate_shell      use this for debug purposes only
+  -debug_print            print every executed command
 EOF
 }
 
@@ -149,6 +150,9 @@ while [ $# -ne 0 ] ; do
           ;;
         -train_part)
           defaultTrainPart=$optValue
+          ;;
+        -max_final_rerank_qty)
+          globalParams+=" $opt"
           ;;
         *)
           echo "Invalid option: $optName" >&2
