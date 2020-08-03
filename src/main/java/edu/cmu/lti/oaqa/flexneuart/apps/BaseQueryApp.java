@@ -197,8 +197,7 @@ class BaseProcessingUnit {
     Ranker modelFinal = mAppRef.mModelFinal;
     int rerankQty = Math.min(cands.length, mAppRef.mMaxFinalRerankQty);
     // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
-    if (mAppRef.mExtrFinal!= null && modelFinal != null && 
-        rerankQty > 0 && cands.length > 0) {
+    if (mAppRef.mExtrFinal!= null && rerankQty > 0 && cands.length > 0) {
       
       if (cands.length > maxNumRet) {
         throw new RuntimeException("Bug or you are using old/different cache: cands.size()=" + cands.length + " > maxNumRet=" + maxNumRet);
@@ -207,58 +206,56 @@ class BaseProcessingUnit {
       // Note, however, we might choose to re-rank only top candidates not all of them
       
       start = System.currentTimeMillis();
-      CandidateEntry candsToRerank[] = Arrays.copyOf(cands, rerankQty);
-      allDocFeats = mAppRef.mExtrFinal.getFeatures(candsToRerank, queryFields);
       
-      DataPointWrapper featRankLib = new DataPointWrapper();
-      
-      float minTopRerankScore = Float.MAX_VALUE;
-      // Because candidates are sorted, this is going to be the
-      // smallest score among rerankQty top candidates.
-      float minTopOrigScore = cands[rerankQty - 1].mScore;
-      
-      for (int rank = 0; rank < rerankQty; ++rank) {
-        CandidateEntry e = cands[rank];
-        DenseVector feat = allDocFeats.get(e.mDocId);
-        // It looks like eval is thread safe in RankLib
-        featRankLib.assign(feat);                            
-        e.mScore = (float) modelFinal.eval(featRankLib);
-        // Re-ranked scores aren't guaranteed to be ordered, 
-        // so the last candidate won't necessary have the lowest score.
-        // We need to compute the minimum explicitly.
-        minTopRerankScore = Math.min(e.mScore, minTopRerankScore);
-        if (Float.isNaN(e.mScore)) {
-          if (Float.isNaN(e.mScore)) {
-            mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryId);
-            mAppRef.logger.info("NAN scores, feature vector:");
-            mAppRef.logger.info(feat.toString());
-            throw new Exception("NAN score encountered (intermediate reranker)!");
-          }
-        }    
-      }
-      
-      if (rerankQty < cands.length) {
-        
-        // If the we don't re-rank tail entries, their scores still have to be adjusted
-        // so that the order is preserved and all the scores are below the minimum score
-        // for all the re-ranked entries
-        for (int rank = rerankQty; rank < cands.length; ++rank) {
+      if (modelFinal != null) {
+        CandidateEntry candsToRerank[] = Arrays.copyOf(cands, rerankQty);
+        allDocFeats = mAppRef.mExtrFinal.getFeatures(candsToRerank, queryFields);
+        DataPointWrapper featRankLib = new DataPointWrapper();
+        float minTopRerankScore = Float.MAX_VALUE;
+        // Because candidates are sorted, this is going to be the
+        // smallest score among rerankQty top candidates.
+        float minTopOrigScore = cands[rerankQty - 1].mScore;
+        for (int rank = 0; rank < rerankQty; ++rank) {
           CandidateEntry e = cands[rank];
-          float origScore = e.mScore;
-          // currScore must be <= minTopOrigScore, so we could get only
-          // smaller values compared to the top-k cohort
-          // Note the brackets: without them the lack of associativity 
-          // due to floating point errors may lead to the sanity check failure
-          e.mScore = minTopRerankScore + (origScore - minTopOrigScore);
-          if (e.mScore > minTopRerankScore + 1e-6) {
-            mAppRef.logger.info(
-              String.format("orig score: %f updated score: %f minTopRerankScore: %f minTopOrigScore: %f", 
-                             origScore,           e.mScore,       minTopRerankScore, minTopOrigScore));
-            throw new RuntimeException("Shouldn't happen: it's a ranking bug!");
+          DenseVector feat = allDocFeats.get(e.mDocId);
+          // It looks like eval is thread safe in RankLib
+          featRankLib.assign(feat);
+          e.mScore = (float) modelFinal.eval(featRankLib);
+          // Re-ranked scores aren't guaranteed to be ordered, 
+          // so the last candidate won't necessary have the lowest score.
+          // We need to compute the minimum explicitly.
+          minTopRerankScore = Math.min(e.mScore, minTopRerankScore);
+          if (Float.isNaN(e.mScore)) {
+            if (Float.isNaN(e.mScore)) {
+              mAppRef.logger.info("DocId=" + e.mDocId + " queryId=" + queryId);
+              mAppRef.logger.info("NAN scores, feature vector:");
+              mAppRef.logger.info(feat.toString());
+              throw new Exception("NAN score encountered (intermediate reranker)!");
+            }
           }
         }
+        if (rerankQty < cands.length) {
+
+          // If the we don't re-rank tail entries, their scores still have to be adjusted
+          // so that the order is preserved and all the scores are below the minimum score
+          // for all the re-ranked entries
+          for (int rank = rerankQty; rank < cands.length; ++rank) {
+            CandidateEntry e = cands[rank];
+            float origScore = e.mScore;
+            // currScore must be <= minTopOrigScore, so we could get only
+            // smaller values compared to the top-k cohort
+            // Note the brackets: without them the lack of associativity 
+            // due to floating point errors may lead to the sanity check failure
+            e.mScore = minTopRerankScore + (origScore - minTopOrigScore);
+            if (e.mScore > minTopRerankScore + 1e-6) {
+              mAppRef.logger
+                  .info(String.format("orig score: %f updated score: %f minTopRerankScore: %f minTopOrigScore: %f",
+                      origScore, e.mScore, minTopRerankScore, minTopOrigScore));
+              throw new RuntimeException("Shouldn't happen: it's a ranking bug!");
+            }
+          }
+        } 
       }
-      
       end = System.currentTimeMillis();
       long rerankFinalTimeMS = end - start;
       mAppRef.logger.info(
