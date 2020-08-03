@@ -245,11 +245,16 @@ class BaseProcessingUnit {
         // for all the re-ranked entries
         for (int rank = rerankQty; rank < cands.length; ++rank) {
           CandidateEntry e = cands[rank];
-          float currScore = e.mScore;
+          float origScore = e.mScore;
           // currScore must be <= minTopOrigScore, so we could get only
           // smaller values compared to the top-k cohort
-          e.mScore = minTopRerankScore + currScore - minTopOrigScore;
-          if (e.mScore > minTopRerankScore) {
+          // Note the brackets: without them the lack of associativity 
+          // due to floating point errors may lead to the sanity check failure
+          e.mScore = minTopRerankScore + (origScore - minTopOrigScore);
+          if (e.mScore > minTopRerankScore + 1e-6) {
+            mAppRef.logger.info(
+              String.format("orig score: %f updated score: %f minTopRerankScore: %f minTopOrigScore: %f", 
+                             origScore,           e.mScore,       minTopRerankScore, minTopOrigScore));
             throw new RuntimeException("Shouldn't happen: it's a ranking bug!");
           }
         }
@@ -592,6 +597,10 @@ public abstract class BaseQueryApp {
       }
     }
     
+    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
+
+    mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
+    
     logger.info(
         String.format(
             "Candidate provider type: %s URI: %s Query file: %s Max. # of queries: %d # of cand. records: %d Max. # to re-rank w/ final re-ranker: %d", 
@@ -601,9 +610,6 @@ public abstract class BaseQueryApp {
     for (int topk : mNumRetArr) {
       logger.info("" + topk);
     }
-    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
-
-    mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
     
     mQrelFile = mCmd.getOptionValue(CommonParams.QREL_FILE_PARAM);
     if (mQrelFile != null) {
