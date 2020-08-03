@@ -207,9 +207,11 @@ class BaseProcessingUnit {
       
       start = System.currentTimeMillis();
       
+
+      CandidateEntry candsToRerank[] = Arrays.copyOf(cands, rerankQty);
+      allDocFeats = mAppRef.mExtrFinal.getFeatures(candsToRerank, queryFields);
+      
       if (modelFinal != null) {
-        CandidateEntry candsToRerank[] = Arrays.copyOf(cands, rerankQty);
-        allDocFeats = mAppRef.mExtrFinal.getFeatures(candsToRerank, queryFields);
         DataPointWrapper featRankLib = new DataPointWrapper();
         float minTopRerankScore = Float.MAX_VALUE;
         // Because candidates are sorted, this is going to be the
