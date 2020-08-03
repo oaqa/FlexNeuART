@@ -547,23 +547,49 @@ public abstract class BaseQueryApp {
     if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_DESC);              
     mQueryFile = mCmd.getOptionValue(CommonParams.QUERY_FILE_PARAM);
     if (null == mQueryFile) showUsageSpecify(CommonParams.QUERY_FILE_DESC);
-    String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_QUERY_PARAM);
-    if (tmpn != null) {
-      try {
-        mMaxNumQuery = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Maximum number of queries isn't integer: '" + tmpn + "'");
+    {
+      String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_QUERY_PARAM);
+      if (tmpn != null) {
+        try {
+          mMaxNumQuery = Integer.parseInt(tmpn);
+        } catch (NumberFormatException e) {
+          showUsage("Maximum number of queries isn't integer: '" + tmpn + "'");
+        }
       }
     }
-    tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_RESULTS_PARAM);
-    if (null == tmpn) showUsageSpecify(CommonParams.MAX_NUM_RESULTS_DESC);
-    tmpn = mCmd.getOptionValue(CommonParams.MAX_FINAL_RERANK_QTY_PARAM);
-    if (tmpn != null) {
-      try {
-        mMaxFinalRerankQty = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Maximum number of entries to re-rank (using a final re-ranker) isn't integer: '" + tmpn + "'");
-      } 
+    {
+      String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_RESULTS_PARAM);
+      if (null == tmpn) showUsageSpecify(CommonParams.MAX_NUM_RESULTS_DESC);
+      
+      // mMaxNumRet must be init before mMaxCandRet
+      mMaxNumRet = Integer.MIN_VALUE;
+      for (String s: mSplitOnComma.split(tmpn)) {
+        int n = 0;
+        
+        try {
+          n = Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+          showUsage("Number of candidates isn't integer: '" + s + "'");
+        }
+  
+        if (n <= 0) {
+          showUsage("Specify only positive number of candidate entries");
+        }
+        
+        mNumRetArr.add(n);      
+        mMaxNumRet = Math.max(n, mMaxNumRet);
+      }
+    }
+    
+    {
+      String tmpn = mCmd.getOptionValue(CommonParams.MAX_FINAL_RERANK_QTY_PARAM);
+      if (tmpn != null) {
+        try {
+          mMaxFinalRerankQty = Integer.parseInt(tmpn);
+        } catch (NumberFormatException e) {
+          showUsage("Maximum number of entries to re-rank (using a final re-ranker) isn't integer: '" + tmpn + "'");
+        } 
+      }
     }
     
     logger.info(
@@ -571,26 +597,12 @@ public abstract class BaseQueryApp {
             "Candidate provider type: %s URI: %s Query file: %s Max. # of queries: %d # of cand. records: %d Max. # to re-rank w/ final re-ranker: %d", 
         mCandProviderType, mProviderURI, mQueryFile, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
     mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
-    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
-    
-    // mMaxNumRet must be init before mMaxCandRet
-    mMaxNumRet = Integer.MIN_VALUE;
-    for (String s: mSplitOnComma.split(tmpn)) {
-      int n = 0;
-      
-      try {
-        n = Integer.parseInt(s);
-      } catch (NumberFormatException e) {
-        showUsage("Number of candidates isn't integer: '" + s + "'");
-      }
-
-      if (n <= 0) {
-        showUsage("Specify only positive number of candidate entries");
-      }
-      
-      mNumRetArr.add(n);      
-      mMaxNumRet = Math.max(n, mMaxNumRet);
+    logger.info("An array of number of entries to retrieve:");
+    for (int topk : mNumRetArr) {
+      logger.info("" + topk);
     }
+    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
+
     mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
     
     mQrelFile = mCmd.getOptionValue(CommonParams.QREL_FILE_PARAM);
@@ -598,26 +610,29 @@ public abstract class BaseQueryApp {
       logger.info("QREL-file: " + mQrelFile);
       mQrels = new QrelReader(mQrelFile);
     }
-    tmpn = mCmd.getOptionValue(CommonParams.THREAD_QTY_PARAM);
-    if (null != tmpn) {
-      try {
-        mThreadQty = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Number of threads isn't integer: '" + tmpn + "'");
+    {
+      String tmpn = mCmd.getOptionValue(CommonParams.THREAD_QTY_PARAM);
+      if (null != tmpn) {
+        try {
+          mThreadQty = Integer.parseInt(tmpn);
+        } catch (NumberFormatException e) {
+          showUsage("Number of threads isn't integer: '" + tmpn + "'");
+        }
       }
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
 
     mGizaRootDir = mCmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
-    tmpn = mCmd.getOptionValue(CommonParams.GIZA_ITER_QTY_PARAM);
-    if (null != tmpn) {
-      try {
-        mGizaIterQty = Integer.parseInt(tmpn);
-      } catch (NumberFormatException e) {
-        showUsage("Number of GIZA iterations isn't integer: '" + tmpn + "'");
-      }
+    {
+      String tmpn = mCmd.getOptionValue(CommonParams.GIZA_ITER_QTY_PARAM);
+      if (null != tmpn) {
+        try {
+          mGizaIterQty = Integer.parseInt(tmpn);
+        } catch (NumberFormatException e) {
+          showUsage("Number of GIZA iterations isn't integer: '" + tmpn + "'");
+        }
+      } 
     }
-    
     mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
     
     mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
@@ -630,15 +645,17 @@ public abstract class BaseQueryApp {
         showUsageSpecify(CommonParams.MODEL_FILE_INTERM_PARAM);
       mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
       mModelInterm = FeatureExtractor.readFeatureWeights(modelFile);
-      tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
-      if (null == tmpn)
-        showUsageSpecify(CommonParams.MAX_CAND_QTY_DESC);
-      try {
-        mMaxCandRet = Integer.parseInt(tmpn);
-        if (mMaxCandRet < mMaxNumRet)
-          mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
-      } catch (NumberFormatException e) {
-        showUsage("The value of '" + CommonParams.MAX_CAND_QTY_DESC + "' isn't integer: '" + tmpn + "'");
+      {
+        String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
+        if (null == tmpn)
+          showUsageSpecify(CommonParams.MAX_CAND_QTY_DESC);
+        try {
+          mMaxCandRet = Integer.parseInt(tmpn);
+          if (mMaxCandRet < mMaxNumRet)
+            mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
+        } catch (NumberFormatException e) {
+          showUsage("The value of '" + CommonParams.MAX_CAND_QTY_DESC + "' isn't integer: '" + tmpn + "'");
+        }
       }
 
       logger.info("Using the following weights for the intermediate re-ranker:");
