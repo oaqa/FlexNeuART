@@ -58,7 +58,7 @@ public class FileUtils {
 		    // This was really weird to do nothing in the case of file reading failure
             //content = new StringBuffer();
 		    e.printStackTrace();
-		    throw new RuntimError("Error reading from file:"  + filename);
+		    throw new RuntimeException("Error reading from file:"  + filename);
 		}
 		//return content;
                 return content.toString();
