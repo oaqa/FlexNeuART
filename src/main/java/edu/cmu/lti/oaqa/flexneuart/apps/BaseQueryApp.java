@@ -163,6 +163,7 @@ class BaseProcessingUnit {
           }
         }
       }
+      // Re-sorting after updating scores
       Arrays.sort(cands);
       // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
       if (cands.length > maxNumRet) {
@@ -258,6 +259,10 @@ class BaseProcessingUnit {
           }
         } 
       }
+      
+      // Re-sorting after updating scores
+      Arrays.sort(cands);
+      
       end = System.currentTimeMillis();
       long rerankFinalTimeMS = end - start;
       mAppRef.logger.info(
@@ -266,19 +271,17 @@ class BaseProcessingUnit {
       mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
     }
     
-    /* 
-     * After computing scores based on the final model, elements need to be resorted.
-     * However, this needs to be done *SEPARATELY* for each of the subset of top-K results.
-     * This simulates a setup when for each number of candidates we carry out a
-     * separate retrieval and re-ranking procedure.
-     */
+    
+    // Now that all documents are re-ranked we simply output them
     
 
     for (int k = 0; k < mAppRef.mNumRetArr.size(); ++k) {
       int numRet = mAppRef.mNumRetArr.get(k);
       if (numRet >= minRelevRank) {
         CandidateEntry resultsCurr[] = Arrays.copyOf(cands, Math.min(numRet, cands.length));
-        Arrays.sort(resultsCurr);
+        // We previously used to-resort results here to be compliant with some previous publications.
+        // It is clearly a counter productive thing to do.
+        //Arrays.sort(resultsCurr);
         synchronized (mWriteLock) {
           mAppRef.procResults(
               mAppRef.mRunId,
