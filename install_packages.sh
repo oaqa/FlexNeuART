@@ -26,10 +26,6 @@ fi
 echo "Python packages to install:"
 echo ${plist[*]}
 
-cd trec_eval
-make
-cd ..
-
 if [ -d pytorch-pretrained-BERT-mod ] ; then
   rm -rf pytorch-pretrained-BERT-mod
 fi
