@@ -55,7 +55,10 @@ public class FileUtils {
 		catch(Exception e)
 		{
 		    //content = "";
-                    content = new StringBuffer();
+		    // This was really weird to do nothing in the case of file reading failure
+            //content = new StringBuffer();
+		    e.printStackTrace();
+		    throw new RuntimError("Error reading from file:"  + filename);
 		}
 		//return content;
                 return content.toString();
