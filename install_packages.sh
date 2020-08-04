@@ -9,7 +9,7 @@ plist=(\
 lxml             "" \
 pytools          "" \
 torch            "1.4" \
-torchtext        "" \
+torchtext        "0.6.0" \
 numpy            "" \
 bs4              "" \
 thrift           "0.13.0" \
