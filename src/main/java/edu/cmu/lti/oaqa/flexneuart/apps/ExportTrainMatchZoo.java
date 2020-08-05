@@ -17,6 +17,7 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
+import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
 class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
   
@@ -116,6 +117,10 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
       if (text.isEmpty()) {
         logger.warn("Ignoring document " + docId + " b/c of empty field");
         continue;
+      }
+      
+      if (mMaxWhitespaceTokDocQty > 0) {
+        text = StringUtils.truncAtKthWhiteSpaceSeq(text, mMaxWhitespaceTokDocQty);
       }
       
       writeField(isTestQuery ? mOutTest : mOutTrain, queryId, queryFieldText, docId, text, relFlag);

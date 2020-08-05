@@ -49,8 +49,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   
   public static final String QUERY_DOC_PAIR_FILE_PARAM = "train_pairs_file";
   public static final String QUERY_DOC_PAIR_FILE_DESC = "query-document pairs for training";
-  
-  
+ 
   protected ExportTrainCEDR(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
                                QrelReader qrelsTrain, QrelReader qrelsTest) {
     super(candProv, fwdIndex, qrelsTrain, qrelsTest);
@@ -141,7 +140,11 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
       
       if (!mSeenDocIds.contains(docId)) {
           // documents can sure repeat, but a data file needs to have only one copy
-          mDataDocs.write("doc\t" + docId + "\t" + StringUtils.replaceWhiteSpaces(text) + Const.NL);
+          text = StringUtils.replaceWhiteSpaces(text);
+          if (mMaxWhitespaceTokDocQty > 0) {
+            text = StringUtils.truncAtKthWhiteSpaceSeq(text, mMaxWhitespaceTokDocQty);
+          }
+          mDataDocs.write("doc\t" + docId + "\t" + text + Const.NL);
           mSeenDocIds.add(docId);
       }
     

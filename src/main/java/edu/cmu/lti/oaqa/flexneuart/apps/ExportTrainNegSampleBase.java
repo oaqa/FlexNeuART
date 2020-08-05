@@ -49,6 +49,11 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   private final static String MAX_CAND_TEST_QTY_DESC = 
       "A maximum number of candidate records returned by the provider to generate test data.";
   
+  
+  public static final String MAX_DOC_WHITESPACE_TOK_QTY_PARAM = "max_doc_whitespace_qty";
+  public static final String MAX_DOC_WHITESPACE_TOK_QTY_DESC = "max # of whitespace separated tokens to keep in a document";
+ 
+  
   public ExportTrainNegSampleBase(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
                                   QrelReader qrelsTrain, QrelReader qrelsTest) {
     super(candProv, fwdIndex, qrelsTrain, qrelsTest);
@@ -65,6 +70,8 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     opts.addOption(MAX_CAND_TRAIN_QTY_PARAM, null, true, MAX_CAND_TRAIN_QTY_DESC);
     opts.addOption(MAX_CAND_TEST_QTY_PARAM, null, true, MAX_CAND_TEST_QTY_DESC);
     opts.addOption(CommonParams.RANDOM_SEED_PARAM, null, true, CommonParams.RANDOM_SEED_DESC);
+    
+    opts.addOption(MAX_DOC_WHITESPACE_TOK_QTY_PARAM, null, true, MAX_DOC_WHITESPACE_TOK_QTY_DESC);
   }
   
   @Override
@@ -133,6 +140,19 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     
     logger.info(String.format("# top-scoring training candidates to sample/select from %d", mCandTrainQty));
     logger.info(String.format("# top candidates for validation %d", mCandTestQty));
+    
+    
+    tmpn = cmd.getOptionValue(MAX_DOC_WHITESPACE_TOK_QTY_PARAM);
+    if (tmpn != null) {
+      try {
+        mMaxWhitespaceTokDocQty = Integer.parseInt(tmpn);
+      }  catch (NumberFormatException e) {
+        return "Maximum number of whitespace document tokens isn't integer: '" + tmpn + "'";
+      }
+    }
+    if (mMaxWhitespaceTokDocQty > 0) {
+      logger.info(String.format("Keeping max %d number of whitespace document tokens", mMaxWhitespaceTokDocQty));
+    }
     
     return "";
   }
@@ -318,6 +338,8 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   int mHardNegQty = 0;
   int mSampleMedNegQty = 0;
   int mSampleEasyNegQty = 0;
+  
+  int                    mMaxWhitespaceTokDocQty = -1;
   
   int mCandTrainQty = Integer.MAX_VALUE;
   int mCandTestQty = Integer.MAX_VALUE;

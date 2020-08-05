@@ -14,20 +14,22 @@ sampleEasyNegQty=10
 candTrainQty=500
 candTestQty=10
 randSeed=0
+maxDocWhitespaceQty=-1 # means no truncation
 
 boolOpts=("h" "help" "print help")
 
 paramOpts=(
-"thread_qty"          "threadQty"        "# of threads"
-"out_subdir"          "outSubdir"        "output sub-directory (default $outSubdir)"
-"hard_neg_qty"        "hardNegQty"       "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
-"sample_med_neg_qty"  "sampleMedNegQty"  "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
-"sample_easy_neg_qty" "sampleEasyNegQty" "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
-"cand_train_qty"      "candTrainQty"     "A max. # of candidate records to generate training data"
-"cand_test_qty"       "candTestQty"      "A max. # of candidate records to generate test data"
-"max_num_query_train" "maxNumQueryTrain" "Optional max. # of train queries"
-"max_num_query_test"  "maxNumQueryTest"  "Optional max. # of test/dev queries"
-"seed"                "randSeed"         "A random seed (default $randSeed)"
+"thread_qty"             "threadQty"        "# of threads"
+"out_subdir"             "outSubdir"        "output sub-directory (default $outSubdir)"
+"hard_neg_qty"           "hardNegQty"       "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
+"sample_med_neg_qty"     "sampleMedNegQty"  "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
+"sample_easy_neg_qty"    "sampleEasyNegQty" "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
+"cand_train_qty"         "candTrainQty"     "A max. # of candidate records to generate training data"
+"cand_test_qty"          "candTestQty"      "A max. # of candidate records to generate test data"
+"max_num_query_train"    "maxNumQueryTrain" "Optional max. # of train queries"
+"max_num_query_test"     "maxNumQueryTest"  "Optional max. # of test/dev queries"
+"max_doc_whitespace_qty" "maxDocWhitespaceQty" "Optional max. # of whitespace separated tokens to keep in a document"
+"seed"                   "randSeed"         "A random seed (default $randSeed)"
 )
 
 usageMain="<collection> <name of the index field> \

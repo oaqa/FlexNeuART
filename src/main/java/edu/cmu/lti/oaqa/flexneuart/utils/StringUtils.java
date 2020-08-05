@@ -185,6 +185,41 @@ public class StringUtils {
     return Const.PATTERN_WHITESPACE.split(str);
   }
   
+  /**
+   * Truncate the string after finding a k-th contiguous sequence of white-space characters.
+   * 
+   * @param str  input string
+   * @param k    the number of a sequence: we delete this sequence and what follows
+   * @return a truncated string
+   */
+  public static String truncAtKthWhiteSpaceSeq(String str, int k) {
+    Matcher m = Const.PATTERN_WHITESPACE.matcher(str);
+    int seenSeqQty = 0;
+    int prev = -2;
+    boolean lastMatch = false;
+    
+    if (k < 1) {
+      return "";
+    }
+    
+    while (seenSeqQty < k) {
+      if (!m.find()) {
+        lastMatch=false;
+        break;
+      }
+      lastMatch=true;
+      int last = m.end() - 1;
+      if (last > prev + 1) {
+        seenSeqQty++;
+      }
+      prev = last;
+    }
+    if (!lastMatch) {
+      return str;
+    }
+    return str.substring(0, m.end() - 1);
+  }
+  
   public static String joinWithSpace(List<String> arr) {
     return mJoinOnSpace.join(arr);
   }

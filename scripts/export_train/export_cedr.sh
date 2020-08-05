@@ -41,6 +41,7 @@ target/appassembler/bin/ExportTrainPairs \
 -cand_train_qty $candTrainQty -cand_test_qty $candTestQty \
 $maxNumQueryTestParam \
 $maxNumQueryTrainParam \
+-max_doc_whitespace_qty $maxDocWhitespaceQty \
 \
 -fwd_index_dir  "$fwdIndexDir" \
 \
