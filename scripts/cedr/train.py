@@ -280,6 +280,8 @@ def do_train(device_qty, master_port, rank, is_master_proc,
             avg_model_params(model)
 
         if is_master_proc:
+            os.makedirs(model_out_dir, exist_ok=True)
+
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
             valid_score = validate(model, train_params, dataset, valid_run, qrel_file_name, epoch, model_out_dir)
             print(f'validation epoch={epoch} score={valid_score:.4g}')
