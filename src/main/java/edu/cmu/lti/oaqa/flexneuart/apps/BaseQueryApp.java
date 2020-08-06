@@ -151,6 +151,10 @@ class BaseProcessingUnit {
       for (int rank = 0; rank < cands.length; ++rank) {
         CandidateEntry e = cands[rank];
         DenseVector feat = allDocFeats.get(e.mDocId);
+        if (feat.size() != intermModelWeights.size()) {
+          throw new Exception(String.format("Feature and linear model dim. mismatch in the intermedaite re-ranker, features: %d model: %d",
+                                            feat.size(), intermModelWeights.size()));
+        }
         e.mScore = (float) feat.dot(intermModelWeights);
         if (Float.isNaN(e.mScore)) {
           if (Float.isNaN(e.mScore)) {
