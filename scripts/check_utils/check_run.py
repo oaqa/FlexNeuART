@@ -35,7 +35,6 @@ query_doc_qtys = {}
 for e in queries:
     qid = e[DOCID_FIELD]
     query_ids.append(qid)
-    query_doc_qtys[qid] = 0
 
 # Some copy-paste from common_eval.readRunDict, but ok for now
 fileName = args.run_file
@@ -74,6 +73,8 @@ with FileWrapper(fileName) as f:
 
         prevScore = score
         seenDocs.add(docid)
+        if not qid in query_doc_qtys:
+            query_doc_qtys[qid] = 0
         query_doc_qtys[qid] += 1
 
 
@@ -83,7 +84,7 @@ with FileWrapper(fileName) as f:
 print('# of results per query:')
 nWarn = 0
 for qid in query_ids:
-    qty = query_doc_qtys[qid]
+    qty = query_doc_qtys[qid] if qid in query_doc_qtys else 0
 
     print(f'{qid} {qty}')
     if qty < args.min_exp_doc_qty:
