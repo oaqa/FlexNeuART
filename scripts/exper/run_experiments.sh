@@ -2,6 +2,8 @@
 . scripts/common_proc.sh
 . scripts/config.sh
 
+currDir=$PWD
+
 # Be careful when you rename parameter names, certain things
 # are used in Python scripts
 
@@ -257,9 +259,9 @@ for ((ivar=1;;++ivar)) ; do
   elif [ "$stat" = "#END" ] ; then # out of range
     break
   else
-    testPart=`grepFileForVal "$tmpConf" $TEST_PART_PARAM`
-    experSubdir=`grepFileForVal "$tmpConf" $EXPER_SUBDIR_PARAM`
-    testOnly=`grepFileForVal "$tmpConf" $TEST_ONLY_PARAM`
+    testPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
+    experSubdir=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $EXPER_SUBDIR_PARAM`
+    testOnly=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_ONLY_PARAM`
 
     if [ "$testPart" = "" ] ; then
       testPart=$defaultTestPart
@@ -291,7 +293,7 @@ for ((ivar=1;;++ivar)) ; do
     for ((i=0;i<${#jsonParamMap[*]};i+=2)) ; do
       paramName=${jsonParamMap[$i]}
       jsonParamName=${jsonParamMap[$(($i+1))]}
-      paramVal=`grepFileForVal "$tmpConf" "$jsonParamName"`
+      paramVal=`$currDir/scripts/grep_file_for_val.py "$tmpConf" "$jsonParamName"`
       # useLMART requires special treatment
       if [ "$paramName" = "use_lmart" -a "$paramVal" != "1" ] ; then
         paramVal=""

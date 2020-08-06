@@ -10,6 +10,8 @@ checkVarNonEmpty "STAT_FILE"
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
+currDir=$PWD
+
 boolOpts=(\
 "h" "help" "print help" \
 "debug_print" "debug" "print every executed command" \
@@ -77,20 +79,16 @@ fi
 tmpConf=`mktemp`
 
 metrListGrep=(\
-"ndcg@5" \
 "ndcg@10" \
 "ndcg@20" \
-"ndcg@30" \
 "ndcg@100" \
-"err@20" "p@20" "map" "Reciprocal rank" "recall")
+"err@20" "p20" "map" "mrr" "recall")
 
 metrListPrint=(\
-"ndcg@5" \
-"ndcg@10" \
-"ndcg@20" \
-"ndcg@30" \
-"ndcg@100" \
-"err@20" "p@20" "map" "mrr" "recall")
+"NDCG@10" \
+"NDCG@20" \
+"NDCG@100" \
+"ERR@20" "P@20" "MAP" "R-RANK" "RECALL")
 
 header="test_part\texper_subdir\ttop_k\tquery_qty"
 
@@ -116,8 +114,8 @@ for ((ivar=1;;++ivar)) ; do
     break
   else
 
-    testPart=`grepFileForVal "$tmpConf" $TEST_PART_PARAM`
-    experSubdir=`grepFileForVal "$tmpConf" $EXPER_SUBDIR_PARAM`
+    testPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
+    experSubdir=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $EXPER_SUBDIR_PARAM`
     if [ "$testPart" = "" ] ; then
       testPart=$defaultTestPart
     fi
@@ -156,13 +154,13 @@ for ((ivar=1;;++ivar)) ; do
 
     for f in `ls -tr out_${fltN}.rep` ; do
       top_k=`echo $f|sed 's/out_//'|sed 's/.rep//'`
-      query_qty=`grepFileForVal "$f" "# of queries"`
+      query_qty=`$currDir/scripts/grep_file_for_val.py "$f" "# of queries"`
 
       row="$testPart\t$experSubdir\t$top_k\t$query_qty"
       for ((i=0;i<${#metrListGrep[*]};i++)) ; do
         metrGrepName=${metrListGrep[$i]}
         metrPrintName=${metrListPrint[$i]}
-        val=`grepFileForVal "$f" "$metrGrepName" "1"`
+        val=`$currDir/scripts/grep_file_for_val.py "$f" "$metrGrepName" "1"`
         if [ "$metrGrepName" = "$printBestMetr" -o "$metrPrintName" = "$printBestMetr" ] ; then
           cmp=`isGreater "$val" "$bestVal"`
           if [ "$bestSubdir" = "" -o "$cmp" = "1" ] ; then

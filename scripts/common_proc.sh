@@ -146,21 +146,6 @@ function setJavaMem {
   echo "JAVA_OPTS=$JAVA_OPTS"
 }
 
-# grep*ForVal functions extract values of a given key
-# from a string/file in a stupid one-entry-per-line format,
-# where each line has the format (there can be spaces around :)
-# key:value
-
-function grepFileForVal {
-  fileName="$1"
-  metrName="$2"
-  ignoreCase="$3"
-  if [ "$ignoreCase" ] ; then
-    caseFlag='-i'
-  fi
-  fgrep $caseFlag "$metrName:" "$fileName" | cut -d : -f 2- | sed -E 's/^[[:space:]]*//' |sed -E 's/[[:space:]]*$//'
-}
-
 function getNumCpuCores {
   python -c 'import multiprocessing; print(multiprocessing.cpu_count())'
 }
