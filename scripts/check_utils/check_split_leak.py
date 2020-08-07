@@ -34,7 +34,6 @@ from scripts.common_eval import readQrelsDict
 
 
 QUERY_BATCH_SIZE=32
-QUANTILE_QTY=20
 PRINT_TOO_CLOSE_THRESHOLD=0.9 # We want to inspect answers that are too close
 
 np.random.seed(0)
@@ -159,7 +158,7 @@ index = nmslib.init(method=methodName,
                     space='jaccard_sparse',
                     data_type=nmslib.DataType.OBJECT_AS_STRING)
 
-for start in tqdm(range(0, len(sampleQueryList2), QUERY_BATCH_SIZE), desc='injest query set'):
+for start in tqdm(range(0, len(sampleQueryList2), QUERY_BATCH_SIZE), desc='reading query set'):
     dbatch = []
     for e in sampleQueryList2[start:start + QUERY_BATCH_SIZE]:
         dbatch.append(strToNMSLIBVect(e[TEXT_RAW_FIELD_NAME]))
@@ -233,8 +232,8 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
 
         qbatch = []
 
-
-q=list(np.arange(QUANTILE_QTY + 1) / QUANTILE_QTY) + [0.99]
+QUANTILE_QTY=20
+q=list(np.arange(QUANTILE_QTY + 1) / QUANTILE_QTY) + [0.96, 0.97, 0.98, 0.99, 0.999, 0.999]
 q.sort()
 
 print('Distribution of question-neighbor *SIMILARITIES* for k=%d' % K)
