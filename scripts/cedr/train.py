@@ -68,7 +68,8 @@ TrainParams = namedtuple('TrainParams',
                      'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
                      'backprop_batch_size',
-                     'epoch_qty', 'save_snapshots',
+                     'epoch_qty',
+                     'save_epoch_snapshots', 'save_last_snapshot_every_k_batch'
                      'device_name', 'print_grads',
                      'shuffle_train',
                      'use_external_eval', 'eval_metric'])
@@ -101,7 +102,9 @@ def train_iteration(model,
                     loss_obj,
                     train_params, max_train_qty,
                     optimizer, scheduler,
-                    dataset, train_pairs, qrels):
+                    dataset, train_pairs, qrels,
+                    save_last_snapshot_every_k_batch,
+                    model_out_dir):
 
     clean_memory(train_params.device_name)
 
@@ -165,6 +168,12 @@ def train_iteration(model,
                     avg_model_params(model)
 
             batch_id += 1
+
+            # We will surely skip batch_id == 0
+            if save_last_snapshot_every_k_batch is not None and batch_id % save_last_snapshot_every_k_batch == 0:
+                if is_master_proc:
+                    os.makedirs(model_out_dir, exist_ok=True)
+                    torch.save(model, os.path.join(model_out_dir, 'model.last'))
 
         if pbar is not None:
             pbar.update(count)
@@ -272,7 +281,9 @@ def do_train(device_qty, master_port, rank, is_master_proc,
                                device_qty=device_qty, loss_obj=loss_obj,
                                train_params=train_params, max_train_qty=max_train_qty,
                                optimizer=optimizer, scheduler=scheduler,
-                               dataset=dataset, train_pairs=train_pairs, qrels=qrels)
+                               dataset=dataset, train_pairs=train_pairs, qrels=qrels,
+                               save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
+                               model_out_dir=model_out_dir)
 
         # This must be done in every process, not only in the master process
         # But only if we have more than one device!
@@ -292,7 +303,7 @@ def do_train(device_qty, master_port, rank, is_master_proc,
                 print('new top validation score, saving the whole model')
                 torch.save(model, os.path.join(model_out_dir, 'model.best'))
 
-            if train_params.save_snapshots:
+            if train_params.save_epoch_snapshots:
                 torch.save(model, os.path.join(model_out_dir, f'model.{epoch}'))
 
         lr *= epoch_lr_decay
@@ -342,8 +353,13 @@ def main_cli():
     parser.add_argument('--print_grads', action='store_true',
                         help='print gradient norms of parameters')
 
-    parser.add_argument('--save_snapshots', action='store_true',
+    parser.add_argument('--save_epoch_snapshots', action='store_true',
                         help='save model after each epoch')
+
+    parser.add_argument('--save_last_snapshot_every_k_batch',
+                        metavar='save latest snapshot every k batch',
+                        type=int, default=None,
+                        help='save latest snapshot every k batch')
 
     parser.add_argument('--seed', metavar='random seed', help='random seed',
                         type=int, default=42)
@@ -396,6 +412,10 @@ def main_cli():
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
     args = parser.parse_args()
+
+    if args.save_last_snapshot_every_k_batch is not None and args.save_last_snapshot_every_k_batch < 2:
+        print('--save_last_snapshot_every_k_batch should be > 1')
+        sys.exit(1)
 
     utils.set_all_seeds(args.seed)
 
@@ -479,7 +499,8 @@ def main_cli():
                                     epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
                                     backprop_batch_size=args.backprop_batch_size,
                                     batches_per_train_epoch=args.batches_per_train_epoch,
-                                    save_snapshots=args.save_snapshots,
+                                    save_epoch_snapshots=args.save_epoch_snapshots,
+                                   save_last_snapshot_every_k_batch=args.save_last_snapshot_every_k_batch,
                                     batch_size=args.batch_size, batch_size_val=args.batch_size_val,
                                     max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
                                     epoch_qty=args.epoch_qty, device_name=device_name,
