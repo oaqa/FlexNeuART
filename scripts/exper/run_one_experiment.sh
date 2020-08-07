@@ -33,6 +33,10 @@ checkVarNonEmpty "DEFAULT_TRAIN_CAND_QTY"
 checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
 checkVarNonEmpty "SEP_DEBUG_LINE"
 
+checkVarNonEmpty "FAKE_RUN_ID"
+
+runId=$FAKE_RUN_ID
+
 numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
 metricType=$DEFAULT_METRIC_TYPE
@@ -120,6 +124,9 @@ while [ $# -ne 0 ] ; do
           ;;
         -num_rand_restart)
           numRandRestart=$optValue
+          ;;
+        -run_id)
+          runId=$optValue
           ;;
         -train_part)
           trainPart=$optValue
@@ -249,7 +256,6 @@ mkdir -p "$reportDir"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 
-checkVarNonEmpty "FAKE_RUN_ID"
 
 
 checkVarNonEmpty "COLLECT_ROOT"
@@ -347,6 +353,7 @@ echo "GIZA root directory:     $gizaRootDir"
 echo "$SEP_DEBUG_LINE"
 
 echo "Experiment directory:                    $letorDir"
+echo "RUN id:                                  $runId"
 echo "QREL file:                               $QREL_FILE"
 echo "Directory with TREC-style runs:          $trecRunDir"
 echo "Report directory:                        $reportDir"
@@ -395,7 +402,7 @@ if [ "$testOnly" = "0" ] ; then
     # This APP can require a lot of memory
     setJavaMem 5 9
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
-                                    -run_id "$FAKE_RUN_ID" \
+                                    -run_id "$runId" \
                                     -q "$inputDataDir/$trainPart/$queryFileName" \
                                     -qrel_file "$inputDataDir/$trainPart/$QREL_FILE" \
                                     -n "$trainCandQty" \
@@ -435,7 +442,7 @@ if [ "$testOnly" = "0" ] ; then
       target/appassembler/bin/QueryAppMultThread  -u "$candProvURI" -cand_prov "$candProvType" \
                                   -q "$inputDataDir/$trainPart/$queryFileName" \
                                   -n "$trainCandQty" \
-                                  -run_id "$FAKE_RUN_ID" \
+                                  -run_id "$runId" \
                                   -o "$trecRunDir/run_check_train_metrics" \
                                   $commonAddParams \
                                   $maxFinalRerankQtyParam \
@@ -458,7 +465,7 @@ target/appassembler/bin/QueryAppMultThread \
                             -u "$candProvURI" -cand_prov "$candProvType" \
                             -q "$inputDataDir/$testPart/$queryFileName"  \
                             -n "$testCandQtyList" \
-                            -run_id "$FAKE_RUN_ID" \
+                            -run_id "$runId" \
                             -o "$trecRunDir/run"  -save_stat_file "$statFile" \
                             $commonAddParams \
                             $maxFinalRerankQtyParam \

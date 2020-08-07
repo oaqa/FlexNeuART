@@ -14,6 +14,10 @@ parser.add_argument('--run_file', metavar='run file',
 parser.add_argument('--query_file', metavar='query file',
                     help='a query file',
                     type=str, required=True)
+parser.add_argument('--run_id', metavar='run id',
+                    help='optional run id to check',
+                    default=None,
+                    type=str)
 parser.add_argument('--fwd_index_file', metavar='forward index catalog file',
                     help='the "catalog" file of the forward index',
                     type=str, required=True)
@@ -52,7 +56,7 @@ with FileWrapper(fileName) as f:
             raise Exception(
                 f'Invalid line {ln} in run file {fileName} expected 6 white-space separated fields by got: {line}')
 
-        qid, _, docid, rank, scoreStr, _ = fld
+        qid, _, docid, rank, scoreStr, runId = fld
         if prevQueryId is None or qid != prevQueryId:
             seenDocs = set()
             prevQueryId = qid
@@ -70,6 +74,10 @@ with FileWrapper(fileName) as f:
         if docid in seenDocs:
             raise Exception(
                 f'Invalid line {ln} in run file {fileName} repeating document {docid}')
+
+        if args.run_id is not None and runId != args.run_id:
+            raise Exception(
+                f'Invalid line {ln} in run file {fileName} invalid run id {runId}')
 
         prevScore = score
         seenDocs.add(docid)
