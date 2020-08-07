@@ -12,6 +12,7 @@ import gc
 import sys
 import math
 import argparse
+import shutil
 import torch
 import torch.distributed as dist
 
@@ -173,7 +174,9 @@ def train_iteration(model,
             if save_last_snapshot_every_k_batch is not None and batch_id % save_last_snapshot_every_k_batch == 0:
                 if is_master_proc:
                     os.makedirs(model_out_dir, exist_ok=True)
-                    torch.save(model, os.path.join(model_out_dir, 'model.last'))
+                    out_tmp = os.path.join(model_out_dir, 'model.last.tmp')
+                    torch.save(model, out_tmp)
+                    shutil.move(out_tmp, os.path.join(model_out_dir, 'model.last'))
 
         if pbar is not None:
             pbar.update(count)
