@@ -69,7 +69,7 @@ TrainParams = namedtuple('TrainParams',
                      'max_query_len', 'max_doc_len',
                      'backprop_batch_size',
                      'epoch_qty',
-                     'save_epoch_snapshots', 'save_last_snapshot_every_k_batch'
+                     'save_epoch_snapshots', 'save_last_snapshot_every_k_batch',
                      'device_name', 'print_grads',
                      'shuffle_train',
                      'use_external_eval', 'eval_metric'])
@@ -500,7 +500,7 @@ def main_cli():
                                     backprop_batch_size=args.backprop_batch_size,
                                     batches_per_train_epoch=args.batches_per_train_epoch,
                                     save_epoch_snapshots=args.save_epoch_snapshots,
-                                   save_last_snapshot_every_k_batch=args.save_last_snapshot_every_k_batch,
+                                    save_last_snapshot_every_k_batch=args.save_last_snapshot_every_k_batch,
                                     batch_size=args.batch_size, batch_size_val=args.batch_size_val,
                                     max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
                                     epoch_qty=args.epoch_qty, device_name=device_name,
