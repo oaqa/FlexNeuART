@@ -232,8 +232,9 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
 
         qbatch = []
 
-QUANTILE_QTY=20
-q=list(np.arange(QUANTILE_QTY + 1) / QUANTILE_QTY) + [0.96, 0.97, 0.98, 0.99, 0.999, 0.999]
+# We are more interested in extremely high similarities, hence,
+# we increase resolution in higher quantiles
+q=list([0.2,0.3,0.4,0.5,0.6,0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 0.999, 0.999])
 q.sort()
 
 print('Distribution of question-neighbor *SIMILARITIES* for k=%d' % K)
