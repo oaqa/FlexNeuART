@@ -126,6 +126,7 @@ def train_iteration(model,
     lr_desc = get_lr_desc(optimizer)
 
     batch_id = 0
+    snap_id = 0
 
     if is_master_proc:
         pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False)
@@ -174,9 +175,9 @@ def train_iteration(model,
             if save_last_snapshot_every_k_batch is not None and batch_id % save_last_snapshot_every_k_batch == 0:
                 if is_master_proc:
                     os.makedirs(model_out_dir, exist_ok=True)
-                    out_tmp = os.path.join(model_out_dir, 'model.last.tmp')
+                    out_tmp = os.path.join(model_out_dir, f'model.last.{snap_id}')
                     torch.save(model, out_tmp)
-                    shutil.move(out_tmp, os.path.join(model_out_dir, 'model.last'))
+                    snap_id += 1
 
         if pbar is not None:
             pbar.update(count)
@@ -360,9 +361,9 @@ def main_cli():
                         help='save model after each epoch')
 
     parser.add_argument('--save_last_snapshot_every_k_batch',
-                        metavar='save latest snapshot every k batch',
+                        metavar='debug: save latest snapshot every k batch',
                         type=int, default=None,
-                        help='save latest snapshot every k batch')
+                        help='debug option: save latest snapshot every k batch')
 
     parser.add_argument('--seed', metavar='random seed', help='random seed',
                         type=int, default=42)
