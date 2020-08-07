@@ -15,19 +15,22 @@ from tqdm import tqdm
 # Specifically, we search for very similar question-answer pairs, which might
 # be duplicates or near duplicates. Hence, we check the following:
 # 1. Are there very similar questions?
-# 2. For sufficiently similar questions, e.g., Jaccard >= 0.75, we check the similarity
-#    among all relevant answers.
+# 2. For sufficiently similar questions, e.g., Jaccard >= 0.75, we check
+#    all pairwise similarities among all relevant answers.
+#
 # By default this method uses brute-force search with the Jaccard similarity.
 # The exhaustiveness of the search ensures we won't miss anything. However, for quicker-and-easier
 # checks, one can use HNSW with sufficently high values of M (>= 30), efConstruction (>=200),
 # and efSearch (>=1000). These parameters might need to be bumped up for "harder" collections
 # and brute-force search is certainly a safer option.
+#
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import unique, readQueries, readQrelsDict, jsonlGen
+from scripts.data_convert.convert_common import unique, readQueries, jsonlGen
 from scripts.config import BERT_BASE_MODEL, QUESTION_FILE_JSON, ANSWER_FILE_JSON, QREL_FILE, \
     DOCID_FIELD, TEXT_RAW_FIELD_NAME
+from scripts.common_eval import readQrelsDict
 
 
 QUERY_BATCH_SIZE=32
@@ -181,8 +184,8 @@ print('K=', K)
 print('Setting query-time parameters', queryTimeParams)
 index.setQueryTimeParams(queryTimeParams)
 
-nbrQuestDists = []
-nbrAnswDists = []
+nbrQuestSimils = []
+nbrAnswSimils = []
 
 for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query w/ 1st query set'):
     qbatch = []
@@ -198,12 +201,13 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
 
             indexQueries, dists = nbrs[i]
             for t in range(len(indexQueries)):
-                dist = dists[t]
-                nbrQuestDists.append(dist)
+                # In the case of Jaccard, the similarity is one minus the distance
+                nqsimil = 1 - dists[t]
+                nbrQuestSimils.append(nqsimil)
 
                 # For close enough queries, compute all pairwise distances
                 # between the respective relevant answers
-                if dist >= args.min_jacc:
+                if nqsimil >= args.min_jacc:
                     qnum2 = indexQueries[t]
 
                     qid2 = sampleQueryList2[qnum2][DOCID_FIELD]
@@ -215,10 +219,10 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
                                     aid1 in answDictText and aid2 in answDictText:
                                     toks1 = unique(getTokenIds(answDictText[aid1]))
                                     toks2 = unique(getTokenIds(answDictText[aid2]))
-                                    answDist = jaccard(toks1, toks2)
-                                    nbrAnswDists.append(answDist)
-                                    if answDist >= PRINT_TOO_CLOSE_THRESHOLD:
-                                        print(qid1, aid1, '<=>', answDist, '<=>', qid2, aid2)
+                                    answSimil = jaccard(toks1, toks2)
+                                    nbrAnswSimils.append(answSimil)
+                                    if answSimil >= PRINT_TOO_CLOSE_THRESHOLD:
+                                        print(qid1, aid1, '<=>', answSimil, '<=>', qid2, aid2)
                                         print('---------------------')
                                         print(answDictText[aid1])
                                         print(toks1)
@@ -233,14 +237,14 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
 q=list(np.arange(QUANTILE_QTY + 1) / QUANTILE_QTY) + [0.99]
 q.sort()
 
-print('Distribution of question-neighbor distances for k=%d' % K)
-dst = np.quantile(nbrQuestDists, q = q)
+print('Distribution of question-neighbor *SIMILARITIES* for k=%d' % K)
+dst = np.quantile(nbrQuestSimils, q = q)
 for k in range(len(q)):
     print('%5.03g' % q[k], '%.03g' % dst[k])
 
-print('Distribution of relevant answer distances from neighbor questions with Jaccard >= %g' % args.min_jacc)
-if nbrAnswDists:
-    dst = np.quantile(nbrAnswDists, q = q)
+print('Distribution of relevant answer pairwise *SIMILARITIES* from neighbor questions with Jaccard >= %g' % args.min_jacc)
+if nbrAnswSimils:
+    dst = np.quantile(nbrAnswSimils, q = q)
     for k in range(len(q)):
         print('%5.03g' % q[k], '%.03g' % dst[k])
 else:
