@@ -7,7 +7,7 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
-from pytools import memoize_method
+#from pytools import memoize_method
 import torch
 import torch.nn.functional as F
 import pytorch_pretrained_bert
@@ -56,7 +56,9 @@ class BertRanker(torch.nn.Module):
     def forward(self, **inputs):
         raise NotImplementedError
 
-    @memoize_method
+    #@memoize_method
+    # memoization of the tokenizer is not very useful with large datasets,
+    # but it can cause a huge memory bloating
     def tokenize(self, text):
         toks = self.tokenizer.tokenize(text)
         toks = [self.tokenizer.vocab[t] for t in toks]
