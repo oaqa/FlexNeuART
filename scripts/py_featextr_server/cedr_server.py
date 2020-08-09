@@ -2,6 +2,8 @@
 import sys
 import argparse
 import torch
+import time
+from profilehooks import profile
 
 sys.path.append('.')
 
@@ -20,8 +22,9 @@ class CedrQueryHandler(BaseQueryHandler):
                     model,
                     batchSize, deviceName,
                     maxQueryLen, maxDocLen,
+                    exclusive,
                     debugPrint=False):
-        super().__init__(exclusive=True)
+        super().__init__(exclusive=exclusive)
 
         self.debugPrint = debugPrint
         self.batchSize = batchSize
@@ -37,7 +40,6 @@ class CedrQueryHandler(BaseQueryHandler):
 
         # need to be in the eval mode
         self.model.eval()
-
 
     def computeScoresFromParsedOverride(self, query, docs):
         queryRaw = TextEntryRaw(query.id, self.concatTextEntryWords(query))
@@ -73,9 +75,9 @@ class CedrQueryHandler(BaseQueryHandler):
                     scores = self.model(records['query_tok'],
                                         records['query_mask'],
                                         records['doc_tok'],
-                                        records['doc_mask'])
+                                        records['doc_mask']).tolist()
+
                     for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
-                        score = score.item()  # From tensor to value
                         if self.debugPrint:
                             print(score, did, docData[did])
                         # Note that each element must be an array, b/c
@@ -127,10 +129,11 @@ if __name__ == '__main__':
     else:
         model = torch.load(args.init_model, map_location='cpu')
 
-    multiThreaded = False  #
+    multiThreaded = False  # if we set to True, we can often run out of CUDA memory.
     startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(model=model,
                                                                            batchSize=args.batch_size,
                                                                            debugPrint=args.debug_print,
                                                                            deviceName=args.device_name,
                                                                            maxQueryLen=args.max_query_len,
-                                                                           maxDocLen=args.max_doc_len))
+                                                                           maxDocLen=args.max_doc_len,
+                                                                           exclusive=not multiThreaded))

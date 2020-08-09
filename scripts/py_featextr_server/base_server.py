@@ -21,6 +21,10 @@ SAMPLE_PORT = 8080
 class BaseQueryHandler:
     def __init__(self, exclusive=True):
         self.lock_ = Lock() if exclusive else None
+        if self.lock_ is not None:
+            print('Locking the base server for single-threaded processing')
+        else:
+            print('NOT locking the base server for multi-threaded processing')
 
     def getScoresFromParsed(self, query, docs):
         try:
@@ -49,9 +53,7 @@ class BaseQueryHandler:
         return te.id + ' '.join(arr)
 
     def concatTextEntryWords(self, te):
-        arr = []
-        for winfo in te.entries:
-            arr.append(winfo.word)
+        arr = [winfo.word for winfo in te.entries]
         return ' '.join(arr)
 
     # One or both functions need to be implemented in a child class
