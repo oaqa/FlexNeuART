@@ -65,6 +65,8 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   public static String POSITIONAL = "useWordSeq";
   
   public static String UNK_WORD = "unkWord";
+  
+  public static String PARSED_AS_RAW = "sendParsedAsRaw";
 
   public FeatExtractorExternalApacheThrift(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);
@@ -80,6 +82,8 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     mUnkWord = conf.getReqParamStr(UNK_WORD);
     
     mNormByQueryLen = conf.getParamBool(NORM_BY_QUERY_LEN);
+    
+    mTextAsRaw = conf.getParamBool(PARSED_AS_RAW);
     
     mUseWordSeq = conf.getParamBool(POSITIONAL);
     
@@ -169,23 +173,42 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           docEntries.add(new TextEntryRaw(e.mDocId, docEntryRaw));
         }
         scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
-      } else {
-        DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
-        if (queryEntry == null) return res;
-        
-        TextEntryParsed queryTextEntry = createTextEntryParsed(queryId, queryEntry);
-        ArrayList<TextEntryParsed> docTextEntries = new ArrayList<>();
-        
-        for (CandidateEntry e : cands) {
-          DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(e.mDocId);
+      } else {        
+        if (mTextAsRaw) {
+          String queryTextRaw = queryData.get(getQueryFieldName());
+          if (queryTextRaw == null) return res;
+          
+          ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
+          
+          for (CandidateEntry e : cands) {
+            String docEntryRaw = mFieldIndex.getDocEntryParsedText(e.mDocId);
 
-          if (docEntry == null) {
-            throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
+            if (docEntryRaw == null) {
+              throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
+            }
+
+            docEntries.add(new TextEntryRaw(e.mDocId, docEntryRaw));
           }
+          scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
+          
+        } else {
+          DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+          if (queryEntry == null)
+            return res;
+          
+          TextEntryParsed queryTextEntry = createTextEntryParsed(queryId, queryEntry);
+          ArrayList<TextEntryParsed> docTextEntries = new ArrayList<>();
+          for (CandidateEntry e : cands) {
+            DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(e.mDocId);
 
-          docTextEntries.add(createTextEntryParsed(e.mDocId, docEntry));
+            if (docEntry == null) {
+              throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
+            }
+
+            docTextEntries.add(createTextEntryParsed(e.mDocId, docEntry));
+          }
+          scores = clnt.getScoresFromParsed(queryTextEntry, docTextEntries);
         }
-        scores = clnt.getScoresFromParsed(queryTextEntry, docTextEntries);
       }
       
       String query = queryData.get(Const.TEXT_FIELD_NAME);
@@ -247,6 +270,8 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   final boolean                      mUseWordSeq;
   
   final boolean                      mNormByQueryLen;
+  
+  final boolean                      mTextAsRaw;
   
   @Override
   public String getName() {

@@ -444,25 +444,22 @@ public abstract class ForwardIndex {
    */
   public abstract String getDocEntryRaw(String docId) throws Exception;
 
-  /**
-   * Retrieves an existing parsed document entry and constructs a textual representation.
-   * This function needs a positional index.
+  /***
+   * This function constructs a textual representation of parsed document/query entry.
+   * This function needs a positional index. If the input is null, we return an empty string.
    * 
-   * @param docId document id.
-   * @return the document text or null,
-   *         if there is no document with the specified document ID.
-   *         
-   * @throws An exception if there is a retrieval error, or if the index type is raw.
+   * @param e a parsed entry
+   * @return parsed entry text
+   * @throws Exception
    */
-  public String getDocEntryParsedText(String docId) throws Exception {
-    DocEntryParsed e = getDocEntryParsed(docId);
+  public String getDocEntryParsedText(DocEntryParsed e) throws Exception {
     if (e == null) {
-      return null;
+      return "";
     }
     StringBuffer sb = new StringBuffer();
 
     if (e.mWordIdSeq == null) {
-    	throw new Exception("Positional information is missing in the index!");
+        throw new Exception("Positional information is missing in the index!");
     }
     
     for (int i = 0; i < e.mWordIdSeq.length; ++i) {
@@ -478,6 +475,25 @@ public abstract class ForwardIndex {
     }
     
     return sb.toString();
+  }
+  
+  
+  /**
+   * Retrieves an existing parsed document entry and constructs a textual representation.
+   * This function needs a positional index.
+   * 
+   * @param docId document id.
+   * @return the document text or null,
+   *         if there is no document with the specified document ID.
+   *         
+   * @throws An exception if there is a retrieval error, or if the index type is raw.
+   */
+  public String getDocEntryParsedText(String docId) throws Exception {
+    DocEntryParsed e = getDocEntryParsed(docId);
+    if (e == null) {
+      return null;
+    }
+    return getDocEntryParsedText(e);
   }
 
   /**
