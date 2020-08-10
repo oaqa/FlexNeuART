@@ -158,6 +158,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
       }
       
       if (mFieldIndex.isRaw()) {
+        logger.info("Sending raw/unparsed entry.");
         String queryTextRaw = queryData.get(getQueryFieldName());
         if (queryTextRaw == null) return res;
         
@@ -175,6 +176,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
       } else {        
         if (mTextAsRaw) {
+          logger.info("Sending parsed entry in the unparsed/raw format.");
           String queryTextRaw = queryData.get(getQueryFieldName());
           if (queryTextRaw == null) return res;
           
@@ -192,6 +194,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
           
         } else {
+          logger.info("Sending parsed entry.");
           DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
           if (queryEntry == null)
             return res;
