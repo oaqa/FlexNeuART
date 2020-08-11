@@ -12,6 +12,9 @@ public abstract class KeyValueConfig {
   }
   
   public String getReqParamStr(String name) throws Exception {
+    if (params == null) {
+      throw new Exception("The parametr dictionary is missing!");
+    }
     String val = params.get(name);
     if (val == null)
       throw new Exception(String.format("Mandatory parameter %s is undefined for " + getName(), name));
