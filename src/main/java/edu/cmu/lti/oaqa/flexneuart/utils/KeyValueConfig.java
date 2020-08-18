@@ -13,7 +13,7 @@ public abstract class KeyValueConfig {
   
   public String getReqParamStr(String name) throws Exception {
     if (params == null) {
-      throw new Exception("The parametr dictionary is missing!");
+      throw new Exception("The parameter dictionary is missing!");
     }
     String val = params.get(name);
     if (val == null)

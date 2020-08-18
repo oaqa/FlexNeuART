@@ -300,8 +300,6 @@ def do_train(device_qty, master_port, rank, is_master_proc,
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
             valid_score = validate(model, train_params, dataset, valid_run, qrel_file_name, epoch, model_out_dir)
             print(f'validation epoch={epoch} score={valid_score:.4g}')
-            # Clearing token cache is a necessary evil, or else the saved model file is going to be a bloated beast
-            model.tokenize.clear_cache(model)
             if top_valid_score is None or valid_score > top_valid_score:
                 top_valid_score = valid_score
                 print('new top validation score, saving the whole model')
