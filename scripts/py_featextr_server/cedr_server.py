@@ -77,15 +77,12 @@ class CedrQueryHandler(BaseQueryHandler):
                                         records['doc_tok'],
                                         records['doc_mask'])
 
-                    scores = scores.squeeze()
-                    scores = scores.tolist()
-
                     for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                         if self.debugPrint:
                             print(score, did, docData[did])
                         # Note that each element must be an array, b/c
                         # we can generate more than one feature per document!
-                        sampleRet[did] = [score]
+                        sampleRet[did] = [score.item()]
 
         if self.debugPrint:
             print('All scores:', sampleRet)
