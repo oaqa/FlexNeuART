@@ -75,7 +75,10 @@ class CedrQueryHandler(BaseQueryHandler):
                     scores = self.model(records['query_tok'],
                                         records['query_mask'],
                                         records['doc_tok'],
-                                        records['doc_mask']).tolist()
+                                        records['doc_mask'])
+
+                    scores = scores.squeeze()
+                    scores = scores.tolist()
 
                     for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                         if self.debugPrint:
