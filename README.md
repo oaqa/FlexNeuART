@@ -1,7 +1,7 @@
 ## FlexNeuART
 Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) is a substantially reworked `knn4qa` package.  `FlexNeuART` is under active development. Detailed description and documentaion is to appear. Description of the `knn4qa` is given below.
 
-## Previous work (as a knn4qa package)
+## Former life (as a knn4qa package)
 
 This is a learning-to-rank pipeline, which is a part of the project where we study applicability of k-nearest neighbor search methods to IR and QA applications. This project is supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
 
