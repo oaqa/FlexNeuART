@@ -499,6 +499,9 @@ def main_cli():
     if is_distr_train:
         qids = list(train_pairs_all.keys())
 
+    queue_sync_stop = Queue()
+    queue_sync_start = Queue()
+
     # We must go in the reverse direction, b/c
     # rank == 0 trainer is in the same process and
     # we call the function do_train in the same process,
@@ -539,9 +542,6 @@ def main_cli():
             train_pairs = train_pairs_all
         print('Process rank %d device %s using %d training pairs out of %d' %
               (rank, device_name, len(train_pairs), train_pair_qty))
-
-        queue_sync_stop = Queue()
-        queue_sync_start = Queue()
 
         param_dict = {
             'queue_sync_stop': queue_sync_stop,
