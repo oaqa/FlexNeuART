@@ -24,7 +24,7 @@ paramOpts=(\
 
 parseArguments $@
 
-usageMain="<collection> <field> <MGIZA directory>"
+usageMain="<collection> <field>"
 
 if [ "$help" = "1" ] ; then
   genUsage $usageMain
@@ -51,11 +51,7 @@ if [ "$field" = "" ] ; then
   exit 1
 fi
 
-mgizaDir=${posArgs[2]}
-if [ "$mgizaDir" = "" ] ; then
- genUsage "$usageMain" "Specify MGIZA dir (3d arg)"
- exit 1
-fi
+mgizaDir="$PWD/mgiza"
 
 if [ ! -d "$mgizaDir" ] ; then
   "$mgizaDir isn't a directory"

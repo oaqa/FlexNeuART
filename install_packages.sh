@@ -1,4 +1,8 @@
 #!/bin/bash -e
+set -o pipefail
+
+curr_dir=$PWD
+
 source scripts/common_proc.sh
 source scripts/config.sh
 
@@ -36,6 +40,14 @@ cd pytorch-pretrained-BERT-mod
 python setup.py install
 cd ..
 
+rm -rf mgiza
+git clone https://github.com/moses-smt/mgiza.git
+cd mgiza/mgizapp
+cmake .
+make -j 4
+make install
+cd $curr_dir
+
 qty=${#plist[*]}
 for ((i=0;i<$qty;i+=2)) ; do
   pname=${plist[$i]}
@@ -51,5 +63,13 @@ done
 
 python -m spacy download en_core_web_sm
 
+cd trec_eval 
+make  
+cd $curr_dir
+
+cd lemur-code-r2792-RankLib-trunk >/dev/null
+mvn clean package 
+cp target/RankLib-2.14.jar ../lib/umass/RankLib/2.14.fixed/RankLib-2.14.fixed.jar
+cd $curr_dir
 
 echo "All is installed!"
