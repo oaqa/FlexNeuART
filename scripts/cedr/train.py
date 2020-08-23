@@ -27,7 +27,7 @@ from scripts.config import DEVICE_CPU
 
 from tqdm import tqdm
 from collections import namedtuple
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 # Important: all the losses should have a reduction type sum!
 class MarginRankingLossWrapper:
@@ -226,7 +226,8 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
     return rerank_run
 
 
-def do_train(device_qty, master_port, rank, is_master_proc,
+def do_train(queue_sync_start, queue_sync_stop,
+              device_qty, master_port, rank, is_master_proc,
               dataset,
               qrels, qrel_file_name,
               train_pairs, valid_run,
@@ -289,12 +290,23 @@ def do_train(device_qty, master_port, rank, is_master_proc,
                                save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
                                model_out_dir=model_out_dir)
 
-        # This must be done in every process, not only in the master process
-        # But only if we have more than one device!
-        if device_qty > 1:
-            avg_model_params(model)
+
+        queue_sync_stop.put(1)
 
         if is_master_proc:
+
+            if device_qty > 1:
+                print('Waiting for all the processes to finish the training iteration')
+
+            # For one process it will terminate after the first iteration,
+            # since we always add an element to the stop queue (see above)
+            fin_qty = 0
+            while fin_qty < device_qty:
+                queue_sync_stop.get(block=True)
+                fin_qty += 1
+
+            avg_model_params(model)
+
             os.makedirs(model_out_dir, exist_ok=True)
 
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
@@ -307,6 +319,13 @@ def do_train(device_qty, master_port, rank, is_master_proc,
 
             if train_params.save_epoch_snapshots:
                 torch.save(model, os.path.join(model_out_dir, f'model.{epoch}'))
+
+
+            for i in range(device_qty):
+                queue_sync_start.put(1)
+
+        # Should always work for a single-process as well
+        queue_sync_start.get(block=True)
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
@@ -521,7 +540,10 @@ def main_cli():
         print('Process rank %d device %s using %d training pairs out of %d' %
               (rank, device_name, len(train_pairs), train_pair_qty))
 
+
         param_dict = {
+            'queue_sync_stop' : Queue(),
+            'queue_sync_start': Queue(),
             'device_qty' : device_qty, 'master_port' : master_port,
              'rank' : rank, 'is_master_proc' : is_master_proc,
              'dataset' : dataset,
@@ -530,6 +552,7 @@ def main_cli():
              'model_out_dir' : args.model_out_dir,
              'model' : model, 'loss_obj' : loss_obj, 'train_params' : train_params
         }
+
 
         if is_distr_train and not is_master_proc:
             p = Process(target=do_train, kwargs=param_dict)
