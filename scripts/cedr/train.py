@@ -540,10 +540,12 @@ def main_cli():
         print('Process rank %d device %s using %d training pairs out of %d' %
               (rank, device_name, len(train_pairs), train_pair_qty))
 
+        queue_sync_stop = Queue()
+        queue_sync_start = Queue()
 
         param_dict = {
-            'queue_sync_stop' : Queue(),
-            'queue_sync_start': Queue(),
+            'queue_sync_stop': queue_sync_stop,
+            'queue_sync_start': queue_sync_start,
             'device_qty' : device_qty, 'master_port' : master_port,
              'rank' : rank, 'is_master_proc' : is_master_proc,
              'dataset' : dataset,
