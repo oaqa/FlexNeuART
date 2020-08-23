@@ -305,7 +305,9 @@ def do_train(queue_sync_start, queue_sync_stop,
                 queue_sync_stop.get(block=True)
                 fin_qty += 1
 
-            avg_model_params(model)
+            #For some unclear reasons averaging causes a deadlock here.
+            #This is something that needs to be figured out someday.
+            #avg_model_params(model)
 
             os.makedirs(model_out_dir, exist_ok=True)
 
