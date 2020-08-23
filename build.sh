@@ -6,8 +6,6 @@ log_file="$curr_dir/main.build.log"
 echo "========================"
 echo " BUILDING main codebase "
 echo " log: $log_file"
-echo " Success!"
-cd - >/dev/null
 mvn clean package appassembler:assemble &> $log_file || { echo "Build failed!" ; exit 1 ; }
 
 echo "======================="
