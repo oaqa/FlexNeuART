@@ -309,6 +309,10 @@ def do_train(queue_sync_start, queue_sync_stop,
             #This is something that needs to be figured out someday.
             #avg_model_params(model)
 
+            if train_params.save_epoch_snapshots:
+                print('Saving the model epoch snapshot')
+                torch.save(model, os.path.join(model_out_dir, f'model.{epoch}'))
+
             os.makedirs(model_out_dir, exist_ok=True)
 
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
@@ -318,9 +322,6 @@ def do_train(queue_sync_start, queue_sync_stop,
                 top_valid_score = valid_score
                 print('new top validation score, saving the whole model')
                 torch.save(model, os.path.join(model_out_dir, 'model.best'))
-
-            if train_params.save_epoch_snapshots:
-                torch.save(model, os.path.join(model_out_dir, f'model.{epoch}'))
 
 
             for i in range(device_qty):
