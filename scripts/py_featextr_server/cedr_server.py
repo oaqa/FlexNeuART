@@ -3,7 +3,6 @@ import sys
 import argparse
 import torch
 import time
-from profilehooks import profile
 
 sys.path.append('.')
 

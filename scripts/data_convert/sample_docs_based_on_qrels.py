@@ -9,7 +9,7 @@ import os
 import random
 import json
 
-sys.path.append('scripts')
+sys.path.append('.')
 import argparse
 from scripts.common_eval import readQrelsDict
 from scripts.config import ANSWER_FILE_JSON, QREL_FILE, DOCID_FIELD
@@ -69,7 +69,7 @@ for qid, qd in qrelDict.items():
             allRelDocs.add(did)
 
 
-with FileWrapper(args.out_doc_file) as outFile:
+with FileWrapper(args.out_doc_file, 'w') as outFile:
     for docEntry in jsonlGen(args.inp_doc_file):
         did = docEntry[DOCID_FIELD]
         if did in allRelDocs or random.random() < sample_prob:
