@@ -130,11 +130,10 @@ scripts/giza/sample_and_filter_long_bitext.py "${source_dir}/answer_${field}"   
 
 scripts/giza/run_mgiza.sh "$mgizaDir" "$dir" \
                           "$full_target_dir/source" "$full_target_dir/target" \
-                          $GIZA_ITER_QTY"
-
+                          "$GIZA_ITER_QTY"
 
 pushd "$full_target_dir/${field}.orig"
 rm `ls *|grep -v output.t1.${GIZA_ITER_QTY}|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
 popd
 
-rm -f $target_dir/source $target_dir/target
+rm -f "$target_dir/source $target_dir/target"
