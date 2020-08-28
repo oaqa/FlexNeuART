@@ -11,7 +11,16 @@ import time
 import numpy as np
 from tqdm import tqdm
 
+#
 # This utility scripts checks for possible leakage across different data splits.
+# Importantly it works only for bitext. In the context of a community QA collection,
+# such bitext arises naturally. For regular document collections, a pseudo-bitext
+# needs to be created user the scripts/giza/export_bitext_plain.sh:
+# importantly one needs to use the text_raw field (and text as an index field)
+# and use a very large "max query to doc word ratio" so documents are not split
+# into chunks.
+#
+
 # Specifically, we search for very similar question-answer pairs, which might
 # be duplicates or near duplicates. Hence, we check the following:
 # 1. Are there very similar questions?

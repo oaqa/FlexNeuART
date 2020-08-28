@@ -9,16 +9,19 @@
 . scripts/common_proc.sh
 . scripts/config.sh
 
-
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "BITEXT_SUBDIR"
+
+bitextInSubDir=$BITEXT_SUBDIR
+bitextOutSubDir=$BITEXT_SUBDIR
 
 boolOpts=(\
 "h" "help" "print help"
 )
 
 paramOpts=(\
-"bitext_subdir" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
+"bitext_in_subdir" "bitextInSubDir" "bitext input sub-dir (default $bitextInSubDir)"
+"bitext_out_subdir" "bitextOutSubDir" "bitext input sub-dir (default $bitextOutSubDir)"
 )
 
 parseArguments $@
@@ -30,9 +33,8 @@ if [ "$help" = "1" ] ; then
   exit 1
 fi
 
-if [ "$bitextSubDir" = "" ] ; then
-  bitextSubDir=$BITEXT_SUBDIR
-fi
+checkVarNonEmpty "bitextInSubDir"
+checkVarNonEmpty "bitextOutSubDir"
 
 collect=${posArgs[0]}
 
@@ -50,7 +52,7 @@ checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bitextSubDir"
+outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bitextOutSubDir"
 indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 
@@ -79,12 +81,15 @@ if [ "$maxRatio" = "" ] ; then
   exit 1
 fi
 
+inputPartDir="$inputDataDir/$bitextInSubDir"
+
 echo "=========================================================================="
-echo "Data directory:          $inputDataDir"
-echo "Forward index directory: $indexDir"
-echo "Bitext sub-directory:    $bitextSubDir"
-echo "Embedding directory:     $embedDir"
-echo "Max ratio:               $maxRatio"
+echo "Data directory:             $inputDataDir"
+echo "Forward index directory:    $indexDir"
+echo "Bitext input sub-directory: $inputPartDir"
+echo "Bitext output sub-directory:$outDir"
+echo "Embedding directory:        $embedDir"
+echo "Max ratio:                  $maxRatio"
 echo "=========================================================================="
 
 retVal=""
@@ -95,14 +100,12 @@ if [ "$queryFileName" = "" ] ; then
   exit 1
 fi
 
-partPref="$inputDataDir/$bitextSubDir"
-
 target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
                                   -embed_dir $embedDir \
                                   -index_field $field \
                                   -query_field $query_field \
                                   -output_dir "$outDir" \
-                                  -q "$partPref/$queryFileName" \
-                                  -qrel_file "$partPref/$QREL_FILE" \
+                                  -q "$inputPartDir/$queryFileName" \
+                                  -qrel_file "$inputPartDir/$QREL_FILE" \
                                   -max_doc_query_qty_ratio "$maxRatio"
 

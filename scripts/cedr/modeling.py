@@ -107,7 +107,9 @@ class BertRanker(torch.nn.Module):
                 cls_result.append(cls_output[i*batch_qty:(i+1)*batch_qty])
             # Leonid Boytsov: though proper batch-specific scaling should be 
             # be necessary, there's in practice no deterioration due to
-            # imperfect scaling introduced by simple averaging.
+            # imperfect scaling introduced by simple averaging. Furthermore,
+            # on 11 GB gpus, one cannot have a mini-batch of the size > 1
+            # (larger batches are simulated via graident accumulation)
             if USE_BATCH_COEFF:
                 cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
                 assert(cls_result.size()[0] == batch_qty)
