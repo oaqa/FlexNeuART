@@ -250,13 +250,13 @@ print('Maximum similarity among questions:', np.max(nbrQuestSimils))
 print('Distribution of question-neighbor *SIMILARITIES* for k=%d' % K)
 dst = np.quantile(nbrQuestSimils, q = q)
 for k in range(len(q)):
-    print('%5.03g' % q[k], '%.03g' % dst[k])
+    print('%5.03g' % q[k], '%.05g' % dst[k])
 
 print('Distribution of relevant answer pairwise *SIMILARITIES* from neighbor questions with Jaccard >= %g' % args.min_jacc)
 if nbrAnswSimils:
     dst = np.quantile(nbrAnswSimils, q = q)
     for k in range(len(q)):
-        print('%5.03g' % q[k], '%.03g' % dst[k])
+        print('%5.03g' % q[k], '%.05g' % dst[k])
 else:
     print('No data collected, did you set the Jaccard threshold to a value < 1?')
 
