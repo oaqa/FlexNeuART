@@ -17,7 +17,7 @@ from tqdm import tqdm
 # such bitext arises naturally. For regular document collections, a pseudo-bitext
 # needs to be created user the scripts/giza/export_bitext_plain.sh:
 # importantly one needs to use the text_raw field (and text as an index field)
-# and use a very large "max query to doc word ratio" so documents are not split
+# and use 0 for the  "max query to doc word ratio" so documents are not split
 # into chunks.
 #
 
@@ -246,6 +246,7 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
 q=list([0.2,0.3,0.4,0.5,0.6,0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 0.999, 0.999])
 q.sort()
 
+print('Maximum similarity among questions:', np.max(nbrQuestSimils))
 print('Distribution of question-neighbor *SIMILARITIES* for k=%d' % K)
 dst = np.quantile(nbrQuestSimils, q = q)
 for k in range(len(q)):
