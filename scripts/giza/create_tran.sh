@@ -136,4 +136,4 @@ pushd "$full_target_dir/${field}.orig"
 rm `ls *|grep -v output.t1.${GIZA_ITER_QTY}|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
 popd
 
-rm -f "$target_dir/source $target_dir/target"
+rm -f "$target_dir/source" "$target_dir/target"
