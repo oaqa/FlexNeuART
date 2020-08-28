@@ -80,7 +80,7 @@ public class CreateBitextFromQRELs {
     int mMaxNumQuery = Integer.MAX_VALUE;
     
     @Option(name = MAX_DOC_QUERY_QTY_RATIO_PARAM, usage = "Max. ratio of # words in docs to # of words in queries (<=0 to dump complete raw text)")
-    float mDocQueryWordRatio = -1;
+    float mDocQueryWordRatio = 0;
   }
   
   public static void main(String[] argv) {
