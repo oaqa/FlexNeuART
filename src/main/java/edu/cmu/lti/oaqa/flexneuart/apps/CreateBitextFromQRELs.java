@@ -79,9 +79,8 @@ public class CreateBitextFromQRELs {
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, required = false, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery = Integer.MAX_VALUE;
     
-    @Option(name = MAX_DOC_QUERY_QTY_RATIO_PARAM, usage = "Max. ratio of # words in docs to # of words in queries")
+    @Option(name = MAX_DOC_QUERY_QTY_RATIO_PARAM, usage = "Max. ratio of # words in docs to # of words in queries (<=0 to dump complete raw text)")
     float mDocQueryWordRatio = -1;
-
   }
   
   public static void main(String[] argv) {
@@ -119,14 +118,8 @@ public class CreateBitextFromQRELs {
         }
         
         embeds = resourceManager.getWordEmbed(fieldName, args.mEmbedFile);
-      } else {
-        if (args.mDocQueryWordRatio <= 0) {
-          System.err.println("For simple/plain export you need to specify positive fraction " + MAX_DOC_QUERY_QTY_RATIO_PARAM);
-          System.exit(1);         
-        }
       }
-
-      
+   
       ForwardIndex fwdIndex = resourceManager.getFwdIndex(fieldName);
       
       QrelReader qrels = new QrelReader(args.mQrelFile);
@@ -173,7 +166,10 @@ public class CreateBitextFromQRELs {
           int grade = CandidateProvider.parseRelevLabel(e.getValue());
           if (grade >= 1) {
             if (args.mSampleQty <= 0) {
-              genBitextSplitPlain(fwdIndex, did, fieldName, questFile, answFile, queryText, queryWordQtyInv, args.mDocQueryWordRatio);
+              if (args.mDocQueryWordRatio > 0)
+                genBitextSplitPlain(fwdIndex, did, fieldName, questFile, answFile, queryText, queryWordQtyInv, args.mDocQueryWordRatio);
+              else 
+                genBitextWholeRaw(fwdIndex, did, fieldName, questFile, answFile, queryText);
             } else {
               genBitextSample(fwdIndex, embeds, did, fieldName, questFile, answFile, queryWords, args.mSampleQty);
             }
@@ -198,6 +194,9 @@ public class CreateBitextFromQRELs {
                                      String did, String fieldName, 
                                      BufferedWriter questFile, BufferedWriter answFile, 
                                      String[] queryWords, int sampleQty) throws Exception {
+    if (fwdIndex.isRaw()) {
+      throw new Exception("genBitextSample requires a parsed forward index!");
+    }
     DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
     if (dentry == null) {
       System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
@@ -261,6 +260,9 @@ public class CreateBitextFromQRELs {
                           BufferedWriter questFile, BufferedWriter answFile,
                           String queryText, 
                           float queryWordQtyInv, float docQueryWordRatio) throws Exception {
+    if (fwdIndex.isRaw()) {
+      throw new Exception("genBitextSplitPlain requires a parsed forward index!");
+    }
     DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
     if (dentry == null) {
       System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
@@ -296,4 +298,24 @@ public class CreateBitextFromQRELs {
     }
   }
 
+  static void genBitextWholeRaw(ForwardIndex fwdIndex, String did, String fieldName, 
+      BufferedWriter questFile, BufferedWriter answFile,
+      String queryText) throws Exception {
+    if (!fwdIndex.isRaw()) {
+      throw new Exception("genBitextWholeRaw requires a raw forward index!");
+    }
+    String docTextRaw = fwdIndex.getDocEntryRaw(did);
+    if (docTextRaw == null) {
+      System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+      return;
+    }
+    
+    docTextRaw = docTextRaw.trim();
+    
+    if (!docTextRaw.isEmpty()) {
+      questFile.write(queryText + Const.NL);
+      answFile.write(docTextRaw + Const.NL);
+    }
+  }  
+  
 }
