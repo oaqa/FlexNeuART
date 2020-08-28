@@ -13,13 +13,16 @@ checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
+sampleProb=1
+
 boolOpts=(\
 "h" "help" "print help"
 )
 
-paramOpts=(\
-"bitext_subdir" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR" \
-"giza_subdir" "gizaSubDir" "GIZA sub-dir to store translation table, if not specified we use $GIZA_SUBDIR"
+paramOpts=(
+  "bitext_subdir" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
+  "giza_subdir" "gizaSubDir" "GIZA sub-dir to store translation table, if not specified we use $GIZA_SUBDIR"
+  "sample_prob" "sampleProb"  "sample probability (default $sampleProb)"
 )
 
 parseArguments $@
@@ -69,6 +72,7 @@ echo "Giza (output) sub-directory:  $gizaSubDir"
 echo "Bitext sub-directory:         $bitextSubDir"
 echo "Source dir prefix:            $source_dir"
 echo "Target dir prefix:            $target_dir"
+echo "Sample probability:           $sampleProb"
 echo "=========================================================================="
 
 if [ ! -d "$source_dir" ] ; then
@@ -102,18 +106,32 @@ set pipefile
 
 echo "Full target dir: $full_target_dir"
 
-# Note that answers are the source corpus and questions are the target one!
+#
+# Note that answers are the source corpus and questions are the target one:
+# after all, IBM Model 1 needs conditional probabilities p(q|a)
+# and not the other way around.
+#
 # This is also confirmed by the paper:
 # Finding Similar Questions in Large Question and Answer Archives
 # Jiwoon Jeon, W. Bruce Croft and Joon Ho Lee 
-# However, a better performance is achieved with a symmetrized approach.
+# However, a better performance is achieved with a symmetrized approach,
+# where for each pair (q, a) we also add a flipped pair (a, q)
+#
 
 # 1. Filtering out sentences where the difference in the number of words is too large 
 # 2. Applying symmetrization if requested
 MAX_FERTILITY=9
-execAndCheck "scripts/giza/filter_long.py \"${source_dir}/answer_${field}\"   \"${source_dir}/question_${field}\" \"$MAX_FERTILITY\" \"$full_target_dir/source\" \"$full_target_dir/target\" \"$SYMMETRIZE\""
+scripts/giza/sample_and_filter_long_bitext.py "${source_dir}/answer_${field}"   \
+                            "${source_dir}/question_${field}" \
+                            "$MAX_FERTILITY" \
+                            "$full_target_dir/source" "$full_target_dir/target" \
+                            "$SYMMETRIZE" \
+                            "$sampleProb"
 
-execAndCheck "scripts/giza/run_mgiza.sh \"$mgizaDir\" $dir \"$full_target_dir/source\" \"$full_target_dir/target\" $GIZA_ITER_QTY"
+scripts/giza/run_mgiza.sh "$mgizaDir" "$dir" \
+                          "$full_target_dir/source" "$full_target_dir/target" \
+                          $GIZA_ITER_QTY"
+
 
 pushd "$full_target_dir/${field}.orig"
 rm `ls *|grep -v output.t1.${GIZA_ITER_QTY}|grep -v source.vcb|grep -v target.vcb|grep -v output.gizacfg|grep -v output.perp|grep -v output.Decoder.config`
