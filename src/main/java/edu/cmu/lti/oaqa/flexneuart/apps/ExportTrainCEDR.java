@@ -93,7 +93,9 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
 
   @Override
   void startOutput() throws Exception {
-    mOutNum = 0;
+    mOutNumDocs = 0;
+    mOutNumQueries = 0;
+    mOutNumPairs = 0;
     
     mTestRun = MiscHelper.createBufferedFileWriter(mTestRunFileName);
     mDataDocs = MiscHelper.createBufferedFileWriter(mDataFileDocsName);
@@ -103,7 +105,8 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
 
   @Override
   void finishOutput() throws Exception {
-    logger.info("Generated data for " + mOutNum + " queries.");
+    logger.info(String.format("Generated data for %d queries %d documents %d training query-doc pairs",
+                                mOutNumQueries, mOutNumDocs, mOutNumPairs));
     
     mTestRun.close();
     mDataDocs.close();
@@ -121,6 +124,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
       return;
     }
     mSeenQueryIds.add(queryId);
+    mOutNumQueries++;
     
     mDataQueries.write("query\t" + queryId + "\t" + StringUtils.replaceWhiteSpaces(queryFieldText) + Const.NL);
     
@@ -146,6 +150,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
           }
           mDataDocs.write("doc\t" + docId + "\t" + text + Const.NL);
           mSeenDocIds.add(docId);
+          ++mOutNumDocs;
       }
     
       ++pos;
@@ -159,11 +164,13 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
       } else {
         mQueryDocTrainPairs.write(queryId + "\t" + docId + Const.NL);
       }
-      mOutNum++;
+      mOutNumPairs++;
     }
   }
   
-  int                    mOutNum = 0;
+  int                    mOutNumPairs = 0;
+  int                    mOutNumQueries = 0;
+  int                    mOutNumDocs = 0;
   
   BufferedWriter         mTestRun;
   BufferedWriter         mDataDocs;

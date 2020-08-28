@@ -95,7 +95,7 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
 
   @Override
   void finishOutput() throws Exception {
-    logger.info("Generated data for " + mOutNum + " queries.");
+    logger.info("Generated data for " + mOutNum + " query-doc pairs.");
     mOutTrain.close();
     mOutTest.close();
   }
