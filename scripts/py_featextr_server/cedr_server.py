@@ -76,7 +76,8 @@ class CedrQueryHandler(BaseQueryHandler):
                                         records['doc_tok'],
                                         records['doc_mask'])
 
-                    scores = scores.squeeze(dim=-1)
+                    # tolist() works much faster compared to extracting scores
+                    # one by one using .item()
                     scores = scores.tolist()
 
                     for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
