@@ -3,6 +3,7 @@ import random
 import numpy
 import multiprocessing
 import json
+import sys
 
 PYTORCH_DISTR_BACKEND='gloo'
 
@@ -55,3 +56,9 @@ def save_json(file_name, data, indent=4):
     """
     with open(file_name, 'w') as f:
         json.dump(data, f, indent=indent)
+
+
+def sync_out_stream():
+    """Just flush all stdin and stderr to make streams go in sync"""
+    sys.stderr.flush()
+    sys.stdout.flush()
