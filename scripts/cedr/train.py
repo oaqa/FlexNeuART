@@ -454,16 +454,17 @@ def main_cli():
     all_arg_names = vars(args).keys()
 
     if args.json_conf is not None:
-        conf_file = args.json
+        conf_file = args.json_conf
         print(f'Reading configuration variables from {conf_file}')
         add_conf = utils.read_json(conf_file)
-        for arg_name, arg_val in add_conf:
+        for arg_name, arg_val in add_conf.items():
             if arg_name not in all_arg_names:
                 print(f'Invalid option in the configuration file: {arg_name}')
                 sys.exit(1)
-            exp_type = type(getattr(args, arg_name))
-            if type(arg_val) != exp_type:
-                print('Invalid type in the configuration file: {arg_name} expected type: '+str(type(exp_type)))
+            arg_default = getattr(args, arg_name)
+            exp_type = type(arg_default)
+            if arg_default is not None and type(arg_val) != exp_type:
+                print(f'Invalid type in the configuration file: {arg_name} expected type: '+str(type(exp_type)) + f' default {arg_default}')
                 sys.exit(1)
             print(f'Using {arg_name} from the config')
             setattr(args, arg_name, arg_val)

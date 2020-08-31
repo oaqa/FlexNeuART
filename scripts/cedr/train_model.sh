@@ -14,6 +14,7 @@ set -eo pipefail
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+checkVarNonEmpty "IR_MODELS_SUBDIR"
 
 sampleProb=1
 
@@ -33,7 +34,7 @@ bertLarge="0"
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "epoch_qty"          "epochQty"         "# of epochs (default $epochQty)"
-      "batches_per_epoch"  "batchesPerEpoch"  "# of batches per epoch (default $batchesPerEpoch)"
+      "batches_per_train_epoch"  "batchesPerEpoch"  "# of batches per train epoch (default $batchesPerEpoch)"
       "master_port"        "masterPort"       "master port for multi-GPU train (default $masterPort)"
       "device_name"        "deviceName"       "device name for single-gpu train (default $deviceName)"
       "device_qty"         "deviceQty"        "# of device (default $deviceQty)"
@@ -46,7 +47,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
 
 parseArguments $@
 
-usageMain="<collection> <train collection-root relative data subdir> <model type>"
+usageMain="<collection> <train data subdir (relative to derived data)> <model type>"
 
 collect=${posArgs[0]}
 
@@ -55,10 +56,12 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
+derivedDataDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR"
+
 trainSubDir=${posArgs[1]}
 
 if [ "$trainSubDir" = "" ] ; then
-  genUsage "$usageMain" "Specify collection-root relative training data subdir (2d arg)"
+  genUsage "$usageMain" "Specify training data subdir relative to $derivedDataDir (2d arg)"
   exit 1
 fi
 
@@ -70,9 +73,9 @@ fi
 
 initModelArgs=""
 if [ "$initModelWeights" != "" ] ; then
-  initModelArgs=" ---init_model_weights $initModelWeights "
+  initModelArgs=" --init_model_weights $initModelWeights "
 elif [ "$initModel" != "" ] ; then
-  initModelArgs=" ---init_model $initModel "
+  initModelArgs=" --init_model $initModel "
 else
   genUsage "$usageMain" "Specify either -init_model_weights or -init_model"
   exit 1
@@ -85,8 +88,8 @@ if [ "$bertLarge" = "1" ] ; then
   bertTypeSubdir="large"
 fi
 
-outModelDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$modelType/$addExperSubdir/$bertTypeSubdir/$seed/"
-trainDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$trainSubDir"
+outModelDir="$derivedDataDir/$IR_MODELS_SUBDIR/$modelType/$addExperSubdir/$bertTypeSubdir/$seed/"
+trainDir="$derivedDataDir/$trainSubDir"
 
 
 if [ ! -d "$outModelDir" ] ; then
@@ -107,29 +110,37 @@ echo "device #:                                       $deviceQty"
 
 if [ "$deviceQty" = "1" ] ; then
   echo "device name:                                    $deviceName"
-else:
+else
   echo "master port:                                    $masterPort"
 fi
 
+collectDir="$COLLECT_ROOT/$collect"
+
 if [ "$jsonConf" != "" ] ; then
-  cp "$jsonConf" "$outModelDir"
+  cp "$collectDir/$jsonConf" "$outModelDir"
   bn=`basename "$jsonConf"`
   jsonConfDest="$outModelDir/$bn"
-  jsonConfArg=" --json_conf \"jsonConfDest\" "
-  echo "JSON config:                                    jsonConfDest"
+  jsonConfArg=" --json_conf $jsonConfDest "
+  echo "JSON config:                                    $jsonConfDest"
 fi
 
 echo "=========================================================================="
 
 scripts/cedr/train.py \
-  "$initModelArgs" \
-  "$jsonConfArg" \
-  "$bertLargeArg" \
+  $initModelArgs \
+  $jsonConfArg \
+  $bertLargeArg \
   --seed $seed \
   --device_name $deviceName \
   --device_qty $deviceQty \
   --epoch_qty $epochQty \
-  --batches_per_epoch $batchesPerEpoch \
+  --batches_per_train_epoch $batchesPerEpoch \
   --master_port $masterPort \
+  --datafiles "$trainDir/data_query.tsv"  \
+              "$trainDir/data_docs.tsv" \
+   --train_pairs "$trainDir/train_pairs.tsv" \
+  --valid_run "$trainDir/test_run.txt" \
+  --qrels "$trainDir/qrels.txt" \
+  --model_out_dir "$outModelDir" \
 2>&1|tee "$outModelDir/train.log"
 
