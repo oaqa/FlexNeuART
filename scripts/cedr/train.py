@@ -476,8 +476,8 @@ def main_cli():
 
     # This hack copies max query and document length parameters to the model space parameters
     # maybe some other approach is more elegant, but this one should at least work
-    setattr(args, 'f{MODEL_PARAM_PREF}max_query_len', args.max_query_len)
-    setattr(args, 'f{MODEL_PARAM_PREF}max_doc_len', args.max_doc_len)
+    setattr(args, f'{MODEL_PARAM_PREF}max_query_len', args.max_query_len)
+    setattr(args, f'{MODEL_PARAM_PREF}max_doc_len', args.max_doc_len)
 
     if args.save_last_snapshot_every_k_batch is not None and args.save_last_snapshot_every_k_batch < 2:
         print('--save_last_snapshot_every_k_batch should be > 1')
