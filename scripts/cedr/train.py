@@ -263,7 +263,7 @@ def do_train(queue_sync_start, queue_sync_stop,
 
     top_valid_score = None
 
-    stat = {}
+    train_stat = {}
 
     for epoch in range(train_params.epoch_qty):
 
@@ -328,12 +328,12 @@ def do_train(queue_sync_start, queue_sync_stop,
             valid_score = validate(model, train_params, dataset, valid_run, qrel_file_name, epoch, model_out_dir)
             print(f'validation epoch={epoch} score={valid_score:.4g}')
 
-            stat[epoch] = {'loss' : loss,
-                           'score' : valid_score,
-                           'lr' : lr,
-                           'bert_lr' : bert_lr}
+            train_stat[epoch] = {'loss' : loss,
+                                   'score' : valid_score,
+                                   'lr' : lr,
+                                   'bert_lr' : bert_lr}
 
-            utils.save_json(os.path.join(model_out_dir, 'train_stat.json'))
+            utils.save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
 
             if top_valid_score is None or valid_score > top_valid_score:
                 top_valid_score = valid_score
