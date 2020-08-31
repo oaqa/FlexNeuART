@@ -73,7 +73,7 @@ fi
 
 initModelArgs=""
 if [ "$initModelWeights" != "" ] ; then
-  initModelArgs=" --init_model_weights $initModelWeights "
+  initModelArgs=" --model $modelType --init_model_weights $initModelWeights "
 elif [ "$initModel" != "" ] ; then
   initModelArgs=" --init_model $initModel "
 else
