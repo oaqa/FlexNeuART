@@ -185,6 +185,7 @@ def train_iteration(model,
 
         if pbar is not None:
             pbar.update(count)
+            utils.sync_out_streams()
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
         if total_qty >= max_train_qty:
             break
@@ -199,6 +200,8 @@ def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
 
     rerank_run = run_model(model, train_params, dataset, run)
     eval_metric = train_params.eval_metric
+
+    utils.sync_out_streams()
 
     print(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
@@ -512,6 +515,7 @@ def main_cli():
 
     os.makedirs(args.model_out_dir, exist_ok=True)
     print(model)
+    utils.sync_out_streams()
     model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
     dataset = data.read_datafiles(args.datafiles)

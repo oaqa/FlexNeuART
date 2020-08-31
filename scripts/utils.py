@@ -58,7 +58,7 @@ def save_json(file_name, data, indent=4):
         json.dump(data, f, indent=indent)
 
 
-def sync_out_stream():
+def sync_out_streams():
     """Just flush all stdin and stderr to make streams go in sync"""
     sys.stderr.flush()
     sys.stdout.flush()

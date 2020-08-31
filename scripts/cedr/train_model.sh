@@ -31,6 +31,7 @@ jsonConf=""
 initModelWeights=""
 initModel=""
 bertLarge="0"
+vocabFile=""
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "epoch_qty"          "epochQty"         "# of epochs (default $epochQty)"
@@ -40,6 +41,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "device_qty"         "deviceQty"        "# of device (default $deviceQty)"
       "add_exper_subdir"   "addExperSubdir"   "additional experimental sub-directory (optional)"
       "json_conf"          "jsonConf"         "collection relative JSON configuration file (optional)"
+      "vocab_file"         "vocabFile"        "vocabulary file relative to derived-data directory (optional)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
       "bert_large"         "bertLarge"        "specify 1 to use BERT"
@@ -77,8 +79,8 @@ if [ "$initModelWeights" != "" ] ; then
 elif [ "$initModel" != "" ] ; then
   initModelArgs=" --init_model $initModel "
 else
-  genUsage "$usageMain" "Specify either -init_model_weights or -init_model"
-  exit 1
+  initModelArgs=" --model $modelType "
+  echo "WARNING: neither -init_model_weights nor -init_model specified, training from random init!"
 fi
 
 bertLargeArg=""
@@ -124,12 +126,19 @@ if [ "$jsonConf" != "" ] ; then
   echo "JSON config:                                    $jsonConfDest"
 fi
 
+if [ "$vocabFile" != "" ] ; then
+  vocabFileFullPath="$derivedDataDir/$vocabFile"
+  vocabFileArg=" --model.vocab_file $vocabFileFullPath "
+  echo "Vocabulary file path:                           $vocabFileFullPath"
+fi
+
 echo "=========================================================================="
 
 scripts/cedr/train.py \
   $initModelArgs \
   $jsonConfArg \
   $bertLargeArg \
+  $vocabFileArg \
   --seed $seed \
   --device_name $deviceName \
   --device_qty $deviceQty \
