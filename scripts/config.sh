@@ -28,6 +28,7 @@ COLLECT_ROOT="collections"
 #             $BITEXT_SUBDIR (optional)
 #             $EMBED_SUBDIR (optional)
 #             $LM_FINETUNE_SUBDIR (optional)
+#             $IR_MODELS_SUBDIR (optional)
 #
 #         $EXPER_SUBDIR
 #
@@ -63,6 +64,9 @@ DEV2_SUBDIR="dev2"
 # A directory with data for BERT LM fine-tuning
 LM_FINETUNE_SUBDIR="lm_finetune_data"
 LM_FINETUNE_SET_PREF="set"
+
+# A directory to store trained models
+IR_MODELS_SUBDIR="ir_models"
 
 # Parallel corpora sub-directory
 BITEXT_SUBDIR="bitext"
