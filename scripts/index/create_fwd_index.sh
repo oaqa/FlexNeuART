@@ -12,7 +12,7 @@ fi
 
 fwdIndexType=$2
 if [ "$fwdIndexType" = "" ] ; then
-  echo "Specify forward index type (2d arg), e.g., mapdb, flatdata"
+  echo "Specify forward index type (2d arg), e.g., mapdb, lucene, flatdata"
   exit 1
 fi
 

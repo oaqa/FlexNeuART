@@ -256,6 +256,8 @@ def do_train(queue_sync_start, queue_sync_stop,
 
     top_valid_score = None
 
+    stat = {}
+
     for epoch in range(train_params.epoch_qty):
 
         params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
@@ -318,6 +320,14 @@ def do_train(queue_sync_start, queue_sync_stop,
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
             valid_score = validate(model, train_params, dataset, valid_run, qrel_file_name, epoch, model_out_dir)
             print(f'validation epoch={epoch} score={valid_score:.4g}')
+
+            stat[epoch] = {'loss' : loss,
+                           'score' : valid_score,
+                           'lr' : lr,
+                           'bert_lr' : bert_lr}
+
+            utils.save_json(os.path.join(model_out_dir, 'train_stat.json'))
+
             if top_valid_score is None or valid_score > top_valid_score:
                 top_valid_score = valid_score
                 print('new top validation score, saving the whole model')
@@ -435,7 +445,29 @@ def main_cli():
                         default=PairwiseSoftmaxLoss.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
+    parser.add_argument('--json_conf', metavar='JSON config',
+                        type=str, default=None,
+            help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
+
     args = parser.parse_args()
+
+    all_arg_names = vars(args).keys()
+
+    if args.json_conf is not None:
+        conf_file = args.json
+        print(f'Reading configuration variables from {conf_file}')
+        add_conf = utils.read_json(conf_file)
+        for arg_name, arg_val in add_conf:
+            if arg_name not in all_arg_names:
+                print(f'Invalid option in the configuration file: {arg_name}')
+                sys.exit(1)
+            exp_type = type(getattr(args, arg_name))
+            if type(arg_val) != exp_type:
+                print('Invalid type in the configuration file: {arg_name} expected type: '+str(type(exp_type)))
+                sys.exit(1)
+            print(f'Using {arg_name} from the config')
+            setattr(args, arg_name, arg_val)
+
 
     # This hack copies max query and document length parameters to the model space parameters
     # maybe some other approach is more elegant, but this one should at least work

@@ -2,6 +2,7 @@ import torch
 import random
 import numpy
 import multiprocessing
+import json
 
 PYTORCH_DISTR_BACKEND='gloo'
 
@@ -32,3 +33,25 @@ def join_and_check_stat(proc):
     proc.join()
     if proc.exitcode != 0:
         raise Exception('A process exited abnormally with code:' + str(proc.exitcode))
+
+
+def read_json(file_name):
+    """Read and parse JSON file
+
+    :param file_name: JSON file name
+    """
+    with open(file_name) as f:
+        data = f.read()
+
+    return json.loads(data)
+
+
+def save_json(file_name, data, indent=4):
+    """Save JSON data
+
+    :param file_name:   output file name
+    :param data:        JSON data
+    :param indent:      JSON indentation
+    """
+    with open(file_name, 'w') as f:
+        json.dump(data, f, indent=indent)
