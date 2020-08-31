@@ -95,7 +95,11 @@ trainDir="$derivedDataDir/$trainSubDir"
 
 
 if [ ! -d "$outModelDir" ] ; then
+  echo "Creating new output directory"
   mkdir -p "$outModelDir"
+else
+  echo "Cleaning up the output directory"
+  rm -f "$outModelDir"/*
 fi
 
 jsonConfArg=""
