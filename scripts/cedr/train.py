@@ -20,7 +20,11 @@ sys.path.append('.')
 
 import scripts.utils as utils
 import scripts.cedr.data as data
+
+from scripts.cedr.model_init_utils import MODEL_PARAM_PREF
+
 import scripts.cedr.model_init_utils as model_init_utils
+
 
 from scripts.common_eval import METRIC_LIST, readQrelsDict, readRunDict, getEvalResults
 from scripts.config import DEVICE_CPU
