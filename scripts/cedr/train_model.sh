@@ -32,8 +32,12 @@ initModelWeights=""
 initModel=""
 bertLarge="0"
 vocabFile=""
+optim="adam"
+momentum="0.9"
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
+      "optim"              "optim"            "optimizer (default $optim)"
+      "momentum"           "momentum"         "SGD momentum (default $momentum)"
       "epoch_qty"          "epochQty"         "# of epochs (default $epochQty)"
       "batches_per_train_epoch"  "batchesPerEpoch"  "# of batches per train epoch (default $batchesPerEpoch)"
       "master_port"        "masterPort"       "master port for multi-GPU train (default $masterPort)"
@@ -113,6 +117,7 @@ echo "# of epochs:                                    $epochQty"
 echo "BERT large?:                                    $bertLarge"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
+echo "optimizer:                                      $optim"
 
 if [ "$deviceQty" = "1" ] ; then
   echo "device name:                                    $deviceName"
@@ -143,6 +148,8 @@ scripts/cedr/train.py \
   $jsonConfArg \
   $bertLargeArg \
   $vocabFileArg \
+  --optim $optim \
+  --momentum $momentum \
   --seed $seed \
   --device_name $deviceName \
   --device_qty $deviceQty \

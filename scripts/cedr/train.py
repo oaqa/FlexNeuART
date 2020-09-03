@@ -33,6 +33,9 @@ from tqdm import tqdm
 from collections import namedtuple
 from multiprocessing import Process, Queue
 
+OPT_SGD='sgd'
+OPT_ADAMW='adamw'
+
 # Important: all the losses should have a reduction type sum!
 class MarginRankingLossWrapper:
     @staticmethod
@@ -67,7 +70,9 @@ class PairwiseSoftmaxLoss:
 LOSS_FUNC_LIST = [PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]
 
 TrainParams = namedtuple('TrainParams',
-                    ['init_lr', 'init_bert_lr', 'epoch_lr_decay', 'weight_decay',
+                    ['optim',
+                     'init_lr', 'init_bert_lr', 'epoch_lr_decay', 'weight_decay',
+                     'momentum',
                      'warmup_pct', 'batch_sync_qty',
                      'batches_per_train_epoch',
                      'batch_size', 'batch_size_val',
@@ -205,6 +210,8 @@ def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
 
     print(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
+    utils.sync_out_streams()
+
     runf = os.path.join(model_out_dir, f'{epoch}.run')
 
     return getEvalResults(train_params.use_external_eval,
@@ -260,6 +267,7 @@ def do_train(queue_sync_start, queue_sync_stop,
     bert_lr = train_params.init_bert_lr
     epoch_lr_decay = train_params.epoch_lr_decay
     weight_decay = train_params.weight_decay
+    momentum = train_params.momentum
 
     top_valid_score = None
 
@@ -271,8 +279,15 @@ def do_train(queue_sync_start, queue_sync_stop,
         non_bert_params = {'params': [v for k, v in params if not k.startswith('bert.')]}
         bert_params = {'params': [v for k, v in params if k.startswith('bert.')], 'lr': bert_lr}
 
-        optimizer = torch.optim.AdamW([non_bert_params, bert_params],
+        if train_params.optim == OPT_ADAMW:
+            optimizer = torch.optim.AdamW([non_bert_params, bert_params],
                                        lr=lr, weight_decay=weight_decay)
+        elif train_params.optim == OPT_SGD:
+            optimizer = torch.optim.SGD([non_bert_params, bert_params],
+                                         lr=lr, weight_decay=weight_decay,
+                                         momentum=momentum)
+        else:
+            raise Exception('Unsupported optimizer: ' + train_params.optim)
 
         bpte = train_params.batches_per_train_epoch
         max_train_qty = data.train_item_qty(train_pairs) if bpte <= 0 else bpte * train_params.batch_size
@@ -405,11 +420,17 @@ def main_cli():
     parser.add_argument('--seed', metavar='random seed', help='random seed',
                         type=int, default=42)
 
+    parser.add_argument('--optim', metavar='optimizer', choices=[OPT_SGD, OPT_ADAMW], default=OPT_ADAMW,
+                        help='Optimizer')
+
     parser.add_argument('--loss_margin', metavar='loss margin', help='Margin in the margin loss',
                         type=float, default=1)
 
     parser.add_argument('--init_lr', metavar='init learn. rate',
                         type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
+
+    parser.add_argument('--momentum', metavar='SGD momentum',
+                        type=float, default=0.9, help='SGD momentum')
 
     parser.add_argument('--init_bert_lr', metavar='init BERT learn. rate',
                         type=float, default=0.00005, help='Initial learning rate for BERT parameters')
@@ -568,6 +589,7 @@ def main_cli():
         is_master_proc = rank == 0
 
         train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
+                                   momentum=args.momentum,
                                     warmup_pct=args.warmup_pct, batch_sync_qty=args.batch_sync_qty,
                                     epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
                                     backprop_batch_size=args.backprop_batch_size,
@@ -579,7 +601,8 @@ def main_cli():
                                     epoch_qty=args.epoch_qty, device_name=device_name,
                                     use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                                     print_grads=args.print_grads,
-                                    shuffle_train=not args.no_shuffle_train)
+                                    shuffle_train=not args.no_shuffle_train,
+                                    optim=args.optim)
 
         train_pair_qty = len(train_pairs_all)
         if is_distr_train or train_pair_qty < device_qty:
@@ -596,12 +619,12 @@ def main_cli():
             'queue_sync_stop': queue_sync_stop,
             'queue_sync_start': queue_sync_start,
             'device_qty' : device_qty, 'master_port' : master_port,
-             'rank' : rank, 'is_master_proc' : is_master_proc,
-             'dataset' : dataset,
-             'qrels' : qrels, 'qrel_file_name' : qrelf,
-             'train_pairs' : train_pairs, 'valid_run' : valid_run,
-             'model_out_dir' : args.model_out_dir,
-             'model' : model, 'loss_obj' : loss_obj, 'train_params' : train_params
+            'rank' : rank, 'is_master_proc' : is_master_proc,
+            'dataset' : dataset,
+            'qrels' : qrels, 'qrel_file_name' : qrelf,
+            'train_pairs' : train_pairs, 'valid_run' : valid_run,
+            'model_out_dir' : args.model_out_dir,
+            'model' : model, 'loss_obj' : loss_obj, 'train_params' : train_params
         }
 
 
