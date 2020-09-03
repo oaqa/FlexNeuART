@@ -49,8 +49,10 @@ echo "Clean old index?:          $clean"
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
 else
-  echo "Removing previously created index (if exists)"
-  rm -rf "$indexDir"/*
+  if [ "$clean" = "1" ] ; then
+    echo "Removing previously created index (if exists)"
+    rm -rf "$indexDir"/*
+  fi
 fi
 
 echo "Field list definition:     $fieldListDef"
