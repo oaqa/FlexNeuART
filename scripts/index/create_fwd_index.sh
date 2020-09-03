@@ -3,22 +3,35 @@ source scripts/common_proc.sh
 source scripts/config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
+checkVarNonEmpty "FWD_INDEX_TYPES"
 
-collect=$1
+clean="0"
+boolOpts=("h"     "help"    "print help"
+          "clean" "clean"   "remove all previous indices")
+
+paramOpts=()
+
+FIELD_LIST_DEF="e.g., 'text:parsedBOW text_unlemm:parsedText text_raw:raw'"
+
+parseArguments $@
+
+usageMain="<collection> <fwd index type: $FWD_INDEX_TYPES> <field list def: $FIELD_LIST_DEF>"
+
+collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (1st arg)"
+  genUsage "$usageMain" "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 
-fwdIndexType=$2
+fwdIndexType=${posArgs[1]}
 if [ "$fwdIndexType" = "" ] ; then
-  echo "Specify forward index type (2d arg), e.g., mapdb, lucene, flatdata"
+  genUsage "$usageMain" "Specify forward index type (2d arg), $FWD_INDEX_TYPES"
   exit 1
 fi
 
-fieldListDef=$3
+fieldListDef=${posArgs[2]}
 if [ "$fieldListDef" = "" ] ; then
-  echo "Specify a *QUOTED* space-separated list of field index definitions (3d arg), e.g., 'text:parsedBOW text_unlemm:parsedText text_raw:raw'"
+  genUsage "$usageMain" "Specify a *QUOTED* space-separated list of field index definitions (3d arg), $FIELD_LIST_DEF"
   exit 1
 fi
 
@@ -32,6 +45,7 @@ indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 echo "=========================================================================="
 echo "Data directory:            $inputDataDir"
 echo "Forward index directory:   $indexDir"
+echo "Clean old index?:          $clean"
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
 else

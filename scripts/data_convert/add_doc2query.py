@@ -46,8 +46,6 @@ nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=T
 doc_id_prev = None
 predicted_queries = []
 
-doc_id_prev = None
-predicted_queries = []
 for doc_id, predicted_queries_partial in tqdm(zip(FileWrapper(args.doc_ids_path),
                                                   FileWrapper(args.predictions_path)), desc='reading predictions'):
     doc_id = doc_id.strip()
@@ -59,6 +57,7 @@ for doc_id, predicted_queries_partial in tqdm(zip(FileWrapper(args.doc_ids_path)
     doc_id_prev = doc_id
     predicted_queries.append(predicted_queries_partial)
 
+# Not forgetting about the last batch
 if predicted_queries and doc_id_prev is not None:
     docid_to_preds[doc_id_prev] = ' '.join(predicted_queries)
 
@@ -74,5 +73,4 @@ with FileWrapper(args.output, 'w') as outf:
             outf.write(json.dumps(doce) + '\n')
 
         else:
-            print(f'WARNING: no predictionsf or {doc_id}')
-            
+            print(f'WARNING: no predictions for {doc_id}')
