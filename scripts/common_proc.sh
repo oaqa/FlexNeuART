@@ -2,6 +2,7 @@
 # This should be consistent with common_proc.sh and config.py
 
 CAND_PROV_LUCENE="lucene"
+FWD_INDEX_TYPES="mapdb, lucene, flatdata"
 ANSWER_FILE="AnswerFields.jsonl"
 QUESTION_FILE="QuestionFields.jsonl"
 SAMPLE_COLLECT_ARG="Specify a collection sub-directory, e.g., msmarco_pass"
