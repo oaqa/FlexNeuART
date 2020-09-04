@@ -32,7 +32,7 @@ initModelWeights=""
 initModel=""
 bertLarge="0"
 vocabFile=""
-optim="adam"
+optim="adamw"
 momentum="0.9"
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"

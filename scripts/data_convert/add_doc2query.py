@@ -47,7 +47,8 @@ doc_id_prev = None
 predicted_queries = []
 
 for doc_id, predicted_queries_partial in tqdm(zip(FileWrapper(args.doc_ids_path),
-                                                  FileWrapper(args.predictions_path)), desc='reading predictions'):
+                                                  FileWrapper(args.predictions_path)),
+                                              desc='reading predictions'):
     doc_id = doc_id.strip()
     if doc_id_prev is not None and doc_id_prev != doc_id:
         if predicted_queries and doc_id_prev is not None:
