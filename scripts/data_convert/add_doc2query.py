@@ -17,7 +17,7 @@ from scripts.config import SPACY_MODEL
 from scripts.config import DOCID_FIELD
 
 DOC2QUERY_FIELD_TEXT = 'doc2query_text'
-DOC2QUERY_FIELD_TEXT_UNLEMM = 'doc2query_text_ulemm'
+DOC2QUERY_FIELD_TEXT_UNLEMM = 'doc2query_text_unlemm'
 
 parser = argparse.ArgumentParser(description='Add doc2query fields to the existing JSONL data entries')
 
@@ -69,8 +69,7 @@ with FileWrapper(args.output, 'w') as outf:
             text, text_unlemm = nlp.procText(docid_to_preds[doc_id])
             doce[DOC2QUERY_FIELD_TEXT] = text
             doce[DOC2QUERY_FIELD_TEXT_UNLEMM] = text_unlemm
-
-            outf.write(json.dumps(doce) + '\n')
-
         else:
             print(f'WARNING: no predictions for {doc_id}')
+
+        outf.write(json.dumps(doce) + '\n')
