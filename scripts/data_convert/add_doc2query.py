@@ -14,7 +14,7 @@ from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import readStopWords, jsonlGen, FileWrapper, STOPWORD_FILE
 from scripts.config import SPACY_MODEL
 
-from scripts.config import DOCID_FIELD
+from scripts.config import DOCID_FIELD, TEXT_FIELD_NAME
 
 DOC2QUERY_FIELD_TEXT = 'doc2query_text'
 DOC2QUERY_FIELD_TEXT_UNLEMM = 'doc2query_text_unlemm'
@@ -68,6 +68,7 @@ with FileWrapper(args.output, 'w') as outf:
         doc_id = doce[DOCID_FIELD]
         if doc_id in docid_to_preds:
             text, text_unlemm = nlp.procText(docid_to_preds[doc_id])
+            doce[TEXT_FIELD_NAME] = doce[TEXT_FIELD_NAME] + ' ' + text
             doce[DOC2QUERY_FIELD_TEXT] = text
             doce[DOC2QUERY_FIELD_TEXT_UNLEMM] = text_unlemm
         else:
