@@ -57,6 +57,7 @@ usageMain="<collection> <train data subdir (relative to derived data)> <model ty
 
 if [ "$help" = "1" ] ; then
   genUsage "$usageMain"
+  exit 1
 fi
 
 collect=${posArgs[0]}
