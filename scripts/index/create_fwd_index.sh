@@ -11,7 +11,7 @@ boolOpts=("h"     "help"    "print help"
 
 paramOpts=()
 
-FIELD_LIST_DEF="e.g., 'text:parsedBOW text_unlemm:parsedText text_raw:raw'"
+FIELD_LIST_DEF="e.g., \"text:parsedBOW text_unlemm:parsedText text_raw:raw\""
 
 parseArguments $@
 
