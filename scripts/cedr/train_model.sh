@@ -55,6 +55,10 @@ parseArguments $@
 
 usageMain="<collection> <train data subdir (relative to derived data)> <model type>"
 
+if [ "$help" = "1" ] ; then
+  genUsage "$usageMain"
+fi
+
 collect=${posArgs[0]}
 
 if [ "$collect" = "" ] ; then
