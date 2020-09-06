@@ -17,6 +17,11 @@ parseArguments $@
 
 usageMain="<collection> <fwd index type: $FWD_INDEX_TYPES> <field list def: $FIELD_LIST_DEF>"
 
+if [ "$help" = "1" ] ; then
+  genUsage "$usageMain"
+  exit 1
+fi
+
 collect=${posArgs[0]}
 if [ "$collect" = "" ] ; then
   genUsage "$usageMain" "$SAMPLE_COLLECT_ARG (1st arg)"
