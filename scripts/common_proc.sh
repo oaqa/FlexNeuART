@@ -347,7 +347,7 @@ function parseArguments {
       echo "Invalid option: $1"
       exit 1
     fi
-    posArgs=(${posArgs[*]} $1)
+    posArgs=(${posArgs[*]} "$1")
     shift 1
   done
 }

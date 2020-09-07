@@ -13,7 +13,8 @@ paramOpts=()
 
 FIELD_LIST_DEF="e.g., \"text:parsedBOW text_unlemm:parsedText text_raw:raw\""
 
-parseArguments $@
+# This seems to be the only (though hacky way to pass space separted by quoted arguments)
+parseArguments $1 $2 "$3"
 
 usageMain="<collection> <fwd index type: $FWD_INDEX_TYPES> <field list def: $FIELD_LIST_DEF>"
 
@@ -34,7 +35,7 @@ if [ "$fwdIndexType" = "" ] ; then
   exit 1
 fi
 
-fieldListDef=${posArgs[2]}
+fieldListDef="${posArgs[2]}"
 if [ "$fieldListDef" = "" ] ; then
   genUsage "$usageMain" "Specify a *QUOTED* space-separated list of field index definitions (3d arg), $FIELD_LIST_DEF"
   exit 1
