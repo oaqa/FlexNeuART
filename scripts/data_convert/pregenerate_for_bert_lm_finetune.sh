@@ -17,8 +17,12 @@ boolOpts=(\
 "h" "help" "print help"
 )
 
+seed=0
+epochQty=1
+
 paramOpts=(\
-"epoch_qty" "epochQty" "# of epochs"
+"epoch_qty" "epochQty" "# of epochs (default $epochQty)"
+"seed" "seed" "seed (default $seed)"
 )
 
 parseArguments $@
@@ -40,10 +44,6 @@ part=${posArgs[1]}
 if [ "$part" = "" ] ; then
   echo "$usageMain" "Specify a part to be used (2d arg), e.g., $BITEXT_SUBDIR"
   exit 1
-fi
-
-if [ "$epochQty" = "" ] ; then
-  epochQty="1"
 fi
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
@@ -90,6 +90,7 @@ for setFile in "$outLMDir/$LM_FINETUNE_SET_PREF"* ; do
   # (given that the case is fixed) which is the same for 
   # BERT large and small
   scripts/data_convert/pregenerate_training_data.py \
+    --seed $seed \
     --epochs_to_generate $epochQty \
     --bert_model bert-base-uncased \
     --train_corpus "$setFile" \

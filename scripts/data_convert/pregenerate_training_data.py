@@ -291,6 +291,7 @@ def create_training_file(docs, vocab_list, args, epoch_num):
 
 def main():
     parser = ArgumentParser()
+    parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--train_corpus', type=Path, required=True)
     parser.add_argument("--output_dir", type=Path, required=True)
     parser.add_argument("--bert_model", type=str, required=True,
@@ -315,6 +316,9 @@ def main():
                         help="Maximum number of tokens to mask in each sequence")
 
     args = parser.parse_args()
+
+    print('Using seed', args.seed)
+    random.seed(args.seed)
 
     if args.num_workers > 1 and args.reduce_memory:
         raise ValueError("Cannot use multiple workers while reducing memory")
