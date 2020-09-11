@@ -55,6 +55,8 @@ def subbatch(toks, maxlen):
         return torch.cat(stack, dim=0), SUBBATCH
 
 
+# TODO it's better to pass sbcount to this function rather than make
+#      un_subbatch recomputed sbcount again from maxlen
 def un_subbatch(embed, toks, maxlen):
     BATCH, DLEN = toks.shape[:2]
     SUBBATCH = math.ceil(DLEN / maxlen)
@@ -90,6 +92,10 @@ class PACRRConvMax2dModule(torch.nn.Module):
             simmat = self.pad(simmat)
         conv = self.activation(self.conv(simmat))
         top_filters, _ = conv.max(dim=1)
+        # LB: This a work around for rarely occurring weird cases of very short documents
+        if DLEN < self.k:
+            # padding with zeros the last dim to make it have it at least DLEN elements
+            top_filters = torch.nn.functional.pad(top_filters, (0, self.k - DLEN))
         top_toks, _ = top_filters.topk(self.k, dim=2)
         result = top_toks.reshape(BATCH, QLEN, self.k)
         return result
