@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.utils;
+package edu.cmu.lti.oaqa.flexneuart.utils;
 
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 import static org.junit.Assert.assertEquals;

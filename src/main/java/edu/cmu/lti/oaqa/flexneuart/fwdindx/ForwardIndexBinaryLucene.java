@@ -36,7 +36,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
-
+import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,6 +105,19 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     }
     return null;
   }
+  
+  private BytesRef getDocEntryBin(String docId) throws Exception {
+    QueryParser parser = new QueryParser(Const.TAG_DOCNO, mAnalyzer);
+    Query       queryParsed = parser.parse(docId);
+    
+    TopDocs     hits = mSearcher.search(queryParsed, 1);
+    ScoreDoc[]  scoreDocs = hits.scoreDocs;
+    if (scoreDocs != null && scoreDocs.length == 1) {
+      Document doc = mSearcher.doc(scoreDocs[0].doc);
+      return doc.getBinaryValue(Const.TAG_DOC_ENTRY);
+    }
+    return null;
+  }
 
   @Override
   public String getDocEntryRaw(String docId) throws Exception {
@@ -119,9 +132,9 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
     if (mIsRaw) {
       throw new Exception("An attempt to read the parsed entry for the raw field, directory: " + mBinDir);
     }
-    String docText = getDocEntryStr(docId);
-    if (docText != null) {
-      return DocEntryParsed.fromString(docText);
+    BytesRef docBin = getDocEntryBin(docId);
+    if (docBin != null) {
+      return DocEntryParsed.fromBinary(docBin.bytes);
     }
     return null;
   }
@@ -156,8 +169,21 @@ public class ForwardIndexBinaryLucene extends ForwardIndexBinaryBase {
   }
   
   @Override
-  protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {   
-    addDocEntryRaw(docId, doc.toString());    
+  protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {
+
+    Document luceneDoc = new Document();
+    luceneDoc.add(new StringField(Const.TAG_DOCNO, docId, Field.Store.YES));
+    luceneDoc.add(new StoredField(Const.TAG_DOC_ENTRY, new BytesRef(doc.toBinary())));
+    
+    mDocIds.add(docId);
+  
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      logger.info("Committing");
+      mIndexWriter.commit();
+    }
+    
+    // Index writers should be completely thread-safe 
+    mIndexWriter.addDocument(luceneDoc);
   }
 
   @Override

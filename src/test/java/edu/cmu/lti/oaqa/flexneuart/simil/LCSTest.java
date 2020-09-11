@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.simil;
+package edu.cmu.lti.oaqa.flexneuart.simil;
 
 import static org.junit.Assert.*;
 
@@ -25,7 +25,7 @@ import edu.cmu.lti.oaqa.flexneuart.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
-import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
+import edu.cmu.lti.oaqa.flexneuart.AbstractTest;
 
 /**
  * @author Leonid Boytsov

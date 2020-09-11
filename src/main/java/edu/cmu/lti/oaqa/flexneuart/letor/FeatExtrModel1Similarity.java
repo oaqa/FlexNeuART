@@ -300,19 +300,23 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public int getDim() {
     return 0;
   }
-
+  
   @Override
-  public VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) throws Exception {
-
-    if (mFlipDocQuery) {
-      isQuery = !isQuery;
-    }
-    if (isQuery) {
+  public VectorWrapper getFeatInnerProdQueryVector(DocEntryParsed e) throws Exception {
+    if (!mFlipDocQuery) { 
       return getQueryFeatureVectorsForInnerProd(e);
     } else {
       return getDocFeatureVectorsForInnerProd(e);
     }
- 
+  }
+  
+  @Override
+  public VectorWrapper getFeatInnerProdDocVector(DocEntryParsed e) throws Exception {
+    if (mFlipDocQuery) { 
+      return getQueryFeatureVectorsForInnerProd(e);
+    } else {
+      return getDocFeatureVectorsForInnerProd(e);
+    }
   }
 
   private VectorWrapper getDocFeatureVectorsForInnerProd(DocEntryParsed doc) throws Exception {

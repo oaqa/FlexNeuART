@@ -176,6 +176,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
       } else {        
         if (mTextAsRaw) {
+          // This can be a lot faster on the Python side!
           logger.info("Sending parsed entry in the unparsed/raw format.");
           String queryTextRaw = queryData.get(getQueryFieldName());
           if (queryTextRaw == null) return res;

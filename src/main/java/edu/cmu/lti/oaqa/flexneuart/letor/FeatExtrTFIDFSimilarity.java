@@ -15,7 +15,6 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
@@ -51,10 +50,19 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
       throw new Exception("Unsupported field similarity: " + similType);
  
   }
+
+  @Override
+  public VectorWrapper getFeatInnerProdQueryVector(DocEntryParsed query) throws Exception {
+    return new VectorWrapper(mSimilObjs[0].getBM25SparseVector(query, 
+                                                              true /* query */, 
+                                                              true /* share IDF */));
+  }
   
   @Override
-  public VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) {
-    return new VectorWrapper(mSimilObjs[0].getBM25SparseVector(e, isQuery, true /* share IDF */));
+  public VectorWrapper getFeatInnerProdDocVector(DocEntryParsed doc) throws Exception {
+    return new VectorWrapper(mSimilObjs[0].getBM25SparseVector(doc, 
+                                                              false /* doc: not query */, 
+                                                              true /* share IDF */));
   }
 
   @Override

@@ -77,7 +77,7 @@ class QtyOffsetPair {
  */
 public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   
-	private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryFlatFileData.class);
+  private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryFlatFileData.class);
   public static final int COMMIT_INTERV = 2000000;
   public static final String DATA_SUFFIX = ".dat";
   

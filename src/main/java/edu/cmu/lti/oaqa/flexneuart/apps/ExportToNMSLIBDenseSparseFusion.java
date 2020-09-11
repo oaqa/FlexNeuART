@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Vector;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -35,7 +36,7 @@ import edu.cmu.lti.oaqa.flexneuart.utils.BinWriteUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
-import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
+import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
 
 /**
  * A class that exports a number of query and/or document feature vectors to the NMSLIB dense/sparse
@@ -64,6 +65,9 @@ public class ExportToNMSLIBDenseSparseFusion {
 
     @Option(name = "-out_file", required = true, usage = "Binary output file")
     String mOutFile;
+    
+    @Option(name = "-" + CommonParams.BATCH_SIZE_PARAM, usage = CommonParams.BATCH_SIZE_DESC)
+    int mBatchSize=16;
   }
   
   public static void main(String argv[]) {
@@ -143,14 +147,25 @@ public class ExportToNMSLIBDenseSparseFusion {
       
       if (parsedQueries == null) {    
         int docNum = 0;
-        for (String docId : allDocIds) {
-          writeStringId(docId, out);
-          VectorWrapper.writeAllVectorsToNMSLIBStream(docId, null, compIndices, compExtractors, out);
-          ++docNum;
-          if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
-            System.out.println("Exported " + docNum + " docs");
+        
+        for (int batchStart = 0; batchStart < allDocIds.length; batchStart += args.mBatchSize) {
+          int actualBatchQty = Math.min(args.mBatchSize, allDocIds.length - batchStart);
+          
+          String docIds[] = new String[actualBatchQty];
+
+          for (int i = 0; i < actualBatchQty; ++i) {
+            docIds[i] = allDocIds[batchStart + i];
+          }
+          
+          VectorUtils.writeInnerProdDocVecsBatchToNMSLIBStream(docIds, compIndices, compExtractors, out);
+          for (int i = 0; i < actualBatchQty; ++i) {
+            ++docNum;
+            if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
+              System.out.println("Exported " + docNum + " docs");
+            }
           }
         }
+
         System.out.println("Exported " + docNum + " docs");
       } else {
         int queryQty = 0;
@@ -164,7 +179,7 @@ public class ExportToNMSLIBDenseSparseFusion {
           }
           
           writeStringId(queryId, out);
-          VectorWrapper.writeAllVectorsToNMSLIBStream(queryId, queryFields, compIndices, compExtractors, out);
+          VectorUtils.writeInnerProdQueryVecsToNMSLIBStream(queryFields, compIndices, compExtractors, out);
         }
         System.out.println("Exported " + parsedQueries.size() + " queries");
       }

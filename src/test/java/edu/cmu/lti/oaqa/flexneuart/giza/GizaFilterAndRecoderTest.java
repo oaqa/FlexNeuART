@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa.giza;
+package edu.cmu.lti.oaqa.flexneuart.giza;
 
 import static org.junit.Assert.*;
 
@@ -26,7 +26,7 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndexBasedFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaVocabularyReader;
-import edu.cmu.lti.oaqa.knn4qa.AbstractTest;
+import edu.cmu.lti.oaqa.flexneuart.AbstractTest;
 
 /**
  * @author Leonid Boytsov

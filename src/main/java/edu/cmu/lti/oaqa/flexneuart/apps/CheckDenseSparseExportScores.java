@@ -77,6 +77,9 @@ public class CheckDenseSparseExportScores {
     
     @Option(name = "-eps_diff", required = true, usage = "The maximum score difference considered to be substantial.")
     float mEpsDiff;
+    
+    @Option(name = "-" + CommonParams.BATCH_SIZE_PARAM, usage = CommonParams.BATCH_SIZE_DESC)
+    int mBatchSize=16;
   }
   
   public static void main(String argv[]) {
@@ -141,6 +144,7 @@ public class CheckDenseSparseExportScores {
           for (int k = 0; k < featExtrQty; ++k) {
             SingleFieldInnerProdFeatExtractor   oneExtr = compExtractors[k];
             ForwardIndex                        oneIndx = compIndices[k];
+            boolean                             isRaw = oneIndx.isRaw();
             String                              queryFieldName = oneExtr.getQueryFieldName();
             String                              indexFieldName = oneExtr.getIndexFieldName();
             
@@ -154,35 +158,55 @@ public class CheckDenseSparseExportScores {
               queryText = "";
             }
            
-            DocEntryParsed queryEntry = oneIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), true); // true means including positions
-            
-            for (int i = 0; i < docIdSample.size(); ++i) {
-              String docId = docIdSample.get(i);
-              DocEntryParsed docEntry = oneIndx.getDocEntryParsed(docId);
+            VectorWrapper queryVect = null;
+            if (isRaw) {
+              queryVect = oneExtr.getFeatInnerProdQueryVector(queryText);
+            } else {
+              DocEntryParsed queryEntry = oneIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), 
+                                                                      true); // true means including positions
+              queryVect = oneExtr.getFeatInnerProdQueryVector(queryEntry);
+            }
+
+            for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
+              int actualBatchQty = Math.min(args.mBatchSize, docIdSample.size() - batchStart);
               
-              VectorWrapper docVect = oneExtr.getFeatInnerProdVector(docEntry, false);         
-              VectorWrapper queryVect = oneExtr.getFeatInnerProdVector(queryEntry, true);
-              
-              float innerProdVal = VectorWrapper.scalarProduct(docVect, queryVect);
-              DenseVector oneFeatVecScore = res.get(docId);
-              if (oneFeatVecScore == null) {
-                throw new Exception("Bug: no score for " + docId + " extractor: " + oneExtr.getName() + 
-                                   " index field: " + indexFieldName);
+              String docIds[] = new String[actualBatchQty];
+  
+              for (int i = 0; i < actualBatchQty; ++i) {
+                docIds[i] = docIdSample.get(batchStart + i);
               }
-              if (oneFeatVecScore.size() != 1) {
-                throw new Exception("Bug: feature vector for " + docId + " extractor: " + oneExtr.getName() + 
-                    " index field: " + indexFieldName + " has size " + oneFeatVecScore.size() + " but we expect size one!");
-              }
-              float featureVal = (float) oneFeatVecScore.get(0);
               
-              boolean isDiff = Math.abs(innerProdVal - featureVal) > args.mEpsDiff;  
-              compQty++;
-              diffQty += isDiff ? 1 : 0;
+              VectorWrapper[] docVectArr = null;
               
-              System.out.println(String.format("Query id: %s Doc id: %s field names: %s/%s feature val: %g inner product val: %g extractor: %s %s",
-                                              queryId, docId, queryFieldName, indexFieldName, featureVal, innerProdVal, oneExtr.getName(),
-                                              isDiff ? "SIGN. DIFF." : ""));
-           }
+              docVectArr = oneExtr.getFeatInnerProdDocVectorBatch(oneIndx, docIds);
+              
+              for (int i = 0; i < actualBatchQty; ++i) {
+                String did = docIds[i];
+                VectorWrapper docVect = docVectArr[i];
+
+                float innerProdVal = VectorWrapper.scalarProduct(docVect, queryVect);
+                DenseVector oneFeatVecScore = res.get(did);
+                if (oneFeatVecScore == null) {
+                  throw new Exception("Bug: no score for " + did + " extractor: " + oneExtr.getName()
+                      + " index field: " + indexFieldName);
+                }
+                if (oneFeatVecScore.size() != 1) {
+                  throw new Exception(
+                      "Bug: feature vector for " + did + " extractor: " + oneExtr.getName() + " index field: "
+                          + indexFieldName + " has size " + oneFeatVecScore.size() + " but we expect size one!");
+                }
+                float featureVal = (float) oneFeatVecScore.get(0);
+
+                boolean isDiff = Math.abs(innerProdVal - featureVal) > args.mEpsDiff;
+                compQty++;
+                diffQty += isDiff ? 1 : 0;
+
+                System.out.println(String.format(
+                    "Query id: %s Doc id: %s field names: %s/%s feature val: %g inner product val: %g extractor: %s %s",
+                    queryId, did, queryFieldName, indexFieldName, featureVal, innerProdVal, oneExtr.getName(),
+                    isDiff ? "SIGN. DIFF." : ""));
+              } 
+            }
             
           }
           

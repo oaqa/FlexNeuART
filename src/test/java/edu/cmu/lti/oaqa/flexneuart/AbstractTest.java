@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.knn4qa;
+package edu.cmu.lti.oaqa.flexneuart;
 
 import org.slf4j.Logger;
 
