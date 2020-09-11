@@ -15,7 +15,6 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 

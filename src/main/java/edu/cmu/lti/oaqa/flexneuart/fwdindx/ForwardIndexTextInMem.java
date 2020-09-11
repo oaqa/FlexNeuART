@@ -50,7 +50,7 @@ class DocEntryExt implements Comparable<DocEntryExt> {
  * An in-memory forward index that is stored on disk in a simple text format.
  * This index needs to be loaded fully from disk before it can be used. 
  * This class is kept primarily for compatibility with old code, in particular,
- * to run unit tests. It does not support <b>raw</b> field.
+ * to run unit tests. It *DOES NOT* support <b>raw</b> field and should not be normally used.
  * 
  * @author Leonid Boytsov
  *

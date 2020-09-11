@@ -1,4 +1,4 @@
-namespace java edu.cmu.lti.oaqa.knn4qa.letor.external
+namespace java edu.cmu.lti.oaqa.flexneuart.letor.external
 
 struct WordEntryInfo {
   1: required string      word; // a word

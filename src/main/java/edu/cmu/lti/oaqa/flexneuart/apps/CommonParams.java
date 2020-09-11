@@ -147,6 +147,8 @@ public class CommonParams {
   public static final String OUTPUT_FILE_PARAM = "out_file";
   public static final String OUTPUT_FILE_DESC = "Output file";
   
+  public static final String BATCH_SIZE_PARAM = "batch_size";
+  public static final String BATCH_SIZE_DESC = "batch size";
   
   public static final int USAGE_WIDTH = 90;
   

@@ -31,7 +31,6 @@ import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
-import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import edu.cmu.lti.oaqa.nmslib.QueryService;
 import edu.cmu.lti.oaqa.nmslib.ReplyEntry;
 import edu.cmu.lti.oaqa.nmslib.QueryService.Client;
@@ -170,13 +169,13 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     ByteArrayOutputStream  out = new ByteArrayOutputStream();
     
     if (null == mCompQueryWeights) {
-      VectorWrapper.writeAllVectorsToNMSLIBStream(null, 
+      VectorUtils.writeInnerProdQueryVecsToNMSLIBStream(
                                                   queryData, 
                                                   mCompIndices, 
                                                   mCompExtractors, 
                                                   out);
     } else {
-      VectorWrapper.writeAllVectorsInterleavedToNMSLIBStream(null, 
+      VectorUtils.writeInterleavedInnerProdQueryVectToNMSLIBStream(
                                                             queryData, 
                                                             mCompIndices, 
                                                             mCompExtractors, 

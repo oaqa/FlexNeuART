@@ -256,7 +256,7 @@ public abstract class ForwardIndex {
     
     long totalUniqWordQty = 0; // sum the number of uniq words per document (over all documents)
     
-    logger.info("Creating a new in-memory forward index, maximum # of docs to process: " + maxNumRec);
+    logger.info("Creating a new forward index, maximum # of docs to process: " + maxNumRec);
     
     for (String fileName : fileNames) {    
       try (DataEntryReader inp = new DataEntryReader(fileName)) {

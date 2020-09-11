@@ -68,7 +68,11 @@ public class BM25CloseOrderPairSimilQueryNorm extends BM25ClosePairSimilarityQue
       }
     }
     
-    // TODO: This nested loop can be a bit slow, in the future some speed-up might help. 
+    // TODO: This nested loop is actually quite a bit slow.
+    //       A sliding window approach can speed it up by an order of magnitude.
+    //       It is also clearly possible to achieve the speed up by:
+    //         1. Combining ordered and UNordered pair computation
+    //         2. Using a faster hash (koloboke)
     for (int i = 0; i < doc.mWordIdSeq.length - 1; ++i) {
       for (int k = i + 1; k < Math.min(doc.mWordIdSeq.length, i + mDocWindow); ++k) {
         int wid1 = doc.mWordIdSeq[i];

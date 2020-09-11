@@ -84,6 +84,9 @@ public class CheckSparseExportScores {
     
     @Option(name = "-verbose", usage = "Print some extra debug info")
     boolean mVerbose;
+    
+    @Option(name = "-" + CommonParams.BATCH_SIZE_PARAM, usage = CommonParams.BATCH_SIZE_DESC)
+    int mBatchSize=16;
   }
   
   public static void main(String argv[]) {
@@ -154,38 +157,45 @@ public class CheckSparseExportScores {
          
           Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(
                             CandidateEntry.createZeroScoreCandListFromDocIds(docIdSample), queryFields);
+          
 
-          for (int i = 0; i < docIdSample.size(); ++i) {
-            String docId = docIdSample.get(i);
-            
-            
-            TrulySparseVector queryVect = VectorWrapper.createAnInterleavedFeatureVect(null, queryFields, 
-                                                                                      compIndices, compExtractors, 
-                                                                                      compWeights);
-            
-            TrulySparseVector docVect = VectorWrapper.createAnInterleavedFeatureVect(docId, null, 
-                                                                                     compIndices, compExtractors, 
-                                                                                     unitWeights);
-            
-            float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);    
-            DenseVector featVect = res.get(docId);
-            float featBasedVal = (float)compWeights.dot(featVect);
-            
-            boolean isDiff = Math.abs(innerProdVal - featBasedVal) > args.mEpsDiff;  
-            compQty++;
-            diffQty += isDiff ? 1 : 0;
-            
+          TrulySparseVector queryVect = VectorUtils.createInterleavedInnerProdQueryFeatVect(queryFields, 
+                                                                                            compIndices,
+                                                                                            compExtractors, compWeights);
 
+          for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
+            int actualBatchQty = Math.min(args.mBatchSize, docIdSample.size() - batchStart);
             
-            System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
-                                              queryId, docId, featBasedVal, innerProdVal,
-                                              isDiff ? "SIGN. DIFF." : ""));
-            
-            if (args.mVerbose) {
-              System.out.println("Weights: "+ VectorUtils.toString(compWeights));
-              System.out.println("Features: "+ VectorUtils.toString(featVect));
+            String docIds[] = new String[actualBatchQty];
+
+            for (int i = 0; i < actualBatchQty; ++i) {
+              docIds[i] = docIdSample.get(batchStart + i);
             }
             
+            TrulySparseVector docVectArr[] = VectorUtils.createInterleavedInnerProdDocFeatureVecBatch(docIds, compIndices,
+                                                                                                      compExtractors, unitWeights);
+            
+            for (int i = 0; i < actualBatchQty; ++i) {
+              String did = docIds[i];
+              TrulySparseVector docVect = docVectArr[i];
+
+              float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);
+              DenseVector featVect = res.get(did);
+              float featBasedVal = (float) compWeights.dot(featVect);
+
+              boolean isDiff = Math.abs(innerProdVal - featBasedVal) > args.mEpsDiff;
+              compQty++;
+              diffQty += isDiff ? 1 : 0;
+
+              System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
+                                                queryId, did, featBasedVal, innerProdVal, isDiff ? "SIGN. DIFF." : ""));
+
+              if (args.mVerbose) {
+                System.out.println("Weights: " + VectorUtils.toString(compWeights));
+                System.out.println("Features: " + VectorUtils.toString(featVect));
+              }
+
+            } 
           }
         
         }

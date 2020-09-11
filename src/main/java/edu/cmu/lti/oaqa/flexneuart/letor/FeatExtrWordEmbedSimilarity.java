@@ -57,21 +57,26 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   }
   
   @Override
-  public VectorWrapper getFeatInnerProdVector(DocEntryParsed e, boolean isQuery) throws Exception {
+  public VectorWrapper getFeatInnerProdQueryVector(DocEntryParsed e) throws Exception {
     if (!mIsCosine) {
       throw new Exception("Inner-product representation is available only for the cosine similarity!");
     }
-    if (isQuery) {
-      return new VectorWrapper(mQueryEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
-                                                         mUseIDFWeight, 
-                                                         true /* normalize vectors!!!*/ ));
-    } else {
-      return new VectorWrapper(mDocEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
-                                                        mUseIDFWeight, 
-                                                        true /* normalize vectors!!!*/ ));
-    }
+    // note we use query embeddings here
+    return new VectorWrapper(mQueryEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
+                            mUseIDFWeight, 
+                            true /* normalize vectors!!!*/ ));
   }
   
+  @Override
+  public VectorWrapper getFeatInnerProdDocVector(DocEntryParsed e) throws Exception {
+    if (!mIsCosine) {
+      throw new Exception("Inner-product representation is available only for the cosine similarity!");
+    }
+    // note that we use document embeddings here
+    return new VectorWrapper(mDocEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
+                            mUseIDFWeight, 
+                            true /* normalize vectors!!!*/ ));
+  }  
 
   @Override
   public boolean isSparse() {
