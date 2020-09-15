@@ -152,8 +152,13 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
       }
  
       double collectProb = queryWordId >= 0 ? Math.max(mProbOOV, mModel1Data.mFieldProbTable[queryWordId]) : mProbOOV;
-                                                    
-      res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb) - Math.log(mLambda*collectProb);
+      // Subtracting log-collection probability adds the same constant factor to each document.
+      // However, it makes all the scores non-negative.
+      if (mLambda >= Float.MAX_VALUE) {
+        res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb) - Math.log(mLambda*collectProb);
+      } else {
+        res[iq] = Math.log((1-mLambda)*totTranProb);
+      }
     }
     
     return res;
