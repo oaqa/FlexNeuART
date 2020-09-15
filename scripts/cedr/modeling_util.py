@@ -35,6 +35,8 @@ class CustomBertModel(pytorch_pretrained_bert.BertModel):
 # This function should produce averaging coefficients compatiable
 # with the split in get_batch_avg_coeff
 def get_batch_avg_coeff(mask, maxlen):
+    # Fortunately for us, the mask type is float or else divivision would
+    # have resulted in zeros as 1.0 / torch.LongTensor([4]) == 0
     return 1.0/torch.ceil(torch.sum(mask, dim=-1) / maxlen)
 
 
