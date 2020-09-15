@@ -1,6 +1,13 @@
 ## FlexNeuART
 Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) is a substantially reworked `knn4qa` package.  `FlexNeuART` is under active development. Detailed description and documentaion is to appear. Description of the `knn4qa` is given below.
 
+## MSMARCO DOC leaderboard submissions
+
+Methods and models used in [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/):
+
+1. ``August 20th, 2020	MRR=0.256``  : a multi-field BM25 scores combined with IBM Model 1 scores. This is purely non-neural submission.
+2. ``August 27th, 2020	MRR=0.368``  : the output of the traditional pipeline (with MRR=0.256) is re-ranked using BERT **BASE**.
+
 ## Former life (as a knn4qa package)
 
 This is a learning-to-rank pipeline, which is a part of the project where we study applicability of k-nearest neighbor search methods to IR and QA applications. This project is supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
