@@ -43,11 +43,9 @@ import net.openhft.koloboke.collect.set.hash.HashIntSets;
 
 public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor {
   final static Logger logger = LoggerFactory.getLogger(FeatExtrModel1Similarity.class);
-  
   public static String EXTR_TYPE = "Model1Similarity";
   
   public static String GIZA_ITER_QTY = "gizaIterQty";
-  public static String NO_OFFSET_TERM = "noOffsetTerm";
   public static String PROB_SELF_TRAN = "probSelfTran";
   public static String MIN_MODEL1_PROB = "minModel1Prob";
   public static String MODEL1_SUBDIR = "model1SubDir";
@@ -79,16 +77,13 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     mMinTranScorePerDocWord = conf.getParam(MIN_TRAN_SCORE_PERDOCWORD, 1e-6f); 
 
     logger.info("Computing " + mTopTranScoresPerDocWordQty + 
-                " top per doc-word scores from top " + mTopTranCandWordQty + 
-                " translations per document word, ignoring scores < " + mMinTranScorePerDocWord);
+        " top per doc-word scores from top " + mTopTranCandWordQty + 
+        " translations per document word, ignoring scores < " + mMinTranScorePerDocWord);
     
     mLambda = conf.getReqParamFloat(LAMBDA);
     mProbOOV = conf.getParam(OOV_PROB, 1e-9f); 
     
     mFlipDocQuery = conf.getParamBool(FLIP_DOC_QUERY);
-    mNoOffsetTerm = conf.getParamBool(NO_OFFSET_TERM);
-    
-    logger.info("No offset? " + mNoOffsetTerm + " flipd docs & queries? " + mFlipDocQuery);
     
     mModel1Data = resMngr.getModel1Tran(getIndexFieldName(), 
                                         mModel1SubDir,
@@ -163,11 +158,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
       double collectProb = queryWordId >= 0 ? Math.max(mProbOOV, mModel1Data.mFieldProbTable[queryWordId]) : mProbOOV;
       // Subtracting log-collection probability adds the same constant factor to each document.
       // However, it makes all the scores non-negative.
-      if (!mNoOffsetTerm) {
-        res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb) - Math.log(mLambda*collectProb);
-      } else {
-        res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb);
-      }
+      res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb) - Math.log(mLambda*collectProb);
     }
     
     return res;
@@ -390,7 +381,6 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   final float           mLambda;
   final float           mProbOOV;
   final boolean         mFlipDocQuery;
-  final boolean         mNoOffsetTerm;
   
   final int             mTopTranScoresPerDocWordQty;
   final int             mTopTranCandWordQty;
