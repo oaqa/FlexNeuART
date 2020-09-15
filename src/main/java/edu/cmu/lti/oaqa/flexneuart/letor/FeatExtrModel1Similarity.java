@@ -55,6 +55,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public static String TOP_TRAN_SCORES_PER_DOCWORD_QTY = "topTranScoresPerDocWordQty";
   public static String TOP_TRAN_CANDWORD_QTY = "topTranCandWordQty";
   public static String MIN_TRAN_SCORE_PERDOCWORD = "minTranScorePerDocWord";
+  private static float MIN_ZERO_LABMDA_TRAN_PROB = 1e-8f;
  
   @Override
   public String getName() {
@@ -156,9 +157,17 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
       }
  
       double collectProb = queryWordId >= 0 ? Math.max(mProbOOV, mModel1Data.mFieldProbTable[queryWordId]) : mProbOOV;
-      // Subtracting log-collection probability adds the same constant factor to each document.
-      // However, it makes all the scores non-negative.
-      res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb) - Math.log(mLambda*collectProb);
+      /* 
+         Subtracting log-collection probability adds the same constant factor to each document.
+         However, it makes all the scores non-negative and it is also incompatible with the neural
+         Model1, which does not use collection smoothing. Hence, for mLambda == 0, we use
+         a slightly different formula.
+       */
+      if (mLambda > Float.MIN_NORMAL) {
+        res[iq] = Math.log((1-mLambda)*totTranProb +mLambda*collectProb) - Math.log(mLambda*collectProb);
+      } else {
+        res[iq] = Math.log(Math.max(MIN_ZERO_LABMDA_TRAN_PROB, totTranProb));
+      }
     }
     
     return res;
