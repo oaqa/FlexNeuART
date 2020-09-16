@@ -138,6 +138,9 @@ def train_iteration(model,
     snap_id = 0
 
     if is_master_proc:
+
+        utils.sync_out_streams()
+
         pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False)
     else:
         pbar = None
@@ -197,6 +200,7 @@ def train_iteration(model,
 
     if pbar is not None:
         pbar.close()
+        utils.sync_out_streams()
 
     return total_loss / float(total_qty)
 
@@ -339,8 +343,15 @@ def do_train(queue_sync_start, queue_sync_stop,
 
             os.makedirs(model_out_dir, exist_ok=True)
 
+
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
+
+            utils.sync_out_streams()
+
             valid_score = validate(model, train_params, dataset, valid_run, qrel_file_name, epoch, model_out_dir)
+
+            utils.sync_out_streams()
+
             print(f'validation epoch={epoch} score={valid_score:.4g}')
 
             train_stat[epoch] = {'loss' : loss,

@@ -49,8 +49,7 @@ class CedrQueryHandler(BaseQueryHandler):
         return self.computeScoresFromRawOverride(queryRaw, docsRaw)
 
     def computeScoresFromRawOverride(self, query, docs):
-        if self.debugPrint:
-            print('getScores', query.id, query.text)
+        print('Processing query:', query.id, query.text)
 
         queryData = {query.id: query.text}
         # Run maps queries to arrays of document IDs see iter_valid_records (train.py)
