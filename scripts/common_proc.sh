@@ -121,7 +121,8 @@ function waitChildren {
 
 # A hacky procedure to start a CEDR server
 # one can specify either initial model weights or the complete initial model to load.
-# All other parameters are supposed to be
+# All other parameters are required.
+# IMPORTANT NOTE: don't use with set -o pipefail
 function startCedrServer {
   modelType="$1"
   initModelWeights="$2"
@@ -130,10 +131,10 @@ function startCedrServer {
   maxDocLen="$5"
   deviceName="$6"
   port="$7"
-  serverPidFile="$9"
+  serverPidFile="$8"
 
   if [ "$initModel" = "" ] ; then
-    checkVarNonEmpty "modeType"
+    checkVarNonEmpty "modelType"
     checkVarNonEmpty "initModelWeights"
 
     initModelArg=" --model $modelType --init_model_weights \"$initModelWeights\" "
@@ -146,6 +147,7 @@ function startCedrServer {
   fi
 
   logFileName=`echo $initFile|sed s'|/|_|g'`
+  logFileName="log.$logFileName"
 
   checkVarNonEmpty "maxQueryLen"
   checkVarNonEmpty "maxDocLen"
@@ -175,7 +177,7 @@ function startCedrServer {
     echo "Checking if CEDR server (PID=$PID) has started"
     ps -p $PID &>/dev/null
 
-        if [ "${PIPESTATUS[0]}" != "0" ] ; then
+    if [ "${PIPESTATUS[0]}" != "0" ] ; then
       echo "CEDR server stopped unexpectedly, check logs: $logFileName"
       exit 1
     fi
