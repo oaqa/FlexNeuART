@@ -366,4 +366,7 @@ if [ "$nfail" -gt "0" ] ; then
 fi
 echo "$SEP_DEBUG_LINE"
 rm "$tmpConf"
+if [ "$nfail" -gt "0" ] ; then
+  exit 1
+fi
 
