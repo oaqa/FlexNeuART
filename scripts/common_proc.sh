@@ -165,6 +165,11 @@ function startCedrServer {
 
   PID=$!
 
+  if [ "$?" != "0" ] ; then
+    echo "Starting CEDR immediate failure, check out $logFileName"
+    exit 1
+  fi
+
   echo $PID > "$serverPidFile"
 
 
