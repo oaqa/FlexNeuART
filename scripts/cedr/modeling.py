@@ -171,7 +171,6 @@ class CedrPacrrRanker(BertRanker):
         rel = F.relu(self.linear1(scores))
         rel = F.relu(self.linear2(rel))
         rel = self.linear3(rel)
-        print(rel.shape)
         # the last dimension is singleton and needs to be removed
         return rel.squeeze(dim=-1)
 
