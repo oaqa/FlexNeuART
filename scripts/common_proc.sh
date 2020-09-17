@@ -157,7 +157,8 @@ function startCedrServer {
   checkVarNonEmpty "port"
   checkVarNonEmpty "serverPidFile"
 
-  scripts/py_featextr_server/cedr_server.py \
+  # Note -u
+  python -u scripts/py_featextr_server/cedr_server.py \
     --max_query_len $maxQueryLen \
     --max_doc_len $maxDocLen \
     --device_name $deviceName \
@@ -189,9 +190,9 @@ function startCedrServer {
       exit 1
     fi
 
-    grep -i 'start.*server' "$logFile" &>/dev/null
+    grep -iE "start.*server" $logFileName &>/dev/null
 
-     if [ "$?" = "0" ] ; then
+    if [ "$?" = "0" ] ; then
       echo "CEDR server has started!"
       started=1
     fi
