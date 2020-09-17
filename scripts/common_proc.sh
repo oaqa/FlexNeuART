@@ -122,7 +122,9 @@ function waitChildren {
 # A hacky procedure to start a CEDR server
 # one can specify either initial model weights or the complete initial model to load.
 # All other parameters are required.
-# IMPORTANT NOTE: don't use with set -o pipefail
+# IMPORTANT NOTE:
+# don't use with:
+# set -eo pipefail
 function startCedrServer {
   modelType="$1"
   initModelWeights="$2"
@@ -159,7 +161,7 @@ function startCedrServer {
     --max_query_len $maxQueryLen \
     --max_doc_len $maxDocLen \
     --device_name $deviceName \
-    --port server $port \
+    --port $port \
     $initModelArg \
     &> $logFileName    &
 
