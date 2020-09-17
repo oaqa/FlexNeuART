@@ -48,6 +48,7 @@ threadQty=""
 
 defaultTestPart=""
 defaultTrainPart=""
+addExperSubdir=""
 
 function usage {
   msg=$1
@@ -62,6 +63,7 @@ Additional options:
   -max_final_rerank_qty   max. # of records to re-rank using the final re-ranker
   -test_cand_qty_list     a comma-separate list of # candidates for testing (default $testCandQtyList)
   -metric_type            evaluation metric (default $metricType)
+  -add_exper_subdir       additional experimental sub-directory
   -skip_eval              skip/disable evaluation, just produce TREC runs
   -test_model_results     additionally test model performance on the training set
   -max_num_query_train    max. # of training queries
@@ -128,6 +130,9 @@ while [ $# -ne 0 ] ; do
         -num_cpu_cores)
           numCpuCores=$optValue
           globalParams+=" $opt"
+          ;;
+        -add_exper_subdir)
+          addExperSubDir=$optValue
           ;;
         -train_cand_qty)
           globalParams+=" $opt"
@@ -278,6 +283,9 @@ for ((ivar=1;;++ivar)) ; do
 
     # Each experiment should run in its own sub-directory
     experDirBase=`getExperDirBase "$collectSubdir" "$testPart" "$experSubdir"`
+    if [ "$addExperSubDir" != "" ] ; then
+      experDirBase="$experDirBase/$addExperSubDir"
+    fi
 
     if [ -d "$experDirBase" ] ; then
       echo "Experimental directory already exists (ignoring): $experDirBase"

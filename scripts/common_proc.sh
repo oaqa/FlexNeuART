@@ -119,6 +119,76 @@ function waitChildren {
   done
 }
 
+# A hacky procedure to start a CEDR server
+# one can specify either initial model weights or the complete initial model to load.
+# All other parameters are supposed to be
+function startCedrServer {
+  modelType="$1"
+  initModelWeights="$2"
+  initModel="$3"
+  maxQueryLen="$4"
+  maxDocLen="$5"
+  deviceName="$6"
+  port="$7"
+  serverPidFile="$9"
+
+  if [ "$initModel" = "" ] ; then
+    checkVarNonEmpty "modeType"
+    checkVarNonEmpty "initModelWeights"
+
+    initModelArg=" --model $modelType --init_model_weights \"$initModelWeights\" "
+    initFile="$initModelWeights"
+  else
+    checkVarNonEmpty "initModel"
+
+    initModelArg=" --init_model  \"$initModel\" "
+    initFile="$initModel"
+  fi
+
+  logFileName=`echo $initFile|sed s'|/|_|g'`
+
+  checkVarNonEmpty "maxQueryLen"
+  checkVarNonEmpty "maxDocLen"
+  checkVarNonEmpty "deviceName"
+  checkVarNonEmpty "port"
+  checkVarNonEmpty "serverPidFile"
+
+  scripts/py_featextr_server/cedr_server.py \
+    --max_query_len $maxQueryLen \
+    --max_doc_len $maxDocLen \
+    --device_name $deviceName \
+    --port server $port \
+    $initModelArg \
+    &> $logFileName    &
+
+  PID=$!
+
+  echo $PID > "$serverPidFile"
+
+
+  started=0
+  while [ "$started" = "0" ]
+  do
+    # Usuall the server starts quite quickly
+    sleep 5
+
+    echo "Checking if CEDR server (PID=$PID) has started"
+    ps -p $PID &>/dev/null
+
+        if [ "${PIPESTATUS[0]}" != "0" ] ; then
+      echo "CEDR server stopped unexpectedly, check logs: $logFileName"
+      exit 1
+    fi
+
+    grep -i 'start.*server' "$logFile" &>/dev/null
+
+     if [ "$?" = "0" ] ; then
+      echo "CEDR server has started!"
+      started=1
+    fi
+  done
+}
+
 function getOS {
   uname|awk '{print $1}'
 }
