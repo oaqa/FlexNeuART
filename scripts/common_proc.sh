@@ -139,12 +139,12 @@ function startCedrServer {
     checkVarNonEmpty "modelType"
     checkVarNonEmpty "initModelWeights"
 
-    initModelArg=" --model $modelType --init_model_weights \"$initModelWeights\" "
+    initModelArg=" --model $modelType --init_model_weights $initModelWeights"
     initFile="$initModelWeights"
   else
     checkVarNonEmpty "initModel"
 
-    initModelArg=" --init_model  \"$initModel\" "
+    initModelArg=" --init_model  $initModel"
     initFile="$initModel"
   fi
 
