@@ -182,7 +182,7 @@ function startCedrServer {
     echo "Checking if CEDR server (PID=$PID) has started"
     ps -p $PID &>/dev/null
 
-    if [ "${PIPESTATUS[0]}" != "0" ] ; then
+    if [ "$?" != "0" ] ; then
       echo "CEDR server stopped unexpectedly, check logs: $logFileName"
       exit 1
     fi
