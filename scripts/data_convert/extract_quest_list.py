@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 # Just a simple script to extract a list of of questions from the JSONL file
 import sys
 import argparse
@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 fn = args.field_name
 
-with open(args.output) as out_f:
+with open(args.output, 'w') as out_f:
     for e in jsonlGen(args.input):
         if fn in e:
             text = e[fn]
