@@ -200,7 +200,8 @@ class CedrKnrmRanker(BertRanker):
         result = result.sum(dim=2) # sum over query terms
         result = torch.cat([result, cls_reps[-1]], dim=1)
         scores = self.combine(result) # linear combination over kernels
-        return scores
+        # the last dimension is singleton and needs to be removed
+        return scores.squeeze(dim=-1)
 
 
 class CedrDrmmRanker(BertRanker):
