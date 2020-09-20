@@ -171,7 +171,8 @@ class CedrPacrrRanker(BertRanker):
         rel = F.relu(self.linear1(scores))
         rel = F.relu(self.linear2(rel))
         rel = self.linear3(rel)
-        return rel
+        # the last dimension is singleton and needs to be removed
+        return rel.squeeze(dim=-1)
 
 
 class CedrKnrmRanker(BertRanker):
@@ -199,7 +200,8 @@ class CedrKnrmRanker(BertRanker):
         result = result.sum(dim=2) # sum over query terms
         result = torch.cat([result, cls_reps[-1]], dim=1)
         scores = self.combine(result) # linear combination over kernels
-        return scores
+        # the last dimension is singleton and needs to be removed
+        return scores.squeeze(dim=-1)
 
 
 class CedrDrmmRanker(BertRanker):
