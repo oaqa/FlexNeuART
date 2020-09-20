@@ -96,6 +96,8 @@ class BertRanker(torch.nn.Module):
         # extract relevant subsequences for query and doc
         query_results = [r[:batch_qty, 1:max_qlen+1] for r in result]
         doc_results = [r[:, max_qlen+2:-1] for r in result]
+        # TODO it's better to pass sbcount to this function rather than make
+        #      un_subbatch recomputed sbcount again from max_doc_tok_len
         doc_results = [modeling_util.un_subbatch(r, doc_tok, max_doc_tok_len) for r in doc_results]
 
         # build CLS representation
