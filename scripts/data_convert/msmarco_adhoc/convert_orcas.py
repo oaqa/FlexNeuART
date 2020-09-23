@@ -41,7 +41,7 @@ print(args)
 arg_vars = vars(args)
 
 inpFile = FileWrapper(args.input)
-maxQueryQty = arg_vars(MAX_NUM_QUERY_OPT)
+maxQueryQty = arg_vars[MAX_NUM_QUERY_OPT]
 if maxQueryQty < 0 or maxQueryQty is None:
     maxQueryQty = float('inf')
 
