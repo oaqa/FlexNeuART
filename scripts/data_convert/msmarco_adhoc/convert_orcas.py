@@ -11,7 +11,7 @@ sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, readStopWords, addRetokenizedField, readQueries
+    FileWrapper, readStopWords, addRetokenizedField, readQueries, MAX_NUM_QUERY_QTY_OPT_HELP, MAX_NUM_QUERY_QTY_OPT
 
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
     TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
@@ -34,12 +34,16 @@ parser.add_argument('--out_dir', metavar='output directory', help='output direct
 parser.add_argument('--min_query_token_qty', type=int, default=0,
                     metavar='min # of query tokens', help='ignore queries that have smaller # of tokens')
 parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+parser.add_argument('--' + MAX_NUM_QUERY_QTY_OPT, type=int, default=None, help=MAX_NUM_QUERY_QTY_OPT_HELP)
 
 args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
 inpFile = FileWrapper(args.input)
+maxQueryQty = arg_vars(MAX_NUM_QUERY_QTY_OPT)
+if maxQueryQty < 0 or maxQueryQty is None:
+    maxQueryQty = float('inf')
 
 ignoreQueries = set()
 
@@ -74,6 +78,7 @@ qrelList = []
 ln = 0
 
 prevQid = ''
+genQueryQty = 0
 
 for line in inpFile:
     ln += 1
@@ -111,6 +116,9 @@ for line in inpFile:
 
             docStr = json.dumps(doc) + '\n'
             outFileQueries.write(docStr)
+            genQueryQty += 1
+            if genQueryQty >= maxQueryQty:
+                break
 
     prevQid = qid
 
