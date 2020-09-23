@@ -17,8 +17,11 @@ checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "IR_MODELS_SUBDIR"
 
 sampleProb=1
+saveEpochSnapshots=0
+saveEpochSnapshotsArg=""
 
-boolOpts=("h" "help" "print help")
+boolOpts=("h" "help" "print help"
+          "save_epoch_snapshots" "saveEpochSnapshots" "save snapshot after each epoch")
 
 seed=0
 epochQty=1
@@ -113,12 +116,16 @@ fi
 
 jsonConfArg=""
 
+if [ "$saveEpochSnapshots" = "1" ] ; then
+  saveEpochSnapshotsArg=" --save_epoch_snapshots "
+fi
 
 
 echo "=========================================================================="
 echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
 echo "# of epochs:                                    $epochQty"
+echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
 echo "BERT large?:                                    $bertLarge"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
@@ -159,6 +166,7 @@ scripts/cedr/train.py \
   --device_name $deviceName \
   --device_qty $deviceQty \
   --epoch_qty $epochQty \
+  $saveEpochSnapshotsArg \
   --batches_per_train_epoch $batchesPerEpoch \
   --master_port $masterPort \
   --datafiles "$trainDir/data_query.tsv"  \
