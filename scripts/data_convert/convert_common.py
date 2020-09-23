@@ -14,8 +14,8 @@ WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed',
 YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
                                               'uri subject content bestAnswerId answerList')
 
-MAX_NUM_QUERY_QTY_OPT = 'max_num_query_qty'
-MAX_NUM_QUERY_QTY_OPT_HELP = 'maximum # of queries to generate'
+MAX_NUM_QUERY_OPT = 'max_num_query'
+MAX_NUM_QUERY_OPT_HELP = 'maximum # of queries to generate'
 BERT_TOK_OPT = 'bert_tokenize'
 BERT_TOK_OPT_HELP = 'Apply the BERT tokenizer and store result in a separate field'
 
