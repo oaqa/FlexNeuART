@@ -53,6 +53,7 @@ for e in readQueries(args.input):
     if text in ignoreQueries:
         print(f"Ignoring query, which is found in specified query files: {text}'")
 
+    wroteQty += 1
     outFileQueries.write(json.dumps(e) + '\n')
 
 
