@@ -11,7 +11,7 @@ from scripts.data_convert.convert_common import FileWrapper, readQueries
 from scripts.config import TEXT_FIELD_NAME, QUESTION_FILE_JSON
 
 parser = argparse.ArgumentParser(description='Filter queries to exclude queries from given sub-directories')
-parser.add_argument('--input', metavar='input file', help='input file',
+parser.add_argument('--input_dir', metavar='input dir', help='input dir',
                     type=str, required=True)
 parser.add_argument('--filter_query_dir', metavar='filtering query dir',
                     default=[],
@@ -44,7 +44,7 @@ outFileQueries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w'
 readQty = 0
 wroteQty = 0
 
-for e in readQueries(args.input):
+for e in readQueries(os.path.join(args.input_dir, QUESTION_FILE_JSON)):
     readQty += 1
     if not TEXT_FIELD_NAME in e:
         continue
@@ -52,6 +52,7 @@ for e in readQueries(args.input):
     text = e[TEXT_FIELD_NAME]
     if text in ignoreQueries:
         print(f"Ignoring query, which is found in specified query files: {text}'")
+        continue
 
     wroteQty += 1
     outFileQueries.write(json.dumps(e) + '\n')
