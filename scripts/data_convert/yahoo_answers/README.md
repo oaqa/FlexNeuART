@@ -89,7 +89,7 @@ does not have data leaks, i.e., similar question-answer pairs shared among diffe
 It is most crucial to check for overlaps between parts ``dev1`` (``dev2``, ``test``) and ``bitext``:
 as well as between any testing subset and ``train``. For example:
 ```
-./scripts/qa/check_split_leak.py \
+./scripts/check_utils/check_split_leak.py \
   --data_dir collections/manner/input_data/ \
   --input_subdir1 dev1 \
   --input_subdir2 bitext \
@@ -186,7 +186,7 @@ python -u scripts/cedr/train.py \
 ``` 
 There is also a convenience wrapper script `scripts/cedr/train_model.sh`, but it typically requires a JSON config
 of which we do not have an example yet.
-```
+
 
 ## Generating a vocabulary file
 
