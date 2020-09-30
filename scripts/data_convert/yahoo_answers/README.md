@@ -141,13 +141,15 @@ scripts/export_train/export_cedr.sh \
   bitext \
   dev1 \
   -thread_qty 4 \
-  -sample_neg_qty 20
+  -hard_neg_qty 0 \
+  -sample_easy_neg_qty 0 \
+  -sample_med_neg_qty 20
 ```
 In this case, the output goes to:
 ```
 collections/manner/derived_data/cedr_train/text_raw
 ```
-Note that we use `dev2` here, so that we can use `dev1` **to evaluate fusion results**.
+Note that we use `dev1` here, so that we can use `dev2` **to evaluate fusion results**.
 
 Afterwards, one can train using the following commands. Setting convenience variables:
 ```
@@ -171,18 +173,20 @@ python -u scripts/cedr/train.py \
     --datafiles $dpath/derived_data/$train_subdir/data_query.tsv  \
                     $dpath/derived_data/$train_subdir/data_docs.tsv \
     --train_pairs $dpath/derived_data/$train_subdir/train_pairs.tsv \
-   --valid_run $dpath/derived_data/$train_subdir/test_run.txt \
-   --qrels $dpath/derived_data//$train_subdir/qrels.txt \
-   --init_model_weights $dpath/derived_data/lm_finetune_model/pytorch_model.bin \
-   --warmup_pct 0.1 --weight_decay 0 \
-   --model_out_dir $dpath/derived_data/ir_models/$mtype \
-   --batches_per_train_epoch $batches_per_epoch --init_lr 1e-3 --init_bert_lr 2e-5 \
+    --valid_run $dpath/derived_data/$train_subdir/test_run.txt \
+    --qrels $dpath/derived_data//$train_subdir/qrels.txt \
+    --init_model_weights $dpath/derived_data/lm_finetune_model/pytorch_model.bin \
+    --warmup_pct 0.1 --weight_decay 0 \
+    --model_out_dir $dpath/derived_data/ir_models/$mtype \
+    --batches_per_train_epoch $batches_per_epoch --init_lr 1e-3 --init_bert_lr 2e-5 \
     --epoch_qty 30 --epoch_lr_decay 0.9 \
     --backprop_batch_size $backprop_batch_size --batch_size 32 --batch_size_val $batch_size_val \
     --grad_checkpoint_param $grad_checkpoint_param \
     --max_doc_len $max_doc_len --max_query_len $max_query_len
 ``` 
-
+There is also a convenience wrapper script `scripts/cedr/train_model.sh`, but it typically requires a JSON config
+of which we do not have an example yet.
+```
 
 ## Generating a vocabulary file
 
@@ -198,29 +202,31 @@ scripts/cedr/build_vocab.py \
 
 ## Training an IBM Model 1 model
 
-Here we create a model for the field ```text_unlemm```. To do
-so one needs to download and compile MGIZA:
+Here we create a model for the fields `text_unlemm` and `text_bert_tok` (requires MGIZA to be compiled):
 ```
-scripts/giza/create_tran.sh \
-  manner \
-  text_unlemm \
-  <MGIZA DIRECTORY>
+for field_name in text_unlemm text_bert_tok ; do
+  scripts/giza/create_tran.sh \
+    manner \
+    $field_name
+done 
 ```
 
-It further needs to cleaned-up and converted to a binary format.
+It further needs to cleaned-up and converted to a binary format (infrequent tokens need to be filtered out as well):
 ```
 export min_tran_prob=0.001
-export top_word_qty=100000
+export top_word_qty=1000000
 ```
 
 and
 
 ```
-scripts/giza/filter_tran_table_and_voc.sh \
-  manner \
-  text_bert_tok \
-  $min_tran_prob \
-  $top_word_qty
+for field_name in text_unlemm text_bert_tok ; do
+  scripts/giza/filter_tran_table_and_voc.sh \
+    manner \
+    $field_name \
+    $min_tran_prob \
+    $top_word_qty
+done
 ```
 
 Note that for BERT-tokenized text, which has less than
@@ -323,8 +329,8 @@ scripts/exper/run_experiments.sh \
 
 IBM Model 1 has quite a few parameters and can benefit from tuning as well.
 Rather than tuning IBM Model 1 alone, we tune its fusion with the field
-```text```.
-Model 1 descriptors are going to be created for the field ```text_bert_tok ```:
+`text`.
+Model 1 descriptors are going to be created for the field `text_bert_tok`:
 ```
 scripts/gen_exper_desc/gen_model1_exper_json_desc.py \
   -k1 0.4 -b 0.6  \
