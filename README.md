@@ -7,7 +7,7 @@ Methods and models used in [MSMARCO Document ranking task](https://microsoft.git
 
 1. ``August 20th, 2020	MRR=0.256``  : a multi-field BM25 scores combined with IBM Model 1 scores. This is purely non-neural submission.
 2. ``August 27th, 2020	MRR=0.368``  : the output of the traditional pipeline (with MRR=0.256) is re-ranked using BERT **BASE**.
-3. ``October 1st, 2020  MRR=0.38``   : the output of the traditional pipeline is re-ranked using a variant of BERT **BASE** (this model code is not available yet). Data is augmented with [doc2query text](https://github.com/castorini/docTTTTTquery), though it does not make a whole a lot of difference in this case compared to using just the traditional pipeline.
+3. ``October 1st, 2020  MRR=0.38``   : the output of the traditional pipeline is re-ranked using a variant of BERT **BASE** (this model code is not available yet). Data is augmented with [doc2query text](https://github.com/castorini/docTTTTTquery). However, it does not make a whole a lot of difference in this case compared to using just the traditional pipeline.
 
 ## Former life (as a knn4qa package)
 
