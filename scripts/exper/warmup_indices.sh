@@ -16,16 +16,29 @@ fi
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 
-indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
+luceneIndexDir="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR/"
+
+if [ -d "$luceneIndexDir" ] ; then
+  echo "=========================================================================="
+  echo "Lucene index directory:   $luceneIndexDir"
+
+  for f in "$luceneIndexDir"/* ; do
+    echo "Catting $f to /dev/null"
+    time cat "$f" > /dev/null
+  done
+  
+fi
+
+fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 
 echo "=========================================================================="
-echo "Forward index directory:   $indexDir"
-if [ ! -d "$indexDir" ] ; then
-  echo "Directory does not exit: $indexDir"
+echo "Forward index directory:   $fwdIndexDir"
+if [ ! -d "$fwdIndexDir" ] ; then
+  echo "Directory does not exit: $fwdIndexDir"
   exit 1
 fi
 
-for f in "$indexDir"/* ; do
+for f in "$fwdIndexDir"/* ; do
   echo "Catting $f to /dev/null"
   time cat "$f" > /dev/null
 done
