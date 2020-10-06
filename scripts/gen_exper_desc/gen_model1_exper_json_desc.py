@@ -13,9 +13,13 @@ class ExtrModel1JsonGEN:
         for fid, extrType in self.paramConf:
             yield fid, extrType, testOnly, None
 
-    def __init__(self, k1, b, bitextFieldName, textFieldName=TEXT_FIELD_NAME):
+    def __init__(self, k1, b,
+                 indexFieldName, queryFieldName,
+                 textFieldName=TEXT_FIELD_NAME):
         self.k1 = k1
         self.b = b
+        self.queryFieldName = queryFieldName
+        self.indexFieldName = indexFieldName
 
         self.paramConf = []
 
@@ -35,13 +39,14 @@ class ExtrModel1JsonGEN:
         paramArr.append((0.9, 0.0001))
 
         for probSelfTran, lamb in paramArr:
-            fid = f'bm25={textFieldName}+model1={bitextFieldName}+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
+            fid = f'bm25={textFieldName}+model1={indexFieldName}+lambda=%g+probSelfTran=%g' % (lamb, probSelfTran)
 
             extrList = [
                 {
                     "type": "Model1Similarity",
                     "params": {
-                        "indexFieldName": bitextFieldName,
+                        "queryFieldName": self.queryFieldName,
+                        "indexFieldName": self.indexFieldName,
                         "gizaIterQty": "5",
                         "probSelfTran": probSelfTran,
                         "lambda": lamb,
@@ -68,14 +73,15 @@ class ExtrModel1JsonGEN:
         paramArr.append((0.9, 0.00001, 2.5e-4))
 
         for probSelfTran, lamb, minModel1Prob in paramArr:
-            fid = f'bm25={textFieldName}+model1={bitextFieldName}+lambda=%g+probSelfTran=%g+minTranProb=%g' % (
+            fid = f'bm25={textFieldName}+model1={indexFieldName}+lambda=%g+probSelfTran=%g+minTranProb=%g' % (
                 lamb, probSelfTran, minModel1Prob)
 
             extrList = [
                 {
                     "type": "Model1Similarity",
                     "params": {
-                        "indexFieldName": bitextFieldName,
+                        "queryFieldName": self.queryFieldName,
+                        "indexFieldName": self.indexFieldName,
                         "gizaIterQty": "5",
                         "probSelfTran": str(probSelfTran) + "f",  # for float in Java
                         "lambda": lamb,
@@ -85,7 +91,7 @@ class ExtrModel1JsonGEN:
                 {
                     "type": "TFIDFSimilarity",
                     "params": {
-                        "indexFieldName": bitextFieldName,
+                        "indexFieldName": indexFieldName,
                         "similType": "bm25",
                         "k1": self.k1,
                         "b": self.b
@@ -104,9 +110,12 @@ class ParserWithModel1Coeff(BaseParser):
         self.parser.add_argument('-k1', metavar='BM25 k1',
                                  help='BM25 parameter b',
                                  type=float, required=True)
-        self.parser.add_argument('--field_name',
-                                 metavar='BITEXT field name',
-                                 help='a field for BITEXT data', required=True)
+        self.parser.add_argument('--index_field_name',
+                                 metavar='BITEXT index field name',
+                                 help='an index field for BM25 score', required=True)
+        self.parser.add_argument('--query_field_name',
+                                 metavar='BITEXT query field name',
+                                 help='an query field for BM25 score', default=None)
 
     def __init__(self, progName):
         super().__init__(progName)
@@ -115,8 +124,11 @@ class ParserWithModel1Coeff(BaseParser):
 parser = ParserWithModel1Coeff('Model1 tuning param generator')
 parser.parseArgs()
 args = parser.getArgs()
-fieldName = args.field_name
-model1prefix = f'model1tune_{fieldName}'
+indexFieldName = args.index_field_name
+queryFieldName = args.query_field_name
+fileNameDesc = '%s_%s' % (queryFieldName, indexFieldName)
+model1prefix = f'model1tune_{fileNameDesc}'
 genRerankDescriptors(args,
-                     ExtrModel1JsonGEN(k1=args.k1, b=args.b, bitextFieldName=fieldName),
+                     ExtrModel1JsonGEN(k1=args.k1, b=args.b,
+                                       indexFieldName=indexFieldName, queryFieldName=queryFieldName),
                      model1prefix + '.json', model1prefix)
