@@ -40,6 +40,14 @@ fi
 
 for f in "$fwdIndexDir"/* ; do
   echo "Catting $f to /dev/null"
-  time cat "$f" > /dev/null
+  if [ -f "$f" ] ; then
+    time cat "$f" > /dev/null
+  fi
+  if [ -d "$f" ] ; then
+    for f1 in "$f"/* ; do
+      echo "Catting $f1 to /dev/null"
+      time cat "$f1" > /dev/null
+    done
+  fi
 done
 
