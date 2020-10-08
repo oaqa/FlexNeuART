@@ -36,8 +36,13 @@ import no.uib.cipr.matrix.DenseVector;
 public class FeatExtrPassRetrScore extends SingleFieldFeatExtractor  {
   public static String EXTR_TYPE = "PassRetrScore";
   
+  // Always use the original retrieval score even if there's an intermediate re-ranker
+  public static String USE_ORIG_RETR_SCORE = "useOrigRetrScore";
+  
   FeatExtrPassRetrScore(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);
+    
+    mUseOrigScore = conf.getParamBool(USE_ORIG_RETR_SCORE);
   }
 
   @Override
@@ -56,7 +61,9 @@ public class FeatExtrPassRetrScore extends SingleFieldFeatExtractor  {
         throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", e.mDocId));
       }
       
-      v.set(0, e.mOrigScore);   
+      float score = mUseOrigScore ? e.mOrigScore : e.mScore;
+      
+      v.set(0, score);   
     }
     
     return res;
@@ -66,4 +73,6 @@ public class FeatExtrPassRetrScore extends SingleFieldFeatExtractor  {
   public int getFeatureQty() {
     return 1;
   }
+  
+  final boolean mUseOrigScore;
 }
