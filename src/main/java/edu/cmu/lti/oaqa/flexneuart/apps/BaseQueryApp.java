@@ -679,6 +679,10 @@ public abstract class BaseQueryApp {
         if (null == modelFile) 
           showUsageSpecify(CommonParams.MODEL_FILE_FINAL_PARAM);
         RankerFactory rf = new RankerFactory();
+        File tmp = new File(modelFile);
+        if (!tmp.exists()) {
+          throw new Exception(String.format("Model file does not exist: %s", modelFile));
+        }
         mModelFinal = rf.loadRankerFromFile(modelFile);
         logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
       }

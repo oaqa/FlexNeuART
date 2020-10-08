@@ -334,7 +334,8 @@ Model 1 descriptors are going to be created for the field `text_bert_tok`:
 ```
 scripts/gen_exper_desc/gen_model1_exper_json_desc.py \
   -k1 0.4 -b 0.6  \
-  --field_name text_bert_tok \
+  --query_field_name text_bert_tok \
+  --index_field_name text_bert_tok \
   --outdir collections/manner/exper_desc/ \
   --rel_desc_path exper_desc
 ```
@@ -345,4 +346,15 @@ scripts/exper/run_experiments.sh \
   manner \
   exper_desc/model1tune_text_bert_tok.json \
   -test_part dev1
+```
+
+Saving experimental results:
+```
+scripts/report/get_exper_results.sh \
+  manner \
+  exper_desc/model1tune_text_bert_tok.json \
+  model1_text_bert_tok_tune.tsv \
+  -test_part dev1 \
+  -flt_cand_qty 250 \
+  -print_best_metr map
 ```
