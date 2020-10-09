@@ -42,6 +42,7 @@ testCandQtyList=$DEFAULT_TEST_CAND_QTY_LIST
 
 debugPrint="0"
 globalParams=""
+defaultModelFinal=""
 
 useSeparateShell=1
 parallelExperQty=1
@@ -61,6 +62,7 @@ Usage: <collection> <feature desc. file relative to collection root> [additional
 Additional options:
   -max_num_query_test     max. # of test queries
   -test_part              default test set, e.g., dev1
+  -model_final            final-stage model (relative to the collection root)
   -train_part             default train set, e.g., train
   -train_cand_qty         # of candidates for training (default $trainCandQty)
   -max_final_rerank_qty   max. # of records to re-rank using the final re-ranker
@@ -160,6 +162,9 @@ while [ $# -ne 0 ] ; do
           ;;
         -train_part)
           defaultTrainPart=$optValue
+          ;;
+        -model_final)
+          defaultModelFinal=$optValue
           ;;
         -max_final_rerank_qty)
           globalParams+=" $opt"
@@ -344,6 +349,10 @@ for ((ivar=1;;++ivar)) ; do
       # Overriding the value of the default training set
       if [ "$paramName" = "train_part" -a "$paramVal" = "" ] ; then
         paramVal="$defaultTrainPart"
+      fi
+      # Overriding the value of the final model
+      if [ "$paramName" = "model_final" -a "$paramVal" = "" ] ; then
+        paramVal="$defaultModelFinal"
       fi
       if [ "$paramVal" != "" ] ; then
         for adjParamName in ${adjustLocForParams[*]} ; do
