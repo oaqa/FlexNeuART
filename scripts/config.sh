@@ -101,8 +101,10 @@ STAT_FILE="stat_file"
 SEP_DEBUG_LINE="================================================================================"
 
 TEST_PART_PARAM="testPart"
+TRAIN_PART_PARAM="trainPart"
 EXPER_SUBDIR_PARAM="experSubdir"
 TEST_ONLY_PARAM="testOnly"
+TRAIN_ONLY_PARAM="trainOnly"
 
 
 

@@ -15,13 +15,16 @@ currDir=$PWD
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
+checkVarNonEmpty "DEFAULT_TRAIN_SUBDIR"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
 checkVarNonEmpty "CAND_PROV_LUCENE"
 
 checkVarNonEmpty "TEST_PART_PARAM"
+checkVarNonEmpty "TRAIN_PART_PARAM"
 checkVarNonEmpty "EXPER_SUBDIR_PARAM"
 checkVarNonEmpty "TEST_ONLY_PARAM"
+checkVarNonEmpty "TRAIN_ONLY_PARAM"
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
@@ -47,7 +50,7 @@ numCpuCores=""
 threadQty=""
 
 defaultTestPart=""
-defaultTrainPart=""
+defaultTrainPart="$DEFAULT_TRAIN_SUBDIR"
 addExperSubdir=""
 
 function usage {
@@ -266,23 +269,51 @@ for ((ivar=1;;++ivar)) ; do
     break
   else
     testPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
+    trainPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TRAIN_PART_PARAM`
+
+    if [ "$trainPart" = "" ] ; then
+      trainPart="$defaultTrainPart"
+    fi
+    # here trainPart must be defined
+    checkVarNonEmpty "trainPart"
+
     experSubdir=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $EXPER_SUBDIR_PARAM`
     testOnly=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_ONLY_PARAM`
+    trainOnly=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TRAIN_ONLY_PARAM`
 
-    if [ "$testPart" = "" ] ; then
-      testPart=$defaultTestPart
-    fi
-    if [ "$testPart" = "" ] ; then
-      echo "Specify $TEST_PART_PARAM in config # $ivar or set the script parameter -test_part"
+    if [ "$testOnly" = "1" -a "$trainOnly" = "1" ] ; then
+      echo "Incompatible options, you cannot simulataneously set $TEST_PART_PARAM and $TRAIN_ONLY_PARAM to 1!"
       exit 1
     fi
+
+    if [ "$trainOnly" != "1" ] ; then
+      if [ "$testPart" = "" ] ; then
+        testPart=$defaultTestPart
+      fi
+      if [ "$testPart" = "" ] ; then
+        echo "Specify $TEST_PART_PARAM in config # $ivar, set the script parameter -test_part, or use option $TRAIN_ONLY_PARAM to disable testing"
+        exit 1
+      fi
+    fi
+
     if [ "$experSubdir" = "" ] ; then
       echo "Missing $EXPER_SUBDIR_PARAM config # $ivar"
       exit 1
     fi
 
+    if [ "$trainOnly" = "1" ] ; then
+      experPart="$trainPart"
+    else
+      experPart="$testPart"
+    fi
+
     # Each experiment should run in its own sub-directory
-    experDirBase=`getExperDirBase "$collectSubdir" "$testPart" "$experSubdir"`
+    experDirBase=`getExperDirBase "$collectSubdir" "$experPart" "$experSubdir"`
+    if [ "$?" != "0" ] ; then
+      echo "Failed to obtain the experimental directory!"
+      exit 1
+    fi
+
     if [ "$addExperSubDir" != "" ] ; then
       experDirBase="$experDirBase/$addExperSubDir"
     fi
@@ -297,6 +328,9 @@ for ((ivar=1;;++ivar)) ; do
 
     if [ "$testOnly" = "1" ] ; then
       singleConfParams+=" -test_only"
+    fi
+    if [ "$trainOnly" = "1" ] ; then
+      singleConfParams+=" -train_only"
     fi
 
     for ((i=0;i<${#jsonParamMap[*]};i+=2)) ; do

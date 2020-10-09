@@ -69,6 +69,7 @@ testCandQtyList="$DEFAULT_TEST_CAND_QTY_LIST"
 
 skipEval=0
 testOnly=0
+trainOnly=0
 
 while [ $# -ne 0 ] ; do
   optValue=""
@@ -101,6 +102,10 @@ while [ $# -ne 0 ] ; do
       shift 1
     elif [ "$optName" = "-test_only" ] ; then
       testOnly=1
+      # option without an argument shift by 1
+      shift 1
+    elif [ "$optName" = "-train_only" ] ; then
+      trainOnly=1
       # option without an argument shift by 1
       shift 1
     else
@@ -196,10 +201,12 @@ if [ "$experDirBase" = "" ] ; then
   exit 1
 fi
 
-testPart=${posArgs[2]}
-if [ "$testPart" = "" ] ; then
-  echo "Specify a test part, e.g., dev1 (3d arg)"
-  exit 1
+if [ "$trainOnly" != "1" ] ; then
+  testPart=${posArgs[2]}
+  if [ "$testPart" = "" ] ; then
+    echo "Specify a test part, e.g., dev1, or use -train_only (3d arg)"
+    exit 1
+  fi
 fi
 
 testCandQtyListSpaceSep=`echo $testCandQtyList|sed 's/,/ /g'`
@@ -457,6 +464,10 @@ if [ "$testOnly" = "0" ] ; then
       exit 0
     fi
   fi
+fi
+
+if [ "$trainOnly" = "1" ] ; then
+  exit 0
 fi
 
 statFile="$reportDir/$STAT_FILE"
