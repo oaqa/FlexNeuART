@@ -15,7 +15,6 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;

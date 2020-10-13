@@ -1,9 +1,6 @@
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
-import java.util.ArrayList;
 import java.util.Map;
-
-import javax.management.RuntimeErrorException;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
