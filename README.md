@@ -1,11 +1,18 @@
 ## FlexNeuART
-FlexNeuART (Flexible classic and NeurAl Retrieval Toolkit) is a substantially reworked `knn4qa` package. FlexNeuART is under active development. Detail description and documentaion is to appear. Description of the `knn4qa` is given below.
+Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) is a substantially reworked `knn4qa` package.  `FlexNeuART` is under active development. Detailed description and documentaion is to appear. Description of the `knn4qa` is given below.
 
-## Previous work (as a knn4qa package)
+## MSMARCO Document ranking task (leaderboard submissions)
+
+Methods and models used in [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking):
+
+1. ``August 20th, 2020	MRR=0.256``  : a multi-field BM25 scores combined with IBM Model 1 scores. This is purely non-neural submission.
+2. ``August 27th, 2020	MRR=0.368``  : the output of the traditional pipeline (with MRR=0.256) is re-ranked using BERT **BASE**.
+3. ``October 1st, 2020  MRR=0.38``   : the output of the traditional pipeline is re-ranked using a variant of BERT **BASE** (this model code is not available yet). Data is augmented with [doc2query text](https://github.com/castorini/docTTTTTquery). However, it does not make a whole a lot of difference in this case compared to using just the traditional pipeline.
+4. ``October 13,  2020, MRR=0.39``    : a slightly better tuned and trained variant of our October 1st solution.
+
+## Former life (as a knn4qa package)
 
 This is a learning-to-rank pipeline, which is a part of the project where we study applicability of k-nearest neighbor search methods to IR and QA applications. This project is supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
-
-The master branch contains a new, simplified version of this package, which has a better integration with NMSLIB. It also has support for external scorers, in particular, implemented in Python. We will keep working on improving this version and respective documentation. A basic usage/installation example can be found [in these notebooks](scripts/notebooks). More detailed documentation is in preparation. Please, note that currently the toolkit is still under active development. 
 
 Previous work can be found in the following branches branches:
 
