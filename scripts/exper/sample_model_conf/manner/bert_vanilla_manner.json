@@ -1,0 +1,22 @@
+{
+  "max_query_len" : 128,
+  "max_doc_len" : 381,
+
+  "grad_checkpoint_param" : 0,
+
+  "epoch_lr_decay" : 0.95,
+  "warmup_pct" : 0.2,
+  "init_lr" : 2e-4,
+  "init_bert_lr" : 2e-5,
+
+  "loss_func" :  "pairwise_margin",
+
+  "model.dropout" : 0.05,
+  "weight_decay" :  1e-7,
+
+  "backprop_batch_size" : 1,
+  "batch_size" : 16,
+  "batch_size_val" : 16,
+
+  "max_query_val" : 5000
+}
