@@ -1,9 +1,3 @@
-# EDITING TODOS
-1. Have a separate more in-depth tutorial on running epxeriments (covering
-parameters and configuration options in descriptors)
-2. Eventually describe the vocabulary creation procedure better,
-or totally remove it.
-
 # Basic data preparation
 This example covers a Manner subset of the Yahoo Answers Comprehensive.
 However, a similar procedure can be applied to a bigger collection. All
@@ -129,8 +123,9 @@ The indexer white-space tokenizes text fields and compiles token statistics.
 
 ## Training CEDR neural ranking models
 
-First, we need to export training data, one can optionally limit the number of
-generated queries via `-max_num_query_test`. The following command
+Training requires exporting data in the format of the 
+CEDR framework ([MacAvaney et al' 2019](https://github.com/Georgetown-IR-Lab/cedr).
+The following command
 generates training data in the CEDR format for the collection `manner`
 and the field `text_raw`. The traing data is generated from the split `bitext`, 
 whereas split `dev1` is used to generate eval data:
@@ -151,21 +146,25 @@ collections/manner/derived_data/cedr_train/text_raw
 ```
 Note that we use `dev1` here, so that we can use `dev2` **to evaluate fusion results**.
 
+One can also optionally limit the number of training/validation queries 
+using `-max_num_query_train` and `-max_num_query_test`.
+
 Afterwards, one can train using the following commands. Setting convenience variables:
 ```
 export train_subdir=cedr_train/text_raw
 export dpath=collections/manner
 export mtype=vanilla_bert
 export max_doc_len=512
+export epoch_qty=3
 export max_query_len=64
 export grad_checkpoint_param=0
 export backprop_batch_size=1
 export batches_per_epoch=1024
 export batch_size_val=16
-export max_query_val=5000
-
-
 ```
+Additionally, we also use a BERT model that underwent a self-supervised target-corpus pre-trainining,
+which we store in the file `$dpath/derived_data/lm_finetune_model/pytorch_model.bin`.
+
 Starting a training script:
 ```
 python -u scripts/cedr/train.py \
@@ -179,25 +178,31 @@ python -u scripts/cedr/train.py \
     --warmup_pct 0.1 --weight_decay 0 \
     --model_out_dir $dpath/derived_data/ir_models/$mtype \
     --batches_per_train_epoch $batches_per_epoch --init_lr 1e-3 --init_bert_lr 2e-5 \
-    --epoch_qty 30 --epoch_lr_decay 0.9 \
+    --epoch_qty $epoch_qty --epoch_lr_decay 0.9 \
     --backprop_batch_size $backprop_batch_size --batch_size 32 --batch_size_val $batch_size_val \
     --grad_checkpoint_param $grad_checkpoint_param \
     --max_doc_len $max_doc_len --max_query_len $max_query_len
 ``` 
-There is also a convenience wrapper script `scripts/cedr/train_model.sh`, but it typically requires a JSON config
-of which we do not have an example yet.
 
-
-## Generating a vocabulary file
-
-**NOTE: this is currently not used**:
+There is also a convenience wrapper script `scripts/cedr/train_model.sh`, which requires a JSON configuration file.
+We will first copy a sample configuration file:
+```
+mkdir -p collections/manner/exper_desc/model_conf/
+cp scripts/exper/sample_model_conf/manner/bert_vanilla_manner.json collections/manner/exper_desc/model_conf/
 
 ```
-scripts/cedr/build_vocab.py \
-  --field text_unlemm \
-  --input collections/manner/input_data/bitext/AnswerFields.jsonl.gz  \
-          collections/manner/input_data/train/AnswerFields.jsonl.gz  \
-  --output collections/manner/derived_data/vocab/text_unlemm.voc 
+Please, check out this script: It specifies quite a few parameters.
+Then we can run the script `train_model.sh`. Important notes:
+1. The script loads model **weights** rather than the complete model. 
+The location of this model is absolute or relative to the source code location.
+2. All other descriptor locations are relative to the collection directory.
+3. The trained model is saved to the `derived_data/ir_models` sub-directory (again, relative
+to the collection directory).
+
+```
+scripts/cedr/train_model.sh manner cedr_train/text_raw  vanilla_bert \
+   -json_conf exper_desc/model_conf/bert_vanilla_manner.json \
+   -init_model_weights collections/manner/derived_data/lm_finetune_model/pytorch_model.bin 
 ```
 
 ## Training an IBM Model 1 model
@@ -358,3 +363,6 @@ scripts/report/get_exper_results.sh \
   -flt_cand_qty 250 \
   -print_best_metr map
 ```
+
+
+
