@@ -1,6 +1,8 @@
-# Installing packages
+# Installing packages & building code.
 
 To install packages run the script `install_packages.sh` from the source code root folder.
+
+To build the code run the script `./build.sh`.
 
 # Basic data preparation
 This example covers a Manner subset of the Yahoo Answers Comprehensive.
