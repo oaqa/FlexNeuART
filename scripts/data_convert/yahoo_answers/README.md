@@ -1,3 +1,7 @@
+# Installing packages
+
+To install packages run the script `install_packages.sh` from the source code root folder.
+
 # Basic data preparation
 This example covers a Manner subset of the Yahoo Answers Comprehensive.
 However, a similar procedure can be applied to a bigger collection. All
@@ -110,7 +114,7 @@ The last line defines a type of the index for each indexed field.
 At a high level, there are two types of the field: a parsed text field and a raw field.
 The raw text field keeps text "as is". A parsed field processor white-space tokenizes the text and compiles token statistics.
 More specifically:
-1. `parsedBOW` index keeps only a bag-of-words;
+1. `parsedBOW` index keeps only a bag of words;
 2. `parsedText` keeps the original word sequence;
 3. `raw` is the index that stores text "as is" without any changes.
 
@@ -202,7 +206,7 @@ scripts/cedr/train_model.sh manner cedr_train/text_raw  vanilla_bert \
 
 ## Training an IBM Model 1 model
 
-Here we create a model for the fields `text_unlemm` and `text_bert_tok` (requires MGIZA to be compiled):
+Here we create a model for the fields `text_unlemm` and `text_bert_tok`. This script requires MGIZA to be compiled (make sure you ran the script `install_packages.sh`):
 ```
 for field_name in text_unlemm text_bert_tok ; do
   scripts/giza/create_tran.sh \
@@ -272,16 +276,16 @@ can be more than one experiment run. However, for debugging purposes,
 one can run experiments in the foreground by specifying the
 option `-no_separate_shell`.
 
-Furthermore, he script `scripts/exper/run_experiments.sh` has a number of parameters,
+Furthermore, the script `scripts/exper/run_experiments.sh` has a number of parameters,
 which might be worth tweaking.
 In particular, for "shallow" relevance pools, one
 can use default number of candidates (which is small).
 However, for queries with a lot of relevance judgments,
-it makes sense to increase the number of top candidate
+it makes sense to slightly increase the number of top candidate
 entries that are used to obtain a fusion model 
 (parameter ``-train_cand_qty``).
 
-Obtain experimental results and find the best configuration 
+Now, let us obtain experimental results and find the best configuration 
 with respect to the Mean Average Precision (MAP):
 ```
 scripts/report/get_exper_results.sh \
