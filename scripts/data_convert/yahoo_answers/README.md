@@ -123,7 +123,7 @@ More specifically:
 ## Training CEDR neural ranking models
 
 Training requires exporting data in the format of the 
-CEDR framework ([MacAvaney et al' 2019](https://github.com/Georgetown-IR-Lab/cedr).
+CEDR framework ([MacAvaney et al' 2019](https://github.com/Georgetown-IR-Lab/cedr)).
 The following command
 generates training data in the CEDR format for the collection `manner`
 and the field `text_raw`. The traing data is generated from the split `bitext`, 
