@@ -91,35 +91,30 @@ as well as between any testing subset and ``train``. For example:
 ```
 
 # Indexing
-Before creating Lucene index (if collections was resplit), please,
-first delete Lucene caches:
-```
-rm -rf collections/manner/lucene_cache/
-```
-
-Then, you can create a Lucene index:
+First, create a Lucene index:
 ```
 scripts/index/create_lucene_index.sh manner
 ```
 
-
-Create a forward index, mapdb, generates the fastest (but not the
-smallest forward index):
+Then, create a forward index. There are several types of the index with different 
+space/efficiency/tradeoffs:
+1. `mapdb` is the fastest, but not the smallest and not the most memory efficient index. Its size may also be limited by the number of `mmap` ranges permited by your OS. 
+2. `flatdata` requires less memory at index time, but it is somewhat slower at re-ranking.
 ```
 scripts/index/create_fwd_index.sh \
   manner \
   mapdb \
   'text:parsedBOW text_unlemm:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
-More detailed explanation of index types is below. Note that
-there are two types of the field: a parsed text field and a raw field.
-The indexer white-space tokenizes text fields and compiles token statistics. 
+The last line defines a type of the index for each indexed field. 
+At a high level, there are two types of the field: a parsed text field and a raw field.
+The raw text field keeps text "as is". A parsed field processor white-space tokenizes the text and compiles token statistics.
+More specifically:
 1. `parsedBOW` index keeps only a bag-of-words;
 2. `parsedText` keeps the original word sequence;
 3. `raw` is the index that stores text "as is" without any changes.
 
 # Generating & using optional (derived) data
-
 
 ## Training CEDR neural ranking models
 
@@ -128,7 +123,7 @@ CEDR framework ([MacAvaney et al' 2019](https://github.com/Georgetown-IR-Lab/ced
 The following command
 generates training data in the CEDR format for the collection `manner`
 and the field `text_raw`. The traing data is generated from the split `bitext`, 
-whereas split `dev1` is used to generate eval data:
+whereas split `dev1` is used to generate validation data:
 ```
 scripts/export_train/export_cedr.sh \
   manner \
@@ -165,7 +160,7 @@ export batch_size_val=16
 Additionally, we also use a BERT model that underwent a self-supervised target-corpus pre-trainining,
 which we store in the file `$dpath/derived_data/lm_finetune_model/pytorch_model.bin`.
 
-Starting a training script:
+Now we can run a training script, which loads initial-model **weights** rather than the complete Pytorch model:
 ```
 python -u scripts/cedr/train.py \
     --model $mtype \
@@ -185,18 +180,18 @@ python -u scripts/cedr/train.py \
 ``` 
 
 There is also a convenience wrapper script `scripts/cedr/train_model.sh`, which requires a JSON configuration file.
-We will first copy a sample configuration file:
+We will first copy a sample configuration file to a collection-specific location:
 ```
 mkdir -p collections/manner/exper_desc/model_conf/
 cp scripts/exper/sample_model_conf/manner/bert_vanilla_manner.json collections/manner/exper_desc/model_conf/
 
 ```
-Please, check out this script: It specifies quite a few parameters.
+
 Then we can run the script `train_model.sh`. Important notes:
-1. The script loads model **weights** rather than the complete model. 
+1. The script loads model **weights** rather than the complete Pytorch model. 
 The location of this model is absolute or relative to the source code location.
 2. All other descriptor locations are relative to the collection directory.
-3. The trained model is saved to the `derived_data/ir_models` sub-directory (again, relative
+3. The trained model is saved to a directory in the `derived_data/ir_models` sub-directory (again, relative
 to the collection directory).
 
 ```
