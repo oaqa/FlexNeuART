@@ -35,6 +35,7 @@ import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   public static final int COMMIT_INTERV = 1000000;
+  public static final int MEM_ALLOCATE_INCREMENT = 1024*1024*256; // Allocating memory in 256 MB chunks
   
   protected String mBinFile = null;
 
@@ -47,7 +48,7 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   protected void initIndex() throws IOException {
     mDocIds.clear();
   
-    mDb = DBMaker.fileDB(mBinFile).closeOnJvmShutdown().fileMmapEnable().make();
+    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).closeOnJvmShutdown().fileMmapEnable().make();
     mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).create();
   }
 
@@ -97,7 +98,7 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
     readHeaderAndDocIds();
     
     // Note that we disable file locking and concurrence to enable accessing the file by different programs at the same time
-    mDb = DBMaker.fileDB(mBinFile).concurrencyDisable().fileLockDisable().closeOnJvmShutdown().fileMmapEnable().make();
+    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).concurrencyDisable().fileLockDisable().closeOnJvmShutdown().fileMmapEnable().make();
     mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).open();
     
     System.out.println("Finished loading context from file: " + mBinFile);
