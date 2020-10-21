@@ -5,9 +5,9 @@ Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intend
 
 Methods and models used in [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking):
 
-1. ``August 20th, 2020	MRR=0.256``  : a multi-field BM25 scores combined with IBM Model 1 scores. This is purely non-neural submission.
-2. ``August 27th, 2020	MRR=0.368``  : the output of the traditional pipeline (with MRR=0.256) is re-ranked using BERT **BASE**.
-3. ``October 1st, 2020  MRR=0.38``   : the output of the traditional pipeline is re-ranked using a variant of BERT **BASE** (this model code is not available yet). Data is augmented with [doc2query text](https://github.com/castorini/docTTTTTquery). 
+1. ``August 20, 2020	MRR=0.256``  : a multi-field BM25 scores combined with IBM Model 1 scores. This is purely non-neural submission.
+2. ``August 27, 2020	MRR=0.368``  : the output of the traditional pipeline (with MRR=0.256) is re-ranked using BERT **BASE**.
+3. ``October 1, 2020  MRR=0.38``   : the output of the traditional pipeline is re-ranked using a variant of BERT **BASE** (this model code is not available yet). Data is augmented with [doc2query text](https://github.com/castorini/docTTTTTquery). 
 4. ``October 12,  2020, MRR=0.39``    : a slightly better tuned and trained variant of our October 1st solution.
 5. ``October 20,  2020, MRR=0.396``   : a slightly better tuned and trained variant of our October 12th solution.
 
