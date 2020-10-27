@@ -12,7 +12,6 @@ import gc
 import sys
 import math
 import argparse
-import shutil
 import torch
 import torch.distributed as dist
 
@@ -31,7 +30,11 @@ from scripts.config import DEVICE_CPU
 
 from tqdm import tqdm
 from collections import namedtuple
-from multiprocessing import Process, Queue
+from multiprocessing import Process
+from threading import Barrier, BrokenBarrierError
+
+# five minutes should be enough
+BARRIER_WAIT_TIMEOUT=60*5
 
 OPT_SGD='sgd'
 OPT_ADAMW='adamw'
@@ -107,7 +110,7 @@ def get_lr_desc(optimizer):
     return ' '.join(lr_arr)
 
 
-def train_iteration(model,
+def train_iteration(model, sync_barrier,
                     is_master_proc, device_qty,
                     loss_obj,
                     train_params, max_train_qty,
@@ -179,6 +182,11 @@ def train_iteration(model,
             # This must be done in every process, not only in the master process
             if device_qty > 1:
                 if batch_id % train_params.batch_sync_qty == 0:
+                    try:
+                        sync_barrier.wait(BARRIER_WAIT_TIMEOUT)
+                    except BrokenBarrierError:
+                        raise Exception('A model parameter synchronization timeout!')
+
                     avg_model_params(model)
 
             batch_id += 1
@@ -197,6 +205,15 @@ def train_iteration(model,
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
         if total_qty >= max_train_qty:
             break
+
+    # Mandatory model averaging in the end
+    if device_qty > 1:
+        try:
+            sync_barrier.wait(BARRIER_WAIT_TIMEOUT)
+        except BrokenBarrierError:
+            raise Exception('A model parameter synchronization timeout!')
+
+        avg_model_params(model)
 
     if pbar is not None:
         pbar.close()
@@ -244,7 +261,7 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
     return rerank_run
 
 
-def do_train(queue_sync_start, queue_sync_stop,
+def do_train(sync_barrier,
               device_qty, master_port, rank, is_master_proc,
               dataset,
               qrels, qrel_file_name,
@@ -309,7 +326,7 @@ def do_train(queue_sync_start, queue_sync_stop,
         if is_master_proc:
             print('Optimizer', optimizer)
 
-        loss = train_iteration(model=model,
+        loss = train_iteration(model=model, sync_barrier=sync_barrier,
                                is_master_proc=is_master_proc,
                                device_qty=device_qty, loss_obj=loss_obj,
                                train_params=train_params, max_train_qty=max_train_qty,
@@ -318,24 +335,7 @@ def do_train(queue_sync_start, queue_sync_stop,
                                save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
                                model_out_dir=model_out_dir)
 
-
-        queue_sync_stop.put(1)
-
         if is_master_proc:
-
-            if device_qty > 1:
-                print('Waiting for all the processes to finish the training iteration')
-
-            # For one process it will terminate after the first iteration,
-            # since we always add an element to the stop queue (see above)
-            fin_qty = 0
-            while fin_qty < device_qty:
-                queue_sync_stop.get(block=True)
-                fin_qty += 1
-
-            #For some unclear reasons averaging causes a deadlock here.
-            #This is something that needs to be figured out someday.
-            #avg_model_params(model)
 
             if train_params.save_epoch_snapshots:
                 print('Saving the model epoch snapshot')
@@ -366,12 +366,6 @@ def do_train(queue_sync_start, queue_sync_stop,
                 print('new top validation score, saving the whole model')
                 torch.save(model, os.path.join(model_out_dir, 'model.best'))
 
-
-            for i in range(device_qty):
-                queue_sync_start.put(1)
-
-        # Should always work for a single-process as well
-        queue_sync_start.get(block=True)
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
@@ -580,8 +574,7 @@ def main_cli():
     if is_distr_train:
         qids = list(train_pairs_all.keys())
 
-    queue_sync_stop = Queue()
-    queue_sync_start = Queue()
+    sync_barrier = Barrier(device_qty)
 
     # We must go in the reverse direction, b/c
     # rank == 0 trainer is in the same process and
@@ -627,8 +620,7 @@ def main_cli():
               (rank, device_name, len(train_pairs), train_pair_qty))
 
         param_dict = {
-            'queue_sync_stop': queue_sync_stop,
-            'queue_sync_start': queue_sync_start,
+            'sync_barrier': sync_barrier,
             'device_qty' : device_qty, 'master_port' : master_port,
             'rank' : rank, 'is_master_proc' : is_master_proc,
             'dataset' : dataset,
