@@ -8,6 +8,7 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import os
+import time
 import gc
 import sys
 import math
@@ -327,6 +328,8 @@ def do_train(sync_barrier,
         if is_master_proc:
             print('Optimizer', optimizer)
 
+        start_time = time.time()
+
         loss = train_iteration(model=model, sync_barrier=sync_barrier,
                                is_master_proc=is_master_proc,
                                device_qty=device_qty, loss_obj=loss_obj,
@@ -335,6 +338,8 @@ def do_train(sync_barrier,
                                dataset=dataset, train_pairs=train_pairs, qrels=qrels,
                                save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
                                model_out_dir=model_out_dir)
+
+        end_time = time.time()
 
         if is_master_proc:
 
@@ -358,7 +363,8 @@ def do_train(sync_barrier,
             train_stat[epoch] = {'loss' : loss,
                                    'score' : valid_score,
                                    'lr' : lr,
-                                   'bert_lr' : bert_lr}
+                                   'bert_lr' : bert_lr,
+                                   'train_time' : end_time - start_time}
 
             utils.save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
 
