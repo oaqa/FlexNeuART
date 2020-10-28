@@ -31,7 +31,8 @@ from scripts.config import DEVICE_CPU
 from tqdm import tqdm
 from collections import namedtuple
 from multiprocessing import Process
-from threading import Barrier, BrokenBarrierError
+from threading import BrokenBarrierError
+from multiprocessing import Barrier
 
 # five minutes should be enough
 BARRIER_WAIT_TIMEOUT=60*5
