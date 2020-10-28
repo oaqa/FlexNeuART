@@ -28,6 +28,7 @@ epochQty=1
 batchesPerEpoch=0
 masterPort=10001
 deviceQty=1
+batchSyncQty=4
 deviceName="cuda:0"
 addExperSubdir=""
 jsonConf=""
@@ -46,6 +47,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "master_port"        "masterPort"       "master port for multi-GPU train (default $masterPort)"
       "device_name"        "deviceName"       "device name for single-gpu train (default $deviceName)"
       "device_qty"         "deviceQty"        "# of device (default $deviceQty)"
+      "batch_sync_qty"     "batchSyncQty"     "# of batches before model sync"
       "add_exper_subdir"   "addExperSubdir"   "additional experimental sub-directory (optional)"
       "json_conf"          "jsonConf"         "collection relative JSON configuration file (optional)"
       "vocab_file"         "vocabFile"        "vocabulary file relative to derived-data directory (optional)"
@@ -129,6 +131,7 @@ echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
 echo "BERT large?:                                    $bertLarge"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
+echo "# of batches before model sync:                 $batchSyncQty"
 echo "optimizer:                                      $optim"
 
 if [ "$deviceQty" = "1" ] ; then
@@ -165,6 +168,7 @@ scripts/cedr/train.py \
   --seed $seed \
   --device_name $deviceName \
   --device_qty $deviceQty \
+  --batch_sync_qty $batchSyncQty \
   --epoch_qty $epochQty \
   $saveEpochSnapshotsArg \
   --batches_per_train_epoch $batchesPerEpoch \
