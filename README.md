@@ -1,5 +1,9 @@
 ## FlexNeuART
-Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) is a substantially reworked `knn4qa` package.  `FlexNeuART` is under active development. Detailed description and documentaion is to appear. Description of the `knn4qa` is given below.
+Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) is a substantially reworked `knn4qa` package.  
+
+`FlexNeuART` is under active development. Detailed description and documentaion is to appear. The overview can be found in our [EMNLP workshop paper](https://arxiv.org/abs/2010.14848).
+
+Description of the `knn4qa` is given below.
 
 ## MSMARCO Document ranking task (leaderboard submissions)
 
