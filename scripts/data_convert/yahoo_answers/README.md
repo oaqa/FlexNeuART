@@ -1,5 +1,11 @@
 # Installing packages & building code.
+## Pre-requisits
+The packages requires:
+1. Java
+2. Maven
+3. A C and C++ compiler.
 
+## Installation procedure
 To install packages run the script `install_packages.sh` from the source code root folder.
 
 To build the code run the script `./build.sh`.
