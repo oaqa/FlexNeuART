@@ -64,13 +64,6 @@ def add_model_init_basic_args(parser, add_train_params):
                             type=str, default=None,
                             help='a previously built vocabulary file')
 
-
-        parser.add_argument(f'--{MODEL_PARAM_PREF}prob_network_type',
-                            metavar='prob network type',
-                            default=modeling_model1.ProbNetworkSumFC.name(),
-                            help='a network type to compute probabilities: ' + ' '.join(modeling_model1.PROB_NETWORK_TYPE_NAMES),
-                            choices=modeling_model1.PROB_NETWORK_TYPE_NAMES)
-
         parser.add_argument(f'--{MODEL_PARAM_PREF}use_fasttext',
                             action='store_true',
                             help='use FastText embeddings to initialize lexical Model1 embeddings (dim. defined by FastText)')
