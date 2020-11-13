@@ -4,14 +4,14 @@ Create raw-data directory and download data:
 ```
 mkdir -p collections/msmarco_doc/input_raw
 
-scripts/data_convert/msmarco_adhoc/download_msmarco_doc.sh \
+scripts/data_convert/msmarco/download_msmarco_doc.sh \
   collections/msmarco_doc/input_raw
 ```
 Create the directory to store pre-processed data and run the conversion:
 ```
 mkdir -p collections/msmarco_doc/input_data 
 
-scripts/data_convert/msmarco_adhoc/convert_msmarco_doc.sh \
+scripts/data_convert/msmarco/convert_msmarco_doc.sh \
   collections/msmarco_doc/input_raw  \
   msmarco_doc
 ```

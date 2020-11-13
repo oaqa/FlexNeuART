@@ -4,13 +4,13 @@
 ```
 mkdir -p collections/msmarco_pass/input_raw
 
-scripts/data_convert/msmarco_adhoc/download_msmarco_pass.sh \
+scripts/data_convert/msmarco/download_msmarco_pass.sh \
   collections/msmarco_pass/input_raw
 ```
 
 Convert data:
 ```
-scripts/data_convert/msmarco_adhoc/convert_msmarco_pass.sh \
+scripts/data_convert/msmarco/convert_msmarco_pass.sh \
   collections/msmarco_pass/input_raw/ msmarco_pass
 ```
 
