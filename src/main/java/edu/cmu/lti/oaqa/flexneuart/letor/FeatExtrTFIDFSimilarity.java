@@ -46,14 +46,14 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
     // It's a bit less then ideal to store these names in the CommonParams rather than
     // in a static class variable. However, we have only two of these so far and it's 
     // unlikely we're going have many more in the future (if at all).
-    if (similType.equalsIgnoreCase(CommonParams.BM25_SIMIL))
+    if (similType.equalsIgnoreCase(CommonParams.BM25_SIMIL)) {
       mSimilObjs[0] = new BM25SimilarityLuceneNorm(
                                           conf.getParam(CommonParams.K1_PARAM, BM25SimilarityLucene.DEFAULT_BM25_K1), 
                                           conf.getParam(CommonParams.B_PARAM, BM25SimilarityLucene.DEFAULT_BM25_B), 
                                           mFieldIndex);
-    if (similType.equalsIgnoreCase(CommonParams.COSINE_SIMIL))
+    } else if (similType.equalsIgnoreCase(CommonParams.COSINE_SIMIL)) {
       mSimilObjs[0] = new CosineTextSimilarity(mFieldIndex);
-    else
+    } else
       throw new Exception("Unsupported field similarity: " + similType);
  
   }
