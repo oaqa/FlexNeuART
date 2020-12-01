@@ -1,22 +1,11 @@
 package edu.cmu.lti.oaqa.flexneuart.simil_func;
 
-import java.util.*;
-
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 
 /**
  * A re-implementation of the Lucene/SOLR BM25 similarity,
  * which is normalized using the sum of query term IDFs. 
- *
- * <p>Unlike
- * the original implementation, though, we don't rely on a coarse
- * version of the document normalization factor. Our approach
- * might be a tad slower, but
- * (1) it's easier to implement;
- * (2) there is a small (about 1%) increase in accuracy. 
- * Note that IDF values are cached (without evicting from the cache).  
- * </p>
  * 
  * @author Leonid Boytsov
  *
@@ -60,7 +49,8 @@ public class BM25SimilarityLuceneNorm extends BM25SimilarityLucene {
   }
   
   @Override
-  public TrulySparseVector getBM25SparseVector(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
+  public TrulySparseVector getSparseVector(DocEntryParsed e, boolean isQuery) {
+    boolean shareIDF = true;
     TrulySparseVector res = getBM25SparseVectorNoNorm(e, isQuery, shareIDF);
     
     if (isQuery) {

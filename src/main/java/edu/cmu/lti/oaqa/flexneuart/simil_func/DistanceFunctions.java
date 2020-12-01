@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -204,8 +204,11 @@ public class DistanceFunctions {
   }
  
   /**
-   * Computes a number terms shared between the query (represented by
-   * a DocEntry object) and the document (also represented by a DocEntry object)
+   * Computes an overall number terms shared between the query (represented by
+   * a DocEntry object) and the document (also represented by a DocEntry object).
+   * This function assumes that word IDs in queries and documents are *SORTED*.
+   * Please, note that the query entry is the first argument, if you swap
+   * queries and documents, the results will likely be incorrect!
    * 
    * @param query
    * @param document

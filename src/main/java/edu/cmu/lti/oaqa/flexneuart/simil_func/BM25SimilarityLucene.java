@@ -20,16 +20,7 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.WordEntry;
 
 /**
- * A re-implementation of the Lucene/SOLR BM25 similarity. 
- *
- * <p>Unlike
- * the original implementation, though, we don't rely on a coarse
- * version of the document normalization factor. Our approach
- * might be a tad slower, but
- * (1) it's easier to implement;
- * (2) there is a small (about 1%) increase in accuracy. 
- * Note that IDF values are cached (without evicting from the cache).  
- * </p>
+ * A re-implementation of the Lucene BM25 similarity. 
  * 
  * @author Leonid Boytsov
  *
@@ -177,24 +168,9 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
     return scores;
   }  
 
-  /**
-   * Extracts a sparse vector corresponding to a query or a document (these
-   * vectors are used to test NMSLIB methods for sparse vector sets).
-   * 
-   * <p>These vectors are designed so that a dot product of a query and
-   * a document vectors is equal to the value of the respective BM25 similarity.
-   * </p>
-   * 
-   * @param e         a query/document entry
-   * @param isQuery   true if is a query entry
-   * @param shareIDF  if true, we multiply elements of both documents and queries by sqrt(IDF), 
-   *                  otherwise, document vector eleemnts are multiplied by IDF and query vector
-   *                  elements are multiplied by 1. 
-   * 
-   * @return
-   */
-  public TrulySparseVector getBM25SparseVector(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
-    return getBM25SparseVectorNoNorm(e, isQuery, shareIDF);
+  @Override
+  public TrulySparseVector getSparseVector(DocEntryParsed e, boolean isQuery) {
+    return getBM25SparseVectorNoNorm(e, isQuery, true /* shareIDF */);
   }
 
   protected TrulySparseVector getBM25SparseVectorNoNorm(DocEntryParsed e, boolean isQuery, boolean shareIDF) {
@@ -225,36 +201,5 @@ public class BM25SimilarityLucene extends TFIDFSimilarity {
     
     return res;
   }
-  
-  public TrulySparseVector getDocCosineSparseVector(DocEntryParsed e) {
-    int qty = 0;
-    for (int wid : e.mWordIds)
-      if (wid >= 0) qty++;
-    TrulySparseVector res = new TrulySparseVector(qty);
-
-    float norm = 0;
-    // Getting vector values
-    for (int i = 0, id=0; i < e.mWordIds.length; ++i) {
-      int wordId = e.mWordIds[i];
-      if (wordId < 0) continue;
-      float IDF = getIDF(mFieldIndex, wordId);
-      float tf = e.mQtys[i];
-      float val = tf * IDF;
-      
-      res.mIDs[id] = wordId;
-      res.mVals[id]=  val;
-      
-      norm += val * val;
-      id++;
-    }
-    // Normalizing
-    norm = (float)(1.0/Math.sqrt(norm));
-    
-    for (int i = 0; i < res.mIDs.length; ++i) {
-      res.mVals[i] *= norm;
-    }
-    
-    return res;
-  }  
   
 }

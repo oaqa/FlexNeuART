@@ -38,6 +38,8 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
       String extrType = oneExtrConf.type;
       if (extrType.equalsIgnoreCase(FeatExtrTFIDFSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrTFIDFSimilarity(resMngr, oneExtrConf);
+      } else if(extrType.equalsIgnoreCase(FeatExtrTermMatchSimilarity.EXTR_TYPE)) {
+        fe = new FeatExtrTermMatchSimilarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtrModel1Similarity.EXTR_TYPE)) {
         fe = new FeatExtrModel1Similarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtrWordEmbedSimilarity.EXTR_TYPE)) {

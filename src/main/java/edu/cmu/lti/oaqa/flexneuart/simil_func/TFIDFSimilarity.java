@@ -1,3 +1,18 @@
+/*
+ *  Copyright 2014+ Carnegie Mellon University
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package edu.cmu.lti.oaqa.flexneuart.simil_func;
 
 import java.util.HashMap;
@@ -41,6 +56,19 @@ public abstract class TFIDFSimilarity implements QueryDocSimilarityFunc {
     }
     return res;    
   }
+  
+  /**
+   * Extracts a sparse vector corresponding to a query or a document.
+   * These vectors are designed so that a dot product of a query and
+   * a document vectors is equal to the value of the respective BM25 similarity.
+   * </p>
+   * 
+   * @param e         a query/document entry
+   * @param isQuery   true if is a query entry
+   * 
+   * @return
+   */
+  public abstract TrulySparseVector getSparseVector(DocEntryParsed e, boolean isQuery);
   
   protected abstract float computeIDF(float docQty, WordEntry e);
   

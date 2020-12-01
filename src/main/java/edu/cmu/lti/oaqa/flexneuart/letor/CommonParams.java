@@ -18,6 +18,7 @@ package edu.cmu.lti.oaqa.flexneuart.letor;
 public class CommonParams {
   
   public static String BM25_SIMIL = "bm25";
+  public static String COSINE_SIMIL = "cosine";
   
   public static String QUERY_FIELD_NAME = "queryFieldName";
   public static String INDEX_FIELD_NAME = "indexFieldName";

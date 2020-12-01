@@ -26,6 +26,14 @@ public abstract class BM25ClosePairSimilarityQueryNormBase extends TFIDFSimilari
   protected final int mDocWindow;
   protected final float mInvAvgDl;
   protected final ForwardIndex mFieldIndex;
+  
+
+  @Override
+  public TrulySparseVector getSparseVector(DocEntryParsed e, boolean isQuery) {
+    // Not supporting this feature in the class and its children, b/c
+    // it doesn't make much sense
+    return null;
+  }
 
   public BM25ClosePairSimilarityQueryNormBase(float k1, float b, 
                                               int queryWindow, int docWindow, 
