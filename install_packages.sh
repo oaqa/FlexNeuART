@@ -10,6 +10,7 @@ source scripts/config.sh
 USE_MATCHZOO=0
 
 plist=(\
+urllib           "" \
 lxml             "" \
 pytools          "" \
 torch            "1.4" \

@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import json
+import urllib
 from bs4 import BeautifulSoup
 
 from scripts.config import DEFAULT_ENCODING, STOPWORD_FILE, DOCID_FIELD
@@ -150,6 +151,27 @@ def SimpleXmlRecIterator(fileName, recTagName):
 def removeTags(str):
     """Just remove anything that looks like a tag"""
     return re.sub(r'</?[a-z]+\s*/?>', '', str)
+
+
+def pretokenizeUrl(url):
+    """A hacky procedure to "pretokenize" URLs.
+
+    :param  url:  an input URL
+    :return a URL with prefixes (see below) removed and some characters replaced with ' '
+    """
+    remove_pref = ['http://', 'https://', 'www.']
+    url = urllib.parse.unquote(url)
+    changed = True
+    while changed:
+        changed = False
+        for p in remove_pref:
+            assert len(p) > 0
+            if url.startswith(p):
+                changed = True
+                url = url[len(p):]
+                break
+
+    return re.sub(r'[.,:!\?/"+\-\'=_{}()|]', " ", url)
 
 
 def wikiExtractorFileIterator(rootDir):

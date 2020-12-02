@@ -7,81 +7,99 @@ import numpy as np
 
 from scripts.config import SPACY_MODEL
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import readStopWords
-from scripts.config import DOCID_FIELD, QUESTION_FILE_JSON, TEXT_FIELD_NAME, \
-                            TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME, \
+from scripts.data_convert.convert_common import readStopWords, addRetokenizedField, \
+                                                BERT_TOK_OPT, BERT_TOK_OPT_HELP
+from scripts.config import DOCID_FIELD, QUESTION_FILE_JSON, BERT_BASE_MODEL, \
+                            TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
+                            TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, \
                             ANSWER_LIST_FIELD_NAME, STOPWORD_FILE
-
-def doOutput(nlp, qlist, qids, outPref):
-  if len(qids):
-    with open(os.path.join(outPref, QUESTION_FILE_JSON), 'w') as outFile:
-      for i in qids:
-        qid, question, answerList = qlist[i]
-
-        questionLemmas, questionUnlemm = nlp.procText(question)
-
-        question = question.lower()  # after NLP
-
-        answerListProc = set()
-
-        for answ in answerList:
-          answLemmas, _ = nlp.procText(answ)
-          answerListProc.add(answLemmas)
-
-        doc = {DOCID_FIELD: qid,
-               TEXT_FIELD_NAME: questionLemmas,
-               TEXT_UNLEMM_FIELD_NAME: questionUnlemm,
-               TEXT_RAW_FIELD_NAME: question,
-               ANSWER_LIST_FIELD_NAME: list(answerListProc)}
-        docStr = json.dumps(doc) + '\n'
-        outFile.write(docStr)
+from pytorch_pretrained_bert import BertTokenizer
 
 
-def convertAndSaveQueries(readingFunc):
-  """An end-to-end function to parse QA collections, which reads
-  input arguments, splits the collection, and saves the results.
-  It only delegates reading of the input data to the readingFunc.
+def outputQuestionList(nlp, bertTokenizer, qlist, q_idx, outDir):
+    """Save questions with the specified indices.
 
-  :param readingFunc: this function yields, triples: question ID,
-                      question text, and the list of answers (as text fragments)
-  """
+    :param nlp:                 a text processing object.
+    :param bertTokenizer:       a bert tokenizer (can be None).
+    :param qlist:               a *FULL* list of questions.
+    :param q_idx:               a list of question indices (other questions are ignored)
+    :param outDir:              an output directory
 
-  parser = argparse.ArgumentParser(description='Convert a collection of SQuAD questions.')
-  parser.add_argument('--input', metavar='input file', help='input file',
-                      type=str, required=True)
-  parser.add_argument('--split_prob', metavar='1st split prob',
-                      help='First split probability, if it is equal to one, there is not output for the second split',
-                      type=float, default=1.0)
-  parser.add_argument('--output_dir_split1', metavar='1st split out dir',
-                      help='Output directory for the first split',
-                      type=str, required=True)
-  parser.add_argument('--output_dir_split2', metavar='2d split out dir',
-                      help='Output directory for the second split',
-                      type=str, default=None)
+    """
+    if len(q_idx):
+        with open(os.path.join(outDir, QUESTION_FILE_JSON), 'w') as outFile:
+            for idx in q_idx:
+                qid, question, answerList = qlist[idx]
 
-  args = parser.parse_args()
-  print(args)
+                questionLemmas, questionUnlemm = nlp.procText(question)
 
-  stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
-  print(stopWords)
-  nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True, enablePOS=False)
+                question = question.lower()  # after NLP
 
-  qlist = []
+                answerListProc = set()
 
-  for questionId, questionText, answerList in readingFunc(args.input):
-    qlist.append((questionId, questionText, answerList))
+                for answ in answerList:
+                    answLemmas, _ = nlp.procText(answ)
+                    answerListProc.add(answLemmas)
 
-  qty = len(qlist)
+                doc = {DOCID_FIELD: qid,
+                       TEXT_FIELD_NAME: questionLemmas,
+                       TEXT_UNLEMM_FIELD_NAME: questionUnlemm,
+                       TEXT_RAW_FIELD_NAME: question,
+                       ANSWER_LIST_FIELD_NAME: list(answerListProc)}
+                addRetokenizedField(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bertTokenizer)
+                docStr = json.dumps(doc) + '\n'
+                outFile.write(docStr)
 
-  qids = np.arange(qty)
-  np.random.seed(0)
-  np.random.shuffle(qids)
-  if args.output_dir_split2 is not None:
-    qty1 = int(qty * args.split_prob)
-  else:
-    print('Do not create a random sample, b/c the second sub-directory is not specified!')
-    qty1 = qty
 
-  doOutput(nlp, qlist, qids[0:qty1], args.output_dir_split1)
-  if args.output_dir_split2 is not None:
-    doOutput(nlp, qlist, qids[qty1:qty], args.output_dir_split2)
+def convertAndSaveQueries(readingFunc, desc='convert questions'):
+    """A high-level function function to parse input questions into queries.
+       It reads command line arguments on its own, but delegates parsing of the input data
+       to the function readingFunc.
+
+    :param readingFunc: this function is expected to yield the following triples:
+                        question ID, question text, and the list of answers (as unparsed text fragments)
+    :param desc:        program desription
+    """
+
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('--input', metavar='input file', help='input file',
+                        type=str, required=True)
+    parser.add_argument('--output_dir', metavar='out dir',
+                        help='output directory',
+                        type=str, required=True)
+    parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+
+    args = parser.parse_args()
+    arg_vars = vars(args)
+    print(args)
+
+    bertTokenizer = None
+    if BERT_TOK_OPT in arg_vars:
+        print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
+        bertTokenizer = BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+
+    stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
+    print(stopWords)
+    nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True, enablePOS=False)
+
+    qlist = []
+
+    for questionId, questionText, answerList in readingFunc(args.input):
+        qlist.append((questionId, questionText, answerList))
+
+    qty = len(qlist)
+    qids = np.arange(qty)
+
+    outputQuestionList(nlp, bertTokenizer, qlist, qids, args.output_dir)
+
+
+def convertAndSaveParagraphs(readingFunc):
+    """A high-level function function to parse input paragraphs.
+       It reads command line arguments on its own, but delegates parsing of the input data
+       to the function readingFunc.
+
+    :param readingFunc: this function is expected to yield a string per paragraph, which
+                        has the following TAB-separated entities:
+                        question ID, question text, and the list of answers (as unparsed text fragments)
+    """
+

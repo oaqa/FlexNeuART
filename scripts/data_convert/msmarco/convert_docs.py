@@ -10,9 +10,10 @@ sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, readStopWords, addRetokenizedField
+    FileWrapper, readStopWords, addRetokenizedField, pretokenizeUrl
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
-    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, TITLE_UNLEMM_FIELD_NAME, \
+    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
+    TITLE_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
     TEXT_RAW_FIELD_NAME, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
 
@@ -63,6 +64,9 @@ class DocParseWorker:
 
         did, url, title, body = fields
 
+        url_pretok = pretokenizeUrl(url)
+
+        url_lemmas, url_unlemm = self.nlp.procText(url_pretok)
         title_lemmas, title_unlemm = self.nlp.procText(title)
         body_lemmas, body_unlemm = self.nlp.procText(body)
 
@@ -70,7 +74,10 @@ class DocParseWorker:
         text = text.strip()
         text_raw = (title.strip() + ' ' + body.strip()).lower()
         doc = {DOCID_FIELD: did,
+               'url' : url_lemmas,
+               'url_unlemm' : url_unlemm,
                TEXT_FIELD_NAME: text,
+               TITLE_FIELD_NAME : title_lemmas,
                TITLE_UNLEMM_FIELD_NAME: title_unlemm,
                'body': body_unlemm,
                TEXT_RAW_FIELD_NAME: text_raw}

@@ -55,14 +55,6 @@ public class FeatExtrTermMatchSimilarity extends SingleFieldFeatExtractor  {
   public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
     return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
   }
-
-  public VectorWrapper getFeatInnerProdQueryVector(String query) throws Exception {
-    return null;
-  }
-
-  public VectorWrapper getFeatInnerProdDocVector(String doc) throws Exception {
-    return null;
-  }
   
   TermMatchSimilarity[] mSimilObjs = new TermMatchSimilarity[1];
   final ForwardIndex                 mFieldIndex;

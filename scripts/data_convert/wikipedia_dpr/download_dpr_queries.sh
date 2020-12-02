@@ -1,7 +1,8 @@
+#!/bin/bash -e
 datasetName=$1;
 
 if [ "$datasetName" = "" ] ; then
-  echo "Specify datasetName as a first argument";
+  echo "Specify datasetName as a first argument: nq, trivia, squad";
   exit 1;
 fi
 
