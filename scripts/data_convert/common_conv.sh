@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 source scripts/config.sh
 source scripts/common_proc.sh
 

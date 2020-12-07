@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-import sys, os
+import sys
+import numpy as np
 import json
 import argparse
 import multiprocessing
@@ -7,6 +8,8 @@ import multiprocessing
 #
 # Convert a Wikipedia corpus used in the Facebook DPR project:
 # https://github.com/facebookresearch/DPR/tree/master/data
+# Optionally, one can specify a subset of the corpus by providing
+# a numpy array with passage IDs to select.
 #
 # The input is a TAB-separated file with three columns: id, passage text, title
 # This conversion script preserves original passages, but it also tokenizes them.
@@ -27,6 +30,8 @@ from pytorch_pretrained_bert import BertTokenizer
 parser = argparse.ArgumentParser(description='Convert a Wikipedia corpus downloaded from github.com/facebookresearch/DPR.')
 parser.add_argument('--input_file', metavar='input file', help='input directory',
                     type=str, required=True)
+parser.add_argument('--passage_ids', metavar='optional passage ids',
+                    type=str, default=None, help='an optional numpy array with passage ids to select')
 parser.add_argument('--out_file', metavar='output file',
                     help='output JSONL file',
                     type=str, required=True)
@@ -44,22 +49,24 @@ if BERT_TOK_OPT in arg_vars:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
     bertTokenizer = BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 
-stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
-print(stopWords)
-
 # Lower cased
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
 print(stopWords)
 
+fltPassIds = None
+if args.passage_ids is not None:
+    fltPassIds = set(np.load(args.passage_ids))
+    print(f'Restricting parsing to {len(fltPassIds)} passage IDs')
+
 fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
 
+# Lower cased
+textProcessor = SpacyTextParser(SPACY_MODEL, stopWords,
+                                keepOnlyAlphaNum=True, lowerCase=True,
+                                enablePOS=True)
 
 class PassParseWorker:
-    def __init__(self, stopWords, spacyModel):
-        # Lower cased
-        self.textProcessor = SpacyTextParser(spacyModel, stopWords,
-                                             keepOnlyAlphaNum=True, lowerCase=True,
-                                             enablePOS=True)
+
     def __call__(self, line):
 
         if not line:
@@ -76,8 +83,12 @@ class PassParseWorker:
         assert len(fields) == 3, f"Wrong format fline: {line}"
         passId, rawText, title = fields
 
-        textLemmas, textUnlemm = self.textProcessor.procText(rawText)
-        titleLemmas, titleUnlemm = self.textProcessor.procText(title)
+        if fltPassIds is not None:
+            if passId not in fltPassIds:
+                return ''
+
+        textLemmas, textUnlemm = textProcessor.procText(rawText)
+        titleLemmas, titleUnlemm = textProcessor.procText(title)
 
         doc = {DOCID_FIELD: passId,
                TEXT_FIELD_NAME: titleLemmas + ' ' + textLemmas,
@@ -96,16 +107,20 @@ proc_qty = args.proc_qty
 print(f'Spanning {proc_qty} processes')
 pool = multiprocessing.Pool(processes=proc_qty)
 ln = 0
-for docStr in pool.imap(PassParseWorker(stopWords, SPACY_MODEL), inpFile, IMAP_PROC_CHUNK_QTY):
+ln_ign = 0
+for docStr in pool.imap(PassParseWorker(), inpFile, IMAP_PROC_CHUNK_QTY):
     ln = ln + 1
+
     if docStr is not None:
         if docStr:
             outFile.write(docStr + '\n')
+        else:
+            ln_ign += 1
     else:
         print('Ignoring misformatted line %d' % ln)
 
     if ln % REPORT_QTY == 0:
-        print('Processed %d passages' % ln)
+        print('Read %d passages, processed %d passages' % (ln, ln - ln_ign))
 
 print('Processed %d passages' % ln)
 

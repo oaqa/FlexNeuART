@@ -46,11 +46,9 @@ if BERT_TOK_OPT in arg_vars:
 stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
 print(stopWords)
 
+nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
 
 class PassParseWorker:
-    def __init__(self, stopWords, spacyModel):
-        self.nlp = SpacyTextParser(spacyModel, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
-
     def __call__(self, line):
 
         if not line:
@@ -63,7 +61,7 @@ class PassParseWorker:
 
         pid, body = fields
 
-        text, text_unlemm = self.nlp.procText(body)
+        text, text_unlemm = nlp.procText(body)
 
         doc = {DOCID_FIELD: pid,
                TEXT_FIELD_NAME: text,
@@ -78,7 +76,7 @@ proc_qty = args.proc_qty
 print(f'Spanning {proc_qty} processes')
 pool = multiprocessing.Pool(processes=proc_qty)
 ln = 0
-for docStr in pool.imap(PassParseWorker(stopWords, SPACY_MODEL), inpFile, IMAP_PROC_CHUNK_QTY):
+for docStr in pool.imap(PassParseWorker(), inpFile, IMAP_PROC_CHUNK_QTY):
     ln = ln + 1
     if docStr is not None:
         outFile.write(docStr)

@@ -19,7 +19,9 @@ MAX_NUM_QUERY_OPT = 'max_num_query'
 MAX_NUM_QUERY_OPT_HELP = 'maximum # of queries to generate'
 BERT_TOK_OPT = 'bert_tokenize'
 BERT_TOK_OPT_HELP = 'Apply the BERT tokenizer and store result in a separate field'
-
+OUT_BITEXT_PATH_OPT = 'out_bitext_path'
+OUT_BITEXT_PATH_OPT_META = 'optional bitext path'
+OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
 
 # Replace \n and \r characters with spaces
 def replaceCharsNL(s):

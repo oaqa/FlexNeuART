@@ -16,6 +16,7 @@ from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.common_eval import genQrelStr
 from scripts.data_convert.convert_common import FileWrapper, readStopWords, \
                                                 BERT_TOK_OPT, BERT_TOK_OPT_HELP, \
+                                                OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP, \
                                                 getRetokenized, SimpleXmlRecIterator,\
                                                 procYahooAnswersRecord
 from scripts.config import SPACY_MODEL, BERT_BASE_MODEL, ANSWER_FILE_JSON, BITEXT_QUESTION_PREFIX,\
@@ -30,9 +31,9 @@ parser.add_argument('--input', metavar='input file', help='input file',
 parser.add_argument('--out_main_path', metavar='main output directory',
                     help='main output directory, which includes indexable data and QRELs',
                     type=str, required=True)
-parser.add_argument('--out_bitext_path', metavar='optional bitext output directory',
-                    help='An optional output directory to store bitext',
-                    type=str, default='')
+parser.add_argument('--' + OUT_BITEXT_PATH_OPT, metavar=OUT_BITEXT_PATH_OPT_META,
+                    help=OUT_BITEXT_PATH_OPT_HELP,
+                    type=str, default=None)
 parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
 
 args = parser.parse_args()
@@ -42,7 +43,7 @@ arg_vars = vars(args)
 inpFileName = args.input
 
 outMainDir = args.out_main_path
-outBitextDir = args.out_bitext_path
+outBitextDir = arg_vars[OUT_BITEXT_PATH_OPT]
 
 bertTokenizer = None
 

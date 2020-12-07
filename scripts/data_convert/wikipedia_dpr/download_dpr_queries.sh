@@ -1,10 +1,18 @@
 #!/bin/bash -e
+# Based on https://github.com/facebookresearch/DPR/blob/master/data/download_data.py
 datasetName=$1;
 
 if [ "$datasetName" = "" ] ; then
-  echo "Specify datasetName as a first argument: nq, trivia, squad";
+  echo "Specify datasetName as a first argument: nq, trivia, squad (1st arg)";
   exit 1;
 fi
+
+dstDir=$2
+[ "$dstDir" != "" ] || { echo "Specify destination directory (2d arg)" ; exit 1 ; }
+
+[ -d "$dstDir" ] || { echo "Not a directory: $dstDir (2d arg)" ; exit 1 ; }
+
+cd "$dstDir"
 
 case $datasetName in
 

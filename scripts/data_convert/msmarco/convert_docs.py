@@ -48,11 +48,9 @@ if BERT_TOK_OPT in arg_vars:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
     bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 
+nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
 
 class DocParseWorker:
-    def __init__(self, stopWords, spacyModel):
-        self.nlp = SpacyTextParser(spacyModel, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
-
     def __call__(self, line):
 
         if not line:
@@ -66,9 +64,9 @@ class DocParseWorker:
 
         url_pretok = pretokenizeUrl(url)
 
-        url_lemmas, url_unlemm = self.nlp.procText(url_pretok)
-        title_lemmas, title_unlemm = self.nlp.procText(title)
-        body_lemmas, body_unlemm = self.nlp.procText(body)
+        url_lemmas, url_unlemm = nlp.procText(url_pretok)
+        title_lemmas, title_unlemm = nlp.procText(title)
+        body_lemmas, body_unlemm = nlp.procText(body)
 
         text = title_lemmas + ' ' + body_lemmas
         text = text.strip()
@@ -91,7 +89,7 @@ proc_qty = args.proc_qty
 print(f'Spanning {proc_qty} processes')
 pool = multiprocessing.Pool(processes=proc_qty)
 ln = 0
-for docStr in pool.imap(DocParseWorker(stopWords, SPACY_MODEL), inpFile, IMAP_PROC_CHUNK_QTY):
+for docStr in pool.imap(DocParseWorker(), inpFile, IMAP_PROC_CHUNK_QTY):
     ln = ln + 1
     if docStr is not None:
         outFile.write(docStr)

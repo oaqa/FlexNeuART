@@ -87,9 +87,29 @@ class StanzaTextParser:
         return ' '.join(lemmas), ' '.join(tokens)
 
 
-"""A wrapper class to handle basic Spacy-based text processing."""
+class Sentencizer:
+    """A simple wrapper for the rule-based Spacy sentence splitter."""
+    def __init__(self, modelName):
+        """
+        :param modelName: a name of the spacy model to use, e.g., en_core_web_sm
+        """
+        self._nlp = spacy.load(modelName, disable=[SPACY_NER, SPACY_PARSER,SPACY_POS])
+        self._nlp.add_pipe(self._nlp.create_pipe("sentencizer"))
+
+    def __call__(self, text):
+        """A thin wrapper that merely calls spacy.
+
+            :param text     input text string
+            :return         a spacy Doc object
+        """
+        return self._nlp(text).sents
 
 
+"""A wrapper class to handle basic Spacy-based text processing.
+   It also implements sentence splitting, but there's a design flaw,
+   which makes it hard to obtain both sentences and other data.
+   So, instead please use the separate sentencizer class instead.
+"""
 class SpacyTextParser:
     def __init__(self, modelName, stopWords,
                  removePunct=True,

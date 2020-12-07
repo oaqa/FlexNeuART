@@ -28,15 +28,23 @@ Create a forward index:
 scripts/index/create_fwd_index.sh msmarco_doc mapdb \
   'title:parsedBOW text:parsedText body:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
- ## Optionally splitting the train and development parts
+ ## Optionally splitting training queries
+ 
+This is necessary to carve out smaller subsets 
+for fusion and development. The original
+development set can be used for testing (then the
+corresponding folder needs to be renamed accordingly):
+
 ```
 scripts/data_convert/split_queries.sh \
-  msmarco_doc dev dev1 dev2 -part1_qty 3000
-scripts/qa/check_split_queries.sh \
-  msmarco_doc dev dev1 dev2
+  msmarco_doc train train_fusion tmp -part1_qty 10000
+scripts/qa/check_split_queries.sh   \
+  msmarco_doc train train_fusion tmp
 
 scripts/data_convert/split_queries.sh \
-  msmarco_doc train train1 bitext -part1_qty 10000
-scripts/qa/check_split_queries.sh   \
-  msmarco_doc train train1 bitext
+  msmarco_doc tmp dev_add bitext -part1_qty 5000
+scripts/qa/check_split_queries.sh \
+  msmarco_doc tmp dev_add bitext
 ```
+
+
