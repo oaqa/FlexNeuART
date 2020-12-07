@@ -5,11 +5,11 @@ SPACY_MODEL = 'en_core_web_sm'
 # Constants defined here mostly can't be modified as they should be in sync with Java and bash code
 STOPWORD_FILE = 'data/stopwords.txt'
 MAX_DOC_SIZE=16536 # 16 K of text is enough for most applications
-REPORT_QTY=10000
+REPORT_QTY=1000
 
 # A size of the chunk passed used in imap
 # it should be sufficiently large, but not too large
-IMAP_PROC_CHUNK_QTY=1000
+IMAP_PROC_CHUNK_QTY=500
 
 DEVICE_CPU = 'cpu'
 
