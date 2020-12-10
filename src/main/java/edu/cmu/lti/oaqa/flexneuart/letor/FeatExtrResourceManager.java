@@ -105,7 +105,7 @@ public class FeatExtrResourceManager {
       throw new Exception("There is no giza files directory, likely, you need to specify " + 
           CommonParams.GIZA_ROOT_DIR_PARAM + " in the calling app");
     // Synchronize all resource allocation on the class reference to avoid race conditions AND dead locks
-    String key = fieldName + "_" + flipTranTable + "_" + gizaIterQty;
+    String key = fieldName + "_" + flipTranTable + "_" + model1SubDir + "_" + gizaIterQty;
     synchronized (this) {
       if (!mModel1Data.containsKey(key)) {
         ForwardIndex fwdIndx = getFwdIndex(fieldName);
