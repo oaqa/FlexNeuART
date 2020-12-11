@@ -30,6 +30,6 @@ scripts/index/create_fwd_index.sh msmarco_pass mapdb \
 ```
 scripts/data_convert/split_queries.sh \
   msmarco_pass train train1 bitext -part1_qty 20000
-scripts/qa/check_split_queries.sh   \
+scripts/check_utils/check_split_queries.sh   \
   msmarco_pass train train1 bitext
 ```

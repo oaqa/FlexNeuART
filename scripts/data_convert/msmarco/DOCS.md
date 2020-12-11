@@ -16,7 +16,6 @@ scripts/data_convert/msmarco/convert_msmarco_doc.sh \
   msmarco_doc
 ```
 
-
 ## Indexing
 Create a Lucene index:
 ```
@@ -26,7 +25,7 @@ scripts/index/create_lucene_index.sh msmarco_doc
 Create a forward index:
 ```
 scripts/index/create_fwd_index.sh msmarco_doc mapdb \
-  'title:parsedBOW text:parsedText body:parsedText text_bert_tok:parsedText text_raw:raw'
+  'title_unlemm:parsedText url_unlemm:parsedText text:parsedText body:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
  ## Optionally splitting training queries
  
@@ -38,12 +37,12 @@ corresponding folder needs to be renamed accordingly):
 ```
 scripts/data_convert/split_queries.sh \
   msmarco_doc train train_fusion tmp -part1_qty 10000
-scripts/qa/check_split_queries.sh   \
+scripts/check_utils/check_split_queries.sh   \
   msmarco_doc train train_fusion tmp
 
 scripts/data_convert/split_queries.sh \
   msmarco_doc tmp dev_add bitext -part1_qty 5000
-scripts/qa/check_split_queries.sh \
+scripts/check_utils/check_split_queries.sh \
   msmarco_doc tmp dev_add bitext
 ```
 
