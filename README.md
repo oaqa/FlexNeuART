@@ -13,6 +13,10 @@ In fact, our best traditional (non-neural) run slightly outperformed a couple of
 `FlexNeuART` is under active development. More detailed description and documentaion is to appear. Currently we have:
 
 * [The installation instructions](INSTALL.md)
+* Collection-specific:
+   * [MS MARCO](scripts/data_convert/msmarco/README.md)
+   * [Yahoo Answers](scripts/data_convert/yahoo_answers/README.md)
+
 
 For neural network training FlexNeuART incorporates
 a re-worked variant of CEDR ([MacAvaney et al' 2019](https://github.com/Georgetown-IR-Lab/cedr)).

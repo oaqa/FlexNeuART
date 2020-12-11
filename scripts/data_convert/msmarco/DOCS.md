@@ -25,25 +25,6 @@ scripts/index/create_lucene_index.sh msmarco_doc
 Create a forward index:
 ```
 scripts/index/create_fwd_index.sh msmarco_doc mapdb \
-  'title_unlemm:parsedText url_unlemm:parsedText text:parsedText body:parsedText text_bert_tok:parsedText text_raw:raw'
+  'title:parsedBOW title_unlemm:parsedText url_unlemm:parsedText text:parsedText body:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
- ## Optionally splitting training queries
- 
-This is necessary to carve out smaller subsets 
-for fusion and development. The original
-development set can be used for testing (then the
-corresponding folder needs to be renamed accordingly):
-
-```
-scripts/data_convert/split_queries.sh \
-  msmarco_doc train train_fusion tmp -part1_qty 10000
-scripts/check_utils/check_split_queries.sh   \
-  msmarco_doc train train_fusion tmp
-
-scripts/data_convert/split_queries.sh \
-  msmarco_doc tmp dev_add bitext -part1_qty 5000
-scripts/check_utils/check_split_queries.sh \
-  msmarco_doc tmp dev_add bitext
-```
-
 
