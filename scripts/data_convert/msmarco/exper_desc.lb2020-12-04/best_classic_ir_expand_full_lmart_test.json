@@ -1,0 +1,10 @@
+[
+  {
+    "experSubdir": "final_exper/best_classic_ir_full_lmart_expand",
+    "candProvAddConfParam" : "exper_desc.lb2020-12-04/lucene.json",
+    "extrType": "exper_desc.lb2020-12-04/extractors/best_classic_ir_expand_full.json",
+    "useLMART" : 1,
+    "modelFinal" : "exper_desc.lb2020-12-04/models/lmart.model",
+    "testOnly": 1
+  }
+]
