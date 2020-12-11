@@ -1,0 +1,13 @@
+{
+"extractors" : [
+ {
+  "type" : "TFIDFSimilarity",
+  "params" : {
+    "k1"        : "1.6",
+    "b"         : "0.75",
+    "indexFieldName" : "text",
+    "similType" : "bm25"
+  }
+ }
+]
+}

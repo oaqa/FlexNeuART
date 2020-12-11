@@ -1,0 +1,120 @@
+{
+"extractors" : [
+ {
+  "type" : "TFIDFSimilarity",
+  "params" : {
+    "k1"        : "1.6",
+    "b"         : "0.75",
+    "indexFieldName" : "text",
+    "similType" : "bm25"
+  }
+ },
+ {
+  "type" : "TFIDFSimilarity",
+  "params" : {
+    "indexFieldName" : "text",
+    "similType" : "cosine"
+  }
+ },
+ {
+  "type" : "TermMatchSimilarity",
+  "params" : {
+    "queryFieldName" : "text",
+    "indexFieldName" : "text"
+  }
+ },
+ {
+  "type" : "TFIDFSimilarity",
+  "params" : {
+    "k1"        : "1.6",
+    "b"         : "0.75",
+    "indexFieldName" : "text_bert_tok",
+    "queryFieldName" : "text_bert_tok",
+    "similType" : "bm25"
+  }
+ },
+ {
+  "type" : "TermMatchSimilarity",
+  "params" : {
+    "queryFieldName" : "text_bert_tok",
+    "indexFieldName" : "text_bert_tok"
+  }
+ },
+ {
+ "type" : "Model1Similarity",
+  "params" : {
+    "queryFieldName" : "text_bert_tok",
+    "indexFieldName" : "text_bert_tok",
+    "gizaIterQty" : "5",
+    "probSelfTran" : "0.05f",
+    "lambda" : "0.1f",
+    "minModel1Prob" : "5e-4f"
+  }
+ },
+ {
+  "type" : "TFIDFSimilarity",
+  "params" : {
+    "k1"        : "1.6",
+    "b"         : "0.75",
+    "queryFieldName" : "text_unlemm",
+    "indexFieldName" : "title_unlemm",
+    "similType" : "bm25"
+  }
+ },
+ {
+ "type" : "Model1Similarity",
+  "params" : {
+    "queryFieldName" : "text_unlemm",
+    "indexFieldName" : "title_unlemm",
+    "gizaIterQty" : "5",
+    "probSelfTran" : "0.05f",
+    "lambda" : "0.1f",
+    "minModel1Prob" : "5e-4f"
+  }
+ },
+ {
+  "type" : "TFIDFSimilarity",
+  "params" : {
+    "k1"        : "1.6",
+    "b"         : "0.75",
+    "queryFieldName" : "text_unlemm",
+    "indexFieldName" : "url_unlemm",
+    "similType" : "bm25"
+  }
+ },
+ {
+ "type" : "Model1Similarity",
+  "params" : {
+    "queryFieldName" : "text_unlemm",
+    "indexFieldName" : "url_unlemm",
+    "gizaIterQty" : "5",
+    "probSelfTran" : "0.05f",
+    "lambda" : "0.1f",
+    "minModel1Prob" : "5e-4f"
+  }
+ },
+ {
+  "type" : "BM25ClosePairSimilarity",
+  "params" : {
+    "queryFieldName" : "text_unlemm",
+    "indexFieldName" : "body",
+    "queryWindow"    : "4",
+    "docWindow"      : "8",
+    "k1"             : "1.6",
+    "b"              : "0.75"
+  }
+ },
+ {
+ "type" : "Model1Similarity",
+  "params" : {
+    "queryFieldName" : "text_unlemm",
+    "indexFieldName" : "body",
+    "gizaIterQty" : "5",
+    "probSelfTran" : "0.05f",
+    "lambda" : "0.1f",
+    "minModel1Prob" : "5e-4f"
+  }
+ }
+]
+}
+

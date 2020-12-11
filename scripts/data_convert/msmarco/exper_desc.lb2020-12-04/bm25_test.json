@@ -1,0 +1,11 @@
+[
+  {
+    "experSubdir": "final_exper/bm25",
+    "candProvAddConfParam" : "exper_desc.lb2020-12-04/lucene.json",
+    "extrType": "exper_desc.lb2020-12-04/extractors/bm25.json",
+    "useLMART" : 0,
+    "numRandRestart" : 15,
+    "modelFinal" : "exper_desc.lb2020-12-04/models/one_feat.model",
+    "testOnly": 1
+  }
+]

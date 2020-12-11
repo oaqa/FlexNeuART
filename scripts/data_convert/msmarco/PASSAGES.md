@@ -25,11 +25,3 @@ Create a forward index:
 scripts/index/create_fwd_index.sh msmarco_pass mapdb \
   'text:parsedText text_unlemm:parsedText text_bert_tok:parsedText text_raw:raw'
 ```
-
-## Optionally splitting the train part
-```
-scripts/data_convert/split_queries.sh \
-  msmarco_pass train train1 bitext -part1_qty 20000
-scripts/qa/check_split_queries.sh   \
-  msmarco_pass train train1 bitext
-```

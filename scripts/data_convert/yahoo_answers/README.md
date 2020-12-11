@@ -1,15 +1,3 @@
-# Installing packages & building code.
-## Pre-requisits
-The packages requires:
-1. Java
-2. Maven
-3. A C and C++ compiler.
-
-## Installation procedure
-To install packages run the script `install_packages.sh` from the source code root folder.
-
-To build the code run the script `./build.sh`.
-
 # Basic data preparation
 This example covers a Manner subset of the Yahoo Answers Comprehensive.
 However, a similar procedure can be applied to a bigger collection. All

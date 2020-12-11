@@ -1,19 +1,25 @@
 ## FlexNeuART
-Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) is a substantially reworked `knn4qa` package.  
+Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) 
+is a substantially reworked `knn4qa` (see below) package.  
+The overview can be found in our EMNLP OSS workshop paper: 
+[Flexible retrieval with NMSLIB and FlexNeuART, 2020. Leonid Boytsov, Eric Nyberg](https://arxiv.org/abs/2010.14848).
 
-`FlexNeuART` is under active development. Detailed description and documentaion is to appear. The overview can be found in our EMNLP OSS workshop paper: [Flexible retrieval with NMSLIB and FlexNeuART, 2020. Leonid Boytsov, Eric Nyberg](https://arxiv.org/abs/2010.14848).
 
-Description of the `knn4qa` is given below.
+In Aug-Dec 2020, we used this framework to generate best traditional and/or neural runs 
+in the [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking).
+In fact, our best traditional (non-neural) run slightly outperformed a couple of neural submissions.
 
-## MSMARCO Document ranking task (leaderboard submissions)
 
-Methods and models used in [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking):
+`FlexNeuART` is under active development. More detailed description and documentaion is to appear. Currently we have:
 
-1. ``August 20, 2020	MRR=0.256``  : a multi-field BM25 scores combined with IBM Model 1 scores. This is purely non-neural submission.
-2. ``August 27, 2020	MRR=0.368``  : the output of the traditional pipeline (with MRR=0.256) is re-ranked using BERT **BASE**.
-3. ``October 1, 2020  MRR=0.38``   : the output of the traditional pipeline is re-ranked using a variant of BERT **BASE** (this model code is not available yet). Data is augmented with [doc2query text](https://github.com/castorini/docTTTTTquery). 
-4. ``October 12,  2020, MRR=0.39``    : a slightly better tuned and trained variant of our October 1st solution.
-5. ``October 20,  2020, MRR=0.396``   : a slightly better tuned and trained variant of our October 12th solution.
+* [The installation instructions](INSTALL.md)
+* Collection-specific:
+   * [MS MARCO](scripts/data_convert/msmarco/README.md)
+   * [Yahoo Answers](scripts/data_convert/yahoo_answers/README.md)
+
+
+For neural network training FlexNeuART incorporates
+a re-worked variant of CEDR ([MacAvaney et al' 2019](https://github.com/Georgetown-IR-Lab/cedr)).
 
 ## Former life (as a knn4qa package)
 
