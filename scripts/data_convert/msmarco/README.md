@@ -1,4 +1,4 @@
-# MSMARCO TREC 2019 collection walk-through.
+# MSMARCO
 1. [Document ranking](DOCS.md)
 2. [Passage ranking](PASSAGES.md)
 3. A [detailed notebook](MSMARCO_docs_2020-10-12_complete.ipynb) to 
