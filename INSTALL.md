@@ -30,7 +30,7 @@ cd FlexNeuART/
 Optionally check out a specific branch or tag.
 For example:
 ```
-git checkout tags/repr2020-12-09
+git checkout tags/repr2020-12-06
 ```
 
 Install packages and build the code:
