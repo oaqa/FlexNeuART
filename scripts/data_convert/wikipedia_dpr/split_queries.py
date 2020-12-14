@@ -67,7 +67,7 @@ def main():
 
     sizes = args.partitions_sizes(len(queries_ids))
     assert len(sizes) == len(args.partitions_names)
-    print("Final partitions sizes:", sizes)
+    print("Final partitions sizes:", list(zip(args.partitions_names, sizes)))
 
     query_id_to_partition = build_query_id_to_partition(queries_ids, sizes)
 

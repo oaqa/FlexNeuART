@@ -21,11 +21,6 @@ if [ "$oldCollPref" = "" ] ; then
 fi
 
 for colType in nq trivia squad ; do
-  trainFusionSize=10000;
-  if [ "$colType" = "squad" ] ; then
-    trainFusionSize=5000;
-  fi
-
   oldCollect="${oldCollPref}_${colType}"
   newCollect="${newCollPref}_${colType}"
 
