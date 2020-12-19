@@ -37,6 +37,7 @@ $maxNumQueryTrainParam \
 -thread_qty $threadQty \
 \
 -index_field $indexFieldName \
+-query_field $queryFieldName \
 -fwd_index_dir  "$fwdIndexDir" \
 \
 -query_field $QUERY_FIELD_NAME \

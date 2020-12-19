@@ -53,7 +53,7 @@ $maxNumQueryTrainParam \
 -sample_easy_neg_qty $sampleEasyNegQty \
 \
 -index_field $indexFieldName \
--query_field $QUERY_FIELD_NAME \
+-query_field $queryFieldName \
 \
 -query_file_train "$inputDataDir/$partTrain/QuestionFields.jsonl" \
 -qrel_file_train "$inputDataDir/$partTrain/$QREL_FILE" \

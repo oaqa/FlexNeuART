@@ -15,12 +15,14 @@ candTrainQty=500
 candTestQty=10
 randSeed=0
 maxDocWhitespaceQty=-1 # means no truncation
+queryFieldName=""
 
 boolOpts=("h" "help" "print help")
 
 paramOpts=(
 "thread_qty"             "threadQty"           "# of threads"
 "out_subdir"             "outSubdir"           "output sub-directory (default $outSubdir)"
+"queryField"             "queryFieldName"      "an optional query field name (if different from the index field name)"
 "hard_neg_qty"           "hardNegQty"          "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
 "sample_med_neg_qty"     "sampleMedNegQty"     "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
 "sample_easy_neg_qty"    "sampleEasyNegQty"    "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
@@ -62,6 +64,9 @@ if [ "$indexFieldName" = "" ] ; then
   genUsage "$usageMain" "Specify the name of the index field (2d arg)"
   exit 1
 fi
+if [ "$queryFieldName" = "" ] ; then
+  queryFieldName="$indexFieldName"
+fi
 
 partTrain=${posArgs[2]}
 if [ "$partTrain" = "" ] ; then
@@ -99,6 +104,8 @@ echo "Eval split: $partTest"
 echo "Random seed: $randSeed"
 echo "Output directory: $outDir"
 echo "# of threads: $threadQty"
+echo "Index field: $indexFieldName"
+echo "Query field: $queryFieldName"
 echo "A # of hard/medium/easy samples per query: $hardNegQty/$sampleMedNegQty/$sampleEasyNegQty"
 echo "A max. # of candidate records to generate training data: $candTrainQty"
 echo "A max. # of candidate records to generate test data: $candTestQty"

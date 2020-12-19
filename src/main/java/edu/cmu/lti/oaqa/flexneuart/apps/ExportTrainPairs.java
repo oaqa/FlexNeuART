@@ -116,10 +116,15 @@ public class ExportTrainPairs {
       if (fwdIndex == null) {
         showUsageSpecify(CommonParams.FWDINDEX_PARAM);
       }
-      String fieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
-      if (fieldName == null) {
+      String indexFieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
+      if (indexFieldName == null) {
         showUsageSpecify(CommonParams.INDEX_FIELD_NAME_PARAM);
       }
+      String queryFieldName = cmd.getOptionValue(CommonParams.QUERY_FIELD_NAME_PARAM);
+      if (queryFieldName == null) {
+        showUsageSpecify(CommonParams.QUERY_FIELD_NAME_PARAM);
+      }
+      
       String exportType = cmd.getOptionValue(EXPORT_FMT);
       if (null == exportType) {
         showUsageSpecify(EXPORT_FMT);
@@ -197,20 +202,26 @@ public class ExportTrainPairs {
             System.exit(1);
           }
           
+          /*
+           *  Thing may seem to be confusing. There is one query field that is used for actual querying.
+           *  It is currently hardcoded. There is also the name of the filed in a query JSON entry.
+           *  It can be different from the value of the field in the document JSON entry.
+           */
           String queryText = docFields.get(Const.TEXT_FIELD_NAME);
-          String fieldText = docFields.get(fieldName);
 
           if (queryText == null) queryText = "";
-          if (fieldText == null) fieldText = "";
-          
           if (queryText.isEmpty()) {
             logger.info(String.format("Ignoring query with empty field '%s' for query '%s'",
                                       Const.TEXT_FIELD_NAME, qid));
             continue;
           }
+          
+          String fieldText = docFields.get(queryFieldName);
+          
+          if (fieldText == null) fieldText = "";
           if (fieldText.isEmpty()) {
             logger.info(String.format("Ignoring query with empty field '%s' for query '%s'",
-                                      fieldName, qid));
+                                      queryFieldName, qid));
             continue;
           }
           
@@ -232,7 +243,7 @@ public class ExportTrainPairs {
  
       ExportTrainBase oneExport = 
           ExportTrainBase.createExporter(exportType, candProv, 
-                                         resourceManager.getFwdIndex(fieldName), 
+                                         resourceManager.getFwdIndex(indexFieldName), 
                                          qrelsTrain, qrelsTest);
       if (null == oneExport) {
         showUsage("Undefined output format: '" + exportType + "'");
