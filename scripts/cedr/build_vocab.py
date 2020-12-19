@@ -30,7 +30,7 @@ for fn in args.input:
         if field in docEntry:
             vocab.procDoc(docEntry[field])
         else:
-            print(f'No field {field} is found in line {ln} file {fn}')
-            sys.exit(1)
+            print(f'WARNING: No field {field} is found in line {ln} file {fn}')
+            continue
 
 vocab.save(args.output)
