@@ -22,7 +22,7 @@ boolOpts=("h" "help" "print help")
 paramOpts=(
 "thread_qty"             "threadQty"           "# of threads"
 "out_subdir"             "outSubdir"           "output sub-directory (default $outSubdir)"
-"queryField"             "queryFieldName"      "an optional query field name (if different from the index field name)"
+"query_field"            "queryFieldName"      "an optional query field name (if different from the index field name)"
 "hard_neg_qty"           "hardNegQty"          "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
 "sample_med_neg_qty"     "sampleMedNegQty"     "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
 "sample_easy_neg_qty"    "sampleEasyNegQty"    "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
