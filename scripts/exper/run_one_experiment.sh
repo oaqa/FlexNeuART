@@ -417,7 +417,7 @@ if [ "$testOnly" = "0" ] ; then
                                     -extr_type_final \"$extrType\" \
                                      $commonAddParams \
                                      $maxQueryQtyTrainParam  \
-                                     $queryCacheParamTrain 2>&1 | tee "${fullOutPrefTrain}_${n}.log"
+                                     $queryCacheParamTrain 2>&1 | tee "${fullOutPrefTrain}_${trainCandQty}.log"
 
   fi
 
