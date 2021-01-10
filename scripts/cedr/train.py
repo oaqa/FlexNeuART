@@ -35,8 +35,8 @@ from multiprocessing import Process
 from threading import BrokenBarrierError
 from multiprocessing import Barrier
 
-# five minutes should be enough
-BARRIER_WAIT_TIMEOUT=60*5
+# 10 minutes should be enough
+BARRIER_WAIT_TIMEOUT=60*10
 
 OPT_SGD='sgd'
 OPT_ADAMW='adamw'
