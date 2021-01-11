@@ -208,14 +208,17 @@ def train_iteration(model, sync_barrier,
         if total_qty >= max_train_qty:
             break
 
-    # Mandatory model averaging in the end
-    if device_qty > 1:
-        try:
-            sync_barrier.wait(BARRIER_WAIT_TIMEOUT)
-        except BrokenBarrierError:
-            raise Exception('A model parameter synchronization timeout!')
+    # Model averaging in the end often dies due to a timeout (esp. when training is long).
+    # It is not clear why this happens, but this last-step averaging isn't crucial,
+    # so let's just skip it and think about more thorough investigation in the future.
 
-        avg_model_params(model)
+    # if device_qty > 1:
+    #     try:
+    #         sync_barrier.wait(BARRIER_WAIT_TIMEOUT)
+    #     except BrokenBarrierError:
+    #         raise Exception('A model parameter synchronization timeout!')
+    #
+    #     avg_model_params(model)
 
     if pbar is not None:
         pbar.close()
