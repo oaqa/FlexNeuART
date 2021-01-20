@@ -7,6 +7,7 @@ is a substantially reworked `knn4qa` (see below) package.  The overview can be f
 In Aug-Dec 2020, we used this framework to generate best traditional and/or neural runs 
 in the [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking).
 In fact, our best traditional (non-neural) run slightly outperformed a couple of neural submissions.
+The code for the best-performing neural model will be published within 2-3 months.
 
 
 `FlexNeuART` is under active development. More detailed description and documentaion is to appear. Currently we have:
