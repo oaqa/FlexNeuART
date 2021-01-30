@@ -42,7 +42,7 @@ BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*5
 # Let's optimistically assume, it is not longer than two hours, but this
 # might need to be fixed in the future. And a good fix should make validation
 # use all GPUs
-BARRIER_WAIT_VALIDATION_TIMEOUT=60*120
+BARRIER_WAIT_VALIDATION_TIMEOUT=60*240
 
 OPT_SGD='sgd'
 OPT_ADAMW='adamw'
