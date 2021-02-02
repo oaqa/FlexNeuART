@@ -38,10 +38,12 @@ $maxNumQueryTrainParam \
 \
 -index_field $indexFieldName \
 -query_field $queryFieldName \
--fwd_index_dir  "$fwdIndexDir" \
 \
 -query_field $QUERY_FIELD_NAME \
--u "$luceneIndexDir" \
+\
+$commonResourceParams \
+\
+$candProvParams \
 \
 -hard_neg_qty $hardNegQty \
 -sample_med_neg_qty $sampleMedNegQty \

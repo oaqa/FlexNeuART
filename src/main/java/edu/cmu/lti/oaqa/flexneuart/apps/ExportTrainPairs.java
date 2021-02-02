@@ -27,7 +27,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
+import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
@@ -77,7 +77,6 @@ public class ExportTrainPairs {
    */
   public static void main(String[] args) {
     
-    mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
     mOptions.addOption(CommonParams.INDEX_FIELD_NAME_PARAM, null, true, CommonParams.INDEX_FIELD_NAME_DESC);
     
     mOptions.addOption(EXPORT_FMT,                          null, true, "A type of the export procedure/format");
@@ -92,6 +91,12 @@ public class ExportTrainPairs {
     mOptions.addOption(QREL_FILE_TEST_PARAM,   null, true, QREL_FILE_TEST_DESC);
     
     mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,     null, true, CommonParams.LUCENE_INDEX_LOCATION_DESC);
+    mOptions.addOption(CommonParams.CAND_PROVID_PARAM,      null, true, CandidateProvider.CAND_PROVID_DESC);
+    
+    mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
+    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,    null, true,  CommonParams.GIZA_ROOT_DIR_DESC);
+    mOptions.addOption(CommonParams.GIZA_ITER_QTY_PARAM,    null, true,  CommonParams.GIZA_ITER_QTY_DESC);   
+    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,        null, true,  CommonParams.EMBED_DIR_DESC);  
 
     mOptions.addOption(CommonParams.THREAD_QTY_PARAM,       null, true, CommonParams.THREAD_QTY_DESC);
     
@@ -110,7 +115,17 @@ public class ExportTrainPairs {
         cmd = parser.parse(mOptions, args);
       } catch (ParseException e) {
         showUsage(e.toString());
+      }    
+
+      String providerURI = cmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
+      if (null == providerURI) {
+        showUsageSpecify(CommonParams.PROVIDER_URI_DESC);  
       }
+      String candProviderType = cmd.getOptionValue(CommonParams.CAND_PROVID_PARAM);
+      if (null == candProviderType) {
+        candProviderType = CandidateProvider.CAND_TYPE_LUCENE;
+      }
+      String candProviderConfigName = cmd.getOptionValue(CommonParams.CAND_PROVID_ADD_CONF_PARAM);
       
       String fwdIndex = cmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
       if (fwdIndex == null) {
@@ -124,6 +139,10 @@ public class ExportTrainPairs {
       if (queryFieldName == null) {
         showUsageSpecify(CommonParams.QUERY_FIELD_NAME_PARAM);
       }
+      
+      String embedDir = cmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
+      String gizaRootDir = cmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
+
       
       String exportType = cmd.getOptionValue(EXPORT_FMT);
       if (null == exportType) {
@@ -178,6 +197,22 @@ public class ExportTrainPairs {
       if (null == queryFileTest) {
         showUsageSpecify(QUERY_FILE_TEST_PARAM);
       }
+  
+      
+      logger.info("Candidate provider type: " + candProviderType + " URI: " + providerURI + " config: " + candProviderConfigName);
+      logger.info("Number of threads: " + threadQty);
+      
+      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(fwdIndex, gizaRootDir, embedDir);
+      
+      CandidateProvider  [] candProviders = new CandidateProvider[threadQty];
+      candProviders = CandidateProvider.createCandProviders(resourceManager, 
+                                                            candProviderType, 
+                                                            providerURI, 
+                                                            candProviderConfigName, threadQty);    
+      if (candProviders == null) {
+        showUsage("Wrong candidate record provider type: '" + candProviderType + "'");
+      }
+      
       
       ArrayList<String> queryQueryTexts = new ArrayList<String>();
       ArrayList<String> queryFieldTexts = new ArrayList<String>();
@@ -232,17 +267,9 @@ public class ExportTrainPairs {
         }
         inp.close();
       }
-
-      String providerURI = cmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
-      if (null == providerURI) {
-        showUsageSpecify(CommonParams.PROVIDER_URI_DESC);  
-      }
-      LuceneCandidateProvider candProv = new LuceneCandidateProvider(providerURI, null);
-      
-      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(fwdIndex, null, null);
  
       ExportTrainBase oneExport = 
-          ExportTrainBase.createExporter(exportType, candProv, 
+          ExportTrainBase.createExporter(exportType,
                                          resourceManager.getFwdIndex(indexFieldName), 
                                          qrelsTrain, qrelsTest);
       if (null == oneExport) {
@@ -258,7 +285,7 @@ public class ExportTrainPairs {
       ExportTrainPairsWorker[] workers = new ExportTrainPairsWorker[threadQty];
       
       for (int threadId = 0; threadId < threadQty; ++threadId) {               
-        workers[threadId] = new ExportTrainPairsWorker(oneExport);
+        workers[threadId] = new ExportTrainPairsWorker(candProviders[threadId], oneExport);
       }
       
       int threadId = 0;
@@ -295,8 +322,10 @@ public class ExportTrainPairs {
 
 class ExportTrainPairsWorker extends Thread  {
   
-  public ExportTrainPairsWorker(ExportTrainBase exporter) {
+  public ExportTrainPairsWorker(CandidateProvider candProv,
+                                ExportTrainBase exporter) {
     mExporter = exporter;
+    mCandProv = candProv;
   }
   
   public void addQuery(int queryNum, String queryId, 
@@ -313,7 +342,8 @@ class ExportTrainPairsWorker extends Thread  {
   public void run() {
     for (int i = 0; i < mQueryId.size(); ++i) {
       try {
-        mExporter.exportQuery(mQueryNum.get(i), mQueryId.get(i), 
+        mExporter.exportQuery(mCandProv,
+                              mQueryNum.get(i), mQueryId.get(i), 
                               mQueryQueryText.get(i), mQueryFieldText.get(i),
                               mIsTestQuery.get(i));
       } catch (Exception e) {
@@ -335,6 +365,7 @@ class ExportTrainPairsWorker extends Thread  {
   ArrayList<Integer> mQueryNum = new ArrayList<Integer>();
   ArrayList<Boolean> mIsTestQuery = new ArrayList<Boolean>();
   
+  private CandidateProvider mCandProv;
   private ExportTrainBase mExporter; 
   private boolean mFail = false;
 }

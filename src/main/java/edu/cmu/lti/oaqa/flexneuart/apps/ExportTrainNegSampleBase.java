@@ -54,9 +54,9 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   public static final String MAX_DOC_WHITESPACE_TOK_QTY_DESC = "max # of whitespace separated tokens to keep in a document";
  
   
-  public ExportTrainNegSampleBase(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
+  public ExportTrainNegSampleBase(ForwardIndex fwdIndex, 
                                   QrelReader qrelsTrain, QrelReader qrelsTest) {
-    super(candProv, fwdIndex, qrelsTrain, qrelsTest);
+    super(fwdIndex, qrelsTrain, qrelsTest);
     
     mAllDocIds = fwdIndex.getAllDocIds();
   }
@@ -166,6 +166,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   /**
    * This is a function to be customized in a child class.
    * 
+   * @param candProv       a candidate provider
    * @param queryFieldText a text of the query used for candidate generation
    * @param isTestQuery    true only for test/dev queries
    * @param queryId        query ID
@@ -178,17 +179,19 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
                                   ArrayList<String> docIds) throws Exception;
 
   @Override
-  void exportQuery(int queryNum, String queryId, String queryQueryText, String queryFieldText, boolean bIsTestQuery)
+  void exportQuery(CandidateProvider candProv,
+                  int queryNum, String queryId, String queryQueryText, String queryFieldText, boolean bIsTestQuery)
       throws Exception {
     if (bIsTestQuery) {
-      exportQueryTest(queryNum, queryId, queryQueryText, queryFieldText);
+      exportQueryTest(candProv, queryNum, queryId, queryQueryText, queryFieldText);
     } else {
-      exportQueryTrain(queryNum, queryId, queryQueryText, queryFieldText);
+      exportQueryTrain(candProv, queryNum, queryId, queryQueryText, queryFieldText);
     }
   }
   
-  void exportQueryTest(int queryNum, String queryId, 
-                      String queryQueryText, String queryFieldText) throws Exception {
+  void exportQueryTest(CandidateProvider candProv,
+                       int queryNum, String queryId, 
+                       String queryQueryText, String queryFieldText) throws Exception {
     //logger.info("Generating test data: just dumping all top-" + mCandQty + " retrieved candidates");
     
     queryFieldText = queryFieldText.trim();
@@ -223,10 +226,10 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
 
     HashMap<String, String> queryData = new HashMap<String, String>();
     
-    queryData.put(Const.TEXT_FIELD_NAME, 
-    CandidateProvider.removeAddStopwords(queryQueryText));
+    //queryData.put(Const.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(queryQueryText));
+    queryData.put(Const.TEXT_FIELD_NAME, queryQueryText);
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
-    CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandTestQty);
+    CandidateInfo cands = candProv.getCandidates(queryNum, queryData, mCandTestQty);
 
     ArrayList<String> docIds = new ArrayList<String>();
     for (CandidateEntry e : cands.mEntries) {
@@ -240,8 +243,9 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
    *  This version of exportQueryTrain ignores queries without relevant entries
    *  as well as queries with empty text.
    */
-  void exportQueryTrain(int queryNum, String queryId, 
-      String queryQueryText, String queryFieldText) throws Exception {
+  void exportQueryTrain(CandidateProvider candProv,
+                        int queryNum, String queryId, 
+                        String queryQueryText, String queryFieldText) throws Exception {
     
     //logger.info("Generating training data using noise-contrastive estimation (sampling negative examples)");
     
@@ -279,10 +283,10 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
       return;
     }
     
-    queryData.put(Const.TEXT_FIELD_NAME, 
-                  CandidateProvider.removeAddStopwords(queryQueryText));
+    //queryData.put(Const.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(queryQueryText));
+    queryData.put(Const.TEXT_FIELD_NAME, queryQueryText);
     queryData.put(CandidateProvider.ID_FIELD_NAME, queryId);
-    CandidateInfo cands = mCandProv.getCandidates(queryNum, queryData, mCandTrainQty);
+    CandidateInfo cands = candProv.getCandidates(queryNum, queryData, mCandTrainQty);
 
     // The sampling pool for medium-difficulty items is created from 
     // 1. negative QREL entries

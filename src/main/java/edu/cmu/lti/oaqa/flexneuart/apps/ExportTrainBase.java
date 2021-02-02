@@ -18,21 +18,19 @@ package edu.cmu.lti.oaqa.flexneuart.apps;
 import org.apache.commons.cli.*;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
 
 
 public abstract class ExportTrainBase {  
   static ExportTrainBase createExporter(String expType,
-                                        LuceneCandidateProvider candProv,
                                         ForwardIndex fwdIndex,
                                         QrelReader qrelsTrain, QrelReader qrelsTest) {
     if (expType.compareToIgnoreCase(ExportTrainMatchZoo.FORMAT_NAME) == 0) {
-      return new ExportTrainMatchZoo(candProv, fwdIndex, qrelsTrain, qrelsTest);
+      return new ExportTrainMatchZoo(fwdIndex, qrelsTrain, qrelsTest);
     }
     if (expType.compareToIgnoreCase(ExportTrainCEDR.FORMAT_NAME) == 0) {
-      return new ExportTrainCEDR(candProv, fwdIndex, qrelsTrain, qrelsTest);
+      return new ExportTrainCEDR(fwdIndex, qrelsTrain, qrelsTest);
     }
     return null;
   }
@@ -59,6 +57,7 @@ public abstract class ExportTrainBase {
   /**
    * An abstract function for query export.
    * 
+   * @param candProv        a candidate provider
    * @param queryNum        an ordinal query number
    * @param queryId         a string query ID
    * @param queryQueryText  a text of the query used for candidate generation
@@ -66,7 +65,8 @@ public abstract class ExportTrainBase {
    * @param bIsTestQuery    true if the query is a test/dev query
    * @throws Exception
    */
-  abstract void exportQuery(int queryNum, 
+  abstract void exportQuery(CandidateProvider candProv,
+                            int queryNum, 
                             String queryId,
                             String queryQueryText,
                             String queryFieldText,
@@ -76,15 +76,12 @@ public abstract class ExportTrainBase {
   abstract void startOutput() throws Exception;
   abstract void finishOutput() throws Exception;
 
-  protected ExportTrainBase(LuceneCandidateProvider candProv,
-                           ForwardIndex fwdIndex,
+  protected ExportTrainBase(ForwardIndex fwdIndex,
                            QrelReader qrelsTrain, QrelReader qrelsTest) {
-    mCandProv = candProv;
     mFwdIndex = fwdIndex;
     mQrelsTrain = qrelsTrain;
     mQrelsTest = qrelsTest;
   }
-
 
   /**
    * Read and process document text if necessary. For raw indices, no processing is needed.
@@ -102,11 +99,9 @@ public abstract class ExportTrainBase {
     if (text == null) {
       return null;
     }
-    return CandidateProvider.removeAddStopwords(text).trim();
+    return text.trim();
   }
  
-
-  protected LuceneCandidateProvider   mCandProv;
   protected ForwardIndex              mFwdIndex;
   protected QrelReader                mQrelsTrain;
   protected QrelReader                mQrelsTest;

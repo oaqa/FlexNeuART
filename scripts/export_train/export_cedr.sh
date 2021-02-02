@@ -43,9 +43,9 @@ $maxNumQueryTestParam \
 $maxNumQueryTrainParam \
 -max_doc_whitespace_qty $maxDocWhitespaceQty \
 \
--fwd_index_dir  "$fwdIndexDir" \
+$commonResourceParams \
 \
--u "$luceneIndexDir" \
+$candProvParams \
 -thread_qty $threadQty \
 \
 -hard_neg_qty $hardNegQty \

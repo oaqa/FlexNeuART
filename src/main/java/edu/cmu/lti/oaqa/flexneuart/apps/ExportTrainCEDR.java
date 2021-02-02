@@ -24,7 +24,6 @@ import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.EvalUtils;
@@ -50,9 +49,9 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   public static final String QUERY_DOC_PAIR_FILE_PARAM = "train_pairs_file";
   public static final String QUERY_DOC_PAIR_FILE_DESC = "query-document pairs for training";
  
-  protected ExportTrainCEDR(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
-                               QrelReader qrelsTrain, QrelReader qrelsTest) {
-    super(candProv, fwdIndex, qrelsTrain, qrelsTest);
+  protected ExportTrainCEDR(ForwardIndex fwdIndex, 
+                            QrelReader qrelsTrain, QrelReader qrelsTest) {
+    super(fwdIndex, qrelsTrain, qrelsTest);
   }
 
 //Must be called from ExportTrainBase.addAllOptionDesc
