@@ -46,7 +46,7 @@ extrType=""
 skipEval=0
 
 checkVarNonEmpty "CAND_PROV_LUCENE"
-checkVarNonEmpty "CAND_PROV_NMSLIB
+checkVarNonEmpty "CAND_PROV_NMSLIB"
 
 candProvType="$CAND_PROV_LUCENE"
 
@@ -127,7 +127,7 @@ while [ $# -ne 0 ] ; do
           candProvAddConfParam=$opt
           ;;
         -cand_prov_uri)
-          candProvURI=$opt
+          candProvURI=$optValue
           ;;
         -num_rand_restart)
           numRandRestart=$optValue
@@ -312,7 +312,7 @@ fi
 
 # All provider URIs except for NMSLIB are relative to the collection location
 if [ "$candProv" != "$CAND_PROV_NMSLIB" ] ; then
-  providerURI="$COLLECT_ROOT/$collect/$providerURI"
+  candProvURI="$COLLECT_ROOT/$collect/$candProvURI"
 fi
 
 
