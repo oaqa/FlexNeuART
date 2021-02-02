@@ -46,6 +46,8 @@ extrType=""
 skipEval=0
 
 checkVarNonEmpty "CAND_PROV_LUCENE"
+checkVarNonEmpty "CAND_PROV_NMSLIB
+
 candProvType="$CAND_PROV_LUCENE"
 
 candProvURI=""
@@ -299,15 +301,18 @@ queryCacheParamTrain=""
 queryCacheParamTest=""
 
 if [ "$candProvType" = "$CAND_PROV_LUCENE" -a "$candProvURI" = "" ] ; then
-
-  candProvURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
-
+  candProvURI="$LUCENE_INDEX_SUBDIR"
 else
   if [ "$candProvURI" = "" ] ; then
     echo "You must specify -cand_prov_uri for the provider $candProvType"
     exit 1
   fi
 
+fi
+
+# All provider URIs except for NMSLIB are relative to the collection location
+if [ "$candProv" != "$CAND_PROV_NMSLIB" ] ; then
+  providerURI="$COLLECT_ROOT/$collect/$providerURI"
 fi
 
 
