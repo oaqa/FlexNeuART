@@ -76,7 +76,7 @@ public abstract class CandidateProvider {
       for (int ic = 1; ic < threadQty; ++ic) 
         res[ic] = res[0];
     } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_TREC_RUNS)) {
-      res[0] = new TrecRunCandidateProvider(provURI, addConf);
+      res[0] = new TrecRunCandidateProvider(provURI);
       for (int ic = 1; ic < threadQty; ++ic) 
         res[ic] = res[0];
     } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_NMSLIB)) {
