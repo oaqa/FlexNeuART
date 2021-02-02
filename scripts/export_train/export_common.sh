@@ -27,7 +27,7 @@ boolOpts=("h" "help" "print help")
 paramOpts=(
 "thread_qty"             "threadQty"           "# of threads"
 "cand_prov"              "candProv"            "Candidate record provider type"
-"u"                      "providerURI"         "Provider URI: an index location, a query server address, etc"
+"cand_prov_uri"          "providerURI"         "Provider URI: an index location, a query server address, etc"
 "cand_prov_add_conf"     "candProvAddConf"     "JSON with additional candidate provider parameters"
 "out_subdir"             "outSubdir"           "output sub-directory (default $outSubdir)"
 "query_field"            "queryFieldName"      "an optional query field name (if different from the index field name)"
