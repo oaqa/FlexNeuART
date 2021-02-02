@@ -271,7 +271,6 @@ checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_SUBDIR"
-checkVarNonEmpty "GIZA_ITER_QTY"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
@@ -281,7 +280,7 @@ gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 commonResourceParams="\
 -fwd_index_dir \"$fwdIndexDir\" \
 -embed_dir \"$embedDir\" \
--giza_root_dir \"$gizaRootDir\" -giza_iter_qty $GIZA_ITER_QTY "
+-giza_root_dir \"$gizaRootDir\" "
 
 checkVarNonEmpty "inputDataDir" # set by set_common_resource_vars.sh
 checkVarNonEmpty "commonResourceParams"  # set by set_common_resource_vars.sh
