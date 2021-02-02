@@ -80,7 +80,11 @@ public class TrecRunCandidateProvider extends CandidateProvider {
       return mEmpty;
     }
     
-    CandidateEntry[] results = resArr.toArray(new CandidateEntry[resArr.size()]);
+    int retQty = Math.min(resArr.size(), maxQty);
+    CandidateEntry[] results = new CandidateEntry[retQty];
+    for (int i = 0; i < retQty; ++i) {
+      results[i] = resArr.get(i);
+    }
     Arrays.sort(results);
         
     return new CandidateInfo(results.length, results);
