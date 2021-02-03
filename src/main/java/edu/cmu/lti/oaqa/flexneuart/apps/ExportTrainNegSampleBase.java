@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
@@ -234,9 +233,12 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     ArrayList<String> docIds = new ArrayList<String>();
     for (CandidateEntry e : cands.mEntries) {
       docIds.add(e.mDocId);
-    } 
-    writeOneEntryData(queryFieldText, true /* this is test query */,
-                      queryId, relDocIds, docIds);
+    }
+    // Making it thread-safe!
+    synchronized (ExportTrainNegSampleBase.class) {
+      writeOneEntryData(queryFieldText, true /* this is test query */,
+                        queryId, relDocIds, docIds);
+    }
   }
 
   /**
@@ -334,9 +336,11 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
       String docId = mAllDocIds[idx];
       allDocIds.add(docId);
     }
-    
-    writeOneEntryData(queryFieldText, false /* this is train query */,
-                      queryId, relDocIds, allDocIds);
+    // Making it thread-safe!
+    synchronized (ExportTrainNegSampleBase.class) {
+      writeOneEntryData(queryFieldText, false /* this is train query */,
+                        queryId, relDocIds, allDocIds);
+    }
   }
 
   int mHardNegQty = 0;
