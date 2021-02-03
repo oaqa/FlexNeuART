@@ -92,6 +92,7 @@ public class ExportTrainPairs {
     
     mOptions.addOption(CommonParams.PROVIDER_URI_PARAM,     null, true, CommonParams.LUCENE_INDEX_LOCATION_DESC);
     mOptions.addOption(CommonParams.CAND_PROVID_PARAM,      null, true, CandidateProvider.CAND_PROVID_DESC);
+    mOptions.addOption(CommonParams.CAND_PROVID_ADD_CONF_PARAM, null, true, CommonParams.CAND_PROVID_ADD_CONF_DESC);
     
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
     mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,    null, true,  CommonParams.GIZA_ROOT_DIR_DESC); 

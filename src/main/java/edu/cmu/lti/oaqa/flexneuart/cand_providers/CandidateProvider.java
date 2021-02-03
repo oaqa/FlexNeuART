@@ -39,7 +39,8 @@ public abstract class CandidateProvider {
  
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
-      CandidateProvider.CAND_TYPE_NMSLIB;
+      CandidateProvider.CAND_TYPE_NMSLIB + ", " +
+      CandidateProvider.CAND_TYPE_TREC_RUNS;
   
   
   /**
