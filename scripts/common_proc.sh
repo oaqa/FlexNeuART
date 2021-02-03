@@ -286,6 +286,8 @@ function getIndexQueryDataInfo {
         fi
         indexDirs="${indexDirs}$subDir"
       fi
+    else
+      echo "No $subdir"
     fi # if [ -d "$subDir"]
   done
   queryDirs=""

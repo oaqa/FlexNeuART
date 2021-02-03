@@ -11,8 +11,9 @@ METRIC_MAP = 'map'
 # We hardcode 20, b/c it's hardcoded in gdeval.pl
 NDCG_TOP_K = 20
 METRIC_NDCG20 = 'ndcg@20'
+METRIC_MRR = "recip_rank"
 
-METRIC_LIST = [METRIC_MAP, METRIC_NDCG20]
+METRIC_LIST = [METRIC_MAP, METRIC_NDCG20, METRIC_MRR]
 
 QrelEntry = collections.namedtuple('QrelEntry',
                                    'queryId docId relGrade')
@@ -69,6 +70,14 @@ class MeanAveragePrecision:
                 result += pos / (i + 1.)
 
         return result / postQty
+
+
+class MeanReciprocalRank:
+    def __call__(self, relsSortedByScores, qrelDict):
+        for i, rel in enumerate(relsSortedByScores):
+            if rel > RELEVANCE_THRESHOLD:
+                return 1 / (i + 1.)
+        return 0
 
 
 def genQrelStr(queryId, docId, relGrade):
@@ -276,7 +285,7 @@ def evalRun(rerankRun, runFileName, qrelFileName, metricFunc,
 
 def getEvalResults(useExternalEval, evalMetric,
                    rerankRun, runFile, qrelFile,
-                   useQrelCache=False):
+                   useQrelCache=False, saveRun=False):
     """Carry out internal or external evaluation.
 
     :param useExternalEval:   True to use external evaluation tools.
@@ -292,6 +301,8 @@ def getEvalResults(useExternalEval, evalMetric,
             m = 'map'
         elif evalMetric == METRIC_NDCG20:
             m = 'ndcg_cut_20'
+        elif evalMetric == METRIC_MRR:
+            m = 'recip_rank'
         else:
             raise Exception('Unsupported metric: ' + evalMetric)
 
@@ -302,10 +313,12 @@ def getEvalResults(useExternalEval, evalMetric,
             f = MeanAveragePrecision()
         elif evalMetric == METRIC_NDCG20:
             f = NormalizedDiscountedCumulativeGain(NDCG_TOP_K)
+        elif evalMetric == METRIC_MRR:
+            f = MeanReciprocalRank()
         else:
             raise Exception('Unsupported metric: ' + evalMetric)
 
-        return evalRun(rerankRun, runFile, qrelFile, f, useQrelCache=useQrelCache)
+        return evalRun(rerankRun, runFile, qrelFile, f, useQrelCache=useQrelCache, saveRun=saveRun)
 
 
 def trec_eval(runf, qrelf, metric):
