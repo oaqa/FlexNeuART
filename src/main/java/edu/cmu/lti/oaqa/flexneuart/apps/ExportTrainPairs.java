@@ -94,8 +94,7 @@ public class ExportTrainPairs {
     mOptions.addOption(CommonParams.CAND_PROVID_PARAM,      null, true, CandidateProvider.CAND_PROVID_DESC);
     
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
-    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,    null, true,  CommonParams.GIZA_ROOT_DIR_DESC);
-    mOptions.addOption(CommonParams.GIZA_ITER_QTY_PARAM,    null, true,  CommonParams.GIZA_ITER_QTY_DESC);   
+    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,    null, true,  CommonParams.GIZA_ROOT_DIR_DESC); 
     mOptions.addOption(CommonParams.EMBED_DIR_PARAM,        null, true,  CommonParams.EMBED_DIR_DESC);  
 
     mOptions.addOption(CommonParams.THREAD_QTY_PARAM,       null, true, CommonParams.THREAD_QTY_DESC);
