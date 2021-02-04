@@ -1,7 +1,6 @@
 ## Former life (as a knn4qa package)
 
-This project grew out of a `knn4qa` package, which was a learning-to-rank pipeline. 
-It was a part of the project where we study applicability of k-nearest neighbor search methods to IR and QA applications. 
+This project grew out of a `knn4qa` package, which was a a project studying applicability of k-nearest neighbor search methods to IR and QA applications. 
 This project was supported primarily by the NSF grant **#1618159** : "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". 
 
 Previous work can be found in the following branches branches:
