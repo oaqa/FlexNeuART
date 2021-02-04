@@ -10,14 +10,16 @@ source scripts/config.sh
 USE_MATCHZOO=0
 
 plist=(\
-lxml             "" 
-pytools          "" 
-torch            "1.4" 
-torchtext        "0.6.0" 
-numpy            "1.18.2" 
-bs4              "" 
-thrift           "0.13.0" 
-spacy            "2.2.3" 
+urllib           "" \
+lxml             "" \
+pytools          "" \
+torch            "1.4" \
+torchtext        "0.6.0" \
+numpy            "" \
+bs4              "" \
+thrift           "0.13.0" \
+spacy            "2.2.3" \
+pyjnius          ""
 )
 
 if [ "$USE_MATCHZOO" = "1" ] ; then
