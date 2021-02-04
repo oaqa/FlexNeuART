@@ -1,6 +1,6 @@
 ## FlexNeuART (flex-noo-art)
 Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) 
-is a substantially reworked `knn4qa` (see below) package.  The overview can be found in our EMNLP OSS workshop paper: 
+is a substantially reworked [`knn4qa` package](knn4qa.md).  The overview can be found in our EMNLP OSS workshop paper: 
 [Flexible retrieval with NMSLIB and FlexNeuART, 2020. Leonid Boytsov, Eric Nyberg](https://arxiv.org/abs/2010.14848).
 
 
