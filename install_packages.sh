@@ -19,6 +19,7 @@ numpy            "" \
 bs4              "" \
 thrift           "0.13.0" \
 spacy            "2.2.3" \
+pyjnius          ""
 )
 
 if [ "$USE_MATCHZOO" = "1" ] ; then

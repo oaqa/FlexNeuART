@@ -5,7 +5,7 @@ from collections import namedtuple
 from jnius import autoclass
 
 from scripts.config import TEXT_FIELD_NAME, DOCID_FIELD
-from scripts.pyflexneuart.utils import dict_to_hash_map
+from scripts.py_flexneuart.utils import dict_to_hash_map
 
 CandidateEntry = namedtuple('CandidateEntry', ['doc_id', 'score'])
 JCandidateProvider = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider')
