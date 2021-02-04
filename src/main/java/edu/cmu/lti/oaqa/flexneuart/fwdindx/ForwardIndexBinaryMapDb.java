@@ -73,25 +73,25 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
     }
   }
   
-	@Override
-	public String getDocEntryRaw(String docId) throws Exception {
+  @Override
+  public String getDocEntryRaw(String docId) throws Exception {
     byte[] zippedStr =  mDbMap.get(docId);
     if (zippedStr != null) {
       return CompressUtils.decomprStr(zippedStr);
     }
     return null;
-	}
+  }
 
-	@Override
-	protected void addDocEntryRaw(String docId, String docText) throws IOException {
-		mDocIds.add(docId);
+  @Override
+  protected void addDocEntryRaw(String docId, String docText) throws IOException {
+    mDocIds.add(docId);
     mDbMap.put(docId, CompressUtils.comprStr(docText));
-    
+
     if (mDocIds.size() % COMMIT_INTERV == 0) {
       System.out.println("Committing");
       mDb.commit();
     }    
-   }
+  }
   
   @Override
   public void readIndex() throws Exception {

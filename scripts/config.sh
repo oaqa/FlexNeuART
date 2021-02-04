@@ -3,7 +3,10 @@
 # Point COLLECT_ROOT to the location you want to use as
 # the root directory for all collections/indices.
 
-COLLECT_ROOT="collections"
+if [ "$COLLECT_ROOT" = "" ] ; then
+  COLLECT_ROOT="collections"
+fi
+echo "Using collection root: $COLLECT_ROOT"
 
 # The structure of sub-directories is outlined below
 
