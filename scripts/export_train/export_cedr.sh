@@ -43,9 +43,9 @@ $maxNumQueryTestParam \
 $maxNumQueryTrainParam \
 -max_doc_whitespace_qty $maxDocWhitespaceQty \
 \
--fwd_index_dir  "$fwdIndexDir" \
+$commonResourceParams \
 \
--u "$luceneIndexDir" \
+$candProvParams \
 -thread_qty $threadQty \
 \
 -hard_neg_qty $hardNegQty \
@@ -53,7 +53,7 @@ $maxNumQueryTrainParam \
 -sample_easy_neg_qty $sampleEasyNegQty \
 \
 -index_field $indexFieldName \
--query_field $QUERY_FIELD_NAME \
+-query_field $queryFieldName \
 \
 -query_file_train "$inputDataDir/$partTrain/QuestionFields.jsonl" \
 -qrel_file_train "$inputDataDir/$partTrain/$QREL_FILE" \

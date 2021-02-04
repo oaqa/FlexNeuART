@@ -46,6 +46,8 @@ extrType=""
 skipEval=0
 
 checkVarNonEmpty "CAND_PROV_LUCENE"
+checkVarNonEmpty "CAND_PROV_NMSLIB"
+
 candProvType="$CAND_PROV_LUCENE"
 
 candProvURI=""
@@ -125,7 +127,7 @@ while [ $# -ne 0 ] ; do
           candProvAddConfParam=$opt
           ;;
         -cand_prov_uri)
-          candProvURI=$opt
+          candProvURI=$optValue
           ;;
         -num_rand_restart)
           numRandRestart=$optValue
@@ -271,7 +273,6 @@ checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_SUBDIR"
-checkVarNonEmpty "GIZA_ITER_QTY"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
@@ -281,7 +282,7 @@ gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
 commonResourceParams="\
 -fwd_index_dir \"$fwdIndexDir\" \
 -embed_dir \"$embedDir\" \
--giza_root_dir \"$gizaRootDir\" -giza_iter_qty $GIZA_ITER_QTY "
+-giza_root_dir \"$gizaRootDir\" "
 
 checkVarNonEmpty "inputDataDir" # set by set_common_resource_vars.sh
 checkVarNonEmpty "commonResourceParams"  # set by set_common_resource_vars.sh
@@ -300,15 +301,18 @@ queryCacheParamTrain=""
 queryCacheParamTest=""
 
 if [ "$candProvType" = "$CAND_PROV_LUCENE" -a "$candProvURI" = "" ] ; then
-
-  candProvURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
-
+  candProvURI="$LUCENE_INDEX_SUBDIR"
 else
   if [ "$candProvURI" = "" ] ; then
     echo "You must specify -cand_prov_uri for the provider $candProvType"
     exit 1
   fi
 
+fi
+
+# All provider URIs except for NMSLIB are relative to the collection location
+if [ "$candProv" != "$CAND_PROV_NMSLIB" ] ; then
+  candProvURI="$COLLECT_ROOT/$collect/$candProvURI"
 fi
 
 
@@ -417,7 +421,7 @@ if [ "$testOnly" = "0" ] ; then
                                     -extr_type_final \"$extrType\" \
                                      $commonAddParams \
                                      $maxQueryQtyTrainParam  \
-                                     $queryCacheParamTrain 2>&1 | tee "${fullOutPrefTrain}_${n}.log"
+                                     $queryCacheParamTrain 2>&1 | tee "${fullOutPrefTrain}_${trainCandQty}.log"
 
   fi
 

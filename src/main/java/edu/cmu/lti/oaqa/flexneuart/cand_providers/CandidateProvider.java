@@ -35,10 +35,12 @@ public abstract class CandidateProvider {
   // If you add a new provider, update CAND_PROVID_DESC below
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
+  public static final String CAND_TYPE_TREC_RUNS   = "trec_runs";
  
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
-      CandidateProvider.CAND_TYPE_NMSLIB;
+      CandidateProvider.CAND_TYPE_NMSLIB + ", " +
+      CandidateProvider.CAND_TYPE_TREC_RUNS;
   
   
   /**
@@ -74,8 +76,11 @@ public abstract class CandidateProvider {
       res[0] = new LuceneCandidateProvider(provURI, addConf);
       for (int ic = 1; ic < threadQty; ++ic) 
         res[ic] = res[0];
-    
-    } else if (provType.equals(CandidateProvider.CAND_TYPE_NMSLIB)) {
+    } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_TREC_RUNS)) {
+      res[0] = new TrecRunCandidateProvider(provURI);
+      for (int ic = 1; ic < threadQty; ++ic) 
+        res[ic] = res[0];
+    } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_NMSLIB)) {
       /*
        * NmslibKNNCandidateProvider isn't thread-safe,
        * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
@@ -162,11 +167,13 @@ public abstract class CandidateProvider {
    * Removes stop-word that are often a by-product of tokenization and which
    * isn't always present in standard dictionaries (and thus accidentally
    * added to the index). However, when included into a query, 
-   * it drastically can increase retrieval times.
+   * it drastically can increase retrieval times. We now deprecate this
+   * function, because data processing code should take care of removing these words.
    * 
    * @param text
    * @return
    */
+  @Deprecated
   public static String removeAddStopwords(String text) {
     if (text != null) {
       text = removeWords(text,  mAddStopWords);

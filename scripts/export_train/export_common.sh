@@ -3,6 +3,8 @@
 
 checkVarNonEmpty "DEV1_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
+checkVarNonEmpty "CAND_PROV_LUCENE"
+checkVarNonEmpty "CAND_PROV_NMSLIB"
 
 # This default is set by a calling script
 checkVarNonEmpty "outSubdir"
@@ -15,12 +17,20 @@ candTrainQty=500
 candTestQty=10
 randSeed=0
 maxDocWhitespaceQty=-1 # means no truncation
+queryFieldName=""
+candProv=$CAND_PROV_LUCENE
+providerURI=""
+candProvAddConf=""
 
 boolOpts=("h" "help" "print help")
 
 paramOpts=(
 "thread_qty"             "threadQty"           "# of threads"
+"cand_prov"              "candProv"            "Candidate record provider type"
+"cand_prov_uri"          "providerURI"         "Provider URI: an index location, a query server address, etc"
+"cand_prov_add_conf"     "candProvAddConf"     "JSON with additional candidate provider parameters"
 "out_subdir"             "outSubdir"           "output sub-directory (default $outSubdir)"
+"query_field"            "queryFieldName"      "an optional query field name (if different from the index field name)"
 "hard_neg_qty"           "hardNegQty"          "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
 "sample_med_neg_qty"     "sampleMedNegQty"     "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
 "sample_easy_neg_qty"    "sampleEasyNegQty"    "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
@@ -62,6 +72,9 @@ if [ "$indexFieldName" = "" ] ; then
   genUsage "$usageMain" "Specify the name of the index field (2d arg)"
   exit 1
 fi
+if [ "$queryFieldName" = "" ] ; then
+  queryFieldName="$indexFieldName"
+fi
 
 partTrain=${posArgs[2]}
 if [ "$partTrain" = "" ] ; then
@@ -78,6 +91,8 @@ fi
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
+checkVarNonEmpty "EMBED_SUBDIR"
+checkVarNonEmpty "GIZA_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "QUERY_FIELD_NAME"
@@ -85,7 +100,33 @@ checkVarNonEmpty "QREL_FILE"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-luceneIndexDir="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR/"
+embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
+
+commonResourceParams="\
+-fwd_index_dir \"$fwdIndexDir\" \
+-embed_dir \"$embedDir\" \
+-giza_root_dir \"$gizaRootDir\" "
+
+if [ "$providerURI" = "" ] ; then
+  if [ "$candProv" = "$CAND_PROV_LUCENE" ] ; then
+    providerURI="$LUCENE_INDEX_SUBDIR"
+  else
+    echo "Need to specify the candidate provider URI (-u) if the provider is not $CAND_PROV_LUCENE"
+    exit 1
+  fi
+fi
+
+# All provider URIs except for NMSLIB are relative to the collection location
+if [ "$candProv" != "$CAND_PROV_NMSLIB" ] ; then
+  providerURI="$COLLECT_ROOT/$collect/$providerURI"
+fi
+
+candProvParams=" -cand_prov \"$candProv\" -u \"$providerURI\" "
+if [ "$candProvAddConf" != "" ] ; then
+  # Additional config is collection-location relative
+  candProvParams="$candProvParams -cand_prov_add_conf \"$COLLECT_ROOT/$collect/$candProvAddConf\""
+fi
 
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$outSubdir/$indexFieldName"
 
@@ -99,6 +140,10 @@ echo "Eval split: $partTest"
 echo "Random seed: $randSeed"
 echo "Output directory: $outDir"
 echo "# of threads: $threadQty"
+echo "Index field: $indexFieldName"
+echo "Query field: $queryFieldName"
+echo "Candidate provider parameters: $candProvParams"
+echo "Resource parameters: $commonResourceParams"
 echo "A # of hard/medium/easy samples per query: $hardNegQty/$sampleMedNegQty/$sampleEasyNegQty"
 echo "A max. # of candidate records to generate training data: $candTrainQty"
 echo "A max. # of candidate records to generate test data: $candTestQty"

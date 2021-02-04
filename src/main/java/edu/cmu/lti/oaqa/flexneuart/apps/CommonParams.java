@@ -28,7 +28,7 @@ public class CommonParams {
   public static final String RANDOM_SEED_PARAM = "seed";
   public static final String RANDOM_SEED_DESC = "a random seed";
   
-  public static final String PROVIDER_URI_DESC = "Provider URI: an index location or a query server address";
+  public static final String PROVIDER_URI_DESC = "Provider URI: an index location, a query server address, etc";
   public static final String PROVIDER_URI_PARAM = "u";
   
   public static final String QUERY_CACHE_FILE_DESC  = "A file to cache query results";

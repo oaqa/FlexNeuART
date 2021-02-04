@@ -194,8 +194,8 @@ public abstract class ForwardIndex {
    * @throws IOException
    */
   public static ForwardIndex createWriteInstance(String filePrefix,
-  																							 ForwardIndexType indexType,
-  																							 ForwardIndexStorageType indexStorageType) throws IOException {
+  												ForwardIndexType indexType,
+  												ForwardIndexStorageType indexStorageType) throws IOException {
     return createInstance(filePrefix, indexType, indexStorageType);
   }
 

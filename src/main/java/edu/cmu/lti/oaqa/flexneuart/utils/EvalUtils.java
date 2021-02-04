@@ -22,9 +22,15 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.cand_providers.TrecRunCandidateProvider;
 
 public class EvalUtils {
+  final static Logger logger = LoggerFactory.getLogger(EvalUtils.class);
+  
   /** Some fake document ID, which is unlikely to be equal to a real one */
   private static final String FAKE_DOC_ID = 
       "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES";
@@ -144,6 +150,8 @@ public class EvalUtils {
         }
         res.put(topicId, new ArrayList<CandidateEntry>());
         prevDocPos = 0;
+        
+        if (res.size() % 1000 == 0) logger.info("Read results for " + res.size() + " queries");
       }
       
       ArrayList<CandidateEntry> currArr = res.get(topicId);
@@ -159,6 +167,8 @@ public class EvalUtils {
       prevTopicId = topicId;
       prevDocPos = docPos;
     }
+    
+    logger.info("Read results for " + res.size() + " queries");
     
     return res;    
   }

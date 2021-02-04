@@ -14,7 +14,7 @@ paramOpts=()
 FIELD_LIST_DEF="e.g., \"text:parsedBOW text_unlemm:parsedText text_raw:raw\""
 
 # This seems to be the only (though hacky way to pass space separted by quoted arguments)
-parseArguments $1 $2 "$3"
+parseArguments "$1" "$2" "$3" $4 $5
 
 usageMain="<collection> <fwd index type: $FWD_INDEX_TYPES> <field list def: $FIELD_LIST_DEF>"
 

@@ -35,8 +35,14 @@ from multiprocessing import Process
 from threading import BrokenBarrierError
 from multiprocessing import Barrier
 
-# five minutes should be enough
-BARRIER_WAIT_TIMEOUT=60*5
+# 5 minutes should be more than enough while waiting
+# for other processes to reach the same training point
+BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*5
+# However (see comment below) we should wait more before validation completes
+# Let's optimistically assume, it is not longer than two hours, but this
+# might need to be fixed in the future. And a good fix should make validation
+# use all GPUs
+BARRIER_WAIT_VALIDATION_TIMEOUT=60*240
 
 OPT_SGD='sgd'
 OPT_ADAMW='adamw'
@@ -185,7 +191,7 @@ def train_iteration(model, sync_barrier,
             if device_qty > 1:
                 if batch_id % train_params.batch_sync_qty == 0:
                     try:
-                        sync_barrier.wait(BARRIER_WAIT_TIMEOUT)
+                        sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
                     except BrokenBarrierError:
                         raise Exception('A model parameter synchronization timeout!')
 
@@ -208,10 +214,11 @@ def train_iteration(model, sync_barrier,
         if total_qty >= max_train_qty:
             break
 
-    # Mandatory model averaging in the end
+    # Final model averaging in the end.
+
     if device_qty > 1:
         try:
-            sync_barrier.wait(BARRIER_WAIT_TIMEOUT)
+            sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
         except BrokenBarrierError:
             raise Exception('A model parameter synchronization timeout!')
 
@@ -373,6 +380,16 @@ def do_train(sync_barrier,
                 print('new top validation score, saving the whole model')
                 torch.save(model, os.path.join(model_out_dir, 'model.best'))
 
+        # We must sync here or else non-master processes would start training and they
+        # would timeout on the model averaging barrier. However, the wait time here
+        # can be much longer. This is actually quite lame, because validation
+        # should instead be split accross GPUs, but validation is usually pretty quick
+        # and this should work as a (semi-)temporary fix
+        if device_qty > 1:
+            try:
+                sync_barrier.wait(BARRIER_WAIT_VALIDATION_TIMEOUT)
+            except BrokenBarrierError:
+                raise Exception('A model parameter synchronization timeout!')
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay

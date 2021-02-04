@@ -39,6 +39,7 @@ class FileWrapper:
           :param  fileName a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
           :param  flags    open flags such as 'r' or 'w'
         """
+        os.makedirs(os.path.dirname(fileName), exist_ok=True)
         if fileName.endswith('.gz'):
             self._file = gzip.open(fileName, flags)
             self._isCompr = True

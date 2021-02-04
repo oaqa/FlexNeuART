@@ -31,9 +31,9 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
   private static final Logger logger = LoggerFactory.getLogger(ExportTrainMatchZoo.class);
   public static final String FORMAT_NAME = "match_zoo";
   
-  protected ExportTrainMatchZoo(LuceneCandidateProvider candProv, ForwardIndex fwdIndex, 
+  protected ExportTrainMatchZoo(ForwardIndex fwdIndex, 
                                QrelReader qrelsTrain, QrelReader qrelsTest) {
-    super(candProv, fwdIndex, qrelsTrain, qrelsTest);
+    super(fwdIndex, qrelsTrain, qrelsTest);
   }
 
   // Must be called from ExportTrainBase.addAllOptionDesc

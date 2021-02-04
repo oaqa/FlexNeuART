@@ -111,11 +111,12 @@ class BaseProcessingUnit {
 
       String text = queryFields.get(Const.TEXT_FIELD_NAME);
       if (text != null) {
-        // This is a workaround for a pesky problem: didn't previously notice that the string
+        // This was a workaround for a pesky problem: didn't previously notice that the string
         // n't (obtained by tokenization of can't is indexed. Querying using this word
         // add a non-negligible overhead (although this doesn't affect overall accuracy)
-        // THIS IS FOR THE FIELD TEXT ONLY
-        queryFields.put(Const.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
+        // However, we believe data processing scripts should now always remove these extra stop-words
+        //queryFields.put(Const.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
+        queryFields.put(Const.TEXT_FIELD_NAME, text);
       }
       qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
       if (mAppRef.mResultCache != null) 
@@ -511,7 +512,6 @@ public abstract class BaseQueryApp {
   void addResourceOpts() {    
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,            null, true,  CommonParams.FWDINDEX_DESC);    
     mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,       null, true,  CommonParams.GIZA_ROOT_DIR_DESC);
-    mOptions.addOption(CommonParams.GIZA_ITER_QTY_PARAM,       null, true,  CommonParams.GIZA_ITER_QTY_DESC);   
     mOptions.addOption(CommonParams.EMBED_DIR_PARAM,           null, true,  CommonParams.EMBED_DIR_DESC);         
   }
   
@@ -634,16 +634,6 @@ public abstract class BaseQueryApp {
     logger.info(String.format("Number of threads: %d", mThreadQty));
 
     mGizaRootDir = mCmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
-    {
-      String tmpn = mCmd.getOptionValue(CommonParams.GIZA_ITER_QTY_PARAM);
-      if (null != tmpn) {
-        try {
-          mGizaIterQty = Integer.parseInt(tmpn);
-        } catch (NumberFormatException e) {
-          showUsage("Number of GIZA iterations isn't integer: '" + tmpn + "'");
-        }
-      } 
-    }
     mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
     
     mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
@@ -769,7 +759,7 @@ public abstract class BaseQueryApp {
            
           mParsedQueries.add(queryFields);
           ++queryQty;
-          if (queryQty % 100 == 0) logger.info("Read " + queryQty + " documents from " + mQueryFile);
+          if (queryQty % 1000 == 0) logger.info("Read " + queryQty + " documents from " + mQueryFile);
         }
       }
       
@@ -862,7 +852,6 @@ public abstract class BaseQueryApp {
   int          mThreadQty = 1;
   String       mSaveStatFile;     
   String       mGizaRootDir;
-  int          mGizaIterQty = -1;
   String       mEmbedDir;
   String       mFwdIndexPref;
   String       mExtrTypeFinal;
