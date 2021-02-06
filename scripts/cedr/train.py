@@ -103,7 +103,9 @@ def avg_model_params(model):
         prm.data /= qty
 
 def clean_memory(device_name):
-    print('Clearning memory device:', device_name)
+    utils.sync_out_streams()
+    print('\nClearning memory device:', device_name)
+    utils.sync_out_streams()
     gc.collect()
     if device_name != DEVICE_CPU:
         with torch.cuda.device(device_name):
@@ -122,12 +124,12 @@ class ValidationTimer:
     def __init__(self, validation_checkpoints):
         self.validation_checkpoints = sorted(validation_checkpoints)
         self.pointer = 0
-        self.total_batches = 0
+        self.total_steps = 0
 
     def is_time(self):
         if self.pointer >= len(self.validation_checkpoints):
             return False
-        if self.total_batches >= self.validation_checkpoints[self.pointer]:
+        if self.total_steps >= self.validation_checkpoints[self.pointer]:
             self.pointer += 1
             return True
         return False
@@ -135,8 +137,8 @@ class ValidationTimer:
     def last_checkpoint(self):
         return self.validation_checkpoints[self.pointer - 1]
 
-    def increment(self, batches_qty):
-        self.total_batches += batches_qty
+    def increment(self, steps_qty):
+        self.total_steps += steps_qty
 
 
 def train_iteration(model, sync_barrier,
@@ -235,6 +237,7 @@ def train_iteration(model, sync_barrier,
 
         if pbar is not None:
             pbar.update(count)
+            pbar.refresh()
             utils.sync_out_streams()
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
 
@@ -242,9 +245,15 @@ def train_iteration(model, sync_barrier,
             model.eval()
             os.makedirs(valid_run_dir, exist_ok=True)
             run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
+            pbar.refresh()
+            utils.sync_out_streams()
             score = validate(model, train_params, dataset,
                              valid_run,
                              qrelf=valid_qrel_filename, run_filename=run_file_name)
+
+            pbar.refresh()
+            utils.sync_out_streams()
+            print(f'\n# of batches={validation_timer.total_steps} score={score:.4g}')
             valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
             utils.save_json(os.path.join(valid_run_dir, "scores.log"), valid_scores_holder)
             model.train()
@@ -283,12 +292,14 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
     :param run_filename:    a file name to store the *RE-RANKED* run
     :return:
     """
+    utils.sync_out_streams()
+
     rerank_run = run_model(model, train_params, dataset, orig_run)
     eval_metric = train_params.eval_metric
 
     utils.sync_out_streams()
 
-    print(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
+    print(f'\nEvaluating run with QREL file {qrelf} using metric {eval_metric}')
 
     utils.sync_out_streams()
 
@@ -320,13 +331,13 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
 
-        for qid, d in rerank_run.items():
-            entry = {'qid' : qid, 'text': dataset[0][qid], 'docs' : []}
-            for did, score in d.items():
-                entry['docs'].append((did, dataset[1][did], score))
-            entry['docs'].sort(key=lambda x: -x[2])
-            json.dump(entry, output)
-            output.write('\n')
+        #for qid, d in rerank_run.items():
+        #    entry = {'qid' : qid, 'text': dataset[0][qid], 'docs' : []}
+        #    for did, score in d.items():
+        #        entry['docs'].append((did, dataset[1][did], score))
+        #    entry['docs'].sort(key=lambda x: -x[2])
+        #    json.dump(entry, output)
+        #    output.write('\n')
 
     return rerank_run
 
@@ -438,10 +449,10 @@ def do_train(sync_barrier,
             print(f'validation epoch={epoch} score={valid_score:.4g}')
 
             train_stat[epoch] = {'loss' : loss,
-                                   'score' : valid_score,
-                                   'lr' : lr,
-                                   'bert_lr' : bert_lr,
-                                   'train_time' : end_time - start_time}
+                                  'score' : valid_score,
+                                  'lr' : lr,
+                                  'bert_lr' : bert_lr,
+                                  'train_time' : end_time - start_time}
 
             utils.save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
 
@@ -547,7 +558,7 @@ def main_cli():
                         type=int, default=32, help='validation batch size')
 
     parser.add_argument('--backprop_batch_size', metavar='backprop batch size',
-                        type=int, default=12,
+                        type=int, default=1,
                         help='batch size for each backprop step')
 
     parser.add_argument('--batches_per_train_epoch', metavar='# of rand. batches per epoch',
@@ -576,8 +587,8 @@ def main_cli():
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
 
-    parser.add_argument('--valid_run_dir', metavar='', type=str, default=None, help='Directory to store full predictions on validation set')
-    parser.add_argument('--valid_checkpoints', metavar='', type=str, default=None, help='Validation checkpoints in batches')
+    parser.add_argument('--valid_run_dir', metavar='', type=str, default=None, help='directory to store predictions on validation set')
+    parser.add_argument('--valid_checkpoints', metavar='', type=str, default=None, help='validation checkpoints (in # of batches)')
 
     args = parser.parse_args()
 

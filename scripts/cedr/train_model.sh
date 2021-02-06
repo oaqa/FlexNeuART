@@ -38,12 +38,16 @@ bertLarge="0"
 vocabFile=""
 optim="adamw"
 momentum="0.9"
+validCheckPoints=""
+validRunDir=""
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
       "momentum"           "momentum"         "SGD momentum (default $momentum)"
       "epoch_qty"          "epochQty"         "# of epochs (default $epochQty)"
       "batches_per_train_epoch"  "batchesPerEpoch"  "# of batches per train epoch (default $batchesPerEpoch)"
+      "valid_checkpoints"  "validCheckPoints" "validation checkpoints (in # of batches)"
+      "valid_run_dir"      "validRunDir"      "directory to store full predictions on validation set"
       "master_port"        "masterPort"       "master port for multi-GPU train (default $masterPort)"
       "device_name"        "deviceName"       "device name for single-gpu train (default $deviceName)"
       "device_qty"         "deviceQty"        "# of device (default $deviceQty)"
@@ -112,9 +116,25 @@ if [ ! -d "$outModelDir" ] ; then
   echo "Creating new output directory"
   mkdir -p "$outModelDir"
 else
-  echo "Cleaning up the output directory"
-  rm -f "$outModelDir"/*
+  echo "Cleaning up the output directory: $outModelDir"
+  # A safer way to clean is to make sure that:
+  # 1. the variable is not empty and it is a directory
+  # 2. go there, then delete.
+  # 3. otherwise we risk doing rm -rf /  *
+  checkVarNonEmpty "outModelDir"
+  # -d will fail for empty name as well
+  if [ ! -d "$outModelDir" ] ; then
+    echo "$Not a directory: $outModelDir"
+    exit 1
+  else
+    pushd "$outModelDir"
+    # In the worst case we will delete files in the current directory only
+    rm -rf ./*
+    popd
+  fi
 fi
+
+collectDir="$COLLECT_ROOT/$collect"
 
 jsonConfArg=""
 
@@ -122,6 +142,15 @@ if [ "$saveEpochSnapshots" = "1" ] ; then
   saveEpochSnapshotsArg=" --save_epoch_snapshots "
 fi
 
+validCheckPointsArg=""
+if [ "$validCheckPoints" != "" ] ; then
+  validCheckPointsArg=" --valid_checkpoints $validCheckPoints "
+fi
+
+validRunDirArg=""
+if [ "$validRunDir" != "" ] ; then
+  validRunDirArg=" --valid_run_dir $outModelDir/$validRunDir "
+fi
 
 echo "=========================================================================="
 echo "Training data directory:                        $trainDir"
@@ -133,14 +162,14 @@ echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
 echo "# of batches before model sync:                 $batchSyncQty"
 echo "optimizer:                                      $optim"
+echo "validation checkpoints arg:                     $validCheckPointsArg"
+echo "validation run dir  arg:                        $validRunDirArg"
 
 if [ "$deviceQty" = "1" ] ; then
   echo "device name:                                    $deviceName"
 else
   echo "master port:                                    $masterPort"
 fi
-
-collectDir="$COLLECT_ROOT/$collect"
 
 if [ "$jsonConf" != "" ] ; then
   cp "$collectDir/$jsonConf" "$outModelDir"
@@ -163,6 +192,8 @@ scripts/cedr/train.py \
   $jsonConfArg \
   $bertLargeArg \
   $vocabFileArg \
+  $validCheckPointsArg \
+  $validRunDirArg \
   --optim $optim \
   --momentum $momentum \
   --seed $seed \
