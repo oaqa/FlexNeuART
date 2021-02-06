@@ -118,12 +118,35 @@ def get_lr_desc(optimizer):
     return ' '.join(lr_arr)
 
 
+class ValidationTimer:
+    def __init__(self, validation_checkpoints):
+        self.validation_checkpoints = sorted(validation_checkpoints)
+        self.pointer = 0
+        self.total_batches = 0
+
+    def is_time(self):
+        if self.pointer >= len(self.validation_checkpoints):
+            return False
+        if self.total_batches >= self.validation_checkpoints[self.pointer]:
+            self.pointer += 1
+            return True
+        return False
+
+    def last_checkpoint(self):
+        return self.validation_checkpoints[self.pointer - 1]
+
+    def increment(self, batches_qty):
+        self.total_batches += batches_qty
+
+
 def train_iteration(model, sync_barrier,
                     is_master_proc, device_qty,
                     loss_obj,
                     train_params, max_train_qty,
+                    valid_run, valid_qrel_filename,
                     optimizer, scheduler,
                     dataset, train_pairs, qrels,
+                    validation_timer, valid_run_dir, valid_scores_holder,
                     save_last_snapshot_every_k_batch,
                     model_out_dir):
 
@@ -177,6 +200,9 @@ def train_iteration(model, sync_barrier,
         total_loss += loss.item()
 
         if total_qty - total_prev_qty >= batch_size:
+            if is_master_proc:
+                validation_timer.increment(total_qty - total_prev_qty)
+
             #print(total, 'optimizer step!')
             optimizer.step()
             optimizer.zero_grad()
@@ -211,6 +237,16 @@ def train_iteration(model, sync_barrier,
             pbar.update(count)
             utils.sync_out_streams()
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
+
+        while is_master_proc and validation_timer.is_time() and valid_run_dir is not None:
+            model.eval()
+            os.makedirs(valid_run_dir, exist_ok=True)
+            run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
+            score = validate(model, train_params, dataset, valid_run, valid_qrel_filename, run_file_name, save_run=True)
+            valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
+            utils.save_json(os.path.join(valid_run_dir, "scores.log"), valid_scores_holder)
+            model.train()
+
         if total_qty >= max_train_qty:
             break
 
@@ -231,7 +267,7 @@ def train_iteration(model, sync_barrier,
     return total_loss / float(total_qty)
 
 
-def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
+def validate(model, train_params, dataset, run, qrelf, run_filename=None, save_run=False):
 
     rerank_run = run_model(model, train_params, dataset, run)
     eval_metric = train_params.eval_metric
@@ -242,18 +278,17 @@ def validate(model, train_params, dataset, run, qrelf, epoch, model_out_dir):
 
     utils.sync_out_streams()
 
-    runf = os.path.join(model_out_dir, f'{epoch}.run')
-
     return getEvalResults(train_params.use_external_eval,
                           eval_metric,
-                          rerank_run, runf, qrelf)
+                          rerank_run, run_filename, qrelf, saveRun=save_run)
 
 
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
     clean_memory(train_params.device_name)
-    with torch.no_grad(), tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
+    with torch.no_grad(), tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar, open("output.json", "w") as output:
         model.eval()
+        d = {}
         for records in data.iter_valid_records(model,
                                                train_params.device_name,
                                                dataset, orig_run,
@@ -267,6 +302,14 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
 
+        for qid, d in rerank_run.items():
+            entry = {'qid' : qid, 'text': dataset[0][qid], 'docs' : []}
+            for did, score in d.items():
+                entry['docs'].append((did, dataset[1][did], score))
+            entry['docs'].sort(key=lambda x: -x[2])
+            json.dump(entry, output)
+            output.write('\n')
+
     return rerank_run
 
 
@@ -275,6 +318,7 @@ def do_train(sync_barrier,
               dataset,
               qrels, qrel_file_name,
               train_pairs, valid_run,
+              valid_run_dir, valid_checkpoints,
               model_out_dir,
               model, loss_obj, train_params):
     if device_qty > 1:
@@ -303,6 +347,8 @@ def do_train(sync_barrier,
 
     train_stat = {}
 
+    validation_timer = ValidationTimer(valid_checkpoints)
+    valid_scores_holder = dict()
     for epoch in range(train_params.epoch_qty):
 
         params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
@@ -341,8 +387,11 @@ def do_train(sync_barrier,
                                is_master_proc=is_master_proc,
                                device_qty=device_qty, loss_obj=loss_obj,
                                train_params=train_params, max_train_qty=max_train_qty,
+                               valid_run=valid_run, valid_qrel_filename=qrel_file_name,
                                optimizer=optimizer, scheduler=scheduler,
                                dataset=dataset, train_pairs=train_pairs, qrels=qrels,
+                               validation_timer=validation_timer, valid_run_dir=valid_run_dir,
+                               valid_scores_holder=valid_scores_holder,
                                save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
                                model_out_dir=model_out_dir)
 
@@ -361,7 +410,9 @@ def do_train(sync_barrier,
 
             utils.sync_out_streams()
 
-            valid_score = validate(model, train_params, dataset, valid_run, qrel_file_name, epoch, model_out_dir)
+            valid_score = validate(
+                model, train_params, dataset, valid_run, qrel_file_name, os.path.join(model_out_dir, f'{epoch}.run')
+            )
 
             utils.sync_out_streams()
 
@@ -506,6 +557,9 @@ def main_cli():
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
 
+    parser.add_argument('--valid_run_dir', metavar='', type=str, default=None, help='Directory to store full predictions on validation set')
+    parser.add_argument('--valid_checkpoints', metavar='', type=str, default="", help='Validation checkpoints in batches')
+
     args = parser.parse_args()
 
     all_arg_names = vars(args).keys()
@@ -649,7 +703,10 @@ def main_cli():
             'rank' : rank, 'is_master_proc' : is_master_proc,
             'dataset' : dataset,
             'qrels' : qrels, 'qrel_file_name' : qrelf,
-            'train_pairs' : train_pairs, 'valid_run' : valid_run,
+            'train_pairs' : train_pairs,
+            'valid_run' : valid_run,
+            'valid_run_dir' : args.valid_run_dir,
+            'valid_checkpoints' : list(map(int, args.valid_checkpoints.split(','))),
             'model_out_dir' : args.model_out_dir,
             'model' : model, 'loss_obj' : loss_obj, 'train_params' : train_params
         }
