@@ -313,8 +313,7 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
     clean_memory(train_params.device_name)
     with torch.no_grad(), \
-            tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar, \
-            open("output.json", "w") as output:
+            tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
 
         model.eval()
         d = {}
@@ -330,14 +329,6 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
             for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
             pbar.update(len(records['query_id']))
-
-        #for qid, d in rerank_run.items():
-        #    entry = {'qid' : qid, 'text': dataset[0][qid], 'docs' : []}
-        #    for did, score in d.items():
-        #        entry['docs'].append((did, dataset[1][did], score))
-        #    entry['docs'].sort(key=lambda x: -x[2])
-        #    json.dump(entry, output)
-        #    output.write('\n')
 
     return rerank_run
 
