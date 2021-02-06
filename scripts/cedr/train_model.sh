@@ -40,12 +40,14 @@ optim="adamw"
 momentum="0.9"
 validCheckPoints=""
 validRunDir=""
+maxQueryVal=""
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
       "momentum"           "momentum"         "SGD momentum (default $momentum)"
       "epoch_qty"          "epochQty"         "# of epochs (default $epochQty)"
       "batches_per_train_epoch"  "batchesPerEpoch"  "# of batches per train epoch (default $batchesPerEpoch)"
+      "max_query_val"      "maxQueryVal"      "max # of val queries"
       "valid_checkpoints"  "validCheckPoints" "validation checkpoints (in # of batches)"
       "valid_run_dir"      "validRunDir"      "directory to store full predictions on validation set"
       "master_port"        "masterPort"       "master port for multi-GPU train (default $masterPort)"
@@ -152,6 +154,11 @@ if [ "$validRunDir" != "" ] ; then
   validRunDirArg=" --valid_run_dir $outModelDir/$validRunDir "
 fi
 
+maxQueryValArg=""
+if [ "$maxQueryVal" != "" ] ; then
+  maxQueryValArg=" --max_query_val $maxQueryVal "
+fi
+
 echo "=========================================================================="
 echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
@@ -164,6 +171,8 @@ echo "# of batches before model sync:                 $batchSyncQty"
 echo "optimizer:                                      $optim"
 echo "validation checkpoints arg:                     $validCheckPointsArg"
 echo "validation run dir  arg:                        $validRunDirArg"
+echo "batches per train epoch:                        $batchesPerEpoch"
+echo "max # of valid. queries arg:                    $maxQueryValArg"
 
 if [ "$deviceQty" = "1" ] ; then
   echo "device name:                                    $deviceName"
@@ -187,13 +196,14 @@ fi
 
 echo "=========================================================================="
 
-scripts/cedr/train.py \
+python -u scripts/cedr/train.py \
   $initModelArgs \
   $jsonConfArg \
   $bertLargeArg \
   $vocabFileArg \
   $validCheckPointsArg \
   $validRunDirArg \
+  $maxQueryValArg \
   --optim $optim \
   --momentum $momentum \
   --seed $seed \

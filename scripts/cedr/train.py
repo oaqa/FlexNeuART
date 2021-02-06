@@ -592,6 +592,10 @@ def main_cli():
 
     args = parser.parse_args()
 
+    print(args)
+    utils.sync_out_streams()
+    
+
     all_arg_names = vars(args).keys()
 
     if args.json_conf is not None:
