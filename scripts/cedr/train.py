@@ -25,7 +25,6 @@ from scripts.cedr.model_init_utils import MODEL_PARAM_PREF
 
 import scripts.cedr.model_init_utils as model_init_utils
 
-
 from scripts.common_eval import METRIC_LIST, readQrelsDict, readRunDict, getEvalResults
 from scripts.config import DEVICE_CPU
 
@@ -558,7 +557,7 @@ def main_cli():
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
 
     parser.add_argument('--valid_run_dir', metavar='', type=str, default=None, help='Directory to store full predictions on validation set')
-    parser.add_argument('--valid_checkpoints', metavar='', type=str, default="", help='Validation checkpoints in batches')
+    parser.add_argument('--valid_checkpoints', metavar='', type=str, default=None, help='Validation checkpoints in batches')
 
     args = parser.parse_args()
 
@@ -697,6 +696,8 @@ def main_cli():
         print('Process rank %d device %s using %d training pairs out of %d' %
               (rank, device_name, len(train_pairs), train_pair_qty))
 
+        valid_checkpoints = [] if args.valid_checkpoints is None \
+                            else list(map(int, args.valid_checkpoints.split(',')))
         param_dict = {
             'sync_barrier': sync_barrier,
             'device_qty' : device_qty, 'master_port' : master_port,
@@ -706,11 +707,10 @@ def main_cli():
             'train_pairs' : train_pairs,
             'valid_run' : valid_run,
             'valid_run_dir' : args.valid_run_dir,
-            'valid_checkpoints' : list(map(int, args.valid_checkpoints.split(','))),
+            'valid_checkpoints' : valid_checkpoints,
             'model_out_dir' : args.model_out_dir,
             'model' : model, 'loss_obj' : loss_obj, 'train_params' : train_params
         }
-
 
         if is_distr_train and not is_master_proc:
             p = Process(target=do_train, kwargs=param_dict)
