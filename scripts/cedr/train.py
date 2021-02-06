@@ -12,6 +12,7 @@ import time
 import gc
 import sys
 import math
+import json
 import argparse
 import torch
 import torch.distributed as dist
@@ -241,7 +242,9 @@ def train_iteration(model, sync_barrier,
             model.eval()
             os.makedirs(valid_run_dir, exist_ok=True)
             run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
-            score = validate(model, train_params, dataset, valid_run, valid_qrel_filename, run_file_name, save_run=True)
+            score = validate(model, train_params, dataset,
+                             valid_run,
+                             qrelf=valid_qrel_filename, run_filename=run_file_name)
             valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
             utils.save_json(os.path.join(valid_run_dir, "scores.log"), valid_scores_holder)
             model.train()
@@ -266,9 +269,21 @@ def train_iteration(model, sync_barrier,
     return total_loss / float(total_qty)
 
 
-def validate(model, train_params, dataset, run, qrelf, run_filename=None, save_run=False):
+def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
+    """Model validation step:
+         1. Re-rank a given run
+         2. Save the re-ranked run
+         3. Evaluate results
 
-    rerank_run = run_model(model, train_params, dataset, run)
+    :param model:           a model reference.
+    :param train_params:    training parameters
+    :param dataset:         validation dataset
+    :param orig_run:        a run to re-rank
+    :param qrelf:           QREL files
+    :param run_filename:    a file name to store the *RE-RANKED* run
+    :return:
+    """
+    rerank_run = run_model(model, train_params, dataset, orig_run)
     eval_metric = train_params.eval_metric
 
     utils.sync_out_streams()
@@ -277,15 +292,19 @@ def validate(model, train_params, dataset, run, qrelf, run_filename=None, save_r
 
     utils.sync_out_streams()
 
+    # Let us always save the run
     return getEvalResults(train_params.use_external_eval,
                           eval_metric,
-                          rerank_run, run_filename, qrelf, saveRun=save_run)
+                          rerank_run, run_filename, qrelf)
 
 
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
     clean_memory(train_params.device_name)
-    with torch.no_grad(), tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar, open("output.json", "w") as output:
+    with torch.no_grad(), \
+            tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar, \
+            open("output.json", "w") as output:
+
         model.eval()
         d = {}
         for records in data.iter_valid_records(model,
@@ -409,9 +428,10 @@ def do_train(sync_barrier,
 
             utils.sync_out_streams()
 
-            valid_score = validate(
-                model, train_params, dataset, valid_run, qrel_file_name, os.path.join(model_out_dir, f'{epoch}.run')
-            )
+            valid_score = validate(model, train_params, dataset,
+                                    valid_run,
+                                    qrelf=qrel_file_name,
+                                    run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
 
             utils.sync_out_streams()
 

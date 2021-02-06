@@ -243,6 +243,7 @@ def evalRun(rerankRun, runFileName, qrelFileName, metricFunc,
     """
 
     if saveRun:
+        assert runFileName is not None, "Run file name should not be None"
         writeRunDict(rerankRun, runFileName)
 
     global qrelCache
@@ -285,13 +286,14 @@ def evalRun(rerankRun, runFileName, qrelFileName, metricFunc,
 
 def getEvalResults(useExternalEval, evalMetric,
                    rerankRun, runFile, qrelFile,
-                   useQrelCache=False, saveRun=False):
+                   useQrelCache=False):
     """Carry out internal or external evaluation.
 
     :param useExternalEval:   True to use external evaluation tools.
     :param evalMetric:        Evaluation metric (from the METRIC_LIST above)
-    :param runFile:           A run file to store results for external eval tool.
+    :param runFile:           A run file to store results.
     :param qrelFile:          A QREL file.
+
     :return:  average metric value.
     """
 
@@ -306,6 +308,9 @@ def getEvalResults(useExternalEval, evalMetric,
         else:
             raise Exception('Unsupported metric: ' + evalMetric)
 
+        assert runFile is not None, "Run file name should not be None"
+        writeRunDict(rerankRun, runFile)
+
         return trec_eval(runFile, qrelFile, m)
     else:
         f = None
@@ -318,10 +323,17 @@ def getEvalResults(useExternalEval, evalMetric,
         else:
             raise Exception('Unsupported metric: ' + evalMetric)
 
-        return evalRun(rerankRun, runFile, qrelFile, f, useQrelCache=useQrelCache, saveRun=saveRun)
+        return evalRun(rerankRun, runFile, qrelFile, f, useQrelCache=useQrelCache, saveRun=True)
 
 
 def trec_eval(runf, qrelf, metric):
+    """Run an external tool: trec_eval and retrieve results.
+
+    :param runf:    a run file name
+    :param qrelf:   a QREL file name
+    :param metric:  a metric code (should match what trec_eval prints)
+    :return:
+    """
     trec_eval_f = 'trec_eval/trec_eval'
     trec_eval_params = [trec_eval_f,
                         '-m', 'official',
