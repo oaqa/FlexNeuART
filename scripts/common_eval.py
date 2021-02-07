@@ -11,8 +11,9 @@ METRIC_MAP = 'map'
 # We hardcode 20, b/c it's hardcoded in gdeval.pl
 NDCG_TOP_K = 20
 METRIC_NDCG20 = 'ndcg@20'
+METRIC_MRR = "recip_rank"
 
-METRIC_LIST = [METRIC_MAP, METRIC_NDCG20]
+METRIC_LIST = [METRIC_MAP, METRIC_NDCG20, METRIC_MRR]
 
 QrelEntry = collections.namedtuple('QrelEntry',
                                    'queryId docId relGrade')
@@ -69,6 +70,14 @@ class MeanAveragePrecision:
                 result += pos / (i + 1.)
 
         return result / postQty
+
+
+class MeanReciprocalRank:
+    def __call__(self, relsSortedByScores, qrelDict):
+        for i, rel in enumerate(relsSortedByScores):
+            if rel > RELEVANCE_THRESHOLD:
+                return 1 / (i + 1.)
+        return 0
 
 
 def genQrelStr(queryId, docId, relGrade):
@@ -234,6 +243,7 @@ def evalRun(rerankRun, runFileName, qrelFileName, metricFunc,
     """
 
     if saveRun:
+        assert runFileName is not None, "Run file name should not be None"
         writeRunDict(rerankRun, runFileName)
 
     global qrelCache
@@ -281,8 +291,9 @@ def getEvalResults(useExternalEval, evalMetric,
 
     :param useExternalEval:   True to use external evaluation tools.
     :param evalMetric:        Evaluation metric (from the METRIC_LIST above)
-    :param runFile:           A run file to store results for external eval tool.
+    :param runFile:           A run file to store results.
     :param qrelFile:          A QREL file.
+
     :return:  average metric value.
     """
 
@@ -292,8 +303,13 @@ def getEvalResults(useExternalEval, evalMetric,
             m = 'map'
         elif evalMetric == METRIC_NDCG20:
             m = 'ndcg_cut_20'
+        elif evalMetric == METRIC_MRR:
+            m = 'recip_rank'
         else:
             raise Exception('Unsupported metric: ' + evalMetric)
+
+        assert runFile is not None, "Run file name should not be None"
+        writeRunDict(rerankRun, runFile)
 
         return trec_eval(runFile, qrelFile, m)
     else:
@@ -302,13 +318,22 @@ def getEvalResults(useExternalEval, evalMetric,
             f = MeanAveragePrecision()
         elif evalMetric == METRIC_NDCG20:
             f = NormalizedDiscountedCumulativeGain(NDCG_TOP_K)
+        elif evalMetric == METRIC_MRR:
+            f = MeanReciprocalRank()
         else:
             raise Exception('Unsupported metric: ' + evalMetric)
 
-        return evalRun(rerankRun, runFile, qrelFile, f, useQrelCache=useQrelCache)
+        return evalRun(rerankRun, runFile, qrelFile, f, useQrelCache=useQrelCache, saveRun=True)
 
 
 def trec_eval(runf, qrelf, metric):
+    """Run an external tool: trec_eval and retrieve results.
+
+    :param runf:    a run file name
+    :param qrelf:   a QREL file name
+    :param metric:  a metric code (should match what trec_eval prints)
+    :return:
+    """
     trec_eval_f = 'trec_eval/trec_eval'
     trec_eval_params = [trec_eval_f,
                         '-m', 'official',

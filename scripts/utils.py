@@ -1,6 +1,8 @@
 import torch
 import random
 import numpy
+import tempfile
+import os
 import multiprocessing
 import json
 import sys
@@ -62,3 +64,12 @@ def sync_out_streams():
     """Just flush all stdin and stderr to make streams go in sync"""
     sys.stderr.flush()
     sys.stdout.flush()
+
+
+def create_temp_file():
+    """"Create a temporary file
+    :return temporary file name
+    """
+    f, file_name = tempfile.mkstemp()
+    os.close(f)
+    return file_name
