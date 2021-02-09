@@ -13,7 +13,7 @@ The code for the best-performing neural model will be published within 2-3 month
 `FlexNeuART` is under active development. More detailed description and documentaion is to appear. Currently we have:
 
 * [The installation instructions](INSTALL.md)
-* [Python API for basic retrieval functionality](scripts/py_flexneuart/README.md)
+* [Python API for retrieval adn re-reranking](scripts/py_flexneuart/README.md)
 * [Former life (as a knn4qa package), including acknowledgements and publications](knn4qa.md)
 * Collection-specific:
    * [MS MARCO](scripts/data_convert/msmarco/README.md)
