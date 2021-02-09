@@ -437,7 +437,7 @@ def do_train(sync_barrier,
 
             if train_params.no_final_val:
                 print('No final validation')
-                valid_score = 0
+                valid_score = None
             else:
                 valid_score = validate(model, train_params, dataset,
                                         valid_run,
