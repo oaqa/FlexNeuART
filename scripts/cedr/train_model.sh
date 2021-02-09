@@ -19,8 +19,10 @@ checkVarNonEmpty "IR_MODELS_SUBDIR"
 sampleProb=1
 saveEpochSnapshots=0
 saveEpochSnapshotsArg=""
+noFinalValArg=""
 
 boolOpts=("h" "help" "print help"
+          "no_final_val" "noFinalVal" "no validation in the end of epoch"
           "save_epoch_snapshots" "saveEpochSnapshots" "save snapshot after each epoch")
 
 seed=0
@@ -144,6 +146,10 @@ if [ "$saveEpochSnapshots" = "1" ] ; then
   saveEpochSnapshotsArg=" --save_epoch_snapshots "
 fi
 
+if [ "$noFinalVal" = "1" ] ; then
+  noFinalValArg=" --no_final_val "
+fi
+
 validCheckPointsArg=""
 if [ "$validCheckPoints" != "" ] ; then
   validCheckPointsArg=" --valid_checkpoints $validCheckPoints "
@@ -164,6 +170,7 @@ echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
 echo "# of epochs:                                    $epochQty"
 echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
+echo "No final validation arg:                        $noFinalValArg"
 echo "BERT large?:                                    $bertLarge"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
@@ -204,6 +211,7 @@ python -u scripts/cedr/train.py \
   $validCheckPointsArg \
   $validRunDirArg \
   $maxQueryValArg \
+  $noFinalValArg \
   --optim $optim \
   --momentum $momentum \
   --seed $seed \

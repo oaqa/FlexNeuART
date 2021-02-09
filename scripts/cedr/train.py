@@ -93,6 +93,7 @@ TrainParams = namedtuple('TrainParams',
                      'save_epoch_snapshots', 'save_last_snapshot_every_k_batch',
                      'device_name', 'print_grads',
                      'shuffle_train',
+                     'no_final_val',
                      'use_external_eval', 'eval_metric'])
 
 def avg_model_params(model):
@@ -403,7 +404,7 @@ def do_train(sync_barrier,
         if is_master_proc:
             print('Optimizer', optimizer)
 
-        start_time = time.time()
+        start_train_time = time.time()
 
         loss = train_iteration(model=model, sync_barrier=sync_barrier,
                                is_master_proc=is_master_proc,
@@ -417,7 +418,7 @@ def do_train(sync_barrier,
                                save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
                                model_out_dir=model_out_dir)
 
-        end_time = time.time()
+        end_train_time = time.time()
 
         if is_master_proc:
 
@@ -432,10 +433,18 @@ def do_train(sync_barrier,
 
             utils.sync_out_streams()
 
-            valid_score = validate(model, train_params, dataset,
-                                    valid_run,
-                                    qrelf=qrel_file_name,
-                                    run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
+            start_val_time = time.time()
+
+            if train_params.no_final_val:
+                print('No final validation')
+                valid_score = 0
+            else:
+                valid_score = validate(model, train_params, dataset,
+                                        valid_run,
+                                        qrelf=qrel_file_name,
+                                        run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
+
+            end_val_time = time.time()
 
             utils.sync_out_streams()
 
@@ -445,14 +454,19 @@ def do_train(sync_barrier,
                                   'score' : valid_score,
                                   'lr' : lr,
                                   'bert_lr' : bert_lr,
-                                  'train_time' : end_time - start_time}
+                                  'train_time' : end_train_time - start_train_time,
+                                  'validation_time' : end_val_time - start_val_time}
 
             utils.save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
 
-            if top_valid_score is None or valid_score > top_valid_score:
-                top_valid_score = valid_score
-                print('new top validation score, saving the whole model')
+            if train_params.no_final_val:
+                print('Saving the whole model')
                 torch.save(model, os.path.join(model_out_dir, 'model.best'))
+            else:
+                if top_valid_score is None or valid_score > top_valid_score:
+                    top_valid_score = valid_score
+                    print('new top validation score, saving the whole model')
+                    torch.save(model, os.path.join(model_out_dir, 'model.best'))
 
         # We must sync here or else non-master processes would start training and they
         # would timeout on the model averaging barrier. However, the wait time here
@@ -494,7 +508,11 @@ def main_cli():
     parser.add_argument('--epoch_qty', metavar='# of epochs', help='# of epochs',
                         type=int, default=10)
 
-    parser.add_argument('--no_cuda', action='store_true')
+    parser.add_argument('--no_cuda', action='store_true',
+                        help='Use no CUDA')
+
+    parser.add_argument('--no_final_val', action='store_true',
+                        help='no validation in the end of epoch')
 
     parser.add_argument('--warmup_pct', metavar='warm-up fraction',
                         default=None, type=float,
@@ -504,7 +522,7 @@ def main_cli():
                         default=1, help='# of GPUs for multi-GPU training')
 
     parser.add_argument('--batch_sync_qty', metavar='# of batches before model sync',
-                        type=int, default=4, help='Model syncronization frequency for multi-GPU trainig in the # of batche')
+                        type=int, default=4, help='model syncronization frequency for multi-GPU trainig in the # of batche')
 
     parser.add_argument('--master_port', type=int, metavar='pytorch master port',
                         default=None, help='pytorch master port for multi-GPU training')
@@ -530,16 +548,16 @@ def main_cli():
                         type=float, default=1)
 
     parser.add_argument('--init_lr', metavar='init learn. rate',
-                        type=float, default=0.001, help='Initial learning rate for BERT-unrelated parameters')
+                        type=float, default=0.001, help='initial learning rate for BERT-unrelated parameters')
 
     parser.add_argument('--momentum', metavar='SGD momentum',
                         type=float, default=0.9, help='SGD momentum')
 
     parser.add_argument('--init_bert_lr', metavar='init BERT learn. rate',
-                        type=float, default=0.00005, help='Initial learning rate for BERT parameters')
+                        type=float, default=0.00005, help='initial learning rate for BERT parameters')
 
     parser.add_argument('--epoch_lr_decay', metavar='epoch LR decay',
-                        type=float, default=1.0, help='Per-epoch learning rate decay')
+                        type=float, default=1.0, help='per-epoch learning rate decay')
 
     parser.add_argument('--weight_decay', metavar='weight decay',
                         type=float, default=0.0, help='optimizer weight decay')
@@ -711,6 +729,7 @@ def main_cli():
                                     use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                                     print_grads=args.print_grads,
                                     shuffle_train=not args.no_shuffle_train,
+                                    no_final_val=args.no_final_val,
                                     optim=args.optim)
 
         train_pair_qty = len(train_pairs_all)
