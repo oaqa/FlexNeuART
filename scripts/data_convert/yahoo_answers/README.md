@@ -160,7 +160,7 @@ export batch_size_val=16
 Additionally, we also use a BERT model that underwent a self-supervised target-corpus pre-trainining,
 which we store in the file `$dpath/derived_data/lm_finetune_model/pytorch_model.bin`.
 
-Now we can run a training script, which loads initial-model **weights** rather than the complete Pytorch model:
+Now we can run a training script. In this example it loads initial-model **weights** rather than the complete Pytorch model (but one can load the complete Pytorch model as well by specifying `--init_model`):
 ```
 python -u scripts/cedr/train.py \
     --model $mtype \
