@@ -8,6 +8,7 @@ from scripts.config import TEXT_FIELD_NAME, DOCID_FIELD
 from scripts.py_flexneuart.utils import dict_to_hash_map
 
 CandidateEntry = namedtuple('CandidateEntry', ['doc_id', 'score'])
+JCandidateEntry = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry')
 JCandidateProvider = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider')
 
 PROVIDER_TYPE_LUCENE = JCandidateProvider.CAND_TYPE_LUCENE
@@ -40,21 +41,34 @@ def create_cand_provider(resource_manager, provider_type, provider_uri, add_conf
                                        add_config_file,
                                        1)[0]
 
+def create_query_dict(query_text,
+                    query_id=FAKE_QUERY_ID, field_name=TEXT_FIELD_NAME):
+    """Create a Java HashMap instance with query information.
+
+    :param query_text:       query text: *WHITE-SPACE* tokenized query tokens
+    :param query_id:         a query ID (can be anything or just stick to default)
+    :param field_name:       a field name (currently it's hardcoded in FlexNeuART anyways, so don't change this default)
+
+    :return:
+    """
+    return dict_to_hash_map({DOCID_FIELD : str(query_id), field_name : query_text})
+
+
 def run_query(cand_provider,
                top_qty,
-               query_text_tokens,
+               query_text,
                query_id=FAKE_QUERY_ID, field_name=TEXT_FIELD_NAME):
     """Run a query.
 
     :param cand_provider:    a candidate provider object
     :param top_qty:          a number of top-scored entries to return
-    :param query_text_tok:   an array of query tokens
+    :param query_text:       query text: *WHITE-SPACE* tokenized query tokens
     :param query_id:         a query ID (can be anything or just stick to default)
     :param field_name:       a field name (currently it's hardcoded in FlexNeuART anyways, so don't change this default)
 
     :return: a tuple: # of entries found, an array of candidate entries: (document ID, score) objects
     """
-    query = dict_to_hash_map({DOCID_FIELD : str(query_id), field_name : ' '.join(query_text_tokens)})
+    query = create_query_dict(query_text, query_id, field_name)
     cand_info = cand_provider.getCandidates(0, query, top_qty)
 
     return cand_info.mNumFound, \
