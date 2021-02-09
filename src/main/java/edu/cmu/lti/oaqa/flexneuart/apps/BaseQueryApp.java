@@ -33,6 +33,7 @@ import com.google.common.base.Splitter;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.*;
 import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
@@ -40,52 +41,6 @@ import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
 import ciir.umass.edu.learning.*;
 
-/**
- * This class converts a dense vector to DataPoint format of the RankLib library
- * version 2.5.
- * 
- * <p>Perhaps, an <b>important</b> note: a RankLib DataPoint class contains 
- * a static variable featureCount. It doesn't seem to be used except
- * for feature normalization or by the evaluator code. So, it seems
- * to be fine to leave this variable set to default value (zero).
-
- * </p>
- * 
- * @author Leonid Boytsov
- *
- */
-class DataPointWrapper extends DataPoint {
-  DataPointWrapper() {}
-  
-  void assign(DenseVector feat) {
-    mFeatValues = new float[feat.size() + 1];
-    double data[] = feat.getData();
-    for (int i = 0; i < feat.size(); ++i)
-      mFeatValues[i+1] = (float)data[i];
-  }
-  
-  @Override
-  public float getFeatureValue(int fid) {
-    return mFeatValues[fid];
-  }
-
-  @Override
-  public float[] getFeatureVector() {
-    return mFeatValues;
-  }
-
-  @Override
-  public void setFeatureValue(int fid, float val) {
-    mFeatValues[fid] = val;
-  }
-
-  @Override
-  public void setFeatureVector(float[] vals) {
-    mFeatValues = vals;
-  }
-  
-  float [] mFeatValues;
-}
 
 class BaseProcessingUnit {
   public static Object              mWriteLock = new Object();

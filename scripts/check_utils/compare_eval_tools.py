@@ -51,8 +51,11 @@ for qid in query_ids:
     writeRunDict(tmpRun, tmpFileNameRun)
     res = []
     for i in range(2):
-        res.append(getEvalResults(i==0, args.eval_metric,
-                                  tmpRun, tmpFileNameRun, tmpFileNameQrels,
+        res.append(getEvalResults(i==0,
+                                  args.eval_metric,
+                                  rerankRun=tmpRun,
+                                  qrelFile=tmpFileNameQrels,
+                                  runFile=tmpFileNameRun,
                                   useQrelCache=False))
 
     val_ext, val_int = res[0], res[1]

@@ -3,6 +3,7 @@ from jnius import autoclass
 
 JHashMap = autoclass('java.util.HashMap')
 
+
 def dict_to_hash_map(dict_obj):
     """Convert a Python dictionary to a Java HashMap object. Caution:
        values in the dictionary need to be either simple types, or

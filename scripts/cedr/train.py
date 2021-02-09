@@ -304,9 +304,11 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
     utils.sync_out_streams()
 
     # Let us always save the run
-    return getEvalResults(train_params.use_external_eval,
-                          eval_metric,
-                          rerank_run, run_filename, qrelf)
+    return getEvalResults(useExternalEval=train_params.use_external_eval,
+                          evalMetric=eval_metric,
+                          rerankRun=rerank_run,
+                          qrelFile=qrelf,
+                          runFile=run_filename)
 
 
 def run_model(model, train_params, dataset, orig_run, desc='valid'):

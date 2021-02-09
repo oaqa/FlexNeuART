@@ -230,29 +230,15 @@ def readRunDict(fileName):
     return result
 
 
-def evalRun(rerankRun, runFileName, qrelFileName, metricFunc,
-            saveRun=False, debug=False, useQrelCache=False):
+def evalRun(rerankRun, qrelsDict, metricFunc, debug=False):
     """Evaluate run stored in a file using QRELs stored in a file.
 
     :param rerankRun:     a run dictionary (of dictionaries)
-    :param runFileName:   a run file name (for external tools)
-    :param qrelFileName:  a QREL file name
+    :param qrelsDict:     a QRELs dictionary read by the function readQrelsDict
     :param metricFunc:    a metric function or class instance with overloaded __call__
-    :param saveRun:       true if we want to save the run
+
     :return:  the average metric value
     """
-
-    if saveRun:
-        assert runFileName is not None, "Run file name should not be None"
-        writeRunDict(rerankRun, runFileName)
-
-    global qrelCache
-
-    if useQrelCache and qrelFileName in qrelCache:
-        qrels = qrelCache[qrelFileName]
-    else:
-        qrels = qrelCache[qrelFileName] = readQrelsDict(qrelFileName)
-
     resArr = []
 
     for qid, scoreDict in rerankRun.items():
@@ -260,8 +246,8 @@ def evalRun(rerankRun, runFileName, qrelFileName, metricFunc,
 
         val = 0
 
-        if qid in qrels:
-            queryQrelDict = qrels[qid]
+        if qid in qrelsDict:
+            queryQrelDict = qrelsDict[qid]
 
             for did, score in getSorteScoresFromScoreDict(scoreDict):
                 rel_score = 0
@@ -284,15 +270,20 @@ def evalRun(rerankRun, runFileName, qrelFileName, metricFunc,
     return res
 
 
-def getEvalResults(useExternalEval, evalMetric,
-                   rerankRun, runFile, qrelFile,
+def getEvalResults(useExternalEval,
+                   evalMetric,
+                   rerankRun,
+                   qrelFile,
+                   runFile=None,
                    useQrelCache=False):
     """Carry out internal or external evaluation.
 
     :param useExternalEval:   True to use external evaluation tools.
     :param evalMetric:        Evaluation metric (from the METRIC_LIST above)
-    :param runFile:           A run file to store results.
+    :param runFile:           A run file to store results (or None).
     :param qrelFile:          A QREL file.
+    :param useQrelCache:  use global QREL file cache (dangerous option: there should
+                          be no file-name collisions to for this)
 
     :return:  average metric value.
     """
@@ -323,7 +314,19 @@ def getEvalResults(useExternalEval, evalMetric,
         else:
             raise Exception('Unsupported metric: ' + evalMetric)
 
-        return evalRun(rerankRun, runFile, qrelFile, f, useQrelCache=useQrelCache, saveRun=True)
+        if runFile is not None:
+            writeRunDict(rerankRun, runFile)
+
+        global qrelCache
+
+        if useQrelCache and qrelFile in qrelCache:
+            qrels = qrelCache[qrelFile]
+        else:
+            qrels = qrelCache[qrelFile] = readQrelsDict(qrelFile)
+
+        return evalRun(rerankRun=rerankRun,
+                       qrelsDict=qrels,
+                       metricFunc=f)
 
 
 def trec_eval(runf, qrelf, metric):
