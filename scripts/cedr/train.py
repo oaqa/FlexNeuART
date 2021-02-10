@@ -202,11 +202,13 @@ def train_iteration(model, sync_barrier,
 
         total_loss += loss.item()
 
-        if total_qty - total_prev_qty >= batch_size:
-            if is_master_proc:
-                validation_timer.increment(total_qty - total_prev_qty)
+        if is_master_proc:
+            validation_timer.increment(1)
 
-            #print(total, 'optimizer step!')
+        # If it's time to validate, we need to interrupt the batch
+        if total_qty - total_prev_qty >= batch_size or\
+            (is_master_proc is validation_timer.is_time() and valid_run_dir is not None):
+
             optimizer.step()
             optimizer.zero_grad()
             total_prev_qty = total_qty
@@ -256,7 +258,7 @@ def train_iteration(model, sync_barrier,
             utils.sync_out_streams()
             print(f'\n# of batches={validation_timer.total_steps} score={score:.4g}')
             valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
-            utils.save_json(os.path.join(valid_run_dir, "scores.log"), valid_scores_holder)
+            utils.save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
             model.train()
 
         if total_qty >= max_train_qty:
