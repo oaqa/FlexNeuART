@@ -257,7 +257,7 @@ def train_iteration(model, sync_barrier,
 
             pbar.refresh()
             utils.sync_out_streams()
-            print(f'\n# of batches={validation_timer.total_steps} score={score:.4g}')
+            print(f'\n# of steps={validation_timer.total_steps} score={score:.4g}')
             valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
             utils.save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
             model.train()
