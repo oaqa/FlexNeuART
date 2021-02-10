@@ -205,9 +205,10 @@ def train_iteration(model, sync_barrier,
         if is_master_proc:
             validation_timer.increment(1)
 
+        run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
+
         # If it's time to validate, we need to interrupt the batch
-        if total_qty - total_prev_qty >= batch_size or\
-            (is_master_proc is validation_timer.is_time() and valid_run_dir is not None):
+        if total_qty - total_prev_qty >= batch_size or run_chkpt_val:
 
             optimizer.step()
             optimizer.zero_grad()
@@ -244,7 +245,7 @@ def train_iteration(model, sync_barrier,
             utils.sync_out_streams()
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
 
-        while is_master_proc and validation_timer.is_time() and valid_run_dir is not None:
+        while run_chkpt_val:
             model.eval()
             os.makedirs(valid_run_dir, exist_ok=True)
             run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
@@ -260,6 +261,8 @@ def train_iteration(model, sync_barrier,
             valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
             utils.save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
             model.train()
+            # We may need to make more than one validation iteration
+            run_chkpt_val = run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
 
         if total_qty >= max_train_qty:
             break
