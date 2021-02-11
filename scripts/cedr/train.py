@@ -394,7 +394,7 @@ def do_train(sync_barrier,
             raise Exception('Unsupported optimizer: ' + train_params.optim)
 
         bpte = train_params.batches_per_train_epoch
-        max_train_qty = data.train_item_qty(train_pairs, dataset=dataset, qrels=qrels)
+        max_train_qty = data.train_item_qty_upper_bound(train_pairs)
         if bpte >0:
             max_train_qty = min(max_train_qty, bpte * train_params.batch_size)
 
