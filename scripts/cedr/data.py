@@ -55,11 +55,7 @@ def iter_train_pairs(model, device_name, dataset, train_pairs, do_shuffle, qrels
             batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
 
 
-def train_item_qty(train_pairs):
-    return len(list(train_pairs.keys()))
-
-
-def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
+def _iter_train_pairs_data(dataset, train_pairs, do_shuffle, qrels):
     ds_queries, ds_docs = dataset
     while True:
         qids = list(train_pairs.keys())
@@ -76,7 +72,7 @@ def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
             if len(neg_ids) == 0:
                 continue
             neg_id = random.choice(neg_ids)
-            query_tok = model.tokenize(ds_queries[qid])
+
             pos_doc = ds_docs.get(pos_id)
             neg_doc = ds_docs.get(neg_id)
             if pos_doc is None:
@@ -85,8 +81,21 @@ def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
             if neg_doc is None:
                 tqdm.write(f'missing doc {neg_id}! Skipping')
                 continue
-            yield qid, pos_id, query_tok, model.tokenize(pos_doc)
-            yield qid, neg_id, query_tok, model.tokenize(neg_doc)
+            yield qid, pos_id, pos_doc, neg_id, neg_doc
+
+
+def train_item_qty(train_pairs, dataset, qrels):
+    return len(list(_iter_train_pairs_data(dataset, train_pairs, False, qrels)))
+
+
+def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
+    ds_queries, _ = dataset
+
+    for qid, pos_id, pos_doc, neg_id, neg_doc in \
+        _iter_train_pairs_data(model, dataset, train_pairs, do_shuffle, qrels):
+        query_tok = model.tokenize(ds_queries[qid])
+        yield qid, pos_id, query_tok, model.tokenize(pos_doc)
+        yield qid, neg_id, query_tok, model.tokenize(neg_doc)
 
 
 def iter_valid_records(model, device_name, dataset, run,
