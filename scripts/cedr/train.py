@@ -453,7 +453,8 @@ def do_train(sync_barrier,
 
             utils.sync_out_streams()
 
-            print(f'validation epoch={epoch} score={valid_score:.4g}')
+            if valid_score is not None:
+                print(f'validation epoch={epoch} score={valid_score:.4g}')
 
             train_stat[epoch] = {'loss' : loss,
                                   'score' : valid_score,
