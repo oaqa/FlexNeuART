@@ -153,6 +153,29 @@ def train_iteration(model, sync_barrier,
                     save_last_snapshot_every_k_batch,
                     model_out_dir):
 
+    if is_master_proc:
+        utils.sync_out_streams()
+        pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False)
+    else:
+        pbar = None
+
+    def run_valid_chkpt():
+        model.eval()
+        os.makedirs(valid_run_dir, exist_ok=True)
+        run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
+        pbar.refresh()
+        utils.sync_out_streams()
+        score = validate(model, train_params, dataset,
+                         valid_run,
+                         qrelf=valid_qrel_filename, run_filename=run_file_name)
+
+        pbar.refresh()
+        utils.sync_out_streams()
+        print(f'\n# of steps={validation_timer.total_steps} score={score:.4g}')
+        valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
+        utils.save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
+        model.train()
+
     clean_memory(train_params.device_name)
 
     model.train()
@@ -174,13 +197,9 @@ def train_iteration(model, sync_barrier,
     batch_id = 0
     snap_id = 0
 
-    if is_master_proc:
-
-        utils.sync_out_streams()
-
-        pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False)
-    else:
-        pbar = None
+    #For the case of 0 steps checkpoint
+    if is_master_proc and validation_timer.is_time() and valid_run_dir is not None:
+        run_valid_chkpt()
 
     for record in data.iter_train_pairs(model, train_params.device_name, dataset, train_pairs, train_params.shuffle_train,
                                         qrels, train_params.backprop_batch_size,
@@ -246,23 +265,9 @@ def train_iteration(model, sync_barrier,
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
 
         while run_chkpt_val:
-            model.eval()
-            os.makedirs(valid_run_dir, exist_ok=True)
-            run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
-            pbar.refresh()
-            utils.sync_out_streams()
-            score = validate(model, train_params, dataset,
-                             valid_run,
-                             qrelf=valid_qrel_filename, run_filename=run_file_name)
-
-            pbar.refresh()
-            utils.sync_out_streams()
-            print(f'\n# of steps={validation_timer.total_steps} score={score:.4g}')
-            valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
-            utils.save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
-            model.train()
+            run_valid_chkpt()
             # We may need to make more than one validation iteration
-            run_chkpt_val = run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
+            run_chkpt_val = validation_timer.is_time()
 
         if total_qty >= max_train_qty:
             break
