@@ -29,7 +29,9 @@ def toksToStr(arr):
 
 def strToNMSLIBVect(tokenizer, text):
     """Converts to a string that can be fed to NMSLIB"""
-    return toksToStr(unique(getTokenIds(tokenizer, text)))
+    lst = unique(getTokenIds(tokenizer, text))
+    lst.sort()
+    return toksToStr(lst)
 
 
 def readSampleQueries(dataDir,
