@@ -104,13 +104,15 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
 
             indexQueries, dists = nbrs[i]
             # In the case of Jaccard, the similarity is one minus the distance
-            if indexQueries and 1 - dists[0] >= args.min_jacc:
-                repApproxQty += 1
-                qnum2 = indexQueries[0]
-                qid2 = sampleQueryList2[qnum2][DOCID_FIELD]
-                print(f'Approximate match between id: {qid1} and id: {qid2}')
-                print(f'1st query: {rawText}')
-                print(f'2d query: {e[TEXT_RAW_FIELD_NAME]}')
+            if indexQueries:
+                qsim = 1 - dists[0]
+                if qsim >= args.min_jacc:
+                    repApproxQty += 1
+                    qnum2 = indexQueries[0]
+                    qid2 = sampleQueryList2[qnum2][DOCID_FIELD]
+                    print(f'Approximate match between id: {qid1} and id: {qid2}, Jaccard score: {qsim}')
+                    print(f'1st query: {rawText}')
+                    print(f'2d query: {e[TEXT_RAW_FIELD_NAME]}')
 
 
 print(f'# of exact tokenized matches: {repTokQty} # of approx. matches: {repApproxQty}')
