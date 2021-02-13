@@ -76,7 +76,7 @@ def createJaccardIndex(useHnsw, tokenizer, queryList):
                         space='jaccard_sparse',
                         data_type=nmslib.DataType.OBJECT_AS_STRING)
 
-    for start in tqdm(range(0, len(queryList), QUERY_BATCH_SIZE), desc='reading query set'):
+    for start in tqdm(range(0, len(queryList), QUERY_BATCH_SIZE), desc='reading query set to build a k-NN search index'):
         dbatch = []
         for e in queryList[start:start + QUERY_BATCH_SIZE]:
             dbatch.append(strToNMSLIBVect(tokenizer, e[TEXT_RAW_FIELD_NAME]))

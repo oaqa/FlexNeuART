@@ -77,11 +77,11 @@ if len(sampleQueryList2) < len(sampleQueryList1):
     sampleQueryList1 = prevSampleQueryList2
 
 
-seenText = set([e[TEXT_FIELD_NAME].join(' ').strip() for e in sampleQueryList2])
+seenText = set([e[TEXT_FIELD_NAME].strip() for e in sampleQueryList2])
 
 repTokQty = 0
 for e in sampleQueryList1:
-    text = e[TEXT_FIELD_NAME].join(' ').strip()
+    text = e[TEXT_FIELD_NAME].strip()
     if text and text in seenText:
         print(f'Repeating tokenized query, id: {e[DOCID_FIELD]}, text: {text}')
         repTokQty += 1
@@ -112,7 +112,8 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
                     rawText2 = sampleQueryList2[qnum2][TEXT_RAW_FIELD_NAME]
                     toks1 = getTokenIds(BERT_TOKENIZER, rawText)
                     toks2 = getTokenIds(BERT_TOKENIZER, rawText2)
-                    if jaccard(toks1, toks2) >= args.min_jacc:
+                    qsim = jaccard(toks1, toks2)
+                    if qsim >= args.min_jacc:
                         repApproxQty += 1
                         print(f'Approximate match between id: {qid1} and id: {qid2}, Jaccard score: {qsim}')
                         print(f'1st query: {rawText}')
