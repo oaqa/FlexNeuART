@@ -22,7 +22,6 @@ saveEpochSnapshotsArg=""
 noFinalValArg=""
 
 boolOpts=("h" "help" "print help"
-          "no_final_val" "noFinalVal" "no validation in the end of epoch"
           "save_epoch_snapshots" "saveEpochSnapshots" "save snapshot after each epoch")
 
 seed=0
@@ -43,6 +42,8 @@ momentum="0.9"
 validCheckPoints=""
 validRunDir=""
 maxQueryVal=""
+valType=""
+batchesPerEpoch=""
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
@@ -61,6 +62,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "vocab_file"         "vocabFile"        "vocabulary file relative to derived-data directory (optional)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
+      "val_type"           "valType"          "validation type: always (every epoch), last (last epoch), never"
       "bert_large"         "bertLarge"        "specify 1 to use BERT"
 )
 
@@ -146,8 +148,9 @@ if [ "$saveEpochSnapshots" = "1" ] ; then
   saveEpochSnapshotsArg=" --save_epoch_snapshots "
 fi
 
-if [ "$noFinalVal" = "1" ] ; then
-  noFinalValArg=" --no_final_val "
+valTypeArg=""
+if [ "$valType" != "" ] ; then
+  valTypeArg=" --val_type $valType "
 fi
 
 validCheckPointsArg=""
@@ -165,12 +168,17 @@ if [ "$maxQueryVal" != "" ] ; then
   maxQueryValArg=" --max_query_val $maxQueryVal "
 fi
 
+batchesPerEpochArg=""
+if [ "$batchesPerEpoch" != "" ] ; then
+  batchesPerEpochArg=" --batches_per_train_epoch $batchesPerEpoch "
+fi
+
 echo "=========================================================================="
 echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
 echo "# of epochs:                                    $epochQty"
 echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
-echo "No final validation arg:                        $noFinalValArg"
+echo "Validation type arg:                            $valTypeArg"
 echo "BERT large?:                                    $bertLarge"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
@@ -178,7 +186,7 @@ echo "# of batches before model sync:                 $batchSyncQty"
 echo "optimizer:                                      $optim"
 echo "validation checkpoints arg:                     $validCheckPointsArg"
 echo "validation run dir  arg:                        $validRunDirArg"
-echo "batches per train epoch:                        $batchesPerEpoch"
+echo "batches per train epoch arg:                    $batchesPerEpochArg"
 echo "max # of valid. queries arg:                    $maxQueryValArg"
 
 if [ "$deviceQty" = "1" ] ; then
@@ -211,7 +219,8 @@ python -u scripts/cedr/train.py \
   $validCheckPointsArg \
   $validRunDirArg \
   $maxQueryValArg \
-  $noFinalValArg \
+  $valTypeArg \
+  $batchesPerEpochArg \
   --optim $optim \
   --momentum $momentum \
   --seed $seed \
@@ -220,7 +229,6 @@ python -u scripts/cedr/train.py \
   --batch_sync_qty $batchSyncQty \
   --epoch_qty $epochQty \
   $saveEpochSnapshotsArg \
-  --batches_per_train_epoch $batchesPerEpoch \
   --master_port $masterPort \
   --datafiles "$trainDir/data_query.tsv"  \
               "$trainDir/data_docs.tsv" \

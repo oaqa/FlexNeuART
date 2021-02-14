@@ -47,6 +47,10 @@ BARRIER_WAIT_VALIDATION_TIMEOUT=60*240
 OPT_SGD='sgd'
 OPT_ADAMW='adamw'
 
+VALID_ALWAYS = 'always'
+VALID_LAST = 'last_epoch'
+VALID_NONE = 'never'
+
 # Important: all the losses should have a reduction type sum!
 class MarginRankingLossWrapper:
     @staticmethod
@@ -93,7 +97,7 @@ TrainParams = namedtuple('TrainParams',
                      'save_epoch_snapshots', 'save_last_snapshot_every_k_batch',
                      'device_name', 'print_grads',
                      'shuffle_train',
-                     'no_final_val',
+                     'val_type',
                      'use_external_eval', 'eval_metric'])
 
 def avg_model_params(model):
@@ -395,25 +399,29 @@ def do_train(sync_barrier,
 
         bpte = train_params.batches_per_train_epoch
         max_train_qty = data.train_item_qty_upper_bound(train_pairs)
-        if bpte >0:
-            max_train_qty = min(max_train_qty, bpte * train_params.batch_size)
 
-        lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
-        scheduler = None
-        if train_params.warmup_pct:
-            if is_master_proc:
-                print('Using a scheduler with a warm-up for %f steps' % train_params.warmup_pct)
-            scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
-                                                            total_steps=lr_steps,
-                                                            max_lr=[lr, bert_lr],
-                                                            anneal_strategy='linear',
-                                                            pct_start=train_params.warmup_pct)
-        if is_master_proc:
-            print('Optimizer', optimizer)
+        if bpte is not None and bpte >= 0:
+            max_train_qty = min(max_train_qty, int(bpte) * train_params.batch_size)
+            print(f'Setting the number of train instances to {max_train_qty} b/c batches_per_train_epoch={bpte}')
 
         start_train_time = time.time()
 
-        loss = train_iteration(model=model, sync_barrier=sync_barrier,
+        if max_train_qty > 0:
+
+            lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
+            scheduler = None
+            if train_params.warmup_pct:
+                if is_master_proc:
+                    print('Using a scheduler with a warm-up for %f steps' % train_params.warmup_pct)
+                scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
+                                                                total_steps=lr_steps,
+                                                                max_lr=[lr, bert_lr],
+                                                                anneal_strategy='linear',
+                                                                pct_start=train_params.warmup_pct)
+            if is_master_proc:
+                print('Optimizer', optimizer)
+
+            loss = train_iteration(model=model, sync_barrier=sync_barrier,
                                is_master_proc=is_master_proc,
                                device_qty=device_qty, loss_obj=loss_obj,
                                train_params=train_params, max_train_qty=max_train_qty,
@@ -424,6 +432,8 @@ def do_train(sync_barrier,
                                valid_scores_holder=valid_scores_holder,
                                save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
                                model_out_dir=model_out_dir)
+        else:
+            loss = 0
 
         end_train_time = time.time()
 
@@ -442,14 +452,19 @@ def do_train(sync_barrier,
 
             start_val_time = time.time()
 
-            if train_params.no_final_val:
-                print('No final validation')
-                valid_score = None
+            # Run validation if the validation type is
+            run_val = (train_params.val_type == VALID_ALWAYS) or \
+                      ((train_params.val_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
+
+            if run_val:
+                valid_score = validate(model,
+                                       train_params, dataset,
+                                       valid_run,
+                                       qrelf=qrel_file_name,
+                                       run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
             else:
-                valid_score = validate(model, train_params, dataset,
-                                        valid_run,
-                                        qrelf=qrel_file_name,
-                                        run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
+                print(f'No validation at epoch: {epoch}')
+                valid_score = None
 
             end_val_time = time.time()
 
@@ -467,14 +482,14 @@ def do_train(sync_barrier,
 
             utils.save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
 
-            if train_params.no_final_val:
-                print('Saving the whole model')
-                torch.save(model, os.path.join(model_out_dir, 'model.best'))
-            else:
+            if run_val:
                 if top_valid_score is None or valid_score > top_valid_score:
                     top_valid_score = valid_score
                     print('new top validation score, saving the whole model')
                     torch.save(model, os.path.join(model_out_dir, 'model.best'))
+            else:
+                print('Saving the whole model')
+                torch.save(model, os.path.join(model_out_dir, 'model.best'))
 
         # We must sync here or else non-master processes would start training and they
         # would timeout on the model averaging barrier. However, the wait time here
@@ -519,8 +534,10 @@ def main_cli():
     parser.add_argument('--no_cuda', action='store_true',
                         help='Use no CUDA')
 
-    parser.add_argument('--no_final_val', action='store_true',
-                        help='no validation in the end of epoch')
+    parser.add_argument('--val_type',
+                        default=VALID_ALWAYS,
+                        choices=[VALID_ALWAYS, VALID_LAST, VALID_NONE],
+                        help='validation type')
 
     parser.add_argument('--warmup_pct', metavar='warm-up fraction',
                         default=None, type=float,
@@ -581,7 +598,7 @@ def main_cli():
                         help='batch size for each backprop step')
 
     parser.add_argument('--batches_per_train_epoch', metavar='# of rand. batches per epoch',
-                        type=int, default=0,
+                        type=int, default=None,
                         help='# of random batches per epoch: 0 tells to use all data')
 
     parser.add_argument('--max_query_val', metavar='max # of val queries',
@@ -737,7 +754,7 @@ def main_cli():
                                     use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                                     print_grads=args.print_grads,
                                     shuffle_train=not args.no_shuffle_train,
-                                    no_final_val=args.no_final_val,
+                                    val_type=args.val_type,
                                     optim=args.optim)
 
         train_pair_qty = len(train_pairs_all)
