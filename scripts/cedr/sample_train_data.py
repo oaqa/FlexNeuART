@@ -120,13 +120,8 @@ for train_sample_qty in args.train_query_sample_qty:
                                       args.field_name)
         os.makedirs(dst_dir_sample, exist_ok=True)
 
-        # First symlink full-size files - QUERY SAMPLE - TRAIN PAIRS (though)
-        for data_fn in args.datafiles + [args.qrels]:
-            print('Symlinking:', data_fn)
-            os.symlink(os.path.join('..', '..', args.src_subdir, args.field_name, data_fn),
-                       os.path.join(dst_dir_sample, data_fn))
-        # Second symlink a QUERY SAMPLE
-        for data_fn in [args.valid_run]:
+        # First symlink full-size files  TRAIN PAIRS (though)
+        for data_fn in args.datafiles + [args.qrels, args.valid_run]:
             print('Symlinking:', data_fn)
             os.symlink(os.path.join('..', '..', subdir_full, args.field_name, data_fn),
                        os.path.join(dst_dir_sample, data_fn))
