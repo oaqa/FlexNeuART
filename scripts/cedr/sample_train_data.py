@@ -24,17 +24,21 @@ parser = argparse.ArgumentParser('Training data sampling script')
 parser.add_argument('--seed', metavar='random seed', help='random seed',
                     type=int, default=42)
 
-parser.add_argument('--top_level_dir_src', metavar='source top level dir',
+parser.add_argument('--top_level_dir', metavar='source top level dir',
                     type=str, required=True,
-                    help='Source top-level data directory (field-name sub-directory not including)')
+                    help='Source top-level data directory')
 
 parser.add_argument('--field_name', metavar='field name',
                     type=str, required=True,
-                    help='Field name, which is also the name of the subdirectory.')
+                    help='field name (sub-directory)')
 
-parser.add_argument('--top_level_dir_dst_pref', metavar='target top level dir pref',
+parser.add_argument('--src_subdir', metavar='source subdir',
                     type=str, required=True,
-                    help='A prefix of target data directories (field-name sub-directory not including)')
+                    help='A source subdirectory: no slashes!')
+
+parser.add_argument('--dst_subdir_pref', metavar='target path pref',
+                    type=str, required=True,
+                    help='A target subdirectory prefix: no slashes')
 
 parser.add_argument('--test_query_sample_qty', metavar='# of sampled queries',
                     type=int, required=int,
@@ -72,10 +76,13 @@ print(args)
 
 utils.set_all_seeds(args.seed)
 
-src_dir = os.path.join(args.top_level_dir_src, args.field_name)
+assert not os.path.split(args.src_subdir)[0], "Source sub-directory should not be a complex path!"
+assert not os.path.split(args.dst_subdir_pref)[0], "Target sub-directory should not be a complex path!"
+
+src_dir = os.path.join(args.top_level_dir, args.src_subdir, args.field_name)
 
 # First, we create a directory with complete training data, but a sample of validation queries.
-dst_dir_full = os.path.join(args.top_level_dir_dst_pref + '_full', args.field_name)
+dst_dir_full = os.path.join(args.top_level_dir, args.dst_subdir_pref + '_full', args.field_name)
 os.makedirs(dst_dir_full, exist_ok=True)
 
 # Copy data files & qrels & train pairs to the full training set directory
@@ -107,14 +114,15 @@ train_qid_lst = list(train_pairs.keys())
 for train_sample_qty in args.train_query_sample_qty:
     for sample_id in range(args.train_set_sample_qty):
         print(f'Training query sample size: {train_sample_qty}, sample {sample_id}')
-        dst_dir_sample = os.path.join(args.top_level_dir_dst_pref + f'_tqty={train_sample_qty}_sampid={sample_id}',
+        dst_dir_sample = os.path.join(args.top_level_dir,
+                                      args.dst_subdir_pref + f'_tqty={train_sample_qty}_sampid={sample_id}',
                                       args.field_name)
         os.makedirs(dst_dir_sample, exist_ok=True)
 
         # First symlink full-size files + QUERY SAMPLE - TRAIN PAIRS (though)
         for data_fn in args.datafiles + [args.qrels, args.valid_run]:
             print('Symlinking:', data_fn)
-            os.symlink(os.path.join(dst_dir_full, data_fn),
+            os.symlink(os.path.join('..', '..', args.src_subdir, args.field_name, data_fn),
                        os.path.join(dst_dir_sample, data_fn))
 
         train_qid_sample = np.random.choice(train_qid_lst, train_sample_qty, replace=False)
