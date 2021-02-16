@@ -35,12 +35,31 @@ def read_datafiles(files):
 
 
 def read_pairs_dict(file):
+    """Read training pairs.
+
+    :param file: an open file, not a file name!
+    :return:  training pairs in the dictionary of dictionary formats.
+    """
     result = {}
-    for line in tqdm(file, desc='loading pairs (by line)', leave=False):
-        qid, docid = line.split()
+    for ln, line in enumerate(tqdm(file, desc='loading pairs (by line)', leave=False)):
+        fields = line.split()
+        if len(fields) != 2:
+            raise Exception(f'Wrong # of fields {len(fields)} in file {file}, line #: {ln+1}')
+        qid, docid = fields
         result.setdefault(qid, {})[docid] = 1
     return result
 
+
+def write_pairs_dict(train_pairs, file_name):
+    """Write training pairs.
+
+    :param train_pairs:   training data dictionary of dictionaries.
+    :param file_name:     output file name
+    """
+    with open(file_name, 'w') as outf:
+        for qid, docid_dict in train_pairs.items():
+            for did in docid_dict.keys():
+                outf.write(f'{qid}\t{did}\n')
 
 def iter_train_pairs(model, device_name, dataset, train_pairs, do_shuffle, qrels,
                      batch_size, max_query_len, max_doc_len):
