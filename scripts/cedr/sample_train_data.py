@@ -82,7 +82,8 @@ assert not os.path.split(args.dst_subdir_pref)[0], "Target sub-directory should 
 src_dir = os.path.join(args.top_level_dir, args.src_subdir, args.field_name)
 
 # First, we create a directory with complete training data, but a sample of validation queries.
-dst_dir_full = os.path.join(args.top_level_dir, args.dst_subdir_pref + '_full', args.field_name)
+subdir_full = args.dst_subdir_pref + '_full'
+dst_dir_full = os.path.join(args.top_level_dir, subdir_full, args.field_name)
 os.makedirs(dst_dir_full, exist_ok=True)
 
 # Copy data files & qrels & train pairs to the full training set directory
@@ -119,10 +120,15 @@ for train_sample_qty in args.train_query_sample_qty:
                                       args.field_name)
         os.makedirs(dst_dir_sample, exist_ok=True)
 
-        # First symlink full-size files + QUERY SAMPLE - TRAIN PAIRS (though)
-        for data_fn in args.datafiles + [args.qrels, args.valid_run]:
+        # First symlink full-size files - QUERY SAMPLE - TRAIN PAIRS (though)
+        for data_fn in args.datafiles + [args.qrels]:
             print('Symlinking:', data_fn)
             os.symlink(os.path.join('..', '..', args.src_subdir, args.field_name, data_fn),
+                       os.path.join(dst_dir_sample, data_fn))
+        # Second symlink a QUERY SAMPLE
+        for data_fn in [args.valid_run]:
+            print('Symlinking:', data_fn)
+            os.symlink(os.path.join('..', '..', subdir_full, args.field_name, data_fn),
                        os.path.join(dst_dir_sample, data_fn))
 
         train_qid_sample = np.random.choice(train_qid_lst, train_sample_qty, replace=False)
