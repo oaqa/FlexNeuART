@@ -18,7 +18,7 @@ class CedrQueryHandler(BaseQueryHandler):
     # Exclusive==True means that only one getScores
     # function is executed at at time
     def __init__(self,
-                    modelList, modelWeightList,
+                    modelList,
                     batchSize, deviceName,
                     maxQueryLen, maxDocLen,
                     exclusive,
@@ -38,18 +38,6 @@ class CedrQueryHandler(BaseQueryHandler):
             model.to(self.deviceName)
             # need to be in the eval mode
             model.eval()
-
-        # This covers both None and empty list
-        if not modelWeightList:
-            modelWeightList = [1.0] * len(modelList)
-
-        assert len(modelWeightList) == len(modelList), "The weight list should be empty or have the same # of elements as the model list!"
-        # Normalize weights
-        weightSum = sum(modelWeightList)
-        assert weightSum > 0, "The sum of the weights should be positive!"
-
-        self.modelWeightList = [float(w) / weightSum for w in modelWeightList]
-        print('Normalized model weights:', self.modelWeightList)
 
 
     def computeScoresFromParsedOverride(self, query, docs):
@@ -71,7 +59,9 @@ class CedrQueryHandler(BaseQueryHandler):
         for e in docs:
             docData[e.id] = e.text
 
-        sampleRet = {}
+        modelQty = len(self.modelList)
+        # Initialize the return dictionary: for each document ID, a zero-element array of the size # of models.
+        sampleRet = {e.id : [0.] * modelQty for e in docs}
 
         if docData:
 
@@ -79,7 +69,7 @@ class CedrQueryHandler(BaseQueryHandler):
             dataSet = queryData, docData
             # must disable gradient computation to greatly reduce memory requirements and speed up things
             with torch.no_grad():
-                for model, weight in zip(self.modelList, self.modelWeightList):
+                for modelId, model in enumerate(self.modelList):
                     for records in data.iter_valid_records(model, self.deviceName, dataSet, run,
                                                            self.batchSize,
                                                            self.maxQueryLen, self.maxDocLen):
@@ -92,17 +82,14 @@ class CedrQueryHandler(BaseQueryHandler):
 
                         # tolist() works much faster compared to extracting scores
                         # one by one using .item()
-                        scores = (weight * scores).tolist()
+                        scores = scores.tolist()
 
                         for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
                             if self.debugPrint:
-                                print(score, did, docData[did])
-                            # Note that each element must be an array, b/c
-                            # one can potentially generate more than one feature per document!
-                            if did in sampleRet:
-                                sampleRet[did][0] += score
-                            else:
-                                sampleRet[did] = [score]
+                                print('model id:', modelId, 'score & doc. id:', score, did, docData[did])
+
+                            assert did in sampleRet, f'Bug: missing document ID: {did} in the result set.'
+                            sampleRet[did][modelId] = score
 
         if self.debugPrint:
             print('All scores:', sampleRet)
@@ -126,13 +113,6 @@ def add_eval_model_init_args(parser):
                         metavar='initial model',
                         help='initial *COMPLETE* model with heads and extra parameters',
                         type=argparse.FileType('rb'),
-                        nargs='+',
-                        default=None)
-
-    parser.add_argument('--model_mix_weights',
-                        metavar='model mixing weights',
-                        help='weights to linearly combine model scores (same weights by default)',
-                        type=float,
                         nargs='+',
                         default=None)
 
@@ -176,7 +156,6 @@ if __name__ == '__main__':
 
     assert(args.init_model is None or type(args.init_model) == list)
     assert (args.init_model_weights is None or type(args.init_model_weights) == list)
-    assert (args.model_mix_weights is None or type(args.model_mix_weights) == list)
 
     modelList = []
 
@@ -204,7 +183,6 @@ if __name__ == '__main__':
 
     multiThreaded = False  # if we set to True, we can often run out of CUDA memory.
     startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(modelList=modelList,
-                                                                           modelWeightList=args.model_mix_weights,
                                                                            batchSize=args.batch_size,
                                                                            debugPrint=args.debug_print,
                                                                            deviceName=args.device_name,

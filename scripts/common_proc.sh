@@ -315,13 +315,19 @@ function getCatCmd {
   if [ -f "$fileName" ] ; then
 
     # Not all parts correspond to the data files
-    echo "$fileName" | grep '^.gz$' >/dev/null
+    echo "$fileName" | grep -E '^.*gz$' >/dev/null
     if [ "$?" = "0" ] ; then
-      catCommand="zcat"
-    else
-      echo "$fileName" | grep '^.bz2$' >/dev/null
-      if [ "$?" = "0" ] ; then
+      OS=$(getOS)
+      # Assuming Macbook pro
+      if [ "$OS" = "Darwin" ] ; then
+        catCommand="gzcat"
+      else
         catCommand="zcat"
+      fi
+    else
+      echo "$fileName" | grep -E '^.*bz2$' >/dev/null
+      if [ "$?" = "0" ] ; then
+        catCommand="bzcat"
       else
         catCommand="cat"
       fi
