@@ -31,7 +31,7 @@ parser.add_argument('--inp_doc_file',
                     help=f'a file containing indexable document entries, e.g., {ANSWER_FILE_JSON}',
                     required=True)
 
-parser.add_argument('--min_rel_grad',
+parser.add_argument('--min_rel_grade',
                     metavar='min qrel relev. grade',
                     type=int,
                     required=True,
@@ -65,7 +65,7 @@ allRelDocs = set()
 
 for qid, qd in qrelDict.items():
     for did, rel in qd.items():
-        if rel >= args.min_rel_grad:
+        if rel >= args.min_rel_grade:
             allRelDocs.add(did)
 
 
