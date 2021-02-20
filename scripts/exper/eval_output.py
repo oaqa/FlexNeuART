@@ -2,6 +2,8 @@
 import sys
 import subprocess as sp
 
+# This was just to check compatibiity with some old runs
+RUN_GDEVAL=False
 
 def Usage(err):
     if not err is None:
@@ -14,7 +16,7 @@ def Usage(err):
 NUM_REL = 'num_rel'
 NUM_REL_RET = 'num_rel_ret'
 
-ERR20       = 'err20'
+GDEVAL_ERR20= 'err20'
 P20         = 'P_20'
 
 MAP         = 'map'
@@ -27,9 +29,10 @@ GDEVAL_NDCG20_REPORT    = 'GDEVAL NDCG@20'
 METRIC_DICT = {
     MAP             : 'MAP',
     RECIP_RANK      : 'MRR',
-    ERR20           : 'ERR@20',
     P20             : 'P20',
     RECALL          : 'Recall',
+
+    GDEVAL_ERR20    : 'ERR@20',
     GDEVAL_NDCG20   :  GDEVAL_NDCG20_REPORT
 }
 
@@ -40,7 +43,9 @@ for k in [10, 20, 100]:
     METRIC_DICT[nkey] = f'NDCG@{k}'
     FINAL_METR_ORDERED_LIST.append(nkey)
 
-FINAL_METR_ORDERED_LIST.extend([ERR20, P20, MAP, RECIP_RANK, RECALL, GDEVAL_NDCG20])
+FINAL_METR_ORDERED_LIST.extend([P20, MAP, RECIP_RANK, RECALL])
+if RUN_GDEVAL:
+    FINAL_METR_ORDERED_LIST.extend([GDEVAL_ERR20, GDEVAL_NDCG20])
 
 # Recall is computed from NUM_REL and NUM_REL_RET
 TREC_EVAL_METR = [k for k in METRIC_DICT.keys() if k not in[RECALL]]
@@ -76,7 +81,7 @@ def parseGdevalResults(lines):
         if (len(arr) != 4):
             raise Exception("wrong-format line: '%s'" % s)
         (runid, qid, val1, val2) = arr
-        res[qid] = {GDEVAL_NDCG20: float(val1), ERR20: float(val2)}
+        res[qid] = {GDEVAL_NDCG20: float(val1), GDEVAL_ERR20: float(val2)}
     return res
 
 
@@ -113,14 +118,16 @@ for k in FINAL_METR_ORDERED_LIST:
     if k in resTrecEval:
         res[k] = resTrecEval[k]
 
-outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8').split('\n')
-resGdevalAll = parseGdevalResults(outputGdeval)
-resGdeval=resGdevalAll['amean']
+if RUN_GDEVAL:
+    outputGdeval = sp.check_output([gdevalScript, qrelFile, trecOut]).decode('utf-8').split('\n')
+    resGdevalAll = parseGdevalResults(outputGdeval)
+    resGdeval=resGdevalAll['amean']
 
 #print('gdeval results parsed:', resGdeval)
 
-res[ERR20] = resGdeval[ERR20]
-res[GDEVAL_NDCG20] = resGdeval[GDEVAL_NDCG20]
+if RUN_GDEVAL:
+    res[GDEVAL_ERR20] = resGdeval[GDEVAL_ERR20]
+    res[GDEVAL_NDCG20] = resGdeval[GDEVAL_NDCG20]
 
 queryQty = 0
 
@@ -135,9 +142,9 @@ for qid, entry in resTrecEvalAll.items():
     if numRel <= 0:
         print("Warning: No relevant documents for qid=%s numRel=%d" % (qid, numRel))
 
-
-if len(resTrecEvalAll) != len(resGdevalAll):
-    print("Warning: The number of query entries returned by trec_eval and gdeval are different!")
+if RUN_GDEVAL:
+    if len(resTrecEvalAll) != len(resGdevalAll):
+        print("Warning: The number of query entries returned by trec_eval and gdeval are different!")
 
 reportText = f"# of queries:    {queryQty}\n"
 
@@ -173,7 +180,8 @@ if outPrefix != '':
         fTrecEval.write(line.rstrip() + '\n')
     fTrecEval.close()
 
-    fGdeval = open(outPrefix + '.gdeval', 'w')
-    for line in outputGdeval:
-        fGdeval.write(line.rstrip() + '\n')
-    fGdeval.close()
+    if RUN_GDEVAL:
+        fGdeval = open(outPrefix + '.gdeval', 'w')
+        for line in outputGdeval:
+            fGdeval.write(line.rstrip() + '\n')
+        fGdeval.close()

@@ -505,8 +505,9 @@ if [ "$skipEval" != "1" ] ; then
 
   echo "Bzipping trec_eval output in the directory: ${reportDir}"
   bzip2 ${reportDir}/*.trec_eval
-  echo "Bzipping gdeval output in the directory: ${reportDir}"
-  bzip2 ${reportDir}/*.gdeval
+# Don't normally do it any more
+#  echo "Bzipping gdeval output in the directory: ${reportDir}"
+#  bzip2 ${reportDir}/*.gdeval
 fi
 
 if [ "$deleteTrecRuns" = "1" ] ; then
