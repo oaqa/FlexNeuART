@@ -5,6 +5,11 @@ import subprocess
 import math
 from tqdm import tqdm
 
+import sys
+sys.path.append('.')
+
+from scripts.data_convert.convert_common import FileWrapper
+
 FAKE_RUN_ID = "fake_run"
 
 METRIC_MAP = 'map'
@@ -213,7 +218,7 @@ def readRunDict(fileName):
     :return:
     """
     result = {}
-    with open(fileName) as f:
+    with FileWrapper(fileName) as f:
         for ln, line in enumerate(tqdm(f, desc='loading run (by line)', leave=False)):
             line = line.strip()
             if not line:
