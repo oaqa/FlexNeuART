@@ -15,8 +15,9 @@ parser.add_argument('--input_run', metavar='input run file',
                     required=True, type=str, help='input run file')
 parser.add_argument('--out_qrels', metavar='output QREL file',
                     required=True, type=str, help='output QREL file')
-parser.add_argument('--top_k', metavar='top k', default=1,
-                    required=True, type=int, help='top k entries to use as psedo relevant labels')
+parser.add_argument('--top_k', metavar='top k',
+                    default=1,
+                    type=int, help='top k entries to use as psedo relevant labels')
 parser.add_argument('--grade', metavar='grade',
                     default=1, type=int, help='a grade for the relevance item')
 
