@@ -35,9 +35,9 @@ from multiprocessing import Process
 from threading import BrokenBarrierError
 from multiprocessing import Barrier
 
-# 5 minutes should be more than enough while waiting
+# 10 minutes should be more than enough while waiting
 # for other processes to reach the same training point
-BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*5
+BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*10
 # However (see comment below) we should wait more before validation completes
 # Let's optimistically assume, it is not longer than two hours, but this
 # might need to be fixed in the future. And a good fix should make validation
