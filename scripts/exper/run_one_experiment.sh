@@ -375,7 +375,7 @@ echo "$SEP_DEBUG_LINE"
 
 echo "Candidate provider type:                  $candProvType"
 echo "Candidate provider URI:                   $candProvURI"
-echo "Candidate provider # of candidates param  $candQtyParam"
+echo "Candidate provider # of candidates        $candQty"
 echo "Candidate provider addition configuration $candProvAddConf"
 
 echo "$SEP_DEBUG_LINE"
