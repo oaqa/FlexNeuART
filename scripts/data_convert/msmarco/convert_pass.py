@@ -39,7 +39,7 @@ maxDocSize = args.max_doc_size
 
 
 bertTokenizer=None
-if BERT_TOK_OPT in arg_vars:
+if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
     bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 

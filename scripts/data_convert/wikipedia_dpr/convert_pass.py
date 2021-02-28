@@ -45,7 +45,7 @@ arg_vars = vars(args)
 print(args)
 
 bertTokenizer=None
-if BERT_TOK_OPT in arg_vars:
+if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
     bertTokenizer = BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 

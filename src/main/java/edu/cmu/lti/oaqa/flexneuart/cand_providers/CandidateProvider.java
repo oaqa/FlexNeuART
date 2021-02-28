@@ -123,6 +123,7 @@ public abstract class CandidateProvider {
     } catch (NumberFormatException e) {
       throw new Exception("Label '" + label + "' is not numeric!");
     }
+    /* The RankLib code will get very upset if relevance is negative */
     if (relVal < 0) {
       throw new Exception("Encountered a negative relevance label: " + label);
     }
