@@ -62,7 +62,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "vocab_file"         "vocabFile"        "vocabulary file relative to derived-data directory (optional)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
-      "val_type"           "valType"          "validation type: always (every epoch), last (last epoch), never"
+      "valid_type"          "valType"          "validation type: always (every epoch), last (last epoch), never"
       "bert_large"         "bertLarge"        "specify 1 to use BERT"
 )
 
@@ -150,7 +150,7 @@ fi
 
 valTypeArg=""
 if [ "$valType" != "" ] ; then
-  valTypeArg=" --val_type $valType "
+  valTypeArg=" --valid_type $valType "
 fi
 
 validCheckPointsArg=""

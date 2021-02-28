@@ -24,7 +24,7 @@ python -u scripts/data_convert/cranfield/convert_queries.py \
 --input "$src/cran.qry" \
 --output "$inputDataDir/queries/${QUESTION_FILE}"
 
-# binary QRELs
-#cat "$src/cranqrel" | awk '{qrel=$3 > 0; print $1" 0 "$2" "qrel}' > "$inputDataDir/queries/$QREL_FILE"
+# binary QRELs (just in case we would want to use them later)
+cat "$src/cranqrel" | awk '{qrel=$3 > 0; print $1" 0 "$2" "qrel}' > "$inputDataDir/queries/qrels.txt.binary"
 # graded QRELs, but no negatives!
 cat "$src/cranqrel" | awk '{qrel=$3; if (qrel < 0) qrel=0; print $1" 0 "$2" "qrel}' > "$inputDataDir/queries/$QREL_FILE"

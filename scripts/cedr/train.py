@@ -97,7 +97,7 @@ TrainParams = namedtuple('TrainParams',
                      'save_epoch_snapshots', 'save_last_snapshot_every_k_batch',
                      'device_name', 'print_grads',
                      'shuffle_train',
-                     'val_type',
+                     'valid_type',
                      'use_external_eval', 'eval_metric'])
 
 def avg_model_params(model):
@@ -453,8 +453,8 @@ def do_train(sync_barrier,
             start_val_time = time.time()
 
             # Run validation if the validation type is
-            run_val = (train_params.val_type == VALID_ALWAYS) or \
-                      ((train_params.val_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
+            run_val = (train_params.valid_type == VALID_ALWAYS) or \
+                      ((train_params.valid_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
 
             if run_val:
                 valid_score = validate(model,
@@ -534,7 +534,7 @@ def main_cli():
     parser.add_argument('--no_cuda', action='store_true',
                         help='Use no CUDA')
 
-    parser.add_argument('--val_type',
+    parser.add_argument('--valid_type',
                         default=VALID_ALWAYS,
                         choices=[VALID_ALWAYS, VALID_LAST, VALID_NONE],
                         help='validation type')
@@ -754,7 +754,7 @@ def main_cli():
                                     use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                                     print_grads=args.print_grads,
                                     shuffle_train=not args.no_shuffle_train,
-                                    val_type=args.val_type,
+                                    valid_type=args.valid_type,
                                     optim=args.optim)
 
         train_pair_qty = len(train_pairs_all)
