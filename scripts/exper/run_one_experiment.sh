@@ -339,6 +339,7 @@ queryLogFile=${trecRunDir}/query.log
 if [ "$testOnly" = "0" ] ; then
   if [ "$modelFinal" != "" ] ; then
     echo "Bug: here the modelFinal variable should be empty!"
+    exit 1
   fi
   modelFinal="${fullOutPrefTrain}_${trainCandQty}.model"
 fi
