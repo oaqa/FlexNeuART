@@ -8,6 +8,24 @@ ANSWER_FILE="AnswerFields.jsonl"
 QUESTION_FILE="QuestionFields.jsonl"
 SAMPLE_COLLECT_ARG="Specify a collection sub-directory, e.g., msmarco_pass"
 
+function div1() {
+  awk "BEGIN{printf(\"%.1f\", $1/$2)}"|sed 's/[.]0$//'
+}
+
+# Convert numbers to compact human-readable format
+function humnReadNums() {
+  num=$1
+  if [ "$num" -gt 1000000 ] ; then
+      echo $(div1 $num 1000000)"M"
+  else
+      if [ "$num" -gt 1000 ] ; then
+        echo $(div1 $num 1000)"K"
+      else
+        echo $num
+      fi
+  fi
+}
+
 
 # Just lowercasing, solution https://stackoverflow.com/a/2264537
 function lower {
