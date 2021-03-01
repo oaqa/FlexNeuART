@@ -273,6 +273,10 @@ for ((ivar=1;;++ivar)) ; do
   elif [ "$stat" = "#END" ] ; then # out of range
     break
   else
+
+    echo "Parsed experiment parameters:"
+    cat "$tmpConf"
+
     testPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
     trainPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TRAIN_PART_PARAM`
 
