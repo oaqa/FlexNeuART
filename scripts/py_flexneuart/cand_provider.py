@@ -41,9 +41,9 @@ def create_cand_provider(resource_manager, provider_type, provider_uri, add_conf
                                        add_config_file,
                                        1)[0]
 
-def create_query_dict(query_text,
+def create_text_query_dict(query_text,
                     query_id=FAKE_QUERY_ID, field_name=TEXT_FIELD_NAME):
-    """Create a Java HashMap instance with query information.
+    """Create a Java HashMap instance with text query information.
 
     :param query_text:       query text: *WHITE-SPACE* tokenized query tokens
     :param query_id:         a query ID (can be anything or just stick to default)
@@ -54,11 +54,11 @@ def create_query_dict(query_text,
     return dict_to_hash_map({DOCID_FIELD : str(query_id), field_name : query_text})
 
 
-def run_query(cand_provider,
+def run_text_query(cand_provider,
                top_qty,
                query_text,
                query_id=FAKE_QUERY_ID, field_name=TEXT_FIELD_NAME):
-    """Run a query.
+    """Run a text query.
 
     :param cand_provider:    a candidate provider object
     :param top_qty:          a number of top-scored entries to return
@@ -68,7 +68,7 @@ def run_query(cand_provider,
 
     :return: a tuple: # of entries found, an array of candidate entries: (document ID, score) objects
     """
-    query = create_query_dict(query_text, query_id, field_name)
+    query = create_text_query_dict(query_text, query_id, field_name)
     cand_info = cand_provider.getCandidates(0, query, top_qty)
 
     return cand_info.mNumFound, \

@@ -4,7 +4,7 @@ Access to FlexNeuART re-ranking functionality
 import os
 from jnius import autoclass
 
-from scripts.py_flexneuart.cand_provider import create_query_dict, JCandidateEntry
+from scripts.py_flexneuart.cand_provider import JCandidateEntry
 from scripts.py_flexneuart.utils import dict_to_hash_map
 
 JRankerFactory = autoclass('ciir.umass.edu.learning.RankerFactory')
