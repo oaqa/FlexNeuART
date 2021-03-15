@@ -1,27 +1,37 @@
-#!/bin/bash
+#!/bin/bash -e
 
-# Download the msmarco qa dataset in the collections folder
-# compile the train, dev and eval data into a single file
+source scripts/common_proc.sh
+source scripts/config.sh
 
-COLLECTIONS_PATH="../../../collections"
-QA_DATAPATH="${COLLECTIONS_PATH}/msmarco_qa"
+checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "ANSWER_FILE"
+checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-rm "${QA_DATAPATH}/transformed_data.jsonl"
+src=$1
+if [ "$src" = "" ] ; then
+    echo "Specify the source directory (1st arg)"
+    exit 1
+fi
 
-./transform_ms_marco_qa_dataset.py "${QA_DATAPATH}/train_v2.1.json" "${QA_DATAPATH}/transformed_data.jsonl"
-./transform_ms_marco_qa_dataset.py "${QA_DATAPATH}/dev_v2.1.json" "${QA_DATAPATH}/transformed_data.jsonl"
-./transform_ms_marco_qa_dataset.py "${QA_DATAPATH}/eval_v2.1_public.json" "${QA_DATAPATH}/transformed_data.jsonl"
+collect=$2
+if [ "$collect" = "" ] ; then
+    echo "$SAMPLE_COLLECT_ARG (2d arg)"
+    exit 1
+fi
 
-PASSAGE_DATAPATH="${COLLECTIONS_PATH}/msmarco_doc/input_data"
+python -u scripts/data_convert/msmarco/concatenate_datasets.py \
+        --input_datapath "${src}/${INPUT_DATA_SUBDIR}" \
+        --output "${src}/${INPUT_DATA_SUBDIR}/concatenated_data.jsonl" 
 
-mkdir -p "${COLLECTIONS_PATH}/question_types/"
-
-for datasplit in ${PASSAGE_DATAPATH}/*;
-    do
-        filename=$(basename "${datasplit}" .json)
-        if [ ${filename} != "bitext" ] && [ ${filename} != "docs" ]
-            then
-                echo "annotating ${filename}"
-                ./question_tagging.py "${datasplit}/QuestionFields.jsonl" "${QA_DATAPATH}/transformed_data.jsonl"  "${COLLECTIONS_PATH}/question_types/${filename}_em.json"
-        fi
-    done
+for DATASPLIT_FOLDER in ${collect}/${INPUT_DATA_SUBDIR}/*; do
+    QUESTION_FILE_PATH="${DATASPLIT_FOLDER}/${QUESTION_FILE}"
+    if [[ "${DATASPLIT_FOLDER}" != *"bitext"* ]] && test -f "${QUESTION_FILE_PATH}";
+    then
+        echo "Annotating ${QUESTION_FILE_PATH}"
+        python -u scripts/data_convert/msmarco/question_tagging.py \
+                "${QUESTION_FILE_PATH}" "${src}/${INPUT_DATA_SUBDIR}/concatenated_data.jsonl" \
+                "${DATASPLIT_FOLDER}/tagged_question_ids.json"
+    fi
+done
