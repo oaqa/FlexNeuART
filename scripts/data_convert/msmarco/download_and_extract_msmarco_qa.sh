@@ -10,9 +10,9 @@ source scripts/config.sh
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_RAW_SUBDIR"
 
-collect=$2
+collect=$1
 if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (2d arg)"
+  echo "$SAMPLE_COLLECT_ARG (1st arg)"
   exit 1
 fi
 
