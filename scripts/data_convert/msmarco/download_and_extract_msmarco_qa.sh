@@ -1,17 +1,26 @@
 #!/bin/bash -e
 
+. scripts/data_convert/common_conv.sh
+
 # Downloads MS MARCO QA and NLG dataset v2.1
 # to collections directory
 
 source scripts/config.sh
 
-DATASET_FOLDER_NAME="${1}"
+checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "INPUT_RAW_SUBDIR"
 
-DATA_DOWNLOAD_DIR="${COLLECT_ROOT}/${DATASET_FOLDER_NAME}/${INPUT_DATA_SUBDIR}"
+collect=$2
+if [ "$collect" = "" ] ; then
+  echo "$SAMPLE_COLLECT_ARG (2d arg)"
+  exit 1
+fi
 
-mkdir -p "${DATA_DOWNLOAD_DIR}"
+dataDownloadDir="${COLLECT_ROOT}/${collect}/${INPUT_RAW_SUBDIR}"
 
-cd "${DATA_DOWNLOAD_DIR}"
+mkdir -p "${dataDownloadDir}"
+
+cd "${dataDownloadDir}"
 
 if test -f "SUCCESS";
 then
