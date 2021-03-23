@@ -1,8 +1,8 @@
 import os
-import sys
 import re
 import json
 import argparse
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -20,16 +20,18 @@ def get_converted_data(dataset):
 
     return datapoints
 
+
 def get_tokens(query_text):
     return list(map(lambda x: x.lower(), re.sub('[^a-zA-Z0-9 ]', ' ', query_text).split()))
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     args = get_args()
     print(args)
 
     with open(args.output, "a") as output_file:
         for datafile in os.listdir(args.input_datapath):
+            print('Processing:', datafile)
             if datafile.endswith(".json"):
                 filename = os.path.join(args.input_datapath, datafile)
                 with open(filename, "r") as f:

@@ -2,7 +2,10 @@ import sys
 import re
 import json
 
-from similarity_funcs import is_equal, tokenized_equal
+sys.path.append('.')
+
+from scripts.data_convert.msmarco.similarity_funcs import is_equal, tokenized_equal
+
 
 def annotate_questions_using_msmarco_dataset(passage_dataset, qa_dataset, similarity_func):
     """Uses the MSMarco QA dataset to annontate the passage ranking
@@ -23,6 +26,7 @@ def annotate_questions_using_msmarco_dataset(passage_dataset, qa_dataset, simila
             question_type_2_docno[question_type].append(question["DOCNO"])
     return question_type_2_docno
 
+
 def find_question_type_from_dataset(question, qa_dataset, similarity_func):
     """Returns query_type of the datapoint from ms_marco QA dataset
        for the first match.
@@ -30,6 +34,7 @@ def find_question_type_from_dataset(question, qa_dataset, similarity_func):
     for datapoint in qa_dataset:
         if similarity_func(question["text_raw"], datapoint["query"]):
             return datapoint["query_type"]
+
 
 def load_jsonl(filepath):
     datapoints = []
@@ -39,7 +44,7 @@ def load_jsonl(filepath):
     return datapoints
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     
     passage_dataset_filepath = sys.argv[1]
     qa_dataset_filepath = sys.argv[2]
@@ -52,4 +57,3 @@ if __name__=="__main__":
 
     with open(outfilename, "w") as f:
         json.dump(question_type_annotation, f)
-        
