@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-. scripts/data_convert/common_conv.sh
+. scripts/common_proc.sh
 
 # Downloads MS MARCO QA and NLG dataset v2.1
 # to collections directory
