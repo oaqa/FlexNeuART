@@ -146,7 +146,7 @@ def readQrels(fileName):
     return res
 
 
-def getSorteScoresFromScoreDict(queryRunDict):
+def getSortedScoresFromScoreDict(queryRunDict):
     """Take a dictionary of document scores indexed by the document id
     and produce a list of (document id, score tuples) sorted
     in the order of decreasing scores.
@@ -169,7 +169,7 @@ def writeRunDict(runDict, fileName):
     """
     with open(fileName, 'wt') as runfile:
         for qid in runDict:
-            scores = getSorteScoresFromScoreDict(runDict[qid])
+            scores = getSortedScoresFromScoreDict(runDict[qid])
             for i, (did, score) in enumerate(scores):
                 runfile.write(genRunEntryStr(qid, did, i + 1, score, FAKE_RUN_ID) + '\n')
 
@@ -254,7 +254,7 @@ def evalRun(rerankRun, qrelsDict, metricFunc, debug=False):
         if qid in qrelsDict:
             queryQrelDict = qrelsDict[qid]
 
-            for did, score in getSorteScoresFromScoreDict(scoreDict):
+            for did, score in getSortedScoresFromScoreDict(scoreDict):
                 rel_score = 0
                 if did in queryQrelDict:
                     rel_score = queryQrelDict[did]

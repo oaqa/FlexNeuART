@@ -7,7 +7,7 @@ import sys
 
 sys.path.append('.')
 
-from scripts.common_eval import readRunDict, writeQrels, QrelEntry, getSorteScoresFromScoreDict
+from scripts.common_eval import readRunDict, writeQrels, QrelEntry, getSortedScoresFromScoreDict
 
 parser = argparse.ArgumentParser('Generate pseudo-QRELs from a run')
 
@@ -28,7 +28,7 @@ inp_run = readRunDict(args.input_run)
 qrels = []
 
 for qid, run_dict in inp_run.items():
-    for did, score in getSorteScoresFromScoreDict(run_dict)[0: args.top_k]:
+    for did, score in getSortedScoresFromScoreDict(run_dict)[0: args.top_k]:
         qrels.append(QrelEntry(queryId=qid, docId=did, relGrade=args.grade))
 
 
