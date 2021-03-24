@@ -19,17 +19,18 @@ fi
 dataDownloadDir="${COLLECT_ROOT}/${collect}/${INPUT_RAW_SUBDIR}"
 
 python -u scripts/data_convert/msmarco/concatenate_datasets.py \
-        --input_datapath "${dataDownloadDir}/${INPUT_DATA_SUBDIR}" \
-        --output "${dataDownloadDir}/${INPUT_DATA_SUBDIR}/concatenated_data.jsonl"
+        --input_datapath "${dataDownloadDir}/" \
+        --output "${dataDownloadDir}/concatenated_data.jsonl"
 
-for DATASPLIT_FOLDER in ${collect}/${INPUT_DATA_SUBDIR}/*; do
-    questFilePath="${DATASPLIT_FOLDER}/${QUESTION_FILE}"
+for inpSubDir in ${collect}/${INPUT_DATA_SUBDIR}/*; do
+    questFilePath="${inpSubDir}/${QUESTION_FILE}"
     # Produce annotations for all available files
     if [ -f "${questFilePath}" ] ;
     then
         echo "Annotating ${questFilePath}"
         python -u scripts/data_convert/msmarco/question_tagging.py \
-                "${questFilePath}" "${dataDownloadDir}/${INPUT_DATA_SUBDIR}/concatenated_data.jsonl" \
-                "${DATASPLIT_FOLDER}/tagged_question_ids.json"
+                "${questFilePath}" \
+                "${dataDownloadDir}/concatenated_data.jsonl" \
+                "${inpSubDir}/tagged_question_ids.json"
     fi
 done
