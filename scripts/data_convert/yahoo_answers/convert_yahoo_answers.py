@@ -89,21 +89,22 @@ for rec_str in SimpleXmlRecIterator(inp_file_name, 'document'):
         if len(rec.answer_list) == 0:  # Ignore questions without answers
             continue
 
-        question = (rec.subject + ' ' + rec.content).strip()
+        question_orig = (rec.subject + ' ' + rec.content).strip()
+        question_lc = question_orig.lower()
         qid = rec.uri
 
-        question_lemmas, question_unlemm = nlp.proc_text(question)
+        question_lemmas, question_unlemm = nlp.proc_text(question_orig)
 
-        question = question.lower()  # after NLP
 
         question_bert_tok = None
         if bert_tokenizer:
-            question_bert_tok = get_retokenized(bert_tokenizer, question)
+            question_bert_tok = get_retokenized(bert_tokenizer, question_lc)
 
         doc = {DOCID_FIELD: qid,
                TEXT_FIELD_NAME: question_lemmas,
                TEXT_UNLEMM_FIELD_NAME: question_unlemm,
-               TEXT_RAW_FIELD_NAME: question}
+               TEXT_RAW_FIELD_NAME: question_lc}
+
         if question_bert_tok is not None:
             doc[TEXT_BERT_TOKENIZED_NAME] = question_bert_tok
         doc_str = json.dumps(doc) + '\n'
@@ -111,20 +112,20 @@ for rec_str in SimpleXmlRecIterator(inp_file_name, 'document'):
 
         for i in range(len(rec.answer_list)):
             aid = qid + '-' + str(i)
-            answ = rec.answer_list[i]
-            answ_lemmas, answ_unlemm = nlp.proc_text(answ)
+            answ_orig = rec.answer_list[i]
+            answ_lc = answ_orig.lower()
 
-            answ = answ.lower()  # after NLP
+            answ_lemmas, answ_unlemm = nlp.proc_text(answ_orig)
 
             # Doing it after lower-casing
             answ_bert_tok = None
             if bert_tokenizer:
-                answ_bert_tok = get_retokenized(bert_tokenizer, answ)
+                answ_bert_tok = get_retokenized(bert_tokenizer, answ_lc)
 
             doc = {DOCID_FIELD: aid,
                    TEXT_FIELD_NAME: answ_lemmas,
                    TEXT_UNLEMM_FIELD_NAME: answ_unlemm,
-                   TEXT_RAW_FIELD_NAME: answ}
+                   TEXT_RAW_FIELD_NAME: answ_lc}
 
             if answ_bert_tok is not None:
                 doc[TEXT_BERT_TOKENIZED_NAME] = answ_bert_tok

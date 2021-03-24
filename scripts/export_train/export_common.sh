@@ -21,8 +21,12 @@ queryFieldName=""
 candProv=$CAND_PROV_LUCENE
 providerURI=""
 candProvAddConf=""
+handleCaseParam=""
 
-boolOpts=("h" "help" "print help")
+boolOpts=(
+"h" "help" "print help"
+"keep_case" "keepCase" "do not lowercase"
+)
 
 paramOpts=(
 "thread_qty"             "threadQty"           "# of threads"
@@ -134,6 +138,11 @@ if [ ! -d "$outDir" ] ; then
   mkdir -p "$outDir"
 fi
 
+
+if [ "$keepCase" = "1" ] ; then
+  handleCaseParam=" -keep_case "
+fi
+
 echo "========================================================"
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
@@ -149,4 +158,5 @@ echo "A max. # of candidate records to generate training data: $candTrainQty"
 echo "A max. # of candidate records to generate test data: $candTestQty"
 echo "Max train query # param.: $maxNumQueryTrainParam"
 echo "Max test/dev query # param.: $maxNumQueryTestParam"
+echo "Case handling param: $handleCaseParam"
 echo "========================================================"

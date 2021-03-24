@@ -62,7 +62,7 @@ for line in inp_file:
         doc = {DOCID_FIELD: did,
                TEXT_FIELD_NAME: query_lemmas,
                TEXT_UNLEMM_FIELD_NAME: query_unlemm,
-               TEXT_RAW_FIELD_NAME: query.lower()}
+               TEXT_RAW_FIELD_NAME: query}
         add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
         doc_str = json.dumps(doc) + '\n'

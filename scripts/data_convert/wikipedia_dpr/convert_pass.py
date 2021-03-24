@@ -94,7 +94,7 @@ class PassParseWorker:
                TEXT_FIELD_NAME: title_lemmas + ' ' + text_lemmas,
                TITLE_UNLEMM_FIELD_NAME: title_unlemm,
                TEXT_UNLEMM_FIELD_NAME: text_unlemm,
-               TEXT_RAW_FIELD_NAME: title_unlemm + ' ' + raw_text.lower()}
+               TEXT_RAW_FIELD_NAME: title_unlemm + ' ' + raw_text}
 
         add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
         return json.dumps(doc)

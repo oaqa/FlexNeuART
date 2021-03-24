@@ -36,6 +36,7 @@ cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  
 setJavaMem 1 2
 
 target/appassembler/bin/ExportTrainPairs \
+$handleCaseParam \
 -seed $randSeed \
 -export_fmt cedr  \
 -cand_train_qty $candTrainQty -cand_test_qty $candTestQty \

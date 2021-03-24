@@ -85,7 +85,7 @@ for query_idx, fields in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
             DOCID_FIELD: query_idx,
             TEXT_FIELD_NAME: query_lemmas,
             TEXT_UNLEMM_FIELD_NAME: query_unlemm,
-            TEXT_RAW_FIELD_NAME: query.lower()
+            TEXT_RAW_FIELD_NAME: query
         }
         add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
         if TEXT_BERT_TOKENIZED_NAME in doc:

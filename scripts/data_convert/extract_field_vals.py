@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Just a simple script to extract a list of of questions from the JSONL file
+# Just a simple script to extract a list of of values from a specific field of a JSONL file
 import sys
 import argparse
 

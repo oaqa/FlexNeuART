@@ -22,7 +22,8 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
 
 
-public abstract class ExportTrainBase {  
+public abstract class ExportTrainBase {
+  
   static ExportTrainBase createExporter(String expType,
                                         ForwardIndex fwdIndex,
                                         QrelReader qrelsTrain, QrelReader qrelsTest) {
@@ -83,6 +84,10 @@ public abstract class ExportTrainBase {
     mQrelsTest = qrelsTest;
   }
 
+  protected String handleCase(String text) {
+    return mDoLowerCase ? text.toLowerCase() : text;
+  }
+  
   /**
    * Read and process document text if necessary. For raw indices, no processing is needed.
    *   
@@ -93,14 +98,17 @@ public abstract class ExportTrainBase {
    */
   protected String getDocText(String docId) throws Exception {
     if  (mFwdIndex.isRaw()) {
-      return mFwdIndex.getDocEntryRaw(docId);
+      return handleCase(mFwdIndex.getDocEntryRaw(docId));
     }
     String text = mFwdIndex.getDocEntryParsedText(docId);
     if (text == null) {
       return null;
     }
-    return text.trim();
+    return handleCase(text.trim());
   }
+  
+  
+  protected boolean mDoLowerCase = true;
  
   protected ForwardIndex              mFwdIndex;
   protected QrelReader                mQrelsTrain;

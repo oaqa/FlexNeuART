@@ -70,7 +70,8 @@ class DocParseWorker:
 
         text = title_lemmas + ' ' + body_lemmas
         text = text.strip()
-        text_raw = (title.strip() + ' ' + body.strip()).lower()
+        text_raw = (title.strip() + ' ' + body.strip())
+
         doc = {DOCID_FIELD: did,
                'url' : url_lemmas,
                'url_unlemm' : url_unlemm,

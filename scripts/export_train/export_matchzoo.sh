@@ -26,6 +26,7 @@ checkVarNonEmpty "sampleMedNegQty"
 checkVarNonEmpty "sampleEasyNegQty"
 
 target/appassembler/bin/ExportTrainPairs \
+$handleCaseParam \
 -seed $randSeed \
 -export_fmt match_zoo  \
 \

@@ -66,7 +66,7 @@ class PassParseWorker:
         doc = {DOCID_FIELD: pid,
                TEXT_FIELD_NAME: text,
                TEXT_UNLEMM_FIELD_NAME: text_unlemm,
-               TEXT_RAW_FIELD_NAME: body.lower()}
+               TEXT_RAW_FIELD_NAME: body}
         add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
         return json.dumps(doc) + '\n'

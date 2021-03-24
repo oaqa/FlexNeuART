@@ -51,6 +51,9 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   
   public static final String MAX_DOC_WHITESPACE_TOK_QTY_PARAM = "max_doc_whitespace_qty";
   public static final String MAX_DOC_WHITESPACE_TOK_QTY_DESC = "max # of whitespace separated tokens to keep in a document";
+  
+  public static final String KEEP_CASE_PARAM = "keep_case";
+  public static final String KEEP_CASE_DESC = "do not lower-case queries and documents";
  
   
   public ExportTrainNegSampleBase(ForwardIndex fwdIndex, 
@@ -71,6 +74,8 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     opts.addOption(CommonParams.RANDOM_SEED_PARAM, null, true, CommonParams.RANDOM_SEED_DESC);
     
     opts.addOption(MAX_DOC_WHITESPACE_TOK_QTY_PARAM, null, true, MAX_DOC_WHITESPACE_TOK_QTY_DESC);
+    
+    opts.addOption(KEEP_CASE_PARAM, null, false, KEEP_CASE_DESC);
   }
   
   @Override
@@ -137,6 +142,12 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
       }
     }
     
+    if (cmd.hasOption(KEEP_CASE_PARAM)) {
+      mDoLowerCase = false;
+    }
+    
+    logger.info("Lower-casing? " + mDoLowerCase);
+    
     logger.info(String.format("# top-scoring training candidates to sample/select from %d", mCandTrainQty));
     logger.info(String.format("# top candidates for validation %d", mCandTestQty));
     
@@ -177,10 +188,21 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
                                   HashSet<String> relDocIds,
                                   ArrayList<String> docIds) throws Exception;
 
+  /**
+   *  A wrapper functions that routes the query to a specific processing function and does case-processing (lower-casing)
+   *  if needed.
+   *  
+   *  @param candProv    candidate provider
+   *  @param queryNum    a query number
+   *  @param queryId     a query identifier
+   *  @param queryQueryText  a query text to pass to the candidate provider
+   *  @param queryFieldText  a query text to export (this can be a different field than the field that we use for the candidate provider)
+   */
   @Override
   void exportQuery(CandidateProvider candProv,
                   int queryNum, String queryId, String queryQueryText, String queryFieldText, boolean bIsTestQuery)
       throws Exception {
+    queryFieldText = this.handleCase(queryQueryText);
     if (bIsTestQuery) {
       exportQueryTest(candProv, queryNum, queryId, queryQueryText, queryFieldText);
     } else {
@@ -190,9 +212,8 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   
   void exportQueryTest(CandidateProvider candProv,
                        int queryNum, String queryId, 
-                       String queryQueryText, String queryFieldText) throws Exception {
-    //logger.info("Generating test data: just dumping all top-" + mCandQty + " retrieved candidates");
-    
+                       String queryQueryText, 
+                       String queryFieldText) throws Exception {  
     queryFieldText = queryFieldText.trim();
     
     // It's super-important to not generate any empty text fields.
