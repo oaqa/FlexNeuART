@@ -18,29 +18,30 @@ fi
 
 dataDownloadDir="${COLLECT_ROOT}/${collect}/${INPUT_RAW_SUBDIR}"
 
-mkdir -p "${dataDownloadDir}"
+if [ ! -d "${dataDownloadDir}" ] ; then
+  mkdir -p "${dataDownloadDir}"
+fi
 
 cd "${dataDownloadDir}"
 
 if test -f "SUCCESS";
 then
-    echo "Data downloaded"
-    exit 0
+  echo "Data downloaded"
+  exit 0
 fi
 
 for split in train_v2.1.json.gz \
              dev_v2.1.json.gz \
              eval_v2.1_public.json.gz \
              ; do
-    uri="https://msmarco.blob.core.windows.net/msmarco/${split}"
-    echo "Download ${uri}"
-    wget "${uri}" 
+  uri="https://msmarco.blob.core.windows.net/msmarco/${split}"
+  echo "Download ${uri}"
+  wget "${uri}"
 done
 
 for file in ./*.gz;
 do
-    gunzip "${file}"
-
+  gunzip "${file}"
 done
 
 touch "SUCCESS"
