@@ -9,9 +9,6 @@ from bs4 import BeautifulSoup
 
 from scripts.config import DEFAULT_ENCODING, STOPWORD_FILE, DOCID_FIELD
 
-WikipediaRecordParsed = collections.namedtuple('WikipediaRecordParsed',
-                                               'id url title content')
-
 YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
                                               'uri subject content bestAnswerId answerList')
 
@@ -177,36 +174,6 @@ def pretokenizeUrl(url):
                 break
 
     return re.sub(r'[.,:!\?/"+\-\'=_{}()|]', " ", url)
-
-
-def wikiExtractorFileIterator(rootDir):
-    """Iterate over all files produced by the wikiextractor and return file names.
-    """
-    dirList1Sorted = list(os.listdir(rootDir))
-    dirList1Sorted.sort()
-    for dn in dirList1Sorted:
-        fullDirName = os.path.join(rootDir, dn)
-        if os.path.isdir(fullDirName):
-            dirList2Sorted = list(os.listdir(fullDirName))
-            dirList2Sorted.sort()
-            for fn in dirList2Sorted:
-                if fn.startswith('wiki_'):
-                    yield os.path.join(fullDirName, fn)
-
-
-def procWikipediaRecord(recStr):
-    """A procedure to parse a single Wikipedia page record
-       from the wikiextractor output, which we assume it to have DEFAULT_ENCODING encoding.
-
-    :param recStr:  One page content including encosing tags <doc> ... </doc>
-    """
-    doc = BeautifulSoup(recStr, 'lxml', from_encoding=DEFAULT_ENCODING)
-
-    docRoot = doc.find('doc')
-    if docRoot is None:
-        raise Exception('Invalid format, missing <doc> tag')
-
-    return WikipediaRecordParsed(id=docRoot['id'], url=docRoot['url'], title=docRoot['title'], content=docRoot.text)
 
 
 def procYahooAnswersRecord(recStr):

@@ -6,7 +6,6 @@ import argparse
 import random
 import math
 import pytorch_pretrained_bert
-import nmslib
 import time
 import numpy as np
 from tqdm import tqdm

@@ -71,6 +71,9 @@ with FileWrapper(fileName) as f:
         if score > prevScore:
             raise Exception(
                 f'Invalid line {ln} in run file {fileName} increasing score!')
+        if docid not in allDocIds:
+            raise Exception(
+                f'Invalid line {ln} in run file {fileName} document id not found in the index: {docid}')
         if docid in seenDocs:
             raise Exception(
                 f'Invalid line {ln} in run file {fileName} repeating document {docid}')

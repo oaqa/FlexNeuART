@@ -291,14 +291,6 @@
                   <id>FilterVocabulary</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ConvertStackOverflowStep1</mainClass>
-                  <id>ConvertStackOverflowStep1</id>
-                </program>
-                <program>
-                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ConvertStackOverflowStep2</mainClass>
-                  <id>ConvertStackOverflowStep2</id>
-                </program>
-                <program>
                   <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.CheckDenseSparseExportScores</mainClass>
                   <id>CheckDenseSparseExportScores</id>
                 </program>

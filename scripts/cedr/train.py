@@ -109,7 +109,7 @@ def avg_model_params(model):
 
 def clean_memory(device_name):
     utils.sync_out_streams()
-    print('\nClearning memory device:', device_name)
+    print('\n', 'Clearning memory device:', device_name)
     utils.sync_out_streams()
     gc.collect()
     if device_name != DEVICE_CPU:
@@ -309,7 +309,7 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
 
     utils.sync_out_streams()
 
-    print(f'\nEvaluating run with QREL file {qrelf} using metric {eval_metric}')
+    print(f'\n', f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
     utils.sync_out_streams()
 
