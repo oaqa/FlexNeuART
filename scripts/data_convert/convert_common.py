@@ -105,7 +105,7 @@ def SimpleXmlRecIterator(fileName, recTagName):
       </recordTagName>
 
     :param fileName:  input file name (can be compressed).
-    :param tagName:   a record tag name (for the tag that encloses the record)
+    :param recTagName:   a record tag name (for the tag that encloses the record)
 
     :return:   it yields a series of records
     """
