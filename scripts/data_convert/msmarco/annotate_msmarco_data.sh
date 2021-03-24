@@ -23,7 +23,8 @@ python -u scripts/data_convert/msmarco/concatenate_datasets.py \
         --output "${dataDownloadDir}/concatenated_data.jsonl"
 
 for inpSubDir in ${collect}/${INPUT_DATA_SUBDIR}/*; do
-    questFilePath="${inpSubDir}/${QUESTION_FILE}"
+    questFilePath="${collect}/${INPUT_DATA_SUBDIR}/${inpSubDir}/${QUESTION_FILE}"
+    echo "Checking existence of the file: $questFilePath"
     # Produce annotations for all available files
     if [ -f "${questFilePath}" ] ;
     then
