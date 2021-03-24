@@ -20,8 +20,8 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 
 import no.uib.cipr.matrix.sparse.SparseVector;
-import edu.cmu.lti.oaqa.flexneuart.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
+import edu.cmu.lti.oaqa.flexneuart.letor.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
 /**

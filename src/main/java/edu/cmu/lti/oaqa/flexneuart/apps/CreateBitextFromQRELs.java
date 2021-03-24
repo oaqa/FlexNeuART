@@ -28,9 +28,9 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.flexneuart.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.letor.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;

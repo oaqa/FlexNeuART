@@ -19,7 +19,6 @@ import java.io.File;
 import java.util.HashMap;
 
 import edu.cmu.lti.oaqa.flexneuart.apps.CommonParams;
-import edu.cmu.lti.oaqa.flexneuart.embed.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndexBasedFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaTranTableReaderAndRecoder;

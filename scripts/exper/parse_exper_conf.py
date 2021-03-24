@@ -45,7 +45,6 @@ if entryId < 0 or entryId >= len(inpData):
     print(END_STR)
     sys.exit(0)
 else:
-    resList = []
 
     with open(outFile, 'w') as of:
         for key, value in inpData[entryId].items():

@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.flexneuart.embed;
+package edu.cmu.lti.oaqa.flexneuart.letor;
 
 
 import java.io.*;
