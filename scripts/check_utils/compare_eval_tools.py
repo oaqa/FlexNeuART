@@ -27,13 +27,13 @@ parser.add_argument('--eval_metric', choices=METRIC_LIST, default=METRIC_LIST[0]
 args = parser.parse_args()
 print(args)
 
-qrels = readQrelsDict(args.qrels)
-run = readRunDict(args.run)
+qrels = read_qrels_dict(args.qrels)
+run = read_run_dict(args.run)
 query_ids = list(run.keys())
 
 
-tmpFileNameRun = create_temp_file()
-tmpFileNameQrels = create_temp_file()
+tmp_file_name_run = create_temp_file()
+tmp_file_name_qrels = create_temp_file()
 
 print('query external internal')
 print('-----------------------')
@@ -42,21 +42,21 @@ res_all_int = []
 res_all_ext = []
 
 for qid in query_ids:
-    tmpQrels = []
+    tmp_qrels = []
     if qid in qrels:
-        for did, relGrade in qrels[qid].items():
-            tmpQrels.append(QrelEntry(queryId=qid, docId=did, relGrade=relGrade))
-    tmpRun = {qid : run[qid]}
-    writeQrels(tmpQrels, tmpFileNameQrels)
-    writeRunDict(tmpRun, tmpFileNameRun)
+        for did, rel_grade in qrels[qid].items():
+            tmp_qrels.append(QrelEntry(query_id=qid, doc_id=did, rel_grade=rel_grade))
+    tmp_run = {qid : run[qid]}
+    write_qrels(tmp_qrels, tmp_file_name_qrels)
+    write_run_dict(tmp_run, tmp_file_name_run)
     res = []
     for i in range(2):
-        res.append(getEvalResults(i==0,
+        res.append(get_eval_results(i==0,
                                   args.eval_metric,
-                                  rerankRun=tmpRun,
-                                  qrelFile=tmpFileNameQrels,
-                                  runFile=tmpFileNameRun,
-                                  useQrelCache=False))
+                                  rerank_run=tmp_run,
+                                  qrel_file=tmp_file_name_qrels,
+                                  run_file=tmp_file_name_run,
+                                  use_qrel_cache=False))
 
     val_ext, val_int = res[0], res[1]
     mx = max(val_ext, val_int)

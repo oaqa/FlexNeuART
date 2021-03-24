@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import jsonlGen
+from scripts.data_convert.convert_common import jsonl_gen
 from scripts.cedr.data import VocabBuilder
 
 parser = argparse.ArgumentParser('Build vocabularies from several processed fiels')
@@ -25,10 +25,10 @@ field = args.field_name
 
 for fn in args.input:
     ln = 0
-    for docEntry in tqdm(jsonlGen(fn), desc='Processing: ' + fn):
+    for doc_entry in tqdm(jsonl_gen(fn), desc='Processing: ' + fn):
         ln += 1
-        if field in docEntry:
-            vocab.procDoc(docEntry[field])
+        if field in doc_entry:
+            vocab.proc_doc(doc_entry[field])
         else:
             print(f'WARNING: No field {field} is found in line {ln} file {fn}')
             continue

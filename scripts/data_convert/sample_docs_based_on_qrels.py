@@ -11,9 +11,9 @@ import json
 
 sys.path.append('.')
 import argparse
-from scripts.common_eval import readQrelsDict
+from scripts.common_eval import read_qrels_dict
 from scripts.config import ANSWER_FILE_JSON, QREL_FILE, DOCID_FIELD
-from scripts.data_convert.convert_common import jsonlGen, FileWrapper
+from scripts.data_convert.convert_common import jsonl_gen, FileWrapper
 
 random.seed(0)
 
@@ -59,19 +59,19 @@ if sample_prob < 0 or sample_prob >= 1:
     sys.exit(1)
 
 
-qrelDict = readQrelsDict(os.path.join(args.qrel_dir, QREL_FILE))
+qrel_dict = read_qrels_dict(os.path.join(args.qrel_dir, QREL_FILE))
 
-allRelDocs = set()
+all_rel_docs = set()
 
-for qid, qd in qrelDict.items():
+for qid, qd in qrel_dict.items():
     for did, rel in qd.items():
         if rel >= args.min_rel_grade:
-            allRelDocs.add(did)
+            all_rel_docs.add(did)
 
 
-with FileWrapper(args.out_doc_file, 'w') as outFile:
-    for docEntry in jsonlGen(args.inp_doc_file):
-        did = docEntry[DOCID_FIELD]
-        if did in allRelDocs or random.random() < sample_prob:
-            outFile.write(json.dumps(docEntry) + '\n')
+with FileWrapper(args.out_doc_file, 'w') as out_file:
+    for doc_entry in jsonl_gen(args.inp_doc_file):
+        did = doc_entry[DOCID_FIELD]
+        if did in all_rel_docs or random.random() < sample_prob:
+            out_file.write(json.dumps(doc_entry) + '\n')
 

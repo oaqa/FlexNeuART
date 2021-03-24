@@ -17,7 +17,7 @@ import multiprocessing
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import readStopWords, FileWrapper, addRetokenizedField, \
+from scripts.data_convert.convert_common import read_stop_words, FileWrapper, add_retokenized_field, \
                                                 BERT_TOK_OPT, BERT_TOK_OPT_HELP
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.config import STOPWORD_FILE, BERT_BASE_MODEL, SPACY_MODEL, \
@@ -44,26 +44,26 @@ args = parser.parse_args()
 arg_vars = vars(args)
 print(args)
 
-bertTokenizer=None
+bert_tokenizer=None
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bertTokenizer = BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 
 # Lower cased
-stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
-print(stopWords)
+stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
+print(stop_words)
 
-fltPassIds = None
+flt_pass_ids = None
 if args.passage_ids is not None:
-    fltPassIds = set(np.load(args.passage_ids))
-    print(f'Restricting parsing to {len(fltPassIds)} passage IDs')
+    flt_pass_ids = set(np.load(args.passage_ids))
+    print(f'Restricting parsing to {len(flt_pass_ids)} passage IDs')
 
 fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
 
 # Lower cased
-textProcessor = SpacyTextParser(SPACY_MODEL, stopWords,
-                                keepOnlyAlphaNum=True, lowerCase=True,
-                                enablePOS=True)
+text_processor = SpacyTextParser(SPACY_MODEL, stop_words,
+                                keep_only_alpha_num=True, lower_case=True,
+                                enable_pos=True)
 
 class PassParseWorker:
 
@@ -81,39 +81,39 @@ class PassParseWorker:
             return ''
 
         assert len(fields) == 3, f"Wrong format fline: {line}"
-        passId, rawText, title = fields
+        pass_id, raw_text, title = fields
 
-        if fltPassIds is not None:
-            if passId not in fltPassIds:
+        if flt_pass_ids is not None:
+            if pass_id not in flt_pass_ids:
                 return ''
 
-        textLemmas, textUnlemm = textProcessor.procText(rawText)
-        titleLemmas, titleUnlemm = textProcessor.procText(title)
+        text_lemmas, text_unlemm = text_processor.proc_text(raw_text)
+        title_lemmas, title_unlemm = text_processor.proc_text(title)
 
-        doc = {DOCID_FIELD: passId,
-               TEXT_FIELD_NAME: titleLemmas + ' ' + textLemmas,
-               TITLE_UNLEMM_FIELD_NAME: titleUnlemm,
-               TEXT_UNLEMM_FIELD_NAME: textUnlemm,
-               TEXT_RAW_FIELD_NAME: titleUnlemm + ' ' + rawText.lower()}
+        doc = {DOCID_FIELD: pass_id,
+               TEXT_FIELD_NAME: title_lemmas + ' ' + text_lemmas,
+               TITLE_UNLEMM_FIELD_NAME: title_unlemm,
+               TEXT_UNLEMM_FIELD_NAME: text_unlemm,
+               TEXT_RAW_FIELD_NAME: title_unlemm + ' ' + raw_text.lower()}
 
-        addRetokenizedField(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bertTokenizer)
+        add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
         return json.dumps(doc)
 
 
-inpFile = FileWrapper(args.input_file)
-outFile = FileWrapper(args.out_file, 'w')
+inp_file = FileWrapper(args.input_file)
+out_file = FileWrapper(args.out_file, 'w')
 
 proc_qty = args.proc_qty
 print(f'Spanning {proc_qty} processes')
 pool = multiprocessing.Pool(processes=proc_qty)
 ln = 0
 ln_ign = 0
-for docStr in pool.imap(PassParseWorker(), inpFile, IMAP_PROC_CHUNK_QTY):
+for doc_str in pool.imap(PassParseWorker(), inp_file, IMAP_PROC_CHUNK_QTY):
     ln = ln + 1
 
-    if docStr is not None:
-        if docStr:
-            outFile.write(docStr + '\n')
+    if doc_str is not None:
+        if doc_str:
+            out_file.write(doc_str + '\n')
         else:
             ln_ign += 1
     else:
@@ -124,6 +124,6 @@ for docStr in pool.imap(PassParseWorker(), inpFile, IMAP_PROC_CHUNK_QTY):
 
 print('Processed %d passages' % ln)
 
-inpFile.close()
-outFile.close()
+inp_file.close()
+out_file.close()
 

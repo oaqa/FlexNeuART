@@ -16,11 +16,11 @@ OUT_DIR_PARAM = 'outdir'
 
 
 class BaseParser:
-    def initAddArgs(self):
+    def init_add_args(self):
         pass
 
-    def __init__(self, progName):
-        self.parser = argparse.ArgumentParser(description=progName)
+    def __init__(self, prog_name):
+        self.parser = argparse.ArgumentParser(description=prog_name)
         self.parser.add_argument('--' + OUT_DIR_PARAM, metavar='output directory',
                                  help='output directory',
                                  type=str, required=True)
@@ -30,15 +30,15 @@ class BaseParser:
         self.parser.add_argument('--exper_subdir', metavar='exper. results subdir.',
                                  help='top-level sub-directory to store experimental results',
                                  type=str, default=FEAT_EXPER_SUBDIR)
-        self.initAddArgs()
+        self.init_add_args()
 
-    def getArgs(self):
+    def get_args(self):
         """
         :return: argument objects, to be used
         """
         return self.args
 
-    def parseArgs(self):
+    def parse_args(self):
         """This is deliberately implemented with a delayed optimization,
         so that a user can add new parameter definitions before arguments
         are parsed.
@@ -47,37 +47,37 @@ class BaseParser:
         print(self.args)
 
 
-def genRerankDescriptors(args, extrJsonGenFunc, jsonDescName, jsonSubDir):
+def gen_rerank_descriptors(args, extr_json_gen_func, json_desc_name, json_sub_dir):
     """
     A generic function to write a bunch of experimental descrptors (for the re-ranking only scenario).
 
     :param args:              arguments previously produce by the class inherited from BaseParser
-    :param extrJsonGenFunc:   generator of extractor JSON and its file ID.
-    :param jsonDescName:      the name of the top-level descriptor file that reference individual extractor JSONs.
-    :param jsonSubDir:        a sub-directory to store extractor JSONs.
+    :param extr_json_gen_func:   generator of extractor JSON and its file ID.
+    :param json_desc_name:      the name of the top-level descriptor file that reference individual extractor JSONs.
+    :param json_sub_dir:        a sub-directory to store extractor JSONs.
 
     """
-    descDataJSON = []
+    desc_data_json = []
 
     args_var = vars(args)
 
-    outJsonSubDir = os.path.join(args_var[OUT_DIR_PARAM], jsonSubDir)
-    if not os.path.exists(outJsonSubDir):
-        os.makedirs(outJsonSubDir)
+    out_json_sub_dir = os.path.join(args_var[OUT_DIR_PARAM], json_sub_dir)
+    if not os.path.exists(out_json_sub_dir):
+        os.makedirs(out_json_sub_dir)
 
-    for fileId, jsonDesc, testOnly, modelFinal in extrJsonGenFunc():
-        jsonFileName = fileId + '.json'
+    for file_id, json_desc, test_only, model_final in extr_json_gen_func():
+        json_file_name = file_id + '.json'
 
-        desc = {EXPER_SUBDIR_PARAM: os.path.join(args.exper_subdir, jsonSubDir, fileId),
-                EXTR_TYPE_PARAM: os.path.join(args_var[REL_DESC_PATH_PARAM], jsonSubDir, jsonFileName),
-                TEST_ONLY_PARAM: int(testOnly)}
-        if modelFinal is not None:
-            desc[MODEL_FINAL_PARAM] = modelFinal
+        desc = {EXPER_SUBDIR_PARAM: os.path.join(args.exper_subdir, json_sub_dir, file_id),
+                EXTR_TYPE_PARAM: os.path.join(args_var[REL_DESC_PATH_PARAM], json_sub_dir, json_file_name),
+                TEST_ONLY_PARAM: int(test_only)}
+        if model_final is not None:
+            desc[MODEL_FINAL_PARAM] = model_final
 
-        descDataJSON.append(desc)
+        desc_data_json.append(desc)
 
-        with open(os.path.join(outJsonSubDir, jsonFileName), 'w') as of:
-            json.dump(jsonDesc, of, indent=2)
+        with open(os.path.join(out_json_sub_dir, json_file_name), 'w') as of:
+            json.dump(json_desc, of, indent=2)
 
-    with open(os.path.join(args.outdir, jsonDescName), 'w') as of:
-        json.dump(descDataJSON, of, indent=2)
+    with open(os.path.join(args.outdir, json_desc_name), 'w') as of:
+        json.dump(desc_data_json, of, indent=2)

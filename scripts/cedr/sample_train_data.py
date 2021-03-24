@@ -14,7 +14,7 @@ import argparse
 import numpy as np
 import shutil
 
-from scripts.common_eval import readRunDict, writeRunDict
+from scripts.common_eval import read_run_dict, write_run_dict
 from scripts.cedr.data import read_pairs_dict, write_pairs_dict
 from scripts.config import QREL_FILE
 import scripts.utils as utils
@@ -94,7 +94,7 @@ for data_fn in args.datafiles + [args.train_pairs, args.qrels]:
                 follow_symlinks=True)
 
 # Read and sample validation queries
-full_val_run = readRunDict(os.path.join(src_dir, args.valid_run))
+full_val_run = read_run_dict(os.path.join(src_dir, args.valid_run))
 
 val_qid_lst = list(full_val_run.keys())
 val_qid_lst.sort()
@@ -103,7 +103,7 @@ val_qid_sample = np.random.choice(val_qid_lst, args.test_query_sample_qty, repla
 
 sample_val_run = {qid : full_val_run[qid] for qid in val_qid_sample}
 
-writeRunDict(sample_val_run, os.path.join(dst_dir_full, args.valid_run))
+write_run_dict(sample_val_run, os.path.join(dst_dir_full, args.valid_run))
 
 with open(os.path.join(src_dir, args.train_pairs)) as f:
     train_pairs = read_pairs_dict(f)

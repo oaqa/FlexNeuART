@@ -7,7 +7,7 @@ import time
 sys.path.append('.')
 
 from scripts.py_featextr_server.python_generated.protocol.ttypes import TextEntryRaw
-from scripts.py_featextr_server.base_server import BaseQueryHandler, startQueryServer
+from scripts.py_featextr_server.base_server import BaseQueryHandler, start_query_server
 
 import scripts.cedr.model_init_utils as model_init_utils
 import scripts.cedr.data as data
@@ -15,64 +15,66 @@ import scripts.cedr.data as data
 DEFAULT_BATCH_SIZE = 32
 
 class CedrQueryHandler(BaseQueryHandler):
-    # Exclusive==True means that only one getScores
-    # function is executed at at time
+    # Exclusive==True means single-threaded processing, which seems to be necessary here (there were hang ups otherwise)
     def __init__(self,
-                    modelList,
-                    batchSize, deviceName,
-                    maxQueryLen, maxDocLen,
+                    model_list,
+                    batch_size, device_name,
+                    max_query_len, max_doc_len,
                     exclusive,
-                    debugPrint=False):
+                    debug_print=False):
         super().__init__(exclusive=exclusive)
 
-        self.debugPrint = debugPrint
-        self.batchSize = batchSize
+        self.debug_print = debug_print
+        self.batch_size = batch_size
 
-        self.maxQueryLen = maxQueryLen
-        self.maxDocLen = maxDocLen
-        self.deviceName = deviceName
-        print('Maximum query/document len %d/%d device: %s' % (self.maxQueryLen, self.maxDocLen, self.deviceName))
+        self.max_query_len = max_query_len
+        self.max_doc_len = max_doc_len
+        self.device_name = device_name
+        print('Maximum query/document len %d/%d device: %s' % (self.max_query_len, self.max_doc_len, self.device_name))
 
-        self.modelList = modelList
-        for model in self.modelList:
-            model.to(self.deviceName)
+        self.model_list = model_list
+        for model in self.model_list:
+            model.to(self.device_name)
             # need to be in the eval mode
             model.eval()
 
 
-    def computeScoresFromParsedOverride(self, query, docs):
-        queryRaw = TextEntryRaw(query.id, self.concatTextEntryWords(query))
-        docsRaw = []
+    def compute_scores_from_parsed_override(self, query, docs):
+        # Sending words array with subsequent concatenation is quite inefficient in Python (very-very inefficient)
+        # This is left for compatibility, but you better use the option sendParsedAsRaw in the JSON config file
+        # for a Java-based feature extractor
+        query_raw = TextEntryRaw(query.id, self.concat_text_entry_words(query))
+        docs_raw = []
         for e in docs:
-            docsRaw.append(TextEntryRaw(e.id, self.concatTextEntryWords(e)))
+            docs_raw.append(TextEntryRaw(e.id, self.concat_text_entry_words(e)))
 
-        return self.computeScoresFromRawOverride(queryRaw, docsRaw)
+        return self.compute_scores_from_raw_override(query_raw, docs_raw)
 
-    def computeScoresFromRawOverride(self, query, docs):
+    def compute_scores_from_raw_override(self, query, docs):
         print('Processing query:', query.id, query.text, '# of docs: ', len(docs))
 
-        queryData = {query.id: query.text}
+        query_data = {query.id: query.text}
         # Run maps queries to arrays of document IDs see iter_valid_records (train.py)
         run = {query.id: [e.id for e in docs]}
 
-        docData = {}
+        doc_data = {}
         for e in docs:
-            docData[e.id] = e.text
+            doc_data[e.id] = e.text
 
-        modelQty = len(self.modelList)
+        model_qty = len(self.model_list)
         # Initialize the return dictionary: for each document ID, a zero-element array of the size # of models.
-        sampleRet = {e.id : [0.] * modelQty for e in docs}
+        sample_ret = {e.id : [0.] * model_qty for e in docs}
 
-        if docData:
+        if doc_data:
 
             # based on the code from run_model function (train.py)
-            dataSet = queryData, docData
+            data_set = query_data, doc_data
             # must disable gradient computation to greatly reduce memory requirements and speed up things
             with torch.no_grad():
-                for modelId, model in enumerate(self.modelList):
-                    for records in data.iter_valid_records(model, self.deviceName, dataSet, run,
-                                                           self.batchSize,
-                                                           self.maxQueryLen, self.maxDocLen):
+                for model_id, model in enumerate(self.model_list):
+                    for records in data.iter_valid_records(model, self.device_name, data_set, run,
+                                                           self.batch_size,
+                                                           self.max_query_len, self.max_doc_len):
 
                         scores = model(records['query_tok'],
                                         records['query_mask'],
@@ -85,16 +87,16 @@ class CedrQueryHandler(BaseQueryHandler):
                         scores = scores.tolist()
 
                         for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
-                            if self.debugPrint:
-                                print('model id:', modelId, 'score & doc. id:', score, did, docData[did])
+                            if self.debug_print:
+                                print('model id:', model_id, 'score & doc. id:', score, did, doc_data[did])
 
-                            assert did in sampleRet, f'Bug: missing document ID: {did} in the result set.'
-                            sampleRet[did][modelId] = score
+                            assert did in sample_ret, f'Bug: missing document ID: {did} in the result set.'
+                            sample_ret[did][model_id] = score
 
-        if self.debugPrint:
-            print('All scores:', sampleRet)
+        if self.debug_print:
+            print('All scores:', sample_ret)
 
-        return sampleRet
+        return sample_ret
 
 
 def add_eval_model_init_args(parser):
@@ -157,7 +159,7 @@ if __name__ == '__main__':
     assert(args.init_model is None or type(args.init_model) == list)
     assert (args.init_model_weights is None or type(args.init_model_weights) == list)
 
-    modelList = []
+    model_list = []
 
     if args.init_model is None:
         # TODO this one isn't properly tested
@@ -171,7 +173,7 @@ if __name__ == '__main__':
                 # initialization), but not during test time.
                 model.load_state_dict(torch.load(fname.name, map_location='cpu'),
                                       strict=True)
-                modelList.append(model)
+                model_list.append(model)
         else:
             print('Specify the model file: --init_model or model type and model weights')
             sys.exit(1)
@@ -179,13 +181,13 @@ if __name__ == '__main__':
         for fname in args.init_model:
             print('Loading model from:', fname.name)
             model = torch.load(fname.name, map_location='cpu')
-            modelList.append(model)
+            model_list.append(model)
 
-    multiThreaded = False  # if we set to True, we can often run out of CUDA memory.
-    startQueryServer(args.host, args.port, multiThreaded, CedrQueryHandler(modelList=modelList,
-                                                                           batchSize=args.batch_size,
-                                                                           debugPrint=args.debug_print,
-                                                                           deviceName=args.device_name,
-                                                                           maxQueryLen=args.max_query_len,
-                                                                           maxDocLen=args.max_doc_len,
-                                                                           exclusive=not multiThreaded))
+    multi_threaded = False  # if we set to True, we can often run out of CUDA memory.
+    start_query_server(args.host, args.port, multi_threaded, CedrQueryHandler(model_list=model_list,
+                                                                           batch_size=args.batch_size,
+                                                                           debug_print=args.debug_print,
+                                                                           device_name=args.device_name,
+                                                                           max_query_len=args.max_query_len,
+                                                                           max_doc_len=args.max_doc_len,
+                                                                           exclusive=not multi_threaded))

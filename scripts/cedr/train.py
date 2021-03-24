@@ -26,7 +26,7 @@ from scripts.cedr.model_init_utils import MODEL_PARAM_PREF
 
 import scripts.cedr.model_init_utils as model_init_utils
 
-from scripts.common_eval import METRIC_LIST, readQrelsDict, readRunDict, getEvalResults
+from scripts.common_eval import METRIC_LIST, read_qrels_dict, read_run_dict, get_eval_results
 from scripts.config import DEVICE_CPU
 
 from tqdm import tqdm
@@ -314,11 +314,11 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
     utils.sync_out_streams()
 
     # Let us always save the run
-    return getEvalResults(useExternalEval=train_params.use_external_eval,
-                          evalMetric=eval_metric,
-                          rerankRun=rerank_run,
-                          qrelFile=qrelf,
-                          runFile=run_filename)
+    return get_eval_results(use_external_eval=train_params.use_external_eval,
+                          eval_metric=eval_metric,
+                          rerank_run=rerank_run,
+                          qrel_file=qrelf,
+                          run_file=run_filename)
 
 
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
@@ -694,9 +694,9 @@ def main_cli():
 
     dataset = data.read_datafiles(args.datafiles)
     qrelf = args.qrels.name
-    qrels = readQrelsDict(qrelf)
+    qrels = read_qrels_dict(qrelf)
     train_pairs_all = data.read_pairs_dict(args.train_pairs)
-    valid_run = readRunDict(args.valid_run.name)
+    valid_run = read_run_dict(args.valid_run.name)
     max_query_val = args.max_query_val
     query_ids = list(valid_run.keys())
     if max_query_val > 0:

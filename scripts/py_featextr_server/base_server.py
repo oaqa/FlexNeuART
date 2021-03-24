@@ -26,53 +26,55 @@ class BaseQueryHandler:
         else:
             print('NOT locking the base server for multi-threaded processing')
 
+    # This function must remain in Camel-case, b/c it's tied to Java code
     def getScoresFromParsed(self, query, docs):
         try:
             if self.lock_ is not None:
                 with self.lock_:
-                    return self.computeScoresFromParsedOverride(query, docs)
+                    return self.compute_scores_from_parsed_override(query, docs)
             else:
-                return self.computeScoresFromParsedOverride(query, docs)
+                return self.compute_scores_from_parsed_override(query, docs)
         except Exception as e:
             raise ScoringException(str(e))
 
+    # This function must remain in Camel-case, b/c it's tied to Java code
     def getScoresFromRaw(self, query, docs):
         try:
             if self.lock_ is not None:
                 with self.lock_:
-                    return self.computeScoresFromRawOverride(query, docs)
+                    return self.compute_scores_from_raw_override(query, docs)
             else:
-                return self.computeScoresFromRawOverride(query, docs)
+                return self.compute_scores_from_raw_override(query, docs)
         except Exception as e:
             raise ScoringException(str(e))
 
-    def textEntryToStr(self, te):
+    def text_entry_to_str(self, te):
         arr = []
         for winfo in te.entries:
             arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
         return te.id + ' '.join(arr)
 
-    def concatTextEntryWords(self, te):
+    def concat_text_entry_words(self, te):
         arr = [winfo.word for winfo in te.entries]
         return ' '.join(arr)
 
     # One or both functions need to be implemented in a child class
-    def computeScoresFromParsedOverride(self, query, docs):
+    def compute_scores_from_parsed_override(self, query, docs):
         raise ScoringException('Parsed fields are not supported by this server!')
 
-    def computeScoresFromRawOverride(self, query, docs):
+    def compute_scores_from_raw_override(self, query, docs):
         raise ScoringException('Raw-text fields are not supported by this server!')
 
 
 # This function starts the server and takes over the program control
-def startQueryServer(host, port, multiThreaded, queryHandler):
-    processor = Processor(queryHandler)
+def start_query_server(host, port, multi_threaded, query_handler):
+    processor = Processor(query_handler)
 
     transport = TSocket.TServerSocket(host=host, port=port)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 
-    if multiThreaded:
+    if multi_threaded:
         print('Starting a multi-threaded server...')
         server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
     else:

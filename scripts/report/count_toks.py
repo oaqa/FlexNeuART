@@ -4,7 +4,7 @@ import argparse
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import jsonlGen
+from scripts.data_convert.convert_common import jsonl_gen
 
 parser = argparse.ArgumentParser(description='Count tokens and number of entries in JSONL')
 
@@ -17,7 +17,7 @@ qty = 0
 tok_qty = 0
 field = args.field
 
-for e in jsonlGen(args.input):
+for e in jsonl_gen(args.input):
     qty += 1
     if field in e:
         tok_qty += len(e[field].split())

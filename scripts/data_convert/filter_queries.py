@@ -7,7 +7,7 @@ import argparse
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import FileWrapper, readQueries
+from scripts.data_convert.convert_common import FileWrapper, read_queries
 from scripts.config import TEXT_FIELD_NAME, QUESTION_FILE_JSON
 
 parser = argparse.ArgumentParser(description='Filter queries to exclude queries from given sub-directories')
@@ -24,42 +24,42 @@ args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
-ignoreQueries = set()
+ignore_queries = set()
 
 for qfile_dir in args.filter_query_dir:
     qfile_name = os.path.join(qfile_dir, QUESTION_FILE_JSON)
-    for e in readQueries(qfile_name):
+    for e in read_queries(qfile_name):
         if not TEXT_FIELD_NAME in e:
             continue
-        ignoreQueries.add(e[TEXT_FIELD_NAME])
+        ignore_queries.add(e[TEXT_FIELD_NAME])
     print('Read queries from: ' + qfile_name)
 
-print('A list of queries to ignore has %d entries' % (len(ignoreQueries)))
+print('A list of queries to ignore has %d entries' % (len(ignore_queries)))
 
 if not os.path.exists(args.out_dir):
     os.makedirs(args.out_dir)
 
-outFileQueries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w')
+out_file_queries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w')
 
-readQty = 0
-wroteQty = 0
+read_qty = 0
+wrote_qty = 0
 
-for e in readQueries(os.path.join(args.input_dir, QUESTION_FILE_JSON)):
-    readQty += 1
+for e in read_queries(os.path.join(args.input_dir, QUESTION_FILE_JSON)):
+    read_qty += 1
     if not TEXT_FIELD_NAME in e:
         continue
 
     text = e[TEXT_FIELD_NAME]
-    if text in ignoreQueries:
+    if text in ignore_queries:
         print(f"Ignoring query, which is found in specified query files: {text}'")
         continue
 
-    wroteQty += 1
-    outFileQueries.write(json.dumps(e) + '\n')
+    wrote_qty += 1
+    out_file_queries.write(json.dumps(e) + '\n')
 
 
-ignoredQty = readQty - wroteQty
-print(f'Wrote {wroteQty} queries, ignored {ignoredQty} queries')
+ignored_qty = read_qty - wrote_qty
+print(f'Wrote {wrote_qty} queries, ignored {ignored_qty} queries')
 
-outFileQueries.close()
+out_file_queries.close()
 

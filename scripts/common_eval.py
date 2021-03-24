@@ -21,20 +21,20 @@ METRIC_MRR = "recip_rank"
 METRIC_LIST = [METRIC_MAP, METRIC_NDCG20, METRIC_MRR]
 
 QrelEntry = collections.namedtuple('QrelEntry',
-                                   'queryId docId relGrade')
+                                   'query_id doc_id rel_grade')
 
 RELEVANCE_THRESHOLD = 1e-5
 
-qrelCache = {}
+qrel_cache = {}
 
 class NormalizedDiscountedCumulativeGain:
     def __init__(self, k):
         self._k = k
 
-    def _dcg(self, relsSortedByScores):
+    def _dcg(self, rels_sorted_by_scores):
 
         res = 0
-        for i, rel in enumerate(relsSortedByScores):
+        for i, rel in enumerate(rels_sorted_by_scores):
             if i >= self._k:
                 break
             if rel > RELEVANCE_THRESHOLD:
@@ -42,71 +42,71 @@ class NormalizedDiscountedCumulativeGain:
 
         return res
 
-    def __call__(self, relsSortedByScores, qrelDict):
+    def __call__(self, rels_sorted_by_scores, qrel_dict):
         """
         Calculate NDCG. The function assumes,
         we already sorted everything in the order of decreasing scores.
 
-        :param relsSortedByScores: true relevance judgements sorted by scores.
-        :param qrelDict: true relevance scores indexed by document ids
+        :param rels_sorted_by_scores: true relevance judgements sorted by scores.
+        :param qrel_dict: true relevance scores indexed by document ids
         :return: NDCG.
         """
-        idcg = self._dcg(sorted(qrelDict.values(), reverse=True))
-        return self._dcg(relsSortedByScores) / idcg if idcg > 0 else 0
+        idcg = self._dcg(sorted(qrel_dict.values(), reverse=True))
+        return self._dcg(rels_sorted_by_scores) / idcg if idcg > 0 else 0
 
 
 class MeanAveragePrecision:
-    def __call__(self, relsSortedByScores, qrelDict):
+    def __call__(self, rels_sorted_by_scores, qrel_dict):
         """
         Calculate mean average precision. The function assumes,
         we already sorted everything in the order of decreasing scores.
 
-        :param relsSortedByScores: true relevance judgements sorted by scores.
-        :param qrelDict: true relevance scores indexed by document ids
+        :param rels_sorted_by_scores: true relevance judgements sorted by scores.
+        :param qrel_dict: true relevance scores indexed by document ids
         :return: Mean average precision.
         """
         result = 0.
-        postQty = len(qrelDict)
+        post_qty = len(qrel_dict)
 
         pos = 0
-        for i, rel in enumerate(relsSortedByScores):
+        for i, rel in enumerate(rels_sorted_by_scores):
             if rel > RELEVANCE_THRESHOLD:
                 pos += 1.
                 result += pos / (i + 1.)
 
-        return result / postQty
+        return result / post_qty
 
 
 class MeanReciprocalRank:
-    def __call__(self, relsSortedByScores, qrelDict):
-        for i, rel in enumerate(relsSortedByScores):
+    def __call__(self, rels_sorted_by_scores, qrel_dict):
+        for i, rel in enumerate(rels_sorted_by_scores):
             if rel > RELEVANCE_THRESHOLD:
                 return 1 / (i + 1.)
         return 0
 
 
-def genQrelStr(queryId, docId, relGrade):
+def gen_qrel_str(query_id, doc_id, rel_grade):
     """Produces a string representing one QREL entry
 
-    :param queryId:   question/query ID
-    :param docId:     relevanet document/answer ID
-    :param relGrade:  relevance grade
+    :param query_id:   question/query ID
+    :param doc_id:     relevanet document/answer ID
+    :param rel_grade:  relevance grade
 
     :return: a string representing one QREL entry
     """
-    return f'{queryId} 0 {docId} {relGrade}'
+    return f'{query_id} 0 {doc_id} {rel_grade}'
 
 
-def qrelEntry2Str(qrelEntry):
+def qrel_entry2_str(qrel_entry):
     """Convert a parsed QREL entry to string.
 
-    :param qrelEntry: input of the type QrelEntry
+    :param qrel_entry: input of the type QrelEntry
     :return:  string representation.
     """
-    return genQrelStr(qrelEntry.queryId, qrelEntry.docId, qrelEntry.relGrade)
+    return gen_qrel_str(qrel_entry.query_id, qrel_entry.doc_id, qrel_entry.rel_grade)
 
 
-def parseQrelEntry(line):
+def parse_qrel_entry(line):
     """Parse one QREL entry
     :param line  a single line with a QREL entry.
             Relevance graded is expected to be integer.
@@ -119,26 +119,26 @@ def parseQrelEntry(line):
     if len(parts) != 4:
         raise Exception('QREL entry format error, expecting just 4 white-space separted field in the entry: ' + line)
 
-    return QrelEntry(queryId=parts[0], docId=parts[2], relGrade=int(parts[3]))
+    return QrelEntry(query_id=parts[0], doc_id=parts[2], rel_grade=int(parts[3]))
 
 
-def readQrels(fileName):
+def read_qrels(file_name):
     """Read and parse QRELs.
 
-    :param fileName: input file name
+    :param file_name: input file name
     :return: an array of parsed QREL entries
     """
     ln = 0
     res = []
 
-    with open(fileName) as f:
+    with open(file_name) as f:
         for line in tqdm(f, desc='loading qrels (by line)', leave=False):
             ln += 1
             line = line.strip()
             if not line:
                 continue
             try:
-                e = parseQrelEntry(line)
+                e = parse_qrel_entry(line)
                 res.append(e)
             except:
                 raise Exception('Error parsing QRELs in line: %d' % ln)
@@ -146,17 +146,17 @@ def readQrels(fileName):
     return res
 
 
-def getSortedScoresFromScoreDict(queryRunDict):
+def get_sorted_scores_from_score_dict(query_run_dict):
     """Take a dictionary of document scores indexed by the document id
     and produce a list of (document id, score tuples) sorted
     in the order of decreasing scores.
 
-    :param   queryRunDict: a single-query run info in the dictionary format.
+    :param   query_run_dict: a single-query run info in the dictionary format.
     """
-    return list(sorted(queryRunDict.items(), key=lambda x: (x[1], x[0]), reverse=True))
+    return list(sorted(query_run_dict.items(), key=lambda x: (x[1], x[0]), reverse=True))
 
 
-def writeRunDict(runDict, fileName):
+def write_run_dict(run_dict, file_name):
     """Write a dictionary-stored run to a file. The input
        is actually a dictionary of dictinoary. The outer
        dictionary is a set of query-specific results
@@ -164,61 +164,61 @@ def writeRunDict(runDict, fileName):
        is a set of document scores indexed by the document id.
        Before writing data, it is resorted within each query.
 
-    :param runDict:    a run dictionary
-    :param fileName:  an output file name
+    :param run_dict:    a run dictionary
+    :param file_name:  an output file name
     """
-    with open(fileName, 'wt') as runfile:
-        for qid in runDict:
-            scores = getSortedScoresFromScoreDict(runDict[qid])
+    with open(file_name, 'wt') as runfile:
+        for qid in run_dict:
+            scores = get_sorted_scores_from_score_dict(run_dict[qid])
             for i, (did, score) in enumerate(scores):
-                runfile.write(genRunEntryStr(qid, did, i + 1, score, FAKE_RUN_ID) + '\n')
+                runfile.write(gen_run_entry_str(qid, did, i + 1, score, FAKE_RUN_ID) + '\n')
 
 
-def writeQrels(qrelList, fileName):
+def write_qrels(qrel_list, file_name):
     """Write a list of QRELs to a file.
 
-    :param qrelList:  a list of parsed QRELs
-    :param fileName:  an output file name
+    :param qrel_list:  a list of parsed QRELs
+    :param file_name:  an output file name
     """
-    with open(fileName, 'w') as f:
-        for e in qrelList:
-            f.write(qrelEntry2Str(e))
+    with open(file_name, 'w') as f:
+        for e in qrel_list:
+            f.write(qrel_entry2_str(e))
             f.write('\n')
 
 
-def genRunEntryStr(queryId, docId, rank, score, runId):
+def gen_run_entry_str(query_id, doc_id, rank, score, run_id):
     """A simple function to generate one run entry.
 
-    :param queryId: query id
-    :param docId:   document id
+    :param query_id: query id
+    :param doc_id:   document id
     :param rank:    entry rank
     :param score:   entry score
-    :param runId:   run id
+    :param run_id:   run id
 
     """
-    return f'{queryId} Q0 {docId} {rank} {score} {runId}'
+    return f'{query_id} Q0 {doc_id} {rank} {score} {run_id}'
 
 
-def readQrelsDict(fileName):
+def read_qrels_dict(file_name):
     """Read QRELs in the form of a dictionary where keys are query IDs.
 
-    :param fileName: QREL file name
+    :param file_name: QREL file name
     :return: a dictionary of dictionaries
     """
     result = {}
-    for e in readQrels(fileName):
-        result.setdefault(e.queryId, {})[e.docId] = int(e.relGrade)
+    for e in read_qrels(file_name):
+        result.setdefault(e.query_id, {})[e.doc_id] = int(e.rel_grade)
     return result
 
 
-def readRunDict(fileName):
+def read_run_dict(file_name):
     """Read a run file in the form of a dictionary where keys are query IDs.
 
-    :param fileName: run file name
+    :param file_name: run file name
     :return:
     """
     result = {}
-    with FileWrapper(fileName) as f:
+    with FileWrapper(file_name) as f:
         for ln, line in enumerate(tqdm(f, desc='loading run (by line)', leave=False)):
             line = line.strip()
             if not line:
@@ -227,7 +227,7 @@ def readRunDict(fileName):
             if len(fld) != 6:
                 ln += 1
                 raise Exception(
-                    f'Invalid line {ln} in run file {fileName} expected 6 white-space separated fields by got: {line}')
+                    f'Invalid line {ln} in run file {file_name} expected 6 white-space separated fields by got: {line}')
 
             qid, _, docid, rank, score, _ = fld
             result.setdefault(qid, {})[docid] = float(score)
@@ -235,103 +235,103 @@ def readRunDict(fileName):
     return result
 
 
-def evalRun(rerankRun, qrelsDict, metricFunc, debug=False):
+def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
     """Evaluate run stored in a file using QRELs stored in a file.
 
-    :param rerankRun:     a run dictionary (of dictionaries)
-    :param qrelsDict:     a QRELs dictionary read by the function readQrelsDict
-    :param metricFunc:    a metric function or class instance with overloaded __call__
+    :param rerank_run:     a run dictionary (of dictionaries)
+    :param qrels_dict:     a QRELs dictionary read by the function read_qrels_dict
+    :param metric_func:    a metric function or class instance with overloaded __call__
 
     :return:  the average metric value
     """
-    resArr = []
+    res_arr = []
 
-    for qid, scoreDict in rerankRun.items():
-        relsSortedByScores = []
+    for qid, score_dict in rerank_run.items():
+        rels_sorted_by_scores = []
 
         val = 0
 
-        if qid in qrelsDict:
-            queryQrelDict = qrelsDict[qid]
+        if qid in qrels_dict:
+            query_qrel_dict = qrels_dict[qid]
 
-            for did, score in getSortedScoresFromScoreDict(scoreDict):
+            for did, score in get_sorted_scores_from_score_dict(score_dict):
                 rel_score = 0
-                if did in queryQrelDict:
-                    rel_score = queryQrelDict[did]
+                if did in query_qrel_dict:
+                    rel_score = query_qrel_dict[did]
 
-                relsSortedByScores.append(rel_score)
+                rels_sorted_by_scores.append(rel_score)
 
-            val = metricFunc(relsSortedByScores, queryQrelDict) if queryQrelDict else 0
+            val = metric_func(rels_sorted_by_scores, query_qrel_dict) if query_qrel_dict else 0
 
         if debug:
             print('%s %g' % (qid, val))
 
-        resArr.append(val)
+        res_arr.append(val)
 
-    res = np.mean(resArr)
+    res = np.mean(res_arr)
     if debug:
         print('mean %g' % res)
 
     return res
 
 
-def getEvalResults(useExternalEval,
-                   evalMetric,
-                   rerankRun,
-                   qrelFile,
-                   runFile=None,
-                   useQrelCache=False):
+def get_eval_results(use_external_eval,
+                   eval_metric,
+                   rerank_run,
+                   qrel_file,
+                   run_file=None,
+                   use_qrel_cache=False):
     """Carry out internal or external evaluation.
 
-    :param useExternalEval:   True to use external evaluation tools.
-    :param evalMetric:        Evaluation metric (from the METRIC_LIST above)
-    :param runFile:           A run file to store results (or None).
-    :param qrelFile:          A QREL file.
-    :param useQrelCache:  use global QREL file cache (dangerous option: there should
+    :param use_external_eval:   True to use external evaluation tools.
+    :param eval_metric:        Evaluation metric (from the METRIC_LIST above)
+    :param run_file:           A run file to store results (or None).
+    :param qrel_file:          A QREL file.
+    :param use_qrel_cache:  use global QREL file cache (dangerous option: there should
                           be no file-name collisions to for this)
 
     :return:  average metric value.
     """
 
-    if useExternalEval:
+    if use_external_eval:
         m = None
-        if evalMetric == METRIC_MAP:
+        if eval_metric == METRIC_MAP:
             m = 'map'
-        elif evalMetric == METRIC_NDCG20:
+        elif eval_metric == METRIC_NDCG20:
             m = 'ndcg_cut_20'
-        elif evalMetric == METRIC_MRR:
+        elif eval_metric == METRIC_MRR:
             m = 'recip_rank'
         else:
-            raise Exception('Unsupported metric: ' + evalMetric)
+            raise Exception('Unsupported metric: ' + eval_metric)
 
-        assert runFile is not None, "Run file name should not be None"
-        writeRunDict(rerankRun, runFile)
+        assert run_file is not None, "Run file name should not be None"
+        write_run_dict(rerank_run, run_file)
 
-        return trec_eval(runFile, qrelFile, m)
+        return trec_eval(run_file, qrel_file, m)
     else:
         f = None
-        if evalMetric == METRIC_MAP:
+        if eval_metric == METRIC_MAP:
             f = MeanAveragePrecision()
-        elif evalMetric == METRIC_NDCG20:
+        elif eval_metric == METRIC_NDCG20:
             f = NormalizedDiscountedCumulativeGain(NDCG_TOP_K)
-        elif evalMetric == METRIC_MRR:
+        elif eval_metric == METRIC_MRR:
             f = MeanReciprocalRank()
         else:
-            raise Exception('Unsupported metric: ' + evalMetric)
+            raise Exception('Unsupported metric: ' + eval_metric)
 
-        if runFile is not None:
-            writeRunDict(rerankRun, runFile)
+        if run_file is not None:
+            write_run_dict(rerank_run, run_file)
 
-        global qrelCache
+        global qrel_cache
 
-        if useQrelCache and qrelFile in qrelCache:
-            qrels = qrelCache[qrelFile]
+        if use_qrel_cache and qrel_file in qrel_cache:
+            qrels = qrel_cache[qrel_file]
         else:
-            qrels = qrelCache[qrelFile] = readQrelsDict(qrelFile)
+            qrels = qrel_cache[qrel_file] = read_qrels_dict(qrel_file)
 
-        return evalRun(rerankRun=rerankRun,
-                       qrelsDict=qrels,
-                       metricFunc=f)
+        return eval_run(rerank_run=rerank_run,
+                       qrels_dict=qrels,
+                       metric_func=f)
 
 
 def trec_eval(runf, qrelf, metric):

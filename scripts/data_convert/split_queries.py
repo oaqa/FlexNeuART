@@ -6,8 +6,8 @@ import random
 import math
 
 sys.path.append('.')
-from scripts.data_convert.convert_common import readQueries, writeQueries
-from scripts.common_eval import readQrels, writeQrels
+from scripts.data_convert.convert_common import read_queries, write_queries
+from scripts.common_eval import read_qrels, write_qrels
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(description='Split queries and corresponding QREL files.')
@@ -44,72 +44,72 @@ parser.add_argument('--part1_fract',
 args = parser.parse_args()
 print(args)
 
-dataDir = args.data_dir
+data_dir = args.data_dir
 
-queryIdList = []
+query_id_list = []
 
-queryList = readQueries(os.path.join(dataDir, args.input_subdir, QUESTION_FILE_JSON))
+query_list = read_queries(os.path.join(data_dir, args.input_subdir, QUESTION_FILE_JSON))
 
-for data in queryList:
+for data in query_list:
     did = data[DOCID_FIELD]
-    queryIdList.append(did)
+    query_id_list.append(did)
 
 print('Read all the queries')
 
-qrelList = readQrels(os.path.join(dataDir, args.input_subdir, QREL_FILE))
+qrel_list = read_qrels(os.path.join(data_dir, args.input_subdir, QREL_FILE))
 
 print('Read all the QRELs')
-# print(qrelList[0:10])
+# print(qrel_list[0:10])
 
 
-# print('Before shuffling:', queryIdList[0:10], '...')
+# print('Before shuffling:', query_id_list[0:10], '...')
 
 random.seed(args.seed)
-random.shuffle(queryIdList)
+random.shuffle(query_id_list)
 
-# print('After shuffling:', queryIdList[0:10], '...')
+# print('After shuffling:', query_id_list[0:10], '...')
 
-qty = len(queryIdList)
+qty = len(query_id_list)
 
 if qty == 0:
     print('Nothing to split, input is empty')
     sys.exit(1)
 
-qtyPart = args.part1_qty
-if qtyPart is None:
+qty_part = args.part1_qty
+if qty_part is None:
     if args.part1_fract is not None:
         if args.part1_fract <= 0 or args.part1_fract >= 1:
             print('The fraction should be > 0 and < 1')
             sys.exit(1)
-        qtyPart = int(math.ceil(qty * args.part1_fract))
+        qty_part = int(math.ceil(qty * args.part1_fract))
     else:
         print('Specify either --part1_qty or part1_fract')
         sys.exit(1)
 
-queryIdSet = set(queryIdList)
+query_id_set = set(query_id_list)
 
-qrelsToIgnore = list(filter(lambda e: e.queryId not in queryIdSet, qrelList))
+qrels_to_ignore = list(filter(lambda e: e.query_id not in query_id_set, qrel_list))
 
-print('# of QRELs with query IDs not present in any part', len(qrelsToIgnore))
+print('# of QRELs with query IDs not present in any part', len(qrels_to_ignore))
 
-selQueryIds = set(queryIdList[0:qtyPart])
+sel_query_ids = set(query_id_list[0:qty_part])
 
-print('The first part will have %d documents' % len(selQueryIds))
+print('The first part will have %d documents' % len(sel_query_ids))
 
-partSubDirs = [args.out_subdir1, args.out_subdir2]
+part_sub_dirs = [args.out_subdir1, args.out_subdir2]
 
 for part in range(0, 2):
-    outDir = os.path.join(dataDir, partSubDirs[part])
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
+    out_dir = os.path.join(data_dir, part_sub_dirs[part])
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
-    queryPartList = list(filter(lambda e: int(e[DOCID_FIELD] in selQueryIds) == 1 - part, queryList))
-    queryPartIdSet = set([e[DOCID_FIELD] for e in queryPartList])
+    query_part_list = list(filter(lambda e: int(e[DOCID_FIELD] in sel_query_ids) == 1 - part, query_list))
+    query_part_id_set = set([e[DOCID_FIELD] for e in query_part_list])
 
-    qrelPartList = list(filter(lambda e: e.queryId in queryPartIdSet, qrelList))
-    writeQrels(qrelPartList,
-               os.path.join(outDir, QREL_FILE))
+    qrel_part_list = list(filter(lambda e: e.query_id in query_part_id_set, qrel_list))
+    write_qrels(qrel_part_list,
+               os.path.join(out_dir, QREL_FILE))
 
-    writeQueries(queryPartList, os.path.join(outDir, QUESTION_FILE_JSON))
+    write_queries(query_part_list, os.path.join(out_dir, QUESTION_FILE_JSON))
 
-    print('Part %s # of queries: %d # of QRELs: %d' % (partSubDirs[part], len(queryPartList), len(qrelPartList)))
+    print('Part %s # of queries: %d # of QRELs: %d' % (part_sub_dirs[part], len(query_part_list), len(qrel_part_list)))

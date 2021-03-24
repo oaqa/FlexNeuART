@@ -10,8 +10,8 @@ import argparse
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import readQueries
-from scripts.common_eval import  readQrels, qrelEntry2Str
+from scripts.data_convert.convert_common import read_queries
+from scripts.common_eval import  read_qrels, qrel_entry2_str
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(
@@ -39,49 +39,49 @@ print(args)
 
 
 
-dataDir = args.data_dir
+data_dir = args.data_dir
 
-fullQueryList = readQueries(os.path.join(dataDir, args.input_subdir, QUESTION_FILE_JSON))
-fullQueryIdSet = set([data[DOCID_FIELD] for data in fullQueryList])
+full_query_list = read_queries(os.path.join(data_dir, args.input_subdir, QUESTION_FILE_JSON))
+full_query_id_set = set([data[DOCID_FIELD] for data in full_query_list])
 
 print('Read all the queries from the main dir')
 
-qrelList = readQrels(os.path.join(dataDir, args.input_subdir, QREL_FILE))
+qrel_list = read_qrels(os.path.join(data_dir, args.input_subdir, QREL_FILE))
 
 print('Read all the QRELs from the main dir')
 
 
 
-queryIdSet = set()
+query_id_set = set()
 
-partSubDirs = [args.out_subdir1, args.out_subdir2]
+part_sub_dirs = [args.out_subdir1, args.out_subdir2]
 
 for part in range(0,2):
-  outDir = os.path.join(dataDir, partSubDirs[part])
-  qrelList = readQrels(os.path.join(outDir, QREL_FILE))
+  out_dir = os.path.join(data_dir, part_sub_dirs[part])
+  qrel_list = read_qrels(os.path.join(out_dir, QREL_FILE))
 
-  queryPartList = readQueries(os.path.join(outDir, QUESTION_FILE_JSON))
-  queryIdPartSet = set([e[DOCID_FIELD] for e in queryPartList])
+  query_part_list = read_queries(os.path.join(out_dir, QUESTION_FILE_JSON))
+  query_id_part_set = set([e[DOCID_FIELD] for e in query_part_list])
 
-  queryIdSet = queryIdSet.union(queryIdPartSet)
+  query_id_set = query_id_set.union(query_id_part_set)
 
   # 1. Let's check if any QREL ids have query IDs beyond the current part
-  for e in qrelList:
-    if e.queryId not in queryIdPartSet:
+  for e in qrel_list:
+    if e.query_id not in query_id_part_set:
       print('Qrel entry has query ID not included into %s: %s' %
-            (partSubDirs[part], qrelEntry2Str(e)))
+            (part_sub_dirs[part], qrel_entry2_str(e)))
       sys.exit(1)
 
-  qrelQueryIdPartSet = set([e.queryId for e in qrelList])
+  qrel_query_id_part_set = set([e.query_id for e in qrel_list])
   print('Part %s # of queries # %d of queries with at least one QREL: %d' %
-        (partSubDirs[part], len(queryIdPartSet), len(qrelQueryIdPartSet)))
+        (part_sub_dirs[part], len(query_id_part_set), len(qrel_query_id_part_set)))
 
-diff = queryIdSet.symmetric_difference(fullQueryIdSet)
+diff = query_id_set.symmetric_difference(full_query_id_set)
 
 print('# of queries in the original folder: %d # of queries in split folders: %d # of queries in the symmetric diff. %d'
-      % (len(queryIdSet), len(fullQueryIdSet), len(diff)))
+      % (len(query_id_set), len(full_query_id_set), len(diff)))
 
-if len(queryIdSet) != len(fullQueryIdSet) or len(diff) > 0:
+if len(query_id_set) != len(full_query_id_set) or len(diff) > 0:
   print('Query set mismatch!')
   sys.exit(1)
 

@@ -11,7 +11,7 @@ from tqdm import tqdm
 sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import readStopWords, jsonlGen, FileWrapper, STOPWORD_FILE
+from scripts.data_convert.convert_common import read_stop_words, jsonl_gen, FileWrapper, STOPWORD_FILE
 from scripts.config import SPACY_MODEL
 
 from scripts.config import DOCID_FIELD, TEXT_FIELD_NAME
@@ -38,10 +38,10 @@ docid_to_preds = {}
 args = parser.parse_args()
 print(args)
 
-stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
-print(stopWords)
+stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
+print(stop_words)
 
-nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
+nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 
 doc_id_prev = None
 predicted_queries = []
@@ -64,10 +64,10 @@ if predicted_queries and doc_id_prev is not None:
 
 
 with FileWrapper(args.output, 'w') as outf:
-    for doce in tqdm(jsonlGen(args.input), desc='adding doc2query fields'):
+    for doce in tqdm(jsonl_gen(args.input), desc='adding doc2query fields'):
         doc_id = doce[DOCID_FIELD]
         if doc_id in docid_to_preds:
-            text, text_unlemm = nlp.procText(docid_to_preds[doc_id])
+            text, text_unlemm = nlp.proc_text(docid_to_preds[doc_id])
             doce[TEXT_FIELD_NAME] = doce[TEXT_FIELD_NAME] + ' ' + text
             doce[DOC2QUERY_FIELD_TEXT] = text
             doce[DOC2QUERY_FIELD_TEXT_UNLEMM] = text_unlemm

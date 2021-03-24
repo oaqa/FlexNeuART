@@ -5,12 +5,13 @@ import os
 import sys
 import json
 import urllib
+import urllib.parse
 from bs4 import BeautifulSoup
 
 from scripts.config import DEFAULT_ENCODING, STOPWORD_FILE, DOCID_FIELD
 
 YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
-                                              'uri subject content bestAnswerId answerList')
+                                              'uri subject content best_answer_id answer_list')
 
 MAX_NUM_QUERY_OPT = 'max_num_query'
 MAX_NUM_QUERY_OPT_HELP = 'maximum # of queries to generate'
@@ -21,7 +22,7 @@ OUT_BITEXT_PATH_OPT_META = 'optional bitext path'
 OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
 
 # Replace \n and \r characters with spaces
-def replaceCharsNL(s):
+def replace_chars_nl(s):
     return re.sub(r'[\n\r]', ' ', s)
 
 
@@ -30,23 +31,23 @@ class FileWrapper:
     def __enter__(self):
         return self
 
-    def __init__(self, fileName, flags='r'):
+    def __init__(self, file_name, flags='r'):
         """Constructor, which opens a regular or gzipped-file
 
-          :param  fileName a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
+          :param  file_name a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
           :param  flags    open flags such as 'r' or 'w'
         """
-        dirName = os.path.dirname(fileName)
-        if dirName:
-            os.makedirs(dirName, exist_ok=True)
-        if fileName.endswith('.gz'):
-            self._file = gzip.open(fileName, flags)
+        dir_name = os.path.dirname(file_name)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
+        if file_name.endswith('.gz'):
+            self._file = gzip.open(file_name, flags)
             self._isCompr = True
-        elif fileName.endswith('.bz2'):
-            self._file = bz2.open(fileName, flags)
+        elif file_name.endswith('.bz2'):
+            self._file = bz2.open(file_name, flags)
             self._isCompr = True
         else:
-            self._file = open(fileName, flags)
+            self._file = open(file_name, flags)
             self._isCompr = False
 
     def write(self, s):
@@ -72,28 +73,28 @@ class FileWrapper:
             yield line.decode() if self._isCompr else line
 
 
-def readStopWords(fileName=STOPWORD_FILE, lowerCase=True):
+def read_stop_words(file_name=STOPWORD_FILE, lower_case=True):
     """Reads a list of stopwords from a file. By default the words
        are read from a standard repo location and are lowercased.
 
-      :param fileName a stopword file name
-      :param lowerCase  a boolean flag indicating if lowercasing is needed.
+      :param file_name a stopword file name
+      :param lower_case  a boolean flag indicating if lowercasing is needed.
 
       :return a list of stopwords
     """
-    stopWords = []
-    with open(fileName) as f:
+    stop_words = []
+    with open(file_name) as f:
         for w in f:
             w = w.strip()
             if w:
-                if lowerCase:
+                if lower_case:
                     w = w.lower()
-                stopWords.append(w)
+                stop_words.append(w)
 
-    return stopWords
+    return stop_words
 
 
-def SimpleXmlRecIterator(fileName, recTagName):
+def SimpleXmlRecIterator(file_name, rec_tag_name):
     """A simple class to read XML records stored in a way similar to
       the Yahoo Answers collection. In this format, each record
       occupies a certain number of lines, but no record "share" the same
@@ -101,61 +102,61 @@ def SimpleXmlRecIterator(fileName, recTagName):
       record may be. It always starts with a given tag name ends with
       the same tag, e.g.,:
 
-      <recordTagName ...>
-      </recordTagName>
+      <record_tag_name ...>
+      </record_tag_name>
 
-    :param fileName:  input file name (can be compressed).
-    :param recTagName:   a record tag name (for the tag that encloses the record)
+    :param file_name:  input file name (can be compressed).
+    :param rec_tag_name:   a record tag name (for the tag that encloses the record)
 
     :return:   it yields a series of records
     """
 
-    with FileWrapper(fileName) as f:
+    with FileWrapper(file_name) as f:
 
-        recLines = []
+        rec_lines = []
 
-        startEntry = '<' + recTagName
-        endEntry = '</' + recTagName + '>'
+        start_entry = '<' + rec_tag_name
+        end_entry = '</' + rec_tag_name + '>'
 
-        seenEnd = True
-        seenStart = False
+        seen_end = True
+        seen_start = False
 
         ln = 0
         for line in f:
             ln += 1
-            if not seenStart:
+            if not seen_start:
                 if line.strip() == '':
                     continue  # Can skip empty lines
-                if line.startswith(startEntry):
-                    if not seenEnd:
-                        raise Exception(f'Invalid format, no previous end tag, line {ln} file {fileName}')
-                    assert (not recLines)
-                    recLines.append(line)
-                    seenEnd = False
-                    seenStart = True
+                if line.startswith(start_entry):
+                    if not seen_end:
+                        raise Exception(f'Invalid format, no previous end tag, line {ln} file {file_name}')
+                    assert (not rec_lines)
+                    rec_lines.append(line)
+                    seen_end = False
+                    seen_start = True
                 else:
-                    raise Exception(f'Invalid format, no previous start tag, line {ln} file {fileName}')
+                    raise Exception(f'Invalid format, no previous start tag, line {ln} file {file_name}')
             else:
-                recLines.append(line)
-                noSpaceLine = line.replace(' ', '').strip()  # End tags may contain spaces
-                if noSpaceLine.endswith(endEntry):
-                    if not seenStart:
-                        raise Exception(f'Invalid format, no previous start tag, line {ln} file {fileName}')
-                    yield ''.join(recLines)
-                    recLines = []
-                    seenEnd = True
-                    seenStart = False
+                rec_lines.append(line)
+                no_space_line = line.replace(' ', '').strip()  # End tags may contain spaces
+                if no_space_line.endswith(end_entry):
+                    if not seen_start:
+                        raise Exception(f'Invalid format, no previous start tag, line {ln} file {file_name}')
+                    yield ''.join(rec_lines)
+                    rec_lines = []
+                    seen_end = True
+                    seen_start = False
 
-        if recLines:
-            raise Exception(f'Invalid trailing entries in the file {fileName} %d entries left' % (len(recLines)))
+        if rec_lines:
+            raise Exception(f'Invalid trailing entries in the file {file_name} %d entries left' % (len(rec_lines)))
 
 
-def removeTags(str):
+def remove_tags(str):
     """Just remove anything that looks like a tag"""
     return re.sub(r'</?[a-z]+\s*/?>', '', str)
 
 
-def pretokenizeUrl(url):
+def pretokenize_url(url):
     """A hacky procedure to "pretokenize" URLs.
 
     :param  url:  an input URL
@@ -176,55 +177,55 @@ def pretokenizeUrl(url):
     return re.sub(r'[.,:!\?/"+\-\'=_{}()|]', " ", url)
 
 
-def procYahooAnswersRecord(recStr):
+def proc_yahoo_answers_record(rec_str):
     """A procedure to parse a single Yahoo-answers format entry.
 
-    :param recStr: Answer content including enclosing tags <document>...</document>
+    :param rec_str: Answer content including enclosing tags <document>...</document>
     :return:  parsed data as YahooAnswerRecParsed entry
     """
-    doc = BeautifulSoup(recStr, 'lxml')
+    doc = BeautifulSoup(rec_str, 'lxml')
 
-    docRoot = doc.find('document')
-    if docRoot is None:
+    doc_root = doc.find('document')
+    if doc_root is None:
         raise Exception('Invalid format, missing <document> tag')
 
-    uri = docRoot.find('uri')
+    uri = doc_root.find('uri')
     if uri is None:
         raise Exception('Invalid format, missing <uri> tag')
     uri = uri.text
 
-    subject = docRoot.find('subject')
+    subject = doc_root.find('subject')
     if subject is None:
         raise Exception('Invalid format, missing <subject> tag')
-    subject = removeTags(subject.text)
+    subject = remove_tags(subject.text)
 
-    content = docRoot.find('content')
-    content = '' if content is None else removeTags(content.text)  # can probably be missing
+    content = doc_root.find('content')
+    content = '' if content is None else remove_tags(content.text)  # can probably be missing
 
-    bestAnswer = docRoot.find('bestanswer')
-    bestAnswer = '' if bestAnswer is None else bestAnswer.text  # is missing occaisionally
+    best_answer = doc_root.find('bestanswer')
+    best_answer = '' if best_answer is None else best_answer.text  # is missing occaisionally
 
-    bestAnswerId = -1
+    best_answer_id = -1
 
-    answList = []
-    answers = docRoot.find('nbestanswers')
+    answ_list = []
+    answers = doc_root.find('nbestanswers')
     if answers is not None:
         for answ in answers.find_all('answer_item'):
-            answText = answ.text
-            if answText == bestAnswer:
-                bestAnswerId = len(answList)
-            answList.append(removeTags(answText))
+            answ_text = answ.text
+            if answ_text == best_answer:
+                best_answer_id = len(answ_list)
+            answ_list.append(remove_tags(answ_text))
 
     return YahooAnswerRecParsed(uri=uri, subject=subject.strip(), content=content.strip(),
-                                bestAnswerId=bestAnswerId, answerList=answList)
+                                best_answer_id=best_answer_id, answer_list=answ_list)
 
 
-def jsonlGen(fileName):
+def jsonl_gen(file_name):
     """A generator that produces parsed doc/query entries one by one.
-      :param fileName: an input file name
+      :param file_name: an input file name
     """
 
-    with FileWrapper(fileName) as f:
+    with FileWrapper(file_name) as f:
         for i, line in enumerate(f):
             ln = i + 1
             line = line.strip()
@@ -241,23 +242,23 @@ def jsonlGen(fileName):
             yield data
 
 
-def readQueries(fileName):
+def read_queries(file_name):
     """Read queries from a JSONL file and checks the document ID is set.
 
-    :param fileName: an input file name
+    :param file_name: an input file name
     :return: an array where each entry is a parsed query JSON.
     """
-    return list(jsonlGen(fileName))
+    return list(jsonl_gen(file_name))
 
 
-def writeQueries(queryList, fileName):
+def write_queries(query_list, file_name):
     """Write queries to a JSONL file.
 
-    :param queryList: an array of parsed JSON query entries
-    :param fileName: an output file
+    :param query_list: an array of parsed JSON query entries
+    :param file_name: an output file
     """
-    with open(fileName, 'w') as f:
-        for e in queryList:
+    with open(file_name, 'w') as f:
+        for e in query_list:
             f.write(json.dumps(e))
             f.write('\n')
 
@@ -266,7 +267,7 @@ def unique(arr):
     return list(set(arr))
 
 
-def getRetokenized(tokenizer, text):
+def get_retokenized(tokenizer, text):
     """Obtain a space separated re-tokenized text.
     :param tokenizer:  a tokenizer that has the function
                        tokenize that returns an array of tokens.
@@ -275,50 +276,50 @@ def getRetokenized(tokenizer, text):
     return ' '.join(tokenizer.tokenize(text))
 
 
-def addRetokenizedField(dataEntry,
-                        srcField,
-                        dstField,
+def add_retokenized_field(data_entry,
+                        src_field,
+                        dst_field,
                         tokenizer):
     """
     Create a re-tokenized field from an existing one.
 
-    :param dataEntry:   a dictionary of entries (keys are field names, values are text items)
-    :param srcField:    a source field
-    :param dstField:    a target field
+    :param data_entry:   a dictionary of entries (keys are field names, values are text items)
+    :param src_field:    a source field
+    :param dst_field:    a target field
     :param tokenizer:    a tokenizer to use, if None, nothing is done
     """
     if tokenizer is not None:
         dst = ''
-        if srcField in dataEntry:
-            dst = getRetokenized(tokenizer, dataEntry[srcField])
+        if src_field in data_entry:
+            dst = get_retokenized(tokenizer, data_entry[src_field])
 
-        dataEntry[dstField] = dst
+        data_entry[dst_field] = dst
 
 
-def readDocIdsFromForwardFileHeader(fwdFileName):
+def read_doc_ids_from_forward_file_header(fwd_file_name):
     """Read document IDs from the textual header
        of a forward index. Some basic integrity checkes are done.
 
-       :param   fwdFileName: input file name
+       :param   fwd_file_name: input file name
        :return  a set of document IDs.
     """
-    f = open(fwdFileName)
+    f = open(fwd_file_name)
     lines = [s.strip() for s in f]
     f.close()
-    docQty, _ = lines[0].split()
-    docQty = int(docQty)
+    doc_qty, _ = lines[0].split()
+    doc_qty = int(doc_qty)
 
-    assert len(lines) > docQty + 2, f"File {fwdFileName} is too short: length isn't consistent with the header info"
-    assert lines[1] == "", f"The second line in {fwdFileName} isn't empty as expected!"
-    assert lines[-1] == "", f"The last line in {fwdFileName} isn't empty as expected!"
+    assert len(lines) > doc_qty + 2, f"File {fwd_file_name} is too short: length isn't consistent with the header info"
+    assert lines[1] == "", f"The second line in {fwd_file_name} isn't empty as expected!"
+    assert lines[-1] == "", f"The last line in {fwd_file_name} isn't empty as expected!"
     k = 2
     while k < len(lines) and lines[k] != '':
         k = k + 1
     assert lines[k] == ''  # We check that the last line is empty, we must find the empty line!
     k = k + 1
 
-    assert k + docQty + 1 == len(lines)
+    assert k + doc_qty + 1 == len(lines)
     res = lines[k:len(lines) - 1]
-    assert len(res) == docQty
+    assert len(res) == doc_qty
 
     return set(res)

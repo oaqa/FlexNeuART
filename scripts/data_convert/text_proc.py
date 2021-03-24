@@ -7,8 +7,7 @@ SPACY_PARSER = 'parser'
 
 ALPHANUM_TOKENS = re.compile("^[a-zA-Z-_.0-9]+$")
 
-
-def isAlphaNum(s):
+def is_alpha_num(s):
     return s and (ALPHANUM_TOKENS.match(s) is not None)
 
 
@@ -19,26 +18,26 @@ def isAlphaNum(s):
     required and StanzaTextParser is not imported by default.
 """
 class StanzaTextParser:
-    def __init__(self, lang, stopWords,
-                 removePunct=True,
-                 keepOnlyAlphaNum=False,
-                 lowerCase=True):
+    def __init__(self, lang, stop_words,
+                 remove_punct=True,
+                 keep_only_alpha_num=False,
+                 lower_case=True):
         """Constructor.
 
         :param  lang         the name of the language
-        :param  stopWords    a list of stop words to be excluded (case insensitive);
+        :param  stop_words    a list of stop words to be excluded (case insensitive);
                              a token is also excluded when its lemma is in the stop word list.
-        :param  removePunct  a bool flag indicating if the punctuation tokens need to be removed
-        :param  keepOnlyAlphaNum a bool flag indicating if we need to keep only alpha-numeric characters
+        :param  remove_punct  a bool flag indicating if the punctuation tokens need to be removed
+        :param  keep_only_alpha_num a bool flag indicating if we need to keep only alpha-numeric characters
         """
         import stanza
 
         self._nlp = stanza.Pipeline(lang=lang, processors='tokenize,pos,lemma')
 
-        self._removePunct = removePunct
-        self._stopWords = frozenset([w.lower() for w in stopWords])
-        self._keepOnlyAlphaNum = keepOnlyAlphaNum
-        self._lowerCase = lowerCase
+        self._removePunct = remove_punct
+        self._stopWords = frozenset([w.lower() for w in stop_words])
+        self._keepOnlyAlphaNum = keep_only_alpha_num
+        self._lowerCase = lower_case
 
     @staticmethod
     def _basic_clean(text):
@@ -53,7 +52,7 @@ class StanzaTextParser:
 
         return self._nlp(SpacyTextParser._basic_clean(text))
 
-    def procText(self, text):
+    def proc_text(self, text):
         """Process text, remove stopwords and obtain lemmas, but does not split into sentences.
         This function should not emit newlines!
 
@@ -65,12 +64,12 @@ class StanzaTextParser:
         tokens = []
         doc = self(text)
         for sent in doc.sentences:
-            for tokObj in sent.words:
-                if self._removePunct and tokObj.upos == 'PUNCT':
+            for tok_obj in sent.words:
+                if self._removePunct and tok_obj.upos == 'PUNCT':
                     continue
-                lemma = tokObj.lemma
-                text = tokObj.text
-                if self._keepOnlyAlphaNum and not isAlphaNum(text):
+                lemma = tok_obj.lemma
+                text = tok_obj.text
+                if self._keepOnlyAlphaNum and not is_alpha_num(text):
                     continue
                 tok1 = text.lower()
                 tok2 = lemma.lower()
@@ -89,11 +88,11 @@ class StanzaTextParser:
 
 class Sentencizer:
     """A simple wrapper for the rule-based Spacy sentence splitter."""
-    def __init__(self, modelName):
+    def __init__(self, model_name):
         """
-        :param modelName: a name of the spacy model to use, e.g., en_core_web_sm
+        :param model_name: a name of the spacy model to use, e.g., en_core_web_sm
         """
-        self._nlp = spacy.load(modelName, disable=[SPACY_NER, SPACY_PARSER,SPACY_POS])
+        self._nlp = spacy.load(model_name, disable=[SPACY_NER, SPACY_PARSER,SPACY_POS])
         self._nlp.add_pipe(self._nlp.create_pipe("sentencizer"))
 
     def __call__(self, text):
@@ -111,38 +110,38 @@ class Sentencizer:
    So, instead please use the separate sentencizer class instead.
 """
 class SpacyTextParser:
-    def __init__(self, modelName, stopWords,
-                 removePunct=True,
-                 sentSplit=False,
-                 keepOnlyAlphaNum=False,
-                 lowerCase=True,
-                 enablePOS=True):
+    def __init__(self, model_name, stop_words,
+                 remove_punct=True,
+                 sent_split=False,
+                 keep_only_alpha_num=False,
+                 lower_case=True,
+                 enable_pos=True):
         """Constructor.
 
-        :param  modelName    a name of the spacy model to use, e.g., en_core_web_sm
-        :param  stopWords    a list of stop words to be excluded (case insensitive);
+        :param  model_name    a name of the spacy model to use, e.g., en_core_web_sm
+        :param  stop_words    a list of stop words to be excluded (case insensitive);
                              a token is also excluded when its lemma is in the stop word list.
-        :param  removePunct  a bool flag indicating if the punctuation tokens need to be removed
-        :param  sentSplit    a bool flag indicating if sentence splitting is necessary
-        :param  keepOnlyAlphaNum a bool flag indicating if we need to keep only alpha-numeric characters
-        :param  enablePOS    a bool flag that enables POS tagging (which, e.g., can improve lemmatization)
+        :param  remove_punct  a bool flag indicating if the punctuation tokens need to be removed
+        :param  sent_split    a bool flag indicating if sentence splitting is necessary
+        :param  keep_only_alpha_num a bool flag indicating if we need to keep only alpha-numeric characters
+        :param  enable_pos    a bool flag that enables POS tagging (which, e.g., can improve lemmatization)
         """
 
         # Disabling all heavy-weight parsing, but enabling splitting into sentences
-        disableList = [SPACY_NER, SPACY_PARSER]
-        if not enablePOS:
-            disableList.append(SPACY_POS)
-        print('Disabled Spacy components: ', disableList)
+        disable_list = [SPACY_NER, SPACY_PARSER]
+        if not enable_pos:
+            disable_list.append(SPACY_POS)
+        print('Disabled Spacy components: ', disable_list)
 
-        self._nlp = spacy.load(modelName, disable=disableList)
-        if sentSplit:
+        self._nlp = spacy.load(model_name, disable=disable_list)
+        if sent_split:
             sentencizer = self._nlp.create_pipe("sentencizer")
             self._nlp.add_pipe(sentencizer)
 
-        self._removePunct = removePunct
-        self._stopWords = frozenset([w.lower() for w in stopWords])
-        self._keepOnlyAlphaNum = keepOnlyAlphaNum
-        self._lowerCase = lowerCase
+        self._removePunct = remove_punct
+        self._stopWords = frozenset([w.lower() for w in stop_words])
+        self._keepOnlyAlphaNum = keep_only_alpha_num
+        self._lowerCase = lower_case
 
     @staticmethod
     def _basic_clean(text):
@@ -157,7 +156,7 @@ class SpacyTextParser:
 
         return self._nlp(SpacyTextParser._basic_clean(text))
 
-    def procText(self, text):
+    def proc_text(self, text):
         """Process text, remove stopwords and obtain lemmas, but does not split into sentences.
         This function should not emit newlines!
 
@@ -168,12 +167,12 @@ class SpacyTextParser:
         lemmas = []
         tokens = []
         doc = self(text)
-        for tokObj in doc:
-            if self._removePunct and tokObj.is_punct:
+        for tok_obj in doc:
+            if self._removePunct and tok_obj.is_punct:
                 continue
-            lemma = tokObj.lemma_
-            text = tokObj.text
-            if self._keepOnlyAlphaNum and not isAlphaNum(text):
+            lemma = tok_obj.lemma_
+            text = tok_obj.text
+            if self._keepOnlyAlphaNum and not is_alpha_num(text):
                 continue
             tok1 = text.lower()
             tok2 = lemma.lower()
@@ -211,8 +210,8 @@ class TokenExtractor:
 # A possible TODO:
 # these token extractors aren't used yet
 class WhiteSpaceTokenExtractor(TokenExtractor):
-    def __init__(self, lowerCase):
-        self._lowerCase = lowerCase
+    def __init__(self, lower_case):
+        self._lowerCase = lower_case
 
     def __call_(self, text):
         if self._lowerCase:
@@ -221,31 +220,31 @@ class WhiteSpaceTokenExtractor(TokenExtractor):
 
 
 class SpacyTokenExtractor(TokenExtractor):
-    def __init__(self, modelName, stopwords, lemmatize,
-                 lowerCase=True, keepOnlyAlphaNum=True):
+    def __init__(self, model_name, stopwords, lemmatize,
+                 lower_case=True, keep_only_alpha_num=True):
         self._lemmatize = lemmatize
 
-        self._nlp = SpacyTextParser(modelName,
+        self._nlp = SpacyTextParser(model_name,
                                     stopwords,
-                                    keepOnlyAlphaNum=keepOnlyAlphaNum, lowerCase=lowerCase)
+                                    keep_only_alpha_num=keep_only_alpha_num, lower_case=lower_case)
 
     def __call__(self, text):
-        lemmas, unlemm = self._nlp.procText(text)
+        lemmas, unlemm = self._nlp.proc_text(text)
 
         return lemmas if self._lemmatize else unlemm
 
 
 class StanzaTokenExtractor(TokenExtractor):
-    def __init__(self, langName, stopwords, lemmatize,
-                 lowerCase=True, keepOnlyAlphaNum=True):
+    def __init__(self, lang_name, stopwords, lemmatize,
+                 lower_case=True, keep_only_alpha_num=True):
         self._lemmatize = lemmatize
 
-        self._nlp = StanzaTextParser(langName,
+        self._nlp = StanzaTextParser(lang_name,
                                      stopwords,
-                                     keepOnlyAlphaNum=keepOnlyAlphaNum, lowerCase=lowerCase)
+                                     keep_only_alpha_num=keep_only_alpha_num, lower_case=lower_case)
 
     def __call__(self, text):
-        lemmas, unlemm = self._nlp.procText(text)
+        lemmas, unlemm = self._nlp.proc_text(text)
 
         return lemmas if self._lemmatize else unlemm
 
@@ -257,7 +256,7 @@ TOKEN_EXTR_TYPES = {'WhiteSpaceTokenExtractor': WhiteSpaceTokenExtractor,
 
 class TokenExtrFactory:
     @staticmethod
-    def create(tokExtrType, **kwargs):
-        if not tokExtrType in TOKEN_EXTR_TYPES:
-            raise Exception('Unrecognized token extractor type: ' + tokExtrType)
-        return TOKEN_EXTR_TYPES[tokExtrType](**kwargs)
+    def create(tok_extr_type, **kwargs):
+        if not tok_extr_type in TOKEN_EXTR_TYPES:
+            raise Exception('Unrecognized token extractor type: ' + tok_extr_type)
+        return TOKEN_EXTR_TYPES[tok_extr_type](**kwargs)

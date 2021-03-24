@@ -5,7 +5,7 @@ import argparse
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import readDocIdsFromForwardFileHeader, readQueries, DOCID_FIELD, FileWrapper
+from scripts.data_convert.convert_common import read_doc_ids_from_forward_file_header, read_queries, DOCID_FIELD, FileWrapper
 
 parser = argparse.ArgumentParser(description='Run basic run checks')
 parser.add_argument('--run_file', metavar='run file',
@@ -29,9 +29,9 @@ parser.add_argument('--min_exp_doc_qty',
 args = parser.parse_args()
 
 print('Reading document IDs from the index')
-allDocIds = readDocIdsFromForwardFileHeader(args.fwd_index_file)
+all_doc_ids = read_doc_ids_from_forward_file_header(args.fwd_index_file)
 print('Reading queries')
-queries = readQueries(args.query_file)
+queries = read_queries(args.query_file)
 
 query_ids = []
 query_doc_qtys = {}
@@ -40,10 +40,10 @@ for e in queries:
     qid = e[DOCID_FIELD]
     query_ids.append(qid)
 
-# Some copy-paste from common_eval.readRunDict, but ok for now
-fileName = args.run_file
-with FileWrapper(fileName) as f:
-    prevQueryId = None
+# Some copy-paste from common_eval.read_run_dict, but ok for now
+file_name = args.run_file
+with FileWrapper(file_name) as f:
+    prev_query_id = None
 
     # Check for repeating document IDs and improperly sorted entries
     for ln, line in enumerate(f):
@@ -54,36 +54,36 @@ with FileWrapper(fileName) as f:
         if len(fld) != 6:
             ln += 1
             raise Exception(
-                f'Invalid line {ln} in run file {fileName} expected 6 white-space separated fields by got: {line}')
+                f'Invalid line {ln} in run file {file_name} expected 6 white-space separated fields by got: {line}')
 
-        qid, _, docid, rank, scoreStr, runId = fld
-        if prevQueryId is None or qid != prevQueryId:
-            seenDocs = set()
-            prevQueryId = qid
-            prevScore = float('inf')
+        qid, _, docid, rank, score_str, run_id = fld
+        if prev_query_id is None or qid != prev_query_id:
+            seen_docs = set()
+            prev_query_id = qid
+            prev_score = float('inf')
 
         try:
-            score = float(scoreStr)
+            score = float(score_str)
         except:
             raise Exception(
-                f'Invalid score {scoreStr} {ln} in run file {fileName}: {line}')
+                f'Invalid score {score_str} {ln} in run file {file_name}: {line}')
 
-        if score > prevScore:
+        if score > prev_score:
             raise Exception(
-                f'Invalid line {ln} in run file {fileName} increasing score!')
-        if docid not in allDocIds:
+                f'Invalid line {ln} in run file {file_name} increasing score!')
+        if docid not in all_doc_ids:
             raise Exception(
-                f'Invalid line {ln} in run file {fileName} document id not found in the index: {docid}')
-        if docid in seenDocs:
+                f'Invalid line {ln} in run file {file_name} document id not found in the index: {docid}')
+        if docid in seen_docs:
             raise Exception(
-                f'Invalid line {ln} in run file {fileName} repeating document {docid}')
+                f'Invalid line {ln} in run file {file_name} repeating document {docid}')
 
-        if args.run_id is not None and runId != args.run_id:
+        if args.run_id is not None and run_id != args.run_id:
             raise Exception(
-                f'Invalid line {ln} in run file {fileName} invalid run id {runId}')
+                f'Invalid line {ln} in run file {file_name} invalid run id {run_id}')
 
-        prevScore = score
-        seenDocs.add(docid)
+        prev_score = score
+        seen_docs.add(docid)
         if not qid in query_doc_qtys:
             query_doc_qtys[qid] = 0
         query_doc_qtys[qid] += 1
@@ -93,13 +93,13 @@ with FileWrapper(fileName) as f:
 
 # Finally print per-query statistics and report queries that have fewer than a give number of results generated
 print('# of results per query:')
-nWarn = 0
+n_warn = 0
 for qid in query_ids:
     qty = query_doc_qtys[qid] if qid in query_doc_qtys else 0
 
     print(f'{qid} {qty}')
     if qty < args.min_exp_doc_qty:
         print(f'WARNING: query {qid} has fewer results than expected!')
-        nWarn += 1
+        n_warn += 1
 
-print(f'Checking is complete! # of warning {nWarn}')
+print(f'Checking is complete! # of warning {n_warn}')

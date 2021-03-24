@@ -11,14 +11,14 @@ sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, readStopWords, addRetokenizedField, readQueries, MAX_NUM_QUERY_OPT_HELP, MAX_NUM_QUERY_OPT
+    FileWrapper, read_stop_words, add_retokenized_field, read_queries, MAX_NUM_QUERY_OPT_HELP, MAX_NUM_QUERY_OPT
 
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
     TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
     TEXT_RAW_FIELD_NAME, \
     REPORT_QTY, SPACY_MODEL, QUESTION_FILE_JSON, QREL_FILE
 
-from scripts.common_eval import QrelEntry, writeQrels
+from scripts.common_eval import QrelEntry, write_qrels
 
 ORCAS_QID_PREF='orcas_'
 
@@ -40,47 +40,47 @@ args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
-inpFile = FileWrapper(args.input)
-maxQueryQty = arg_vars[MAX_NUM_QUERY_OPT]
-if maxQueryQty < 0 or maxQueryQty is None:
-    maxQueryQty = float('inf')
+inp_file = FileWrapper(args.input)
+max_query_qty = arg_vars[MAX_NUM_QUERY_OPT]
+if max_query_qty < 0 or max_query_qty is None:
+    max_query_qty = float('inf')
 
-ignoreQueries = set()
+ignore_queries = set()
 
 for qfile_dir in args.filter_query_dir:
     qfile_name = os.path.join(qfile_dir, QUESTION_FILE_JSON)
-    for e in readQueries(qfile_name):
-        ignoreQueries.add(e[TEXT_FIELD_NAME])
+    for e in read_queries(qfile_name):
+        ignore_queries.add(e[TEXT_FIELD_NAME])
     print('Read queries from: ' + qfile_name)
 
-print('A list of queries to ignore has %d entries' % (len(ignoreQueries)))
+print('A list of queries to ignore has %d entries' % (len(ignore_queries)))
 
 
 if not os.path.exists(args.out_dir):
     os.makedirs(args.out_dir)
 
-outFileQueries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w')
-outFileQrelsName = os.path.join(args.out_dir, QREL_FILE)
+out_file_queries = FileWrapper(os.path.join(args.out_dir, QUESTION_FILE_JSON), 'w')
+out_file_qrels_name = os.path.join(args.out_dir, QREL_FILE)
 
-minQueryTokQty = args.min_query_token_qty
+min_query_tok_qty = args.min_query_token_qty
 
-stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
-print(stopWords)
-nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
+stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
+print(stop_words)
+nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 
-qrelList = []
+qrel_list = []
 
 # Input file is a TSV file
 ln = 0
 
-prevQid = ''
-genQueryQty = 0
+prev_qid = ''
+gen_query_qty = 0
 
-for line in inpFile:
+for line in inp_file:
     ln += 1
     line = line.strip()
     if not line:
@@ -94,41 +94,41 @@ for line in inpFile:
     qid_orig, query, did, _  = fields
     qid = ORCAS_QID_PREF + qid_orig
 
-    query_lemmas, query_unlemm = nlp.procText(query)
+    query_lemmas, query_unlemm = nlp.proc_text(query)
 
     if query_lemmas == '':
         continue
-    if query_lemmas in ignoreQueries:
+    if query_lemmas in ignore_queries:
         print(f"Ignoring query, which is found in specified query files. Raw query: '{query}' lemmatized query '{query_lemmas}'")
 
     query_toks = query_lemmas.split()
-    if len(query_toks) >= minQueryTokQty:
+    if len(query_toks) >= min_query_tok_qty:
 
-        qrelList.append(QrelEntry(queryId=qid, docId=did, relGrade=1))
+        qrel_list.append(QrelEntry(query_id=qid, doc_id=did, rel_grade=1))
 
         # Entries are sorted by the query ID
-        if prevQid != qid:
+        if prev_qid != qid:
             doc = {DOCID_FIELD: qid,
                    TEXT_FIELD_NAME: query_lemmas,
                    TEXT_UNLEMM_FIELD_NAME: query_unlemm,
                    TEXT_RAW_FIELD_NAME: query.lower()}
-            addRetokenizedField(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bertTokenizer)
+            add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
-            docStr = json.dumps(doc) + '\n'
-            outFileQueries.write(docStr)
-            genQueryQty += 1
-            if genQueryQty >= maxQueryQty:
+            doc_str = json.dumps(doc) + '\n'
+            out_file_queries.write(doc_str)
+            gen_query_qty += 1
+            if gen_query_qty >= max_query_qty:
                 break
 
-    prevQid = qid
+    prev_qid = qid
 
     if ln % REPORT_QTY == 0:
         print('Processed %d input line' % ln)
 
 print('Processed %d input lines' % ln)
 
-writeQrels(qrelList, outFileQrelsName)
+write_qrels(qrel_list, out_file_qrels_name)
 
-inpFile.close()
-outFileQueries.close()
+inp_file.close()
+out_file_queries.close()
 

@@ -9,7 +9,7 @@ import argparse
 sys.path.append('.')
 
 from scripts.config import DOCID_FIELD
-from scripts.data_convert.convert_common import jsonlGen, FileWrapper
+from scripts.data_convert.convert_common import jsonl_gen, FileWrapper
 
 parser = argparse.ArgumentParser(description='Filtering data fields')
 
@@ -33,7 +33,7 @@ print(args)
 incl_field_set = set(args.keep_fields + [DOCID_FIELD])
 
 with FileWrapper(args.output, 'w') as fout:
-    for ln, old_rec in enumerate(jsonlGen(args.input)):
+    for ln, old_rec in enumerate(jsonl_gen(args.input)):
         if DOCID_FIELD not in old_rec:
             raise Exception(f'Entry {ln+1} in args.input lacks the field {DOCID_FIELD}')
         new_rec = {k : old_rec[k] for k in set(old_rec.keys()).intersection(incl_field_set)}

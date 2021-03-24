@@ -181,7 +181,7 @@ class VocabBuilder:
         self.doc_qty = 0
         self.tot_qty = 0
 
-    def procDoc(self, text):
+    def proc_doc(self, text):
         """White-space tokenize the document, update counters."""
         toks = text.strip().split()
         self.total_counter.update(toks)

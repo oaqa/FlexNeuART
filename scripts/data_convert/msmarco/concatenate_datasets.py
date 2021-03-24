@@ -22,7 +22,7 @@ def get_converted_data(dataset):
 
 
 def get_tokens(query_text):
-    return list(map(lambda x: x.lower(), re.sub('[^a-zA-Z0-9 ]', ' ', query_text).split()))
+    return list(map(lambda x: x.lower(), re.sub('[^a-z_a-Z0-9 ]', ' ', query_text).split()))
 
 
 if __name__ == "__main__":

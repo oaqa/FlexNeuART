@@ -10,7 +10,7 @@ sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, readStopWords, addRetokenizedField
+    FileWrapper, read_stop_words, add_retokenized_field
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
     TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
     TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
@@ -33,20 +33,20 @@ args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
-inpFile = FileWrapper(args.input)
-outFile = FileWrapper(args.output, 'w')
-maxDocSize = args.max_doc_size
+inp_file = FileWrapper(args.input)
+out_file = FileWrapper(args.output, 'w')
+max_doc_size = args.max_doc_size
 
 
-bertTokenizer=None
+bert_tokenizer=None
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
 
-stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
-print(stopWords)
+stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
+print(stop_words)
 
-nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True)
+nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 
 class PassParseWorker:
     def __call__(self, line):
@@ -54,20 +54,20 @@ class PassParseWorker:
         if not line:
             return None
 
-        line = line[:maxDocSize]  # cut documents that are too long!
+        line = line[:max_doc_size]  # cut documents that are too long!
         fields = line.split('\t')
         if len(fields) != 2:
             return None
 
         pid, body = fields
 
-        text, text_unlemm = nlp.procText(body)
+        text, text_unlemm = nlp.proc_text(body)
 
         doc = {DOCID_FIELD: pid,
                TEXT_FIELD_NAME: text,
                TEXT_UNLEMM_FIELD_NAME: text_unlemm,
                TEXT_RAW_FIELD_NAME: body.lower()}
-        addRetokenizedField(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bertTokenizer)
+        add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
         return json.dumps(doc) + '\n'
 
@@ -76,10 +76,10 @@ proc_qty = args.proc_qty
 print(f'Spanning {proc_qty} processes')
 pool = multiprocessing.Pool(processes=proc_qty)
 ln = 0
-for docStr in pool.imap(PassParseWorker(), inpFile, IMAP_PROC_CHUNK_QTY):
+for doc_str in pool.imap(PassParseWorker(), inp_file, IMAP_PROC_CHUNK_QTY):
     ln = ln + 1
-    if docStr is not None:
-        outFile.write(docStr)
+    if doc_str is not None:
+        out_file.write(doc_str)
     else:
         print('Ignoring misformatted line %d' % ln)
 
@@ -88,5 +88,5 @@ for docStr in pool.imap(PassParseWorker(), inpFile, IMAP_PROC_CHUNK_QTY):
 
 print('Processed %d passages' % ln)
 
-inpFile.close()
-outFile.close()
+inp_file.close()
+out_file.close()

@@ -3,14 +3,14 @@ import numpy as np
 
 
 # Loads embeddings stored in Glove-vector text format
-def loadEmbeddings(fileName, sep='\t'):
-    dtFrame = pd.read_csv(fileName, sep=sep, header=None)
-    words = dtFrame[0].values
-    dtFrame.drop(0, axis=1, inplace=True)
-    return words, dtFrame.values.astype(np.float32)
+def load_embeddings(file_name, sep='\t'):
+    dt_frame = pd.read_csv(file_name, sep=sep, header=None)
+    words = dt_frame[0].values
+    dt_frame.drop(0, axis=1, inplace=True)
+    return words, dt_frame.values.astype(np.float32)
 
 
-def createEmbedMap(words):
+def create_embed_map(words):
     res = dict()
     for i in range(len(words)):
         res[words[i]] = i
@@ -18,9 +18,9 @@ def createEmbedMap(words):
 
 
 # Unlike scipy cosine it doesn't choke on zero vectors
-def robustCosineSimil(x, y, eps=1e-10):
-    sumX = np.sqrt(np.sum(x * x))
-    sumY = np.sqrt(np.sum(y * y))
-    sumX = max(sumX, eps)
-    sumY = max(sumY, eps)
-    return np.sum(x * y) / (sumX * sumY)
+def robust_cosine_simil(x, y, eps=1e-10):
+    sum_x = np.sqrt(np.sum(x * x))
+    sum_y = np.sqrt(np.sum(y * y))
+    sum_x = max(sum_x, eps)
+    sum_y = max(sum_y, eps)
+    return np.sum(x * y) / (sum_x * sum_y)

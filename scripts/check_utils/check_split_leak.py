@@ -35,15 +35,15 @@ from tqdm import tqdm
 
 sys.path.append('.')
 
-from scripts.check_utils.common_check import getTokenIds, QUERY_BATCH_SIZE, jaccard, \
-                                            readSampleQueries, createJaccardIndex, strToNMSLIBVect
+from scripts.check_utils.common_check import get_token_ids, QUERY_BATCH_SIZE, jaccard, \
+                                            read_sample_queries, create_jaccard_index, str_to_nmslib_vect
 
-from scripts.data_convert.convert_common import jsonlGen, unique
+from scripts.data_convert.convert_common import jsonl_gen, unique
 from scripts.config import BERT_BASE_MODEL, \
                          ANSWER_FILE_JSON, QREL_FILE, \
                          DOCID_FIELD, TEXT_RAW_FIELD_NAME
 
-from scripts.common_eval import readQrelsDict
+from scripts.common_eval import read_qrels_dict
 
 PRINT_TOO_CLOSE_THRESHOLD=0.9 # We want to inspect answers that are too close
 
@@ -83,87 +83,87 @@ parser.add_argument("--use_hnsw", action="store_true",
 args = parser.parse_args()
 print(args)
 
-dataDir = args.data_dir
+data_dir = args.data_dir
 
-sampleQueryList1, sampleQueryList2 = readSampleQueries(dataDir,
+sample_query_list1, sample_query_list2 = read_sample_queries(data_dir,
                                                        args.input_subdir1, args.sample_prob1,
                                                        args.input_subdir2, args.sample_prob2)
 
-apath1=os.path.join(dataDir, args.input_subdir1, ANSWER_FILE_JSON)
-apath2=os.path.join(dataDir, args.input_subdir2, ANSWER_FILE_JSON)
+apath1=os.path.join(data_dir, args.input_subdir1, ANSWER_FILE_JSON)
+apath2=os.path.join(data_dir, args.input_subdir2, ANSWER_FILE_JSON)
 
-rpath1 = os.path.join(dataDir, args.input_subdir1, QREL_FILE)
-qrelDict1 = readQrelsDict(rpath1)
-print('Read %d qrel sets from %s' % (len(qrelDict1), rpath1))
-rpath2 = os.path.join(dataDir, args.input_subdir2, QREL_FILE)
-qrelDict2 = readQrelsDict(rpath2)
-print('Read %d qrel sets from %s' % (len(qrelDict2), rpath2))
+rpath1 = os.path.join(data_dir, args.input_subdir1, QREL_FILE)
+qrel_dict1 = read_qrels_dict(rpath1)
+print('Read %d qrel sets from %s' % (len(qrel_dict1), rpath1))
+rpath2 = os.path.join(data_dir, args.input_subdir2, QREL_FILE)
+qrel_dict2 = read_qrels_dict(rpath2)
+print('Read %d qrel sets from %s' % (len(qrel_dict2), rpath2))
 
-answDictText = {}
+answ_dict_text = {}
 
 for fn in [apath1, apath2]:
     qty = 0
 
-    for e in tqdm(jsonlGen(fn), desc='loading answers'):
+    for e in tqdm(jsonl_gen(fn), desc='loading answers'):
         qty += 1
 
-        answId = e[DOCID_FIELD]
-        answText = e[TEXT_RAW_FIELD_NAME]
+        answ_id = e[DOCID_FIELD]
+        answ_text = e[TEXT_RAW_FIELD_NAME]
 
-        answDictText[answId] = answText
+        answ_dict_text[answ_id] = answ_text
 
     print('Read %d answers from %s' % (qty, fn))
 
-index = createJaccardIndex(args.use_hnsw, BERT_TOKENIZER, sampleQueryList2)
+index = create_jaccard_index(args.use_hnsw, BERT_TOKENIZER, sample_query_list2)
 
 K = args.k
 print('K=', K)
 
 
-nbrQuestSimils = []
-nbrAnswSimils = []
+nbr_quest_simils = []
+nbr_answ_simils = []
 
-for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query w/ 1st query set'):
+for start in tqdm(range(0, len(sample_query_list1), QUERY_BATCH_SIZE), desc='query w/ 1st query set'):
     qbatch = []
-    for e in sampleQueryList1[start:start + QUERY_BATCH_SIZE]:
-        qbatch.append(strToNMSLIBVect(BERT_TOKENIZER, e[TEXT_RAW_FIELD_NAME]))
+    for e in sample_query_list1[start:start + QUERY_BATCH_SIZE]:
+        qbatch.append(str_to_nmslib_vect(BERT_TOKENIZER, e[TEXT_RAW_FIELD_NAME]))
 
     if qbatch:
         nbrs = index.knnQueryBatch(qbatch, k=K, num_threads=0)
         assert(len(nbrs))
         for i in range(len(qbatch)):
             qnum1 = start + i
-            qid1 = sampleQueryList1[qnum1][DOCID_FIELD]
+            qid1 = sample_query_list1[qnum1][DOCID_FIELD]
 
-            indexQueries, dists = nbrs[i]
-            for t in range(len(indexQueries)):
+            index_queries, dists = nbrs[i]
+            for t in range(len(index_queries)):
                 # In the case of Jaccard, the similarity is one minus the distance
                 nqsimil = 1 - dists[t]
-                nbrQuestSimils.append(nqsimil)
+                nbr_quest_simils.append(nqsimil)
 
                 # For close enough queries, compute all pairwise distances
                 # between the respective relevant answers
                 if nqsimil >= args.min_jacc:
-                    qnum2 = indexQueries[t]
+                    qnum2 = index_queries[t]
 
-                    qid2 = sampleQueryList2[qnum2][DOCID_FIELD]
+                    qid2 = sample_query_list2[qnum2][DOCID_FIELD]
 
-                    if qid1 in qrelDict1 and qid2 in qrelDict2:
-                        for aid1, grade1 in qrelDict1[qid1].items():
-                            for aid2, grade2 in qrelDict2[qid2].items():
+                    if qid1 in qrel_dict1 and qid2 in qrel_dict2:
+                        for aid1, grade1 in qrel_dict1[qid1].items():
+                            for aid2, grade2 in qrel_dict2[qid2].items():
                                 if grade1 > 0 and grade2 > 0 and \
-                                    aid1 in answDictText and aid2 in answDictText:
-                                    toks1 = unique(getTokenIds(BERT_TOKENIZER, answDictText[aid1]))
-                                    toks2 = unique(getTokenIds(BERT_TOKENIZER, answDictText[aid2]))
-                                    answSimil = jaccard(toks1, toks2)
-                                    nbrAnswSimils.append(answSimil)
-                                    if answSimil >= PRINT_TOO_CLOSE_THRESHOLD:
-                                        print(qid1, aid1, '<=>', answSimil, '<=>', qid2, aid2)
+                                    aid1 in answ_dict_text and aid2 in answ_dict_text:
+                                    toks1 = unique(get_token_ids(BERT_TOKENIZER, answ_dict_text[aid1]))
+                                    toks2 = unique(get_token_ids(BERT_TOKENIZER, answ_dict_text[aid2]))
+                                    answ_simil = jaccard(toks1, toks2)
+                                    nbr_answ_simils.append(answ_simil)
+                                    if answ_simil >= PRINT_TOO_CLOSE_THRESHOLD:
+                                        print(qid1, aid1, '<=>', answ_simil, '<=>', qid2, aid2)
                                         print('---------------------')
-                                        print(answDictText[aid1])
+                                        print(answ_dict_text[aid1])
                                         print(toks1)
                                         print('---------------------')
-                                        print(answDictText[aid2])
+                                        print(answ_dict_text[aid2])
                                         print(toks2)
                                         print('=====================')
 
@@ -174,17 +174,17 @@ for start in tqdm(range(0, len(sampleQueryList1), QUERY_BATCH_SIZE), desc='query
 q=list([0.2,0.3,0.4,0.5,0.6,0.7, 0.8, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 0.999, 0.999])
 q.sort()
 
-print('Maximum similarity among questions:', np.max(nbrQuestSimils))
+print('Maximum similarity among questions:', np.max(nbr_quest_simils))
 print('Distribution of question-neighbor *SIMILARITIES* for k=%d' % K)
-dst = np.quantile(nbrQuestSimils, q = q)
+dst = np.quantile(nbr_quest_simils, q = q)
 print(' quant| simil')
 print('------+------')
 for k in range(len(q)):
     print('%5.03g' % q[k], ' | %.05g' % dst[k])
 
 print('Distribution of relevant answer pairwise *SIMILARITIES* from neighbor questions with Jaccard >= %g' % args.min_jacc)
-if nbrAnswSimils:
-    dst = np.quantile(nbrAnswSimils, q = q)
+if nbr_answ_simils:
+    dst = np.quantile(nbr_answ_simils, q = q)
     print(' quant| simil')
     print('------+------')
     for k in range(len(q)):

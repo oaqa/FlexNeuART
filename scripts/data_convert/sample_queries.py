@@ -6,8 +6,8 @@ import random
 import math
 
 sys.path.append('.')
-from scripts.data_convert.convert_common import readQueries, writeQueries
-from scripts.common_eval import readQrels, writeQrels
+from scripts.data_convert.convert_common import read_queries, write_queries
+from scripts.common_eval import read_qrels, write_qrels
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(description='Split queries and corresponding QREL files.')
@@ -36,44 +36,44 @@ parser.add_argument('--qty',
 args = parser.parse_args()
 print(args)
 
-dataDir = args.data_dir
+data_dir = args.data_dir
 
-queryIdList = []
+query_id_list = []
 
-queryList = readQueries(os.path.join(dataDir, args.input_subdir, QUESTION_FILE_JSON))
+query_list = read_queries(os.path.join(data_dir, args.input_subdir, QUESTION_FILE_JSON))
 
-for data in queryList:
+for data in query_list:
     did = data[DOCID_FIELD]
-    queryIdList.append(did)
+    query_id_list.append(did)
 
-print('Read %d the queries' % (len(queryIdList)))
+print('Read %d the queries' % (len(query_id_list)))
 
-qrelList = readQrels(os.path.join(dataDir, args.input_subdir, QREL_FILE))
+qrel_list = read_qrels(os.path.join(data_dir, args.input_subdir, QREL_FILE))
 
 print('Read all the QRELs')
-# print(qrelList[0:10])
+# print(qrel_list[0:10])
 
 
-# print('Before shuffling:', queryIdList[0:10], '...')
+# print('Before shuffling:', query_id_list[0:10], '...')
 
 random.seed(args.seed)
-random.shuffle(queryIdList)
-# print('After shuffling:', queryIdList[0:10], '...')
+random.shuffle(query_id_list)
+# print('After shuffling:', query_id_list[0:10], '...')
 
-if len(queryIdList) == 0:
+if len(query_id_list) == 0:
     print('Nothing to sample, input is empty')
     sys.exit(1)
 
-selQueryIds = set(queryIdList[0:args.qty])
+sel_query_ids = set(query_id_list[0:args.qty])
 
-print('We selected %d queries' % len(selQueryIds))
+print('We selected %d queries' % len(sel_query_ids))
 
-outDir = os.path.join(dataDir, args.out_subdir)
-if not os.path.exists(outDir):
-    os.makedirs(outDir)
+out_dir = os.path.join(data_dir, args.out_subdir)
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
 
-queriesFiltered = list(filter(lambda e: e[DOCID_FIELD] in selQueryIds, queryList))
-qrelsFiltered = list(filter(lambda e: e.queryId in selQueryIds, qrelList))
+queries_filtered = list(filter(lambda e: e[DOCID_FIELD] in sel_query_ids, query_list))
+qrels_filtered = list(filter(lambda e: e.query_id in sel_query_ids, qrel_list))
 
-writeQrels(qrelsFiltered,os.path.join(outDir, QREL_FILE))
-writeQueries(queriesFiltered, os.path.join(outDir, QUESTION_FILE_JSON))
+write_qrels(qrels_filtered,os.path.join(out_dir, QREL_FILE))
+write_queries(queries_filtered, os.path.join(out_dir, QUESTION_FILE_JSON))

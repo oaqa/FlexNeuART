@@ -7,7 +7,7 @@ import json
 sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import FileWrapper, replaceCharsNL
+from scripts.data_convert.convert_common import FileWrapper, replace_chars_nl
 from scripts.config import SPACY_MODEL, TEXT_RAW_FIELD_NAME, REPORT_QTY
 
 parser = argparse.ArgumentParser(description='Convert text BERT LM finetuning data file.')
@@ -25,54 +25,54 @@ parser.add_argument('--lower_case', help='lowercase text',
 args = parser.parse_args()
 print(args)
 
-docQty = 0
-setQty = 0
-setId = 0
+doc_qty = 0
+set_qty = 0
+set_id = 0
 
-inpFile = FileWrapper(args.input)
+inp_file = FileWrapper(args.input)
 
-nlp = SpacyTextParser(SPACY_MODEL, [], sentSplit=True)
+nlp = SpacyTextParser(SPACY_MODEL, [], sent_split=True)
 
 
-def outFileName(pref, num):
+def out_file_name(pref, num):
     return pref + str(num) + '.txt'
 
 
 print('Starting set 0')
-outFile = FileWrapper(outFileName(args.output_pref, setId), 'w')
+out_file = FileWrapper(out_file_name(args.output_pref, set_id), 'w')
 
-for line in inpFile:
+for line in inp_file:
     doc = json.loads(line)
-    textRaw = doc[TEXT_RAW_FIELD_NAME]
+    text_raw = doc[TEXT_RAW_FIELD_NAME]
 
-    docSents = []
+    doc_sents = []
 
-    for oneSent in nlp(textRaw).sents:
-        oneSent = replaceCharsNL(str(oneSent)).strip()
+    for one_sent in nlp(text_raw).sents:
+        one_sent = replace_chars_nl(str(one_sent)).strip()
         if args.lower_case:
-            oneSent = oneSent.lower()
-        if oneSent:
-            docSents.append(oneSent)
+            one_sent = one_sent.lower()
+        if one_sent:
+            doc_sents.append(one_sent)
 
     # Work hard to not write empty documents, b/c it'll upset the pregenerator
-    if docSents:
-        for oneSent in docSents:
-            outFile.write(oneSent + '\n')
-        outFile.write('\n')
+    if doc_sents:
+        for one_sent in doc_sents:
+            out_file.write(one_sent + '\n')
+        out_file.write('\n')
 
-    docQty += 1
-    setQty += 1
-    if docQty % REPORT_QTY == 0:
-        print('Processed %d docs' % docQty)
+    doc_qty += 1
+    set_qty += 1
+    if doc_qty % REPORT_QTY == 0:
+        print('Processed %d docs' % doc_qty)
 
-    if setQty >= args.max_set_size:
-        setQty = 0
-        setId += 1
-        print('Starting set %d' % setId)
-        outFile.close()
-        outFile = FileWrapper(outFileName(args.output_pref, setId), 'w')
+    if set_qty >= args.max_set_size:
+        set_qty = 0
+        set_id += 1
+        print('Starting set %d' % set_id)
+        out_file.close()
+        out_file = FileWrapper(out_file_name(args.output_pref, set_id), 'w')
 
-print('Processed %d docs' % docQty)
+print('Processed %d docs' % doc_qty)
 
-inpFile.close()
-outFile.close()
+inp_file.close()
+out_file.close()

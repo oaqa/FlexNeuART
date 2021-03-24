@@ -4,80 +4,80 @@ import argparse
 
 sys.path.append('.')
 
-from scripts.py_featextr_server.base_server import BaseQueryHandler, startQueryServer
+from scripts.py_featextr_server.base_server import BaseQueryHandler, start_query_server
 
 import numpy as np
 
-from scripts.py_featextr_server.utils import loadEmbeddings, createEmbedMap, robustCosineSimil
+from scripts.py_featextr_server.utils import load_embeddings, create_embed_map, robust_cosine_simil
 
-# Exclusive==True means that only one getScores
+# Exclusive==True means that only one get_scores
 # function is executed at at time
 class CosineSimilQueryHandler(BaseQueryHandler):
-    def __init__(self, queryEmbedFile, docEmbedFile, exclusive, debugPrint=False, useIDF=True):
+    def __init__(self, query_embed_file, doc_embed_file, exclusive, debug_print=False, use_idf=True):
         super().__init__(exclusive)
 
-        self.debugPrint = debugPrint
-        self.useIDF = useIDF
+        self.debug_print = debug_print
+        self.use_idf = use_idf
 
-        print('Loading answer embeddings from: ' + docEmbedFile)
-        answWords, self.answEmbed = loadEmbeddings(docEmbedFile)
-        self.answEmbedMap = createEmbedMap(answWords)
+        print('Loading answer embeddings from: ' + doc_embed_file)
+        answ_words, self.answ_embed = load_embeddings(doc_embed_file)
+        self.answ_embed_map = create_embed_map(answ_words)
 
-        if queryEmbedFile is not None:
-            print('Loading query embeddings from: ' + queryEmbedFile)
-            queryWords, self.queryEmbed = loadEmbeddings(queryEmbedFile)
-            self.queryEmbedMap = createEmbedMap(queryWords)
+        if query_embed_file is not None:
+            print('Loading query embeddings from: ' + query_embed_file)
+            query_words, self.query_embed = load_embeddings(query_embed_file)
+            self.query_embed_map = create_embed_map(query_words)
         else:
-            self.queryEmbed = self.answEmbed
-            self.queryEmbedMap = self.answEmbedMap
+            self.query_embed = self.answ_embed
+            self.query_embed_map = self.answ_embed_map
         print('Loading is done!')
 
-    def textEntryToStr(self, te):
+    def text_entry_to_str(self, te):
         arr = []
-        if self.debugPrint:
+        if self.debug_print:
             for winfo in te.entries:
                 arr.append('%s %g %d ' % (winfo.word, winfo.IDF, winfo.qty))
-        return 'docId=' + te.id + ' ' + ' '.join(arr)
+        return 'doc_id=' + te.id + ' ' + ' '.join(arr)
 
-    def createDocEmbed(self, isQuery, textEntry):
+    def create_doc_embed(self, is_query, text_entry):
 
-        if isQuery:
-            embeds = self.queryEmbed
-            embedMap = self.queryEmbedMap
+        if is_query:
+            embeds = self.query_embed
+            embed_map = self.query_embed_map
         else:
-            embeds = self.answEmbed
-            embedMap = self.answEmbedMap
+            embeds = self.answ_embed
+            embed_map = self.answ_embed_map
 
         zerov = np.zeros_like(embeds[0])
         res = zerov
 
-        for winfo in textEntry.entries:
-            vectMult = winfo.qty
-            if self.useIDF:
-                vectMult *= winfo.IDF
+        for winfo in text_entry.entries:
+            vect_mult = winfo.qty
+            if self.use_idf:
+                vect_mult *= winfo.IDF
             word = winfo.word
-            if word in embedMap:
-                res += embeds[embedMap[word]] * vectMult
+            if word in embed_map:
+                res += embeds[embed_map[word]] * vect_mult
 
         return res
 
     # This function overrides the parent class
-    def computeScoresFromParsedOverride(self, query, docs):
-        if self.debugPrint:
-            print('getScores', query.id, self.textEntryToStr(query))
+    def compute_scores_from_parsed_override(self, query, docs):
+        if self.debug_print:
+            print('get_scores', query.id, self.text_entry_to_str(query))
         ret = {}
-        queryEmbed = self.createDocEmbed(True, query)
-        if self.debugPrint:
-            print(queryEmbed)
+        query_embed = self.create_doc_embed(True, query)
+        if self.debug_print:
+            print(query_embed)
         for d in docs:
-            if self.debugPrint:
-                print(self.textEntryToStr(d))
-            docEmbed = self.createDocEmbed(False, d)
-            if self.debugPrint:
-                print(docEmbed)
+            if self.debug_print:
+                print(self.text_entry_to_str(d))
+            doc_embed = self.create_doc_embed(False, d)
+            if self.debug_print:
+                print(doc_embed)
             # Regular cosine deals poorly with all-zero vectors
-            simil = robustCosineSimil(docEmbed, queryEmbed)
-            # simil = (1-cosine(docEmbed, queryEmbed))
+            simil = robust_cosine_simil(doc_embed, query_embed)
+            # simil = (1-cosine(doc_embed, query_embed))
 
             # Note that each element must be an array, b/c
             # we can generate more than one feature per document!
@@ -110,9 +110,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    multiThreaded = True
-    startQueryServer(args.host, args.port, multiThreaded,
+    multi_threaded = True
+    start_query_server(args.host, args.port, multi_threaded,
                      CosineSimilQueryHandler(exclusive=False,
-                                             queryEmbedFile=args.query_embed,
-                                             docEmbedFile=args.doc_embed,
-                                             debugPrint=args.debug_print))
+                                             query_embed_file=args.query_embed,
+                                             doc_embed_file=args.doc_embed,
+                                             debug_print=args.debug_print))

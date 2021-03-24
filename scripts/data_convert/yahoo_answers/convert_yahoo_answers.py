@@ -13,12 +13,12 @@ sys.path.append('.')
 
 
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.common_eval import genQrelStr
-from scripts.data_convert.convert_common import FileWrapper, readStopWords, \
+from scripts.common_eval import gen_qrel_str
+from scripts.data_convert.convert_common import FileWrapper, read_stop_words, \
                                                 BERT_TOK_OPT, BERT_TOK_OPT_HELP, \
                                                 OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP, \
-                                                getRetokenized, SimpleXmlRecIterator,\
-                                                procYahooAnswersRecord
+                                                get_retokenized, SimpleXmlRecIterator,\
+                                                proc_yahoo_answers_record
 from scripts.config import SPACY_MODEL, BERT_BASE_MODEL, ANSWER_FILE_JSON, BITEXT_QUESTION_PREFIX,\
                             QREL_FILE, BITEXT_ANSWER_PREFIX, REPORT_QTY
 from scripts.config import DOCID_FIELD, QUESTION_FILE_JSON, TEXT_FIELD_NAME, \
@@ -40,12 +40,12 @@ args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
-inpFileName = args.input
+inp_file_name = args.input
 
-outMainDir = args.out_main_path
-outBitextDir = arg_vars[OUT_BITEXT_PATH_OPT]
+out_main_dir = args.out_main_path
+out_bitext_dir = arg_vars[OUT_BITEXT_PATH_OPT]
 
-bertTokenizer = None
+bert_tokenizer = None
 
 fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
 # It doesn't make sense to have bitext data for a raw-text field,
@@ -55,50 +55,50 @@ bitext_fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME]
 
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bertTokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
     bitext_fields.append(TEXT_BERT_TOKENIZED_NAME)
 
-if not os.path.exists(outMainDir):
-    os.makedirs(outMainDir)
+if not os.path.exists(out_main_dir):
+    os.makedirs(out_main_dir)
 
-biQuestFiles = {}
-biAnswFiles = {}
+bi_quest_files = {}
+bi_answ_files = {}
 
-stopWords = readStopWords(STOPWORD_FILE, lowerCase=True)
-print(stopWords)
-nlp = SpacyTextParser(SPACY_MODEL, stopWords, keepOnlyAlphaNum=True, lowerCase=True, enablePOS=False)
+stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
+print(stop_words)
+nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True, enable_pos=False)
 
-dataQuestFile = open(os.path.join(outMainDir, QUESTION_FILE_JSON), 'w')
+data_quest_file = open(os.path.join(out_main_dir, QUESTION_FILE_JSON), 'w')
 # File wrapper can handle output gz files
-dataAnswFile = FileWrapper(os.path.join(outMainDir, ANSWER_FILE_JSON), flags='w')
-qrelFile = open(os.path.join(outMainDir, QREL_FILE), 'w')
+data_answ_file = FileWrapper(os.path.join(out_main_dir, ANSWER_FILE_JSON), flags='w')
+qrel_file = open(os.path.join(out_main_dir, QREL_FILE), 'w')
 
-if outBitextDir:
-    if not os.path.exists(outBitextDir):
-        os.makedirs(outBitextDir)
+if out_bitext_dir:
+    if not os.path.exists(out_bitext_dir):
+        os.makedirs(out_bitext_dir)
 
     for fn in bitext_fields:
-        biQuestFiles[fn] = open(os.path.join(outBitextDir, BITEXT_QUESTION_PREFIX + fn), 'w')
-        biAnswFiles[fn] = open(os.path.join(outBitextDir, BITEXT_ANSWER_PREFIX + fn), 'w')
+        bi_quest_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_QUESTION_PREFIX + fn), 'w')
+        bi_answ_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_ANSWER_PREFIX + fn), 'w')
 
 ln = 0
-for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
+for rec_str in SimpleXmlRecIterator(inp_file_name, 'document'):
     ln += 1
     try:
-        rec = procYahooAnswersRecord(recStr)
-        if len(rec.answerList) == 0:  # Ignore questions without answers
+        rec = proc_yahoo_answers_record(rec_str)
+        if len(rec.answer_list) == 0:  # Ignore questions without answers
             continue
 
         question = (rec.subject + ' ' + rec.content).strip()
         qid = rec.uri
 
-        question_lemmas, question_unlemm = nlp.procText(question)
+        question_lemmas, question_unlemm = nlp.proc_text(question)
 
         question = question.lower()  # after NLP
 
         question_bert_tok = None
-        if bertTokenizer:
-            question_bert_tok = getRetokenized(bertTokenizer, question)
+        if bert_tokenizer:
+            question_bert_tok = get_retokenized(bert_tokenizer, question)
 
         doc = {DOCID_FIELD: qid,
                TEXT_FIELD_NAME: question_lemmas,
@@ -106,20 +106,20 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
                TEXT_RAW_FIELD_NAME: question}
         if question_bert_tok is not None:
             doc[TEXT_BERT_TOKENIZED_NAME] = question_bert_tok
-        docStr = json.dumps(doc) + '\n'
-        dataQuestFile.write(docStr)
+        doc_str = json.dumps(doc) + '\n'
+        data_quest_file.write(doc_str)
 
-        for i in range(len(rec.answerList)):
+        for i in range(len(rec.answer_list)):
             aid = qid + '-' + str(i)
-            answ = rec.answerList[i]
-            answ_lemmas, answ_unlemm = nlp.procText(answ)
+            answ = rec.answer_list[i]
+            answ_lemmas, answ_unlemm = nlp.proc_text(answ)
 
             answ = answ.lower()  # after NLP
 
             # Doing it after lower-casing
             answ_bert_tok = None
-            if bertTokenizer:
-                answ_bert_tok = getRetokenized(bertTokenizer, answ)
+            if bert_tokenizer:
+                answ_bert_tok = get_retokenized(bert_tokenizer, answ)
 
             doc = {DOCID_FIELD: aid,
                    TEXT_FIELD_NAME: answ_lemmas,
@@ -129,22 +129,22 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
             if answ_bert_tok is not None:
                 doc[TEXT_BERT_TOKENIZED_NAME] = answ_bert_tok
 
-            docStr = json.dumps(doc) + '\n'
-            dataAnswFile.write(docStr)
+            doc_str = json.dumps(doc) + '\n'
+            data_answ_file.write(doc_str)
 
-            relGrade = MAX_RELEV_GRADE - int(i != rec.bestAnswerId)
-            qrelFile.write(genQrelStr(qid, aid, relGrade) + '\n')
+            rel_grade = MAX_RELEV_GRADE - int(i != rec.best_answer_id)
+            qrel_file.write(gen_qrel_str(qid, aid, rel_grade) + '\n')
 
-            if biQuestFiles and biAnswFiles:
-                biQuestFiles[TEXT_FIELD_NAME].write(question_lemmas + '\n')
-                biQuestFiles[TEXT_UNLEMM_FIELD_NAME].write(question_lemmas + '\n')
+            if bi_quest_files and bi_answ_files:
+                bi_quest_files[TEXT_FIELD_NAME].write(question_lemmas + '\n')
+                bi_quest_files[TEXT_UNLEMM_FIELD_NAME].write(question_lemmas + '\n')
 
-                biAnswFiles[TEXT_FIELD_NAME].write(answ_lemmas + '\n')
-                biAnswFiles[TEXT_UNLEMM_FIELD_NAME].write(answ_lemmas + '\n')
+                bi_answ_files[TEXT_FIELD_NAME].write(answ_lemmas + '\n')
+                bi_answ_files[TEXT_UNLEMM_FIELD_NAME].write(answ_lemmas + '\n')
 
-                if bertTokenizer is not None:
-                    biQuestFiles[TEXT_BERT_TOKENIZED_NAME].write(question_bert_tok + '\n')
-                    biAnswFiles[TEXT_BERT_TOKENIZED_NAME].write(answ_bert_tok + '\n')
+                if bert_tokenizer is not None:
+                    bi_quest_files[TEXT_BERT_TOKENIZED_NAME].write(question_bert_tok + '\n')
+                    bi_answ_files[TEXT_BERT_TOKENIZED_NAME].write(answ_bert_tok + '\n')
 
         if ln % REPORT_QTY == 0:
             print('Processed %d questions' % ln)
@@ -152,11 +152,11 @@ for recStr in SimpleXmlRecIterator(inpFileName, 'document'):
     except Exception as e:
         print(f'Error parsing record #{ln}, error msg: ' + str(e))
 
-dataQuestFile.close()
-dataAnswFile.close()
-qrelFile.close()
+data_quest_file.close()
+data_answ_file.close()
+qrel_file.close()
 
-for _, f in biQuestFiles.items():
+for _, f in bi_quest_files.items():
     f.close()
-for _, f in biAnswFiles.items():
+for _, f in bi_answ_files.items():
     f.close()

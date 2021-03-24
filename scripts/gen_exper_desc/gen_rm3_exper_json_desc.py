@@ -7,7 +7,7 @@ import shutil
 
 sys.path.append('.')
 
-from scripts.gen_exper_desc.common_gen_desc import genRerankDescriptors, BaseParser, OUT_DIR_PARAM, REL_DESC_PATH_PARAM
+from scripts.gen_exper_desc.common_gen_desc import gen_rerank_descriptors, BaseParser, OUT_DIR_PARAM, REL_DESC_PATH_PARAM
 
 MODEL_SRC_PATH = 'scripts/exper/sample_exper_desc/one_feat.model'
 MODEL_DST_REL_PATH = 'models'
@@ -15,7 +15,7 @@ MODEL_DST_NAME = 'one_feat.model'
 
 
 class ParserRM3Coeff(BaseParser):
-    def initAddArgs(self):
+    def init_add_args(self):
         self.parser.add_argument('-b', metavar='BM25 b',
                                  help='BM25 parameter b',
                                  type=float, required=True)
@@ -29,68 +29,70 @@ class ParserRM3Coeff(BaseParser):
                                  metavar='BM25 query field name',
                                  help='an query field for BM25 score', default=None)
 
-    def __init__(self, progName):
-        super().__init__(progName)
+    def __init__(self, prog_name):
+        super().__init__(prog_name)
 
 
 parser = ParserRM3Coeff('RM3 tuning param generator')
-parser.parseArgs()
-args = parser.getArgs()
+parser.parse_args()
+args = parser.get_args()
 args_var = vars(args)
 
-indexFieldName = args.index_field_name
-queryFieldName = args.query_field_name
+index_field_name = args.index_field_name
+query_field_name = args.query_field_name
 outdir = args_var[OUT_DIR_PARAM]
-outModelDir = os.path.join(outdir, MODEL_DST_REL_PATH)
-if not os.path.exists(outModelDir):
-    os.makedirs(outModelDir)
-shutil.copyfile(MODEL_SRC_PATH, os.path.join(outModelDir, MODEL_DST_NAME))
+out_model_dir = os.path.join(outdir, MODEL_DST_REL_PATH)
+if not os.path.exists(out_model_dir):
+    os.makedirs(out_model_dir)
+shutil.copyfile(MODEL_SRC_PATH, os.path.join(out_model_dir, MODEL_DST_NAME))
 
-modelRelName = os.path.join(args_var[REL_DESC_PATH_PARAM], MODEL_DST_REL_PATH, MODEL_DST_NAME)
+model_rel_name = os.path.join(args_var[REL_DESC_PATH_PARAM], MODEL_DST_REL_PATH, MODEL_DST_NAME)
 
 
 class ExtrRM3GEN:
     def __call__(self):
-        testOnly = True
-        for fid, extrType in self.paramConf:
-            yield fid, extrType, testOnly, modelRelName
+        test_only = True
+        for fid, extr_type in self.param_conf:
+            yield fid, extr_type, test_only, model_rel_name
 
-    def __init__(self, k1, b, indexFieldName, queryFieldName):
-        self.paramConf = []
+    def __init__(self, k1, b, index_field_name, query_field_name):
+        self.param_conf = []
 
-        paramArr = []
+        param_arr = []
 
-        for origWeight in [0.5, 0.6, 0.7, 0.8, 0.9]:
-            for topDocQty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-                for topTermQty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-                    paramArr.append((origWeight, topDocQty, topTermQty))
+        for orig_weight in [0.5, 0.6, 0.7, 0.8, 0.9]:
+            for top_doc_qty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+                for top_term_qty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+                    param_arr.append((orig_weight, top_doc_qty, top_term_qty))
 
-        for origWeight, topDocQty, topTermQty in paramArr:
+        for orig_weight, top_doc_qty, top_term_qty in param_arr:
             bstr = '%g' % b
             k1str = '%g' % k1
-            fid = f'rm3={indexFieldName}+{queryFieldName}_origWeight={origWeight}_topDocQty={topDocQty}_topTermQty={topTermQty}_k1={k1str}_{bstr}'
+            fid = f'rm3={index_field_name}+{query_field_name}_origWeight={orig_weight}_topDocQty={top_doc_qty}_topTermQty={top_term_qty}_k1={k1str}_{bstr}'
 
-            extrList = [{
+            extr_list = [{
                 "type": "RM3Similarity",
                 "params": {
-                    "queryFieldName": queryFieldName,
-                    "indexFieldName": indexFieldName,
+                    "queryFieldName": query_field_name,
+                    "indexFieldName": index_field_name,
                     "k1": k1str,
                     "b": bstr,
-                    "origWeight": origWeight,
-                    "topDocQty": topDocQty,
-                    "topTermQty": topTermQty
+                    "origWeight": orig_weight,
+                    "topDocQty": top_doc_qty,
+                    "topTermQty": top_term_qty
                 }}]
 
-            self.paramConf.append((fid, {"extractors": extrList}))
+            self.param_conf.append((fid, {"extractors": extr_list}))
 
 
-if queryFieldName is None:
-    queryFieldName = indexFieldName
+if query_field_name is None:
+    query_field_name = index_field_name
 
-fileNameDesc = '%s_%s' % (queryFieldName, indexFieldName)
-prefix = f'rm3tune_{fileNameDesc}'
+file_name_desc = '%s_%s' % (query_field_name, index_field_name)
+prefix = f'rm3tune_{file_name_desc}'
 
-genRerankDescriptors(args,
-                     ExtrRM3GEN(k1=args.k1, b=args.b, indexFieldName=indexFieldName, queryFieldName=queryFieldName),
+gen_rerank_descriptors(args,
+                       ExtrRM3GEN(k1=args.k1, b=args.b,
+                                  index_field_name=index_field_name,
+                                  query_field_name=query_field_name),
                      f'{prefix}.json', prefix)
