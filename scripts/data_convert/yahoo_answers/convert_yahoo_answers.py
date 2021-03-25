@@ -103,7 +103,7 @@ for rec_str in SimpleXmlRecIterator(inp_file_name, 'document'):
         doc = {DOCID_FIELD: qid,
                TEXT_FIELD_NAME: question_lemmas,
                TEXT_UNLEMM_FIELD_NAME: question_unlemm,
-               TEXT_RAW_FIELD_NAME: question_lc}
+               TEXT_RAW_FIELD_NAME: question_orig}
 
         if question_bert_tok is not None:
             doc[TEXT_BERT_TOKENIZED_NAME] = question_bert_tok
@@ -125,7 +125,7 @@ for rec_str in SimpleXmlRecIterator(inp_file_name, 'document'):
             doc = {DOCID_FIELD: aid,
                    TEXT_FIELD_NAME: answ_lemmas,
                    TEXT_UNLEMM_FIELD_NAME: answ_unlemm,
-                   TEXT_RAW_FIELD_NAME: answ_lc}
+                   TEXT_RAW_FIELD_NAME: answ_orig}
 
             if answ_bert_tok is not None:
                 doc[TEXT_BERT_TOKENIZED_NAME] = answ_bert_tok

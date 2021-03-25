@@ -53,16 +53,16 @@ for line in inp_file:
         print(line.replace('\t', '<field delimiter>'))
         continue
 
-    did, query = fields
+    did, query_orig = fields
 
-    query_lemmas, query_unlemm = nlp.proc_text(query)
+    query_lemmas, query_unlemm = nlp.proc_text(query_orig)
 
     query_toks = query_lemmas.split()
     if len(query_toks) >= min_query_tok_qty:
         doc = {DOCID_FIELD: did,
                TEXT_FIELD_NAME: query_lemmas,
                TEXT_UNLEMM_FIELD_NAME: query_unlemm,
-               TEXT_RAW_FIELD_NAME: query}
+               TEXT_RAW_FIELD_NAME: query_orig}
         add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
         doc_str = json.dumps(doc) + '\n'

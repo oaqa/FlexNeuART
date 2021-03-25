@@ -74,9 +74,9 @@ if out_bitext_dir:
         bi_answ_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_ANSWER_PREFIX + fn), 'w')
 
 for query_idx, fields in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
-    query = fields["question"]
+    query_orig = fields["question"]
     answer_list_lc = [s.lower() for s in fields["answers"]]
-    query_lemmas, query_unlemm = nlp.proc_text(query)
+    query_lemmas, query_unlemm = nlp.proc_text(query_orig)
     query_bert_tok = None
 
     query_toks = query_lemmas.split()
@@ -85,7 +85,7 @@ for query_idx, fields in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
             DOCID_FIELD: query_idx,
             TEXT_FIELD_NAME: query_lemmas,
             TEXT_UNLEMM_FIELD_NAME: query_unlemm,
-            TEXT_RAW_FIELD_NAME: query
+            TEXT_RAW_FIELD_NAME: query_orig
         }
         add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
         if TEXT_BERT_TOKENIZED_NAME in doc:

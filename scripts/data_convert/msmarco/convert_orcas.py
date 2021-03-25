@@ -91,15 +91,15 @@ for line in inp_file:
         print(line.replace('\t', '<field delimiter>'))
         continue
 
-    qid_orig, query, did, _  = fields
+    qid_orig, query_orig, did, _  = fields
     qid = ORCAS_QID_PREF + qid_orig
 
-    query_lemmas, query_unlemm = nlp.proc_text(query)
+    query_lemmas, query_unlemm = nlp.proc_text(query_orig)
 
     if query_lemmas == '':
         continue
     if query_lemmas in ignore_queries:
-        print(f"Ignoring query, which is found in specified query files. Raw query: '{query}' lemmatized query '{query_lemmas}'")
+        print(f"Ignoring query, which is found in specified query files. Raw query: '{query_orig}' lemmatized query '{query_lemmas}'")
 
     query_toks = query_lemmas.split()
     if len(query_toks) >= min_query_tok_qty:
@@ -111,7 +111,7 @@ for line in inp_file:
             doc = {DOCID_FIELD: qid,
                    TEXT_FIELD_NAME: query_lemmas,
                    TEXT_UNLEMM_FIELD_NAME: query_unlemm,
-                   TEXT_RAW_FIELD_NAME: query}
+                   TEXT_RAW_FIELD_NAME: query_orig}
             add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
             doc_str = json.dumps(doc) + '\n'
