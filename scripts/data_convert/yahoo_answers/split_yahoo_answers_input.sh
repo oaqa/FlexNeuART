@@ -1,3 +1,3 @@
 #/bin/bash
-target/appassembler/bin/YahooAnswersCollectionSplitter
+target/appassembler/bin/YahooAnswersCollectionSplitter $@
 
