@@ -26,3 +26,4 @@ tar zxvf collection.tar.gz
 gzip collection.tsv
 
 wget https://trec.nist.gov/data/deep/2019qrels-pass.txt
+wget https://trec.nist.gov/data/deep/2020qrels-pass.txt

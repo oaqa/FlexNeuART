@@ -30,3 +30,4 @@ for year in 2019 2020 ; do
 done
 
 wget https://trec.nist.gov/data/deep/2019qrels-docs.txt
+wget https://trec.nist.gov/data/deep/2020qrels-docs.txt
