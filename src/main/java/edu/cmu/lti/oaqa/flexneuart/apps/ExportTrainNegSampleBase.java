@@ -202,11 +202,10 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   void exportQuery(CandidateProvider candProv,
                   int queryNum, String queryId, String queryQueryText, String queryFieldText, boolean bIsTestQuery)
       throws Exception {
-    queryFieldText = this.handleCase(queryQueryText);
     if (bIsTestQuery) {
-      exportQueryTest(candProv, queryNum, queryId, queryQueryText, queryFieldText);
+      exportQueryTest(candProv, queryNum, queryId, queryQueryText, handleCase(queryFieldText));
     } else {
-      exportQueryTrain(candProv, queryNum, queryId, queryQueryText, queryFieldText);
+      exportQueryTrain(candProv, queryNum, queryId, queryQueryText, handleCase(queryFieldText));
     }
   }
   
