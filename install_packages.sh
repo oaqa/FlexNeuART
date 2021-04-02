@@ -6,8 +6,17 @@ curr_dir=$PWD
 source scripts/common_proc.sh
 source scripts/config.sh
 
-# Don't install Matchzoo packages by default
-USE_MATCHZOO=0
+boolOpts=(\
+"h" "help" "print help"
+"with_giza" "withGiza" "install MGIZA"
+)
+
+parseArguments $@
+
+if [ "$help" = "1" ] ; then
+  genUsage ""
+  exit 1
+fi
 
 plist=(\
 lxml             "" \
@@ -20,14 +29,6 @@ thrift           "0.13.0" \
 spacy            "2.2.3" \
 pyjnius          ""
 )
-
-if [ "$USE_MATCHZOO" = "1" ] ; then
-  echo "Adding matchzoo packages"
-  plist+=(\
-          matchzoo         "" \
-          keras            "2.3.0" \
-          tensorflow       "")
-fi
 
 echo "Python packages to install:"
 echo ${plist[*]}
@@ -49,7 +50,6 @@ for ((i=0;i<$qty;i+=2)) ; do
   fi
 done
 
-
 python -m spacy download en_core_web_sm
 
 # This should be installed after numpy or else it will try to isntall an incompatible version!
@@ -58,13 +58,15 @@ git clone https://github.com/searchivarius/pytorch-pretrained-BERT-mod
 cd pytorch-pretrained-BERT-mod
 python setup.py install
 
-cd $curr_dir
-rm -rf mgiza
-git clone https://github.com/moses-smt/mgiza.git
-cd mgiza/mgizapp
-cmake .
-make -j 4
-make install
+if [ "$withGiza" ] ; then
+  cd $curr_dir
+  rm -rf mgiza
+  git clone https://github.com/moses-smt/mgiza.git
+  cd mgiza/mgizapp
+  cmake .
+  make -j 4
+  make install
+fi
 
 cd $curr_dir/trec_eval 
 make  
