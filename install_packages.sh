@@ -58,7 +58,7 @@ git clone https://github.com/searchivarius/pytorch-pretrained-BERT-mod
 cd pytorch-pretrained-BERT-mod
 python setup.py install
 
-if [ "$withGiza" ] ; then
+if [ "$withGiza" = "1" ] ; then
   cd $curr_dir
   rm -rf mgiza
   git clone https://github.com/moses-smt/mgiza.git
