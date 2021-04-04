@@ -20,6 +20,11 @@ The code for the best-performing neural model will be published within 2-3 month
    * [MS MARCO](scripts/data_convert/msmarco/README.md)
    * [Yahoo Answers](scripts/data_convert/yahoo_answers/README.md)
 
+The framework supports data in generic JSONL format. We provide conversion (and in some cases download) scripts for the following collections:
+* MS MARCO data (documents and passages)
+* Yahoo Answers collections
+* Cranfield
+
 
 For neural network training FlexNeuART incorporates
 a re-worked variant of CEDR ([MacAvaney et al' 2019](https://github.com/Georgetown-IR-Lab/cedr)).
