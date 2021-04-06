@@ -1,115 +1,89 @@
 #!/usr/bin/env python
+# A script to randomly split queries
+# Instead of using this directly, one can use a convenience wrapper shell script split_queries.sh.
+#
 import sys
 import os
-import argparse
 import random
-import math
+import json
 
 sys.path.append('.')
-from scripts.data_convert.convert_common import read_queries, write_queries
-from scripts.common_eval import read_qrels, write_qrels
+from scripts.data_convert.split_queries_args import parse_args
+from scripts.data_convert.convert_common import read_queries
+from scripts.common_eval import read_qrels, qrel_entry2_str
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
-
-parser = argparse.ArgumentParser(description='Split queries and corresponding QREL files.')
-
-parser.add_argument('--data_dir',
-                    metavar='data directory',
-                    help='data directory',
-                    type=str, required=True)
-parser.add_argument('--input_subdir',
-                    metavar='input data subirectory',
-                    help='input data subdirectory',
-                    type=str, required=True)
-parser.add_argument('--seed',
-                    metavar='random seed',
-                    help='random seed',
-                    type=int, default=0)
-parser.add_argument('--out_subdir1',
-                    metavar='1st output data subirectory',
-                    help='1st output data subdirectory',
-                    type=str, required=True)
-parser.add_argument('--out_subdir2',
-                    metavar='2d output data subirectory',
-                    help='2d output data subdirectory',
-                    type=str, required=True)
-parser.add_argument('--part1_qty',
-                    metavar='1st part # of entries',
-                    help='# of entries in the 1st part',
-                    type=int, default=None)
-parser.add_argument('--part1_fract',
-                    metavar='1st part fraction # of entries',
-                    help='Fraction of entries in the 1st part (from 0 to 1)',
-                    type=float, default=None)
-
-args = parser.parse_args()
-print(args)
-
-data_dir = args.data_dir
-
-query_id_list = []
-
-query_list = read_queries(os.path.join(data_dir, args.input_subdir, QUESTION_FILE_JSON))
-
-for data in query_list:
-    did = data[DOCID_FIELD]
-    query_id_list.append(did)
-
-print('Read all the queries')
-
-qrel_list = read_qrels(os.path.join(data_dir, args.input_subdir, QREL_FILE))
-
-print('Read all the QRELs')
-# print(qrel_list[0:10])
+from scripts.data_convert.convert_common import FileWrapper
 
 
-# print('Before shuffling:', query_id_list[0:10], '...')
+def write_queries_files(queries, query_id_to_partition, dst_dir, partitions_names):
+    files = [FileWrapper(os.path.join(dst_dir, name, QUESTION_FILE_JSON), "w")
+             for name in partitions_names]
 
-random.seed(args.seed)
-random.shuffle(query_id_list)
+    for query in queries:
+        query_id = query[DOCID_FIELD]
+        partition_id = query_id_to_partition[query_id]
+        files[partition_id].write(json.dumps(query))
+        files[partition_id].write('\n')
 
-# print('After shuffling:', query_id_list[0:10], '...')
+    for file in files:
+        file.close()
 
-qty = len(query_id_list)
 
-if qty == 0:
-    print('Nothing to split, input is empty')
-    sys.exit(1)
+def write_qrels_files(qrels, query_id_to_partition, dst_dir, partitions_names):
+    files = [FileWrapper(os.path.join(dst_dir, name, QREL_FILE), "w")
+             for name in partitions_names]
 
-qty_part = args.part1_qty
-if qty_part is None:
-    if args.part1_fract is not None:
-        if args.part1_fract <= 0 or args.part1_fract >= 1:
-            print('The fraction should be > 0 and < 1')
-            sys.exit(1)
-        qty_part = int(math.ceil(qty * args.part1_fract))
-    else:
-        print('Specify either --part1_qty or part1_fract')
-        sys.exit(1)
+    for qrel in qrels:
+        partition_id = query_id_to_partition[qrel.query_id]
+        files[partition_id].write(qrel_entry2_str(qrel))
+        files[partition_id].write('\n')
 
-query_id_set = set(query_id_list)
+    for file in files:
+        file.close()
 
-qrels_to_ignore = list(filter(lambda e: e.query_id not in query_id_set, qrel_list))
 
-print('# of QRELs with query IDs not present in any part', len(qrels_to_ignore))
+def build_query_id_to_partition(query_ids, sizes):
+    assert sum(sizes) == len(query_ids)
+    query_id_to_partition = dict()
+    start = 0
+    for part_id in range(len(sizes)):
+        end = start + sizes[part_id]
+        for k in range(start, end):
+            query_id_to_partition[query_ids[k]] = part_id
+        start = end
 
-sel_query_ids = set(query_id_list[0:qty_part])
+    return query_id_to_partition
 
-print('The first part will have %d documents' % len(sel_query_ids))
 
-part_sub_dirs = [args.out_subdir1, args.out_subdir2]
+def main():
+    args = parse_args()
+    print(args.raw_args)
 
-for part in range(0, 2):
-    out_dir = os.path.join(data_dir, part_sub_dirs[part])
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
 
-    query_part_list = list(filter(lambda e: int(e[DOCID_FIELD] in sel_query_ids) == 1 - part, query_list))
-    query_part_id_set = set([e[DOCID_FIELD] for e in query_part_list])
+    random.seed(args.seed)
 
-    qrel_part_list = list(filter(lambda e: e.query_id in query_part_id_set, qrel_list))
-    write_qrels(qrel_part_list,
-               os.path.join(out_dir, QREL_FILE))
+    print("Start reading input files...")
+    src_dir = args.src_dir
+    queries = read_queries(os.path.join(src_dir, QUESTION_FILE_JSON))
 
-    write_queries(query_part_list, os.path.join(out_dir, QUESTION_FILE_JSON))
+    print(f"Shuffled query IDs using sid {args.seed}")
+    query_ids = [data[DOCID_FIELD] for data in queries]
 
-    print('Part %s # of queries: %d # of QRELs: %d' % (part_sub_dirs[part], len(query_part_list), len(qrel_part_list)))
+    random.shuffle(query_ids)
+
+    assert len(query_ids) == len(set(query_ids)), "Non-unique queries ids are forbidden!"
+    qrels = read_qrels(os.path.join(src_dir, QREL_FILE))
+    print("Done reading input files.")
+
+    sizes = args.partitions_sizes(len(query_ids))
+    assert len(sizes) == len(args.partitions_names)
+    print("Final partitions sizes:", list(zip(args.partitions_names, sizes)))
+
+    query_id_to_partition = build_query_id_to_partition(query_ids, sizes)
+
+    write_queries_files(queries, query_id_to_partition, args.dst_dir, args.partitions_names)
+    write_qrels_files(qrels, query_id_to_partition, args.dst_dir, args.partitions_names)
+
+
+if __name__ == '__main__':
+    main()

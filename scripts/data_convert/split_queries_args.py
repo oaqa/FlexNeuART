@@ -18,13 +18,13 @@ def parse_args():
     parser.add_argument('--partitions_names',
                         metavar='names of partitions to split at',
                         help='names of partitions to split at separated by comma',
-                        default="bitext,train_fusion,dev",
+                        required=True,
                         type=str)
     parser.add_argument('--partitions_sizes',
                         metavar='sizes of partitions to split at',
                         help="sizes (in queries) of partitions to split at separated by comma (one of the values can be -1, "
                              "in that case all left queries go to that partition)",
-                        default="-1,10000,10000",
+                        required=True,
                         type=str)
 
     return Arguments(parser.parse_args())
@@ -55,7 +55,10 @@ class Arguments:
         defined_sum = 0
         for value in raw_values:
             if value != -1:
-                assert 0 < value < queries_count
+                if value <= 0:
+                    raise Exception('One query list is empty!')
+                if value >= queries_count:
+                    raise Exception(f'A partition is too big, the total number of queries is only: {queries_count}')
                 defined_sum += value
             else:
                 nondefined_count += 1
