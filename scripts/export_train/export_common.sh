@@ -10,11 +10,11 @@ checkVarNonEmpty "CAND_PROV_NMSLIB"
 checkVarNonEmpty "outSubdir"
 
 threadQty=1
-hardNegQty=10
-sampleMedNegQty=20
-sampleEasyNegQty=10
+hardNegQty=0
+sampleMedNegQty=5
+sampleEasyNegQty=0
 candTrainQty=500
-candTestQty=10
+candTestQty=20
 randSeed=0
 maxDocWhitespaceQty=-1 # means no truncation
 queryFieldName=""
