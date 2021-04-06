@@ -58,7 +58,7 @@ LUCENE_INDEX_SUBDIR="lucene_index"
 EMBED_SUBDIR="embeddings"
 
 # This is a bunch of sub-directories for input data
-DEFAULT_TRAIN_SUBDIR="train" # This only a default that can be overriden
+DEFAULT_TRAIN_SUBDIR="train_fusion" # This only a default that can be overriden
 # The dev* directories can be optional, there can be, e.g., dev1, dev2 or just a single dev
 DEV_SUBDIR="dev"
 DEV1_SUBDIR="dev1"

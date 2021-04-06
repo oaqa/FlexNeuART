@@ -19,6 +19,7 @@ checkVarNonEmpty "DEFAULT_TRAIN_SUBDIR"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
 checkVarNonEmpty "CAND_PROV_LUCENE"
+checkVarNonEmpty "DEV1_SUBDIR"
 
 checkVarNonEmpty "TEST_PART_PARAM"
 checkVarNonEmpty "TRAIN_PART_PARAM"
@@ -61,9 +62,9 @@ function usage {
 Usage: <collection> <feature desc. file relative to collection root> [additional options]
 Additional options:
   -max_num_query_test     max. # of test queries
-  -test_part              default test set, e.g., dev1
+  -test_part              default test set, e.g., $DEV1_SUBDIR (can be redefined in the experimental config)
   -model_final            final-stage model (relative to the collection root)
-  -train_part             default train set, e.g., train
+  -train_part             default train set, e.g., $DEFAULT_TRAIN_SUBDIR (can be redefined in the experimental config)
   -train_cand_qty         # of candidates for training (default $trainCandQty)
   -max_final_rerank_qty   max. # of records to re-rank using the final re-ranker
   -test_cand_qty_list     a comma-separate list of # candidates for testing (default $testCandQtyList)
