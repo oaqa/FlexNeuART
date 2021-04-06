@@ -4,76 +4,61 @@
 #
 import sys
 import os
+import tqdm
 import random
-import json
+import argparse
 
 sys.path.append('.')
-from scripts.data_convert.split_queries_args import parse_args
-from scripts.data_convert.convert_common import read_queries
-from scripts.common_eval import read_qrels, qrel_entry2_str
-from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
-from scripts.data_convert.convert_common import FileWrapper
+from scripts.data_convert.split_queries_args import QuerySplitArgumentsBase, add_basic_query_split_args
+from scripts.data_convert.convert_common import FileWrapper, build_query_id_to_partition
+from scripts.data_convert.wikipedia_dpr.utils import dpr_json_reader
 
 
-def write_queries_files(queries, query_id_to_partition, dst_dir, partitions_names):
-    files = [FileWrapper(os.path.join(dst_dir, name, QUESTION_FILE_JSON), "w")
-             for name in partitions_names]
+class QuerySplitArguments(QuerySplitArgumentsBase):
+    def __init__(self, raw_args):
+        super().__init__(raw_args)
 
-    for query in queries:
-        query_id = query[DOCID_FIELD]
-        partition_id = query_id_to_partition[query_id]
-        files[partition_id].write(json.dumps(query))
-        files[partition_id].write('\n')
+    @property
+    def src_file(self):
+        return self.raw_args.src_file
 
-    for file in files:
-        file.close()
+    @property
+    def dst_file_pref(self):
+        return self.raw_args.dst_file_pref
 
-
-def write_qrels_files(qrels, query_id_to_partition, dst_dir, partitions_names):
-    files = [FileWrapper(os.path.join(dst_dir, name, QREL_FILE), "w")
-             for name in partitions_names]
-
-    for qrel in qrels:
-        partition_id = query_id_to_partition[qrel.query_id]
-        files[partition_id].write(qrel_entry2_str(qrel))
-        files[partition_id].write('\n')
-
-    for file in files:
-        file.close()
-
-
-def build_query_id_to_partition(query_ids, sizes):
-    assert sum(sizes) == len(query_ids)
-    query_id_to_partition = dict()
-    start = 0
-    for part_id in range(len(sizes)):
-        end = start + sizes[part_id]
-        for k in range(start, end):
-            query_id_to_partition[query_ids[k]] = part_id
-        start = end
-
-    return query_id_to_partition
 
 
 def main():
-    args = parse_args()
+    parser = argparse.ArgumentParser(description='Split raw DPR queries.')
+    add_basic_query_split_args(parser)
+
+    parser.add_argument('--src_file',
+                        metavar='input file name',
+                        help='input file name',
+                        type=str, required=True)
+    parser.add_argument('--dst_file_pref',
+                        metavar='output file prefix',
+                        help='output file prefix',
+                        type=str, required=True)
+
+    args = QuerySplitArguments(parser.parse_args())
+
     print(args.raw_args)
 
+    print("Start reading input files...")
+    src_file = args.src_file
+
+    query_ids = []
+
+    # First time we read the input file to count the number of queries
+    with FileWrapper(src_file) as inp_file:
+        for query_idx, _ in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
+            query_ids.append(query_idx)
 
     random.seed(args.seed)
-
-    print("Start reading input files...")
-    src_dir = args.src_dir
-    queries = read_queries(os.path.join(src_dir, QUESTION_FILE_JSON))
-
-    print(f"Shuffled query IDs using sid {args.seed}")
-    query_ids = [data[DOCID_FIELD] for data in queries]
-
     random.shuffle(query_ids)
 
-    assert len(query_ids) == len(set(query_ids)), "Non-unique queries ids are forbidden!"
-    qrels = read_qrels(os.path.join(src_dir, QREL_FILE))
-    print("Done reading input files.")
+    print(f"Shuffled query IDs using sid {args.seed}")
 
     sizes = args.partitions_sizes(len(query_ids))
     assert len(sizes) == len(args.partitions_names)
@@ -81,8 +66,36 @@ def main():
 
     query_id_to_partition = build_query_id_to_partition(query_ids, sizes)
 
-    write_queries_files(queries, query_id_to_partition, args.dst_dir, args.partitions_names)
-    write_qrels_files(qrels, query_id_to_partition, args.dst_dir, args.partitions_names)
+    out_file_list = [None] * len(args.partitions_names)
+    max_query_idx = [-1] * len(args.partitions_names)
+
+    for part_id, part_name in enumerate(args.partitions_names):
+        out_file_name = args.dst_file_pref + '_' + part_name + '.json.gz'
+        out_file_list[part_id] = FileWrapper(out_file_name, 'w')
+        out_file_list[part_id].write('[\n')
+
+    # Due to specifics of formatting of the DPR files, we need to put comma
+    # right after the } that "finalizes" a question.
+    # However, the last } in the file shouldn't be followed by a comma.
+    # To implement this, we need to know the maximum query ID in a partition
+    for query_id, part_id in query_id_to_partition.items():
+        max_query_idx[part_id] = max(max_query_idx[part_id], query_id)
+
+    # First time we read the input file to actually split things
+    with FileWrapper(src_file) as inp_file:
+        for query_idx, json_str in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
+            part_id = query_id_to_partition[query_idx]
+            out_file = out_file_list[part_id]
+            if query_idx < max_query_idx[part_id]:
+                out_file.write(json_str + ',\n')
+            else:
+                # Final entry shouldn't be followed by a comma
+                out_file.write(json_str + '\n')
+
+
+    for out_file in out_file_list:
+        out_file.write(']\n')
+        out_file.close()
 
 
 if __name__ == '__main__':

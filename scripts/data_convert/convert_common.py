@@ -323,3 +323,24 @@ def read_doc_ids_from_forward_file_header(fwd_file_name):
     assert len(res) == doc_qty
 
     return set(res)
+
+
+def build_query_id_to_partition(query_ids, sizes):
+    """Partition a given list of query IDs.
+
+    :param query_ids:   an input array of query IDs.
+    :param sizes:       partion sizes
+
+    :return:  a dictionary that maps each query ID to its respective partition ID
+    """
+    assert sum(sizes) == len(query_ids)
+    query_id_to_partition = dict()
+    start = 0
+    for part_id in range(len(sizes)):
+        end = start + sizes[part_id]
+        for k in range(start, end):
+            query_id_to_partition[query_ids[k]] = part_id
+        start = end
+
+    return query_id_to_partition
+

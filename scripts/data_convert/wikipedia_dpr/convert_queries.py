@@ -73,7 +73,9 @@ if out_bitext_dir:
         bi_quest_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_QUESTION_PREFIX + fn), 'w')
         bi_answ_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_ANSWER_PREFIX + fn), 'w')
 
-for query_idx, fields in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
+
+for query_idx, json_str in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
+    fields = json.loads(json_str)
     query_orig = fields["question"]
     answer_list_lc = [s.lower() for s in fields["answers"]]
     query_lemmas, query_unlemm = nlp.proc_text(query_orig)

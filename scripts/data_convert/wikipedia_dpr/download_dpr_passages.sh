@@ -8,4 +8,13 @@ dstDir="$1"
 
 cd "$dstDir"
 
-wget "https://dl.fbaipublicfiles.com/dpr/wikipedia_split/psgs_w100.tsv.gz"
+fileName="psgs_w100.tsv.gz"
+fileNameSuccess=${fileName}.SUCCESS
+
+if [ -f "$fileNameSuccess" ] ; then
+  echo "Already downloaded!"
+  exit 0
+fi
+
+wget "https://dl.fbaipublicfiles.com/dpr/wikipedia_split/$fileName"
+touch "$fileNameSuccess"
