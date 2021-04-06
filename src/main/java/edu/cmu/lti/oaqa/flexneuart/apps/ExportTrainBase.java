@@ -85,6 +85,9 @@ public abstract class ExportTrainBase {
   }
 
   protected String handleCase(String text) {
+    if (text == null) {
+      return null;
+    }
     return mDoLowerCase ? text.toLowerCase() : text;
   }
   

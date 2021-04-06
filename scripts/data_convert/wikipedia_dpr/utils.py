@@ -1,6 +1,5 @@
 import json
 
-
 def get_passage_id(ctx_entry):
     """Retrieve a passage ID from the positive or negative context entry:
        an element in an array with a key positive_ctxs, negative_ctxs, or
@@ -16,11 +15,13 @@ def get_passage_id(ctx_entry):
 
 def dpr_json_reader(file_to_read):
     """A simple streaming json reader. It assumes the file is well formated,
-       which is the case of DPR data, but it cannot be used as a generic
-       JSON stream reader, where blocks start/end
+       which is the case of Facebook DPR data, but it cannot be used as a generic
+       JSON stream reader, where blocks start/end at arbitrary positions
+       (unlike Facebook DPR data).
 
     :param file_to_read:
-    :return:
+
+    :return: yields an unparsed textual representation of all entries for one question
     """
     current_depth = 0
     buffer = []
@@ -35,7 +36,7 @@ def dpr_json_reader(file_to_read):
             current_depth -= 1
             if current_depth == 0:
                 buffer.append("}")
-                yield json.loads(" ".join(buffer))
+                yield "\n".join(buffer)
                 buffer = []
             else:
                 buffer.append(line)

@@ -1,16 +1,5 @@
-import argparse
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Split queries and corresponding QREL files.')
-
-    parser.add_argument('--src_dir',
-                        metavar='input data directory',
-                        help='input data directory',
-                        type=str, required=True)
-    parser.add_argument('--dst_dir',
-                        metavar='output data directory',
-                        help='output data directory',
-                        type=str, required=True)
+def add_basic_query_split_args(parser):
     parser.add_argument('--seed',
                         metavar='random seed',
                         help='random seed',
@@ -27,9 +16,8 @@ def parse_args():
                         required=True,
                         type=str)
 
-    return Arguments(parser.parse_args())
 
-class Arguments:
+class QuerySplitArgumentsBase:
     def __init__(self, raw_args):
         self.raw_args = raw_args
 

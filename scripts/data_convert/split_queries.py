@@ -6,13 +6,14 @@ import sys
 import os
 import random
 import json
+import argparse
 
 sys.path.append('.')
-from scripts.data_convert.split_queries_args import parse_args
+from scripts.data_convert.split_queries_args import add_basic_query_split_args, QuerySplitArgumentsBase
 from scripts.data_convert.convert_common import read_queries
 from scripts.common_eval import read_qrels, qrel_entry2_str
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
-from scripts.data_convert.convert_common import FileWrapper
+from scripts.data_convert.convert_common import FileWrapper, build_query_id_to_partition
 
 
 def write_queries_files(queries, query_id_to_partition, dst_dir, partitions_names):
@@ -42,34 +43,44 @@ def write_qrels_files(qrels, query_id_to_partition, dst_dir, partitions_names):
         file.close()
 
 
-def build_query_id_to_partition(query_ids, sizes):
-    assert sum(sizes) == len(query_ids)
-    query_id_to_partition = dict()
-    start = 0
-    for part_id in range(len(sizes)):
-        end = start + sizes[part_id]
-        for k in range(start, end):
-            query_id_to_partition[query_ids[k]] = part_id
-        start = end
+class QuerySplitArguments(QuerySplitArgumentsBase):
+    def __init__(self, raw_args):
+        super().__init__(raw_args)
 
-    return query_id_to_partition
+    @property
+    def src_dir(self):
+        return self.raw_args.src_dir
+
+    @property
+    def dst_dir(self):
+        return self.raw_args.dst_dir
 
 
 def main():
-    args = parse_args()
+    parser = argparse.ArgumentParser(description='Split queries and corresponding QREL files.')
+    add_basic_query_split_args(parser)
+
+    parser.add_argument('--src_dir',
+                        metavar='input data directory',
+                        help='input data directory',
+                        type=str, required=True)
+    parser.add_argument('--dst_dir',
+                        metavar='output data directory',
+                        help='output data directory',
+                        type=str, required=True)
+
+    args = QuerySplitArguments(parser.parse_args())
     print(args.raw_args)
-
-
-    random.seed(args.seed)
 
     print("Start reading input files...")
     src_dir = args.src_dir
     queries = read_queries(os.path.join(src_dir, QUESTION_FILE_JSON))
 
-    print(f"Shuffled query IDs using sid {args.seed}")
     query_ids = [data[DOCID_FIELD] for data in queries]
 
+    random.seed(args.seed)
     random.shuffle(query_ids)
+    print(f"Shuffled query IDs using sid {args.seed}")
 
     assert len(query_ids) == len(set(query_ids)), "Non-unique queries ids are forbidden!"
     qrels = read_qrels(os.path.join(src_dir, QREL_FILE))
