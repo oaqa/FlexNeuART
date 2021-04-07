@@ -98,7 +98,7 @@ if out_bitext_dir:
 seen_qrels = set()
 
 for qid, json_str in tqdm.tqdm(enumerate(dpr_json_reader(inp_file))):
-    query_idx = f'{args.part_type}_qid'
+    query_idx = f'{args.part_type}_{qid}'
     fields = json.loads(json_str)
     query_orig = fields["question"]
     answer_list = list(fields["answers"])
