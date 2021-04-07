@@ -20,7 +20,7 @@ paramOpts=(\
 parseArguments $@
 
 usageMain="<$SAMPLE_COLLECT_ARG> <input part, e.g., $BITEXT_SUBDIR> \
-<comma-separated partition names> <comma-separated partition sizes: -1 means all remaining>"
+<comma-separated partition names> <comma-separated partition sizes: empty means all remaining>"
 
 if [ "$help" = "1" ] ; then
   genUsage $usageMain

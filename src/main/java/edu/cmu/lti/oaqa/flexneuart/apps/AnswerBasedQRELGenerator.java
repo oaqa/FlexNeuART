@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateInfo;
-import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
+import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
@@ -73,8 +73,17 @@ public class AnswerBasedQRELGenerator {
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery = Integer.MAX_VALUE;
     
+    @Option(name = "-" + CommonParams.FIELD_NAME_PARAM, usage = "The field whose text we use to find answers")
+    String mFieldName = Const.TEXT_FIELD_NAME;
+    
     @Option(name = "-" + CommonParams.PROVIDER_URI_PARAM, required = true, usage = CommonParams.PROVIDER_URI_DESC)
-    String mProviderURI;
+    String mCandProviderURI;
+    
+    @Option(name = "-" + CommonParams.CAND_PROVID_PARAM, usage = CommonParams.CAND_PROVID_ADD_CONF_DESC)
+    String mCandProviderType = CandidateProvider.CAND_TYPE_LUCENE;
+    
+    @Option(name = "-" + CommonParams.CAND_PROVID_ADD_CONF_PARAM, usage = CommonParams.CAND_PROVID_ADD_CONF_DESC)
+    String mCandProviderConfigName;
     
     @Option(name = "-" + CommonParams.OUTPUT_FILE_PARAM, required = true, usage = CommonParams.OUTPUT_FILE_DESC)
     String mOutFile;
@@ -92,8 +101,6 @@ public class AnswerBasedQRELGenerator {
     Args args = new Args();
     CmdLineParser parser = null;
     
-   
-    
     try {
  
       parser = new CmdLineParser(args, ParserProperties.defaults().withUsageWidth(CommonParams.USAGE_WIDTH));
@@ -108,12 +115,23 @@ public class AnswerBasedQRELGenerator {
     try {
       out = MiscHelper.createBufferedFileWriter(args.mOutFile);
       
-      LuceneCandidateProvider candProv = 
-          new LuceneCandidateProvider(args.mProviderURI, null);
-      
+      logger.info("Candidate provider type: " + args.mCandProviderType + " URI: " + args.mCandProviderURI + " config: " + args.mCandProviderConfigName);
+      logger.info("Number of threads: " + args.mThreadQty);
       
       FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mMemFwdIndex, null, null);
-      ForwardIndex fwdIndexText = resourceManager.getFwdIndex(Const.TEXT_FIELD_NAME);
+      ForwardIndex fwdIndexText = resourceManager.getFwdIndex(args.mFieldName);
+      
+      CandidateProvider  [] candProviders = new CandidateProvider[args.mThreadQty];
+      
+      candProviders = CandidateProvider.createCandProviders(resourceManager, 
+                                                            args.mCandProviderType, 
+                                                            args.mCandProviderURI, 
+                                                            args.mCandProviderConfigName, args.mThreadQty);    
+      if (candProviders == null) {
+        System.err.println("Wrong candidate record provider type: '" + args.mCandProviderType + "'");
+        parser.printUsage(System.err);
+        System.exit(1);
+      }
       
       DataEntryReader inp = new DataEntryReader(args.mQueryFile);
       ExtendedIndexEntry inpEntry = null;
@@ -121,7 +139,7 @@ public class AnswerBasedQRELGenerator {
       AnswBasedQRELGenWorker[] workers = new AnswBasedQRELGenWorker[args.mThreadQty];
       
       for (int i = 0; i < args.mThreadQty; ++i) {
-        workers[i] = new AnswBasedQRELGenWorker(candProv, fwdIndexText, args.mCandQty); 
+        workers[i] = new AnswBasedQRELGenWorker(candProviders[i], args.mFieldName, fwdIndexText, args.mCandQty); 
       }
       
       for (int queryQty = 0; 
@@ -180,7 +198,8 @@ public class AnswerBasedQRELGenerator {
 class AnswBasedQRELGenWorker extends Thread {
 	final static Logger logger = LoggerFactory.getLogger(AnswBasedQRELGenWorker.class);
 	
-  public AnswBasedQRELGenWorker(LuceneCandidateProvider provider, ForwardIndex fwdIndex, int candQty) {
+  public AnswBasedQRELGenWorker(CandidateProvider provider, String fieldName, ForwardIndex fwdIndex, int candQty) {
+    mFieldName = fieldName;
     mCandProvider = provider;
     mFwdIndex = fwdIndex;
     mCandQty = candQty;
@@ -208,13 +227,13 @@ class AnswBasedQRELGenWorker extends Thread {
           continue;
         }
         
-        String queryFieldText = queryFields.get(Const.TEXT_FIELD_NAME);
+        String queryFieldText = queryFields.get(mFieldName);
         if (queryFieldText == null) {
           queryFieldText = "";
         }
         queryFieldText = queryFieldText.trim();
         if (queryFieldText.isEmpty()) {
-          logger.info("Query " + queryId + " is empty, ignoring.");
+          logger.info("Query: " + queryId + " field: " + mFieldName + " is empty, ignoring.");
           continue;
         }
 
@@ -232,13 +251,13 @@ class AnswBasedQRELGenWorker extends Thread {
           String text = mFwdIndex.getDocEntryParsedText(e.mDocId);
           if (text == null) {
             logger.warn("No text for doc: " + e.mDocId + 
-                        " did you create a positional forward index for the field " + Const.TEXT_FIELD_NAME);
+                        " did you create a positional forward index for the field " + mFieldName);
           }
-          text = " " + text.trim() + " "; // adding sentinels
+          text = " " + text.trim().toLowerCase() + " "; // adding sentinels
           boolean hasAnsw = false; 
           for (String answ : answList) {
             if (answ == null) continue;
-            answ = answ.trim();
+            answ = answ.trim().toLowerCase();
             if (text.contains(answ)) {
               hasAnsw = true;
               break;
@@ -260,7 +279,8 @@ class AnswBasedQRELGenWorker extends Thread {
     return mFail;
   }
   
-  final LuceneCandidateProvider mCandProvider;
+  final CandidateProvider mCandProvider;
+  final String mFieldName;
   final ForwardIndex mFwdIndex;
   final int mCandQty;
   final ArrayList<ExtendedIndexEntry> mQueries = new ArrayList<ExtendedIndexEntry>();
