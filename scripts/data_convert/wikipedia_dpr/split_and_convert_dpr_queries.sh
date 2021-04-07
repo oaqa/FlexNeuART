@@ -72,7 +72,7 @@ scripts/data_convert/wikipedia_dpr/split_dpr_raw_queries.py \
   --dst_file_pref "$inputRawDir/${colType}"
 
 # Finally convert the queries
-for part in bitext train_fusion dev ; do
+for part in bitext train_fusion dev dev_official ; do
   outDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR/$part"
   if [ ! -d "$outDataDir" ] ; then
     mkdir -p "$outDataDir"
