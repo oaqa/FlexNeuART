@@ -6,7 +6,7 @@ CAND_PROV_NMSLIB="nmslib"
 FWD_INDEX_TYPES="mapdb, lucene, flatdata"
 ANSWER_FILE="AnswerFields.jsonl"
 QUESTION_FILE="QuestionFields.jsonl"
-SAMPLE_COLLECT_ARG="Specify a collection sub-directory, e.g., msmarco_pass"
+SAMPLE_COLLECT_ARG="collection sub-directory, e.g., msmarco_pass"
 
 function div1() {
   awk "BEGIN{printf(\"%.1f\", $1/$2)}"|sed 's/[.]0$//'

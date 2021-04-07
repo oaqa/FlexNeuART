@@ -11,7 +11,7 @@ def add_basic_query_split_args(parser):
                         type=str)
     parser.add_argument('--partitions_sizes',
                         metavar='sizes of partitions to split at',
-                        help="sizes (in queries) of partitions to split at separated by comma (one of the values can be -1, "
+                        help="sizes (in queries) of partitions to split at separated by comma (one of the values can be missing, "
                              "in that case all left queries go to that partition)",
                         required=True,
                         type=str)
@@ -38,7 +38,12 @@ class QuerySplitArgumentsBase:
         return self.raw_args.partitions_names.split(',')
     
     def partitions_sizes(self, queries_count):
-        raw_values = list(map(int, self.raw_args.partitions_sizes.split(',')))
+        raw_values = []
+        for value in self.raw_args.partitions_sizes.split(','):
+            if value == '':
+                raw_values.append(-1)
+            else:
+                raw_values.append(int(value))
         nondefined_count = 0
         defined_sum = 0
         for value in raw_values:

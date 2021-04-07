@@ -110,7 +110,6 @@ TEST_ONLY_PARAM="testOnly"
 TRAIN_ONLY_PARAM="trainOnly"
 
 
-
 function getExperDirBase {
   collectSubdir="$1"
   testSet="$2"

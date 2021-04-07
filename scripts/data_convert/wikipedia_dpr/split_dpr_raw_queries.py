@@ -45,7 +45,7 @@ def main():
 
     print(args.raw_args)
 
-    print("Start reading input files...")
+    print("Reading input files...")
     src_file = args.src_file
 
     query_ids = []
@@ -80,6 +80,8 @@ def main():
     # To implement this, we need to know the maximum query ID in a partition
     for query_id, part_id in query_id_to_partition.items():
         max_query_idx[part_id] = max(max_query_idx[part_id], query_id)
+
+    print('Actually splitting data')
 
     # First time we read the input file to actually split things
     with FileWrapper(src_file) as inp_file:
