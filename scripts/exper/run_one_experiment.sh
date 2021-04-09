@@ -68,6 +68,8 @@ trainCandQty="$DEFAULT_TRAIN_CAND_QTY"
 intermCandQty="$DEFAULT_INTERM_CAND_QTY"
 testCandQtyList="$DEFAULT_TEST_CAND_QTY_LIST"
 
+checkVarNonEmpty "GIZA_SUBDIR"
+gizaSubdir="$GIZA_SUBDIR"
 
 skipEval=0
 testOnly=0
@@ -121,6 +123,9 @@ while [ $# -ne 0 ] ; do
       case $optName in
         -thread_qty)
           threadQty=$optValue
+          ;;
+        -giza_subdir)
+          gizaSubdir=$optValue
           ;;
         -cand_prov_add_conf)
           candProvAddConf=$optValue
@@ -272,12 +277,11 @@ checkVarNonEmpty "EMBED_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-checkVarNonEmpty "GIZA_SUBDIR"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
 embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
+gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubdir"
 
 commonResourceParams="\
 -fwd_index_dir \"$fwdIndexDir\" \

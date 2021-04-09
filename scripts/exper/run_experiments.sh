@@ -20,6 +20,7 @@ checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
 checkVarNonEmpty "CAND_PROV_LUCENE"
 checkVarNonEmpty "DEV1_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
 checkVarNonEmpty "TEST_PART_PARAM"
 checkVarNonEmpty "TRAIN_PART_PARAM"
@@ -78,6 +79,7 @@ Additional options:
   -parallel_exper_qty     # of experiments to run in parallel (default $parallelExperQty)
   -reuse_feat             reuse previously generated features
   -delete_trec_runs       delete TREC run files
+  -giza_subdir            GIZA sub-directory (relative to $DERIVED_DATA_SUBDIR)
   -no_separate_shell      use this for debug purposes only
   -debug_print            print every executed command
 EOF
@@ -139,6 +141,9 @@ while [ $# -ne 0 ] ; do
           ;;
         -add_exper_subdir)
           addExperSubDir=$optValue
+          ;;
+        -giza_subdir)
+          globalParams+=" $optName \"$optValue\""
           ;;
         -train_cand_qty)
           globalParams+=" $opt"
@@ -277,6 +282,7 @@ for ((ivar=1;;++ivar)) ; do
 
     echo "Parsed experiment parameters:"
     cat "$tmpConf"
+    echo "========================================"
 
     testPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
     trainPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TRAIN_PART_PARAM`
@@ -388,9 +394,11 @@ EOF
       pid=$!
       childPIDs+=($pid)
       echo "Started a process $pid, working dir: $experDirBase"
+      #echo "Command run: $cmd"
       echo "Process log file: $logFileName"
     else
       echo "Starting a process, working dir: $experDirBase"
+      #echo "Command run: $cmd"
       echo "Process log file: $logFileName"
       bash -c "$cmd"  2>&1 |tee "$logFileName"
       checkPipe
