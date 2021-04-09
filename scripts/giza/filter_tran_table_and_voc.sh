@@ -121,7 +121,7 @@ dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field.orig"
 dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field"
 
 if [ ! -d "$dirSrc" ] ; then
-  echo "Error, '$dirDst' doesn't exist"
+  echo "Error, '$dirSrc' doesn't exist"
   exit 1
 fi
 
