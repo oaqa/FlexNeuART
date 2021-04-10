@@ -415,7 +415,6 @@ if [ "$testOnly" = "0" ] ; then
   if [ "$regenFeat" = "1" ] ; then
     checkVarNonEmpty "extrType"
 
-    # This APP can require a lot of memory
     setJavaMem 5 9
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
@@ -455,6 +454,7 @@ if [ "$testOnly" = "0" ] ; then
     if [ "$testModelResults" = "1" ] ; then
       # This part is for debug purposes only
       checkVarNonEmpty "trainCandQty"
+      setJavaMem 5 9
       target/appassembler/bin/QueryAppMultThread  -u "$candProvURI" -cand_prov "$candProvType" \
                                   -q "$inputDataDir/$trainPart/$queryFileName" \
                                   -n "$trainCandQty" \
@@ -481,6 +481,7 @@ fi
 
 statFile="$reportDir/$STAT_FILE"
 $resourceDirParams
+setJavaMem 5 9
 target/appassembler/bin/QueryAppMultThread \
                             -u "$candProvURI" -cand_prov "$candProvType" \
                             -q "$inputDataDir/$testPart/$queryFileName"  \
