@@ -12,3 +12,4 @@ We suggest placing them in a collection sub-directory such as ``download``
 `bitext` (regular training data), `dev` (development), and `train_fusion` (a
 set to learn a fusion model). Splitting and processing the queries can be done using 
 the [following script](split_and_convert_dpr_queries.sh).
+3. Finally passages, need to be converted using [convert_pass.py](convert_pass.py).
