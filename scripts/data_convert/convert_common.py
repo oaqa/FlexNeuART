@@ -2,13 +2,15 @@ import gzip, bz2
 import collections
 import re
 import os
-import sys
+import bson
+import torch
 import json
+import struct
 import urllib
 import urllib.parse
 from bs4 import BeautifulSoup
 
-from scripts.config import DEFAULT_ENCODING, STOPWORD_FILE, DOCID_FIELD
+from scripts.config import DEFAULT_ENCODING, STOPWORD_FILE, DOCID_FIELD, QUESTION_FILE_JSON
 
 YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
                                               'uri subject content best_answer_id answer_list')
@@ -20,6 +22,10 @@ BERT_TOK_OPT_HELP = 'Apply the BERT tokenizer and store result in a separate fie
 OUT_BITEXT_PATH_OPT = 'out_bitext_path'
 OUT_BITEXT_PATH_OPT_META = 'optional bitext path'
 OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
+
+
+ENDIANNES_TYPE = '<'
+PACKED_TYPE_DENSE = 0
 
 # Replace \n and \r characters with spaces
 def replace_chars_nl(s):
@@ -344,3 +350,63 @@ def build_query_id_to_partition(query_ids, sizes):
 
     return query_id_to_partition
 
+
+def dense_vect_pack_mask(dim):
+    """Generate a packing masking for an integer + floating point array (little endian layout).
+
+    :param dim:     dimensionality
+    :return:        packing mask
+    """
+    # The endianness mark applies to the whole string (Python docs are unclear about this, but we checked this out
+    # using real examples)
+    return f'{ENDIANNES_TYPE}I' + ''.join(['f'] * dim)
+
+
+def pack_dense_batch(data):
+    """Pack a bach of dense vectors.
+
+    :param data: a PyTorch tensor or a numpy 2d array
+    :return: a list of byte arrays where each array represents one dense vector
+    """
+    if type(data) == torch.Tensor:
+        data = data.cpu()
+    bqty, dim = data.shape
+
+    mask = dense_vect_pack_mask(dim)
+
+    return [struct.pack(mask, PACKED_TYPE_DENSE, *list(data[i])) for i in range(bqty)]
+
+
+def write_json_to_bin(data_elem, out_file):
+    """Convert a json entry to a BSON format and write it to a file.
+
+    :param data_elem: an input JSON dictionary.
+    :param out_file: an output file (should be binary writable)
+    """
+    assert type(data_elem) == dict
+
+    bson_data = bson.dumps(data_elem)
+    out_file.write(struct.pack(f'{ENDIANNES_TYPE}I', len(bson_data)))
+    out_file.write(bson_data)
+
+
+def read_json_from_bin(inp_file):
+    """Read a BSON entry (previously written by write_json_to_bin) from a
+       file.
+
+    :param input file  (should be binary read-only)
+    :param a parased JSON entry or None when we reach the end of file.
+    """
+    data_len_packed = inp_file.read(4)
+    if len(data_len_packed) == 0:
+        return None
+    assert len(data_len_packed) == 4, "possibly truncated file, not enough input data to read the entry length"
+    data_len = struct.unpack(f'{ENDIANNES_TYPE}I', data_len_packed)[0]
+    data_packed = inp_file.read(data_len)
+    assert len(data_packed) == data_len, "possibly truncated file, not enough input data to read BSON entry"
+    return bson.loads(data_packed)
+
+
+def is_json_query_file(file_name):
+    """Checks if the input is a JSONL query file (using name only)."""
+    return os.path.split(file_name)[1] == QUESTION_FILE_JSON

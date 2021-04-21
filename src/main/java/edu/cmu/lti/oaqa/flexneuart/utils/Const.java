@@ -32,8 +32,8 @@ public class Const {
   public static final Charset ENCODING = Charset.forName(ENCODING_NAME);
   public static final String USER_AGENT = "Mozilla/4.0";
   
-  public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; // we'll do everything on Intel Linux/Mac
-  
+  // Most platforms including Apple M1 and NEON ARM by default use little-endian format
+  public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; 
   /**
    * An XML version, must be 1.0.
    */

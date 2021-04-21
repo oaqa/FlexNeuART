@@ -20,6 +20,8 @@ fi
 
 plist=(\
 lxml             "" \
+bson             "" \
+transforms       "" \
 pytools          "" \
 torch            "1.4" \
 torchtext        "0.6.0" \
