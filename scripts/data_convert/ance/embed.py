@@ -11,8 +11,7 @@ from tqdm import tqdm
 
 sys.path.append('.')
 
-from scripts.config import QUESTION_FILE_JSON
-from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, write_json_to_bin
+from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, write_json_to_bin, is_json_query_file
 from scripts.data_convert.ance.ance_models import create_ance_firstp, create_dpr
 from scripts.data_convert.ance.ance_data import DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, \
                                                 DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_PASS, \
@@ -56,7 +55,7 @@ assert data_type in DATA_TYPE_PATHS
 model_path = os.path.join(args.model_dir, DATA_TYPE_PATHS[data_type])
 print('Model path', model_path)
 
-is_query =
+is_query = is_json_query_file(args.input)
 
 print(f'Query?: {is_query}')
 
