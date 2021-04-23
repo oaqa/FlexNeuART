@@ -1,0 +1,12 @@
+lxml
+bson
+transformers
+urllib3
+pytools
+numpy
+bs4
+pyjnius
+torch==1.4
+torchtext==0.6.0
+thrift==0.13.0
+spacy==2.2.3
