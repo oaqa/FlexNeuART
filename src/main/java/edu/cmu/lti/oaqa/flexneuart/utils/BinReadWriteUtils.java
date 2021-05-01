@@ -21,12 +21,14 @@ import java.nio.ByteBuffer;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TrulySparseVector;
 
 /**
- * A few helper functions to write data in the binary format.
+ * Helper functions to read/write data from/to the binary format.
  * 
  * @author Leonid Boytsov
  *
  */
-public class BinWriteUtils {
+public class BinReadWriteUtils {
+  final static int BIN_DATA_DENSE_VECTOR = 0;
+  final static int BIN_DATA_SPARSE_VECTOR = 1;
   
   /**
    * Converts a 32-bit integer to a sequence of bytes in a given order.
@@ -66,6 +68,27 @@ public class BinWriteUtils {
     return out.array();
   }
   
+  public static float[] readPackedDenseVector(byte [] data) {
+    int qty4 = data.length / 4;
+    if (qty4 * 4 < data.length) {
+      throw new RuntimeException("Data size: " + data.length + " isn't divisible by 4.");
+    }
+    if (qty4 <2) {
+      throw new RuntimeException("Data size: " + data.length + " too small.");
+    }
+    ByteBuffer in = ByteBuffer.wrap(data);
+    in.order(Const.BYTE_ORDER);
+    float [] res = new float[qty4 - 1];
+    int type = in.getInt();
+    if (type != BIN_DATA_DENSE_VECTOR) {
+      throw new RuntimeException("Data type code: " + type + " is not the code for dense vectors.");
+    }
+    for (int i = 0; i < qty4 - 1; i++) {
+      res[i] = in.getFloat();
+    }
+    return res;
+  }
+  
   public static byte[] sparseVectorToBytes(TrulySparseVector vec) {
     ByteBuffer out = ByteBuffer.allocate(8 * vec.mIDs.length);
     out.order(Const.BYTE_ORDER);
@@ -75,6 +98,33 @@ public class BinWriteUtils {
     }
     // The array should be fully filled up
     return out.array();
+  }
+  
+  public static TrulySparseVector readPackedSparsedVector(byte [] data) {
+    int qty4 = data.length / 4;
+    if (qty4 * 4 < data.length) {
+      throw new RuntimeException("Data size: " + data.length + " isn't divisible by 4.");
+    }
+    if (qty4 < 3) {
+      throw new RuntimeException("Data size: " + data.length + " too small.");
+    }
+    int qty2 = (qty4 - 1) / 2;
+    if ((qty4 - 1) > qty2 * 2) {
+      throw new RuntimeException("Data size: " + data.length + " isn't appropriate for packed sparse data.");
+    }
+
+    ByteBuffer in = ByteBuffer.wrap(data);
+    in.order(Const.BYTE_ORDER);
+    TrulySparseVector res = new TrulySparseVector(qty2);
+    int type = in.getInt();
+    if (type != BIN_DATA_SPARSE_VECTOR) {
+      throw new RuntimeException("Data type code: " + type + " is not the code for dense vectors.");
+    }
+    for (int i = 0; i < qty2 - 1; i++) {
+      res.mIDs[i] = in.getInt();
+      res.mVals[i] = in.getFloat();
+    }
+    return res;
   }
   
   /**
@@ -93,7 +143,7 @@ public class BinWriteUtils {
     if (StringUtils.hasNonAscii(id)) {
       throw new Exception("Invalid id, contains non-ASCII chars: " + id);
     }
-    out.write(BinWriteUtils.intToBytes(id.length()));
+    out.write(BinReadWriteUtils.intToBytes(id.length()));
     out.write(id.getBytes());
   }
   

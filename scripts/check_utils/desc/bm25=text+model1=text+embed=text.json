@@ -29,8 +29,7 @@
     "queryEmbedFile" : "starspace/starspace_unlemm.query",
     "docEmbedFile"   : "starspace/starspace_unlemm.answer",
     "useIDFWeight"   : "True",
-    "useL2Norm"      : "True",
-    "distType"       : "cosine"
+    "useL2Norm"      : "True"
   }
  }
 ]

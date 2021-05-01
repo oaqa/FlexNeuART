@@ -9,7 +9,7 @@ checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 
 numCoresCPU=`getNumCpuCores`
 check "getting the number of CPU cores, do you have /proc/cpu/info?"
@@ -82,7 +82,7 @@ if [ "$outputFile" = "" ] ; then
   outputFile="$inputDataDir/$QREL_FILE"
 fi
 
-queryFileName="$inputDataDir/$QUESTION_FILE"
+queryFileName="$inputDataDir/$QUESTION_FILE_JSONL"
 
 echo "=========================================================================="
 echo "Data directory:            $inputDataDir"

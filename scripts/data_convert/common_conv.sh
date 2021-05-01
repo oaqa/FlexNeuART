@@ -4,8 +4,6 @@ source scripts/common_proc.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
-checkVarNonEmpty "ANSWER_FILE"
-checkVarNonEmpty "QUESTION_FILE"
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
 src=$1

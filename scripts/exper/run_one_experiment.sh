@@ -32,6 +32,7 @@ checkVarNonEmpty "DEFAULT_INTERM_CAND_QTY"
 checkVarNonEmpty "DEFAULT_TRAIN_CAND_QTY"
 checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
 checkVarNonEmpty "SEP_DEBUG_LINE"
+checkVarNonEmpty "QUESTION_FILE_PREFIX"
 
 checkVarNonEmpty "FAKE_RUN_ID"
 
@@ -291,14 +292,6 @@ commonResourceParams="\
 checkVarNonEmpty "inputDataDir" # set by set_common_resource_vars.sh
 checkVarNonEmpty "commonResourceParams"  # set by set_common_resource_vars.sh
 
-retVal=""
-getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[3]}
-if [ "$queryFileName" = "" ] ; then
-  echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
-  exit 1
-fi
-
 # Caching is only marginally useful.
 # However, when enabled it can accidentally screw up things quite a bit 
 queryCacheParamTrain=""
@@ -361,7 +354,6 @@ if [ "$testOnly" = "0" ] ; then
   echo "Training part:           $trainPart"
 fi
 echo "Test part:               $testPart"
-echo "Data file name:          $queryFileName"
 echo "Forward index directory: $fwdIndexDir"
 echo "Embedding directory:     $embedDir"
 echo "GIZA root directory:     $gizaRootDir"
@@ -418,7 +410,7 @@ if [ "$testOnly" = "0" ] ; then
     setJavaMem 5 9
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
-                                    -q "$inputDataDir/$trainPart/$queryFileName" \
+                                    -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
                                     -qrel_file "$inputDataDir/$trainPart/$QREL_FILE" \
                                     -n "$trainCandQty" \
                                     -f "$fullOutPrefTrain" \
@@ -456,7 +448,7 @@ if [ "$testOnly" = "0" ] ; then
       checkVarNonEmpty "trainCandQty"
       setJavaMem 5 9
       target/appassembler/bin/QueryAppMultThread  -u "$candProvURI" -cand_prov "$candProvType" \
-                                  -q "$inputDataDir/$trainPart/$queryFileName" \
+                                  -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
                                   -n "$trainCandQty" \
                                   -run_id "$runId" \
                                   -o "$trecRunDir/run_check_train_metrics" \
@@ -484,7 +476,7 @@ $resourceDirParams
 setJavaMem 5 9
 target/appassembler/bin/QueryAppMultThread \
                             -u "$candProvURI" -cand_prov "$candProvType" \
-                            -q "$inputDataDir/$testPart/$queryFileName"  \
+                            -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
                             -n "$testCandQtyList" \
                             -run_id "$runId" \
                             -o "$trecRunDir/run"  -save_stat_file "$statFile" \

@@ -50,8 +50,9 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   public static final String QUERY_DOC_PAIR_FILE_DESC = "query-document pairs for training";
  
   protected ExportTrainCEDR(ForwardIndex fwdIndex, 
+                            String queryExportFieldName, String indexExportFieldName,
                             QrelReader qrelsTrain, QrelReader qrelsTest) {
-    super(fwdIndex, qrelsTrain, qrelsTest);
+    super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
   }
 
 //Must be called from ExportTrainBase.addAllOptionDesc
@@ -114,10 +115,11 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   }
  
   @Override
-  void writeOneEntryData(String queryFieldText, boolean isTestQuery,
+  void writeOneEntryData(String queryExportFieldText, boolean isTestQuery,
                          String queryId,
                          HashSet<String> relDocIds, ArrayList<String> docIds) throws Exception {
     
+   
     if (mSeenQueryIds.contains(queryId)) {
       logger.warn("Ignoring repeating query: " + queryId);
       return;
@@ -125,10 +127,11 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
     mSeenQueryIds.add(queryId);
     mOutNumQueries++;
     
-    mDataQueries.write("query\t" + queryId + "\t" + StringUtils.replaceWhiteSpaces(queryFieldText) + Const.NL);
+    mDataQueries.write("query\t" + queryId + "\t" + StringUtils.replaceWhiteSpaces(queryExportFieldText) + Const.NL);
     
     int pos = -1;
     for (String docId : docIds) {
+      // We expect the query string to be lower-cased if needed, but document text casing is handled by getDocText
       String text = getDocText(docId);
       
       if (text == null) {

@@ -19,7 +19,6 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -32,8 +31,9 @@ import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.flexneuart.utils.BinWriteUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.BinReadWriteUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
 import no.uib.cipr.matrix.DenseVector;
@@ -46,6 +46,7 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class ExportToNMSLIBSparse {
+  
   public static final class Args {
     
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
@@ -60,8 +61,8 @@ public class ExportToNMSLIBSparse {
     @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
-    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, usage = "If specified, we generate queries rather than documents.")
-    String mQueryFile;
+    @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, usage = CommonParams.QUERY_FILE_PREFIX_EXPORT_DESC)
+    String mQueryFilePrefix;
 
     @Option(name = "-out_file", required = true, usage = "Binary output file")
     String mOutFile;
@@ -93,19 +94,14 @@ public class ExportToNMSLIBSparse {
     
     try {
       
-      ArrayList<Map<String, String>> parsedQueries = null;
+      ArrayList<DataEntryFields> queries = null;
       DenseVector compWeights = null;
       
-      if (args.mQueryFile != null) {
+      if (args.mQueryFilePrefix != null) {
 
-        parsedQueries = new ArrayList<Map<String, String>>();     
-        Map<String, String> queryFields = null;   
-        
-        try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-          while ((queryFields = inp.readNext()) != null) {
-            parsedQueries.add(queryFields);
-          }
-        }
+        if (args.mQueryFilePrefix != null) {
+          queries = DataEntryReader.readParallelQueryData(args.mQueryFilePrefix); 
+        } 
         
       } else {
         
@@ -149,13 +145,13 @@ public class ExportToNMSLIBSparse {
       
       String[] allDocIds = compIndices[0].getAllDocIds();
       
-      int entryQty = parsedQueries == null ?  allDocIds.length  : parsedQueries.size();
+      int entryQty = queries == null ?  allDocIds.length  : queries.size();
       
       System.out.println("Writing the number of entries (" + entryQty + ") to the output file");
       
-      out.write(BinWriteUtils.intToBytes(entryQty));
+      out.write(BinReadWriteUtils.intToBytes(entryQty));
       
-      if (parsedQueries == null) {    
+      if (queries == null) {    
         int docNum = 0;
         
         for (int batchStart = 0; batchStart < allDocIds.length; batchStart += args.mBatchSize) {
@@ -179,21 +175,21 @@ public class ExportToNMSLIBSparse {
         System.out.println("Exported " + docNum + " docs");
       } else {
         int queryQty = 0;
-        for (Map<String, String> queryFields : parsedQueries) {
+        for (DataEntryFields queryFields : queries) {
           ++queryQty;
-          String queryId = queryFields.get(Const.TAG_DOCNO);
+          String queryId = queryFields.mEntryId;
           
           if (queryId == null) {
             System.err.println("No query ID: Parsing error, query # " + queryQty);
             System.exit(1);
           }
           
-          BinWriteUtils.writeStringId(queryId, out);          
+          BinReadWriteUtils.writeStringId(queryId, out);          
           VectorUtils.writeInterleavedInnerProdQueryVectToNMSLIBStream(queryFields, 
                                                                         compIndices, compExtractors, 
                                                                         unitWeights, out);
         }
-        System.out.println("Exported " + parsedQueries.size() + " queries");
+        System.out.println("Exported " + queries.size() + " queries");
       }
       
     } catch (Exception e) {

@@ -40,11 +40,12 @@ public class Const {
   public static final String XML_VERSION = "1.0";
   
   public static final String TAG_DOC_ENTRY = "DOC";
-  public static final String TAG_DOCNO     = "DOCNO";
+  
+  public static final String DOC_ID_FIELD_NAME = "DOCNO";
   
   public static final int UNKNOWN_WORD_ID = -1;
   
-  public static final String TEXT_FIELD_NAME = "text";
+  public static final String DEFAULT_QUERY_TEXT_FIELD_NAME = "text";
   
   public static final String ANSWER_LIST_FIELD_NAME = "answer_list";
   

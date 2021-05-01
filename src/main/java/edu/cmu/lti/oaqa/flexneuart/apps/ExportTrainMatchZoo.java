@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import com.opencsv.CSVWriter;
 
-import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
@@ -32,8 +31,9 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
   public static final String FORMAT_NAME = "match_zoo";
   
   protected ExportTrainMatchZoo(ForwardIndex fwdIndex, 
+                               String queryExportFieldName, String indexExportFieldName,
                                QrelReader qrelsTrain, QrelReader qrelsTest) {
-    super(fwdIndex, qrelsTrain, qrelsTest);
+    super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
   }
 
   // Must be called from ExportTrainBase.addAllOptionDesc
@@ -101,12 +101,13 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
   }
   
   @Override
-  void writeOneEntryData(String queryFieldText, boolean isTestQuery,
+  void writeOneEntryData(String queryExportFieldText, boolean isTestQuery,
                          String queryId,
                          HashSet<String> relDocIds, ArrayList<String> docIds) throws Exception {
     for (String docId : docIds) {
       int relFlag = relDocIds.contains(docId) ? 1 : 0;
       
+   // We expect the query string to be lower-cased if needed, but document text casing is handled by getDocText
       String text = getDocText(docId);
       
       if (text == null) {
@@ -123,7 +124,10 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
         text = StringUtils.truncAtKthWhiteSpaceSeq(text, mMaxWhitespaceTokDocQty);
       }
       
-      writeField(isTestQuery ? mOutTest : mOutTrain, queryId, queryFieldText, docId, text, relFlag);
+      writeField(isTestQuery ? mOutTest : mOutTrain, queryId, 
+                queryExportFieldText, docId, 
+                text, 
+                relFlag);
     }
   }
   

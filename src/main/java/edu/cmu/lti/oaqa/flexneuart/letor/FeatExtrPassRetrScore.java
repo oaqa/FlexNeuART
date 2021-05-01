@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -51,7 +52,7 @@ public class FeatExtrPassRetrScore extends SingleFieldFeatExtractor  {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, 1); 
  
     for (CandidateEntry e : cands) {

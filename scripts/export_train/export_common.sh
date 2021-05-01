@@ -17,7 +17,7 @@ candTrainQty=500
 candTestQty=20
 randSeed=0
 maxDocWhitespaceQty=-1 # means no truncation
-queryFieldName=""
+queryExportFieldName=""
 candProv=$CAND_PROV_LUCENE
 providerURI=""
 candProvAddConf=""
@@ -34,7 +34,7 @@ paramOpts=(
 "cand_prov_uri"          "providerURI"         "Provider URI: an index location, a query server address, etc"
 "cand_prov_add_conf"     "candProvAddConf"     "JSON with additional candidate provider parameters"
 "out_subdir"             "outSubdir"           "output sub-directory (default $outSubdir)"
-"query_field"            "queryFieldName"      "an optional query field name (if different from the index field name)"
+"query_export_field"     "queryExportFieldName" "an optional name of the query field name whose content we export (if different from the index field name)"
 "hard_neg_qty"           "hardNegQty"          "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
 "sample_med_neg_qty"     "sampleMedNegQty"     "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
 "sample_easy_neg_qty"    "sampleEasyNegQty"    "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
@@ -71,13 +71,13 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-indexFieldName=${posArgs[1]}
-if [ "$indexFieldName" = "" ] ; then
-  genUsage "$usageMain" "Specify the name of the index field (2d arg)"
+indexExportFieldName=${posArgs[1]}
+if [ "$indexExportFieldName" = "" ] ; then
+  genUsage "$usageMain" "Specify the name of the exported index field (2d arg)"
   exit 1
 fi
-if [ "$queryFieldName" = "" ] ; then
-  queryFieldName="$indexFieldName"
+if [ "$queryExportFieldName" = "" ] ; then
+  queryFieldName="$queryExportFieldName"
 fi
 
 partTrain=${posArgs[2]}
@@ -149,8 +149,8 @@ echo "Eval split: $partTest"
 echo "Random seed: $randSeed"
 echo "Output directory: $outDir"
 echo "# of threads: $threadQty"
-echo "Index field: $indexFieldName"
-echo "Query field: $queryFieldName"
+echo "Index export field: $indexExportFieldName"
+echo "Query export field: $queryExportFieldName"
 echo "Candidate provider parameters: $candProvParams"
 echo "Resource parameters: $commonResourceParams"
 echo "A # of hard/medium/easy samples per query: $hardNegQty/$sampleMedNegQty/$sampleEasyNegQty"

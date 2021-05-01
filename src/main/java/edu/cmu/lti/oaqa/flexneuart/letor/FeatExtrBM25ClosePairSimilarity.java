@@ -23,6 +23,7 @@ import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25CloseOrderPairSimilQueryNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25ClosePairSimilarityQueryNormBase;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25CloseUnorderPairSimilQueryNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
@@ -56,8 +57,8 @@ public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+    return getSimpleFeatures(cands, queryFields, mFieldIndex, mSimilObjs);
   }
 
   @Override

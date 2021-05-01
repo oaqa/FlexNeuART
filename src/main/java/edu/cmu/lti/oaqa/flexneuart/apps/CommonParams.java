@@ -34,8 +34,10 @@ public class CommonParams {
   public static final String QUERY_CACHE_FILE_DESC  = "A file to cache query results";
   public static final String QUERY_CACHE_FILE_PARAM = "query_cache_file";
   
-  public static final String QUERY_FILE_DESC = "Query file";
-  public static final String QUERY_FILE_PARAM = "q";
+  public static final String QUERY_FILE_PREFIX_DESC = "Query file prefix (without a dot)";
+  public static final String QUERY_FILE_PREFIX_EXPORT_DESC = QUERY_FILE_PREFIX_DESC + 
+                                                            ": If specified, we generate queries rather than documents.";
+  public static final String QUERY_FILE_PREFIX_PARAM = "query_file_pref";
   
   public static final String QREL_FILE_DESC  = "QREL file: "+ 
                           " if specified, we save results only for queries for which we find at least one relevant entry.";
@@ -137,12 +139,12 @@ public class CommonParams {
   public static final String INDEX_FIELD_NAME_PARAM = "index_field";
   public final static String INDEX_FIELD_NAME_DESC = "The name of an index field";
 
-  public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
-  public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getIndexTypeList();
+  public final static String FOWARD_INDEX_FIELD_TYPE_PARAM = "fwd_index_field_type";
+  public final static String FOWARD_INDEX_FIELD_TYPE_DESC  = "A forward index field type: " + ForwardIndex.getIndexFieldTypeList();
 
   
-  public final static String FOWARD_INDEX_STORE_TYPE_PARAM = "fwd_index_store_type";
-  public final static String FOWARD_INDEX_STORE_TYPE_DESC  = "A forward index storage type: " + ForwardIndex.getIndexStorageTypeList();
+  public final static String FOWARD_INDEX_BACKEND_TYPE_PARAM = "fwd_index_backend_type";
+  public final static String FOWARD_INDEX_BACKEND_TYPE_DESC  = "A forward index backend type: " + ForwardIndex.getIndexBackendTypeList();
  
   public static final String OUTPUT_FILE_PARAM = "out_file";
   public static final String OUTPUT_FILE_DESC = "Output file";

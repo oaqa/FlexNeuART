@@ -38,7 +38,7 @@ import edu.cmu.lti.oaqa.flexneuart.letor.external.ExternalScorer.Client;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TFIDFSimilarity;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
 /**
@@ -52,8 +52,6 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor {
   private static final Logger logger = LoggerFactory.getLogger(FeatExtractorExternalApacheThrift.class);
 
-  public static final String NORM_BY_QUERY_LEN = "normByQueryLen";
-  
   public static String EXTR_TYPE = "externalThrift";
   
   public static String FEAT_QTY = "featureQty";
@@ -101,8 +99,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
     mHost = conf.getReqParamStr(HOST);
     
     mUnkWord = conf.getReqParamStr(UNK_WORD);
-    
-    mNormByQueryLen = conf.getParamBool(NORM_BY_QUERY_LEN);
     
     mTextAsRaw = conf.getParamBool(PARSED_AS_RAW);
     
@@ -152,7 +148,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   }
   
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields)
       throws Exception {
     HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
     
@@ -173,21 +169,21 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
 
       Map<String, List<Double>> scores = null;
       
-      String queryId = queryData.get(Const.TAG_DOCNO);
+      String queryId = queryFields.mEntryId;
       
       if (queryId == null) {
         throw new Exception("Undefined query ID!");
       }
       
-      if (mFieldIndex.isRaw()) {
+      if (mFieldIndex.isTextRaw()) {
         logger.info("Sending raw/unparsed entry, port: " + port);
-        String queryTextRaw = queryData.get(getQueryFieldName());
+        String queryTextRaw = queryFields.getString(getQueryFieldName());
         if (queryTextRaw == null) return res;
         
         ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
         
         for (CandidateEntry e : cands) {
-          String docEntryRaw = mFieldIndex.getDocEntryRaw(e.mDocId);
+          String docEntryRaw = mFieldIndex.getDocEntryTextRaw(e.mDocId);
 
           if (docEntryRaw == null) {
             throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
@@ -196,11 +192,11 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           docEntries.add(new TextEntryRaw(e.mDocId, docEntryRaw));
         }
         scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
-      } else {        
+      } else if (mFieldIndex.isParsed()) {        
         if (mTextAsRaw) {
           // This can be a lot faster on the Python side!
           logger.info("Sending parsed entry in the unparsed/raw format, port: " + port);
-          String queryTextRaw = queryData.get(getQueryFieldName());
+          String queryTextRaw = queryFields.getString(getQueryFieldName());
           if (queryTextRaw == null) return res;
           
           ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
@@ -218,7 +214,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           
         } else {
           logger.info("Sending parsed entry, port: " + port);
-          DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+          DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
           if (queryEntry == null)
             return res;
           
@@ -235,19 +231,9 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           }
           scores = clnt.getScoresFromParsed(queryTextEntry, docTextEntries);
         }
-      }
-      
-      String query = queryData.get(Const.TEXT_FIELD_NAME);
-      if (query == null) {
-        query = "";
-      }
-      float queryQty = StringUtils.splitOnWhiteSpace(query).length;
-      if (queryQty <= 1) {
-        queryQty = 1;
-      }
-      float invQueryQty = 1.0f / queryQty;
-      if (mNormByQueryLen) {
-        logger.info(String.format("Query: '%s' Normalization factor: %f", query, invQueryQty));
+      } else {
+        throw new RuntimeException(EXTR_TYPE + " works only with parsed or raw text fields, " + 
+                                   "but " + this.getIndexFieldName() + " is binary");
       }
       
       for (CandidateEntry e : cands) {
@@ -266,9 +252,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         int idx = 0;
         
         for (double v : scoreList) {
-          if (mNormByQueryLen) {
-            v *= invQueryQty;
-          }
           scoreVect.set(idx, v);
           idx++;
         }
@@ -294,8 +277,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   
   final int                          mFeatQty;
   final boolean                      mUseWordSeq;
-  
-  final boolean                      mNormByQueryLen;
   
   final boolean                      mTextAsRaw;
   

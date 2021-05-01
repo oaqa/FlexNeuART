@@ -40,14 +40,14 @@ public class VectorWrapper {
   }
   
   public static void writeSparseVect(TrulySparseVector vec, OutputStream out) throws IOException {
-    out.write(BinWriteUtils.intToBytes(vec.mIDs.length));
-    byte buf[] = BinWriteUtils.sparseVectorToBytes(vec);
+    out.write(BinReadWriteUtils.intToBytes(vec.mIDs.length));
+    byte buf[] = BinReadWriteUtils.sparseVectorToBytes(vec);
     out.write(buf);
   }
   
   public static void writeDenseVect(float vec[], OutputStream out) throws IOException {
-    out.write(BinWriteUtils.intToBytes(vec.length));
-    byte buf[] = BinWriteUtils.denseVectorToBytes(vec); 
+    out.write(BinReadWriteUtils.intToBytes(vec.length));
+    byte buf[] = BinReadWriteUtils.denseVectorToBytes(vec); 
     out.write(buf);
   }
   

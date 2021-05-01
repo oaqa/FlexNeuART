@@ -20,7 +20,8 @@ CEDR_TEST_RUN_FILE="test_run.txt"
 CEDR_TRAIN_PAIRS_FILE="train_pairs.tsv"
 
 checkVarNonEmpty "randSeed"
-checkVarNonEmpty "indexFieldName"
+checkVarNonEmpty "indexExportFieldName"
+checkVarNonEmpty "queryExportFieldName"
 checkVarNonEmpty "threadQty"
 checkVarNonEmpty "candTrainQty"
 checkVarNonEmpty "candTestQty"
@@ -53,8 +54,8 @@ $candProvParams \
 -sample_med_neg_qty $sampleMedNegQty \
 -sample_easy_neg_qty $sampleEasyNegQty \
 \
--index_field $indexFieldName \
--query_field $queryFieldName \
+-index_export_field $indexExportFieldName \
+-query_export_field $queryExportFieldName \
 \
 -query_file_train "$inputDataDir/$partTrain/QuestionFields.jsonl" \
 -qrel_file_train "$inputDataDir/$partTrain/$QREL_FILE" \

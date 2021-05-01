@@ -63,10 +63,10 @@ else
 fi
 retVal=""
 
-getIndexQueryDataInfo "$inputDataDir"
+getIndexQueryDataDirs "$inputDataDir"
 dataFileName=${retVal[1]}
 if [ "$dataFileName" = "" ] ; then
-  echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
+  echo "Cannot find the data file!"
   exit 1
 fi
 

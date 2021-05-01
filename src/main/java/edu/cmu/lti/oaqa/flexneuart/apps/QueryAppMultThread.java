@@ -20,6 +20,7 @@ import java.util.*;
 
 import no.uib.cipr.matrix.DenseVector;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.EvalUtils;
 
 
@@ -68,8 +69,9 @@ class QueryAppImpl extends BaseQueryApp {
   @Override
   void procResults(String runId, 
                    String queryId, 
-                   Map<String, String> docFields, 
-                   CandidateEntry[] scoredDocs, int numRet, Map<String, DenseVector> docFeats) throws IOException {
+                   DataEntryFields queryFields, 
+                   CandidateEntry[] scoredDocs, int numRet, 
+                   Map<String, DenseVector> docFeats) throws IOException {
     BufferedWriter trecOut = mhOutFiles.get(numRet);
     if (null == trecOut) 
       throw new RuntimeException("Bug, output file is not init. for numRet=" + numRet);

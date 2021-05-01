@@ -25,12 +25,10 @@ import com.google.common.base.Splitter;
 
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 
 public abstract class CandidateProvider {
   final static Logger logger = LoggerFactory.getLogger(CandidateProvider.class);
-  
-  public final static String ID_FIELD_NAME    = Const.TAG_DOCNO;
-  public final static String QUERY_FIELD_NAME = Const.TEXT_FIELD_NAME;
   
   // If you add a new provider, update CAND_PROVID_DESC below
   public static final String CAND_TYPE_LUCENE      = "lucene";
@@ -136,14 +134,14 @@ public abstract class CandidateProvider {
    * the total number of entries found.
    * 
    * @param     queryNum     an ordinal query number (for debugging purposes).
-   * @param     queryData    several pieces of input data, one is typically a bag-of-words query.
+   * @param     queryFields  a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
    * @param     maxQty       a maximum number of candidate records to return.
    * @return    an array of candidate records (doc ids + scores, no document text) + 
    *            the total number of entries found.
    */
   abstract public CandidateInfo getCandidates(int queryNum, 
-                                    Map<String, String> queryData, 
-                                    int maxQty)  throws Exception;
+                                              DataEntryFields queryFields, 
+                                              int maxQty)  throws Exception;
   
   /**
    * Removes words from the list (case insensitive matching), assumes that the query words are separated by spaces. 

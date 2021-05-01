@@ -30,6 +30,7 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.flexneuart.giza.TranRecSortByProb;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TrulySparseVector;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValPair;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValParamByValDesc;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
@@ -96,10 +97,10 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
-    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
     if (queryEntry == null) return res;
 
     for (CandidateEntry e: cands) {

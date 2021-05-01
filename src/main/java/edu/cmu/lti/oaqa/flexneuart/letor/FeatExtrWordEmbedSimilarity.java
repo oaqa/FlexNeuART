@@ -1,3 +1,18 @@
+/*
+ *  Copyright 2014+ Carnegie Mellon University
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
 import java.util.HashMap;
@@ -6,10 +21,11 @@ import java.util.Map;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
+import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -20,7 +36,6 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   public static String DOC_EMBED_FILE = "docEmbedFile";
   public static String USE_TFIDF_WEIGHT = "useIDFWeight";
   public static String USE_L2_NORM = "useL2Norm";
-  public static String DIST_TYPE = "distType";
   
   FeatExtrWordEmbedSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);
@@ -32,9 +47,6 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
     
     mUseIDFWeight = conf.getReqParamBool(USE_TFIDF_WEIGHT);
     mUseL2Norm = conf.getReqParamBool(USE_L2_NORM);
-    String distType = conf.getReqParamStr(DIST_TYPE);
-    mDist = AbstractDistance.create(distType);
-    mIsCosine = distType.compareToIgnoreCase(AbstractDistance.COSINE) == 0;
     
     String docEmbedFile = conf.getReqParamStr(DOC_EMBED_FILE);
     mDocEmbed = resMngr.getWordEmbed(getIndexFieldName(), docEmbedFile);
@@ -57,9 +69,6 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   
   @Override
   public VectorWrapper getFeatInnerProdQueryVector(DocEntryParsed e) throws Exception {
-    if (!mIsCosine) {
-      throw new Exception("Inner-product representation is available only for the cosine similarity!");
-    }
     // note we use query embeddings here
     return new VectorWrapper(mQueryEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
                             mUseIDFWeight, 
@@ -68,9 +77,6 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   
   @Override
   public VectorWrapper getFeatInnerProdDocVector(DocEntryParsed e) throws Exception {
-    if (!mIsCosine) {
-      throw new Exception("Inner-product representation is available only for the cosine similarity!");
-    }
     // note that we use document embeddings here
     return new VectorWrapper(mDocEmbed.getDocAverage(e, mSimilObj, mFieldIndex, 
                             mUseIDFWeight, 
@@ -88,10 +94,9 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   }
     
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
-      throws Exception {
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
-    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
     if (queryEntry == null) return res;
     
     float [] queryVect = mQueryEmbed.getDocAverage(queryEntry, mSimilObj, mFieldIndex, 
@@ -112,10 +117,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
         throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", 
                                           e.mDocId));
       }
-      // For cosine distance, we add one to convert it into the cosine *SIMILARITY*
-      // In such a case, it will be equal to the inner product of the exported normalized
-      // dense vectors.
-      v.set(0, (mIsCosine ? 1:0) - mDist.compute(queryVect, docVec));
+      v.set(0, DistanceFunctions.compScalar(queryVect, docVec));
     }
     
     return res;
@@ -127,8 +129,6 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   final boolean             mUseL2Norm;
   final EmbeddingReaderAndRecoder mDocEmbed;
   final EmbeddingReaderAndRecoder mQueryEmbed;
-  final AbstractDistance    mDist;
-  final boolean             mIsCosine;
 
 
 }

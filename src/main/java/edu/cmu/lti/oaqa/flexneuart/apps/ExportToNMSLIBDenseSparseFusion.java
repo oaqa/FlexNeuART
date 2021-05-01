@@ -19,21 +19,22 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.Vector;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.flexneuart.utils.BinWriteUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.BinReadWriteUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
@@ -46,6 +47,8 @@ import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
  *
  */
 public class ExportToNMSLIBDenseSparseFusion {
+  final static Logger logger = LoggerFactory.getLogger(ExportToNMSLIBDenseSparseFusion.class);
+  
   public static final class Args {
     
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
@@ -60,8 +63,8 @@ public class ExportToNMSLIBDenseSparseFusion {
     @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
-    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, usage = "If specified, we generate queries rather than documents.")
-    String mQueryFile;
+    @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, usage = CommonParams.QUERY_FILE_PREFIX_EXPORT_DESC)
+    String mQueryFilePrefix;
 
     @Option(name = "-out_file", required = true, usage = "Binary output file")
     String mOutFile;
@@ -90,19 +93,10 @@ public class ExportToNMSLIBDenseSparseFusion {
     
     try {
       
-      ArrayList<Map<String, String>> parsedQueries = null;
+      ArrayList<DataEntryFields> queries = null;
       
-      if (args.mQueryFile != null) {
-
-        parsedQueries = new ArrayList<Map<String, String>>();     
-        Map<String, String> queryFields = null;   
-        
-        try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-          while ((queryFields = inp.readNext()) != null) {
-            parsedQueries.add(queryFields);
-          }
-        }
-        
+      if (args.mQueryFilePrefix != null) {
+        queries = DataEntryReader.readParallelQueryData(args.mQueryFilePrefix); 
       } 
       
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
@@ -133,19 +127,19 @@ public class ExportToNMSLIBDenseSparseFusion {
       
       String[] allDocIds = compIndices[0].getAllDocIds();
       
-      int entryQty = parsedQueries == null ?  allDocIds.length  : parsedQueries.size();
+      int entryQty = queries == null ?  allDocIds.length  : queries.size();
       
-      System.out.println("Writing the number of entries (" + entryQty + ") to the output file");
+      logger.info("Writing the number of entries (" + entryQty + ") to the output file");
       
-      out.write(BinWriteUtils.intToBytes(entryQty));
-      out.write(BinWriteUtils.intToBytes(featExtrQty));
+      out.write(BinReadWriteUtils.intToBytes(entryQty));
+      out.write(BinReadWriteUtils.intToBytes(featExtrQty));
       
       for (SingleFieldInnerProdFeatExtractor oneComp : compExtractors) {
-        out.write(BinWriteUtils.intToBytes(oneComp.isSparse() ? 1 : 0));
-        out.write(BinWriteUtils.intToBytes(oneComp.getDim()));
+        out.write(BinReadWriteUtils.intToBytes(oneComp.isSparse() ? 1 : 0));
+        out.write(BinReadWriteUtils.intToBytes(oneComp.getDim()));
       }
       
-      if (parsedQueries == null) {    
+      if (queries == null) {    
         int docNum = 0;
         
         for (int batchStart = 0; batchStart < allDocIds.length; batchStart += args.mBatchSize) {
@@ -161,17 +155,17 @@ public class ExportToNMSLIBDenseSparseFusion {
           for (int i = 0; i < actualBatchQty; ++i) {
             ++docNum;
             if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
-              System.out.println("Exported " + docNum + " docs");
+              logger.info("Exported " + docNum + " docs");
             }
           }
         }
 
-        System.out.println("Exported " + docNum + " docs");
+        logger.info("Exported " + docNum + " docs");
       } else {
         int queryQty = 0;
-        for (Map<String, String> queryFields : parsedQueries) {
+        for (DataEntryFields queryFields : queries) {
           ++queryQty;
-          String queryId = queryFields.get(Const.TAG_DOCNO);
+          String queryId = queryFields.mEntryId;
           
           if (queryId == null) {
             System.err.println("No query ID: Parsing error, query # " + queryQty);
@@ -181,7 +175,7 @@ public class ExportToNMSLIBDenseSparseFusion {
           writeStringId(queryId, out);
           VectorUtils.writeInnerProdQueryVecsToNMSLIBStream(queryFields, compIndices, compExtractors, out);
         }
-        System.out.println("Exported " + parsedQueries.size() + " queries");
+        logger.info("Exported " + queries.size() + " queries");
       }
       
     } catch (Exception e) {
@@ -206,7 +200,7 @@ public class ExportToNMSLIBDenseSparseFusion {
     if (StringUtils.hasNonAscii(id)) {
       throw new Exception("Invalid id, contains non-ASCII chars: " + id);
     }
-    out.write(BinWriteUtils.intToBytes(id.length()));
+    out.write(BinReadWriteUtils.intToBytes(id.length()));
     out.write(id.getBytes());
   }
 }

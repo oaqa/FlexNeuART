@@ -36,7 +36,7 @@ import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
 import ciir.umass.edu.learning.*;
@@ -51,9 +51,9 @@ class BaseProcessingUnit {
   }  
   
   public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
-    Map<String, String>    queryFields = mAppRef.mParsedQueries.get(queryNum);
+    DataEntryFields    queryFields = mAppRef.mQueries.get(queryNum);
 
-    String queryId = queryFields.get(Const.TAG_DOCNO);
+    String queryId = queryFields.mEntryId;
             
     // 2. Obtain results
     long start = System.currentTimeMillis();
@@ -63,16 +63,6 @@ class BaseProcessingUnit {
     if (mAppRef.mResultCache != null) 
       qres = mAppRef.mResultCache.getCacheEntry(queryId);
     if (qres == null) {            
-
-      String text = queryFields.get(Const.TEXT_FIELD_NAME);
-      if (text != null) {
-        // This was a workaround for a pesky problem: didn't previously notice that the string
-        // n't (obtained by tokenization of can't is indexed. Querying using this word
-        // add a non-negligible overhead (although this doesn't affect overall accuracy)
-        // However, we believe data processing scripts should now always remove these extra stop-words
-        //queryFields.put(Const.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
-        queryFields.put(Const.TEXT_FIELD_NAME, text);
-      }
       qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
       if (mAppRef.mResultCache != null) 
         mAppRef.mResultCache.addOrReplaceCacheEntry(queryId, qres);
@@ -322,7 +312,7 @@ class BaseQueryAppProcessingThread extends Thread  {
       
       CandidateProvider candProvider = mProcUnit.mAppRef.mCandProviders[mThreadId];
 
-      for (int iq = 0; iq < mProcUnit.mAppRef.mParsedQueries.size(); ++iq)
+      for (int iq = 0; iq < Math.min(mProcUnit.mAppRef.mMaxNumQuery, mProcUnit.mAppRef.mQueries.size()); ++iq)
         if (iq % mThreadQty == mThreadId) 
           mProcUnit.procQuery(candProvider, iq);
       
@@ -379,9 +369,8 @@ public abstract class BaseQueryApp {
    *              an ID of the run
    * @param   queryId
    *              a query ID
-   * @param   docFields
-   *              a map, where keys are field names, while values represent
-   *              values of indexable fields.
+   * @param   queryFields
+   *              a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
    * @param   scoredDocs
    *              a list of scored document entries
    * @param   numRet
@@ -393,7 +382,7 @@ public abstract class BaseQueryApp {
   abstract void procResults(
       String                              runId,
       String                              queryId,
-      Map<String, String>                 docFields, 
+      DataEntryFields                           queryFields, 
       CandidateEntry[]                    scoredDocs,
       int                                 numRet,
       @Nullable Map<String, DenseVector>  docFeats
@@ -443,7 +432,7 @@ public abstract class BaseQueryApp {
     mOptions.addOption(CommonParams.RUN_ID_PARAM,              null, true, CommonParams.RUN_ID_DESC);
     
     mOptions.addOption(CommonParams.QUERY_CACHE_FILE_PARAM,    null, true, CommonParams.QUERY_CACHE_FILE_DESC);
-    mOptions.addOption(CommonParams.QUERY_FILE_PARAM,          null, true, CommonParams.QUERY_FILE_DESC);
+    mOptions.addOption(CommonParams.QUERY_FILE_PREFIX_PARAM,   null, true, CommonParams.QUERY_FILE_PREFIX_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_RESULTS_PARAM,     null, true, mMultNumRetr ? 
                                                                              CommonParams.MAX_NUM_RESULTS_DESC : 
                                                                              "A number of candidate records (per-query)");
@@ -510,8 +499,8 @@ public abstract class BaseQueryApp {
     
     mProviderURI = mCmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
     if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_DESC);              
-    mQueryFile = mCmd.getOptionValue(CommonParams.QUERY_FILE_PARAM);
-    if (null == mQueryFile) showUsageSpecify(CommonParams.QUERY_FILE_DESC);
+    mQueryFilePrefix = mCmd.getOptionValue(CommonParams.QUERY_FILE_PREFIX_PARAM);
+    if (null == mQueryFilePrefix) showUsageSpecify(CommonParams.QUERY_FILE_PREFIX_DESC);
     {
       String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_QUERY_PARAM);
       if (tmpn != null) {
@@ -563,8 +552,8 @@ public abstract class BaseQueryApp {
     
     logger.info(
         String.format(
-            "Candidate provider type: %s URI: %s Query file: %s Max. # of queries: %d # of cand. records: %d Max. # to re-rank w/ final re-ranker: %d", 
-        mCandProviderType, mProviderURI, mQueryFile, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
+            "Candidate provider type: %s URI: %s Query file prefix: %s Max. # of queries: %d # of cand. records: %d Max. # to re-rank w/ final re-ranker: %d", 
+        mCandProviderType, mProviderURI, mQueryFilePrefix, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
     mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
     logger.info("An array of number of entries to retrieve:");
     for (int topk : mNumRetArr) {
@@ -704,21 +693,12 @@ public abstract class BaseQueryApp {
           logger.info("Result cache is loaded from '" + mResultCacheName + "'");
         }
       }      
+
+      mQueries = DataEntryReader.readParallelQueryData(mQueryFilePrefix);
       
-      int queryQty = 0;
+      int queryQty = mQueries.size();
       
-      try (DataEntryReader inp = new DataEntryReader(mQueryFile)) {
-        Map<String, String> queryFields = null;      
-        
-        for (; ((queryFields = inp.readNext()) != null) && queryQty < mMaxNumQuery; ) {
-           
-          mParsedQueries.add(queryFields);
-          ++queryQty;
-          if (queryQty % 1000 == 0) logger.info("Read " + queryQty + " documents from " + mQueryFile);
-        }
-      }
-      
-      logger.info("Read " + queryQty + " documents from " + mQueryFile);
+      logger.info("Read " + queryQty + " query file prefix: " + mQueryFilePrefix);
       
       init();
           
@@ -726,7 +706,7 @@ public abstract class BaseQueryApp {
         ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
         logger.info(String.format("Created a fixed thread pool with %d threads", mThreadQty));
         
-        for (int iq = 0; iq < mParsedQueries.size(); ++iq) {
+        for (int iq = 0; iq < Math.min(mMaxNumQuery, mQueries.size()); ++iq) {
           executor.execute(new BaseQueryAppProcessingWorker(this, iq));
         }                  
        
@@ -794,7 +774,7 @@ public abstract class BaseQueryApp {
   
   String       mRunId;
   String       mProviderURI;
-  String       mQueryFile;
+  String       mQueryFilePrefix;
   Integer      mMaxCandRet;
   int          mMaxFinalRerankQty = Integer.MAX_VALUE;
   Integer      mMaxNumRet;
@@ -844,5 +824,5 @@ public abstract class BaseQueryApp {
   SynchronizedSummaryStatistics mFinalRerankTimeStat  = new SynchronizedSummaryStatistics();
   SynchronizedSummaryStatistics mNumRetStat           = new SynchronizedSummaryStatistics();
   
-  ArrayList<Map<String, String>> mParsedQueries = new ArrayList<Map<String, String>>();      
+  ArrayList<DataEntryFields> mQueries = new ArrayList<DataEntryFields>();      
 }

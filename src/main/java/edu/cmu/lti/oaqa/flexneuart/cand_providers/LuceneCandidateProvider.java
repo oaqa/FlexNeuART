@@ -31,7 +31,10 @@ import org.apache.lucene.store.FSDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.cmu.lti.oaqa.flexneuart.letor.CommonParams;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
 import com.google.common.base.Splitter;
@@ -61,6 +64,8 @@ public class LuceneCandidateProvider extends CandidateProvider {
    */
   public LuceneCandidateProvider(String indexDirName, CandProvAddConfig addConf) throws Exception {
   	
+    mQueryFieldName = addConf.getParam(CommonParams.QUERY_FIELD_NAME, Const.DEFAULT_QUERY_TEXT_FIELD_NAME);
+    
   	float k1 = BM25SimilarityLucene.DEFAULT_BM25_K1;
   	float b = BM25SimilarityLucene.DEFAULT_BM25_B;
   	
@@ -91,23 +96,19 @@ public class LuceneCandidateProvider extends CandidateProvider {
   
   @Override
   public CandidateInfo getCandidates(int queryNum, 
-                                Map<String, String> queryData, 
-                                int maxQty) throws Exception {
+                                     DataEntryFields queryFields, 
+                                     int maxQty) throws Exception {
+    String queryID = queryFields.mEntryId;
+    if (null == queryID) {
+      throw new Exception("Query id  is undefined for query #: " + queryNum);
+    }         
 
     ArrayList<CandidateEntry> resArr = new ArrayList<CandidateEntry>();
     
-    String queryID = queryData.get(ID_FIELD_NAME);
-    if (null == queryID) {
-      throw new Exception(
-          String.format("Query id (%s) is undefined for query # %d",
-                        ID_FIELD_NAME, queryNum));
-    }        
-    
-    String text = queryData.get(QUERY_FIELD_NAME);
+    String text = queryFields.getString(mQueryFieldName);
     if (null == text) {
       throw new Exception(
-          String.format("Query (%s) is undefined for query # %d",
-                        QUERY_FIELD_NAME, queryNum));
+          String.format("Query (%s) is undefined for query # %d", mQueryFieldName, queryNum));
     }
     
     String query = StringUtils.removePunct(text.trim());
@@ -123,20 +124,23 @@ public class LuceneCandidateProvider extends CandidateProvider {
 
     long    numFound = 0;
 
-    if (!query.isEmpty()) {    
+    if (query.isEmpty()) {
+      logger.warn("Ignoring empty query #: " + queryNum);
+    } else {
       // QueryParser cannot be shared among threads!
-      QueryParser parser = new QueryParser(QUERY_FIELD_NAME, mAnalyzer);
+      QueryParser parser = new QueryParser(mQueryFieldName, mAnalyzer);
       parser.setDefaultOperator(QueryParser.OR_OPERATOR);
 
       Query       queryParsed = parser.parse(query);
       
       TopDocs     hits = mSearcher.search(queryParsed, maxQty);
-      numFound = hits.totalHits;
+
+      numFound = hits.totalHits.value;
       ScoreDoc[]  scoreDocs = hits.scoreDocs;
       
       for (ScoreDoc oneHit: scoreDocs) {
         Document doc = mSearcher.doc(oneHit.doc);
-        String id = doc.get(ID_FIELD_NAME);
+        String id = doc.get(Const.DOC_ID_FIELD_NAME);
         float score = oneHit.score;
         
         resArr.add(new CandidateEntry(id, score));
@@ -153,6 +157,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
   private IndexSearcher mSearcher = null;
   private final Similarity mSimilarity;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
+  private String        mQueryFieldName;
 
   private static Splitter mSpaceSplit = Splitter.on(' ').omitEmptyStrings().trimResults();
 }

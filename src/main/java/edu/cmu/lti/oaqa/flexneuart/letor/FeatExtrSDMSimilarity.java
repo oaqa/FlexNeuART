@@ -20,11 +20,11 @@ import java.util.Map;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.SDMSimilarityAnserini;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
- * A sequential dependency similarity feature extractor that wraps up
- * Anserini's port of SDM.
+ * A sequential dependency similarity feature extractor that incorporates Anserini's port of SDM.
  * 
  * @author Leonid Boytsov
  *
@@ -56,8 +56,8 @@ public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+    return getSimpleFeatures(cands, queryFields, mFieldIndex, mSimilObjs);
   }
 
   @Override

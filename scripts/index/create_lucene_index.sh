@@ -5,22 +5,40 @@ source scripts/config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
-collect=$1
-if [ "$collect" = "" ] ; then
-  echo "$SAMPLE_COLLECT_ARG (1st arg)"
-  exit 1
-fi
-
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "DEFAULT_QUERY_TEXT_FIELD_NAME"
+
+boolOpts=("h" "help" "print help")
+
+indexFieldName="$DEFAULT_QUERY_TEXT_FIELD_NAME"
+paramOpts=(
+  "index_field_name" "indexFieldName" "indexing field name (default $indexFieldName)"
+)
+
+parseArguments $@
+
+usageMain="<collection>"
+
+if [ "$help" = "1" ] ; then
+  genUsage $usageMain
+  exit 1
+fi
+
+collect=${posArgs[0]}
+if [ "$collect" = "" ] ; then
+  genUsage "$usageMain" "Specify $SAMPLE_COLLECT_ARG (1st arg)"
+  exit
+fi
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 indexDir="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
 
 echo "=========================================================================="
-echo "Data directory: $inputDataDir"
-echo "Index directory: $indexDir"
+echo "Data directory:   $inputDataDir"
+echo "Index directory:  $indexDir"
+echo "index field name: $indexFieldName"
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
 else
@@ -29,7 +47,7 @@ else
 fi
 echo "=========================================================================="
 retVal=""
-getIndexQueryDataInfo "$inputDataDir"
+getIndexQueryDataDirs "$inputDataDir"
 dirList=${retVal[0]}
 dataFileName=${retVal[1]}
 if [ "$dirList" = "" ] ; then

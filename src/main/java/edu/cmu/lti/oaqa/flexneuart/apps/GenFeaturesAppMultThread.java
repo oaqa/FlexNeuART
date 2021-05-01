@@ -19,6 +19,7 @@
 import java.util.*;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
   
 class GenFeaturesAppImpl extends BaseQueryApp {    
@@ -70,7 +71,8 @@ class GenFeaturesAppImpl extends BaseQueryApp {
 
     @Override
     void procResults(String runId,
-                     String queryId, Map<String, String> docFields, 
+                     String queryId,
+                     DataEntryFields queryFields,
                      CandidateEntry[] scoredDocs, int numRet, Map<String, DenseVector> docFeats)
         throws IOException {
       BufferedWriter featOut = mhOutFiles.get(numRet);

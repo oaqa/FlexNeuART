@@ -80,6 +80,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryFlatFileData.class);
   public static final int COMMIT_INTERV = 2000000;
   public static final String DATA_SUFFIX = ".dat";
+  public static final String BIN_DATA_FIELD_NAME = "bin_dta";
   
   protected String mBinFile = null;
 
@@ -139,7 +140,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   }
   
 	@Override
-	public String getDocEntryRaw(String docId) throws Exception {
+	public String getDocEntryTextRaw(String docId) throws Exception {
     byte[] zippedStr = this.getDocEntryPacked(docId);
     if (zippedStr != null) {
       return CompressUtils.decomprStr(zippedStr);
@@ -148,9 +149,20 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
 	}
 
 	@Override
-	protected void addDocEntryRaw(String docId, String docText) throws IOException {
+	protected void addDocEntryTextRaw(String docId, String docText) throws IOException {
 		addDocEntryPacked(docId, CompressUtils.comprStr(docText));
-   }
+  }
+	
+
+  @Override
+  public byte[] getDocEntryBinary(String docId) throws Exception {
+    return getDocEntryPacked(docId);
+  }
+
+  @Override
+  protected void addDocEntryBinary(String docId, byte[] docBin) throws IOException {
+    addDocEntryPacked(docId, docBin);
+  }
   
   @Override
   public void readIndex() throws Exception {
@@ -181,8 +193,8 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
     
     Document luceneDoc = new Document();
     
-    luceneDoc.add(new StringField(Const.TAG_DOCNO, docId, Field.Store.YES));
-    luceneDoc.add(new StoredField(Const.TAG_DOC_ENTRY, new BytesRef(offLenPair)));
+    luceneDoc.add(new StringField(Const.DOC_ID_FIELD_NAME, docId, Field.Store.YES));
+    luceneDoc.add(new StoredField(BIN_DATA_FIELD_NAME, new BytesRef(offLenPair)));
 
     // Index writers should be completely thread-safe 
     mIndexWriter.addDocument(luceneDoc);
@@ -197,7 +209,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   }
     
   private byte [] getDocEntryPacked(String docId) throws IOException, ParseException {
-    QueryParser parser = new QueryParser(Const.TAG_DOCNO, mAnalyzer);
+    QueryParser parser = new QueryParser(Const.DOC_ID_FIELD_NAME, mAnalyzer);
     Query       queryParsed = parser.parse(docId);
     
     TopDocs     hits = mSearcher.search(queryParsed, 1);
@@ -206,7 +218,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
     byte bdata[] = null;
     if (scoreDocs != null && scoreDocs.length == 1) {
       Document doc = mSearcher.doc(scoreDocs[0].doc);
-      bdata = doc.getBinaryValue(Const.TAG_DOC_ENTRY).bytes;
+      bdata = doc.getBinaryValue(BIN_DATA_FIELD_NAME).bytes;
     } else {
     	return null;
     }

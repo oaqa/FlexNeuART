@@ -25,9 +25,9 @@ paramOpts=(
   "sample_prob" "sampleProb"  "sample probability (default $sampleProb)"
 )
 
-parseArguments $@
-
 usageMain="<collection> <field>"
+
+parseArguments $@
 
 if [ "$help" = "1" ] ; then
   genUsage $usageMain

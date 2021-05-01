@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexStorageType;
-import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexType;
+import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexFieldType;
+import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexBackendType;
 
 public class BuildFwdIndexApp {  
   
@@ -50,8 +50,8 @@ public class BuildFwdIndexApp {
     options.addOption(CommonParams.DATA_FILE_PARAM,              null, true, CommonParams.DATA_FILE_DESC);   
     options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_INDEX_DESC);
     options.addOption(CommonParams.FIELD_NAME_PARAM,             null, true, CommonParams.FIELD_NAME_DESC);
-    options.addOption(CommonParams.FOWARD_INDEX_TYPE_PARAM,      null, true, CommonParams.FOWARD_INDEX_TYPE_DESC);
-    options.addOption(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM,      null, true, CommonParams.FOWARD_INDEX_STORE_TYPE_DESC);
+    options.addOption(CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM, null, true, CommonParams.FOWARD_INDEX_BACKEND_TYPE_DESC);
+    options.addOption(CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM,null, true, CommonParams.FOWARD_INDEX_FIELD_TYPE_DESC);
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -107,36 +107,37 @@ public class BuildFwdIndexApp {
       for (int i = 0; i < fileNames.length; ++i)
         fileNames[i] = inputDataDir + File.separator + subDirs[i] + File.separator + dataFileName;
       
-      String fwdIndexStoreType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM);
+      String fwdIndexBackendType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM);
       
-      if (fwdIndexStoreType == null) {
-        Usage("Specify: " + CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, options);
+      if (fwdIndexBackendType == null) {
+        Usage("Specify: " + CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM, options);
       }
       
-      String fwdIndexType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_TYPE_PARAM);
       
-      if (fwdIndexType == null) {
-        Usage("Specify: " + CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, options);
+      ForwardIndexBackendType iBackendType = ForwardIndex.getIndexBackendType(fwdIndexBackendType);
+      
+      if (iBackendType == ForwardIndexBackendType.unknown) {
+        Usage("Wrong value '" + fwdIndexBackendType + "' for " + CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM, options);
+      }
+      
+      logger.info("Forward index backend type: " + iBackendType);
+      
+      String fwdIndexFieldType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM);
+      
+      if (fwdIndexFieldType == null) {
+        Usage("Specify: " + CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM, options);
       }                  
+
+      ForwardIndexFieldType iFieldType = ForwardIndex.getIndexFieldType(fwdIndexFieldType);
       
-      ForwardIndexStorageType iStoreageType = ForwardIndex.getIndexStorageType(fwdIndexStoreType);
-      
-      if (iStoreageType == ForwardIndexStorageType.unknown) {
-        Usage("Wrong value '" + fwdIndexStoreType + "' for " + CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, options);
+      if (iFieldType == ForwardIndexFieldType.unknown) {
+      	Usage("Wrong value '" + fwdIndexFieldType + "' for " + CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM, options);
       }
       
-      
-      logger.info("Forward index storage type: " + iStoreageType);
-      
-      ForwardIndexType iType = ForwardIndex.getIndexType(fwdIndexType);
-      
-      if (iType == ForwardIndexType.unknown) {
-      	Usage("Wrong value '" + fwdIndexType + "' for " + CommonParams.FOWARD_INDEX_TYPE_PARAM, options);
-      }
-      
-      logger.info("Forward index storage type: " + iType);
+      logger.info("Forward index field type: " + iFieldType);
         
-      ForwardIndex indx = ForwardIndex.createWriteInstance(outPrefix + File.separator + fieldName, iType, iStoreageType);
+      ForwardIndex indx = ForwardIndex.createWriteInstance(outPrefix + File.separator + fieldName, 
+                                                          iBackendType, iFieldType);
       
       indx.createIndex(fieldName, fileNames, maxNumRec);
       indx.saveIndex();

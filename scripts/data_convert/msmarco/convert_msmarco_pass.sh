@@ -3,8 +3,8 @@
 # It is called after download_msmarco_pass.sh
 . scripts/data_convert/common_conv.sh
 
-checkVarNonEmpty "ANSWER_FILE"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "ANSWER_FILE_JSONL"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 checkVarNonEmpty "inputDataDir"
 
 
@@ -18,13 +18,13 @@ for year in 2019 2020 ; do
   python -u scripts/data_convert/msmarco/convert_queries.py \
     $BERT_TOK_OPT \
     --input  "$src/msmarco-test${year}-queries.tsv" \
-    --output "$inputDataDir/test${year}/$QUESTION_FILE"
+    --output "$inputDataDir/test${year}/$QUESTION_FILE_JSONL"
 done
 
 python -u scripts/data_convert/msmarco/convert_pass.py \
     $BERT_TOK_OPT \
     --input "$src/collection.tsv.gz"  \
-    --output "$inputDataDir/pass/${ANSWER_FILE}.gz"
+    --output "$inputDataDir/pass/${ANSWER_FILE_JSONL}.gz"
 
 for part in train dev eval ; do
   # eval has no qrels for some reason
@@ -35,7 +35,7 @@ for part in train dev eval ; do
   python -u scripts/data_convert/msmarco/convert_queries.py \
     $BERT_TOK_OPT \
     --input  "$src/queries.$part.tsv" \
-    --output "$inputDataDir/$part/$QUESTION_FILE"
+    --output "$inputDataDir/$part/$QUESTION_FILE_JSONL"
 done
 
 

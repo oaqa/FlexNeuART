@@ -4,7 +4,7 @@ source scripts/common_proc.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
@@ -40,7 +40,7 @@ for colType in nq trivia squad ; do
 
     python -u scripts/data_convert/wikipedia_dpr/convert_queries.py \
         --input "$inpFile" \
-        --output_queries "$inputDataSubDir/$QUESTION_FILE" \
+        --output_queries "$inputDataSubDir/$QUESTION_FILE_JSONL" \
         --output_qrels "$inputDataSubDir/$QREL_FILE" \
         --bert_tokenize \
         $bitextOpt

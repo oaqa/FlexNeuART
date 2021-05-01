@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
-import edu.cmu.lti.oaqa.flexneuart.cand_providers.TrecRunCandidateProvider;
 
 public class EvalUtils {
   final static Logger logger = LoggerFactory.getLogger(EvalUtils.class);

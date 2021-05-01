@@ -9,7 +9,7 @@ checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "DEFAULT_TRAIN_SUBDIR"
 checkVarNonEmpty "DEV1_SUBDIR"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 checkVarNonEmpty "QREL_FILE"
 
 boolOpts=("h" "help" "print help")
@@ -71,7 +71,7 @@ partArr=($partTrain $partDev $partTest)
 
 for part in ${partArr[*]} ; do
   inpDir="$colRoot/$INPUT_DATA_SUBDIR/$part/"
-  questFile="$inpDir/$QUESTION_FILE"
+  questFile="$inpDir/$QUESTION_FILE_JSONL"
   inf1=$(scripts/report/count_toks.py --input $questFile --field $QUERY_FIELD_NAME)
   dummy=' ' read -r -a tokQtys1 <<< "$inf1"
 

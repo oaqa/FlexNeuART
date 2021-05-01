@@ -24,6 +24,7 @@ import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.CosineTextSimilarity;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -74,8 +75,8 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+    return getSimpleFeatures(cands, queryFields, mFieldIndex, mSimilObjs);
   }
   
   @Override

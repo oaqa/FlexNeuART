@@ -16,9 +16,6 @@
 package edu.cmu.lti.oaqa.flexneuart.apps;
 
 import java.util.ArrayList;
-import java.util.Map;
-
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -29,10 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
-
 
 /**
  * A wrapper app for generating different types of training data from existing indexed
@@ -60,6 +56,12 @@ public class ExportTrainPairs {
   public static final String QUERY_FILE_TEST_DESC = "Test query file";
   public static final String QUERY_FILE_TEST_PARAM = "query_file_test";
   
+  public static final String INDEX_EXPORT_FIELD_PARAM = "index_export_field";
+  public static final String INDEX_EXPORT_FIELD_DESC = "The name of the index field whose content we export";
+  
+  public static final String QUERY_EXPORT_FIELD_PARAM = "query_export_field";
+  public static final String QUERY_EXPORT_FIELD_DESC = "The name of the query field whose content we export (candidate provider can use different ones).";
+  
   static void showUsage(String err) {
     System.err.println("Error: " + err);
     HelpFormatter formatter = new HelpFormatter();
@@ -72,13 +74,10 @@ public class ExportTrainPairs {
   
   /**
    * The class that exports/generate training data for an external LETOR framework such as MatchZoo.
-   * It was designed to run efficiently in a multithreaded fashion, b/c potentially we can
+   * It was designed to run efficiently in a multi-threaded fashion, b/c potentially we can
    * use it to generate weakly supervised data (using millions of queries).
    */
   public static void main(String[] args) {
-    
-    mOptions.addOption(CommonParams.INDEX_FIELD_NAME_PARAM, null, true, CommonParams.INDEX_FIELD_NAME_DESC);
-    
     mOptions.addOption(EXPORT_FMT,                          null, true, "A type of the export procedure/format");
     
     mOptions.addOption(CommonParams.MAX_NUM_QUERY_TRAIN_PARAM, null, true, CommonParams.MAX_NUM_QUERY_TRAIN_DESC);
@@ -95,12 +94,17 @@ public class ExportTrainPairs {
     mOptions.addOption(CommonParams.CAND_PROVID_ADD_CONF_PARAM, null, true, CommonParams.CAND_PROVID_ADD_CONF_DESC);
     
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
-    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,    null, true,  CommonParams.GIZA_ROOT_DIR_DESC); 
-    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,        null, true,  CommonParams.EMBED_DIR_DESC);  
+    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,    null, true, CommonParams.GIZA_ROOT_DIR_DESC); 
+    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,        null, true, CommonParams.EMBED_DIR_DESC);  
 
     mOptions.addOption(CommonParams.THREAD_QTY_PARAM,       null, true, CommonParams.THREAD_QTY_DESC);
     
-    mOptions.addOption(CommonParams.QUERY_FIELD_NAME_PARAM, null, true, CommonParams.QUERY_FIELD_NAME_DESC); 
+    /*
+     *  These field names are only used for export. In particular, the candidate provider 
+     *  will normally use different fields to query data.
+     */
+    mOptions.addOption(INDEX_EXPORT_FIELD_PARAM, null, true, INDEX_EXPORT_FIELD_DESC);
+    mOptions.addOption(QUERY_EXPORT_FIELD_PARAM, null, true, QUERY_EXPORT_FIELD_DESC);
        
     ExportTrainBase.addAllOptionDesc(mOptions);
     
@@ -131,19 +135,18 @@ public class ExportTrainPairs {
       if (fwdIndex == null) {
         showUsageSpecify(CommonParams.FWDINDEX_PARAM);
       }
-      String indexFieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
-      if (indexFieldName == null) {
-        showUsageSpecify(CommonParams.INDEX_FIELD_NAME_PARAM);
+      String indexExportFieldName = cmd.getOptionValue(ExportTrainPairs.INDEX_EXPORT_FIELD_PARAM);
+      if (indexExportFieldName == null) {
+        showUsageSpecify(ExportTrainPairs.INDEX_EXPORT_FIELD_PARAM);
       }
-      String queryFieldName = cmd.getOptionValue(CommonParams.QUERY_FIELD_NAME_PARAM);
-      if (queryFieldName == null) {
-        showUsageSpecify(CommonParams.QUERY_FIELD_NAME_PARAM);
+      String queryExportFieldName = cmd.getOptionValue(ExportTrainPairs.QUERY_EXPORT_FIELD_PARAM);
+      if (queryExportFieldName == null) {
+        showUsageSpecify(ExportTrainPairs.QUERY_EXPORT_FIELD_PARAM);
       }
       
       String embedDir = cmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
       String gizaRootDir = cmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
-
-      
+     
       String exportType = cmd.getOptionValue(EXPORT_FMT);
       if (null == exportType) {
         showUsageSpecify(EXPORT_FMT);
@@ -179,7 +182,7 @@ public class ExportTrainPairs {
           showUsage("Maximum number of test queries isn't integer: '" + tmpn + "'");
         }
       }
-           
+ 
       tmpn = cmd.getOptionValue(CommonParams.THREAD_QTY_PARAM);
       if (null != tmpn) {
         try {
@@ -214,12 +217,10 @@ public class ExportTrainPairs {
       }
       
       
-      ArrayList<String> queryQueryTexts = new ArrayList<String>();
-      ArrayList<String> queryFieldTexts = new ArrayList<String>();
-      ArrayList<String> queryIds = new ArrayList<String>();
+      ArrayList<DataEntryFields> queryDataArr = new ArrayList<DataEntryFields>();
       ArrayList<Boolean> isTestQuery = new ArrayList<Boolean>();      
       
-      Map<String, String> docFields = null;
+      DataEntryFields queryFields = null;
       
       for (int iQueryType = 0; iQueryType < 2; ++iQueryType) {
         int maxNumQuery = iQueryType == 0 ? maxNumQueryTrain : maxNumQueryTest;
@@ -227,42 +228,26 @@ public class ExportTrainPairs {
         DataEntryReader inp = new DataEntryReader(queryFile);
         
         int queryQty = 0; // Reset for each type of queries (train vs. test)
-        for (; ((docFields = inp.readNext()) != null) && queryQty < maxNumQuery; ) {
+        for (; ((queryFields = inp.readNext()) != null) && queryQty < maxNumQuery; ) {
 
           ++queryQty;
           
-          String qid = docFields.get(Const.TAG_DOCNO);
+          String qid = queryFields.mEntryId;
           if (qid == null) {
             logger.error("Undefined query ID in query # " + queryQty);
             System.exit(1);
           }
-          
-          /*
-           *  Thing may seem to be confusing. There is one query field that is used for actual querying.
-           *  It is currently hardcoded. There is also the name of the filed in a query JSON entry.
-           *  It can be different from the value of the field in the document JSON entry.
-           */
-          String queryText = docFields.get(Const.TEXT_FIELD_NAME);
 
-          if (queryText == null) queryText = "";
-          if (queryText.isEmpty()) {
-            logger.info(String.format("Ignoring query with empty field '%s' for query '%s'",
-                                      Const.TEXT_FIELD_NAME, qid));
-            continue;
-          }
-          
-          String fieldText = docFields.get(queryFieldName);
+          String fieldText = queryFields.getString(queryExportFieldName);
           
           if (fieldText == null) fieldText = "";
           if (fieldText.isEmpty()) {
             logger.info(String.format("Ignoring query with empty field '%s' for query '%s'",
-                                      queryFieldName, qid));
+                                      queryExportFieldName, qid));
             continue;
           }
           
-          queryIds.add(qid);
-          queryQueryTexts.add(queryText);
-          queryFieldTexts.add(fieldText);
+          queryDataArr.add(queryFields);
           isTestQuery.add(iQueryType != 0);
         }
         inp.close();
@@ -270,7 +255,8 @@ public class ExportTrainPairs {
  
       ExportTrainBase oneExport = 
           ExportTrainBase.createExporter(exportType,
-                                         resourceManager.getFwdIndex(indexFieldName), 
+                                         resourceManager.getFwdIndex(indexExportFieldName),
+                                         queryExportFieldName,  indexExportFieldName,
                                          qrelsTrain, qrelsTest);
       if (null == oneExport) {
         showUsage("Undefined output format: '" + exportType + "'");
@@ -289,10 +275,8 @@ public class ExportTrainPairs {
       }
       
       int threadId = 0;
-      for (int i = 0; i < queryIds.size(); ++i) {
-        workers[threadId].addQuery(i, queryIds.get(i), 
-                                  queryQueryTexts.get(i), queryFieldTexts.get(i),
-                                  isTestQuery.get(i));
+      for (int i = 0; i < queryDataArr.size(); ++i) {
+        workers[threadId].addQuery(i, queryDataArr.get(i), isTestQuery.get(i));
         threadId = (threadId + 1) % threadQty;
       }
       
@@ -328,23 +312,20 @@ class ExportTrainPairsWorker extends Thread  {
     mCandProv = candProv;
   }
   
-  public void addQuery(int queryNum, String queryId, 
-                       String queryQueryText, String queryFieldText,
+  public void addQuery(int queryNum, 
+                       DataEntryFields queryFields,
                        boolean bIsTestQuery) {
     mQueryNum.add(queryNum);
-    mQueryId.add(queryId);
-    mQueryQueryText.add(queryQueryText);
-    mQueryFieldText.add(queryFieldText);
+    mQueryDataArr.add(queryFields);
     mIsTestQuery.add(bIsTestQuery);
   }
 
   @Override
   public void run() {
-    for (int i = 0; i < mQueryId.size(); ++i) {
+    for (int i = 0; i < mQueryNum.size(); ++i) {
       try {
         mExporter.exportQuery(mCandProv,
-                              mQueryNum.get(i), mQueryId.get(i), 
-                              mQueryQueryText.get(i), mQueryFieldText.get(i),
+                              mQueryNum.get(i), mQueryDataArr.get(i), 
                               mIsTestQuery.get(i));
       } catch (Exception e) {
         mFail = true;
@@ -358,10 +339,7 @@ class ExportTrainPairsWorker extends Thread  {
     return mFail;
   }
   
-  ArrayList<String> mQueryId = new ArrayList<String>();
-  // mQueryQueryText and mQueryFieldText may come from different fields.
-  ArrayList<String> mQueryQueryText = new ArrayList<String>();
-  ArrayList<String> mQueryFieldText = new ArrayList<String>();
+  ArrayList<DataEntryFields> mQueryDataArr = new ArrayList<DataEntryFields>();
   ArrayList<Integer> mQueryNum = new ArrayList<Integer>();
   ArrayList<Boolean> mIsTestQuery = new ArrayList<Boolean>();
   

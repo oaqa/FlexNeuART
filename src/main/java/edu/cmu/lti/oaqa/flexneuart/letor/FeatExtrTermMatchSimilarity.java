@@ -20,7 +20,7 @@ import java.util.Map;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TermMatchSimilarity;
-import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -52,8 +52,8 @@ public class FeatExtrTermMatchSimilarity extends SingleFieldFeatExtractor  {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+    return getSimpleFeatures(cands, queryFields, mFieldIndex, mSimilObjs);
   }
   
   TermMatchSimilarity[] mSimilObjs = new TermMatchSimilarity[1];

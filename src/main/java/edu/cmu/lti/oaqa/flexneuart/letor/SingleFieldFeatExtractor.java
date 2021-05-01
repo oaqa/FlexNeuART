@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,14 +22,13 @@ import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.QueryDocSimilarityFunc;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
- * A single-field feature extractor interface (enforcing 
- * implementation of some common functions). Note that
- * the query-field can be different from an index-field.
- * This permits "between" a single query field such as "text"
- * with multiple document fields, e.g., "title", and "body".
+ * A feature extractor interface, which computes one or more similarity scores 
+ * for a single pair of query and index fields. 
+ * Note that the query field name can be different from the index field name: 
  * If the user does not specify the query field name
  * it is assumed to be equal to the index field name.
  * 
@@ -59,21 +58,23 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
     return mIndexFieldName;
   }
   
+
   /**
-   * A helper function that computes a simple single-score similarity
+   * A helper function that computes one or more simple single-field similarity
    * 
-   * @param arrDocIds       document IDs
-   * @param queryData
-   * @param fieldIndex
-   * @param similObj
+   * @param cands       candidate records
+   * @param queryFields a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
+   * @param fieldIndex  a field forward index object.
+   * @param similObj    an array of objects that computer features (query-document similarity).
    * @return
    * @throws Exception
    */
   protected Map<String, DenseVector> getSimpleFeatures(CandidateEntry[] cands, 
-                                                       Map<String, String> queryData,
-                                                       ForwardIndex fieldIndex, QueryDocSimilarityFunc[] similObj) throws Exception {
+                                                       DataEntryFields queryFields,
+                                                       ForwardIndex fieldIndex, 
+                                                       QueryDocSimilarityFunc[] similObj) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, similObj.length); 
-    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryData);
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryFields);
     if (queryEntry == null) return res;
     
     for (CandidateEntry e : cands) {

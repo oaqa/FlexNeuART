@@ -19,7 +19,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.CmdLineException;
@@ -34,6 +33,7 @@ import edu.cmu.lti.oaqa.flexneuart.letor.EmbeddingReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.RandomUtils;
@@ -58,15 +58,18 @@ public class CreateBitextFromQRELs {
   public static final class Args {  
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
     String mFwdIndex;
-    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, required = true, usage = CommonParams.QUERY_FILE_DESC)
-    String mQueryFile;
+    
+    @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, required = true, usage = CommonParams.QUERY_FILE_PREFIX_DESC)
+    String mQueryFilePrefix;
+    @Option(name = "-" + CommonParams.QREL_FILE_PARAM, required = true, usage = CommonParams.QREL_FILE_DESC)
+    String mQrelFile;
     
     @Option(name = "-" + CommonParams.INDEX_FIELD_NAME_PARAM, required = true, usage = CommonParams.INDEX_FIELD_NAME_DESC)
     String mIndexField;
     @Option(name = "-" + CommonParams.QUERY_FIELD_NAME_PARAM, required = true, usage = CommonParams.INDEX_FIELD_NAME_DESC)
     String mQueryField;
-    @Option(name = "-" + CommonParams.QREL_FILE_PARAM, required = true, usage = CommonParams.QREL_FILE_DESC)
-    String mQrelFile;
+
+    
     @Option(name = "-output_dir", required = true, usage = "bi-text output directory")
     String mOutDir;
     @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
@@ -129,22 +132,22 @@ public class CreateBitextFromQRELs {
       BufferedWriter answFile = 
             new BufferedWriter(new FileWriter(args.mOutDir + Const.PATH_SEP + Const.BITEXT_ANSW_PREFIX + fieldName));
           
-      Map<String, String> docFields = null;
       int queryQty = 0;
       
-      DataEntryReader inp = new DataEntryReader(args.mQueryFile);
+      ArrayList<DataEntryFields> queries = DataEntryReader.readParallelQueryData(args.mQueryFilePrefix);
       
-      for (; ((docFields = inp.readNext()) != null) && queryQty < args.mMaxNumQuery; ) {
+      for (int queryNo = 0;  queryNo < Math.min(args.mMaxNumQuery, queries.size());  ++queryNo) {
+        DataEntryFields queryFields = queries.get(queryNo);
 
         ++queryQty;
         
-        String qid = docFields.get(Const.TAG_DOCNO);
+        String qid = queryFields.mEntryId;
         if (qid == null) {
           System.err.println("Undefined query ID in query # " + queryQty);
           System.exit(1);
         }
         
-        String queryText = docFields.get(args.mQueryField);
+        String queryText = queryFields.getString(args.mQueryField);
         if (queryText == null) queryText = "";
         queryText = queryText.trim();
         String [] queryWords = StringUtils.splitOnWhiteSpace(queryText);
@@ -179,9 +182,7 @@ public class CreateBitextFromQRELs {
       
       questFile.close();
       answFile.close();  
- 
-      inp.close();
-      
+
     } catch (Exception e) {
       e.printStackTrace();
       System.err.println("Exception: " + e);
@@ -194,7 +195,7 @@ public class CreateBitextFromQRELs {
                                      String did, String fieldName, 
                                      BufferedWriter questFile, BufferedWriter answFile, 
                                      String[] queryWords, int sampleQty) throws Exception {
-    if (fwdIndex.isRaw()) {
+    if (!fwdIndex.isParsed()) {
       throw new Exception("genBitextSample requires a parsed forward index!");
     }
     DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
@@ -260,8 +261,8 @@ public class CreateBitextFromQRELs {
                           BufferedWriter questFile, BufferedWriter answFile,
                           String queryText, 
                           float queryWordQtyInv, float docQueryWordRatio) throws Exception {
-    if (fwdIndex.isRaw()) {
-      throw new Exception("genBitextSplitPlain requires a parsed forward index!");
+    if (!fwdIndex.isParsed()) {
+      throw new Exception("genBitextSample requires a parsed forward index!");
     }
     DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
     if (dentry == null) {
@@ -301,10 +302,10 @@ public class CreateBitextFromQRELs {
   static void genBitextWholeRaw(ForwardIndex fwdIndex, String did, String fieldName, 
       BufferedWriter questFile, BufferedWriter answFile,
       String queryText) throws Exception {
-    if (!fwdIndex.isRaw()) {
-      throw new Exception("genBitextWholeRaw requires a raw forward index!");
+    if (!fwdIndex.isTextRaw()) {
+      throw new Exception("genBitextWholeRaw requires a raw-text forward index!");
     }
-    String docTextRaw = fwdIndex.getDocEntryRaw(did);
+    String docTextRaw = fwdIndex.getDocEntryTextRaw(did);
     if (docTextRaw == null) {
       System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
       return;

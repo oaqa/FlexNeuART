@@ -15,17 +15,14 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.cand_providers;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
-import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.EvalUtils;
 
 /**
@@ -65,12 +62,10 @@ public class TrecRunCandidateProvider extends CandidateProvider {
   }  
   
   @Override
-  public CandidateInfo getCandidates(int queryNum, Map<String, String> queryData, int maxQty) throws Exception {
-    String queryID = queryData.get(ID_FIELD_NAME);
+  public CandidateInfo getCandidates(int queryNum, DataEntryFields queryFields, int maxQty) throws Exception {
+    String queryID = queryFields.mEntryId;
     if (null == queryID) {
-      throw new Exception(
-          String.format("Query id (%s) is undefined for query # %d",
-                        ID_FIELD_NAME, queryNum));
+      throw new Exception("Query id  is undefined for query #: " + queryNum);
     }        
   
     ArrayList<CandidateEntry> resArr = mTrecRuns.get(queryID);

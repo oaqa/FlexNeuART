@@ -128,5 +128,5 @@ with FileWrapper(args.output, 'wb') as out_file:
             proc_batch(batch_input, is_query, model, out_file, args.field_name)
 
 
-proc_batch(batch_input, is_query, model, out_file, args.field_name)
+    proc_batch(batch_input, is_query, model, out_file, args.field_name)
 

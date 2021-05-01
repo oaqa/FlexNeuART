@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 
@@ -44,6 +45,8 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
         fe = new FeatExtrModel1Similarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtrWordEmbedSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrWordEmbedSimilarity(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(FeatExtrDocEmbedDotProdSimilarity.EXTR_TYPE)) {
+        fe = new FeatExtrDocEmbedDotProdSimilarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtractorExternalApacheThrift.EXTR_TYPE)) {
         fe = new FeatExtractorExternalApacheThrift(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtrSDMSimilarity.EXTR_TYPE)) {
@@ -55,7 +58,7 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
       } else if (extrType.equalsIgnoreCase(FeatExtrPassRetrScore.EXTR_TYPE)) {
         fe = new FeatExtrPassRetrScore(resMngr, oneExtrConf);
       } else {
-        // TODO ideally need to inform about the set of supported extractors
+        // TODO ideally, we need a better factory function that could also inform about the list of available extractors
         throw new Exception("Unsupported extractor type: " + extrType);
       }
       compList.add(fe);
@@ -80,13 +83,12 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
-      throws Exception {
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String,DenseVector> res = FeatureExtractor.initResultSet(cands, getFeatureQty());
     
     int startFeatId = 0;
     for (SingleFieldFeatExtractor featExtr : mCompExtr) {
-      Map<String,DenseVector> subRes = featExtr.getFeatures(cands, queryData);
+      Map<String,DenseVector> subRes = featExtr.getFeatures(cands, queryFields);
       int compQty = featExtr.getFeatureQty();
       for (CandidateEntry e: cands) {
         DenseVector dst = res.get(e.mDocId);

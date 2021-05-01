@@ -33,11 +33,10 @@ import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TrulySparseVector;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.RandomUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
-import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -67,8 +66,8 @@ public class CheckSparseExportScores {
     @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
-    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, required = true, usage = "A query file.")
-    String mQueryFile;
+    @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, usage = CommonParams.QUERY_FILE_PREFIX_EXPORT_DESC)
+    String mQueryFilePrefix;
 
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, required = true, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery;
@@ -147,59 +146,57 @@ public class CheckSparseExportScores {
       
       int diffQty = 0, compQty = 0;
       
-      Map<String, String> queryFields = null;
+      ArrayList<DataEntryFields> queries = DataEntryReader.readParallelQueryData(args.mQueryFilePrefix);
+
+      for (int queryNo = 0;  queryNo < Math.min(args.mMaxNumQuery, queries.size());  ++queryNo) {
+        DataEntryFields queryFields = queries.get(queryNo);
+        String queryId = queryFields.mEntryId;
+       
+        Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(
+                          CandidateEntry.createZeroScoreCandListFromDocIds(docIdSample), queryFields);
         
-      try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-        for (int queryNo = 0; ((queryFields = inp.readNext()) != null) && queryNo < args.mMaxNumQuery; 
-              ++queryNo) {
+
+        TrulySparseVector queryVect = VectorUtils.createInterleavedInnerProdQueryFeatVect(queryFields, 
+                                                                                          compIndices,
+                                                                                          compExtractors, compWeights);
+
+        for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
+          int actualBatchQty = Math.min(args.mBatchSize, docIdSample.size() - batchStart);
           
-          String queryId = queryFields.get(Const.TAG_DOCNO);
-         
-          Map<String, DenseVector> res = compositeFeatureExtractor.getFeatures(
-                            CandidateEntry.createZeroScoreCandListFromDocIds(docIdSample), queryFields);
-          
+          String docIds[] = new String[actualBatchQty];
 
-          TrulySparseVector queryVect = VectorUtils.createInterleavedInnerProdQueryFeatVect(queryFields, 
-                                                                                            compIndices,
-                                                                                            compExtractors, compWeights);
-
-          for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
-            int actualBatchQty = Math.min(args.mBatchSize, docIdSample.size() - batchStart);
-            
-            String docIds[] = new String[actualBatchQty];
-
-            for (int i = 0; i < actualBatchQty; ++i) {
-              docIds[i] = docIdSample.get(batchStart + i);
-            }
-            
-            TrulySparseVector docVectArr[] = VectorUtils.createInterleavedInnerProdDocFeatureVecBatch(docIds, compIndices,
-                                                                                                      compExtractors, unitWeights);
-            
-            for (int i = 0; i < actualBatchQty; ++i) {
-              String did = docIds[i];
-              TrulySparseVector docVect = docVectArr[i];
-
-              float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);
-              DenseVector featVect = res.get(did);
-              float featBasedVal = (float) compWeights.dot(featVect);
-
-              boolean isDiff = Math.abs(innerProdVal - featBasedVal) > args.mEpsDiff;
-              compQty++;
-              diffQty += isDiff ? 1 : 0;
-
-              System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
-                                                queryId, did, featBasedVal, innerProdVal, isDiff ? "SIGN. DIFF." : ""));
-
-              if (args.mVerbose) {
-                System.out.println("Weights: " + VectorUtils.toString(compWeights));
-                System.out.println("Features: " + VectorUtils.toString(featVect));
-              }
-
-            } 
+          for (int i = 0; i < actualBatchQty; ++i) {
+            docIds[i] = docIdSample.get(batchStart + i);
           }
-        
+          
+          TrulySparseVector docVectArr[] = VectorUtils.createInterleavedInnerProdDocFeatureVecBatch(docIds, compIndices,
+                                                                                                    compExtractors, unitWeights);
+          
+          for (int i = 0; i < actualBatchQty; ++i) {
+            String did = docIds[i];
+            TrulySparseVector docVect = docVectArr[i];
+
+            float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);
+            DenseVector featVect = res.get(did);
+            float featBasedVal = (float) compWeights.dot(featVect);
+
+            boolean isDiff = Math.abs(innerProdVal - featBasedVal) > args.mEpsDiff;
+            compQty++;
+            diffQty += isDiff ? 1 : 0;
+
+            System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
+                                              queryId, did, featBasedVal, innerProdVal, isDiff ? "SIGN. DIFF." : ""));
+
+            if (args.mVerbose) {
+              System.out.println("Weights: " + VectorUtils.toString(compWeights));
+              System.out.println("Features: " + VectorUtils.toString(featVect));
+            }
+
+          } 
         }
+      
       }
+
       
       System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));
       if (diffQty != 0) {

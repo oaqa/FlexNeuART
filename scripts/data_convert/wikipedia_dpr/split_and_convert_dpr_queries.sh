@@ -12,7 +12,7 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "INPUT_RAW_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 checkVarNonEmpty "QREL_FILE"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
@@ -87,7 +87,7 @@ for part in bitext train_fusion dev dev_official ; do
     --bert_tokenize \
     --input "$inputRawDir/${colType}_${part}.json.gz" \
     --part_type $part \
-    --output_queries "$outDataDir/$QUESTION_FILE" \
+    --output_queries "$outDataDir/$QUESTION_FILE_JSONL" \
     --output_qrels "$outDataDir/$QREL_FILE" \
     $bitextPathOpt
 done
