@@ -121,7 +121,7 @@ public abstract class ForwardIndex {
    * @return true when the index type is not raw, or we just created
    *              an instance for reading, but didn't actually read contents.
    */
-  public boolean isBinary() { return mIndexFieldType == ForwardIndexFieldType.textRaw; }
+  public boolean isBinary() { return mIndexFieldType == ForwardIndexFieldType.binary; }
   
   /**
    * Is it a parsed field? This functions returns a meaningful value only if the 
