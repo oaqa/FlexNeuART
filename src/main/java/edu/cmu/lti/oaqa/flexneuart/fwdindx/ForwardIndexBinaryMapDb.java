@@ -118,7 +118,7 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
     readHeaderAndDocIds();
     
     // Note that we disable file locking and concurrence to enable accessing the file by different programs at the same time
-    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).concurrencyDisable().fileLockDisable().closeOnJvmShutdown().fileMmapEnable().make();
+    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).concurrencyDisable().fileLockDisable().closeOnJvmShutdown().fileMmapEnable().readOnly().make();
     mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).open();
     
     logger.info("Finished loading context from file: " + mBinFile);
