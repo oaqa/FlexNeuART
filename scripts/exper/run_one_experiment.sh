@@ -448,7 +448,7 @@ if [ "$testOnly" = "0" ] ; then
       checkVarNonEmpty "trainCandQty"
       setJavaMem 5 9
       target/appassembler/bin/QueryAppMultThread  -u "$candProvURI" -cand_prov "$candProvType" \
-                                  -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
+                                  -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \
                                   -n "$trainCandQty" \
                                   -run_id "$runId" \
                                   -o "$trecRunDir/run_check_train_metrics" \
@@ -458,7 +458,7 @@ if [ "$testOnly" = "0" ] ; then
                                   $maxQueryQtyTrainParam \
                                   $cacheFileParamTrain 2>&1
 
-      scripts/exper/eval_output.py "$inputDataDir/$trainPart/$QREL_FILE" \
+      scripts/exper/eval_output.py "$inputDataDir/$testPart/$QREL_FILE" \
                                     "${trecRunDir}/run_check_train_metrics_${trainCandQty}"
 
       echo "Model tested, now exiting!"
@@ -476,7 +476,7 @@ $resourceDirParams
 setJavaMem 5 9
 target/appassembler/bin/QueryAppMultThread \
                             -u "$candProvURI" -cand_prov "$candProvType" \
-                            -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
+                            -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \
                             -n "$testCandQtyList" \
                             -run_id "$runId" \
                             -o "$trecRunDir/run"  -save_stat_file "$statFile" \
