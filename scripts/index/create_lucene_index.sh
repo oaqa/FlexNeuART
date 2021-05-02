@@ -14,7 +14,7 @@ boolOpts=("h" "help" "print help")
 
 indexFieldName="$DEFAULT_QUERY_TEXT_FIELD_NAME"
 paramOpts=(
-  "index_field_name" "indexFieldName" "indexing field name (default $indexFieldName)"
+  "index_field" "indexFieldName" "indexing field name (default $indexFieldName)"
 )
 
 parseArguments $@
@@ -62,4 +62,9 @@ else
 fi
 # This APP can be memory greedy
 setJavaMem 4 8
-target/appassembler/bin/LuceneIndexer -input_data_dir "$inputDataDir" -index_dir "$indexDir" -data_sub_dirs "$dirList" -data_file "$dataFileName"
+target/appassembler/bin/LuceneIndexer \
+    -input_data_dir "$inputDataDir" \
+    -index_dir "$indexDir" \
+    -index_field "$indexFieldName" \
+    -data_sub_dirs "$dirList" \
+    -data_file "$dataFileName"
