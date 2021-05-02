@@ -30,7 +30,7 @@ import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtractor {
-  public static String EXTR_TYPE = "avgWordEmbed";
+  public static String EXTR_TYPE = "AvgWordEmbed";
   
   public static String QUERY_EMBED_FILE = "queryEmbedFile";
   public static String DOC_EMBED_FILE = "docEmbedFile";

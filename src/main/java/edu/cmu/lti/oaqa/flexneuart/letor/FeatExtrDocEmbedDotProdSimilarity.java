@@ -34,7 +34,7 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatExtractor {
-  public static String EXTR_TYPE = "docEmbedDotProd";
+  public static String EXTR_TYPE = "DocEmbedDotProd";
   
   FeatExtrDocEmbedDotProdSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);

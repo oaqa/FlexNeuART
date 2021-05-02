@@ -52,7 +52,7 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor {
   private static final Logger logger = LoggerFactory.getLogger(FeatExtractorExternalApacheThrift.class);
 
-  public static String EXTR_TYPE = "externalThrift";
+  public static String EXTR_TYPE = "ExternalThrift";
   
   public static String FEAT_QTY = "featureQty";
 
