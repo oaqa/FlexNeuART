@@ -566,7 +566,11 @@ public abstract class BaseQueryApp {
     
     logger.info(
         String.format(
-            "Candidate provider type: %s URI: %s Query file prefix: %s Max. # of queries: %d # of cand. records: %d Max. # to re-rank w/ final re-ranker: %d", 
+            "Candidate provider information:\n" + 
+            "type: %s URI: %s\n" +
+            "query file prefix: %s Max. # of queries: %d\n"+
+            "# of cand. records: %d\n" + 
+            "Max. # of records to re-rank using the final re-ranker: %d", 
         mCandProviderType, mProviderURI, mQueryFilePrefix, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
     mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
     logger.info("An array of number of entries to retrieve:");
