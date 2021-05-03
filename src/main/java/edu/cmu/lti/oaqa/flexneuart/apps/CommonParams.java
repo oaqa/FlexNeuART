@@ -31,9 +31,6 @@ public class CommonParams {
   public static final String PROVIDER_URI_DESC = "Provider URI: an index location, a query server address, etc";
   public static final String PROVIDER_URI_PARAM = "u";
   
-  public static final String QUERY_CACHE_FILE_DESC  = "A file to cache query results";
-  public static final String QUERY_CACHE_FILE_PARAM = "query_cache_file";
-  
   public static final String QUERY_FILE_PREFIX_DESC = "Query file prefix (without a dot)";
   public static final String QUERY_FILE_PREFIX_EXPORT_DESC = QUERY_FILE_PREFIX_DESC + 
                                                             ": If specified, we generate queries rather than documents.";

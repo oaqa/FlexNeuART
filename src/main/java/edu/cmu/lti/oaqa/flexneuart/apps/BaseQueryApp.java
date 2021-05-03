@@ -60,12 +60,8 @@ class BaseProcessingUnit {
     
     CandidateInfo qres = null;
     
-    if (mAppRef.mResultCache != null) 
-      qres = mAppRef.mResultCache.getCacheEntry(queryId);
     if (qres == null) {            
       qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
-      if (mAppRef.mResultCache != null) 
-        mAppRef.mResultCache.addOrReplaceCacheEntry(queryId, qres);
     }
     CandidateEntry [] cands = qres.mEntries;
     // Let's re-rank candidates just in case the candidate provider fails to retrieve entries in the right order
@@ -149,10 +145,6 @@ class BaseProcessingUnit {
     int rerankQty = Math.min(cands.length, mAppRef.mMaxFinalRerankQty);
     // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
     if (mAppRef.mExtrFinal!= null && rerankQty > 0 && cands.length > 0) {
-      
-      if (cands.length > maxNumRet) {
-        throw new RuntimeException("Bug or you are using old/different cache: cands.size()=" + cands.length + " > maxNumRet=" + maxNumRet);
-      }
       // Compute features once for all documents using a final re-ranker.
       // Note, however, we might choose to re-rank only top candidates not all of them
       
@@ -431,7 +423,6 @@ public abstract class BaseQueryApp {
     
     mOptions.addOption(CommonParams.RUN_ID_PARAM,              null, true, CommonParams.RUN_ID_DESC);
     
-    mOptions.addOption(CommonParams.QUERY_CACHE_FILE_PARAM,    null, true, CommonParams.QUERY_CACHE_FILE_DESC);
     mOptions.addOption(CommonParams.QUERY_FILE_PREFIX_PARAM,   null, true, CommonParams.QUERY_FILE_PREFIX_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_RESULTS_PARAM,     null, true, mMultNumRetr ? 
                                                                              CommonParams.MAX_NUM_RESULTS_DESC : 
@@ -545,8 +536,6 @@ public abstract class BaseQueryApp {
         } 
       }
     }
-    
-    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
 
     // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce,
     // which is initialized above
@@ -573,7 +562,7 @@ public abstract class BaseQueryApp {
             "# of cand. records: %d\n" + 
             "Max. # of records to re-rank using the final re-ranker: %d", 
         mCandProviderType, mProviderURI, mQueryFilePrefix, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
-    mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
+
     logger.info("An array of number of entries to retrieve:");
     for (int topk : mNumRetArr) {
       logger.info("" + topk);
@@ -690,16 +679,7 @@ public abstract class BaseQueryApp {
       initExtractors();
       // Note that providers must be initialized after resources and extractors are initialized
       // because they may some of the resources (e.g., NMSLIB needs an in-memory feature extractor)
-      initProvider();
-      
-      if (mResultCacheName != null) {
-        mResultCache = new CandidateInfoCache();
-        // If the cache file name is specified and it exists, read the cache!
-        if (CandidateInfoCache.cacheExists(mResultCacheName)) { 
-          mResultCache.readCache(mResultCacheName);
-          logger.info("Result cache is loaded from '" + mResultCacheName + "'");
-        }
-      }      
+      initProvider();    
 
       mQueries = DataEntryReader.readParallelQueryData(mQueryFilePrefix);
       
@@ -762,12 +742,6 @@ public abstract class BaseQueryApp {
         f.close();
       }
       
-      // Overwrite cache only if it doesn't exist or is incomplete
-      if (mResultCacheName != null && !CandidateInfoCache.cacheExists(mResultCacheName)) {
-        mResultCache.writeCache(mResultCacheName);
-        logger.info("Result cache is loaded from '" + mResultCacheName + "'");        
-      }
-      
     } catch (ParseException e) {
       showUsageSpecify("Cannot parse arguments: " + e);
     } catch(Exception e) {
@@ -803,9 +777,6 @@ public abstract class BaseQueryApp {
   boolean      mKnnInterleave = false;
   boolean      mUseThreadPool = false;
   FeatExtrResourceManager mResourceManager;
-  
-  String             mResultCacheName = null; 
-  CandidateInfoCache mResultCache = null;
   
   FeatureExtractor mExtrInterm;
   FeatureExtractor mExtrFinal;
