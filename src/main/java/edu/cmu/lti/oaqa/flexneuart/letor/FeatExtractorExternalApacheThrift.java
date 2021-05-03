@@ -169,8 +169,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
 
       Map<String, List<Double>> scores = null;
       
-      String queryId = queryFields.mEntryId;
-      
+      String queryId = queryFields.mEntryId;  
       if (queryId == null) {
         throw new Exception("Undefined query ID!");
       }
@@ -178,7 +177,10 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
       if (mFieldIndex.isTextRaw()) {
         logger.info("Sending raw/unparsed entry, port: " + port);
         String queryTextRaw = queryFields.getString(getQueryFieldName());
-        if (queryTextRaw == null) return res;
+        if (queryTextRaw == null) {
+          warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+          return res;
+        }
         
         ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
         
@@ -197,7 +199,10 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           // This can be a lot faster on the Python side!
           logger.info("Sending parsed entry in the unparsed/raw format, port: " + port);
           String queryTextRaw = queryFields.getString(getQueryFieldName());
-          if (queryTextRaw == null) return res;
+          if (queryTextRaw == null) {
+            warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+            return res;
+          }
           
           ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
           
@@ -215,8 +220,10 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         } else {
           logger.info("Sending parsed entry, port: " + port);
           DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
-          if (queryEntry == null)
+          if (queryEntry == null) {
+            warnEmptyQueryField(logger, EXTR_TYPE, queryId);
             return res;
+          }
           
           TextEntryParsed queryTextEntry = createTextEntryParsed(queryId, queryEntry);
           ArrayList<TextEntryParsed> docTextEntries = new ArrayList<>();

@@ -58,7 +58,7 @@ public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
 
   @Override
   public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
-    return getSimpleFeatures(cands, queryFields, mFieldIndex, mSimilObjs);
+    return getSimpleFeatures(EXTR_TYPE, cands, queryFields, mFieldIndex, mSimilObjs);
   }
 
   @Override

@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
@@ -39,6 +42,7 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
+  private static final Logger logger = LoggerFactory.getLogger(FeatExtractorRM3Similarity.class);
   public static String EXTR_TYPE = "RM3Similarity";
   
   public static String TOP_DOC_QTY_PARAM = "topDocQty";
@@ -69,9 +73,23 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
 
   @Override
   public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+
+    HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty());
+    
+    String queryId = queryFields.mEntryId;
+    
+    if (queryId == null) {
+      throw new Exception("Undefined query ID!");
+    }
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
+    
+    if (queryEntry == null) {
+      warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+      return res;
+    }
     
     int docQty = cands.length;
-    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
+    
     HashMap<Integer, Float>     topTerms = new HashMap<Integer, Float>();
     ArrayList<IdValPair>        topDocTerms = new ArrayList<IdValPair>();
     ArrayList<DocEntryParsed>   queryDocEntries = new ArrayList<DocEntryParsed>();
@@ -135,8 +153,6 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
      * common terms between queries and documents.
      */
     topDocScoreNorm = 1.0f / Math.max(topDocScoreNorm, Float.MIN_NORMAL);
-
-    HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty());
     
     for (int i = 0; i < docQty; ++i) {
       String docId = cands[i].mDocId;

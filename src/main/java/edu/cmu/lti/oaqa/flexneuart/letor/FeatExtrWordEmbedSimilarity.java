@@ -18,6 +18,9 @@ package edu.cmu.lti.oaqa.flexneuart.letor;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
@@ -30,6 +33,8 @@ import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtractor {
+  private static final Logger logger = LoggerFactory.getLogger(FeatExtractorExternalApacheThrift.class);
+  
   public static String EXTR_TYPE = "AvgWordEmbed";
   
   public static String QUERY_EMBED_FILE = "queryEmbedFile";
@@ -96,8 +101,16 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   @Override
   public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
+    
+    String queryId = queryFields.mEntryId;  
+    if (queryId == null) {
+      throw new Exception("Undefined query ID!");
+    }
     DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
-    if (queryEntry == null) return res;
+    if (queryEntry == null) {
+      warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+      return res;
+    }
     
     float [] queryVect = mQueryEmbed.getDocAverage(queryEntry, mSimilObj, mFieldIndex, 
                                                    mUseIDFWeight, mUseL2Norm);

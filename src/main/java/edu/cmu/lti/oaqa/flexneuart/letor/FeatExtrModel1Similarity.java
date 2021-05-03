@@ -100,8 +100,17 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
+    
+    String queryId = queryFields.mEntryId;  
+    if (queryId == null) {
+      throw new Exception("Undefined query ID!");
+    }
+    
     DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
-    if (queryEntry == null) return res;
+    if (queryEntry == null) {
+      warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+      return res;
+    }
 
     for (CandidateEntry e: cands) {
       DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(e.mDocId);

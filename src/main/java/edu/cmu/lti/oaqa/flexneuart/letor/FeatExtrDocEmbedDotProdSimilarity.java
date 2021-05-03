@@ -28,7 +28,8 @@ import no.uib.cipr.matrix.DenseVector;
 
 /**
  * This feature extractor computes the dot (inner) product between a precomputed
- * document and query vector.
+ * document and query vector. This type of the feature extractor does not tolerate
+ * 
  * 
  * @author Leonid Boytsov
  *
@@ -76,8 +77,15 @@ public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatE
   @Override
   public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
+    
+    String queryId = queryFields.mEntryId;  
+    if (queryId == null) {
+      throw new Exception("Undefined query ID!");
+    }
     byte queryEntry[] = queryFields.getBinary(getQueryFieldName());
-    if (queryEntry == null) return res;
+    if (queryEntry == null) {
+      throw new Exception("Empty query data isn't permissible for extractor: " + EXTR_TYPE + " query ID: " + queryId);
+    }
     
     float [] queryVect = BinReadWriteUtils.readPackedDenseVector(queryEntry);
 
