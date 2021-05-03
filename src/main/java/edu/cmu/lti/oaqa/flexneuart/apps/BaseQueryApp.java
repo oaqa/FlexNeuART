@@ -698,7 +698,7 @@ public abstract class BaseQueryApp {
       
       int queryQty = mQueries.size();
       
-      logger.info("Read " + queryQty + " query file prefix: " + mQueryFilePrefix);
+      logger.info("Read " + queryQty + " queries, query file prefix: " + mQueryFilePrefix);
       
       init();
           
