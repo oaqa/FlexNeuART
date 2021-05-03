@@ -548,7 +548,21 @@ public abstract class BaseQueryApp {
     
     if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
 
-    mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
+    // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce,
+    // which is initialized above
+    mMaxCandRet = mMaxNumRet; 
+    {
+      String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
+      if (null == tmpn)
+        showUsageSpecify(CommonParams.MAX_CAND_QTY_DESC);
+      try {
+        mMaxCandRet = Integer.parseInt(tmpn);
+        if (mMaxCandRet < mMaxNumRet)
+          mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
+      } catch (NumberFormatException e) {
+        showUsage("The value of '" + CommonParams.MAX_CAND_QTY_DESC + "' isn't integer: '" + tmpn + "'");
+      }
+    }
     
     logger.info(
         String.format(
@@ -588,20 +602,8 @@ public abstract class BaseQueryApp {
       String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_INTERM_PARAM);
       if (null == modelFile) 
         showUsageSpecify(CommonParams.MODEL_FILE_INTERM_PARAM);
-      mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
+   
       mModelInterm = FeatureExtractor.readFeatureWeights(modelFile);
-      {
-        String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
-        if (null == tmpn)
-          showUsageSpecify(CommonParams.MAX_CAND_QTY_DESC);
-        try {
-          mMaxCandRet = Integer.parseInt(tmpn);
-          if (mMaxCandRet < mMaxNumRet)
-            mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
-        } catch (NumberFormatException e) {
-          showUsage("The value of '" + CommonParams.MAX_CAND_QTY_DESC + "' isn't integer: '" + tmpn + "'");
-        }
-      }
 
       logger.info("Using the following weights for the intermediate re-ranker:");
       logger.info(mModelInterm.toString());
