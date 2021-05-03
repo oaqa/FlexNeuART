@@ -568,7 +568,8 @@ public abstract class BaseQueryApp {
         String.format(
             "Candidate provider information:\n" + 
             "type: %s URI: %s\n" +
-            "query file prefix: %s Max. # of queries: %d\n"+
+            "query file prefix: %s\n" + 
+            "Max. # of queries: %d\n"+
             "# of cand. records: %d\n" + 
             "Max. # of records to re-rank using the final re-ranker: %d", 
         mCandProviderType, mProviderURI, mQueryFilePrefix, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
