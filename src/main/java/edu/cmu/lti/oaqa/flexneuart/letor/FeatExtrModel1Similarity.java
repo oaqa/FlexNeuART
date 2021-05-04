@@ -186,7 +186,8 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
 
     int queryWordQty = queryEntry.mWordIds.length;
 
-    if ( mTopTranScoresPerDocWordQty == Integer.MAX_VALUE) {
+    if (mTopTranScoresPerDocWordQty == Integer.MAX_VALUE && 
+        mTopTranCandWordQty == Integer.MAX_VALUE) {
       double queryWordScores[] = computeWordScores(queryEntry.mWordIds, docEntry);
       
       for (int iq=0; iq < queryWordQty;++iq) {                                        
