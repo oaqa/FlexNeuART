@@ -50,11 +50,11 @@ public class ExportTrainPairs {
   public static final String QREL_FILE_TEST_DESC  = "QREL file";
   public static final String QREL_FILE_TEST_PARAM = "qrel_file_test";
   
-  public static final String QUERY_FILE_TRAIN_DESC = "Training query file";
-  public static final String QUERY_FILE_TRAIN_PARAM = "query_file_train";
+  public static final String QUERY_FILE_TRAIN_PREF_DESC = "Training query file prefix";
+  public static final String QUERY_FILE_TRAIN_PREF_PARAM = "query_file_train_pref";
   
-  public static final String QUERY_FILE_TEST_DESC = "Test query file";
-  public static final String QUERY_FILE_TEST_PARAM = "query_file_test";
+  public static final String QUERY_FILE_TEST_PREF_DESC = "Test query file prefix";
+  public static final String QUERY_FILE_TEST_PREF_PARAM = "query_file_test_pref";
   
   public static final String INDEX_EXPORT_FIELD_PARAM = "index_export_field";
   public static final String INDEX_EXPORT_FIELD_DESC = "The name of the index field whose content we export";
@@ -83,8 +83,8 @@ public class ExportTrainPairs {
     mOptions.addOption(CommonParams.MAX_NUM_QUERY_TRAIN_PARAM, null, true, CommonParams.MAX_NUM_QUERY_TRAIN_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_QUERY_TEST_PARAM,  null, true, CommonParams.MAX_NUM_QUERY_TEST_DESC);
     
-    mOptions.addOption(QUERY_FILE_TRAIN_PARAM, null, true, QUERY_FILE_TRAIN_DESC);
-    mOptions.addOption(QUERY_FILE_TEST_PARAM,  null, true, QUERY_FILE_TEST_DESC);
+    mOptions.addOption(QUERY_FILE_TRAIN_PREF_PARAM, null, true, QUERY_FILE_TRAIN_PREF_DESC);
+    mOptions.addOption(QUERY_FILE_TEST_PREF_PARAM,  null, true, QUERY_FILE_TEST_PREF_DESC);
     
     mOptions.addOption(QREL_FILE_TRAIN_PARAM,  null, true, QREL_FILE_TRAIN_DESC);
     mOptions.addOption(QREL_FILE_TEST_PARAM,   null, true, QREL_FILE_TEST_DESC);
@@ -192,13 +192,13 @@ public class ExportTrainPairs {
         }
       }
       
-      String queryFileTrain = cmd.getOptionValue(QUERY_FILE_TRAIN_PARAM);
-      if (null == queryFileTrain) {
-        showUsageSpecify(QUERY_FILE_TRAIN_PARAM);
+      String queryFileTrainPref = cmd.getOptionValue(QUERY_FILE_TRAIN_PREF_PARAM);
+      if (null == queryFileTrainPref) {
+        showUsageSpecify(QUERY_FILE_TRAIN_PREF_PARAM);
       }
-      String queryFileTest = cmd.getOptionValue(QUERY_FILE_TEST_PARAM);
-      if (null == queryFileTest) {
-        showUsageSpecify(QUERY_FILE_TEST_PARAM);
+      String queryFileTestPref = cmd.getOptionValue(QUERY_FILE_TEST_PREF_PARAM);
+      if (null == queryFileTestPref) {
+        showUsageSpecify(QUERY_FILE_TEST_PREF_PARAM);
       }
   
       
@@ -220,15 +220,16 @@ public class ExportTrainPairs {
       ArrayList<DataEntryFields> queryDataArr = new ArrayList<DataEntryFields>();
       ArrayList<Boolean> isTestQuery = new ArrayList<Boolean>();      
       
-      DataEntryFields queryFields = null;
-      
       for (int iQueryType = 0; iQueryType < 2; ++iQueryType) {
         int maxNumQuery = iQueryType == 0 ? maxNumQueryTrain : maxNumQueryTest;
-        String queryFile = iQueryType == 0 ? queryFileTrain : queryFileTest;
-        DataEntryReader inp = new DataEntryReader(queryFile);
+        String queryFilePref = iQueryType == 0 ? queryFileTrainPref : queryFileTestPref;
+        ArrayList<DataEntryFields> queryArr = DataEntryReader.readParallelQueryData(queryFilePref);
         
         int queryQty = 0; // Reset for each type of queries (train vs. test)
-        for (; ((queryFields = inp.readNext()) != null) && queryQty < maxNumQuery; ) {
+        for (DataEntryFields queryFields : queryArr) {
+          if (queryQty >= maxNumQuery) {
+            break;
+          }
 
           ++queryQty;
           
@@ -250,7 +251,6 @@ public class ExportTrainPairs {
           queryDataArr.add(queryFields);
           isTestQuery.add(iQueryType != 0);
         }
-        inp.close();
       }
  
       ExportTrainBase oneExport = 

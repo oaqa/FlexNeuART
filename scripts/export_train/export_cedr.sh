@@ -13,6 +13,7 @@ checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "QUERY_FIELD_NAME"
 checkVarNonEmpty "QREL_FILE"
+checkVarNonEmpty "QUESTION_FILE_PREFIX"
 
 CEDR_DOCS_FILE="data_docs.tsv"
 CEDR_QUERY_FILE="data_query.tsv"
@@ -57,9 +58,9 @@ $candProvParams \
 -index_export_field $indexExportFieldName \
 -query_export_field $queryExportFieldName \
 \
--query_file_train "$inputDataDir/$partTrain/QuestionFields.jsonl" \
+-query_file_train_pref "$inputDataDir/$partTrain/$QUESTION_FILE_PREFIX" \
 -qrel_file_train "$inputDataDir/$partTrain/$QREL_FILE" \
--query_file_test "$inputDataDir/$partTest/QuestionFields.jsonl" \
+-query_file_test_pref "$inputDataDir/$partTest/$QUESTION_FILE_PREFIX" \
 -qrel_file_test "$inputDataDir/$partTest/$QREL_FILE" \
 \
 -data_file_docs "$outDir/$CEDR_DOCS_FILE" \
