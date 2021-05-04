@@ -55,7 +55,6 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public static String FLIP_DOC_QUERY = "flipDocQuery";
   public static String TOP_TRAN_SCORES_PER_DOCWORD_QTY = "topTranScoresPerDocWordQty";
   public static String TOP_TRAN_CANDWORD_QTY = "topTranCandWordQty";
-  public static String MIN_TRAN_SCORE_PERDOCWORD = "minTranScorePerDocWord";
   private static float MIN_ZERO_LABMDA_TRAN_PROB = 1e-8f;
  
   @Override
@@ -75,12 +74,10 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     // There might be an integer overflow then
     mTopTranScoresPerDocWordQty = conf.getParam(TOP_TRAN_SCORES_PER_DOCWORD_QTY, Integer.MAX_VALUE);
     mTopTranCandWordQty = conf.getParam(TOP_TRAN_CANDWORD_QTY, Integer.MAX_VALUE);
-   // This default is a bit adhoc, but typically we are not interested in tran scores that are these small
-    mMinTranScorePerDocWord = conf.getParam(MIN_TRAN_SCORE_PERDOCWORD, 1e-6f); 
 
     logger.info("Computing " + mTopTranScoresPerDocWordQty + 
         " top per doc-word scores from top " + mTopTranCandWordQty + 
-        " translations per document word, ignoring scores < " + mMinTranScorePerDocWord);
+        " translations per document word");
     
     mLambda = conf.getReqParamFloat(LAMBDA);
     mProbOOV = conf.getParam(OOV_PROB, 1e-9f); 
@@ -231,9 +228,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     
     for (int i = 0; i < topCandWordIds.length; ++i) {
       double score = topCandWorIdsScores[i];
-      if (score > mMinTranScorePerDocWord) {
-        res.add(new IdValPair(topCandWordIds[i], (float)score));
-      }
+      res.add(new IdValPair(topCandWordIds[i], (float)score));
     }
     
     res.sort(mDescByValComp);
@@ -403,7 +398,6 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   
   final int             mTopTranScoresPerDocWordQty;
   final int             mTopTranCandWordQty;
-  final float           mMinTranScorePerDocWord;
   
   final IdValParamByValDesc mDescByValComp = new IdValParamByValDesc();
   
