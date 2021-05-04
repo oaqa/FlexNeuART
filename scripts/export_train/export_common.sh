@@ -143,6 +143,10 @@ if [ "$keepCase" = "1" ] ; then
   handleCaseParam=" -keep_case "
 fi
 
+if [ "$queryExportFieldName" = "" ] ; then
+  queryExportFieldName="$indexExportFieldName"
+fi
+
 echo "========================================================"
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
