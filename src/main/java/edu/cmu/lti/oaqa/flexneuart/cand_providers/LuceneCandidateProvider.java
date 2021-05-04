@@ -64,7 +64,11 @@ public class LuceneCandidateProvider extends CandidateProvider {
    */
   public LuceneCandidateProvider(String indexDirName, CandProvAddConfig addConf) throws Exception {
   	
-    mQueryFieldName = addConf.getParam(CommonParams.QUERY_FIELD_NAME, Const.DEFAULT_QUERY_TEXT_FIELD_NAME);
+    if (addConf == null) {
+      mQueryFieldName = Const.DEFAULT_QUERY_TEXT_FIELD_NAME;
+    } else {
+      mQueryFieldName = addConf.getParam(CommonParams.QUERY_FIELD_NAME, Const.DEFAULT_QUERY_TEXT_FIELD_NAME);
+    }
     
   	float k1 = BM25SimilarityLucene.DEFAULT_BM25_K1;
   	float b = BM25SimilarityLucene.DEFAULT_BM25_B;
