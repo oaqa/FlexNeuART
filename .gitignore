@@ -1,3 +1,12 @@
 /target/
 __pycache__
 .ipynb_checkpoints
+.DS_Store
+.idea
+.iml
+run.txt
+main.build.log
+collections*
+pytorch-pretrained-BERT-mod
+trec_eval
+trec_eval-9.0.7
