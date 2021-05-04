@@ -148,24 +148,30 @@ public class CheckDenseSparseExportScores {
           
           Map<String, DenseVector> res = 
               oneExtr.getFeatures(CandidateEntry.createZeroScoreCandListFromDocIds(docIdSample), queryFields);
-          
-          String queryText = queryFields.getString(queryFieldName);
-          
-          if (queryText == null) {
-            System.out.println("No query text, query ID:" + queryId + " query field: "+ queryFieldName);
-            queryText = "";
-          }
+
          
           VectorWrapper queryVect = null;
-          if (oneIndx.isTextRaw()) {
-            queryVect = oneExtr.getFeatInnerProdQueryVector(queryText);
-          } if (oneIndx.isParsed()) {
-            DocEntryParsed queryEntry = oneIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), 
-                                                                    true); // true means including positions
+          if (oneIndx.isBinary()) {
+            byte queryEntry[] = queryFields.getBinary(queryFieldName);
             queryVect = oneExtr.getFeatInnerProdQueryVector(queryEntry);
           } else {
-            System.err.println("Binary forward indexes are not supported!");
-            System.exit(1);
+            String queryText = queryFields.getString(queryFieldName);
+            
+            if (queryText == null) {
+              System.out.println("No query text, query ID:" + queryId + " query field: "+ queryFieldName);
+              queryText = "";
+            }
+            
+            if (oneIndx.isTextRaw()) {
+              queryVect = oneExtr.getFeatInnerProdQueryVector(queryText);
+            } if (oneIndx.isParsed()) {
+              DocEntryParsed queryEntry = oneIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), 
+                                                                      true); // true means including positions
+              queryVect = oneExtr.getFeatInnerProdQueryVector(queryEntry);
+            } else {
+              System.err.println("Bug: should not reach this point!");
+              System.exit(1);
+            }
           }
 
           for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
