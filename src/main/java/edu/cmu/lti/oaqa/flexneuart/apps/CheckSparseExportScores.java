@@ -158,7 +158,7 @@ public class CheckSparseExportScores {
 
         TrulySparseVector queryVect = VectorUtils.createInterleavedInnerProdQueryFeatVect(queryFields, 
                                                                                           compIndices,
-                                                                                          compExtractors, compWeights);
+                                                                                          compExtractors, unitWeights);
 
         for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
           int actualBatchQty = Math.min(args.mBatchSize, docIdSample.size() - batchStart);
@@ -170,7 +170,7 @@ public class CheckSparseExportScores {
           }
           
           TrulySparseVector docVectArr[] = VectorUtils.createInterleavedInnerProdDocFeatureVecBatch(docIds, compIndices,
-                                                                                                    compExtractors, unitWeights);
+                                                                                                    compExtractors, compWeights);
           
           for (int i = 0; i < actualBatchQty; ++i) {
             String did = docIds[i];
