@@ -58,7 +58,10 @@ public abstract class CandidateProvider {
 														String provURI,
 														String configName,
 														int threadQty) throws Exception {
-    logger.info(String.format("Provider type: %s URI: %s config file: %s # of threads",
+    logger.info(String.format("Provider type: %s\n" + 
+														  "URI: %s\n" + 
+                              "Config file: %s\n" + 
+														  "# of threads",
                               provType, provURI, configName != null ? configName : "none", threadQty));
     
   	CandidateProvider[] res = new CandidateProvider[threadQty];
