@@ -61,7 +61,7 @@ public abstract class CandidateProvider {
     logger.info(String.format("Provider type: %s\n" + 
 														  "URI: %s\n" + 
                               "Config file: %s\n" + 
-														  "# of threads",
+														  "# of threads: %d",
                               provType, provURI, configName != null ? configName : "none", threadQty));
     
   	CandidateProvider[] res = new CandidateProvider[threadQty];
