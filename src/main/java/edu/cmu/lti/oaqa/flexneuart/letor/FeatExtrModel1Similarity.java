@@ -237,8 +237,9 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     if (mTopTranScoresPerDocWordQty < Integer.MAX_VALUE) {
     
       int maxQty = doc.mWordIds.length * mTopTranScoresPerDocWordQty;
-      while (res.size() > maxQty) {
-        res.remove(res.size()-1);
+      
+      if (res.size() > maxQty) {
+        res.subList(maxQty, res.size()).clear();
       }
       
     }
