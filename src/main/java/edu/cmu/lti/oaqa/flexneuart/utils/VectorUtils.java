@@ -245,6 +245,7 @@ public class VectorUtils {
     }
     
     for (int resId = 0; resId < docIds.length; ++resId) {
+      BinReadWriteUtils.writeStringId(docIds[resId], out);      
       for (int compId = 0; compId < featExtrQty; ++compId) {
         VectorWrapper featVect = docVectBatches.get(compId)[resId];
         if (null == featVect) {
@@ -273,11 +274,13 @@ public class VectorUtils {
                                                                           DenseVector compWeights,
                                                                           OutputStream out) throws Exception  {
 
-    for (TrulySparseVector featVec : createInterleavedInnerProdDocFeatureVecBatch(docIds, 
-                                                                                  compIndices, 
-                                                                                  compExtractors, 
-                                                                                  compWeights)) {
-      VectorWrapper.writeSparseVect(featVec, out);
+    TrulySparseVector[] batchVecs = createInterleavedInnerProdDocFeatureVecBatch(docIds, 
+                                                                                                                                                          compIndices, 
+                                                                                                                                                          compExtractors, 
+                                                                                                                                                          compWeights);
+    for (int resId = 0; resId < batchVecs.length; resId++) {
+      BinReadWriteUtils.writeStringId(docIds[resId], out);  
+      VectorWrapper.writeSparseVect(batchVecs[resId], out);
     }
   }
 
