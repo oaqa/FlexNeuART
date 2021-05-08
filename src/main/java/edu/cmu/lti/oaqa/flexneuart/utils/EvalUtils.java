@@ -97,6 +97,7 @@ public class EvalUtils {
   
   /**
    * Read TREC run files, but ignore run ID(s).
+   * It also ignores fake document IDs.
    * 
    * @param fileName    input file (can be gz or bz2 compressed).
    * @return A hash map where keys are topic IDs and values are arrays. Each array represents a list of document for a single topic/query.
@@ -161,7 +162,9 @@ public class EvalUtils {
                           prevDocPos + 1, docPos, lineNum, fileName));                
       }
       
-      currArr.add(new CandidateEntry(docId, score));
+      if (docId.compareTo(EvalUtils.FAKE_DOC_ID) != 0) {
+        currArr.add(new CandidateEntry(docId, score));
+      }
        
       prevTopicId = topicId;
       prevDocPos = docPos;

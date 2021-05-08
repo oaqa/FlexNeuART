@@ -199,6 +199,8 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
       String externId = e.getExternId();
       if (seen.contains(externId)) continue;
       seen.add(externId);
+      // Note we take the negative of the distance (smaller is better) to 
+      // convert it to a similarity score (higher is better)
       res[ind++] = new CandidateEntry(externId, (float) -e.getDist());
     }		
 

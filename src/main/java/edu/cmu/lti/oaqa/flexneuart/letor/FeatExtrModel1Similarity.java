@@ -62,6 +62,11 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return this.getClass().getName();
   }
   
+   /*
+    * Important note: although this similarity scores should be (approximately) reproducible 
+    * by generating query and document vectors with subsequent inner-product computation,
+    * this feature seems to be broken and it is not completely clear why. 
+    */
   public FeatExtrModel1Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
     super(resMngr, conf);
    
