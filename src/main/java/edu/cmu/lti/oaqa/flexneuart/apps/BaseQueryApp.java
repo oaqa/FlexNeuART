@@ -209,8 +209,9 @@ class BaseProcessingUnit {
       end = System.currentTimeMillis();
       long rerankFinalTimeMS = end - start;
       mAppRef.logger.info(
-          String.format("Final-feature generation & re-ranking for the query # %d queryId='%s', final. reranking took %d ms", 
-                        queryNum, queryId, rerankFinalTimeMS));
+          String.format("Final feature generation & re-ranking for the query # %d queryId='%s', " + 
+                        "final. reranking took %d ms for %d entries", 
+                        queryNum, queryId, rerankFinalTimeMS, rerankQty));
       mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
     }
     
