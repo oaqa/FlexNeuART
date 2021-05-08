@@ -142,8 +142,9 @@ class BaseProcessingUnit {
     }
     
     Ranker modelFinal = mAppRef.mModelFinal;
-    // Don't re-rank more than we return! Another limit is the option -max_final_rerank_qty
-    int rerankQty = Math.min(cands.length, Math.min(mAppRef.mMaxNumRet, mAppRef.mMaxFinalRerankQty));
+    // If -max_final_rerank_qty is not specified, we re-rank all candidates even if we 
+    // have to return fewer than that (as defined by mMaxNumRet). 
+    int rerankQty = Math.min(cands.length, mAppRef.mMaxFinalRerankQty);
     // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
     if (mAppRef.mExtrFinal!= null && rerankQty > 0 && cands.length > 0) {
       // Compute features once for all documents using a final re-ranker.

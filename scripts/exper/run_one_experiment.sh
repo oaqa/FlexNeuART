@@ -407,11 +407,16 @@ if [ "$testOnly" = "0" ] ; then
   if [ "$regenFeat" = "1" ] ; then
     checkVarNonEmpty "extrType"
 
+    if [ "$maxFinalRerankQtyParam" != "" ] ; then
+      echo "WARNING: -max_final_rerank_qty is ignored during feature generation, using $trainCandQty instead"
+    fi
+
     setJavaMem 5 9
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
                                     -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
                                     -qrel_file "$inputDataDir/$trainPart/$QREL_FILE" \
+                                    -max_final_rerank_qty "$trainCandQty" \
                                     -n "$trainCandQty" \
                                     -f "$fullOutPrefTrain" \
                                     -extr_type_final \"$extrType\" \
