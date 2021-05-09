@@ -407,6 +407,11 @@ if [ "$testOnly" = "0" ] ; then
   if [ "$regenFeat" = "1" ] ; then
     checkVarNonEmpty "extrType"
 
+    # For the final training, we re-rank only top-K candidates.
+    if [ "$maxFinalRerankQtyParam" != "" ] ; then
+      echo "WARNING: during training we set -max_final_rerank_qty to $trainCandQty"
+    fi
+
     setJavaMem 5 9
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
@@ -414,6 +419,7 @@ if [ "$testOnly" = "0" ] ; then
                                     -qrel_file "$inputDataDir/$trainPart/$QREL_FILE" \
                                     $maxFinalRerankQtyParam \
                                     -n "$trainCandQty" \
+                                    -max_final_rerank_qty "$trainCandQty" \
                                     -f "$fullOutPrefTrain" \
                                     -extr_type_final \"$extrType\" \
                                      $commonAddParams \
