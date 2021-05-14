@@ -38,11 +38,11 @@ from multiprocessing import Barrier
 # 10 minutes should be more than enough while waiting
 # for other processes to reach the same training point
 BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*10
-# However (see comment below) we should wait more before validation completes
-# Let's optimistically assume, it is not longer than two hours, but this
-# might need to be fixed in the future. And a good fix should make validation
-# use all GPUs
-BARRIER_WAIT_VALIDATION_TIMEOUT=60*240
+# However (see comment below) we should wait more before validation completes.
+# Let's some optimisticially assume, it is not longer than 24 hours,
+# This needs to be fixed in the future:
+# A good fix should make validation use all GPUs.
+BARRIER_WAIT_VALIDATION_TIMEOUT=3600 * 24
 
 OPT_SGD='sgd'
 OPT_ADAMW='adamw'
@@ -229,7 +229,7 @@ def train_iteration(model, sync_barrier,
                     try:
                         sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
                     except BrokenBarrierError:
-                        raise Exception('A model parameter synchronization timeout!')
+                        raise Exception('A waiting-for-model-parameter-synchronization timeout!')
 
                     avg_model_params(model)
 
@@ -277,7 +277,7 @@ def train_iteration(model, sync_barrier,
         try:
             sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
         except BrokenBarrierError:
-            raise Exception('A model parameter synchronization timeout!')
+            raise Exception('A waiting-for-model-parameter-synchronization (in the end of epoch) timeout!')
 
         avg_model_params(model)
 
@@ -500,7 +500,7 @@ def do_train(sync_barrier,
             try:
                 sync_barrier.wait(BARRIER_WAIT_VALIDATION_TIMEOUT)
             except BrokenBarrierError:
-                raise Exception('A model parameter synchronization timeout!')
+                raise Exception('A model validation synchronization timeout!')
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
