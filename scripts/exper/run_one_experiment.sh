@@ -417,7 +417,6 @@ if [ "$testOnly" = "0" ] ; then
                                     -run_id "$runId" \
                                     -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
                                     -qrel_file "$inputDataDir/$trainPart/$QREL_FILE" \
-                                    $maxFinalRerankQtyParam \
                                     -n "$trainCandQty" \
                                     -max_final_rerank_qty "$trainCandQty" \
                                     -f "$fullOutPrefTrain" \
