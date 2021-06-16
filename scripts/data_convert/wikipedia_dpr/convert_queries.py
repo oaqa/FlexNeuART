@@ -20,7 +20,7 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
     BITEXT_QUESTION_PREFIX, BITEXT_ANSWER_PREFIX,\
     ANSWER_LIST_FIELD_NAME
 from scripts.data_convert.wikipedia_dpr.utils import dpr_json_reader, get_passage_id
-from scripts.common_eval import QrelEntry, write_qrels
+from scripts.common_eval import write_qrels, add_qrel_entry
 
 
 def parse_args():
@@ -76,15 +76,6 @@ bi_quest_files = {}
 bi_answ_files = {}
 
 glob_qrel_dict = {}
-
-def add_qrel_entry(qrel_dict, qid, did, grade):
-    qrel_key = (qid, did)
-    if qrel_key in qrel_dict:
-        prev_grade = qrel_dict[qrel_key].rel_grade
-        if prev_grade != grade:
-            raise Exception(f'Repeating inconsistent QREL values for query {qid} and document {did}, got grades: ',
-                            grade, prev_grade)
-    qrel_dict[qrel_key] = QrelEntry(query_id=qid, doc_id=did, rel_grade=grade)
 
 if out_bitext_dir:
     if not os.path.exists(out_bitext_dir):

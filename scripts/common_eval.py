@@ -355,3 +355,21 @@ def trec_eval(runf, qrelf, metric):
 
     raise Exception(
         f'Cannot get the value of the metric {metric} by evaluating file {runf} with qrels {qrelf}')
+
+
+def add_qrel_entry(qrel_dict, qid, did, grade):
+    """Add a QREL entry to the QREL dictionary. Repeated entries are ignored. However if they
+       have a different grade, an exception is throw.
+
+    :param qrel_dict:  a QREL dictionary
+    :param qid:        query id
+    :param did:        document id
+    :param grade:      QREL grade
+    """
+    qrel_key = (qid, did)
+    if qrel_key in qrel_dict:
+        prev_grade = qrel_dict[qrel_key].rel_grade
+        if prev_grade != grade:
+            raise Exception(f'Repeating inconsistent QREL values for query {qid} and document {did}, got grades: ',
+                            grade, prev_grade)
+    qrel_dict[qrel_key] = QrelEntry(query_id=qid, doc_id=did, rel_grade=grade)
