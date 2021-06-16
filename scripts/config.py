@@ -42,3 +42,5 @@ MAX_RELEV_GRADE=4
 
 # Default number of iterations in GIZA EM algorithm
 DEFAULT_GIZA_ITER_QTY=5
+
+DEFAULT_TRAIN_SUBDIR='train_fusion'
