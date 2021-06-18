@@ -11,7 +11,7 @@ boolOpts=("h"     "help"    "print help"
 
 paramOpts=()
 
-FIELD_LIST_DEF="e.g., \"text:parsedBOW text_unlemm:parsedText text_raw:text_raw dense_embed:binary\""
+FIELD_LIST_DEF="e.g., \"text:parsedBOW text_unlemm:parsedText text_raw:textRaw dense_embed:binary\""
 
 # This seems to be the only (though hacky way to pass space separted by quoted arguments)
 parseArguments "$1" "$2" "$3" $4 $5

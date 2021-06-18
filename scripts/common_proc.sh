@@ -374,6 +374,10 @@ function removeComment {
 # The genUsage and parseArguments
 # make assumptions about how parameter-describing
 # variables are stored and presented.
+#
+# LIMITATION: it won't handle gracefully arguments with spaces inside (avoid using these).
+#
+#
 # For simplicity, it expects the following
 # arrays to exist:
 #
