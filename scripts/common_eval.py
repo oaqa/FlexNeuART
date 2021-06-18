@@ -186,6 +186,16 @@ def write_qrels(qrel_list, file_name):
             f.write('\n')
 
 
+def write_qrel_dict(qrel_dict, file_name):
+    """Write a QREL dictionary where entries are added using, e.g., add_qrel_entry
+
+    :param qrel_dict:  dictionary of QRELs.
+    :param file_name:  output file name
+    """
+    qrel_list = [qrel_entry for qrel_key, qrel_entry in qrel_dict.items()]
+    write_qrels(qrel_list, file_name)
+
+
 def gen_run_entry_str(query_id, doc_id, rank, score, run_id):
     """A simple function to generate one run entry.
 
