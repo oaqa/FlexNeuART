@@ -78,7 +78,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
     	b = addConf.getParam(B_PARAM, b);
   	}
   	
-  	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g", K1_PARAM, k1, B_PARAM, b));
+  	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g query field name: %s", K1_PARAM, k1, B_PARAM, b, mQueryFieldName));
   	
     File indexDir = new File(indexDirName);
     mSimilarity = new BM25Similarity(k1, b);
