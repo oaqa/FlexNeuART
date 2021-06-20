@@ -77,9 +77,8 @@ public class LuceneCandidateProvider extends CandidateProvider {
   	if (addConf != null) {
     	k1 = addConf.getParam(K1_PARAM, k1);
     	b = addConf.getParam(B_PARAM, b);
+      mExactMatch = addConf.getParam(EXACT_MATCH_PARAM, false);
   	}
-  	
-  	mExactMatch = addConf.getParam(EXACT_MATCH_PARAM, false);
   	
   	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g query field name: %s Exact field match?: %b", 
   	                          K1_PARAM, k1, B_PARAM, b, mQueryFieldName, mExactMatch));
