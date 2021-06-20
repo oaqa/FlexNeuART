@@ -42,6 +42,7 @@ import com.google.common.base.Splitter;
 public class LuceneCandidateProvider extends CandidateProvider {
 	public static final String B_PARAM = "b";
 	public static final String K1_PARAM = "k1";
+	public static final String EXACT_MATCH_PARAM = "exactMatch";
 
 	final Logger logger = LoggerFactory.getLogger(LuceneCandidateProvider.class);
 	
@@ -78,7 +79,10 @@ public class LuceneCandidateProvider extends CandidateProvider {
     	b = addConf.getParam(B_PARAM, b);
   	}
   	
-  	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g query field name: %s", K1_PARAM, k1, B_PARAM, b, mQueryFieldName));
+  	mExactMatch = addConf.getParam(EXACT_MATCH_PARAM, false);
+  	
+  	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g query field name: %s Exact field match?: %b", 
+  	                          K1_PARAM, k1, B_PARAM, b, mQueryFieldName, mExactMatch));
   	
     File indexDir = new File(indexDirName);
     mSimilarity = new BM25Similarity(k1, b);
@@ -131,13 +135,18 @@ public class LuceneCandidateProvider extends CandidateProvider {
     if (query.isEmpty()) {
       logger.warn("Ignoring empty query #: " + queryNum);
     } else {
-      // QueryParser cannot be shared among threads!
-      QueryParser parser = new QueryParser(mQueryFieldName, mAnalyzer);
-      parser.setDefaultOperator(QueryParser.OR_OPERATOR);
-
-      Query       queryParsed = parser.parse(query);
+      Query       parsedQuery = null;
+      if (mExactMatch) {
+        parsedQuery = new TermQuery(new Term(mQueryFieldName, query));
+      } else {
+        // QueryParser cannot be shared among threads!
+        QueryParser parser = new QueryParser(mQueryFieldName, mAnalyzer);
+        parser.setDefaultOperator(QueryParser.OR_OPERATOR);
+        
+        parsedQuery = parser.parse(query);
+      }
       
-      TopDocs     hits = mSearcher.search(queryParsed, maxQty);
+      TopDocs     hits = mSearcher.search(parsedQuery, maxQty);
 
       numFound = hits.totalHits.value;
       ScoreDoc[]  scoreDocs = hits.scoreDocs;
@@ -162,6 +171,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
   private final Similarity mSimilarity;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
   private String        mQueryFieldName;
+  private boolean       mExactMatch = false;
 
   private static Splitter mSpaceSplit = Splitter.on(' ').omitEmptyStrings().trimResults();
 }

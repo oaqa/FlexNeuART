@@ -47,6 +47,7 @@ public class LuceneIndexer {
   final static Logger logger = LoggerFactory.getLogger(LuceneIndexer.class);
   
   public static final int COMMIT_INTERV = 50000;
+  public static final String EXACT_MATCH_PARAM = "exact_match";
   
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
@@ -56,17 +57,18 @@ public class LuceneIndexer {
 
   }  
   
-  public static final FieldType FIELD_TYPE = new FieldType();
+  public static final FieldType FULL_TEXT_FIELD_TYPE = new FieldType();
   
-  /* Indexed, tokenized, not stored. */
+  /* A full-text search field: tokenized, indexed, but not stored. */
   static {
-    FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
-    FIELD_TYPE.setTokenized(true);
-    FIELD_TYPE.setStored(false);
-    FIELD_TYPE.freeze();
+    FULL_TEXT_FIELD_TYPE.setIndexOptions(IndexOptions.DOCS_AND_FREQS);
+    FULL_TEXT_FIELD_TYPE.setTokenized(true);
+    FULL_TEXT_FIELD_TYPE.setStored(false);
+    FULL_TEXT_FIELD_TYPE.freeze();
   }
   
   public static void main(String [] args) {
+    
     Options options = new Options();
     
     options.addOption(CommonParams.INPUT_DATA_DIR_PARAM,null, true, CommonParams.INPUT_DATA_DIR_DESC);
@@ -75,11 +77,14 @@ public class LuceneIndexer {
     options.addOption(CommonParams.DATA_FILE_PARAM,     null, true, CommonParams.DATA_FILE_DESC);
     options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_INDEX_DESC);
     options.addOption(CommonParams.INDEX_FIELD_NAME_PARAM, null, true, CommonParams.INDEX_FIELD_NAME_DESC);
+    options.addOption(EXACT_MATCH_PARAM, null, false, "Create index for exact search");
     
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
     try {
       CommandLine cmd = parser.parse(options, args);
+      
+      boolean exactMatch = cmd.hasOption(EXACT_MATCH_PARAM);
       
       String textFieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
       
@@ -153,7 +158,7 @@ public class LuceneIndexer {
       */
       indexConf.setOpenMode(OpenMode.CREATE); 
       indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.DEFAULT_RAM_BUFFER_SIZE);
-      logger.info("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec);
+      logger.info("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec + " exact match? " + exactMatch);
       indexConf.setOpenMode(OpenMode.CREATE);
       IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      
       
@@ -185,7 +190,11 @@ public class LuceneIndexer {
             Document luceneDoc = new Document();
             luceneDoc.add(new StringField(Const.DOC_ID_FIELD_NAME, id, Field.Store.YES));
          
-            luceneDoc.add(new Field(textFieldName, textFieldValue, FIELD_TYPE));
+            if (exactMatch) {
+              luceneDoc.add(new StringField(textFieldName, textFieldValue, Field.Store.NO));
+            } else { 
+              luceneDoc.add(new Field(textFieldName, textFieldValue, FULL_TEXT_FIELD_TYPE));
+            }
             
             indexWriter.addDocument(luceneDoc);
             if (docNum % Const.PROGRESS_REPORT_QTY == 0) {

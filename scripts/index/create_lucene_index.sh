@@ -10,11 +10,15 @@ checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DEFAULT_QUERY_TEXT_FIELD_NAME"
 
-boolOpts=("h" "help" "print help")
+boolOpts=("h"           "help"          "print help"
+          "exact_match" "exactMatch"    "create index for exact match")
 
+indexSubDir=$LUCENE_INDEX_SUBDIR
 indexFieldName="$DEFAULT_QUERY_TEXT_FIELD_NAME"
+
 paramOpts=(
-  "index_field" "indexFieldName" "indexing field name (default $indexFieldName)"
+  "index_field"  "indexFieldName" "indexing field name (default $indexFieldName)"
+  "index_subdir" "indexSubDir"    "index subdirectory (default $indexSubDir)"
 )
 
 parseArguments $@
@@ -32,13 +36,20 @@ if [ "$collect" = "" ] ; then
   exit
 fi
 
+if [ "$exactMatch" = "1" ] ; then
+  exactMatchParam=" -exact_match ";
+else
+  exactMatchParam="";
+fi
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-indexDir="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR"
+indexDir="$COLLECT_ROOT/$collect/$indexSubDir"
 
 echo "=========================================================================="
-echo "Data directory:   $inputDataDir"
-echo "Index directory:  $indexDir"
-echo "index field name: $indexFieldName"
+echo "Data directory:    $inputDataDir"
+echo "Index directory:   $indexDir"
+echo "Index field name:  $indexFieldName"
+echo "Exact match param: $exactMatchParam"
+
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
 else
@@ -63,6 +74,7 @@ fi
 # This APP can be memory greedy
 setJavaMem 4 8
 target/appassembler/bin/LuceneIndexer \
+    $exactMatchParam \
     -input_data_dir "$inputDataDir" \
     -index_dir "$indexDir" \
     -index_field "$indexFieldName" \

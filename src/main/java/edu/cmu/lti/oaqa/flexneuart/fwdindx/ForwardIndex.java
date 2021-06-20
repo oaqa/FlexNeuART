@@ -544,7 +544,9 @@ public abstract class ForwardIndex {
   float             mAvgDocLen = 0;
 
   /**
-   * Read the text-only header (which includes vocabulary info) of the forward file.
+   * Read the text-only header (which includes vocabulary info) of the forward file. If the format changes,
+   * please, update/sync with (and possibly make them reuse the same shared common function, so we have no copy-paste)
+   * {@link FrequentIndexWordFilterAndRecoder}.
    * 
    * @param fileName  input file name (for info purposes only)
    * @param inp  the actual input file opened

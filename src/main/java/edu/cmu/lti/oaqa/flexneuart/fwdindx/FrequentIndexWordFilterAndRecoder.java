@@ -20,6 +20,8 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexFieldType;
+
 class WordEntryStr {
   public final int mWordId;
   public final int mWordFreq;
@@ -66,6 +68,15 @@ public class FrequentIndexWordFilterAndRecoder extends VocabularyFilterAndRecode
     
     try {
       inp = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+      
+      String indexFieldTypeStr = inp.readLine();
+      
+      ForwardIndexFieldType indexFieldType = ForwardIndex.getIndexFieldType(indexFieldTypeStr);
+      
+      if (indexFieldType != ForwardIndexFieldType.parsedBOW && indexFieldType != ForwardIndexFieldType.parsedText) {
+        throw 
+        new Exception("The filter/recorder requires a parsed forward file, but " + fileName + " has type: " + indexFieldType);
+      }
 
       String meta = inp.readLine();
 
