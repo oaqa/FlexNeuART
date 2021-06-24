@@ -1,7 +1,7 @@
 #!/bin/bash -e
 # The main script to convert document collection in the Yahoo Answers format,
 # which as previously split by the script:
-# scripts/data_convert/yahoo_answers/split_yahoo_answers_input.sh
+# data_convert/yahoo_answers/split_yahoo_answers_input.sh
 #
 # This script makes the following assumption:
 #

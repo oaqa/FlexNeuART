@@ -1,13 +1,28 @@
 #!/usr/bin/env python
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import sys, os
 import json
 import argparse
 import pytorch_pretrained_bert
 
+#
 # This collection converts data in a quasi Yahoo Answers format (with preamble removed).
-# It expects a collection either produced by other programs such as
-# 1) a Stack Overflow converter script: scripts/data_convert/stack_overflow/convert_stackoverflow_full.sh
-# 2) Yahoo Answers collection splitter:
+# It expects a collection produced by the Yahoo Answers collection splitter: split_yahoo_answers_input.sh
+#
 
 sys.path.append('.')
 

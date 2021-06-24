@@ -1,7 +1,23 @@
 #!/usr/bin/env python
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 # Adding predicted query fields
 # https://github.com/castorini/docTTTTTquery
 # It reads all the predictions into memory
+#
 import sys
 import argparse
 import json
@@ -25,6 +41,10 @@ parser.add_argument('--input', metavar='input JSONL file', help='input JSONL fil
                     type=str, required=True)
 parser.add_argument('--output', metavar='output JSONL file', help='output JSONL file (can be compressed)',
                     type=str, required=True)
+parser.add_argument('--target_fusion_field', metavar='target fusion field',
+                    help='the name of the target field that will store concatenation of the lemmatized doc2query text and the original lemmatized text',
+                    type=str, required=True)
+
 
 parser.add_argument('--doc_ids_path',
                     required=True, metavar='doc2query doc IDs',
@@ -45,6 +65,7 @@ nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_c
 
 doc_id_prev = None
 predicted_queries = []
+target_fusion_field = args.target_fusion_field
 
 for doc_id, predicted_queries_partial in tqdm(zip(FileWrapper(args.doc_ids_path),
                                                   FileWrapper(args.predictions_path)),
@@ -68,7 +89,7 @@ with FileWrapper(args.output, 'w') as outf:
         doc_id = doce[DOCID_FIELD]
         if doc_id in docid_to_preds:
             text, text_unlemm = nlp.proc_text(docid_to_preds[doc_id])
-            doce[TEXT_FIELD_NAME] = doce[TEXT_FIELD_NAME] + ' ' + text
+            doce[target_fusion_field] = doce[TEXT_FIELD_NAME] + ' ' + text
             doce[DOC2QUERY_FIELD_TEXT] = text
             doce[DOC2QUERY_FIELD_TEXT_UNLEMM] = text_unlemm
         else:

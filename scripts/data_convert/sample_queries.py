@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import sys
 import os
 import argparse
@@ -10,7 +25,7 @@ from scripts.data_convert.convert_common import read_queries, write_queries
 from scripts.common_eval import read_qrels, write_qrels
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
-parser = argparse.ArgumentParser(description='Split queries and corresponding QREL files.')
+parser = argparse.ArgumentParser(description='Sample queries and corresponding QREL entries.')
 
 parser.add_argument('--data_dir',
                     metavar='data directory',
