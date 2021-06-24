@@ -20,8 +20,9 @@ Access to FlexNeuART re-ranking functionality
 import os
 from jnius import autoclass
 
+from scripts.py_flexneuart.utils import query_dict_to_dataentry_fields
 from scripts.py_flexneuart.cand_provider import JCandidateEntry
-from scripts.py_flexneuart.utils import dict_to_hash_map
+from scripts.py_flexneuart.utils import DataEntryFields
 
 JRankerFactory = autoclass('ciir.umass.edu.learning.RankerFactory')
 JCompositeFeatureExtractor = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor')
@@ -45,20 +46,25 @@ class QueryRanker:
         self.feat_extr = JCompositeFeatureExtractor(resource_manager, feat_extr_file_name)
         self.dp_wrapper = JDataPointWrapper()
 
-    def rank_candidates(self, cand_list, query_info_dict):
+    def rank_candidates(self, cand_list, query_info_obj_or_dict):
         """Rank a candidate list obtained from the candidate provider.
            Note that this function needs all relevant query fields, not
            just a field that was used to retrieve the list of candidate entries!
 
         :param cand_list:           a list of the objects of the type CandidateEntry
-        :param query_info_dict:     a dictionary containing all key query fields,
-                                    which are necessary for re-ranking (can be both
-                                    native Python dict too)
+        :param query_info_obj:      an instance of
+                                        i) a DataEntryFields object
+                                        ii) a dictionary object, which will the function
+                                            try to convert to DataEntryFields
 
         :return:  a dictionary where keys are document IDs and values are document scores
         """
-        if type(query_info_dict) == dict:
-            query_info_dict = dict_to_hash_map(query_info_dict)
+        if type(query_info_obj_or_dict) == dict:
+            query_info_obj = query_dict_to_dataentry_fields(query_info_obj_or_dict)
+        else:
+            if type(query_info_obj_or_dict) != DataEntryFields:
+                raise Exception('A query object info type should be DataEntryFields or a dictionary!')
+            query_info_obj = query_info_obj_or_dict
 
         res = {}
         # First convert a list of candidate back to the Java types
@@ -66,7 +72,7 @@ class QueryRanker:
         # actuall searching and re-ranking in most cases.
         cands_java = [JCandidateEntry(e.doc_id, e.score) for e in cand_list]
         # Compute a dictionary of features using Java api
-        all_doc_feats = self.feat_extr.getFeatures(cands_java, query_info_dict)
+        all_doc_feats = self.feat_extr.getFeatures(cands_java, query_info_obj)
 
         for cand in cand_list:
             feat = all_doc_feats.get(cand.doc_id)

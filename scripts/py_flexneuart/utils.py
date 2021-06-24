@@ -17,7 +17,10 @@
 """Misc FlexNeuART utils."""
 from jnius import autoclass
 
+from scripts.config import DOCID_FIELD
+
 JHashMap = autoclass('java.util.HashMap')
+DataEntryFields = autoclass('edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields')
 
 
 def dict_to_hash_map(dict_obj):
@@ -33,5 +36,34 @@ def dict_to_hash_map(dict_obj):
     res = JHashMap()
     for k, v in dict_obj.items():
         res.put(k, v)
+
+    return res
+
+
+def query_dict_to_dataentry_fields(query_dict, default_query_id=None):
+    """Convert a query dictionary object to an internal frame work object of the type
+       DataEntryFields.
+
+       LIMITATION: Currently, no binary values or string arrays are supported.
+
+    :param query_dict:          query key-value dictionary that may or may not have the query/doc ID
+    :param default_query_id:    a default query ID to use if query_dict has none.
+
+    :return: an instance of the type DataEntryFields.
+    """
+    if DOCID_FIELD in query_dict:
+        qid = query_dict[DOCID_FIELD]
+    else:
+        qid = default_query_id
+        if qid is None:
+            raise Exception('Specify either a default query ID or provide it as a value of {DOCID_FIELD} field')
+
+    res = DataEntryFields(qid)
+
+    for k, v in query_dict.items():
+        if k != DOCID_FIELD:
+            if type(v) != str:
+                raise Exception('Only string values and keys are currently supported')
+            res.setString(str(k), v)
 
     return res

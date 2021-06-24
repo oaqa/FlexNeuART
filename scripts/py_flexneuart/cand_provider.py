@@ -20,12 +20,13 @@ Access to FlexNeuART candidate providers (i.e., basic querying)
 from collections import namedtuple
 from jnius import autoclass
 
-from scripts.config import TEXT_FIELD_NAME, DOCID_FIELD
-from scripts.py_flexneuart.utils import dict_to_hash_map
+from scripts.config import TEXT_FIELD_NAME
+from scripts.py_flexneuart.utils import DataEntryFields, query_dict_to_dataentry_fields
 
 CandidateEntry = namedtuple('CandidateEntry', ['doc_id', 'score'])
 JCandidateEntry = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry')
 JCandidateProvider = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider')
+
 
 PROVIDER_TYPE_LUCENE = JCandidateProvider.CAND_TYPE_LUCENE
 PROVIDER_TYPE_NMSLIB = JCandidateProvider.CAND_TYPE_NMSLIB
@@ -57,9 +58,10 @@ def create_cand_provider(resource_manager, provider_type, provider_uri, add_conf
                                        add_config_file,
                                        1)[0]
 
-def create_text_query_dict(query_text,
-                    query_id=FAKE_QUERY_ID, field_name=TEXT_FIELD_NAME):
-    """Create a Java HashMap instance with text query information.
+
+def create_text_query_obj(query_text,
+                          query_id=FAKE_QUERY_ID, field_name=TEXT_FIELD_NAME):
+    """Create a Java object with text query information.
 
     :param query_text:       query text: *WHITE-SPACE* tokenized query tokens
     :param query_id:         a query ID (can be anything or just stick to default)
@@ -67,14 +69,24 @@ def create_text_query_dict(query_text,
 
     :return:
     """
-    return dict_to_hash_map({DOCID_FIELD : str(query_id), field_name : query_text})
+    obj = DataEntryFields(str(query_id))
+    obj.setString(field_name, query_text)
+    return obj
+
+
+def run_query_internal(cand_provider, top_qty, query_obj):
+    """An auxilliary function not intended to be used directly"""
+    cand_info = cand_provider.getCandidates(0, query_obj, top_qty)
+
+    return cand_info.mNumFound, \
+           [CandidateEntry(doc_id=e.mDocId, score=e.mScore) for e in cand_info.mEntries]
 
 
 def run_text_query(cand_provider,
                top_qty,
                query_text,
                query_id=FAKE_QUERY_ID, field_name=TEXT_FIELD_NAME):
-    """Run a text query.
+    """Run a single-field text query.
 
     :param cand_provider:    a candidate provider object
     :param top_qty:          a number of top-scored entries to return
@@ -84,8 +96,26 @@ def run_text_query(cand_provider,
 
     :return: a tuple: # of entries found, an array of candidate entries: (document ID, score) objects
     """
-    query = create_text_query_dict(query_text, query_id, field_name)
-    cand_info = cand_provider.getCandidates(0, query, top_qty)
+    query_obj = create_text_query_obj(query_text, query_id, field_name)
 
-    return cand_info.mNumFound, \
-           [CandidateEntry(doc_id=e.mDocId, score=e.mScore) for e in cand_info.mEntries]
+    return run_query_internal(cand_provider, top_qty, query_obj)
+
+
+def run_query(cand_provider,
+            top_qty,
+            query_dict,
+            default_query_id=FAKE_QUERY_ID):
+    """Run a generic (not-necessarily single-field text) query.
+
+    :param cand_provider:       a candidate provider object
+    :param top_qty:             a number of top-scored entries to return
+    :param query_dict:          query key-value dictionary that may or may not have the query/doc ID
+    :param default_query_id:    a default query ID to use if query_dict has none.
+
+    :return: a tuple: # of entries found, an array of candidate entries: (document ID, score) objects
+    """
+    if type(query_dict) != dict:
+        raise Exception('A query object should be a dictionary!')
+    query_obj = query_dict_to_dataentry_fields(query_dict, default_query_id)
+
+    return run_query_internal(cand_provider, top_qty, query_obj)
