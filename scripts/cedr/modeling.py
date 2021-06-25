@@ -6,7 +6,6 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
-#from pytools import memoize_method
 import torch
 import torch.nn.functional as F
 import pytorch_pretrained_bert

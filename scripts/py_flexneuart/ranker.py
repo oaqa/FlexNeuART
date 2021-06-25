@@ -54,9 +54,31 @@ class BaseQueryRanker:
         return query_info_obj
 
     def rank_candidates(self, cand_list, query_info_obj_or_dict):
-        """Rank a candidate list obtained from the candidate provider.
-           Note that this function needs all relevant query fields, not
-           just a field that was used to retrieve the list of candidate entries!
+        """Score and rank a list of candidates obtained from the candidate provider.
+           Note that this function may (though this is ranker-dependent) use all query field fields,
+           not just a field that was used to retrieve the list of candidate entries!
+
+        :param cand_list:           a list of the objects of the type CandidateEntry
+        :param query_info_obj:      an instance of
+                                        i) a DataEntryFields object
+                                        ii) a dictionary object, which will the function
+                                            try to convert to DataEntryFields
+
+        :return a list of tuples (document id, score) sorted in the order of decreasing scores
+        """
+        tmp_res = []
+
+        for did, score in self.score_candidates(cand_list, query_info_obj_or_dict).items():
+            tmp_res.append( (score, did))
+
+        tmp_res.sort(reverse=True)
+
+        return [ (did, score) for score, did in tmp_res]
+
+    def score_candidates(self, cand_list, query_info_obj_or_dict):
+        """Score, but does not rank, a candidate list obtained from the candidate provider.
+           Note that this function may (though this is ranker-dependent) use all query field fields,
+           not just a field that was used to retrieve the list of candidate entries!
 
         :param cand_list:           a list of the objects of the type CandidateEntry
         :param query_info_obj:      an instance of
@@ -71,7 +93,8 @@ class BaseQueryRanker:
 
 
 class JavaQueryRanker(BaseQueryRanker):
-    """An interface to Java-layer re-rankers."""
+    """An interface to Java-layer re-rankers, which are non-neural (except external
+       rankers connected via Apache Thrift. These can be anything."""
     def __init__(self, resource_manager, feat_extr_file_name, model_file_name):
         """Reranker constructor.
 
@@ -89,7 +112,7 @@ class JavaQueryRanker(BaseQueryRanker):
         self.feat_extr = JCompositeFeatureExtractor(resource_manager, feat_extr_file_name)
         self.dp_wrapper = JDataPointWrapper()
 
-    def rank_candidates(self, cand_list, query_info_obj_or_dict):
+    def score_candidates(self, cand_list, query_info_obj_or_dict):
         """Rank a candidate list obtained from the candidate provider.
            Note that this function needs all relevant query fields, not
            just a field that was used to retrieve the list of candidate entries!
@@ -121,7 +144,8 @@ class JavaQueryRanker(BaseQueryRanker):
         return res
 
 
-class CedrQueryRanker(BaseQueryRanker):
+class PythonNNQueryRanker(BaseQueryRanker):
+    "A neural Python-layer re-ranker"
     def __init__(self, resource_manager,
                        query_field_name, max_query_len,
                        index_field_name, max_doc_len,
@@ -155,7 +179,7 @@ class CedrQueryRanker(BaseQueryRanker):
         self.fwd_indx = get_forward_index(resource_manager, index_field_name)
         self.fwd_indx.check_is_text_raw()
 
-    def rank_candidates(self, cand_list, query_info_obj_or_dict):
+    def score_candidates(self, cand_list, query_info_obj_or_dict):
         """Rank a candidate list obtained from the candidate provider.
            Note that this function needs all relevant query fields, not
            just a field that was used to retrieve the list of candidate entries!
