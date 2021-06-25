@@ -270,6 +270,9 @@ def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
     """
     res_arr = []
 
+    assert type(qrels_dict) == dict, \
+        "Relevance info object must be a dictionary, make sure you used read_qrels_dict and not read_qrels!"
+
     for qid, score_dict in rerank_run.items():
         rels_sorted_by_scores = []
 
