@@ -140,7 +140,7 @@ class ExportTrainCEDRWithScores extends ExportTrainNegSampleWithScoresBase {
           if (mMaxWhitespaceTokDocQty > 0) {
             text = StringUtils.truncAtKthWhiteSpaceSeq(text, mMaxWhitespaceTokDocQty);
           }
-          mDataDocs.write("doc\t" + docId + "\t" + text + "\t" + String.format(PRECISION_FORMAT, e.mScore) + Const.NL);
+          mDataDocs.write("doc\t" + docId + "\t" + text + Const.NL);
           mSeenDocIds.add(docId);
           ++mOutNumDocs;
       }
