@@ -43,10 +43,16 @@ def read_pairs_dict(file):
     result = {}
     for ln, line in enumerate(tqdm(file, desc='loading pairs (by line)', leave=False)):
         fields = line.split()
-        if len(fields) != 2:
+        if not len(fields) in [2, 3]:
             raise Exception(f'Wrong # of fields {len(fields)} in file {file}, line #: {ln+1}')
-        qid, docid = fields
-        result.setdefault(qid, {})[docid] = 1
+        qid, docid = fields[0: 2]
+        if len(fields) == 3:
+            score = fields[2]
+        else:
+            score = 0
+
+        result.setdefault(qid, {})[docid] = score
+
     return result
 
 
