@@ -31,23 +31,11 @@ import edu.cmu.lti.oaqa.flexneuart.utils.MiscHelper;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
-class ExportTrainCEDR extends ExportTrainNegSampleBase {
+class ExportTrainCEDR extends ExportTrainNegSampleWithoutScoresBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ExportTrainCEDR.class);
   
   public static final String FORMAT_NAME = "cedr";
-  
-  public static final String TEST_RUN_FILE_PARAM = "test_run_file";
-  public static final String TEST_RUN_FILE_DESC = "a TREC style test/validation run file";
-  
-  public static final String DATA_FILE_DOCS_PARAM = "data_file_docs";
-  public static final String DATA_FILE_DOCS_DESC = "CEDR data file for docs";
-
-  public static final String DATA_FILE_QUERIES_PARAM = "data_file_queries";
-  public static final String DATA_FILE_QUERIES_DESC = "CEDR data file for queries";
-  
-  public static final String QUERY_DOC_PAIR_FILE_PARAM = "train_pairs_file";
-  public static final String QUERY_DOC_PAIR_FILE_DESC = "query-document pairs for training";
  
   protected ExportTrainCEDR(ForwardIndex fwdIndex, 
                             String queryExportFieldName, String indexExportFieldName,
@@ -56,35 +44,32 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   }
 
 //Must be called from ExportTrainBase.addAllOptionDesc
-  static void addOptionsDesc(Options opts) {
-    opts.addOption(TEST_RUN_FILE_PARAM, null, true, TEST_RUN_FILE_DESC); 
-    opts.addOption(DATA_FILE_DOCS_PARAM, null, true, DATA_FILE_DOCS_DESC); 
-    opts.addOption(DATA_FILE_QUERIES_PARAM, null, true, DATA_FILE_QUERIES_DESC); 
-    opts.addOption(QUERY_DOC_PAIR_FILE_PARAM, null, true, QUERY_DOC_PAIR_FILE_DESC); 
+  protected static void addOptionsDesc(Options opts) {
+    ExportCEDRParams.addOptionsDesc(opts);
   }
 
   @Override
-  String readAddOptions(CommandLine cmd) {
+  protected String readAddOptions(CommandLine cmd) {
     String err = super.readAddOptions(cmd);
     if (!err.isEmpty()) {
       return err;
     }
     
-    mTestRunFileName = cmd.getOptionValue(TEST_RUN_FILE_PARAM);    
+    mTestRunFileName = cmd.getOptionValue(ExportCEDRParams.TEST_RUN_FILE_PARAM);    
     if (null == mTestRunFileName) {
-      return "Specify option: " + TEST_RUN_FILE_PARAM;
+      return "Specify option: " + ExportCEDRParams.TEST_RUN_FILE_PARAM;
     } 
-    mDataFileDocsName = cmd.getOptionValue(DATA_FILE_DOCS_PARAM);
+    mDataFileDocsName = cmd.getOptionValue(ExportCEDRParams.DATA_FILE_DOCS_PARAM);
     if (null == mDataFileDocsName) {
-      return "Specify option: " + DATA_FILE_DOCS_PARAM;
+      return "Specify option: " + ExportCEDRParams.DATA_FILE_DOCS_PARAM;
     }
-    mDataFileQueriesName = cmd.getOptionValue(DATA_FILE_QUERIES_PARAM);
+    mDataFileQueriesName = cmd.getOptionValue(ExportCEDRParams.DATA_FILE_QUERIES_PARAM);
     if (null == mDataFileQueriesName) {
-      return "Specify option: " + DATA_FILE_QUERIES_PARAM;
+      return "Specify option: " + ExportCEDRParams.DATA_FILE_QUERIES_PARAM;
     } 
-    mQueryDocTrainPairsFileName = cmd.getOptionValue(QUERY_DOC_PAIR_FILE_PARAM);
+    mQueryDocTrainPairsFileName = cmd.getOptionValue(ExportCEDRParams.QUERY_DOC_PAIR_FILE_PARAM);
     if (null == mQueryDocTrainPairsFileName) {
-      return "Specify option: " + QUERY_DOC_PAIR_FILE_PARAM;
+      return "Specify option: " + ExportCEDRParams.QUERY_DOC_PAIR_FILE_PARAM;
     } 
 
     return "";
@@ -92,7 +77,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   
 
   @Override
-  void startOutput() throws Exception {
+  protected void startOutput() throws Exception {
     mOutNumDocs = 0;
     mOutNumQueries = 0;
     mOutNumPairs = 0;
@@ -104,7 +89,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   }
 
   @Override
-  void finishOutput() throws Exception {
+  protected void finishOutput() throws Exception {
     logger.info(String.format("Generated data for %d queries %d documents %d training query-doc pairs",
                                 mOutNumQueries, mOutNumDocs, mOutNumPairs));
     
@@ -115,7 +100,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleBase {
   }
  
   @Override
-  void writeOneEntryData(String queryExportFieldText, boolean isTestQuery,
+  protected void writeOneEntryData(String queryExportFieldText, boolean isTestQuery,
                          String queryId,
                          HashSet<String> relDocIds, ArrayList<String> docIds) throws Exception {
     

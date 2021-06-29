@@ -18,7 +18,7 @@ import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
-class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
+class ExportTrainMatchZoo extends ExportTrainNegSampleWithoutScoresBase {
   
 
   public static final String OUTPUT_FILE_TRAIN_PARAM = "out_file_train";
@@ -43,7 +43,7 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
   }
 
   @Override
-  String readAddOptions(CommandLine cmd) {
+  public String readAddOptions(CommandLine cmd) {
     String err = super.readAddOptions(cmd);
     if (!err.isEmpty()) {
       return err;
@@ -72,7 +72,7 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
   }
 
   @Override
-  void startOutput() throws Exception {
+  protected void startOutput() throws Exception {
     String lineFields[] = {"id_left", "text_left", "id_right", "text_right", "label"};
     
     mOutTrain = new CSVWriter(new BufferedWriter(new OutputStreamWriter(CompressUtils.createOutputStream(mOutFileNameTrain))),
@@ -94,14 +94,14 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleBase {
   }
 
   @Override
-  void finishOutput() throws Exception {
+  protected void finishOutput() throws Exception {
     logger.info("Generated data for " + mOutNum + " query-doc pairs.");
     mOutTrain.close();
     mOutTest.close();
   }
   
   @Override
-  void writeOneEntryData(String queryExportFieldText, boolean isTestQuery,
+  protected void writeOneEntryData(String queryExportFieldText, boolean isTestQuery,
                          String queryId,
                          HashSet<String> relDocIds, ArrayList<String> docIds) throws Exception {
     for (String docId : docIds) {

@@ -35,12 +35,15 @@ public abstract class ExportTrainBase {
     if (expType.compareToIgnoreCase(ExportTrainCEDR.FORMAT_NAME) == 0) {
       return new ExportTrainCEDR(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
     }
+    if (expType.compareToIgnoreCase(ExportTrainCEDRWithScores.FORMAT_NAME) == 0) {
+      return new ExportTrainCEDRWithScores(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
+    }
     return null;
   }
 
   static void addAllOptionDesc(Options opts) {
     ExportTrainMatchZoo.addOptionDesc(opts);
-    ExportTrainNegSampleBase.addOptionsDesc(opts);
+    ExportTrainNegSampleWithoutScoresBase.addOptionsDesc(opts);
     ExportTrainCEDR.addOptionsDesc(opts);
   }
   // Supposed to return an error message, if some options are missing or poorly formatted
