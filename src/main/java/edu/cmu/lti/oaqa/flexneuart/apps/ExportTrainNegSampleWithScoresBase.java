@@ -120,7 +120,7 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
     
     // It's super-important to not generate any empty text fields.
     if (queryExportFieldText.isEmpty()) {
-    return;
+      return;
     }
 
     String queryId = queryEntry.mEntryId;
@@ -164,21 +164,28 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
     
     String othDocIdsArr[] = new String[othDocIds.size()];
     othDocIdsArr = othDocIds.toArray(othDocIdsArr);
+    
 
-    HashSet<String> medSel = new HashSet<String>();
+    HashSet<String> selNegDocIds = new HashSet<String>();
     
     if (mSampleMedNegQty > 0) {
       ArrayList<String> othDocSample = mRandUtils.reservoirSampling(othDocIdsArr, mSampleMedNegQty);
         
       for (String docId : othDocSample) {
-        medSel.add(docId);     
+        selNegDocIds.add(docId);     
       }
     }
      
     ArrayList<CandidateEntry> docs = new ArrayList<CandidateEntry>();
     
+    boolean bHasRelev = false;
+    
     for (int i = 0; i <cands.mEntries.length; i++) {
       CandidateEntry e = cands.mEntries[i];
+      
+      if (relDocIds.contains(e.mDocId)) {
+        bHasRelev = true;
+      }
 
       // We generate two types of negative samples. 
       // 1. Include a given number of top candidate entries
@@ -187,11 +194,18 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
       // This version does not include easy examples, because they won't have a candidate generator score
       //
       if (i < mHardNegQty ||           // a positive, or a hard negative from the top-K list of candidates
-          medSel.contains(e.mDocId)) { // medium difficult negative sampled
+          selNegDocIds.contains(e.mDocId) || // medium difficult negative sampled
+          relDocIds.contains(e.mDocId)) { // all relevant
         docs.add(e);
       }
     }
 
+    if (!bHasRelev) {
+      if (allRelDocIds.isEmpty()) {
+        logger.info("Skipping query " + queryId + " b/c it has no candidate entries that are relevant.");
+        return;
+      }
+    }
     
     // Making it thread-safe!
     synchronized (ExportTrainNegSampleWithScoresBase.class) {
