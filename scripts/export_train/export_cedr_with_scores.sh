@@ -25,6 +25,7 @@ checkVarNonEmpty "indexExportFieldName"
 checkVarNonEmpty "queryExportFieldName"
 checkVarNonEmpty "threadQty"
 checkVarNonEmpty "candTrainQty"
+checkVarNonEmtpy "candTrain4PosQty"
 checkVarNonEmpty "candTestQty"
 checkVarNonEmpty "partTrain"
 checkVarNonEmpty "partTest"
@@ -40,7 +41,9 @@ target/appassembler/bin/ExportTrainPairs \
 $handleCaseParam \
 -seed $randSeed \
 -export_fmt cedr_with_scores  \
--cand_train_qty $candTrainQty -cand_test_qty $candTestQty \
+-cand_train_qty $candTrainQty \
+-cand_train_4pos_qty $candTrain4PosQty \
+-cand_test_qty $candTestQty \
 $maxNumQueryTestParam \
 $maxNumQueryTrainParam \
 -max_doc_whitespace_qty $maxDocWhitespaceQty \

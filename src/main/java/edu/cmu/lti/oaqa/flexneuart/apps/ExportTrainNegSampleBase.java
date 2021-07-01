@@ -18,9 +18,11 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   private static final String MAX_SAMPLE_MEDIUM_NEG_QTY = "sample_med_neg_qty";
   private static final String MAX_SAMPLE_EASY_NEG_QTY = "sample_easy_neg_qty";
   private static final String MAX_CAND_TRAIN_QTY_PARAM = "cand_train_qty";
-  private static final String MAX_CAND_TRAIN_QTY_DESC = "A maximum number of candidate records returned by the provider to generate hard negative samples.";
+  private static final String MAX_CAND_TRAIN_QTY_DESC = "A max. # of candidate records from which we sample medium negatives.";
+  private static final String MAX_CAND_TRAIN_FOR_POS_QTY_PARAM = "cand_train_4pos_qty";
+  private static final String MAX_CAND_TRAIN_FOR_POS_QTY_DESC = "A max. # of candidate records from which we select positive samples.";
   private static final String MAX_CAND_TEST_QTY_PARAM = "cand_test_qty";
-  private static final String MAX_CAND_TEST_QTY_DESC = "A maximum number of candidate records returned by the provider to generate test data.";
+  private static final String MAX_CAND_TEST_QTY_DESC = "max # of candidate records returned by the provider to generate test data.";
   public static final String MAX_DOC_WHITESPACE_TOK_QTY_PARAM = "max_doc_whitespace_qty";
   public static final String MAX_DOC_WHITESPACE_TOK_QTY_DESC = "max # of whitespace separated tokens to keep in a document";
   public static final String KEEP_CASE_PARAM = "keep_case";
@@ -39,6 +41,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     opts.addOption(MAX_SAMPLE_EASY_NEG_QTY, null, true, "A max. # of *EASY* negative samples (sampling arbitrary docs) per query");
     
     opts.addOption(MAX_CAND_TRAIN_QTY_PARAM, null, true, MAX_CAND_TRAIN_QTY_DESC);
+    opts.addOption(MAX_CAND_TRAIN_FOR_POS_QTY_PARAM, null, true, MAX_CAND_TRAIN_FOR_POS_QTY_DESC);
     opts.addOption(MAX_CAND_TEST_QTY_PARAM, null, true, MAX_CAND_TEST_QTY_DESC);
     opts.addOption(CommonParams.RANDOM_SEED_PARAM, null, true, CommonParams.RANDOM_SEED_DESC);
     
@@ -91,6 +94,17 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
         return MAX_CAND_TRAIN_QTY_PARAM + " isn't integer: '" + tmpn + "'";
       }
     }
+    
+    mCandTrain4PosQty = mCandTrainQty;
+    tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_FOR_POS_QTY_PARAM);
+    if (null != tmpn) {
+      try {
+        mCandTrainQty = Integer.parseInt(tmpn);
+      } catch (NumberFormatException e) {
+        return MAX_CAND_TRAIN_FOR_POS_QTY_PARAM + " isn't integer: '" + tmpn + "'";
+      }
+    }
+    
     
     int seed = 0;
     tmpn = cmd.getOptionValue(CommonParams.RANDOM_SEED_PARAM);
@@ -176,6 +190,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   protected int mSampleEasyNegQty = 0;
   protected int mMaxWhitespaceTokDocQty = -1;
   protected int mCandTrainQty = Integer.MAX_VALUE;
+  protected int mCandTrain4PosQty = Integer.MAX_VALUE;
   protected int mCandTestQty = Integer.MAX_VALUE;
   protected RandomUtils mRandUtils = null;
   protected String [] mAllDocIds = null;

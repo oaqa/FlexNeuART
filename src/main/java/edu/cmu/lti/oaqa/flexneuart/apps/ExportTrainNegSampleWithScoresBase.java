@@ -149,23 +149,32 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
     }
     
     HashSet<String> relDocIds = new HashSet<String>();
+    // A list of documents to select negative samples
     ArrayList<String> othDocIds = new ArrayList<String>();
-    
-    CandidateInfo cands = candProv.getCandidates(queryNum, queryEntry, mCandTrainQty);
 
-    for (CandidateEntry e : cands.mEntries) {
+    // Not all the retrieved candidates will be used to select medium-difficulty negatives
+    CandidateInfo cands = candProv.getCandidates(queryNum, queryEntry, Math.max(mCandTrainQty, mCandTrain4PosQty));
+
+    for (int k = 0; k < cands.mEntries.length; ++k) {
+      CandidateEntry e = cands.mEntries[k];
       
       if (allRelDocIds.contains(e.mDocId)) {
         relDocIds.add(e.mDocId);
       } else {
-        othDocIds.add(e.mDocId);  
+        if (k < mCandTrainQty) {
+          othDocIds.add(e.mDocId);  
+        }
       }
     };
+    
+    if (relDocIds.isEmpty()) {
+      logger.info("Skipping query " + queryId + " b/c it has no candidate entries that are relevant.");
+      return;
+    }
     
     String othDocIdsArr[] = new String[othDocIds.size()];
     othDocIdsArr = othDocIds.toArray(othDocIdsArr);
     
-
     HashSet<String> selNegDocIds = new HashSet<String>();
     
     if (mSampleMedNegQty > 0) {
@@ -178,14 +187,8 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
      
     ArrayList<CandidateEntry> docs = new ArrayList<CandidateEntry>();
     
-    boolean bHasRelev = false;
-    
     for (int i = 0; i <cands.mEntries.length; i++) {
       CandidateEntry e = cands.mEntries[i];
-      
-      if (relDocIds.contains(e.mDocId)) {
-        bHasRelev = true;
-      }
 
       // We generate two types of negative samples. 
       // 1. Include a given number of top candidate entries
@@ -197,13 +200,6 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
           selNegDocIds.contains(e.mDocId) || // medium difficult negative sampled
           relDocIds.contains(e.mDocId)) { // all relevant
         docs.add(e);
-      }
-    }
-
-    if (!bHasRelev) {
-      if (allRelDocIds.isEmpty()) {
-        logger.info("Skipping query " + queryId + " b/c it has no candidate entries that are relevant.");
-        return;
       }
     }
     

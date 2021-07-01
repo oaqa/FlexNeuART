@@ -13,7 +13,8 @@ threadQty=1
 hardNegQty=0
 sampleMedNegQty=5
 sampleEasyNegQty=0
-candTrainQty=500
+candTrainQty=100
+candTrain4PosQty=1000
 candTestQty=20
 randSeed=0
 maxDocWhitespaceQty=-1 # means no truncation
@@ -38,7 +39,8 @@ paramOpts=(
 "hard_neg_qty"           "hardNegQty"          "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
 "sample_med_neg_qty"     "sampleMedNegQty"     "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
 "sample_easy_neg_qty"    "sampleEasyNegQty"    "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
-"cand_train_qty"         "candTrainQty"        "A max. # of candidate records to generate training data (default $candTrainQty)"
+"cand_train_qty"         "candTrainQty"        "A max. # of candidate records from which we sample medium negatives (default $candTrainQty)"
+"cand_train_4pos_qty"    "candTrain4PosQty"    "A max. # of candidate records from which we select positive samples. (default $candTrain4PosQty)"
 "cand_test_qty"          "candTestQty"         "A max. # of candidate records to generate test data (default $candTestQty)"
 "max_num_query_train"    "maxNumQueryTrain"    "Optional max. # of train queries"
 "max_num_query_test"     "maxNumQueryTest"     "Optional max. # of test/dev queries"
