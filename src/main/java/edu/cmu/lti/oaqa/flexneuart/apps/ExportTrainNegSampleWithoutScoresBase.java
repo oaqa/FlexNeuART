@@ -54,8 +54,7 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
                                             boolean isTestQuery, 
                                             String queryId, 
                                             HashSet<String> relDocIds, 
-                                            ArrayList<String> docIds)
-      throws Exception;
+                                            ArrayList<String> docIds) throws Exception;
 
   void exportQueryTest(CandidateProvider candProv,
                        int queryNum,
@@ -124,7 +123,8 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
     String queryId = queryEntry.mEntryId;
 
     HashSet<String> relDocIds = new HashSet<String>();
-    HashSet<String> othDocIds = new HashSet<String>();
+    // negPoolDocIds is used to sample medium-difficulty negatives
+    HashSet<String> negPoolDocIds = new HashSet<String>();
 
     HashMap<String, String> qq = mQrelsTrain.getQueryQrels(queryId);
     
@@ -141,7 +141,8 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
       if (grade >= 1) {
         relDocIds.add(docId);
       } else {
-        othDocIds.add(docId);
+        // add to the pool of medium-difficulty negatives
+        negPoolDocIds.add(docId);
       }
     }
     if (relDocIds.isEmpty()) {
@@ -155,33 +156,34 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
     // 1. negative QREL entries
     // 2. candidates retrieved
     for (CandidateEntry e : cands.mEntries) {
-      
-      if (relDocIds.contains(e.mDocId) || othDocIds.contains(e.mDocId)) {
+      if (relDocIds.contains(e.mDocId) || negPoolDocIds.contains(e.mDocId)) {
         continue;
       }
-      othDocIds.add(e.mDocId);  
+      negPoolDocIds.add(e.mDocId);  
     }
+
+    // Now generate three types of negative samples (hard negative samples aren't randomly selected here!). 
+    // There's a chance of repeats  but they shouldn't be frequent for a reasonable set of parameters. 
+    // So, let's not worry about this.
     
-    ArrayList<String> allDocIds = new ArrayList<String>(relDocIds);
+    // 1. Include a given number of top candidate entries (hard samples, mostly negative)
+    ArrayList<String> selDocIds = new ArrayList<String>(relDocIds);
     
-    String othDocIdsArr[] = othDocIds.toArray(new String[0]);
-    
-    // Second generate three types of negative samples. There's a chance of repeats
-    // but they shouldn't be frequent for a reasonable set of parameters. So, let's not
-    // bother about this.
-    // 1. Include a given number of top candidate entries
     for (int i = 0; i < Math.min(cands.mEntries.length, mHardNegQty); i++) {
-      othDocIds.add(cands.mEntries[i].mDocId);
+      selDocIds.add(cands.mEntries[i].mDocId);
     }
     
     // 2. Generate randomly medium-difficulty negative samples from a candidate list and QRELs:
-    //    These are harder than randomly selected (and likely completely non-relevant documents)
+    //    These are harder than randomly selected documents from all the collection,
     //    but typically easier than a few top candidates, which have highest retrieval scores.
+
+    String negPoolDocIdsArr[] = negPoolDocIds.toArray(new String[0]);
+    
     if (mSampleMedNegQty > 0) {
-      ArrayList<String> othDocSample = mRandUtils.reservoirSampling(othDocIdsArr, mSampleMedNegQty);
+      ArrayList<String> negDocSample = mRandUtils.reservoirSampling(negPoolDocIdsArr, mSampleMedNegQty);
         
-      for (String docId : othDocSample) {
-        allDocIds.add(docId);     
+      for (String docId : negDocSample) {
+        selDocIds.add(docId);     
       }
     }
     
@@ -195,12 +197,13 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
     for (int k = 0; k < mSampleEasyNegQty; ++k) {
       int idx = Math.abs(mRandUtils.nextInt()) % mAllDocIds.length;
       String docId = mAllDocIds[idx];
-      allDocIds.add(docId);
+      selDocIds.add(docId);
     }
+    
     // Making it thread-safe!
     synchronized (ExportTrainNegSampleWithoutScoresBase.class) {
       writeOneEntryData(queryExportFieldText, false /* this is train query */,
-                        queryId, relDocIds, allDocIds);
+                        queryId, relDocIds, selDocIds);
     }
   }
 }

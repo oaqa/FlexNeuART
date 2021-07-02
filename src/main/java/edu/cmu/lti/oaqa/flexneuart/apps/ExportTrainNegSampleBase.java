@@ -85,6 +85,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     }
     
     logger.info(String.format("# of hard/medium/easy samples per query: %d/%d/%d", mHardNegQty, mSampleMedNegQty, mSampleEasyNegQty));
+    logger.info("# of candidates to select relevant entries (for exporting with scores only)" + this.mCandTrain4PosQty);
     
     tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_QTY_PARAM);
     if (null != tmpn) {
