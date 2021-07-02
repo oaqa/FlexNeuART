@@ -54,8 +54,7 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
                                             boolean isTestQuery, 
                                             String queryId, 
                                             HashSet<String> relDocIds, 
-                                            ArrayList<CandidateEntry> docs)
-      throws Exception;
+                                            ArrayList<CandidateEntry> docs) throws Exception;
 
   void exportQueryTest(CandidateProvider candProv,
                        int queryNum,
@@ -150,7 +149,7 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
     
     HashSet<String> relDocIds = new HashSet<String>();
     // A list of documents to select negative samples
-    ArrayList<String> othDocIds = new ArrayList<String>();
+    ArrayList<String> negPoolDocIds = new ArrayList<String>();
 
     // Not all the retrieved candidates will be used to select medium-difficulty negatives
     CandidateInfo cands = candProv.getCandidates(queryNum, queryEntry, Math.max(mCandTrainQty, mCandTrain4PosQty));
@@ -162,7 +161,7 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
         relDocIds.add(e.mDocId);
       } else {
         if (k < mCandTrainQty) {
-          othDocIds.add(e.mDocId);  
+          negPoolDocIds.add(e.mDocId);  
         }
       }
     };
@@ -172,22 +171,21 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
       return;
     }
     
-    String othDocIdsArr[] = new String[othDocIds.size()];
-    othDocIdsArr = othDocIds.toArray(othDocIdsArr);
+    String negPoolDocIdsArr[] = negPoolDocIds.toArray(new String[0]);
     
     HashSet<String> selNegDocIds = new HashSet<String>();
     
     if (mSampleMedNegQty > 0) {
-      ArrayList<String> othDocSample = mRandUtils.reservoirSampling(othDocIdsArr, mSampleMedNegQty);
+      ArrayList<String> negDocSample = mRandUtils.reservoirSampling(negPoolDocIdsArr, mSampleMedNegQty);
         
-      for (String docId : othDocSample) {
+      for (String docId : negDocSample) {
         selNegDocIds.add(docId);     
       }
     }
      
     ArrayList<CandidateEntry> docs = new ArrayList<CandidateEntry>();
     
-    for (int i = 0; i <cands.mEntries.length; i++) {
+    for (int i = 0; i < cands.mEntries.length; i++) {
       CandidateEntry e = cands.mEntries[i];
 
       // We generate two types of negative samples. 

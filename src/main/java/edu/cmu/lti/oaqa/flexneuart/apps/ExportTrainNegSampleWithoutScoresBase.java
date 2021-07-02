@@ -117,7 +117,7 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
     
     // It's super-important to not generate any empty text fields.
     if (queryExportFieldText.isEmpty()) {
-    return;
+      return;
     }
 
     String queryId = queryEntry.mEntryId;

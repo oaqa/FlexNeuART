@@ -43,7 +43,7 @@ public abstract class ExportTrainBase {
 
   static void addAllOptionDesc(Options opts) {
     ExportTrainMatchZoo.addOptionDesc(opts);
-    ExportTrainNegSampleWithoutScoresBase.addOptionsDesc(opts);
+    ExportTrainNegSampleBase.addOptionsDesc(opts);
     ExportTrainCEDR.addOptionsDesc(opts);
   }
   // Supposed to return an error message, if some options are missing or poorly formatted
