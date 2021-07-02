@@ -200,7 +200,7 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
       selDocIds.add(docId);
     }
     
-    logger.info("Query #" + queryNum + " relDocIds.size(): " + relDocIds.size() + " selDocIds.size(): " + selDocIds.size());
+    //logger.info("Query #" + queryNum + " relDocIds.size(): " + relDocIds.size() + " selDocIds.size(): " + selDocIds.size());
     
     // Making it thread-safe!
     synchronized (ExportTrainNegSampleWithoutScoresBase.class) {

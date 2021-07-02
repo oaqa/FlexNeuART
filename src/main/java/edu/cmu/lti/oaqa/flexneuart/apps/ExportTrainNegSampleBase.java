@@ -85,8 +85,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     }
     
     logger.info(String.format("# of hard/medium/easy samples per query: %d/%d/%d", mHardNegQty, mSampleMedNegQty, mSampleEasyNegQty));
-    logger.info("# of candidates to select relevant entries (for exporting with scores only)" + this.mCandTrain4PosQty);
-    
+   
     tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_QTY_PARAM);
     if (null != tmpn) {
       try {
@@ -100,7 +99,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     tmpn = cmd.getOptionValue(MAX_CAND_TRAIN_FOR_POS_QTY_PARAM);
     if (null != tmpn) {
       try {
-        mCandTrainQty = Integer.parseInt(tmpn);
+        mCandTrain4PosQty = Integer.parseInt(tmpn);
       } catch (NumberFormatException e) {
         return MAX_CAND_TRAIN_FOR_POS_QTY_PARAM + " isn't integer: '" + tmpn + "'";
       }
@@ -135,6 +134,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     logger.info("Lower-casing? " + mDoLowerCase);
     
     logger.info(String.format("# top-scoring training candidates to sample/select from %d", mCandTrainQty));
+    logger.info(String.format("# top-scoring training candidates to select positives from %d (only for export with scores)", mCandTrain4PosQty));
     logger.info(String.format("# top candidates for validation %d", mCandTestQty));
     
     

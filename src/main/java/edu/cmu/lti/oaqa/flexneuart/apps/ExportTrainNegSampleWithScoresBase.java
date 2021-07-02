@@ -201,7 +201,7 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
       }
     }
     
-    logger.info("Query #" + queryNum + " relDocIds.size(): " + relDocIds.size() + " docs.size(): " + docs.size());
+    //logger.info("Query #" + queryNum + " relDocIds.size(): " + relDocIds.size() + " docs.size(): " + docs.size());
     
     // Making it thread-safe!
     synchronized (ExportTrainNegSampleWithScoresBase.class) {
