@@ -191,7 +191,7 @@ def train_iteration(model, sync_barrier,
     else:
         pbar = None
 
-    cand_score_weight = torch.FloatTensor(train_params.cand_score_weight).to(train_params.device_name)
+    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
 
     for record in data.iter_train_pairs(model, train_params.device_name, dataset, train_pairs, train_params.shuffle_train,
                                         qrels, train_params.backprop_batch_size,
@@ -331,7 +331,7 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
     clean_memory(train_params.device_name)
-    cand_score_weight = torch.FloatTensor(train_params.cand_score_weight).to(train_params.device_name)
+    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
     with torch.no_grad(), \
             tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
 
