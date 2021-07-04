@@ -641,10 +641,6 @@ def main_cli():
 
     args = parser.parse_args()
 
-    print(args)
-    utils.sync_out_streams()
-    
-
     all_arg_names = vars(args).keys()
 
     if args.json_conf is not None:
@@ -672,6 +668,9 @@ def main_cli():
     if args.save_last_snapshot_every_k_batch is not None and args.save_last_snapshot_every_k_batch < 2:
         print('--save_last_snapshot_every_k_batch should be > 1')
         sys.exit(1)
+
+    print(args)
+    utils.sync_out_streams()
 
     utils.set_all_seeds(args.seed)
 

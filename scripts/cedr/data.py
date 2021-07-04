@@ -66,7 +66,7 @@ def read_pairs_dict(file):
         else:
             score = 0
 
-        result.setdefault(qid, {})[docid] = score
+        result.setdefault(qid, {})[docid] = float(score)
 
     return result
 
