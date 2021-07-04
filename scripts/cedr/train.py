@@ -588,7 +588,7 @@ def main_cli():
                         type=float, default=0.9, help='SGD momentum')
 
     parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
-                        type=float, default=1.0,
+                        type=float, default=0.0,
                         help='a weight of the candidate generator score used to combine it with the model score.')
 
     parser.add_argument('--init_bert_lr', metavar='init BERT learn. rate',
