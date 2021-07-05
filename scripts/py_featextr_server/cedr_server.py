@@ -27,6 +27,8 @@ from scripts.py_featextr_server.base_server import BaseQueryHandler, start_query
 import scripts.cedr.model_init_utils as model_init_utils
 import scripts.cedr.data as data
 
+from scripts.cedr.data import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD
+
 DEFAULT_BATCH_SIZE = 32
 
 class CedrQueryHandler(BaseQueryHandler):
@@ -91,10 +93,10 @@ class CedrQueryHandler(BaseQueryHandler):
                                                            self.batch_size,
                                                            self.max_query_len, self.max_doc_len):
 
-                        scores = model(records['query_tok'],
-                                        records['query_mask'],
-                                        records['doc_tok'],
-                                        records['doc_mask'])
+                        scores = model(records[QUERY_TOK_FIELD],
+                                       records[QUERY_MASK_FIELD],
+                                       records[DOC_TOK_FIELD],
+                                       records[DOC_MASK_FIELD])
 
 
                         # tolist() works much faster compared to extracting scores

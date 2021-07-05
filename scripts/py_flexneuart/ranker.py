@@ -24,6 +24,8 @@ from jnius import autoclass
 from scripts.config import DOCID_FIELD
 
 from scripts.cedr.data import iter_valid_records
+from scripts.cedr.data import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
+                                QUERY_ID_FIELD, DOC_ID_FIELD
 
 from scripts.py_flexneuart.utils import query_dict_to_dataentry_fields
 from scripts.py_flexneuart.cand_provider import JCandidateEntry
@@ -221,18 +223,16 @@ class PythonNNQueryRanker(BaseQueryRanker):
             for records in iter_valid_records(self.model, self.device_name, data_set, run,
                                               self.batch_size,
                                               self.max_query_len, self.max_doc_len):
-                scores = self.model(records['query_tok'],
-                                   records['query_mask'],
-                                   records['doc_tok'],
-                                   records['doc_mask'])
+                scores = self.model(records[QUERY_TOK_FIELD],
+                                    records[QUERY_MASK_FIELD],
+                                    records[DOC_TOK_FIELD],
+                                    records[DOC_MASK_FIELD])
 
                 scores = scores.tolist()
 
-                for qid, doc_id, score in zip(records['query_id'], records['doc_id'], scores):
+                for qid, did, score in zip(records[QUERY_ID_FIELD], records[DOC_ID_FIELD], scores):
                     res[doc_id] = score
 
         return res
-
-
 
 
