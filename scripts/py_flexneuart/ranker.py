@@ -215,7 +215,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
             retr_score[doc_id] = score
 
         data_set = query_data, doc_data
-        run = {query_id : doc_data.keys()}
+        run = {query_id : {did : 0 for did in doc_data.keys()}}
 
         res = {}
 

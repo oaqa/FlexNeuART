@@ -72,7 +72,7 @@ class CedrQueryHandler(BaseQueryHandler):
 
         query_data = {query.id: query.text}
         # Run maps queries to arrays of document IDs see iter_valid_records (train.py)
-        run = {query.id: [e.id for e in docs]}
+        run = {query.id: {e.id : 0 for e in docs}}
 
         doc_data = {}
         for e in docs:
