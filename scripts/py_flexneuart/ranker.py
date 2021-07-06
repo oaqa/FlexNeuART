@@ -209,15 +209,15 @@ class PythonNNQueryRanker(BaseQueryRanker):
 
         doc_data = {}
         retr_score = {}
-        run_docs = {}
+        run_did_and_scores = {}
         for doc_id, score in cand_list:
             doc_text = self.fwd_indx.get_doc_raw(doc_id)
             doc_data[doc_id] = doc_text
             retr_score[doc_id] = score
-            run_docs[doc_id] = 0
+            run_did_and_scores[doc_id] = 0
 
         data_set = query_data, doc_data
-        run = {query_id : run_docs}
+        run = {query_id : run_did_and_scores}
 
         res = {}
 
