@@ -221,8 +221,6 @@ class PythonNNQueryRanker(BaseQueryRanker):
 
         res = {}
 
-        import pdb ; pdb.set_trace()
-
         with torch.no_grad():
             for records in iter_valid_records(self.model, self.device_name, data_set, run,
                                               self.batch_size,
