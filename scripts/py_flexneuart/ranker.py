@@ -40,9 +40,9 @@ class BaseQueryRanker:
     """A base re-ranker class."""
     def get_query_info_obj(self, query_info_obj_or_dict):
         """an instance of
-                                        i) a DataEntryFields object
-                                        ii) a dictionary object, which will the function
-                                            try to convert to DataEntryFields
+                i) a DataEntryFields object
+                ii) a dictionary object, which will the function
+                    try to convert to DataEntryFields
 
         :param query_info_obj_or_dict: a DataEntryFields object
         :return:
@@ -194,7 +194,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
 
         :return:  a dictionary where keys are document IDs and values are document scores
         """
-        query_info_obj = self.get_query_info_obj(query_info_obj_or_dict)
+        query_info_obj_or_dict = self.get_query_info_obj(query_info_obj_or_dict)
 
         if type(query_info_obj_or_dict) == dict:
             query_text = query_info_obj_or_dict[self.query_field_name]

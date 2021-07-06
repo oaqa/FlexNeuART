@@ -43,7 +43,7 @@ def create_featextr_resource_manager(fwd_index_dir=None, model1_root_dir=None, r
     """Create a resource manager use for feature extraction and re-ranking.
 
     :param fwd_index_dir:     a forward index root (optional)
-    :param model1_root_dir:   a Model 1 translation data root (optional)
+    :param model1_root_dir:   a Model 1 (giza) translation data root (optional)
     :param root_embed_dir:    a root word embedding directory (optional)
 
     :return: a references to the FeatExtrResourceManager class

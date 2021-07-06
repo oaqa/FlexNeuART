@@ -27,7 +27,8 @@ from scripts.py_featextr_server.base_server import BaseQueryHandler, start_query
 import scripts.cedr.model_init_utils as model_init_utils
 import scripts.cedr.data as data
 
-from scripts.cedr.data import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD
+from scripts.cedr.data import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
+                                QUERY_ID_FIELD, DOC_ID_FIELD
 
 DEFAULT_BATCH_SIZE = 32
 
@@ -103,7 +104,7 @@ class CedrQueryHandler(BaseQueryHandler):
                         # one by one using .item()
                         scores = scores.tolist()
 
-                        for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
+                        for qid, did, score in zip(records[QUERY_ID_FIELD], records[DOC_ID_FIELD], scores):
                             if self.debug_print:
                                 print('model id:', model_id, 'score & doc. id:', score, did, doc_data[did])
 
