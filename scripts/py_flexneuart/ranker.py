@@ -233,7 +233,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
                 scores = scores.tolist()
 
                 for qid, did, score in zip(records[QUERY_ID_FIELD], records[DOC_ID_FIELD], scores):
-                    res[doc_id] = score
+                    res[did] = score
 
         return res
 
