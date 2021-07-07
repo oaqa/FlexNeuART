@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Downloading and re-packing the MSMARCO passage collection.
+# Downloading and re-packing the MSMARCO document collection.
 dstDir="$1"
 
 [ "$dstDir" != "" ] || { echo "Specify destination directory (1st arg)" ; exit 1 ; }
