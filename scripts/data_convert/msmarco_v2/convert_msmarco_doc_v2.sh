@@ -14,7 +14,7 @@ for part in docs train dev dev2 ; do
 done
 
 for part in train dev dev2 ; do
-  co "$src/docv2_${part}_qrels.tsv" "$inputDataDir/$part/$QREL_FILE"
+  cp "$src/docv2_${part}_qrels.tsv" "$inputDataDir/$part/$QREL_FILE"
   scripts/data_convert/msmarco/convert_queries.py \
     $BERT_TOK_OPT \
     --input  "$src/docv2_${part}_queries.tsv" \
