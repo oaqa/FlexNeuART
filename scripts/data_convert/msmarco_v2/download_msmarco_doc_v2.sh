@@ -26,3 +26,5 @@ for fn in \
   azcopy copy "$uri" .
 done
 
+tar xvf msmarco_v2_doc.tar  
+
