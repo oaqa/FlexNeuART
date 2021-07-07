@@ -25,6 +25,10 @@ QUESTION_FILE_BIN="${QUESTION_FILE_PREFIX}.bin"
 
 SAMPLE_COLLECT_ARG="collection sub-directory, e.g., msmarco_pass"
 
+function check_has_azcopy() {
+  azcopy --help &>/dev/null || { echo "Please, install Microsoft azcopy (Azure copying tool), no auth is needed!" ; exit 1 ; }
+}
+
 function div1() {
   awk "BEGIN{printf(\"%.1f\", $1/$2)}"|sed 's/[.]0$//'
 }

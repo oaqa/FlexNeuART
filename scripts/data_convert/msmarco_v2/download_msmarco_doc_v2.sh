@@ -8,8 +8,9 @@ dstDir="$1"
 
 source scripts/common_proc.sh
 
-cd "$dstDir"
+check_has_azcopy
 
+cd "$dstDir"
 
 for fn in \
           docv2_train_queries.tsv \
@@ -22,6 +23,6 @@ for fn in \
           ; do
   uri=https://msmarco.blob.core.windows.net/msmarcoranking/$fn
   echo "Downloading $uri"
-  wget "$uri"
+  azcopy copy "$uri" .
 done
 
