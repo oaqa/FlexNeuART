@@ -53,7 +53,7 @@ args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
-inp_source = multi_file_linegen(args.input)
+inp_source = multi_file_linegen(args.input, "^msmarco_doc_.*")
 out_file = FileWrapper(args.output, 'w')
 max_doc_size = args.max_doc_size
 
