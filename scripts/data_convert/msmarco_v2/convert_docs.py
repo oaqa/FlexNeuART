@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# Convert MSMARCO documents
+# Convert MSMARCO (v2) documents
 #
 import sys
 import json
@@ -26,7 +26,7 @@ sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field, pretokenize_url
+    multi_file_linegen, FileWrapper, read_stop_words, add_retokenized_field, pretokenize_url
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
     TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
     TITLE_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
@@ -34,8 +34,9 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
 
 
-parser = argparse.ArgumentParser(description='Convert MSMARCO documents.')
-parser.add_argument('--input', metavar='input file', help='input file',
+parser = argparse.ArgumentParser(description='Convert MSMARCO (v2) documents')
+parser.add_argument('--input', metavar='input directory',
+                    help='input directory with un-tarred document file',
                     type=str, required=True)
 parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
@@ -52,7 +53,7 @@ args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
-inp_file = FileWrapper(args.input)
+inp_source = multi_file_linegen(args.input)
 out_file = FileWrapper(args.output, 'w')
 max_doc_size = args.max_doc_size
 
@@ -71,26 +72,31 @@ class DocParseWorker:
 
         if not line:
             return None
-        line = line[:max_doc_size]  # cut documents that are too long!
-        fields = line.split('\t')
-        if len(fields) != 4:
-            return None
 
-        did, url, title, body = fields
+        fields = json.loads(line)
+        body = fields['body'][:max_doc_size] # cut documents that are too long!
+        did = fields['docid']
+        title = fields['title']
+        url = fields['url']
+        headings = fields['headings']
 
         url_pretok = pretokenize_url(url)
 
         url_lemmas, url_unlemm = nlp.proc_text(url_pretok)
         title_lemmas, title_unlemm = nlp.proc_text(title)
         body_lemmas, body_unlemm = nlp.proc_text(body)
+        headings_lemmas, headings_unlemm = nlp.proc_text(headings)
 
-        text = title_lemmas + ' ' + body_lemmas
+        text = ' '.join([url_lemmas, headings_lemmas, title_lemmas, body_lemmas])
         text = text.strip()
-        text_raw = (title.strip() + ' ' + body.strip())
+
+        text_raw = ' '.join([url, headings, title, body])
 
         doc = {DOCID_FIELD: did,
                'url' : url_lemmas,
                'url_unlemm' : url_unlemm,
+               'headings': headings_lemmas,
+               'headings_unlemm': headings_unlemm,
                TEXT_FIELD_NAME: text,
                TITLE_FIELD_NAME : title_lemmas,
                TITLE_UNLEMM_FIELD_NAME: title_unlemm,
@@ -106,7 +112,7 @@ proc_qty = args.proc_qty
 print(f'Spanning {proc_qty} processes')
 pool = multiprocessing.Pool(processes=proc_qty)
 ln = 0
-for doc_str in pool.imap(DocParseWorker(), inp_file, IMAP_PROC_CHUNK_QTY):
+for doc_str in pool.imap(DocParseWorker(), inp_source, IMAP_PROC_CHUNK_QTY):
     ln = ln + 1
     if doc_str is not None:
         out_file.write(doc_str)
@@ -120,5 +126,5 @@ for doc_str in pool.imap(DocParseWorker(), inp_file, IMAP_PROC_CHUNK_QTY):
 
 print('Processed %d docs' % ln)
 
-inp_file.close()
+# inp_source is not a file and doesn't need closing
 out_file.close()

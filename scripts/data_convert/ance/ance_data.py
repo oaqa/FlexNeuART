@@ -135,8 +135,8 @@ def parse_and_tokenize_msmarco(is_doc, line, tokenizer,
         title = line_arr[2].rstrip().lower()
         p_text = line_arr[3].rstrip().lower()
 
-        # <sep> is not a proper token, this is a mistake in ANCE
-        # code. However, we keep it as the encoders were trained with this mistake
+        # <sep> does not seem to be a proper token, this is likely a mistake in ANCE code.
+        # However, we keep it as the encoders were trained with this mistake
         full_text = url + "<sep>" + title + "<sep>" + p_text
         full_text = full_text[:max_doc_character]
     else:
