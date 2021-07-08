@@ -345,14 +345,15 @@ def read_doc_ids_from_forward_file_header(fwd_file_name):
     """
     f = open(fwd_file_name)
     lines = [s.strip() for s in f]
+    assert len(lines) > 3, f"File {fwd_file_name} is too short"
     f.close()
-    doc_qty, _ = lines[0].split()
+    doc_qty, _ = lines[1].split()
     doc_qty = int(doc_qty)
 
-    assert len(lines) > doc_qty + 2, f"File {fwd_file_name} is too short: length isn't consistent with the header info"
-    assert lines[1] == "", f"The second line in {fwd_file_name} isn't empty as expected!"
+    assert len(lines) > doc_qty + 4, f"File {fwd_file_name} is too short: length isn't consistent with the header info"
+    assert lines[2] == "", f"The second line in {fwd_file_name} isn't empty as expected!"
     assert lines[-1] == "", f"The last line in {fwd_file_name} isn't empty as expected!"
-    k = 2
+    k = 3
     while k < len(lines) and lines[k] != '':
         k = k + 1
     assert lines[k] == ''  # We check that the last line is empty, we must find the empty line!
