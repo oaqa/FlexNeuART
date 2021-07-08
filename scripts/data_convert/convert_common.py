@@ -265,6 +265,23 @@ def jsonl_gen(file_name):
             yield data
 
 
+def multi_file_linegen(dir_name, pattern):
+    """A generator that reads all files from a given directory matching the pattern
+       and yields their contents line by line.
+
+    :param dir_name:   a source directory name
+    :param pattern:    a pattern should match fully (we use fullmatch)
+    """
+
+    for fn in os.listdir(dir_name):
+        if re.fullmatch(pattern, fn):
+            full_path = os.path.join(dir_name, fn)
+            print('Processing: ' + full_path)
+            with FileWrapper(full_path) as inp:
+                for line in inp:
+                    yield line
+
+
 def read_queries(file_name):
     """Read queries from a JSONL file and checks the document ID is set.
 
