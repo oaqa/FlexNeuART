@@ -84,9 +84,9 @@ class DocParseWorker:
         title_lemmas, title_unlemm = nlp.proc_text(title)
         body_lemmas, body_unlemm = nlp.proc_text(body)
 
-        text = title_lemmas + ' ' + body_lemmas
+        text = ' '.join([url_lemmas, title_lemmas, body_lemmas])
         text = text.strip()
-        text_raw = (title.strip() + ' ' + body.strip())
+        text = ' '.join([url, title, body])
 
         doc = {DOCID_FIELD: did,
                'url' : url_lemmas,
