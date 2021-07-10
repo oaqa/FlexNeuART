@@ -86,7 +86,7 @@ class DocParseWorker:
 
         text = ' '.join([url_lemmas, title_lemmas, body_lemmas])
         text = text.strip()
-        text = ' '.join([url, title, body])
+        text_raw = ' '.join([url, title, body])
 
         doc = {DOCID_FIELD: did,
                'url' : url_lemmas,
