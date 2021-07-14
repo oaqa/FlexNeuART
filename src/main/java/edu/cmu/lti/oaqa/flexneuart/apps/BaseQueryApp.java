@@ -598,26 +598,6 @@ public abstract class BaseQueryApp {
 
     mFwdIndexPref = mCmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
     mExtrTypeInterm = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM);
-    if (mExtrTypeInterm != null) {
-      String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_INTERM_PARAM);
-      if (null == modelFile) 
-        showUsageSpecify(CommonParams.MODEL_FILE_INTERM_PARAM);
-   
-      mModelInterm = mResourceManager.readFeatureWeights(modelFile);
-
-      logger.info("Using the following weights for the intermediate re-ranker:");
-      logger.info(mModelInterm.toString());
-    }
-    
-    mExtrTypeFinal = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM);
-    if (mExtrTypeFinal != null) {
-      if (mUseFinalModel) {
-        String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_FINAL_PARAM);
-
-        mModelFinal = mResourceManager.loadRankLibModel(modelFile);
-        logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
-      }
-    }
 
     mSaveStatFile = mCmd.getOptionValue(CommonParams.SAVE_STAT_FILE_PARAM);
     if (mSaveStatFile != null)
@@ -632,11 +612,30 @@ public abstract class BaseQueryApp {
   void initExtractors() throws Exception {
     mResourceManager = new ResourceManager(mCollectRootDir, mFwdIndexPref, mModel1RootDir, mEmbedRootDir);
 
-    if (mExtrTypeFinal != null)
-      mExtrFinal = mResourceManager.getFeatureExtractor(mExtrTypeFinal);
-    if (mExtrTypeInterm != null)
+    if (mExtrTypeInterm != null) {
       mExtrInterm = mResourceManager.getFeatureExtractor(mExtrTypeInterm);
+      
+      String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_INTERM_PARAM);
+      if (null == modelFile) 
+        showUsageSpecify(CommonParams.MODEL_FILE_INTERM_PARAM);
+   
+      mModelInterm = mResourceManager.readFeatureWeights(modelFile);
 
+      logger.info("Using the following weights for the intermediate re-ranker:");
+      logger.info(mModelInterm.toString());
+    }
+    
+    mExtrTypeFinal = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM);
+    if (mExtrTypeFinal != null) {
+      mExtrFinal = mResourceManager.getFeatureExtractor(mExtrTypeFinal);
+      
+      if (mUseFinalModel) {
+        String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_FINAL_PARAM);
+
+        mModelFinal = mResourceManager.loadRankLibModel(modelFile);
+        logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
+      }
+    }
   }
   
   /**
