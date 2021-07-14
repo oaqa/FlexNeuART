@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
@@ -51,7 +51,7 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
   public static String TOP_TERM_QTY_PARAM = "topTermQty";
   public static String ORIG_WEIGHT_PARAM = "origWeight";
 
-  public FeatExtractorRM3Similarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
+  public FeatExtractorRM3Similarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 

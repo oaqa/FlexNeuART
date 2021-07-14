@@ -16,7 +16,6 @@
 package edu.cmu.lti.oaqa.flexneuart.resources;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.io.FilenameUtils;
@@ -103,15 +102,14 @@ public class ResourceManager {
     
     CandidateProvider[] res = new CandidateProvider[threadQty];
     
-    JSONKeyValueConfig addConf = null;
+    RestrictedJsonConfig addConf = null;
     
     if (configName != null) {
-      ArrayList<JSONKeyValueConfig> confs = JSONKeyValueConfig.readConfig("Config file, candidate provider: " + provType,
+      addConf = RestrictedJsonConfig.readConfig("Config file, candidate provider: " + provType,
                                                                           FilenameUtils.concat(mResourceRootDir, configName));
-      if (confs.size() != 1) {
-        throw new Exception("Invalid config: " + configName + ", expect exactly 1 key-value dict, but read: " + confs.size());
+      if (!addConf.isKeyValCollection()) {
+        throw new Exception("Provider config '" + configName + "' does not have a key-value parameter collection!");
       }
-      addConf = confs.get(0);
     }
     
     

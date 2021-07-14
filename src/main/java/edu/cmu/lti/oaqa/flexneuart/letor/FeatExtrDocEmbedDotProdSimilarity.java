@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.flexneuart.utils.BinReadWriteUtils;
@@ -43,7 +43,7 @@ public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatE
   public static String EXTR_TYPE = "DocEmbedDotProd";
   final Logger logger = LoggerFactory.getLogger(FeatExtrDocEmbedDotProdSimilarity.class);
   
-  public FeatExtrDocEmbedDotProdSimilarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
+  public FeatExtrDocEmbedDotProdSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     
     String indexFieldName = getIndexFieldName();

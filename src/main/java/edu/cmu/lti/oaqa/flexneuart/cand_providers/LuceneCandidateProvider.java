@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.letor.CommonParams;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
@@ -64,7 +64,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
    * @param addConf         additional/optional configuration: can be null
    * @throws Exception
    */
-  public LuceneCandidateProvider(String indexDirName, JSONKeyValueConfig addConf) throws Exception {
+  public LuceneCandidateProvider(String indexDirName, RestrictedJsonConfig addConf) throws Exception {
   	
     if (addConf == null) {
       mQueryFieldName = Const.DEFAULT_QUERY_TEXT_FIELD_NAME;

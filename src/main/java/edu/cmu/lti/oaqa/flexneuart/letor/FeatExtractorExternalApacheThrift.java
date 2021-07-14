@@ -35,7 +35,7 @@ import edu.cmu.lti.oaqa.flexneuart.letor.external.TextEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.letor.external.TextEntryRaw;
 import edu.cmu.lti.oaqa.flexneuart.letor.external.WordEntryInfo;
 import edu.cmu.lti.oaqa.flexneuart.letor.external.ExternalScorer.Client;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
@@ -68,7 +68,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   
   public static String PARSED_AS_RAW = "sendParsedAsRaw";
 
-  public FeatExtractorExternalApacheThrift(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
+  public FeatExtractorExternalApacheThrift(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
     

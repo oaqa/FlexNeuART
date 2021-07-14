@@ -19,7 +19,7 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.SDMSimilarityAnserini;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
@@ -42,7 +42,7 @@ public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
   public static String LAMBDA_O_PARAM = "lambdaO";
 
 
-  public FeatExtrSDMSimilarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
+  public FeatExtrSDMSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
     //String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);

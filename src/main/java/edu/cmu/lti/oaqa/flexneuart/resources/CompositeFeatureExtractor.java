@@ -42,6 +42,7 @@ import no.uib.cipr.matrix.DenseVector;
  */
 public class CompositeFeatureExtractor extends FeatureExtractor {
   public static final String EXTRACTOR_TYPE_PARAM = "type";
+  public static final String EXTRACTOR_PARAMS_PARAM = "params";
 
   /** 
    * A composite feature extraction is a protected function: It is supposed to be called only by 
@@ -52,14 +53,20 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
    * @throws Exception
    */
   protected CompositeFeatureExtractor(ResourceManager resMngr, String configFile) throws Exception {
-    ArrayList<JSONKeyValueConfig> fullConf = JSONKeyValueConfig.readConfig("composite feature extractor", configFile);
+    RestrictedJsonConfig fullConf = RestrictedJsonConfig.readConfig("composite feature extractor", configFile);
+    if (!fullConf.isArray()) {
+      throw new Exception("Extractors configuration file: '" + configFile  + "' does not have an array of extractor descriptions!");
+    }
+    
     ArrayList<SingleFieldFeatExtractor> compList = new ArrayList<SingleFieldFeatExtractor>();
     
     int extrId = 0;
-    for (JSONKeyValueConfig oneExtrConf : fullConf) {
+    for (RestrictedJsonConfig oneExtrConfTopLevel : fullConf.getParamConfigArray()) {
       extrId++;
       SingleFieldFeatExtractor fe = null;
-      String extrType = oneExtrConf.getReqParamStr(EXTRACTOR_TYPE_PARAM);
+      String extrType = oneExtrConfTopLevel.getReqParamStr(EXTRACTOR_TYPE_PARAM);
+      RestrictedJsonConfig oneExtrConf = oneExtrConfTopLevel.getParamNestedConfig(EXTRACTOR_PARAMS_PARAM);
+      
       if (extrType == null) {
         throw new Exception("Missing value: " + EXTRACTOR_TYPE_PARAM + " for exttractor # " + extrId + " file: " + configFile);
       }

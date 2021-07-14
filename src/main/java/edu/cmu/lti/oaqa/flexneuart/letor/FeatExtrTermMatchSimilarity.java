@@ -19,7 +19,7 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TermMatchSimilarity;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
@@ -35,7 +35,7 @@ import no.uib.cipr.matrix.DenseVector;
 public class FeatExtrTermMatchSimilarity extends SingleFieldFeatExtractor  {
   public static String EXTR_TYPE = "TermMatchSimilarity";
 
-  public FeatExtrTermMatchSimilarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
+  public FeatExtrTermMatchSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());

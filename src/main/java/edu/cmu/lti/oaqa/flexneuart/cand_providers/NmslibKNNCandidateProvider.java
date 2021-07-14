@@ -28,7 +28,7 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
@@ -72,7 +72,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
    */
   public NmslibKNNCandidateProvider(String knnServiceURL, 
                                     ResourceManager resourceManager,
-                                    JSONKeyValueConfig addConf) throws Exception {
+                                    RestrictedJsonConfig addConf) throws Exception {
 
     String host = null;
     int    port = -1;

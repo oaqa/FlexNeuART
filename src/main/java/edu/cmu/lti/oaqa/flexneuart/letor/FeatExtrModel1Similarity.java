@@ -29,7 +29,7 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.flexneuart.giza.TranRecSortByProb;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.Model1Data;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TrulySparseVector;
@@ -70,7 +70,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     * by generating query and document vectors with subsequent inner-product computation,
     * this feature seems to be broken and it is not completely clear why. 
     */
-  public FeatExtrModel1Similarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
+  public FeatExtrModel1Similarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
    
     mModel1FilePref = conf.getParam(MODEL1_FILE_PREFIX, getIndexFieldName());

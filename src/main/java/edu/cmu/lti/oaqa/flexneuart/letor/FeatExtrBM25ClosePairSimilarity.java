@@ -19,7 +19,7 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25CloseOrderPairSimilQueryNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25ClosePairSimilarityQueryNormBase;
@@ -34,7 +34,7 @@ public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
   public static String QUERY_WINDOW_PARAM = "queryWindow";
   public static String DOC_WINDOW_PARAM = "docWindow";
 
-  public FeatExtrBM25ClosePairSimilarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
+  public FeatExtrBM25ClosePairSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
