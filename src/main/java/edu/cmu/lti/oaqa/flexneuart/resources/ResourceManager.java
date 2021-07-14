@@ -18,7 +18,6 @@ package edu.cmu.lti.oaqa.flexneuart.resources;
 import java.io.File;
 import java.util.HashMap;
 
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +57,7 @@ public class ResourceManager {
   private final String mResourceRootDir;
   
   /**
-   * Resource manager constructor.
+   * Resource manager constructor. 
    * 
    * @param resourceRootDir      a top-level directory for file resources (can be null or empty string) : use "."
    *                             to define resources relative to the current directory.
@@ -73,12 +72,19 @@ public class ResourceManager {
     mFwdIndexDir = fwdIndexDir;
     mEmbedRootDir = embedRootDir;
     mModel1RootDir = model1RootDir;
-    mResourceRootDir = resourceRootDir !=null ? resourceRootDir : "";
+    mResourceRootDir = resourceRootDir != null ? resourceRootDir : "";
     
     logger.info("Resource manager initialization. Resource root:" + mResourceRootDir);
   }
   
-  
+  /*
+   * Ideally, path concatenation should be done using something like FilenameUtils.concat.
+   * However, the latter has a huge issue: If what you concatenate starts with a slash, the whole path is interpreted
+   * as absolute.
+   */
+  private String concat(String p1, String p2) {
+    return p1 + FS + p2;
+  }
   
   /**
    * Create an array of candidate providers. If the provider is thread-safe,
@@ -108,7 +114,7 @@ public class ResourceManager {
     
     if (configName != null) {
       addConf = RestrictedJsonConfig.readConfig("Config file, candidate provider: " + provType,
-                                                                          FilenameUtils.concat(mResourceRootDir, configName));
+                                                concat(mResourceRootDir, configName));
       if (!addConf.isKeyValCollection()) {
         throw new Exception("Provider config '" + configName + "' does not have a key-value parameter collection!");
       }
@@ -116,11 +122,11 @@ public class ResourceManager {
     
     
     if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
-      res[0] = new LuceneCandidateProvider(FilenameUtils.concat(mResourceRootDir, provURI), addConf);
+      res[0] = new LuceneCandidateProvider(concat(mResourceRootDir, provURI), addConf);
       for (int ic = 1; ic < threadQty; ++ic) 
         res[ic] = res[0];
     } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_TREC_RUNS)) {
-      res[0] = new TrecRunCandidateProvider(FilenameUtils.concat(mResourceRootDir, provURI));
+      res[0] = new TrecRunCandidateProvider(concat(mResourceRootDir, provURI));
       for (int ic = 1; ic < threadQty; ++ic) {
         res[ic] = res[0];
       }
@@ -177,14 +183,14 @@ public class ResourceManager {
         ForwardIndex fwdIndx = getFwdIndex(fieldName);
         ForwardIndexBasedFilterAndRecoder filterAndRecoder = new ForwardIndexBasedFilterAndRecoder(fwdIndx);
         mWordEmbeds.put(embedKey, 
-            new EmbeddingReaderAndRecoder(FilenameUtils.concat(mResourceRootDir, mEmbedRootDir + FS + fileName), filterAndRecoder));
+            new EmbeddingReaderAndRecoder(concat(mResourceRootDir, mEmbedRootDir + FS + fileName), filterAndRecoder));
       }
       return mWordEmbeds.get(embedKey);
     }
   }
   
   public CompositeFeatureExtractor getFeatureExtractor(String configFileName) throws Exception {
-    return new CompositeFeatureExtractor(this, FilenameUtils.concat(mResourceRootDir, configFileName));
+    return new CompositeFeatureExtractor(this, concat(mResourceRootDir, configFileName));
   }
   
   /**
@@ -215,7 +221,7 @@ public class ResourceManager {
         ForwardIndexBasedFilterAndRecoder filterAndRecoder = new ForwardIndexBasedFilterAndRecoder(fwdIndx);
         
         
-        String prefix = FilenameUtils.concat(mResourceRootDir, mModel1RootDir + FS + model1FilePref + FS);
+        String prefix = concat(mResourceRootDir, mModel1RootDir + FS + model1FilePref + FS);
         GizaVocabularyReader answVoc  = new GizaVocabularyReader(prefix + "source.vcb", filterAndRecoder);
         GizaVocabularyReader questVoc = new GizaVocabularyReader(prefix + "target.vcb", filterAndRecoder);
     
@@ -239,7 +245,7 @@ public class ResourceManager {
   }
 
   private String fwdIndexFileName(String prefixDir, String fieldName) {
-    return FilenameUtils.concat(mResourceRootDir, FS + prefixDir + FS + fieldName);
+    return concat(mResourceRootDir, prefixDir + FS + fieldName);
   }  
   
   private HashMap<String, ForwardIndex>               mFwdIndices = new HashMap<String, ForwardIndex>();
