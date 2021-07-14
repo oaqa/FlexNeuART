@@ -254,7 +254,8 @@ public abstract class ForwardIndex {
     // If for some weird reason more than one index was created, we will try to use the first one
     ForwardIndex res = null;
     
-    for (ForwardIndexBackendType itype : ForwardIndexBackendType.values()) {
+    for (ForwardIndexBackendType itype : ForwardIndexBackendType.values()) 
+    if (itype != ForwardIndexBackendType.unknown) {
       String indexPrefixFull = getIndexPrefix(filePrefix, itype);  
       File indexDirOrFile = new File(indexPrefixFull);
       
