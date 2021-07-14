@@ -18,8 +18,13 @@ package edu.cmu.lti.oaqa.flexneuart.letor;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.flexneuart.utils.BinReadWriteUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
@@ -36,11 +41,14 @@ import no.uib.cipr.matrix.DenseVector;
  */
 public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatExtractor {
   public static String EXTR_TYPE = "DocEmbedDotProd";
+  final Logger logger = LoggerFactory.getLogger(FeatExtrDocEmbedDotProdSimilarity.class);
   
-  FeatExtrDocEmbedDotProdSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrDocEmbedDotProdSimilarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
     super(resMngr, conf);
+    
+    String indexFieldName = getIndexFieldName();
  
-    mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
+    mFieldIndex = resMngr.getFwdIndex(indexFieldName);
     
     String docIds[] = mFieldIndex.getAllDocIds();
     if (docIds.length == 0) {
@@ -49,6 +57,10 @@ public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatE
     // Infer dimensions from the first available vector
     float vec[] = BinReadWriteUtils.readPackedDenseVector(mFieldIndex.getDocEntryBinary(docIds[0]));
     mDim = vec.length;
+    
+    mNormalize = conf.getParam(FeatExtrWordEmbedSimilarity.USE_L2_NORM, false);
+    
+    logger.info("Index field name: " + indexFieldName + " normalize embeddings:? " + mNormalize);
   }
 
   @Override
@@ -97,7 +109,9 @@ public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatE
         throw new Exception(String.format("Bug, cannot retrieve a vector for docId '%s' from the result set", 
                                           e.mDocId));
       }
-      v.set(0, DistanceFunctions.compScalar(queryVect, docVec));
+      float val = mNormalize ?  DistanceFunctions.compNormScalar(queryVect, docVec) :
+                                DistanceFunctions.compScalar(queryVect, docVec);
+      v.set(0, val);
     }
     
     return res;
@@ -105,4 +119,5 @@ public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatE
 
   final ForwardIndex        mFieldIndex;
   final int                 mDim;
+  final boolean             mNormalize;
 }

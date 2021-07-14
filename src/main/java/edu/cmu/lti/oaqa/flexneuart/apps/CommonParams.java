@@ -73,8 +73,8 @@ public class CommonParams {
   public final static String EXTRACTOR_TYPE_INTERM_PARAM = "extr_type_interm";  
   public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type/json";
   
-  public final static String MAX_CAND_QTY_PARAM    = "cand_qty";
-  public final static String MAX_CAND_QTY_DESC     = "A maximum number of candidate records returned by the provider. ";
+  public final static String MAX_CAND_PROV_QTY_PARAM    = "cand_prov_qty";
+  public final static String MAX_CAND_PROV_QTY_DESC     = "A maximum number of candidate records returned by the provider. ";
   
   public final static String MAX_FINAL_RERANK_QTY_PARAM    = "max_final_rerank_qty";
   public final static String MAX_FINAL_RERANK_QTY_DESC     = "A maximum number of records to re-rank using the final re-ranker (candidate or re-ranked by the intermediate re-ranker) ";
@@ -82,14 +82,17 @@ public class CommonParams {
   public final static String MAX_NUM_RESULTS_PARAM = "n";
   public final static String MAX_NUM_RESULTS_DESC  = "A comma-separated list of numbers of candidate records (per-query).";
   
-  public static final String GIZA_ROOT_DIR_PARAM = "giza_root_dir";
-  public static final String GIZA_ROOT_DIR_DESC =  "a root dir for GIZA output";
+  public static final String COLLECTION_ROOT_DIR_PARAM = "collect_root";
+  public static final String COLLECTION_ROOT_DIR_DESC = "an option root dir for the collection (and respective resources)";
+  
+  public static final String MODEL1_ROOT_DIR_PARAM = "model1_dir";
+  public static final String MODEL1_ROOT_DIR_DESC =  "a root dir for Model 1 translation fiels (e.g., GIZA output)";
     
   public static final String GIZA_ITER_QTY_PARAM = "giza_iter_qty";
   public static final String GIZA_ITER_QTY_DESC = "a number of GIZA iterations";
  
-  public static final String EMBED_DIR_PARAM = "embed_dir";
-  public static final String EMBED_DIR_DESC = "a root dir for embeddings";
+  public static final String EMBED_ROOT_DIR_PARAM = "embed_dir";
+  public static final String EMBED_ROOT_DIR_DESC = "a root dir for embeddings";
 
   public final static String INPUT_DATA_DIR_DESC = "A data directory (to be used for indexing/querying)";
   public final static String INPUT_DATA_DIR_PARAM = "input_data_dir";
@@ -98,7 +101,7 @@ public class CommonParams {
   public final static String INPDATA_SUB_DIR_TYPE_PARAM = "data_sub_dirs";
     
   public final static String MAX_NUM_REC_DESC = "maximum number of records to process";
-  public final static String MAX_NUM_REC_PARAM = "n";
+  public final static String MAX_NUM_REC_PARAM = "max_num_rec";
   
   public final static String MAX_NUM_QUERY_DESC  = "maximum number of queries to process";
   public final static String MAX_NUM_QUERY_PARAM = "max_num_query";

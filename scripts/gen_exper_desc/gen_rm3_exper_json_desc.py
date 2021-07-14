@@ -97,7 +97,7 @@ class ExtrRM3GEN:
                     "topTermQty": top_term_qty
                 }}]
 
-            self.param_conf.append((fid, {"extractors": extr_list}))
+            self.param_conf.append((fid, extr_list))
 
 
 if query_field_name is None:

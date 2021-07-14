@@ -13,13 +13,25 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package edu.cmu.lti.oaqa.flexneuart.letor;
+package edu.cmu.lti.oaqa.flexneuart.resources;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrBM25ClosePairSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrDocEmbedDotProdSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrModel1Similarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrPassRetrScore;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrSDMSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrTFIDFSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrTermMatchSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrWordEmbedSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtractorExternalApacheThrift;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtractorRM3Similarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -29,14 +41,28 @@ import no.uib.cipr.matrix.DenseVector;
  * field-specific component-extractors.
  */
 public class CompositeFeatureExtractor extends FeatureExtractor {
+  public static final String EXTRACTOR_TYPE_PARAM = "type";
 
-  public CompositeFeatureExtractor(FeatExtrResourceManager resMngr, String configFile) throws Exception {
-    FeatExtrConfig fullConf = FeatExtrConfig.readConfig(configFile);
+  /** 
+   * A composite feature extraction is a protected function: It is supposed to be called only by 
+   * a resource manager and not directly.
+   * 
+   * @param resMngr
+   * @param configFile
+   * @throws Exception
+   */
+  protected CompositeFeatureExtractor(ResourceManager resMngr, String configFile) throws Exception {
+    ArrayList<JSONKeyValueConfig> fullConf = JSONKeyValueConfig.readConfig("composite feature extractor", configFile);
     ArrayList<SingleFieldFeatExtractor> compList = new ArrayList<SingleFieldFeatExtractor>();
     
-    for (OneFeatExtrConf oneExtrConf : fullConf.extractors) {
+    int extrId = 0;
+    for (JSONKeyValueConfig oneExtrConf : fullConf) {
+      extrId++;
       SingleFieldFeatExtractor fe = null;
-      String extrType = oneExtrConf.type;
+      String extrType = oneExtrConf.getReqParamStr(EXTRACTOR_TYPE_PARAM);
+      if (extrType == null) {
+        throw new Exception("Missing value: " + EXTRACTOR_TYPE_PARAM + " for exttractor # " + extrId + " file: " + configFile);
+      }
       if (extrType.equalsIgnoreCase(FeatExtrTFIDFSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrTFIDFSimilarity(resMngr, oneExtrConf);
       } else if(extrType.equalsIgnoreCase(FeatExtrTermMatchSimilarity.EXTR_TYPE)) {

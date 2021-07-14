@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.letor.CommonParams;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
@@ -63,12 +64,14 @@ public class LuceneCandidateProvider extends CandidateProvider {
    * @param addConf         additional/optional configuration: can be null
    * @throws Exception
    */
-  public LuceneCandidateProvider(String indexDirName, CandProvAddConfig addConf) throws Exception {
+  public LuceneCandidateProvider(String indexDirName, JSONKeyValueConfig addConf) throws Exception {
   	
     if (addConf == null) {
       mQueryFieldName = Const.DEFAULT_QUERY_TEXT_FIELD_NAME;
+      mIndexFieldName = Const.DEFAULT_QUERY_TEXT_FIELD_NAME;
     } else {
       mQueryFieldName = addConf.getParam(CommonParams.QUERY_FIELD_NAME, Const.DEFAULT_QUERY_TEXT_FIELD_NAME);
+      mIndexFieldName = addConf.getParam(CommonParams.INDEX_FIELD_NAME, Const.DEFAULT_QUERY_TEXT_FIELD_NAME);
     }
     
   	float k1 = BM25SimilarityLucene.DEFAULT_BM25_K1;
@@ -80,8 +83,10 @@ public class LuceneCandidateProvider extends CandidateProvider {
       mExactMatch = addConf.getParam(EXACT_MATCH_PARAM, false);
   	}
   	
-  	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g query field name: %s Exact field match?: %b", 
-  	                          K1_PARAM, k1, B_PARAM, b, mQueryFieldName, mExactMatch));
+  	logger.info(String.format("Lucene candidate provider %s=%g, %s=%g " + 
+  	                          "query field name: %s index field name: %s Exact field match?: %b", 
+  	                          K1_PARAM, k1, B_PARAM, b, mQueryFieldName, mIndexFieldName,
+  	                          mExactMatch));
   	
     File indexDir = new File(indexDirName);
     mSimilarity = new BM25Similarity(k1, b);
@@ -136,10 +141,10 @@ public class LuceneCandidateProvider extends CandidateProvider {
     } else {
       Query       parsedQuery = null;
       if (mExactMatch) {
-        parsedQuery = new TermQuery(new Term(mQueryFieldName, query));
+        parsedQuery = new TermQuery(new Term(mIndexFieldName, query));
       } else {
         // QueryParser cannot be shared among threads!
-        QueryParser parser = new QueryParser(mQueryFieldName, mAnalyzer);
+        QueryParser parser = new QueryParser(mIndexFieldName, mAnalyzer);
         parser.setDefaultOperator(QueryParser.OR_OPERATOR);
         
         parsedQuery = parser.parse(query);
@@ -170,6 +175,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
   private final Similarity mSimilarity;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
   private String        mQueryFieldName;
+  private String        mIndexFieldName;
   private boolean       mExactMatch = false;
 
   private static Splitter mSpaceSplit = Splitter.on(' ').omitEmptyStrings().trimResults();

@@ -32,10 +32,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Splitter;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.*;
-import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
@@ -448,9 +447,10 @@ public abstract class BaseQueryApp {
    * 
    */
   void addResourceOpts() {    
+    mOptions.addOption(CommonParams.COLLECTION_ROOT_DIR_PARAM, null, true,  CommonParams.COLLECTION_ROOT_DIR_DESC);
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,            null, true,  CommonParams.FWDINDEX_DESC);    
-    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,       null, true,  CommonParams.GIZA_ROOT_DIR_DESC);
-    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,           null, true,  CommonParams.EMBED_DIR_DESC);         
+    mOptions.addOption(CommonParams.MODEL1_ROOT_DIR_PARAM,     null, true,  CommonParams.MODEL1_ROOT_DIR_DESC);
+    mOptions.addOption(CommonParams.EMBED_ROOT_DIR_PARAM,      null, true,  CommonParams.EMBED_ROOT_DIR_DESC);         
   }
   
   /**
@@ -466,12 +466,13 @@ public abstract class BaseQueryApp {
     
     if (mUseIntermModel) {
       mOptions.addOption(CommonParams.MODEL_FILE_INTERM_PARAM, null, true, CommonParams.MODEL_FILE_INTERM_DESC);
-      mOptions.addOption(CommonParams.MAX_CAND_QTY_PARAM,      null, true, CommonParams.MAX_CAND_QTY_DESC);
+
     }
     if (mUseFinalModel) {
       mOptions.addOption(CommonParams.MODEL_FILE_FINAL_PARAM,  null, true, CommonParams.MODEL_FILE_FINAL_DESC);
-    }
-    mOptions.addOption(CommonParams.MAX_FINAL_RERANK_QTY_PARAM, null, true, CommonParams.MAX_CAND_QTY_DESC);
+    }      
+    mOptions.addOption(CommonParams.MAX_CAND_PROV_QTY_PARAM,      null, true, CommonParams.MAX_CAND_PROV_QTY_DESC);
+    mOptions.addOption(CommonParams.MAX_FINAL_RERANK_QTY_PARAM, null, true, CommonParams.MAX_FINAL_RERANK_QTY_DESC);
   }
   
   /**
@@ -544,15 +545,15 @@ public abstract class BaseQueryApp {
     // which is initialized above
     mMaxCandRet = mMaxNumRet; 
     {
-      String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
+      String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_PROV_QTY_PARAM);
       if (null == tmpn)
-        showUsageSpecify(CommonParams.MAX_CAND_QTY_DESC);
+        showUsageSpecify(CommonParams.MAX_CAND_PROV_QTY_DESC);
       try {
         mMaxCandRet = Integer.parseInt(tmpn);
         if (mMaxCandRet < mMaxNumRet)
           mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
       } catch (NumberFormatException e) {
-        showUsage("The value of '" + CommonParams.MAX_CAND_QTY_DESC + "' isn't integer: '" + tmpn + "'");
+        showUsage("The value of '" + CommonParams.MAX_CAND_PROV_QTY_DESC + "' isn't integer: '" + tmpn + "'");
       }
     }
     
@@ -588,8 +589,10 @@ public abstract class BaseQueryApp {
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
 
-    mGizaRootDir = mCmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
-    mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
+    mCollectRootDir = mCmd.getOptionValue(CommonParams.COLLECTION_ROOT_DIR_PARAM);
+    
+    mModel1RootDir = mCmd.getOptionValue(CommonParams.MODEL1_ROOT_DIR_PARAM);
+    mEmbedRootDir = mCmd.getOptionValue(CommonParams.EMBED_ROOT_DIR_PARAM);
     
     mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
 
@@ -632,12 +635,12 @@ public abstract class BaseQueryApp {
    * @throws Exception 
    */
   void initExtractors() throws Exception {
-    mResourceManager = new FeatExtrResourceManager(mFwdIndexPref, mGizaRootDir, mEmbedDir);
+    mResourceManager = new ResourceManager(mCollectRootDir, mFwdIndexPref, mModel1RootDir, mEmbedRootDir);
 
     if (mExtrTypeFinal != null)
-      mExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
+      mExtrFinal = mResourceManager.getFeatureExtractor(mExtrTypeFinal);
     if (mExtrTypeInterm != null)
-      mExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
+      mExtrInterm = mResourceManager.getFeatureExtractor(mExtrTypeInterm);
 
   }
   
@@ -649,10 +652,9 @@ public abstract class BaseQueryApp {
    * @throws Exception
    */
   void initProvider() throws Exception {
-    mCandProviders = CandidateProvider.createCandProviders(mResourceManager, 
-    														mCandProviderType, 
-    														mProviderURI, 
-    														mCandProviderConfigName, mThreadQty);    
+    mCandProviders = mResourceManager.createCandProviders(mCandProviderType, 
+                              														mProviderURI, 
+                              														mCandProviderConfigName, mThreadQty);    
     if (mCandProviders == null) {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
@@ -769,9 +771,10 @@ public abstract class BaseQueryApp {
   String       mQrelFile;
   QrelReader   mQrels;
   int          mThreadQty = 1;
-  String       mSaveStatFile;     
-  String       mGizaRootDir;
-  String       mEmbedDir;
+  String       mSaveStatFile;    
+  String       mCollectRootDir;
+  String       mModel1RootDir;
+  String       mEmbedRootDir;
   String       mFwdIndexPref;
   String       mExtrTypeFinal;
   String       mExtrTypeInterm;
@@ -779,7 +782,7 @@ public abstract class BaseQueryApp {
   Ranker       mModelFinal;
   boolean      mKnnInterleave = false;
   boolean      mUseThreadPool = false;
-  FeatExtrResourceManager mResourceManager;
+  ResourceManager mResourceManager;
   
   FeatureExtractor mExtrInterm;
   FeatureExtractor mExtrFinal;

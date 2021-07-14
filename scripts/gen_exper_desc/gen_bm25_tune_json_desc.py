@@ -74,20 +74,19 @@ class ExtrBM25JsonGEN:
                 k1str = '%g' % k1
                 fid = 'bm25tune_k1=%s_b=%s' % (k1str, bstr)
 
-                json_desc = {
-                    "extractors": [
-                        {
-                            "type": "TFIDFSimilarity",
-                            "params": {
-                                "queryFieldName": self.query_field_name,
-                                "indexFieldName": self.index_field_name,
-                                "similType": "bm25",
-                                "k1": k1str,
-                                "b": bstr
-                            }
+                json_desc = [
+                    {
+                        "type": "TFIDFSimilarity",
+                        "params": {
+                            "queryFieldName": self.query_field_name,
+                            "indexFieldName": self.index_field_name,
+                            "similType": "bm25",
+                            "k1": k1str,
+                            "b": bstr
                         }
-                    ]
-                }
+                    }
+                ]
+
 
                 # Test only is true, b/c there's nothing to train, but we need to provide the model
                 test_only = True

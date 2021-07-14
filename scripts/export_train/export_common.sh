@@ -98,21 +98,22 @@ fi
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "EMBED_SUBDIR"
-checkVarNonEmpty "GIZA_SUBDIR"
+checkVarNonEmpty "MODEL1_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-checkVarNonEmpty "QUERY_FIELD_NAME"
 checkVarNonEmpty "QREL_FILE"
 
-inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
+collectRoot="$COLLECT_ROOT/$collect"
+inputDataDir="$collectRoot/$INPUT_DATA_SUBDIR"
+fwdIndexDir="$FWD_INDEX_SUBDIR/"
+embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+model1Dir="$DERIVED_DATA_SUBDIR/$MODEL1_SUBDIR"
 
 commonResourceParams="\
+-collect_root \"$collectRoot\"
 -fwd_index_dir \"$fwdIndexDir\" \
 -embed_dir \"$embedDir\" \
--giza_root_dir \"$gizaRootDir\" "
+-model1_dir \"$model1Dir\" "
 
 if [ "$providerURI" = "" ] ; then
   if [ "$candProv" = "$CAND_PROV_LUCENE" ] ; then

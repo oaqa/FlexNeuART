@@ -9,7 +9,7 @@ checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "GIZA_ITER_QTY"
-checkVarNonEmpty "GIZA_SUBDIR"
+checkVarNonEmpty "MODEL1_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
@@ -20,9 +20,9 @@ boolOpts=(\
 )
 
 paramOpts=(
-  "bitext_subdir" "bitextSubDir" "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
-  "giza_subdir" "gizaSubDir" "GIZA sub-dir to store translation table, if not specified we use $GIZA_SUBDIR"
-  "sample_prob" "sampleProb"  "sample probability (default $sampleProb)"
+  "bitext_subdir" "bitextSubDir"  "bitext sub-dir, if not specified we use $BITEXT_SUBDIR"
+  "model1_subdir" "model1SubDir"  "GIZA sub-dir to store translation table, if not specified we use $MODEL1_SUBDIR"
+  "sample_prob"   "sampleProb"    "sample probability (default $sampleProb)"
 )
 
 usageMain="<collection> <field>"
@@ -34,8 +34,8 @@ if [ "$help" = "1" ] ; then
   exit 1
 fi
 
-if [ "$gizaSubDir" = "" ] ; then
-  gizaSubDir=$GIZA_SUBDIR
+if [ "$model1SubDir" = "" ] ; then
+  model1SubDir=$MODEL1_SUBDIR
 fi
 
 if [ "$bitextSubDir" = "" ] ; then
@@ -65,10 +65,10 @@ VOC_ONLY="0"
 SYMMETRIZE=1 # Nearly always works better
 
 export source_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bitextSubDir"
-export target_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir"
+export target_dir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$model1SubDir"
 
 echo "=========================================================================="
-echo "Giza (output) sub-directory:  $gizaSubDir"
+echo "GIZA (output) sub-directory:  $model1SubDir"
 echo "Bitext sub-directory:         $bitextSubDir"
 echo "Source dir prefix:            $source_dir"
 echo "Target dir prefix:            $target_dir"

@@ -72,7 +72,7 @@ else
   echo "Using the data input file: $dataFileName"
 fi
 # This APP can be memory greedy
-setJavaMem 4 8
+setJavaMem 1 8
 target/appassembler/bin/LuceneIndexer \
     $exactMatchParam \
     -input_data_dir "$inputDataDir" \

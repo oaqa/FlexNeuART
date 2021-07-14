@@ -34,10 +34,10 @@ import com.google.gson.*;
  * @author Leonid Boytsov
  * 
  */
-public class JSONUtils {
+public class JSONDataUtils {
   
   /**
-   * Read the next JSON entry from a JSONL file. 
+   * Read the next JSON index/query entry from a JSONL file. 
    * 
    * @param inpText input text
    * @return next entry, or null, if no further entry can be found.

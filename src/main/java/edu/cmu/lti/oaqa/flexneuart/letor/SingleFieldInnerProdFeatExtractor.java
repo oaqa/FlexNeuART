@@ -5,6 +5,8 @@ import java.util.Map;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
@@ -20,7 +22,7 @@ import no.uib.cipr.matrix.DenseVector;
  */
 public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatExtractor {
 
-  public SingleFieldInnerProdFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public SingleFieldInnerProdFeatExtractor(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
     super(resMngr, conf);
   }
 

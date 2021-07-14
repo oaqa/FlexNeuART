@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
@@ -42,7 +44,7 @@ public class FeatExtrWordEmbedSimilarity extends SingleFieldInnerProdFeatExtract
   public static String USE_TFIDF_WEIGHT = "useIDFWeight";
   public static String USE_L2_NORM = "useL2Norm";
   
-  FeatExtrWordEmbedSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrWordEmbedSimilarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
     super(resMngr, conf);
  
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());

@@ -25,10 +25,11 @@ import org.apache.thrift.transport.TTransport;
 import com.google.common.base.Splitter;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
 import edu.cmu.lti.oaqa.nmslib.QueryService;
@@ -54,7 +55,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   
   Splitter splitOnColon = Splitter.on(':');	
   final private Client 			                  mKNNClient;
-  final private FeatExtrResourceManager       mResourceManager;
+  final private ResourceManager       mResourceManager;
   final private SingleFieldInnerProdFeatExtractor  mCompExtractors[];
   final private ForwardIndex                  mCompIndices[];
   final int                                   mFeatExtrQty;
@@ -70,8 +71,8 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
    * @throws Exception
    */
   public NmslibKNNCandidateProvider(String knnServiceURL, 
-                                    FeatExtrResourceManager resourceManager,
-                                    CandProvAddConfig addConf) throws Exception {
+                                    ResourceManager resourceManager,
+                                    JSONKeyValueConfig addConf) throws Exception {
 
     String host = null;
     int    port = -1;
@@ -83,7 +84,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     String extrType = addConf.getReqParamStr(EXTRACTOR_TYPE_PARAM);
     boolean sparseInterleave = addConf.getParamBool(SPARSE_INTERLEAVE_PARAM);
     
-    CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, extrType);
+    CompositeFeatureExtractor featExtr = resourceManager.getFeatureExtractor(extrType);
     
     mResourceManager = resourceManager;   
     

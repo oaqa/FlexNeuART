@@ -17,18 +17,14 @@ package edu.cmu.lti.oaqa.flexneuart.cand_providers;
 
 import java.util.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 
 public abstract class CandidateProvider {
-  final static Logger logger = LoggerFactory.getLogger(CandidateProvider.class);
   
   // If you add a new provider, update CAND_PROVID_DESC below
   public static final String CAND_TYPE_LUCENE      = "lucene";
@@ -39,66 +35,7 @@ public abstract class CandidateProvider {
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
       CandidateProvider.CAND_TYPE_NMSLIB + ", " +
       CandidateProvider.CAND_TYPE_TREC_RUNS;
-  
-  
-  /**
-   * Create an array of candidate providers. If the provider is thread-safe,
-   * only one object will be created.
-   * 
-   * @param resourceManager	resource
-   * @param provType				provider type
-   * @param provURI					provider URI (index location or TCP/IP address)
-   * @param configName			configuration file name (can be null)
-   * @param threadQty				number of threads
-   * 
-   * @return	an array of providers or null if the provider type is not recognized
-   */
-  public static CandidateProvider[] createCandProviders(FeatExtrResourceManager resourceManager,
-														String provType,
-														String provURI,
-														String configName,
-														int threadQty) throws Exception {
-    logger.info(String.format("Provider type: %s\n" + 
-														  "URI: %s\n" + 
-                              "Config file: %s\n" + 
-														  "# of threads: %d",
-                              provType, provURI, configName != null ? configName : "none", threadQty));
-    
-  	CandidateProvider[] res = new CandidateProvider[threadQty];
-  	
-  	CandProvAddConfig addConf = null;
-  	
-  	if (configName != null) {
-  	  addConf = CandProvAddConfig.readConfig(configName, provType);
-  	}
-  	
-  	
-    if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_LUCENE)) {
-      res[0] = new LuceneCandidateProvider(provURI, addConf);
-      for (int ic = 1; ic < threadQty; ++ic) 
-        res[ic] = res[0];
-    } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_TREC_RUNS)) {
-      res[0] = new TrecRunCandidateProvider(provURI);
-      for (int ic = 1; ic < threadQty; ++ic) 
-        res[ic] = res[0];
-    } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_NMSLIB)) {
-      /*
-       * NmslibKNNCandidateProvider isn't thread-safe,
-       * b/c each instance creates a TCP/IP that isn't supposed to be shared among threads.
-       * However, creating one instance of the provider class per thread is totally fine (and is the right way to go). 
-       */
 
-      for (int ic = 0; ic < threadQty; ++ic) {
-        res[ic] = new NmslibKNNCandidateProvider(provURI, resourceManager, addConf);
-      }
-             
-    } else {
-      return null;
-    }
-  	
-  	return res;
-  }
-  
   /**
    * @return  true if {@link #getCandidates(int, Map, int)} can be called by 
    *               several threads simultaneously. 

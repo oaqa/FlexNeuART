@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.QueryDocSimilarityFunc;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
@@ -40,7 +42,7 @@ import no.uib.cipr.matrix.DenseVector;
 public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
   private static final Logger logger = LoggerFactory.getLogger(SingleFieldFeatExtractor.class);
   
-  public SingleFieldFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public SingleFieldFeatExtractor(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
     mIndexFieldName = conf.getReqParamStr(CommonParams.INDEX_FIELD_NAME);
     mQueryFieldName = conf.getParam(CommonParams.QUERY_FIELD_NAME, mIndexFieldName);
   }

@@ -30,7 +30,7 @@ import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.letor.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.AbstractDistance;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
@@ -56,6 +56,10 @@ public class CreateBitextFromQRELs {
   static RandomUtils rand = new RandomUtils(0);
   
   public static final class Args {  
+    
+    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
+    String mCollectRootDir;
+    
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
     String mFwdIndex;
     
@@ -72,8 +76,8 @@ public class CreateBitextFromQRELs {
     
     @Option(name = "-output_dir", required = true, usage = "bi-text output directory")
     String mOutDir;
-    @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
-    String mEmbedDir;
+    @Option(name = "-" + CommonParams.EMBED_ROOT_DIR_PARAM, usage = CommonParams.EMBED_ROOT_DIR_DESC)
+    String mEmbedRootDir;
     @Option(name = EMBED_FILE_NAME_PARAM, usage = "embedding file name relative to the root (used for document word sampling)")
     String mEmbedFile;
     @Option(name = "-sample_qty", usage = "number of samples per query, if specified we need embeddings")
@@ -104,15 +108,18 @@ public class CreateBitextFromQRELs {
     
     
     try {
-      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mFwdIndex, null, args.mEmbedDir);
+      ResourceManager resourceManager = new ResourceManager(args.mCollectRootDir, 
+                                                            args.mFwdIndex, 
+                                                            null, 
+                                                            args.mEmbedRootDir);
       EmbeddingReaderAndRecoder embeds = null;
 
       
       String fieldName = args.mIndexField;
       
       if (args.mSampleQty > 0) {
-        if (args.mEmbedDir == null) {
-          System.err.println("For sampling you need to specify: -" + CommonParams.EMBED_DIR_PARAM);
+        if (args.mEmbedRootDir == null) {
+          System.err.println("For sampling you need to specify: -" + CommonParams.EMBED_ROOT_DIR_PARAM);
           System.exit(1);
         }
         if (args.mEmbedFile == null) {
@@ -153,7 +160,7 @@ public class CreateBitextFromQRELs {
         String [] queryWords = StringUtils.splitOnWhiteSpace(queryText);
       
         if (queryText.isEmpty() || queryWords.length == 0) {
-          System.out.println("Empty text in query # " + queryQty + " ignoring");
+          System.out.println("Empty text in query: " + qid + " ignoring");
           continue;
         }
         

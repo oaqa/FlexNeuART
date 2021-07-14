@@ -79,7 +79,7 @@ Additional options:
   -parallel_exper_qty     # of experiments to run in parallel (default $parallelExperQty)
   -reuse_feat             reuse previously generated features
   -delete_trec_runs       delete TREC run files
-  -giza_subdir            GIZA sub-directory (relative to $DERIVED_DATA_SUBDIR)
+  -model1_subdir          Model1 sub-directory (relative to $DERIVED_DATA_SUBDIR)
   -no_separate_shell      use this for debug purposes only
   -debug_print            print every executed command
 EOF
@@ -142,7 +142,7 @@ while [ $# -ne 0 ] ; do
         -add_exper_subdir)
           addExperSubDir=$optValue
           ;;
-        -giza_subdir)
+        -model1_subdir)
           globalParams+=" $optName \"$optValue\""
           ;;
         -train_cand_qty)
@@ -257,7 +257,7 @@ jsonParamMap=(\
   model_final modelFinal \
   train_cand_qty trainCandQty \
   cand_prov candProv \
-  cand_qty candQty \
+  cand_prov_qty candProvQty \
   test_cand_qty_list testCandQtyList \
   use_lmart useLMART \
   num_trees numTrees

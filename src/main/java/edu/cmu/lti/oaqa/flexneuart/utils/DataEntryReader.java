@@ -99,17 +99,17 @@ public class DataEntryReader implements java.lang.AutoCloseable {
     mRecNum++;
     DataEntryFields currEntry = null;
     if (mIsJson) {
-      String entryStr = JSONUtils.readNextJSONEntry(mInpJson, mRecNum);
+      String entryStr = JSONDataUtils.readNextJSONEntry(mInpJson, mRecNum);
       if (entryStr == null) {
         return null;
       }
-      currEntry = JSONUtils.parseJSONEntry(entryStr, mRecNum);
+      currEntry = JSONDataUtils.parseJSONEntry(entryStr, mRecNum);
     } else {      
-      byte [] entryData = BSONUtils.readNextBSONEntry(mInpBin, mRecNum);
+      byte [] entryData = BSONDataUtils.readNextBSONEntry(mInpBin, mRecNum);
       if (entryData == null) {
         return null;
       }
-      currEntry = BSONUtils.parseBSONEntry(entryData, mRecNum);
+      currEntry = BSONDataUtils.parseBSONEntry(entryData, mRecNum);
     }
     if (currEntry.mEntryId == null) {
       throw new RuntimeException("Missing entry ID entry: " + mRecNum );

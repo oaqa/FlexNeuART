@@ -86,9 +86,9 @@ public class LuceneIndexer {
       
       boolean exactMatch = cmd.hasOption(EXACT_MATCH_PARAM);
       
-      String textFieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
+      String indexFieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
       
-      if (textFieldName == null) Usage("Specify: " + CommonParams.INDEX_FIELD_NAME_DESC, options);
+      if (indexFieldName == null) Usage("Specify: " + CommonParams.INDEX_FIELD_NAME_DESC, options);
       
       String inputDataDir = null;
       
@@ -158,7 +158,9 @@ public class LuceneIndexer {
       */
       indexConf.setOpenMode(OpenMode.CREATE); 
       indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.DEFAULT_RAM_BUFFER_SIZE);
-      logger.info("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec + " exact match? " + exactMatch);
+      logger.info("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec + 
+                  " index field name: " + indexFieldName + 
+                  " exact match? " + exactMatch);
       indexConf.setOpenMode(OpenMode.CREATE);
       IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      
       
@@ -179,11 +181,11 @@ public class LuceneIndexer {
               continue;
             }
             
-            String textFieldValue = docFields.getString(textFieldName);
+            String textFieldValue = docFields.getString(indexFieldName);
             
             if (textFieldValue == null) {
               logger.warn(String.format("Warning: No field '%s', offending DOC #%d", 
-                                               textFieldName, docNum));
+                                               indexFieldName, docNum));
               continue;
             }
 
@@ -191,9 +193,9 @@ public class LuceneIndexer {
             luceneDoc.add(new StringField(Const.DOC_ID_FIELD_NAME, id, Field.Store.YES));
          
             if (exactMatch) {
-              luceneDoc.add(new StringField(textFieldName, textFieldValue, Field.Store.NO));
+              luceneDoc.add(new StringField(indexFieldName, textFieldValue, Field.Store.NO));
             } else { 
-              luceneDoc.add(new Field(textFieldName, textFieldValue, FULL_TEXT_FIELD_TYPE));
+              luceneDoc.add(new Field(indexFieldName, textFieldValue, FULL_TEXT_FIELD_TYPE));
             }
             
             indexWriter.addDocument(luceneDoc);

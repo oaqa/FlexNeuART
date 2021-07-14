@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
@@ -93,11 +93,12 @@ public class ExportTrainPairs {
     mOptions.addOption(CommonParams.CAND_PROVID_PARAM,      null, true, CandidateProvider.CAND_PROVID_DESC);
     mOptions.addOption(CommonParams.CAND_PROVID_ADD_CONF_PARAM, null, true, CommonParams.CAND_PROVID_ADD_CONF_DESC);
     
-    mOptions.addOption(CommonParams.FWDINDEX_PARAM,         null, true, CommonParams.FWDINDEX_DESC); 
-    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,    null, true, CommonParams.GIZA_ROOT_DIR_DESC); 
-    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,        null, true, CommonParams.EMBED_DIR_DESC);  
+    mOptions.addOption(CommonParams.FWDINDEX_PARAM,             null, true, CommonParams.FWDINDEX_DESC); 
+    mOptions.addOption(CommonParams.COLLECTION_ROOT_DIR_PARAM,  null, true, CommonParams.COLLECTION_ROOT_DIR_DESC); 
+    mOptions.addOption(CommonParams.MODEL1_ROOT_DIR_PARAM,      null, true, CommonParams.MODEL1_ROOT_DIR_DESC); 
+    mOptions.addOption(CommonParams.EMBED_ROOT_DIR_PARAM,       null, true, CommonParams.EMBED_ROOT_DIR_DESC);  
 
-    mOptions.addOption(CommonParams.THREAD_QTY_PARAM,       null, true, CommonParams.THREAD_QTY_DESC);
+    mOptions.addOption(CommonParams.THREAD_QTY_PARAM,           null, true, CommonParams.THREAD_QTY_DESC);
     
     /*
      *  These field names are only used for export. In particular, the candidate provider 
@@ -131,8 +132,8 @@ public class ExportTrainPairs {
       }
       String candProviderConfigName = cmd.getOptionValue(CommonParams.CAND_PROVID_ADD_CONF_PARAM);
       
-      String fwdIndex = cmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
-      if (fwdIndex == null) {
+      String fwdIndexDir = cmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
+      if (fwdIndexDir == null) {
         showUsageSpecify(CommonParams.FWDINDEX_PARAM);
       }
       String indexExportFieldName = cmd.getOptionValue(ExportTrainPairs.INDEX_EXPORT_FIELD_PARAM);
@@ -144,8 +145,12 @@ public class ExportTrainPairs {
         showUsageSpecify(ExportTrainPairs.QUERY_EXPORT_FIELD_PARAM);
       }
       
-      String embedDir = cmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
-      String gizaRootDir = cmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
+      String collectRoot = cmd.getOptionValue(CommonParams.COLLECTION_ROOT_DIR_PARAM);
+      if (null == collectRoot) {
+        showUsageSpecify(CommonParams.COLLECTION_ROOT_DIR_PARAM);
+      }
+      String embedRootDir = cmd.getOptionValue(CommonParams.EMBED_ROOT_DIR_PARAM);
+      String model1RootDir = cmd.getOptionValue(CommonParams.MODEL1_ROOT_DIR_PARAM);
      
       String exportType = cmd.getOptionValue(EXPORT_FMT);
       if (null == exportType) {
@@ -205,13 +210,12 @@ public class ExportTrainPairs {
       logger.info("Candidate provider type: " + candProviderType + " URI: " + providerURI + " config: " + candProviderConfigName);
       logger.info("Number of threads: " + threadQty);
       
-      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(fwdIndex, gizaRootDir, embedDir);
+      ResourceManager resourceManager = new ResourceManager(collectRoot, fwdIndexDir, model1RootDir, embedRootDir);
       
       CandidateProvider  [] candProviders = new CandidateProvider[threadQty];
-      candProviders = CandidateProvider.createCandProviders(resourceManager, 
-                                                            candProviderType, 
-                                                            providerURI, 
-                                                            candProviderConfigName, threadQty);    
+      candProviders = resourceManager.createCandProviders(candProviderType, 
+                                                          providerURI, 
+                                                          candProviderConfigName, threadQty);    
       if (candProviders == null) {
         showUsage("Wrong candidate record provider type: '" + candProviderType + "'");
       }

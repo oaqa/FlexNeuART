@@ -545,8 +545,10 @@ public abstract class ForwardIndex {
 
   /**
    * Read the text-only header (which includes vocabulary info) of the forward file. If the format changes,
-   * please, update/sync with (and possibly make them reuse the same shared common function, so we have no copy-paste)
+   * please, update/sync with 
+   * 1. (and possibly make them reuse the same shared common function, so we have no copy-paste)
    * {@link FrequentIndexWordFilterAndRecoder}.
+   * 2. Function read_doc_ids_from_forward_file_header in data_convert/convert_common.py 
    * 
    * @param fileName  input file name (for info purposes only)
    * @param inp  the actual input file opened

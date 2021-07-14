@@ -274,10 +274,10 @@ public class VectorUtils {
                                                                           DenseVector compWeights,
                                                                           OutputStream out) throws Exception  {
 
-    TrulySparseVector[] batchVecs = createInterleavedInnerProdDocFeatureVecBatch(docIds, 
-                                                                                                                                                          compIndices, 
-                                                                                                                                                          compExtractors, 
-                                                                                                                                                          compWeights);
+    TrulySparseVector[] batchVecs = createInterleavedInnerProdDocFeatureVecBatch(docIds,  
+                                                                                compIndices, 
+                                                                                compExtractors, 
+                                                                                compWeights);
     for (int resId = 0; resId < batchVecs.length; resId++) {
       BinReadWriteUtils.writeStringId(docIds[resId], out);  
       VectorWrapper.writeSparseVect(batchVecs[resId], out);

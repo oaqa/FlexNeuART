@@ -44,6 +44,8 @@ OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
 ENDIANNES_TYPE = '<'
 PACKED_TYPE_DENSE = 0
 
+MSMARCO_DOC_V2_FILE_PATTERN = "^msmarco_doc_.*"
+
 # Replace \n and \r characters with spaces
 def replace_chars_nl(s):
     return re.sub(r'[\n\r]', ' ', s)

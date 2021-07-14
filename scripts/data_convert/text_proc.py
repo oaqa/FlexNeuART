@@ -22,6 +22,9 @@ SPACY_PARSER = 'parser'
 
 ALPHANUM_TOKENS = re.compile("^[a-zA-Z-_.0-9]+$")
 
+def replace_tab(orig_str, repl_str=' '):
+    return orig_str.replace('\t', repl_str)
+
 def is_alpha_num(s):
     return s and (ALPHANUM_TOKENS.match(s) is not None)
 

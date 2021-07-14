@@ -37,7 +37,8 @@ PROVIDER_TYPE_LIST = [PROVIDER_TYPE_LUCENE, PROVIDER_TYPE_NMSLIB, PROVIDER_TYPE_
 FAKE_QUERY_ID='fake_query_id'
 
 def create_cand_provider(resource_manager, provider_type, provider_uri, add_config_file=None):
-    """Create a candidate provider (for basic querying).
+    """Create a candidate provider (for basic querying). Configuration and
+       index file paths are relative to the collection root (stored in the resource manager)
 
     :param resource_manager:   a resource manager object
     :param provider_type:      a provider type
@@ -52,11 +53,10 @@ def create_cand_provider(resource_manager, provider_type, provider_uri, add_conf
     # FlexNeuART is multi-thread and for each thread we may need a separate provider object
     # (if the provider is not thread-safe), but in Python we generate only one provider (as we
     # have no real threads anyways)
-    return JCandidateProvider.createCandProviders(resource_manager,
-                                       provider_type,
-                                       provider_uri,
-                                       add_config_file,
-                                       1)[0]
+    return resource_manager.createCandProviders(provider_type,
+                                                   provider_uri,
+                                                   add_config_file,
+                                                   1)[0]
 
 
 def create_text_query_obj(query_text,

@@ -37,7 +37,7 @@ import org.bson.BsonType;
  * @author Leonid Boytsov
  * 
  */
-public class BSONUtils {
+public class BSONDataUtils {
   /**
    * Read the next BSON entry from the input stream. Each entry is supposed to be
    * preceded 

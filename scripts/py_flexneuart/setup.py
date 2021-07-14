@@ -39,12 +39,15 @@ def configure_classpath(source_root):
     set_classpath(latest)
 
 
-def create_featextr_resource_manager(fwd_index_dir=None, model1_root_dir=None, root_embed_dir=None):
-    """Create a resource manager use for feature extraction and re-ranking.
+def create_featextr_resource_manager(collect_root,
+                                     fwd_index_dir=None, model1_root_dir=None, embed_root_dir=None):
+    """Create a resource manager use for feature extraction and re-ranking. Note that
+       all paths are relative to the collection root.
 
-    :param fwd_index_dir:     a forward index root (optional)
+    :param collect_root:      a collection/resource root directory
+    :param fwd_index_dir:     a forward index root  (optional)
     :param model1_root_dir:   a Model 1 (giza) translation data root (optional)
-    :param root_embed_dir:    a root word embedding directory (optional)
+    :param embed_root_dir:    a root word embedding directory (optional)
 
     :return: a references to the FeatExtrResourceManager class
     """
@@ -55,4 +58,4 @@ def create_featextr_resource_manager(fwd_index_dir=None, model1_root_dir=None, r
 
     JFeatExtrResourceManager = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager')
 
-    return JFeatExtrResourceManager(fwd_index_dir, model1_root_dir, root_embed_dir)
+    return JFeatExtrResourceManager(collect_root, fwd_index_dir, model1_root_dir, embed_root_dir)

@@ -1,5 +1,4 @@
-{
-"extractors" : [
+[
  {
   "type" : "TFIDFSimilarity",
   "params" : {
@@ -10,4 +9,3 @@
   }
  }
 ]
-}

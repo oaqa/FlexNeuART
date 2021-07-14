@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -40,7 +42,7 @@ public class FeatExtrPassRetrScore extends SingleFieldFeatExtractor  {
   // Always use the original retrieval score even if there's an intermediate re-ranker
   public static String USE_ORIG_RETR_SCORE = "useOrigRetrScore";
   
-  FeatExtrPassRetrScore(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrPassRetrScore(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
     super(resMngr, conf);
     
     mUseOrigScore = conf.getParamBool(USE_ORIG_RETR_SCORE);

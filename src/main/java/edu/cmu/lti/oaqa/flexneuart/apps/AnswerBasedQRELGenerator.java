@@ -30,7 +30,7 @@ import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.EvalUtils;
@@ -44,16 +44,13 @@ import edu.cmu.lti.oaqa.flexneuart.utils.MiscHelper;
  * an answer string is considered to be relevant. However,
  * clearly, some of such passages are spurious. To generate such
  * QRELs, we retrieve a number of passages using Lucene and check
- * if they contain an answer string (we look ).</p>
+ * if they contain an answer string.</p>
  * 
  * <p>To make it possible,
  * questions and answers passages need to be converted to JSON files.
  * The question JSON-file needs to contain a special extra field
  * with the list of answers. We will then check if an answer
- * appears into one of the retrieved passages. To make matching
- * more robust, the data processing step can do stopping and lemmatization.
- * After such transformation, all tokens are supposed to be separated
- * by a single space.</p>
+ * appears into one of the retrieved passages. The passage index must be text-raw index.</p>
  * 
  * @author Leonid Boytsov
  *
@@ -64,7 +61,7 @@ public class AnswerBasedQRELGenerator {
   
   public static final class Args {
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
-    String mMemFwdIndex;
+    String mFwdIndexDir;
     
     @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, required = true, usage = "A query file.")
     String mQueryFilePrefix;
@@ -74,6 +71,9 @@ public class AnswerBasedQRELGenerator {
     
     @Option(name = "-" + CommonParams.FIELD_NAME_PARAM, usage = "The field whose text we use to find answers")
     String mFieldName = Const.DEFAULT_QUERY_TEXT_FIELD_NAME;
+    
+    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
+    String mCollectRootDir;
     
     @Option(name = "-" + CommonParams.PROVIDER_URI_PARAM, required = true, usage = CommonParams.PROVIDER_URI_DESC)
     String mCandProviderURI;
@@ -117,15 +117,20 @@ public class AnswerBasedQRELGenerator {
       logger.info("Candidate provider type: " + args.mCandProviderType + " URI: " + args.mCandProviderURI + " config: " + args.mCandProviderConfigName);
       logger.info("Number of threads: " + args.mThreadQty);
       
-      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mMemFwdIndex, null, null);
+      ResourceManager resourceManager = new ResourceManager(args.mCollectRootDir, args.mFwdIndexDir, null, null);
       ForwardIndex fwdIndexText = resourceManager.getFwdIndex(args.mFieldName);
+      
+      if (!fwdIndexText.isTextRaw()) {
+        System.out.println("The answer-based QREL-generator works only with raw text indices!");
+        System.exit(1);
+      }
       
       CandidateProvider  [] candProviders = new CandidateProvider[args.mThreadQty];
       
-      candProviders = CandidateProvider.createCandProviders(resourceManager, 
-                                                            args.mCandProviderType, 
+      candProviders = resourceManager.createCandProviders(args.mCandProviderType, 
                                                             args.mCandProviderURI, 
-                                                            args.mCandProviderConfigName, args.mThreadQty);    
+                                                            args.mCandProviderConfigName, 
+                                                            args.mThreadQty);    
       if (candProviders == null) {
         System.err.println("Wrong candidate record provider type: '" + args.mCandProviderType + "'");
         parser.printUsage(System.err);
@@ -242,12 +247,12 @@ class AnswBasedQRELGenWorker extends Thread {
         relDocIds.clear();
 
         for (CandidateEntry e : cands.mEntries) {
-          String text = mFwdIndex.getDocEntryParsedText(e.mDocId);
+          String text = mFwdIndex.getDocEntryTextRaw(e.mDocId);
           if (text == null) {
             logger.warn("No text for doc: " + e.mDocId + 
                         " did you create a positional forward index for the field " + mFieldName);
           }
-          text = " " + text.trim().toLowerCase() + " "; // adding sentinels
+          text = text.trim().toLowerCase();
           boolean hasAnsw = false; 
           for (String answ : answList) {
             if (answ == null) continue;

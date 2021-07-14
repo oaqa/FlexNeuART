@@ -1,16 +1,14 @@
 #!/bin/bash
 source scripts/common_proc.sh
 source scripts/config.sh
+
 # This script works in two modes:
 # 1. Train and test the model (if the final model is not specified)
 # 2. Test an already specified trained model (-model_final)
-# If the extractor is not specified, training is not possible,
-# so we will simply run a test without any model and feature extractor
-
+# If the extractor is not specified, training is not possible.
 
 regenFeat="1"
 recompModel="1" # for debug only
-testModelResults="0"
 
 posArgs=()
 
@@ -28,7 +26,7 @@ checkVarNonEmpty "DEFAULT_NUM_RAND_RESTART"
 checkVarNonEmpty "DEFAULT_NUM_TREES"
 checkVarNonEmpty "DEFAULT_METRIC_TYPE"
 checkVarNonEmpty "DEFAULT_TRAIN_SUBDIR"
-checkVarNonEmpty "DEFAULT_INTERM_CAND_QTY"
+checkVarNonEmpty "DEFAULT_CAND_PROV_QTY"
 checkVarNonEmpty "DEFAULT_TRAIN_CAND_QTY"
 checkVarNonEmpty "DEFAULT_TEST_CAND_QTY_LIST"
 checkVarNonEmpty "SEP_DEBUG_LINE"
@@ -52,7 +50,7 @@ checkVarNonEmpty "CAND_PROV_NMSLIB"
 candProvType="$CAND_PROV_LUCENE"
 
 candProvURI=""
-candQty="$DEFAULT_INTERM_CAND_QTY"
+candProvQty="$DEFAULT_CAND_PROV_QTY"
 candProvAddConf=""
 candProvAddConfParam=""
 
@@ -66,11 +64,10 @@ modelFinal=""
 
 trainPart="$DEFAULT_TRAIN_SUBDIR"
 trainCandQty="$DEFAULT_TRAIN_CAND_QTY"
-intermCandQty="$DEFAULT_INTERM_CAND_QTY"
 testCandQtyList="$DEFAULT_TEST_CAND_QTY_LIST"
 
-checkVarNonEmpty "GIZA_SUBDIR"
-gizaSubdir="$GIZA_SUBDIR"
+checkVarNonEmpty "MODEL1_SUBDIR"
+model1SubDir="$MODEL1_SUBDIR"
 
 skipEval=0
 testOnly=0
@@ -125,8 +122,8 @@ while [ $# -ne 0 ] ; do
         -thread_qty)
           threadQty=$optValue
           ;;
-        -giza_subdir)
-          gizaSubdir=$optValue
+        -model1_subdir)
+          model1SubDir=$optValue
           ;;
         -cand_prov_add_conf)
           candProvAddConf=$optValue
@@ -159,8 +156,8 @@ while [ $# -ne 0 ] ; do
         -cand_prov)
           candProvType=$optValue
           ;;
-        -cand_qty)
-          candQty=$optValue
+        -cand_prov_qty)
+          candProvQty=$optValue
           ;;
         -test_cand_qty_list)
           testCandQtyList=$optValue
@@ -279,15 +276,17 @@ checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 
-inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubdir"
+collectRoot="$COLLECT_ROOT/$collect"
+inputDataDir="$collectRoot/$INPUT_DATA_SUBDIR"
+fwdIndexDir="$FWD_INDEX_SUBDIR/"
+embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+model1Dir="$DERIVED_DATA_SUBDIR/$model1SubDir"
 
 commonResourceParams="\
+-collect_root \"$collectRoot\"
 -fwd_index_dir \"$fwdIndexDir\" \
 -embed_dir \"$embedDir\" \
--giza_root_dir \"$gizaRootDir\" "
+-model1_dir \"$model1Dir\" "
 
 checkVarNonEmpty "inputDataDir" # set by set_common_resource_vars.sh
 checkVarNonEmpty "commonResourceParams"  # set by set_common_resource_vars.sh
@@ -315,15 +314,17 @@ fi
 
 # Don't quote $modelFinalParams,
 #             $candProvAddConfParam,
-#             $commonParams,
+#             commonAddParams,
 #             $maxQueryQtyTrainParam,
 #             $maxQueryQtyTestParam,
 # as we llas other *Param*
 
-commonAddParams="-cand_qty $candQty $candProvAddConfParam \
- -thread_qty "$threadQty" \
-$extrTypeIntermParam $modelIntermParam \
-$commonResourceParams" 
+commonAddParams="\
+  -cand_qty $candQty $candProvAddConfParam \
+  -thread_qty "$threadQty" \
+  $extrTypeIntermParam
+  $modelIntermParam \
+  $commonResourceParams"
 
 outPrefTrain="out_${collect}_${trainPart}"
 outPrefTest="out_${collect}_${testPart}"
@@ -356,7 +357,7 @@ fi
 echo "Test part:               $testPart"
 echo "Forward index directory: $fwdIndexDir"
 echo "Embedding directory:     $embedDir"
-echo "GIZA root directory:     $gizaRootDir"
+echo "Model1 directory:        $model1Dir"
 
 echo "$SEP_DEBUG_LINE"
 
@@ -365,15 +366,13 @@ echo "RUN id:                                  $runId"
 echo "QREL file:                               $QREL_FILE"
 echo "Directory with TREC-style runs:          $trecRunDir"
 echo "Report directory:                        $reportDir"
-echo "Query cache file params (for training):  $queryCacheParamTrain"
-echo "Query cache file params (for testing):   $queryCacheParamTest"
 
 echo "$SEP_DEBUG_LINE"
 
 echo "Candidate provider type:                  $candProvType"
 echo "Candidate provider URI:                   $candProvURI"
 echo "Candidate provider # of candidates        $candQty"
-echo "Candidate provider addition configuration $candProvAddConf"
+echo "Candidate provider add. configuration     $candProvAddConf"
 
 echo "$SEP_DEBUG_LINE"
 
@@ -384,7 +383,7 @@ echo "A list for the number of test candidates: $testCandQtyList"
 
 echo "$SEP_DEBUG_LINE"
 
-echo "Common parameters shared at all steps:    $commonParams"
+echo "Common parameters shared at all steps:    $commonAddParams"
 echo "Intermediate extractor parameters:        $extrTypeIntermParam"
 echo "Intermediate model parameters:            $modelIntermParam"
 echo "Final model parameters:                   $modelFinalParams"
@@ -397,6 +396,20 @@ else
   echo "Number of random restarts:  $numRandRestart"
 fi
 echo "$SEP_DEBUG_LINE"
+#
+# The querying apps have complicate settings for the number of entries returned and reranked
+#
+# 1. The maximum num. of entries returned by the provider is defined as the maximum of parameter -cand_prov_qty
+#    and the maximum number of entries requested via the parameter -n
+# 2. The number of requested entries is different between training and test runs. For training, -n is
+#    forced to be equal to the value passed via parameter -train_cand_qty
+# 3. If an intermediate re-ranker is specified, it re-ranks *ALL* entries returned by the provider.
+# 4. However, the number of entries re-ranked by the final re-ranker can be limited using the parameter -max_final_rerank_qty
+#    In this case, the scores of the entries with ranks higher than the value -max_final_rerank_qty, are updated
+#    in such a way that
+#     a. they are ranked lower than the top entries
+#     b. and their original relative order is preserved
+#
 
 if [ "$testOnly" = "0" ] ; then
   if [ "$trainCandQty" = "" ] ; then
@@ -412,7 +425,7 @@ if [ "$testOnly" = "0" ] ; then
       echo "WARNING: during training we set -max_final_rerank_qty to $trainCandQty"
     fi
 
-    setJavaMem 5 9
+    setJavaMem 2 9
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
                                     -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
@@ -448,28 +461,6 @@ if [ "$testOnly" = "0" ] ; then
                                             "$numRandRestart" "$metricType" 2>&1 | tee -a "$modelLogFile"
     fi
 
-
-    if [ "$testModelResults" = "1" ] ; then
-      # This part is for debug purposes only
-      checkVarNonEmpty "trainCandQty"
-      setJavaMem 5 9
-      target/appassembler/bin/QueryAppMultThread  -u "$candProvURI" -cand_prov "$candProvType" \
-                                  -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \
-                                  -n "$trainCandQty" \
-                                  -run_id "$runId" \
-                                  -o "$trecRunDir/run_check_train_metrics" \
-                                  $commonAddParams \
-                                  $maxFinalRerankQtyParam \
-                                  $modelFinalParams \
-                                  $maxQueryQtyTrainParam \
-                                  $cacheFileParamTrain 2>&1
-
-      scripts/exper/eval_output.py "$inputDataDir/$testPart/$QREL_FILE" \
-                                    "${trecRunDir}/run_check_train_metrics_${trainCandQty}"
-
-      echo "Model tested, now exiting!"
-      exit 0
-    fi
   fi
 fi
 
@@ -479,7 +470,7 @@ fi
 
 statFile="$reportDir/$STAT_FILE"
 $resourceDirParams
-setJavaMem 5 9
+setJavaMem 2 9
 target/appassembler/bin/QueryAppMultThread \
                             -u "$candProvURI" -cand_prov "$candProvType" \
                             -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \

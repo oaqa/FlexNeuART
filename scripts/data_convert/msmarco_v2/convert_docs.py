@@ -25,7 +25,8 @@ import pytorch_pretrained_bert
 sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
+from scripts.data_convert.convert_common import MSMARCO_DOC_V2_FILE_PATTERN, \
+                                                STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
     multi_file_linegen, FileWrapper, read_stop_words, add_retokenized_field, pretokenize_url
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
     TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
@@ -53,7 +54,7 @@ args = parser.parse_args()
 print(args)
 arg_vars = vars(args)
 
-inp_source = multi_file_linegen(args.input, "^msmarco_doc_.*")
+inp_source = multi_file_linegen(args.input, MSMARCO_DOC_V2_FILE_PATTERN)
 out_file = FileWrapper(args.output, 'w')
 max_doc_size = args.max_doc_size
 

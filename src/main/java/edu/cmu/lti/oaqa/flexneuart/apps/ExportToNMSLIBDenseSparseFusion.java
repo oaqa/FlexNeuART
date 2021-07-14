@@ -28,10 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.BinReadWriteUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
@@ -52,13 +52,16 @@ public class ExportToNMSLIBDenseSparseFusion {
   public static final class Args {
     
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
-    String mMemIndexPref;
+    String mFwdIndexDir;
     
-    @Option(name = "-" + CommonParams.GIZA_ROOT_DIR_PARAM, usage = CommonParams.GIZA_ROOT_DIR_DESC)
-    String mGizaRootDir;
+    @Option(name = "-" + CommonParams.MODEL1_ROOT_DIR_PARAM, usage = CommonParams.MODEL1_ROOT_DIR_DESC)
+    String mModel1RootDir;
     
-    @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
-    String mEmbedDir;
+    @Option(name = "-" + CommonParams.EMBED_ROOT_DIR_PARAM, usage = CommonParams.EMBED_ROOT_DIR_DESC)
+    String mEmbedRootDir;
+    
+    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
+    String mCollectRootDir;
     
     @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
@@ -101,10 +104,10 @@ public class ExportToNMSLIBDenseSparseFusion {
       
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
       
-      FeatExtrResourceManager resourceManager = 
-          new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
+      ResourceManager resourceManager = 
+          new ResourceManager(args.mCollectRootDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
       
-      CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);   
+      CompositeFeatureExtractor featExtr = resourceManager.getFeatureExtractor(args.mExtrJson);  
 
       SingleFieldFeatExtractor[] allExtractors = featExtr.getCompExtr();    
       int featExtrQty = allExtractors.length;

@@ -29,6 +29,9 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.flexneuart.giza.TranRecSortByProb;
+import edu.cmu.lti.oaqa.flexneuart.resources.JSONKeyValueConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.Model1Data;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TrulySparseVector;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValPair;
@@ -49,7 +52,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public static String GIZA_ITER_QTY = "gizaIterQty";
   public static String PROB_SELF_TRAN = "probSelfTran";
   public static String MIN_MODEL1_PROB = "minModel1Prob";
-  public static String MODEL1_SUBDIR = "model1SubDir";
+  public static String MODEL1_FILE_PREFIX = "model1FilePrefr";
   public static String LAMBDA = "lambda";
   public static String OOV_PROB = "ProbOOV";
   public static String FLIP_DOC_QUERY = "flipDocQuery";
@@ -67,10 +70,10 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     * by generating query and document vectors with subsequent inner-product computation,
     * this feature seems to be broken and it is not completely clear why. 
     */
-  public FeatExtrModel1Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrModel1Similarity(ResourceManager resMngr, JSONKeyValueConfig conf) throws Exception {
     super(resMngr, conf);
    
-    mModel1SubDir = conf.getParam(MODEL1_SUBDIR, getIndexFieldName());
+    mModel1FilePref = conf.getParam(MODEL1_FILE_PREFIX, getIndexFieldName());
     mGizaIterQty = conf.getReqParamInt(GIZA_ITER_QTY);
     mProbSelfTran = conf.getReqParamFloat(PROB_SELF_TRAN);
     mMinModel1Prob = conf.getReqParamFloat(MIN_MODEL1_PROB);
@@ -90,7 +93,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     mFlipDocQuery = conf.getParamBool(FLIP_DOC_QUERY);
     
     mModel1Data = resMngr.getModel1Tran(getIndexFieldName(), 
-                                        mModel1SubDir,
+                                        mModel1FilePref,
                                         false /* no translation table flip */, 
                                         mGizaIterQty, mProbSelfTran, mMinModel1Prob);
     
@@ -394,7 +397,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
   
   final ForwardIndex    mFieldIndex;
-  final String          mModel1SubDir;
+  final String          mModel1FilePref;
   final Model1Data      mModel1Data;
   final int             mGizaIterQty;
   final float           mProbSelfTran;

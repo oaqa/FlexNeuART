@@ -79,7 +79,7 @@ class ExtrModel1JsonGEN:
                 }
             ]
 
-            self.param_conf.append((fid, {"extractors": extr_list}))
+            self.param_conf.append((fid, extr_list))
 
         param_arr = []
         param_arr.append((0.9, 0.00001, 1e-3))
@@ -114,7 +114,7 @@ class ExtrModel1JsonGEN:
                 }
             ]
 
-            self.param_conf.append((fid, {"extractors": extr_list}))
+            self.param_conf.append((fid, extr_list))
 
 
 class ParserWithModel1Coeff(BaseParser):

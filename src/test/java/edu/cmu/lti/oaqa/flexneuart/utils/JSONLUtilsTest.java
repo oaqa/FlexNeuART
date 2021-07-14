@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
-import edu.cmu.lti.oaqa.flexneuart.utils.JSONUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.JSONDataUtils;
 
 public class JSONLUtilsTest {
 
@@ -30,7 +30,7 @@ public class JSONLUtilsTest {
                String[] keysStrArr, String[][] valsStrArr) {
     DataEntryFields e = null;
     try {
-      e = JSONUtils.parseJSONEntry(textJSON, 0);
+      e = JSONDataUtils.parseJSONEntry(textJSON, 0);
     } catch (Exception e2) {
       // TODO Auto-generated catch block
       e2.printStackTrace();
