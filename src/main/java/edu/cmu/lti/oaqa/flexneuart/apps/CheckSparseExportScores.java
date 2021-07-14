@@ -27,7 +27,6 @@ import org.kohsuke.args4j.ParserProperties;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;

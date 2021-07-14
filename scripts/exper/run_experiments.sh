@@ -270,6 +270,11 @@ for ((ivar=1;;++ivar)) ; do
 
   stat=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
 
+  if [ "$?" != "0" ] ; then
+    echo "Failed to parse configuration $ivar from the file $experDescPath"
+    exit 1
+  fi
+
   if [ "stat" = "#ERR" ] ; then
     echo "Failed to get entry $ivar from experiment config $experDescPath"
     exit 1

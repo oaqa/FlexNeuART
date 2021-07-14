@@ -64,5 +64,8 @@ else:
     with open(out_file, 'w') as of:
         for key, value in inp_data[entry_id].items():
             key = replace_chars_nl(str(key))
+            if type(value) == bool:
+                value = int(value)
+
             value = replace_chars_nl(str(value))
             of.write(f'{key}:{value}\n')
