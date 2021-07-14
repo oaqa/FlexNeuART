@@ -320,7 +320,7 @@ fi
 # as we llas other *Param*
 
 commonAddParams="\
-  -cand_qty $candQty $candProvAddConfParam \
+  -cand_prov_qty $candProvQty $candProvAddConfParam \
   -thread_qty "$threadQty" \
   $extrTypeIntermParam
   $modelIntermParam \
