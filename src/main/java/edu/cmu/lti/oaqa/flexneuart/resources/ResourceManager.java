@@ -74,6 +74,8 @@ public class ResourceManager {
     mEmbedRootDir = embedRootDir;
     mModel1RootDir = model1RootDir;
     mResourceRootDir = resourceRootDir !=null ? resourceRootDir : "";
+    
+    logger.info("Resource manager initialization. Resource root:" + mResourceRootDir);
   }
   
   
