@@ -87,8 +87,8 @@ public class AnswerBasedQRELGenerator {
     @Option(name = "-" + CommonParams.OUTPUT_FILE_PARAM, required = true, usage = CommonParams.OUTPUT_FILE_DESC)
     String mOutFile;
     
-    @Option(name = "-" + CommonParams.MAX_CAND_QTY_PARAM, required = true, usage = CommonParams.MAX_CAND_QTY_DESC)
-    int mCandQty;
+    @Option(name = "-" + CommonParams.MAX_CAND_PROV_QTY_PARAM, required = true, usage = CommonParams.MAX_CAND_PROV_QTY_DESC)
+    int mCandProvQty;
     
     @Option(name = "-" +  CommonParams.THREAD_QTY_PARAM, usage =  CommonParams.THREAD_QTY_DESC)
     int mThreadQty = 1;
@@ -142,7 +142,7 @@ public class AnswerBasedQRELGenerator {
       AnswBasedQRELGenWorker[] workers = new AnswBasedQRELGenWorker[args.mThreadQty];
       
       for (int i = 0; i < args.mThreadQty; ++i) {
-        workers[i] = new AnswBasedQRELGenWorker(candProviders[i], args.mFieldName, fwdIndexText, args.mCandQty); 
+        workers[i] = new AnswBasedQRELGenWorker(candProviders[i], args.mFieldName, fwdIndexText, args.mCandProvQty); 
       }
       
       for (int qnum = 0; qnum < Math.min(queryArr.size(), args.mMaxNumQuery); ++qnum) {
