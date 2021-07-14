@@ -314,7 +314,7 @@ public class ResourceManager {
     if (!tmp.exists()) {
       throw new Exception(String.format("Model file does not exist: %s", fullPath));
     }
-    return rf.loadRankerFromFile(fileName);
+    return rf.loadRankerFromFile(fullPath);
   }
 
   
