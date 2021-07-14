@@ -120,7 +120,7 @@ public class CheckSparseExportScores {
                               args.mModel1RootDir, 
                               args.mEmbedRootDir);
       
-      DenseVector compWeights = FeatureExtractor.readFeatureWeights(args.mLinModelFile);
+      DenseVector compWeights = resourceManager.readFeatureWeights(args.mLinModelFile);
       
       System.out.println("Weights: " + VectorUtils.toString(compWeights));
       

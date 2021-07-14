@@ -98,6 +98,9 @@ public class ExportToNMSLIBSparse {
     
     try {
       
+      ResourceManager resourceManager = 
+          new ResourceManager(args.mCollectRootDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
+      
       ArrayList<DataEntryFields> queries = null;
       DenseVector compWeights = null;
       
@@ -114,13 +117,10 @@ public class ExportToNMSLIBSparse {
           parser.printUsage(System.err);
           System.exit(1);
         }
-        compWeights = FeatureExtractor.readFeatureWeights(args.mLinModelFile);
+        compWeights = resourceManager.readFeatureWeights(args.mLinModelFile);
       }
       
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
-      
-      ResourceManager resourceManager = 
-          new ResourceManager(args.mCollectRootDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
       
       CompositeFeatureExtractor featExtr = resourceManager.getFeatureExtractor(args.mExtrJson);   
 
