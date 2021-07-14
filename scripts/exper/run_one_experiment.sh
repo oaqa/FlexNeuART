@@ -306,11 +306,6 @@ else
 
 fi
 
-# All current provider URIs except for NMSLIB are relative to the collection location
-if [ "$candProvType" != "$CAND_PROV_NMSLIB" ] ; then
-  candProvURI="$COLLECT_ROOT/$collect/$candProvURI"
-fi
-
 
 # Don't quote $modelFinalParams,
 #             $candProvAddConfParam,

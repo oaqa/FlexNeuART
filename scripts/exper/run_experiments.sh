@@ -263,9 +263,6 @@ jsonParamMap=(\
   num_trees numTrees
 )
 
-# Some locations are always relative to the collection root
-adjustLocForParams=(extrType extrTypeInterm modelInterm modelFinal candProvAddConfParam)
-
 childPIDs=()
 nrun=0
 nfail=0
@@ -364,13 +361,6 @@ for ((ivar=1;;++ivar)) ; do
       # Overriding the value of the final model
       if [ "$paramName" = "model_final" -a "$paramVal" = "" ] ; then
         paramVal="$defaultModelFinal"
-      fi
-      if [ "$paramVal" != "" ] ; then
-        for adjParamName in ${adjustLocForParams[*]} ; do
-          if [ "$adjParamName" = "$jsonParamName" ] ; then
-            paramVal="$collectSubdir/$paramVal"
-          fi
-        done
       fi
 
       if [ "$paramVal" != "" ] ; then
