@@ -66,61 +66,6 @@ public abstract class FeatureExtractor {
          
     outFile.close();    
   }
-  
-  /**
-   * Reads feature weights from a file.
-   * 
-   * @param fileName    input file (in the RankLib format): all weights must be present
-   *                    there should be no gaps!
-   * @return            a sparse vector that keeps weights
-   * @throws Exception
-   */
-  public static DenseVector readFeatureWeights(String fileName) throws Exception {
-    BufferedReader inFile = new BufferedReader(new FileReader(new File(fileName)));
-    
-    
-    try {
-      String line = null;
-      
-      while ((line = inFile.readLine()) != null) {
-        line = line.trim();
-        if (line.isEmpty() || line.startsWith("#")) continue;
-        
-        String parts0[] = line.split("\\s+");
-        
-        DenseVector res = new DenseVector(parts0.length);
-        
-        int ind = 0;
-        for (String onePart: parts0) {
-          try {
-            String parts1[] = onePart.split(":");
-            if (parts1.length != 2) {
-              throw new Exception(
-                  String.format(
-                      "The line in file '%s' has a field '%s' without exactly one ':', line: %s", fileName, onePart, line));
-            }
-            int partId = Integer.parseInt(parts1[0]);
-            if (partId != ind + 1) {
-              throw new Exception(
-                  String.format("Looks like there's a missing feature weight, field %d has id %d", ind + 1, partId));
-            }
-            res.set(ind, Double.parseDouble(parts1[1]));
-            ind++;
-          } catch (NumberFormatException e) {
-            throw new Exception(
-                String.format(
-                    "The line in file '%s' has non-number '%s', line: %s", fileName, onePart, line));
-          }
-        }
-        return res;
-      }
-      
-    } finally {    
-      inFile.close();
-    }
-    
-    throw new Exception("No features found in '" + fileName + "'");
-  }
 
   public static HashMap<String, DenseVector> initResultSet(CandidateEntry[] cands, int featureQty) {
     HashMap<String, DenseVector> res = new HashMap<String,DenseVector>();

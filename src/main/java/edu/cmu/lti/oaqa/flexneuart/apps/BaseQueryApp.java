@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 
+import ciir.umass.edu.learning.Ranker;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.*;
 import edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
@@ -38,7 +39,6 @@ import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
-import ciir.umass.edu.learning.*;
 
 
 class BaseProcessingUnit {
@@ -603,23 +603,18 @@ public abstract class BaseQueryApp {
       if (null == modelFile) 
         showUsageSpecify(CommonParams.MODEL_FILE_INTERM_PARAM);
    
-      mModelInterm = FeatureExtractor.readFeatureWeights(modelFile);
+      mModelInterm = mResourceManager.readFeatureWeights(modelFile);
 
       logger.info("Using the following weights for the intermediate re-ranker:");
       logger.info(mModelInterm.toString());
     }
+    
     mExtrTypeFinal = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM);
     if (mExtrTypeFinal != null) {
       if (mUseFinalModel) {
         String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_FINAL_PARAM);
-        if (null == modelFile) 
-          showUsageSpecify(CommonParams.MODEL_FILE_FINAL_PARAM);
-        RankerFactory rf = new RankerFactory();
-        File tmp = new File(modelFile);
-        if (!tmp.exists()) {
-          throw new Exception(String.format("Model file does not exist: %s", modelFile));
-        }
-        mModelFinal = rf.loadRankerFromFile(modelFile);
+
+        mModelFinal = mResourceManager.loadRankLibModel(modelFile);
         logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
       }
     }

@@ -15,7 +15,9 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.resources;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.util.HashMap;
 
 import org.slf4j.Logger;
@@ -31,7 +33,9 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndexBasedFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaVocabularyReader;
 import edu.cmu.lti.oaqa.flexneuart.letor.EmbeddingReaderAndRecoder;
-
+import no.uib.cipr.matrix.DenseVector;
+import ciir.umass.edu.learning.Ranker;
+import ciir.umass.edu.learning.RankerFactory;
 
 /**
  * This class takes care about loading resources necessary for feature extraction and candidate generation.
@@ -246,7 +250,73 @@ public class ResourceManager {
 
   private String fwdIndexFileName(String prefixDir, String fieldName) {
     return concat(mResourceRootDir, prefixDir + FS + fieldName);
-  }  
+  }
+  
+  
+  /**
+   * Reads feature weights from a file.
+   * 
+   * @param fileName    input file (in the RankLib format): all weights must be present
+   *                    there should be no gaps!
+   * @return            a sparse vector that keeps weights
+   * @throws Exception
+   */
+  public DenseVector readFeatureWeights(String fileName) throws Exception {
+    BufferedReader inFile = new BufferedReader(new FileReader(new File(concat(mResourceRootDir, fileName))));
+       
+    try {
+      String line = null;
+      
+      while ((line = inFile.readLine()) != null) {
+        line = line.trim();
+        if (line.isEmpty() || line.startsWith("#")) continue;
+        
+        String parts0[] = line.split("\\s+");
+        
+        DenseVector res = new DenseVector(parts0.length);
+        
+        int ind = 0;
+        for (String onePart: parts0) {
+          try {
+            String parts1[] = onePart.split(":");
+            if (parts1.length != 2) {
+              throw new Exception(
+                  String.format(
+                      "The line in file '%s' has a field '%s' without exactly one ':', line: %s", fileName, onePart, line));
+            }
+            int partId = Integer.parseInt(parts1[0]);
+            if (partId != ind + 1) {
+              throw new Exception(
+                  String.format("Looks like there's a missing feature weight, field %d has id %d", ind + 1, partId));
+            }
+            res.set(ind, Double.parseDouble(parts1[1]));
+            ind++;
+          } catch (NumberFormatException e) {
+            throw new Exception(
+                String.format(
+                    "The line in file '%s' has non-number '%s', line: %s", fileName, onePart, line));
+          }
+        }
+        return res;
+      }
+      
+    } finally {    
+      inFile.close();
+    }
+    
+    throw new Exception("No features found in '" + fileName + "'");
+  }
+  
+  public Ranker loadRankLibModel(String fileName) throws Exception {
+    RankerFactory rf = new RankerFactory();
+    String fullPath = concat(this.mResourceRootDir, fileName);
+    File tmp = new File(fullPath);
+    if (!tmp.exists()) {
+      throw new Exception(String.format("Model file does not exist: %s", fullPath));
+    }
+    return rf.loadRankerFromFile(fileName);
+  }
+
   
   private HashMap<String, ForwardIndex>               mFwdIndices = new HashMap<String, ForwardIndex>();
   private HashMap<String, EmbeddingReaderAndRecoder>  mWordEmbeds = new HashMap<String, EmbeddingReaderAndRecoder>();
