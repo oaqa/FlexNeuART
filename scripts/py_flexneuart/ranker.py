@@ -172,7 +172,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
         model_file_name_full_path = os.path.join(resource_manager.getResourceRootDir(), model_file_name)
         if not os.path.exists(model_file_name_full_path):
             raise Exception(f'Missing model file: {model_file_name_full_path}')
-        self.model = torch.load(model_file_name, map_location='cpu')
+        self.model = torch.load(model_file_name_full_path, map_location='cpu')
         self.device_name = device_name
         self.max_query_len = max_query_len
         self.max_doc_len = max_doc_len
