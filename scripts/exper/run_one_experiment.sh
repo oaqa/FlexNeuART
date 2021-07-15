@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 source scripts/common_proc.sh
 source scripts/config.sh
 
@@ -200,9 +200,9 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-experDirBase=${posArgs[1]}
-if [ "$experDirBase" = "" ] ; then
-  echo "Specify a working directory (2d arg)!"
+experDirBaseRelative=${posArgs[1]}
+if [ "$experDirBaseRelative" = "" ] ; then
+  echo "Specify a working directory relative to the collection directory (2d arg)!"
   exit 1
 fi
 
@@ -240,10 +240,26 @@ fi
 # Do it only after argument parsing
 set -eo pipefail
 
+checkVarNonEmpty "COLLECT_ROOT"
+checkVarNonEmpty "EMBED_SUBDIR"
+checkVarNonEmpty "FWD_INDEX_SUBDIR"
+checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "DERIVED_DATA_SUBDIR"
+
+collectDir="$COLLECT_ROOT/$collect"
+inputDataDir="$collectDir/$INPUT_DATA_SUBDIR"
+fwdIndexDir="$FWD_INDEX_SUBDIR/"
+embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+model1Dir="$DERIVED_DATA_SUBDIR/$model1SubDir"
+
 checkVarNonEmpty "LETOR_SUBDIR"
 checkVarNonEmpty "TRECRUNS_SUBDIR"
 checkVarNonEmpty "REP_SUBDIR"
 
+checkVarNonEmpty "experDirBaseRelative"
+experDirBase="$collectDir/$experDirBaseRelative"
+
+letorDirRelative="$experDirBaseRelative/$LETOR_SUBDIR"
 letorDir="$experDirBase/$LETOR_SUBDIR"
 trecRunDir="$experDirBase/$TRECRUNS_SUBDIR"
 reportDir="$experDirBase/$REP_SUBDIR"
@@ -251,7 +267,8 @@ reportDir="$experDirBase/$REP_SUBDIR"
 checkVarNonEmpty "experDirBase"
 if [ -d "$experDirBase" ] ; then
   # Be very careful with this sort of deletions,
-  # double-check it's not empty again
+  # double-check it's not empty again, otherwise we might try to delete
+  # files at the root file-system directory
   if [ "$experDirBase" != "" ] ; then
     rm -rf "$experDirBase/*"
   else
@@ -270,20 +287,9 @@ checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 
 
 
-checkVarNonEmpty "COLLECT_ROOT"
-checkVarNonEmpty "EMBED_SUBDIR"
-checkVarNonEmpty "FWD_INDEX_SUBDIR"
-checkVarNonEmpty "INPUT_DATA_SUBDIR"
-checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-
-collectRoot="$COLLECT_ROOT/$collect"
-inputDataDir="$collectRoot/$INPUT_DATA_SUBDIR"
-fwdIndexDir="$FWD_INDEX_SUBDIR/"
-embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
-model1Dir="$DERIVED_DATA_SUBDIR/$model1SubDir"
 
 commonResourceParams="\
--collect_root $collectRoot \
+-collect_dir $collectDir \
 -fwd_index_dir $fwdIndexDir \
 -embed_dir $embedDir \
 -model1_dir $model1Dir "
@@ -323,22 +329,29 @@ commonAddParams="\
 
 outPrefTrain="out_${collect}_${trainPart}"
 outPrefTest="out_${collect}_${testPart}"
+fullOutPrefTrainRelative="$letorDirRelative/$outPrefTrain"
 fullOutPrefTrain="$letorDir/$outPrefTrain"
 fullOutPrefTest="$letorDir/$outPrefTest"
 
 queryLogFile=${trecRunDir}/query.log
 
-
+# When training we use an absolute location to save a model.
+# However, when the test app loads the model it expects all the resources and configs
+# to be relative to the collection directory.
 if [ "$testOnly" = "0" ] ; then
   if [ "$modelFinal" != "" ] ; then
     echo "Bug: here the modelFinal variable should be empty!"
     exit 1
   fi
   modelFinal="${fullOutPrefTrain}_${trainCandQty}.model"
+  modelFinalRelative="${fullOutPrefTrainRelative}_${trainCandQty}.model"
+else
+  # This model file name comes from the extractor JSON and it is supposed to be collection-relative
+  modelFinalRelative="$modelFinal"
 fi
 if [ "$modelFinal" != "" ] ; then
   checkVarNonEmpty "extrType"
-  modelFinalParams="-extr_type_final \"$extrType\" -model_final \"$modelFinal\""
+  modelFinalParams="-extr_type_final \"$extrType\" -model_final \"$modelFinalRelative\""
 fi
 
 echo "$SEP_DEBUG_LINE"

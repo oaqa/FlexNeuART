@@ -82,8 +82,8 @@ public class CommonParams {
   public final static String MAX_NUM_RESULTS_PARAM = "n";
   public final static String MAX_NUM_RESULTS_DESC  = "A comma-separated list of numbers of candidate records (per-query).";
   
-  public static final String COLLECTION_ROOT_DIR_PARAM = "collect_root";
-  public static final String COLLECTION_ROOT_DIR_DESC = "an option root dir for the collection (and respective resources)";
+  public static final String COLLECTION_DIR_PARAM = "collect_dir";
+  public static final String COLLECTION_DIR_DESC = "an option root dir for the collection (and respective resources)";
   
   public static final String MODEL1_ROOT_DIR_PARAM = "model1_dir";
   public static final String MODEL1_ROOT_DIR_DESC =  "a root dir for Model 1 translation fiels (e.g., GIZA output)";

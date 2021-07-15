@@ -72,8 +72,8 @@ public class AnswerBasedQRELGenerator {
     @Option(name = "-" + CommonParams.FIELD_NAME_PARAM, usage = "The field whose text we use to find answers")
     String mFieldName = Const.DEFAULT_QUERY_TEXT_FIELD_NAME;
     
-    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
-    String mCollectRootDir;
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
     
     @Option(name = "-" + CommonParams.PROVIDER_URI_PARAM, required = true, usage = CommonParams.PROVIDER_URI_DESC)
     String mCandProviderURI;
@@ -117,7 +117,7 @@ public class AnswerBasedQRELGenerator {
       logger.info("Candidate provider type: " + args.mCandProviderType + " URI: " + args.mCandProviderURI + " config: " + args.mCandProviderConfigName);
       logger.info("Number of threads: " + args.mThreadQty);
       
-      ResourceManager resourceManager = new ResourceManager(args.mCollectRootDir, args.mFwdIndexDir, null, null);
+      ResourceManager resourceManager = new ResourceManager(args.mCollectDir, args.mFwdIndexDir, null, null);
       ForwardIndex fwdIndexText = resourceManager.getFwdIndex(args.mFieldName);
       
       if (!fwdIndexText.isTextRaw()) {

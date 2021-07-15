@@ -56,9 +56,8 @@ public class CreateBitextFromQRELs {
   static RandomUtils rand = new RandomUtils(0);
   
   public static final class Args {  
-    
-    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
-    String mCollectRootDir;
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
     
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
     String mFwdIndex;
@@ -108,7 +107,7 @@ public class CreateBitextFromQRELs {
     
     
     try {
-      ResourceManager resourceManager = new ResourceManager(args.mCollectRootDir, 
+      ResourceManager resourceManager = new ResourceManager(args.mCollectDir, 
                                                             args.mFwdIndex, 
                                                             null, 
                                                             args.mEmbedRootDir);

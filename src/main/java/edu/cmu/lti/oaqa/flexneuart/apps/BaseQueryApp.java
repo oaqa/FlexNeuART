@@ -447,7 +447,7 @@ public abstract class BaseQueryApp {
    * 
    */
   void addResourceOpts() {    
-    mOptions.addOption(CommonParams.COLLECTION_ROOT_DIR_PARAM, null, true,  CommonParams.COLLECTION_ROOT_DIR_DESC);
+    mOptions.addOption(CommonParams.COLLECTION_DIR_PARAM,      null, true,  CommonParams.COLLECTION_DIR_DESC);
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,            null, true,  CommonParams.FWDINDEX_DESC);    
     mOptions.addOption(CommonParams.MODEL1_ROOT_DIR_PARAM,     null, true,  CommonParams.MODEL1_ROOT_DIR_DESC);
     mOptions.addOption(CommonParams.EMBED_ROOT_DIR_PARAM,      null, true,  CommonParams.EMBED_ROOT_DIR_DESC);         
@@ -589,7 +589,7 @@ public abstract class BaseQueryApp {
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
 
-    mCollectRootDir = mCmd.getOptionValue(CommonParams.COLLECTION_ROOT_DIR_PARAM);
+    mCollectDir = mCmd.getOptionValue(CommonParams.COLLECTION_DIR_PARAM);
     
     mModel1RootDir = mCmd.getOptionValue(CommonParams.MODEL1_ROOT_DIR_PARAM);
     mEmbedRootDir = mCmd.getOptionValue(CommonParams.EMBED_ROOT_DIR_PARAM);
@@ -611,7 +611,7 @@ public abstract class BaseQueryApp {
    * @throws Exception 
    */
   void initExtractors() throws Exception {
-    mResourceManager = new ResourceManager(mCollectRootDir, mFwdIndexPref, mModel1RootDir, mEmbedRootDir);
+    mResourceManager = new ResourceManager(mCollectDir, mFwdIndexPref, mModel1RootDir, mEmbedRootDir);
 
     if (mExtrTypeInterm != null) {
       mExtrInterm = mResourceManager.getFeatureExtractor(mExtrTypeInterm);
@@ -766,7 +766,7 @@ public abstract class BaseQueryApp {
   QrelReader   mQrels;
   int          mThreadQty = 1;
   String       mSaveStatFile;    
-  String       mCollectRootDir;
+  String       mCollectDir; // collection top-level (sub) directory
   String       mModel1RootDir;
   String       mEmbedRootDir;
   String       mFwdIndexPref;

@@ -51,9 +51,8 @@ public class ExportToNMSLIBSparse {
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
     String mFwdIndexDir;
     
-    
-    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
-    String mCollectRootDir;
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
     
     @Option(name = "-" + CommonParams.MODEL1_ROOT_DIR_PARAM, usage = CommonParams.MODEL1_ROOT_DIR_DESC)
     String mModel1RootDir;
@@ -98,7 +97,7 @@ public class ExportToNMSLIBSparse {
     try {
       
       ResourceManager resourceManager = 
-          new ResourceManager(args.mCollectRootDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
+          new ResourceManager(args.mCollectDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
       
       ArrayList<DataEntryFields> queries = null;
       DenseVector compWeights = null;

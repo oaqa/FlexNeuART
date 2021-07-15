@@ -94,7 +94,7 @@ public class ExportTrainPairs {
     mOptions.addOption(CommonParams.CAND_PROVID_ADD_CONF_PARAM, null, true, CommonParams.CAND_PROVID_ADD_CONF_DESC);
     
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,             null, true, CommonParams.FWDINDEX_DESC); 
-    mOptions.addOption(CommonParams.COLLECTION_ROOT_DIR_PARAM,  null, true, CommonParams.COLLECTION_ROOT_DIR_DESC); 
+    mOptions.addOption(CommonParams.COLLECTION_DIR_PARAM,       null, true,  CommonParams.COLLECTION_DIR_DESC);
     mOptions.addOption(CommonParams.MODEL1_ROOT_DIR_PARAM,      null, true, CommonParams.MODEL1_ROOT_DIR_DESC); 
     mOptions.addOption(CommonParams.EMBED_ROOT_DIR_PARAM,       null, true, CommonParams.EMBED_ROOT_DIR_DESC);  
 
@@ -145,9 +145,9 @@ public class ExportTrainPairs {
         showUsageSpecify(ExportTrainPairs.QUERY_EXPORT_FIELD_PARAM);
       }
       
-      String collectRoot = cmd.getOptionValue(CommonParams.COLLECTION_ROOT_DIR_PARAM);
-      if (null == collectRoot) {
-        showUsageSpecify(CommonParams.COLLECTION_ROOT_DIR_PARAM);
+      String collectDir = cmd.getOptionValue(CommonParams.COLLECTION_DIR_PARAM);
+      if (null == collectDir) {
+        showUsageSpecify(CommonParams.COLLECTION_DIR_PARAM);
       }
       String embedRootDir = cmd.getOptionValue(CommonParams.EMBED_ROOT_DIR_PARAM);
       String model1RootDir = cmd.getOptionValue(CommonParams.MODEL1_ROOT_DIR_PARAM);
@@ -210,7 +210,7 @@ public class ExportTrainPairs {
       logger.info("Candidate provider type: " + candProviderType + " URI: " + providerURI + " config: " + candProviderConfigName);
       logger.info("Number of threads: " + threadQty);
       
-      ResourceManager resourceManager = new ResourceManager(collectRoot, fwdIndexDir, model1RootDir, embedRootDir);
+      ResourceManager resourceManager = new ResourceManager(collectDir, fwdIndexDir, model1RootDir, embedRootDir);
       
       CandidateProvider  [] candProviders = new CandidateProvider[threadQty];
       candProviders = resourceManager.createCandProviders(candProviderType, 

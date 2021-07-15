@@ -66,7 +66,6 @@ public class FilterTranTable {
     mOptions.addOption(INPUT_PARAM,                        null, true, INPUT_DESC);
     mOptions.addOption(OUTPUT_PARAM,                       null, true, OUTPUT_DESC);
 
-    mOptions.addOption(CommonParams.COLLECTION_ROOT_DIR_PARAM,  null, true, CommonParams.COLLECTION_ROOT_DIR_DESC); 
     mOptions.addOption(CommonParams.FLT_FWD_INDEX_PARAM,   null, true, CommonParams.FLT_FWD_INDEX_DESC);
     mOptions.addOption(CommonParams.GIZA_ITER_QTY_PARAM,   null, true, CommonParams.GIZA_ITER_QTY_DESC);
     mOptions.addOption(CommonParams.MODEL1_ROOT_DIR_PARAM, null, true, CommonParams.MODEL1_ROOT_DIR_DESC);

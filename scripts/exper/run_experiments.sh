@@ -328,7 +328,7 @@ for ((ivar=1;;++ivar)) ; do
     # Each experiment should run in its own sub-directory
     experDirBase=`getExperDirBase "$collectSubdir" "$experPart" "$experSubdir"`
     if [ "$?" != "0" ] ; then
-      echo "Failed to obtain the experimental directory!"
+      echo "Failed to obtain an experimental directory!"
       exit 1
     fi
 
@@ -373,11 +373,18 @@ for ((ivar=1;;++ivar)) ; do
       fi
     done
 
+
+    experDirBaseRelative=`getExperDirBase "" "$experPart" "$experSubdir"`
+    if [ "$?" != "0" ] ; then
+      echo "Failed to obtain a relative experimental directory!"
+      exit 1
+    fi
+
 # Don't quote $globalParams or any other "*Param*
   cmd=`cat <<EOF
         scripts/exper/run_one_experiment.sh \
             "$collect" \
-            "$experDirBase" \
+            "$experDirBaseRelative" \
             "$testPart" \
             $globalParams $singleConfParams
 EOF

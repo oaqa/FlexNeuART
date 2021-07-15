@@ -60,8 +60,8 @@ public class ExportToNMSLIBDenseSparseFusion {
     @Option(name = "-" + CommonParams.EMBED_ROOT_DIR_PARAM, usage = CommonParams.EMBED_ROOT_DIR_DESC)
     String mEmbedRootDir;
     
-    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
-    String mCollectRootDir;
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
     
     @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
@@ -105,7 +105,7 @@ public class ExportToNMSLIBDenseSparseFusion {
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
       
       ResourceManager resourceManager = 
-          new ResourceManager(args.mCollectRootDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
+          new ResourceManager(args.mCollectDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
       
       CompositeFeatureExtractor featExtr = resourceManager.getFeatureExtractor(args.mExtrJson);  
 

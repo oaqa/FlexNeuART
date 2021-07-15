@@ -119,6 +119,10 @@ function getExperDirBase {
   checkVarNonEmpty "experSubdir"
   checkVarNonEmpty "EXPER_SUBDIR"
 
-  echo "$collectSubdir/$EXPER_SUBDIR/$testSet/$experSubdir"
+  if [ "$collectSubdir" != "" ] ; then
+    echo "$collectSubdir/$EXPER_SUBDIR/$testSet/$experSubdir"
+  else
+    echo "$EXPER_SUBDIR/$testSet/$experSubdir"
+  fi
 
 }

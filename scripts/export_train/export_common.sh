@@ -103,14 +103,14 @@ checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "QREL_FILE"
 
-collectRoot="$COLLECT_ROOT/$collect"
-inputDataDir="$collectRoot/$INPUT_DATA_SUBDIR"
+collectDir="$COLLECT_ROOT/$collect"
+inputDataDir="$collectDir/$INPUT_DATA_SUBDIR"
 fwdIndexDir="$FWD_INDEX_SUBDIR/"
 embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 model1Dir="$DERIVED_DATA_SUBDIR/$MODEL1_SUBDIR"
 
 commonResourceParams="\
--collect_root $collectRoot  \
+-collect_dir $collectDir  \
 -fwd_index_dir $fwdIndexDir \
 -embed_dir $embedDir \
 -model1_dir $model1Dir "

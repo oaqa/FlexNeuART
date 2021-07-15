@@ -59,9 +59,8 @@ public class CheckSparseExportScores {
     @Option(name = "-" + CommonParams.MODEL1_ROOT_DIR_PARAM, usage = CommonParams.MODEL1_ROOT_DIR_DESC)
     String mModel1RootDir;
     
-    
-    @Option(name = "-" + CommonParams.COLLECTION_ROOT_DIR_PARAM, usage = CommonParams.COLLECTION_ROOT_DIR_DESC)
-    String mCollectRootDir;
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
     
     @Option(name = "-" + CommonParams.EMBED_ROOT_DIR_PARAM, usage = CommonParams.EMBED_ROOT_DIR_DESC)
     String mEmbedRootDir;
@@ -114,7 +113,7 @@ public class CheckSparseExportScores {
     try {
 
       ResourceManager resourceManager = 
-          new ResourceManager(args.mCollectRootDir, 
+          new ResourceManager(args.mCollectDir, 
                               args.mFwdIndexPref, 
                               args.mModel1RootDir, 
                               args.mEmbedRootDir);
