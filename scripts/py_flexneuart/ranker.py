@@ -95,23 +95,24 @@ class BaseQueryRanker:
 
 
 class JavaQueryRanker(BaseQueryRanker):
-    """An interface to Java-layer re-rankers, which are non-neural (except external
-       rankers connected via Apache Thrift. These can be anything."""
+    """An interface to Java-layer re-rankers. Model and configuration files
+        are relative to the collection directory (resource root directory).
+    """
     def __init__(self, resource_manager, feat_extr_file_name, model_file_name):
         """Reranker constructor.
 
-        :param resource_manager:   a resource manager object
+        :param resource_manager:      a resource manager object
         :param feat_extr_file_name:   feature extractor JSON configuration file.
         :param model_file_name:       a (previously trained/created) model file name
         """
         super().__init__()
-        rank_factory = JRankerFactory()
+
         # It is important to check before passing this to RankLib,
         # which does not handle missing files gracefully
         if not os.path.exists(model_file_name):
             raise Exception(f'Missing model file: {model_file_name}')
-        self.model = rank_factory.loadRankerFromFile(model_file_name)
-        self.feat_extr = JCompositeFeatureExtractor(resource_manager, feat_extr_file_name)
+        self.model = resource_manager.loadRankLibModel(model_file_name)
+        self.feat_extr = resource_manager.getFeatureExtractor(feat_extr_file_name)
         self.dp_wrapper = JDataPointWrapper()
 
     def score_candidates(self, cand_list, query_info_obj_or_dict):
