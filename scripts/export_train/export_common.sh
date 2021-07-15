@@ -110,10 +110,10 @@ embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 model1Dir="$DERIVED_DATA_SUBDIR/$MODEL1_SUBDIR"
 
 commonResourceParams="\
--collect_root \"$collectRoot\"
--fwd_index_dir \"$fwdIndexDir\" \
--embed_dir \"$embedDir\" \
--model1_dir \"$model1Dir\" "
+-collect_root $collectRoot  \
+-fwd_index_dir $fwdIndexDir \
+-embed_dir $embedDir \
+-model1_dir $model1Dir "
 
 if [ "$providerURI" = "" ] ; then
   if [ "$candProv" = "$CAND_PROV_LUCENE" ] ; then

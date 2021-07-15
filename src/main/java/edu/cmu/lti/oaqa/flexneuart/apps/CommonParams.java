@@ -68,10 +68,10 @@ public class CommonParams {
   public final static String CAND_PROVID_ADD_CONF_PARAM = "cand_prov_add_conf";
 
   public final static String EXTRACTOR_TYPE_FINAL_PARAM = "extr_type_final";
-  public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extrator type/json"; 
+  public final static String EXTRACTOR_TYPE_FINAL_DESC = "Final-stage extractor json"; 
                                   
   public final static String EXTRACTOR_TYPE_INTERM_PARAM = "extr_type_interm";  
-  public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extrator type/json";
+  public final static String EXTRACTOR_TYPE_INTERM_DESC = "Intermediate extractor json";
   
   public final static String MAX_CAND_PROV_QTY_PARAM    = "cand_prov_qty";
   public final static String MAX_CAND_PROV_QTY_DESC     = "A maximum number of candidate records returned by the provider. ";

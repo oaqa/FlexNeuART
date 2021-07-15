@@ -283,10 +283,10 @@ embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
 model1Dir="$DERIVED_DATA_SUBDIR/$model1SubDir"
 
 commonResourceParams="\
--collect_root \"$collectRoot\"
--fwd_index_dir \"$fwdIndexDir\" \
--embed_dir \"$embedDir\" \
--model1_dir \"$model1Dir\" "
+-collect_root $collectRoot \
+-fwd_index_dir $fwdIndexDir \
+-embed_dir $embedDir \
+-model1_dir $model1Dir "
 
 checkVarNonEmpty "inputDataDir" # set by set_common_resource_vars.sh
 checkVarNonEmpty "commonResourceParams"  # set by set_common_resource_vars.sh

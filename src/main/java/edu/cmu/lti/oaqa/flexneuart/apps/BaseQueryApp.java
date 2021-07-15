@@ -486,16 +486,16 @@ public abstract class BaseQueryApp {
       mCandProviderType = CandidateProvider.CAND_TYPE_LUCENE;
     else { 
       mCandProviderType = mCmd.getOptionValue(CommonParams.CAND_PROVID_PARAM);
-      if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_DESC);
+      if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_PARAM);
     }
     mCandProviderConfigName = mCmd.getOptionValue(CommonParams.CAND_PROVID_ADD_CONF_PARAM);
     mRunId = mCmd.getOptionValue(CommonParams.RUN_ID_PARAM);
     if (mRunId == null) showUsageSpecify(CommonParams.RUN_ID_PARAM);
     
     mProviderURI = mCmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
-    if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_DESC);              
+    if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_PARAM);              
     mQueryFilePrefix = mCmd.getOptionValue(CommonParams.QUERY_FILE_PREFIX_PARAM);
-    if (null == mQueryFilePrefix) showUsageSpecify(CommonParams.QUERY_FILE_PREFIX_DESC);
+    if (null == mQueryFilePrefix) showUsageSpecify(CommonParams.QUERY_FILE_PREFIX_PARAM);
     {
       String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_QUERY_PARAM);
       if (tmpn != null) {
@@ -508,7 +508,7 @@ public abstract class BaseQueryApp {
     }
     {
       String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_RESULTS_PARAM);
-      if (null == tmpn) showUsageSpecify(CommonParams.MAX_NUM_RESULTS_DESC);
+      if (null == tmpn) showUsageSpecify(CommonParams.MAX_NUM_RESULTS_PARAM);
       
       // mMaxNumRet must be init before mMaxCandRet
       mMaxNumRet = Integer.MIN_VALUE;
@@ -547,13 +547,13 @@ public abstract class BaseQueryApp {
     {
       String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_PROV_QTY_PARAM);
       if (null == tmpn)
-        showUsageSpecify(CommonParams.MAX_CAND_PROV_QTY_DESC);
+        showUsageSpecify(CommonParams.MAX_CAND_PROV_QTY_PARAM);
       try {
         mMaxCandRet = Integer.parseInt(tmpn);
         if (mMaxCandRet < mMaxNumRet)
           mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
       } catch (NumberFormatException e) {
-        showUsage("The value of '" + CommonParams.MAX_CAND_PROV_QTY_DESC + "' isn't integer: '" + tmpn + "'");
+        showUsage("The value of '" + CommonParams.MAX_CAND_PROV_QTY_PARAM + "' isn't integer: '" + tmpn + "'");
       }
     }
     
