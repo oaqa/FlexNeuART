@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.HashMap;
 
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,12 +87,13 @@ public class ResourceManager {
   }
   
   /*
-   * Ideally, path concatenation should be done using something like FilenameUtils.concat.
-   * However, the latter has a huge issue: If what you concatenate starts with a slash, the whole path is interpreted
-   * as absolute.
+   * Both Java and Python path concatenation rules are rather weird, but they seem to be
+   * consistent in their weirdness. So we are using a standard concatentation function here.
+   * For example, one quirk is that if you start p2 with a slash, e.g., '/path', p1
+   * is going to be ignored completely.
    */
   private String concat(String p1, String p2) {
-    return p1 + FS + p2;
+    return FilenameUtils.concat(p1, p2);
   }
   
   /**
