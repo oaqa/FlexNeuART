@@ -474,3 +474,20 @@ function isGreater {
   val2=$2
   python -c "print(int($val1 > $val2))"
 }
+
+function getExperDirBase {
+  collectSubdir="$1"
+  testSet="$2"
+  experSubdir="$3"
+
+  checkVarNonEmpty "testSet"
+  checkVarNonEmpty "experSubdir"
+  checkVarNonEmpty "EXPER_SUBDIR"
+
+  if [ "$collectSubdir" != "" ] ; then
+    echo "$collectSubdir/$EXPER_SUBDIR/$testSet/$experSubdir"
+  else
+    echo "$EXPER_SUBDIR/$testSet/$experSubdir"
+  fi
+
+}

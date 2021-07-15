@@ -109,20 +109,3 @@ TEST_ONLY_PARAM="testOnly"
 TRAIN_ONLY_PARAM="trainOnly"
 
 
-function getExperDirBase {
-  collectSubdir="$1"
-  testSet="$2"
-  experSubdir="$3"
-
-  checkVarNonEmpty "collectSubdir"
-  checkVarNonEmpty "testSet"
-  checkVarNonEmpty "experSubdir"
-  checkVarNonEmpty "EXPER_SUBDIR"
-
-  if [ "$collectSubdir" != "" ] ; then
-    echo "$collectSubdir/$EXPER_SUBDIR/$testSet/$experSubdir"
-  else
-    echo "$EXPER_SUBDIR/$testSet/$experSubdir"
-  fi
-
-}
