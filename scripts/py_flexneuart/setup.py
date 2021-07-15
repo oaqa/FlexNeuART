@@ -56,6 +56,6 @@ def create_featextr_resource_manager(resource_root_dir,
     # configure_classpath call
     from jnius import autoclass
 
-    JFeatExtrResourceManager = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager')
+    JResourceManager = autoclass('edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager')
 
-    return JFeatExtrResourceManager(resource_root_dir, fwd_index_dir, model1_root_dir, embed_root_dir)
+    return JResourceManager(resource_root_dir, fwd_index_dir, model1_root_dir, embed_root_dir)
