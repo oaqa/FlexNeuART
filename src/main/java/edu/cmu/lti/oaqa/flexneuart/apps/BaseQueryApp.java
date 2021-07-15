@@ -598,6 +598,7 @@ public abstract class BaseQueryApp {
 
     mFwdIndexPref = mCmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
     mExtrTypeInterm = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM);
+    mExtrTypeFinal = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM);
 
     mSaveStatFile = mCmd.getOptionValue(CommonParams.SAVE_STAT_FILE_PARAM);
     if (mSaveStatFile != null)
@@ -625,7 +626,6 @@ public abstract class BaseQueryApp {
       logger.info(mModelInterm.toString());
     }
     
-    mExtrTypeFinal = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM);
     if (mExtrTypeFinal != null) {
       mExtrFinal = mResourceManager.getFeatureExtractor(mExtrTypeFinal);
       

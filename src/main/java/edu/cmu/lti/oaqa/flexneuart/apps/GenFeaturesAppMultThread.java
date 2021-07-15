@@ -47,11 +47,11 @@ class GenFeaturesAppImpl extends BaseQueryApp {
     void procCustomOptions() {
       mOutPrefix = mCmd.getOptionValue(CommonParams.FEATURE_FILE_PARAM);
       if (mOutPrefix == null) 
-        showUsageSpecify(CommonParams.FEATURE_FILE_DESC);
+        showUsageSpecify(CommonParams.FEATURE_FILE_PARAM);
       if (null == mExtrTypeFinal)
-        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_FINAL_DESC);
+        showUsageSpecify(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM);
       if (null == mQrels)
-        showUsageSpecify(CommonParams.QREL_FILE_DESC);
+        showUsageSpecify(CommonParams.QREL_FILE_PARAM);
     }
 
     @Override
