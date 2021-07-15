@@ -107,8 +107,9 @@ class JavaQueryRanker(BaseQueryRanker):
 
         # It is important to check before passing this to RankLib,
         # which does not handle missing files gracefully
-        if not os.path.exists(model_file_name):
-            raise Exception(f'Missing model file: {model_file_name}')
+        model_file_name_full_path = os.path.join(resource_manager.resource_root_dir, model_file_name)
+        if not os.path.exists(model_file_name_full_path):
+            raise Exception(f'Missing model file: {model_file_name_full_path}')
         self.model = resource_manager.loadRankLibModel(model_file_name)
         self.feat_extr = resource_manager.getFeatureExtractor(feat_extr_file_name)
         self.dp_wrapper = JDataPointWrapper()
@@ -146,7 +147,7 @@ class JavaQueryRanker(BaseQueryRanker):
 
 
 class PythonNNQueryRanker(BaseQueryRanker):
-    "A neural Python-layer re-ranker"
+    "A neural Python-layer re-ranker. The model file name is relative to the collection (resource root) directory!"
     def __init__(self, resource_manager,
                        query_field_name, max_query_len,
                        index_field_name, max_doc_len,
@@ -168,8 +169,9 @@ class PythonNNQueryRanker(BaseQueryRanker):
         self.resource_manager = resource_manager
         # It is important to check before passing this to RankLib,
         # which does not handle missing files gracefully
-        if not os.path.exists(model_file_name):
-            raise Exception(f'Missing model file: {model_file_name}')
+        model_file_name_full_path = os.path.join(resource_manager.resource_root_dir, model_file_name)
+        if not os.path.exists(model_file_name_full_path):
+            raise Exception(f'Missing model file: {model_file_name_full_path}')
         self.model = torch.load(model_file_name, map_location='cpu')
         self.device_name = device_name
         self.max_query_len = max_query_len
