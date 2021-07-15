@@ -107,7 +107,7 @@ class JavaQueryRanker(BaseQueryRanker):
 
         # It is important to check before passing this to RankLib,
         # which does not handle missing files gracefully
-        model_file_name_full_path = os.path.join(resource_manager.resource_root_dir, model_file_name)
+        model_file_name_full_path = os.path.join(resource_manager.getResourceRootDir(), model_file_name)
         if not os.path.exists(model_file_name_full_path):
             raise Exception(f'Missing model file: {model_file_name_full_path}')
         self.model = resource_manager.loadRankLibModel(model_file_name)
@@ -169,7 +169,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
         self.resource_manager = resource_manager
         # It is important to check before passing this to RankLib,
         # which does not handle missing files gracefully
-        model_file_name_full_path = os.path.join(resource_manager.resource_root_dir, model_file_name)
+        model_file_name_full_path = os.path.join(resource_manager.getResourceRootDir(), model_file_name)
         if not os.path.exists(model_file_name_full_path):
             raise Exception(f'Missing model file: {model_file_name_full_path}')
         self.model = torch.load(model_file_name, map_location='cpu')

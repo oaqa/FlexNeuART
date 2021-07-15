@@ -60,6 +60,10 @@ public class ResourceManager {
   private final String mFwdIndexDir;
   private final String mResourceRootDir;
   
+  public String getResourceRootDir() {
+    return mResourceRootDir;
+  }
+  
   /**
    * Resource manager constructor. 
    * 
