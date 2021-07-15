@@ -32,8 +32,6 @@ from scripts.py_flexneuart.cand_provider import JCandidateEntry
 from scripts.py_flexneuart.utils import DataEntryFields
 from scripts.py_flexneuart.fwd_index import get_forward_index
 
-JRankerFactory = autoclass('ciir.umass.edu.learning.RankerFactory')
-JCompositeFeatureExtractor = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor')
 JDataPointWrapper = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper')
 
 class BaseQueryRanker:
