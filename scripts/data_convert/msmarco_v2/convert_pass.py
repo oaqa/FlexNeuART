@@ -58,7 +58,6 @@ arg_vars = vars(args)
 
 inp_source = multi_file_linegen(args.input, MSMARCO_PASS_V2_FILE_PATTERN)
 out_file = FileWrapper(args.output_main, 'w')
-max_doc_size = args.max_doc_size
 
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
