@@ -70,7 +70,7 @@ public class AnswerBasedQRELGenerator {
     int mMaxNumQuery = Integer.MAX_VALUE;
     
     @Option(name = "-" + CommonParams.FIELD_NAME_PARAM, usage = "The field whose text we use to find answers")
-    String mFieldName = Const.DEFAULT_QUERY_TEXT_FIELD_NAME;
+    String mFieldName;
     
     @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
     String mCollectDir;
