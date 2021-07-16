@@ -122,28 +122,28 @@ public class RestrictedJsonConfig {
   public String getReqParamStr(String name) throws Exception {
     JsonElement val = getValueElemByKey(name);
     if (val == null)
-      throw new Exception(String.format("Mandatory string parameter %s is undefined for " + getName(), name));
+      throw new Exception(String.format("Mandatory string parameter '%s' is undefined for " + getName(), name));
     return getParamStr(val, name);
   }
   
   public float getReqParamFloat(String name) throws Exception {
     JsonElement val = getValueElemByKey(name);
     if (val == null)
-      throw new Exception(String.format("Mandatory float parameter %s is undefined for " + getName(), name));
+      throw new Exception(String.format("Mandatory float parameter '%s' is undefined for " + getName(), name));
     return getParamFloat(val, name);
   } 
   
   public int getReqParamInt(String name) throws Exception {
     JsonElement val = getValueElemByKey(name);
     if (val == null)
-      throw new Exception(String.format("Mandatory integer parameter %s is undefined for " + getName(), name));
+      throw new Exception(String.format("Mandatory integer parameter '%s' is undefined for " + getName(), name));
     return getParamInt(val, name);
   }
   
   public boolean getReqParamBool(String name) throws Exception {
     JsonElement val = getValueElemByKey(name);
     if (val == null)
-      throw new Exception(String.format("Mandatory boolean parameter %s is undefined for " + getName(), name));
+      throw new Exception(String.format("Mandatory boolean parameter '%s' is undefined for " + getName(), name));
     return getParamBool(val, name);
   }
   
