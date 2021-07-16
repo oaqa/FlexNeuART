@@ -20,8 +20,8 @@ paramOpts=("input_subdir" "inputDataSubDir" "input data sub-directory (default $
 
 FIELD_LIST_DEF="e.g., \"text:parsedBOW text_unlemm:parsedText text_raw:textRaw dense_embed:binary\""
 
-# This seems to be the only (though hacky way to pass space separted by quoted arguments)
-parseArguments "$1" "$2" "$3" $4 $5
+# This seems to be the only (though hacky way to pass space separted quoted arguments)
+parseArguments "$1" "$2" "$3" $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13} ${14} ${15}
 
 usageMain="<collection> <fwd index backend: $FWD_INDEX_BACKEND_TYPES> <field list def: $FIELD_LIST_DEF>"
 
