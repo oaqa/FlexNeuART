@@ -340,7 +340,7 @@ queryLogFile=${trecRunDir}/query.log
 # to be relative to the collection directory.
 if [ "$testOnly" = "0" ] ; then
   if [ "$modelFinal" != "" ] ; then
-    echo "Bug: here the modelFinal variable should be empty!"
+    echo "Aborting training, because the final model is specified! Remove the final model specification or run in test-only mode!"
     exit 1
   fi
   modelFinal="${fullOutPrefTrain}_${trainCandQty}.model"

@@ -26,10 +26,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
-import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
 /**
  * A helper class to parse JSON configuration files. This parser is slightly restricted 
@@ -321,52 +319,6 @@ public class RestrictedJsonConfig {
     } catch (ClassCastException e) {
       throw new Exception("Parameter '" + name + "' is not a boolean (true/false)!");
     }    
-  }
-  
-  public static void main(String []arr) throws JsonSyntaxException, Exception {
-    JsonParser parser = new JsonParser();
-
-    String configText = "[ {\"k1\" : 3, \"k2\" : \"v2\", \"k_arr\" : [3, 4, 5.5]} , "
-        + "{\"k4\" : true, \"k2\" : 3.4, \"k_dict\" : {\"k1\" : \"aaaa\", \"k2\" : \"bbbb\" }, " 
-        + "\"k_dict_arr\" : [ {\"k11\" : \"aaaa_1\", \"k12\" : \"bbbb_1\" } , {\"k21\" : \"aaaa_2\", \"k22\" : \"bbbb_2\" } ]}  ]"
-        + "";
-    RestrictedJsonConfig p = new RestrictedJsonConfig(parser.parse(configText), "root");
-    RestrictedJsonConfig[] level1 = p.getParamConfigArray();
-    RestrictedJsonConfig conf1 = level1[0];
-    
-    System.out.println(conf1.getReqParamStr("k1"));
-    System.out.println(conf1.getReqParamStr("k2"));
-    System.out.println(StringUtils.joinWithSpace(conf1.getParamNestedConfig("k_arr").getParamStringArray()));
-    for (int val : conf1.getParamNestedConfig("k_arr").getParamIntArray()) {
-      System.out.print(val + " ");
-    }
-    for (float val : conf1.getParamNestedConfig("k_arr").getParamFloatArray()) {
-      System.out.print(val + " ");
-    }
-    for (boolean val : conf1.getParamNestedConfig("k_arr").getParamBoolArray()) {
-      System.out.print(val + " ");
-    }
-    System.out.println();
-    
-    System.out.println("===========");
-    
-    RestrictedJsonConfig conf2 = level1[1];
-    
-    System.out.println(conf2.getReqParamStr("k4"));
-    System.out.println(conf2.getReqParamStr("k2"));
-    
-    RestrictedJsonConfig confNested1 = conf2.getParamNestedConfig("k_dict");
-    System.out.println(confNested1.getReqParamStr("k1"));
-    System.out.println(confNested1.getReqParamStr("k2"));
-    
-    RestrictedJsonConfig confNested2 = conf2.getParamNestedConfig("k_dict_arr");
-    RestrictedJsonConfig confNested2_1 = confNested2.getParamConfigArray()[0];
-    System.out.println(confNested2_1.getReqParamStr("k11"));
-    System.out.println(confNested2_1.getReqParamStr("k12"));
-    RestrictedJsonConfig confNested2_2 = confNested2.getParamConfigArray()[1];
-    System.out.println(confNested2_2.getReqParamStr("k21"));
-    System.out.println(confNested2_2.getReqParamStr("k22"));
-    
   }
 
   

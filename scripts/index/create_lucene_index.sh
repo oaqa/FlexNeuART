@@ -10,14 +10,18 @@ checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DEFAULT_QUERY_TEXT_FIELD_NAME"
 
-boolOpts=("h"           "help"          "print help"
-          "exact_match" "exactMatch"    "create index for exact match")
+inputDataSubDir="$INPUT_DATA_SUBDIR"
 
 indexSubDir=$LUCENE_INDEX_SUBDIR
 indexFieldName="$DEFAULT_QUERY_TEXT_FIELD_NAME"
 
+boolOpts=("h"           "help"          "print help"
+          "exact_match" "exactMatch"    "create index for exact match")
+
+
 paramOpts=(
   "index_field"  "indexFieldName" "indexing field name (default $indexFieldName)"
+  "input_subdir" "inputDataSubDir" "input data sub-directory (default $inputDataSubDir)"
   "index_subdir" "indexSubDir"    "index subdirectory (default $indexSubDir)"
 )
 
@@ -41,14 +45,14 @@ if [ "$exactMatch" = "1" ] ; then
 else
   exactMatchParam="";
 fi
-inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
+inputDataDir="$COLLECT_ROOT/$collect/$inputDataSubDir"
 indexDir="$COLLECT_ROOT/$collect/$indexSubDir"
 
 echo "=========================================================================="
-echo "Data directory:    $inputDataDir"
-echo "Index directory:   $indexDir"
-echo "Index field name:  $indexFieldName"
-echo "Exact match param: $exactMatchParam"
+echo "Input dta directory:  $inputDataDir"
+echo "Index directory:      $indexDir"
+echo "Index field name:     $indexFieldName"
+echo "Exact match param:    $exactMatchParam"
 
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"

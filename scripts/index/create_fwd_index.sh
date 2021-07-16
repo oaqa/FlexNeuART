@@ -4,12 +4,19 @@ source scripts/config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "FWD_INDEX_BACKEND_TYPES"
+checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "FWD_INDEX_SUBDIR"
+
+inputDataSubDir="$INPUT_DATA_SUBDIR"
+indexSubDir="$FWD_INDEX_SUBDIR"
 
 clean="0"
 boolOpts=("h"     "help"    "print help"
           "clean" "clean"   "remove all previous indices")
 
-paramOpts=()
+paramOpts=("input_subdir" "inputDataSubDir" "input data sub-directory (default $inputDataSubDir)"
+           "index_subdir" "indexSubDir"      "index subdirectory (default $indexSubDir)"
+)
 
 FIELD_LIST_DEF="e.g., \"text:parsedBOW text_unlemm:parsedText text_raw:textRaw dense_embed:binary\""
 
@@ -42,15 +49,13 @@ if [ "$fieldListDef" = "" ] ; then
 fi
 
 checkVarNonEmpty "COLLECT_ROOT"
-checkVarNonEmpty "FWD_INDEX_SUBDIR"
-checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "ANSWER_FILE_BIN"
 
-inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-indexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
+inputDataDir="$COLLECT_ROOT/$collect/$inputDataSubDir"
+indexDir="$COLLECT_ROOT/$collect/$indexSubDir"
 
 echo "=========================================================================="
-echo "Data directory:            $inputDataDir"
+echo "Input data directory:      $inputDataDir"
 echo "Forward index directory:   $indexDir"
 echo "Clean old index?:          $clean"
 if [ ! -d "$indexDir" ] ; then
