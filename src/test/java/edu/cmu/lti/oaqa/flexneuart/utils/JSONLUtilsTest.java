@@ -17,44 +17,45 @@ package edu.cmu.lti.oaqa.flexneuart.utils;
 
 import static org.junit.Assert.assertTrue;
 
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-
 import org.junit.Test;
 
-import edu.cmu.lti.oaqa.flexneuart.utils.ExtendedIndexEntry;
-import edu.cmu.lti.oaqa.flexneuart.utils.JSONUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
+import edu.cmu.lti.oaqa.flexneuart.utils.JSONDataUtils;
 
 public class JSONLUtilsTest {
 
   void oneDecodeTest(String textJSON,
+               String   entryId,
                String[] keysStr, String[] valsStr,
                String[] keysStrArr, String[][] valsStrArr) {
-    HashMap<String, String> str2strMap = new HashMap<String, String>();
-    HashMap<String, ArrayList<String>> str2strArrMap = new HashMap<String, ArrayList<String>>();
-    
-    for (int i = 0; i < keysStr.length; ++i) {
-      str2strMap.put(keysStr[i], valsStr[i]);
-    }
-    for (int i = 0; i < keysStrArr.length; ++i) {
-      str2strArrMap.put(keysStrArr[i], new ArrayList<String>(Arrays.asList(valsStrArr[i])));
-      
-    }
-    
-    ExtendedIndexEntry e = null;
+    DataEntryFields e = null;
     try {
-      e = JSONUtils.parseJSONIndexEntry(textJSON);
+      e = JSONDataUtils.parseJSONEntry(textJSON, 0);
     } catch (Exception e2) {
       // TODO Auto-generated catch block
       e2.printStackTrace();
       assertTrue(false);
     }
     
-    assertTrue(str2strMap.equals(e.mStringDict));
-    assertTrue(str2strArrMap.equals(e.mStringArrDict));
+    assertTrue(entryId.compareTo(e.mEntryId) == 0);
     
+    for (int i = 0; i < keysStr.length; ++i) {
+      String fieldName = keysStr[i];
+      assertTrue(e.hasField(fieldName));
+      assertTrue(e.getString(fieldName).compareTo(valsStr[i]) == 0);
+    }
+    for (int i = 0; i < keysStrArr.length; ++i) {
+      String fieldName = keysStrArr[i];
+      String expVal[] = valsStrArr[i];
+      assertTrue(e.hasField(fieldName));
+      String actualVal[] = e.getStringArray(fieldName);
+      
+      assertTrue(actualVal.length == expVal.length);
+      for (int k = 0; k < expVal.length; ++k) {
+        assertTrue(expVal[k].compareTo(actualVal[k]) == 0);
+      }
+    }
+  
   }
   
   @Test
@@ -67,7 +68,7 @@ public class JSONLUtilsTest {
     String vals[] = {"doc1", "val1"};
     String keysArr[] = {};
     String valsArr[][] = {};
-    oneDecodeTest(doc, keys, vals, keysArr, valsArr);
+    oneDecodeTest(doc, "doc1", keys, vals, keysArr, valsArr);
   }
   
   @Test
@@ -82,7 +83,7 @@ public class JSONLUtilsTest {
     String vals[] = {"doc2", "val2"};
     String keysArr[] = {"answer_list", "answer_list2"};
     String valsArr[][] = {{"1", "2", "3"}, {"11", "22", "33"}};
-    oneDecodeTest(doc, keys, vals, keysArr, valsArr);
+    oneDecodeTest(doc, "doc2", keys, vals, keysArr, valsArr);
   }
 
 }

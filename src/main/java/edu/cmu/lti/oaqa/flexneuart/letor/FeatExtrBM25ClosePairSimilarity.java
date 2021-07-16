@@ -19,10 +19,13 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25CloseOrderPairSimilQueryNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25ClosePairSimilarityQueryNormBase;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25CloseUnorderPairSimilQueryNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
@@ -31,7 +34,7 @@ public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
   public static String QUERY_WINDOW_PARAM = "queryWindow";
   public static String DOC_WINDOW_PARAM = "docWindow";
 
-  public FeatExtrBM25ClosePairSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrBM25ClosePairSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
@@ -56,8 +59,8 @@ public class FeatExtrBM25ClosePairSimilarity extends SingleFieldFeatExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+    return getSimpleFeatures(EXTR_TYPE, cands, queryFields, mFieldIndex, mSimilObjs);
   }
 
   @Override

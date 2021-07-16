@@ -1,5 +1,21 @@
 #!/usr/bin/env python
-# A script to convert passages/documents or queries to dense vectors
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+# A script to convert passages/documents or queries to dense vectors using ANCE models
+#
 import argparse
 import os
 import sys
@@ -14,9 +30,11 @@ sys.path.append('.')
 from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, write_json_to_bin, is_json_query_file
 from scripts.data_convert.ance.ance_models import create_ance_firstp, create_dpr
 from scripts.data_convert.ance.ance_data import DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, \
-                                                DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_PASS, \
+                                                DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_DOC_V2_FIRSTP, \
+                                                DATA_TYPE_MSMARCO_PASS, \
                                                 DATA_TYPE_CHOICES, DATA_TYPE_PATHS, \
-                                                msmarco_body_generator, wikipedia_dpr_body_generator, \
+                                                msmarco_body_generator, msmarco_doc_v2_body_generator, \
+                                                wikipedia_dpr_body_generator, \
                                                 jsonl_query_generator, tokenize_query_msmarco, tokenize_query_dpr
 
 
@@ -62,12 +80,20 @@ print(f'Query?: {is_query}')
 if data_type in [DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_PASS]:
     is_doc = data_type == DATA_TYPE_MSMARCO_DOC_FIRSTP
 
-    print('Creating ANCE FirstP type model')
+    print('Creating ANCE FirstP type model for MS MARCO v1')
     model, tokenizer = create_ance_firstp(model_path)
     if is_query:
         text_generator = jsonl_query_generator(args.input, tokenizer, tokenize_query_msmarco)
     else:
         text_generator = msmarco_body_generator(args.input, is_doc, tokenizer)
+
+elif data_type in [DATA_TYPE_MSMARCO_DOC_V2_FIRSTP]:
+    print('Creating ANCE FirstP type model for MS MARCO v2')
+    model, tokenizer = create_ance_firstp(model_path)
+    if is_query:
+        text_generator = jsonl_query_generator(args.input, tokenizer, tokenize_query_msmarco)
+    else:
+        text_generator = msmarco_doc_v2_body_generator(args.input, tokenizer)
 
 elif data_type in [DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA]:
 
@@ -128,5 +154,5 @@ with FileWrapper(args.output, 'wb') as out_file:
             proc_batch(batch_input, is_query, model, out_file, args.field_name)
 
 
-proc_batch(batch_input, is_query, model, out_file, args.field_name)
+    proc_batch(batch_input, is_query, model, out_file, args.field_name)
 

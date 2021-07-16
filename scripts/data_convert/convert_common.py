@@ -1,3 +1,18 @@
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import gzip, bz2
 import collections
 import re
@@ -19,6 +34,8 @@ MAX_NUM_QUERY_OPT = 'max_num_query'
 MAX_NUM_QUERY_OPT_HELP = 'maximum # of queries to generate'
 BERT_TOK_OPT = 'bert_tokenize'
 BERT_TOK_OPT_HELP = 'Apply the BERT tokenizer and store result in a separate field'
+ENABLE_POS_OPT = 'enable_pos'
+ENABLE_POS_OPT_HELP = 'Enable POS tagging for more accurate lemmatization'
 OUT_BITEXT_PATH_OPT = 'out_bitext_path'
 OUT_BITEXT_PATH_OPT_META = 'optional bitext path'
 OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
@@ -26,6 +43,9 @@ OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
 
 ENDIANNES_TYPE = '<'
 PACKED_TYPE_DENSE = 0
+
+MSMARCO_DOC_V2_FILE_PATTERN = "^msmarco_doc_.*"
+MSMARCO_PASS_V2_FILE_PATTERN = "^msmarco_passage_.*"
 
 # Replace \n and \r characters with spaces
 def replace_chars_nl(s):
@@ -248,6 +268,23 @@ def jsonl_gen(file_name):
             yield data
 
 
+def multi_file_linegen(dir_name, pattern):
+    """A generator that reads all files from a given directory matching the pattern
+       and yields their contents line by line.
+
+    :param dir_name:   a source directory name
+    :param pattern:    a pattern should match fully (we use fullmatch)
+    """
+
+    for fn in os.listdir(dir_name):
+        if re.fullmatch(pattern, fn):
+            full_path = os.path.join(dir_name, fn)
+            print('Processing: ' + full_path)
+            with FileWrapper(full_path) as inp:
+                for line in inp:
+                    yield line
+
+
 def read_queries(file_name):
     """Read queries from a JSONL file and checks the document ID is set.
 
@@ -311,14 +348,15 @@ def read_doc_ids_from_forward_file_header(fwd_file_name):
     """
     f = open(fwd_file_name)
     lines = [s.strip() for s in f]
+    assert len(lines) > 3, f"File {fwd_file_name} is too short"
     f.close()
-    doc_qty, _ = lines[0].split()
+    doc_qty, _ = lines[1].split()
     doc_qty = int(doc_qty)
 
-    assert len(lines) > doc_qty + 2, f"File {fwd_file_name} is too short: length isn't consistent with the header info"
-    assert lines[1] == "", f"The second line in {fwd_file_name} isn't empty as expected!"
+    assert len(lines) > doc_qty + 4, f"File {fwd_file_name} is too short: length isn't consistent with the header info"
+    assert lines[2] == "", f"The second line in {fwd_file_name} isn't empty as expected!"
     assert lines[-1] == "", f"The last line in {fwd_file_name} isn't empty as expected!"
-    k = 2
+    k = 3
     while k < len(lines) and lines[k] != '':
         k = k + 1
     assert lines[k] == ''  # We check that the last line is empty, we must find the empty line!

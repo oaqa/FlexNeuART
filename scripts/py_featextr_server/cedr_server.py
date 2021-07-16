@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import sys
 import argparse
 import torch
@@ -11,6 +26,9 @@ from scripts.py_featextr_server.base_server import BaseQueryHandler, start_query
 
 import scripts.cedr.model_init_utils as model_init_utils
 import scripts.cedr.data as data
+
+from scripts.cedr.data import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
+                                QUERY_ID_FIELD, DOC_ID_FIELD
 
 DEFAULT_BATCH_SIZE = 32
 
@@ -55,7 +73,7 @@ class CedrQueryHandler(BaseQueryHandler):
 
         query_data = {query.id: query.text}
         # Run maps queries to arrays of document IDs see iter_valid_records (train.py)
-        run = {query.id: [e.id for e in docs]}
+        run = {query.id: {e.id : 0 for e in docs}}
 
         doc_data = {}
         for e in docs:
@@ -76,17 +94,17 @@ class CedrQueryHandler(BaseQueryHandler):
                                                            self.batch_size,
                                                            self.max_query_len, self.max_doc_len):
 
-                        scores = model(records['query_tok'],
-                                        records['query_mask'],
-                                        records['doc_tok'],
-                                        records['doc_mask'])
+                        scores = model(records[QUERY_TOK_FIELD],
+                                       records[QUERY_MASK_FIELD],
+                                       records[DOC_TOK_FIELD],
+                                       records[DOC_MASK_FIELD])
 
 
                         # tolist() works much faster compared to extracting scores
                         # one by one using .item()
                         scores = scores.tolist()
 
-                        for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
+                        for qid, did, score in zip(records[QUERY_ID_FIELD], records[DOC_ID_FIELD], scores):
                             if self.debug_print:
                                 print('model id:', model_id, 'score & doc. id:', score, did, doc_data[did])
 

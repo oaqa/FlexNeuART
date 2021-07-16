@@ -10,8 +10,11 @@
 #
 import struct
 import torch
+import json
 
-from scripts.data_convert.convert_common import FileWrapper, jsonl_gen, DOCID_FIELD
+from scripts.data_convert.text_proc import replace_tab
+from scripts.data_convert.convert_common import MSMARCO_DOC_V2_FILE_PATTERN, \
+    FileWrapper, jsonl_gen, DOCID_FIELD, multi_file_linegen
 from scripts.config import TEXT_RAW_FIELD_NAME
 
 MSMARCO_MAX_QUERY_SEQ = 64
@@ -23,6 +26,7 @@ MSMARCO_MAX_DOC_LEN = 10000
 DPR_MAX_SEQ_LEN = 256
 
 DATA_TYPE_MSMARCO_DOC_FIRSTP = 'msmarco_doc_firstp'
+DATA_TYPE_MSMARCO_DOC_V2_FIRSTP = 'msmarco_doc_v2_firstp'
 DATA_TYPE_MSMARCO_PASS = 'msmarco_pass'
 DATA_TYPE_DPR_NQ = 'dpr_nq'
 DATA_TYPE_DPR_TRIVIA = 'dpr_trivia'
@@ -30,12 +34,17 @@ DATA_TYPE_DPR_TRIVIA = 'dpr_trivia'
 # Must match download_ance_models.sh
 DATA_TYPE_PATHS = {
     DATA_TYPE_MSMARCO_DOC_FIRSTP : 'Document_ANCE_FirstP_Checkpoint',
+    DATA_TYPE_MSMARCO_DOC_V2_FIRSTP : 'Document_ANCE_FirstP_Checkpoint',
     DATA_TYPE_MSMARCO_PASS : 'Passage_ANCE_FirstP_Checkpoint',
     DATA_TYPE_DPR_NQ : 'nq.cp',
     DATA_TYPE_DPR_TRIVIA : 'trivia.cp'
 }
 
-DATA_TYPE_CHOICES = [DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_PASS]
+DATA_TYPE_CHOICES = [DATA_TYPE_DPR_NQ,
+                     DATA_TYPE_DPR_TRIVIA,
+                     DATA_TYPE_MSMARCO_DOC_FIRSTP,
+                     DATA_TYPE_MSMARCO_DOC_V2_FIRSTP,
+                     DATA_TYPE_MSMARCO_PASS]
 
 
 def attention_mask(token_seq, max_seq_length):
@@ -135,8 +144,8 @@ def parse_and_tokenize_msmarco(is_doc, line, tokenizer,
         title = line_arr[2].rstrip().lower()
         p_text = line_arr[3].rstrip().lower()
 
-        # <sep> is not a proper token, this is a mistake in ANCE
-        # code. However, we keep it as the encoders were trained with this mistake
+        # <sep> does not seem to be a proper token, this is likely a mistake in ANCE code.
+        # However, we keep it as the encoders were trained with this mistake
         full_text = url + "<sep>" + title + "<sep>" + p_text
         full_text = full_text[:max_doc_character]
     else:
@@ -219,6 +228,25 @@ def msmarco_body_generator(input_file, is_doc, tokenizer):
     with FileWrapper(input_file) as inpf:
         for line in inpf:
             yield parse_and_tokenize_msmarco(is_doc, line, tokenizer)
+
+
+def msmarco_doc_v2_body_generator(input_dir, tokenizer):
+    """MS MARCO (v2) document generator.
+
+    :param input_dir:   an input directory with un-tarred (compressed) JSONL files
+    :param tokenizer:   tokenizer: a tokenizer object
+    :return:  yields a triple: (passage/document id, attention mask, a list of padded token IDs)
+    """
+
+    for line in multi_file_linegen(input_dir, MSMARCO_DOC_V2_FILE_PATTERN):
+        fields = json.loads(line)
+        body = replace_tab(fields['body'])
+        did = replace_tab(fields['docid'])
+        title = replace_tab(fields['title'])
+        url = replace_tab(fields['url'])
+        yield parse_and_tokenize_msmarco(is_doc=True,
+                                         line='\t'.join([did, url, title, body]),
+                                         tokenizer=tokenizer)
 
 
 def jsonl_query_generator(input_file, tokenizer, tokenize_func):

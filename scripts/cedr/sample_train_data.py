@@ -1,10 +1,25 @@
 #!/usr/bin/env python
-
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 # A simple script that takes original training data and creates a set of folders containing:
 # 1. Full data/query text files as well as QRELSs
 # 2. One folder contains all training data, but a sample of test queries.
 # 3. Several folders containing training data samples of the given size.
 # The sampled set of queries is the same in all folders (they symlink)
+#
 import sys
 
 sys.path.append('.')

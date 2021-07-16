@@ -19,7 +19,6 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -27,13 +26,13 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.flexneuart.utils.BinWriteUtils;
+import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.utils.BinReadWriteUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
 import no.uib.cipr.matrix.DenseVector;
@@ -46,22 +45,26 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class ExportToNMSLIBSparse {
+  
   public static final class Args {
     
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
-    String mMemIndexPref;
+    String mFwdIndexDir;
     
-    @Option(name = "-" + CommonParams.GIZA_ROOT_DIR_PARAM, usage = CommonParams.GIZA_ROOT_DIR_DESC)
-    String mGizaRootDir;
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
     
-    @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
-    String mEmbedDir;
+    @Option(name = "-" + CommonParams.MODEL1_ROOT_DIR_PARAM, usage = CommonParams.MODEL1_ROOT_DIR_DESC)
+    String mModel1RootDir;
+    
+    @Option(name = "-" + CommonParams.EMBED_ROOT_DIR_PARAM, usage = CommonParams.EMBED_ROOT_DIR_DESC)
+    String mEmbedRootDir;
     
     @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
-    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, usage = "If specified, we generate queries rather than documents.")
-    String mQueryFile;
+    @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, usage = CommonParams.QUERY_FILE_PREFIX_EXPORT_DESC)
+    String mQueryFilePrefix;
 
     @Option(name = "-out_file", required = true, usage = "Binary output file")
     String mOutFile;
@@ -93,19 +96,17 @@ public class ExportToNMSLIBSparse {
     
     try {
       
-      ArrayList<Map<String, String>> parsedQueries = null;
+      ResourceManager resourceManager = 
+          new ResourceManager(args.mCollectDir, args.mFwdIndexDir, args.mModel1RootDir, args.mEmbedRootDir);
+      
+      ArrayList<DataEntryFields> queries = null;
       DenseVector compWeights = null;
       
-      if (args.mQueryFile != null) {
+      if (args.mQueryFilePrefix != null) {
 
-        parsedQueries = new ArrayList<Map<String, String>>();     
-        Map<String, String> queryFields = null;   
-        
-        try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-          while ((queryFields = inp.readNext()) != null) {
-            parsedQueries.add(queryFields);
-          }
-        }
+        if (args.mQueryFilePrefix != null) {
+          queries = DataEntryReader.readParallelQueryData(args.mQueryFilePrefix); 
+        } 
         
       } else {
         
@@ -114,17 +115,12 @@ public class ExportToNMSLIBSparse {
           parser.printUsage(System.err);
           System.exit(1);
         }
-        compWeights = FeatureExtractor.readFeatureWeights(args.mLinModelFile);
+        compWeights = resourceManager.readFeatureWeights(args.mLinModelFile);
       }
       
       out = new BufferedOutputStream(new FileOutputStream(args.mOutFile));
       
-      
-      
-      FeatExtrResourceManager resourceManager = 
-          new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
-      
-      CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);   
+      CompositeFeatureExtractor featExtr = resourceManager.getFeatureExtractor(args.mExtrJson);   
 
       SingleFieldFeatExtractor[] allExtractors = featExtr.getCompExtr();    
       int featExtrQty = allExtractors.length;
@@ -149,13 +145,13 @@ public class ExportToNMSLIBSparse {
       
       String[] allDocIds = compIndices[0].getAllDocIds();
       
-      int entryQty = parsedQueries == null ?  allDocIds.length  : parsedQueries.size();
+      int entryQty = queries == null ?  allDocIds.length  : queries.size();
       
       System.out.println("Writing the number of entries (" + entryQty + ") to the output file");
       
-      out.write(BinWriteUtils.intToBytes(entryQty));
+      out.write(BinReadWriteUtils.intToBytes(entryQty));
       
-      if (parsedQueries == null) {    
+      if (queries == null) {    
         int docNum = 0;
         
         for (int batchStart = 0; batchStart < allDocIds.length; batchStart += args.mBatchSize) {
@@ -179,21 +175,21 @@ public class ExportToNMSLIBSparse {
         System.out.println("Exported " + docNum + " docs");
       } else {
         int queryQty = 0;
-        for (Map<String, String> queryFields : parsedQueries) {
+        for (DataEntryFields queryFields : queries) {
           ++queryQty;
-          String queryId = queryFields.get(Const.TAG_DOCNO);
+          String queryId = queryFields.mEntryId;
           
           if (queryId == null) {
             System.err.println("No query ID: Parsing error, query # " + queryQty);
             System.exit(1);
           }
           
-          BinWriteUtils.writeStringId(queryId, out);          
+          BinReadWriteUtils.writeStringId(queryId, out);          
           VectorUtils.writeInterleavedInnerProdQueryVectToNMSLIBStream(queryFields, 
                                                                         compIndices, compExtractors, 
                                                                         unitWeights, out);
         }
-        System.out.println("Exported " + parsedQueries.size() + " queries");
+        System.out.println("Exported " + queries.size() + " queries");
       }
       
     } catch (Exception e) {

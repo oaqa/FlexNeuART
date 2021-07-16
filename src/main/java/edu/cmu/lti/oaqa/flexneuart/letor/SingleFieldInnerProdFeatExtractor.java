@@ -5,12 +5,15 @@ import java.util.Map;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
- * A single-field, single-score feature generator,
- * whose score can be computed (exactly or approximately)
+ * A single-field (or rather a single pair of query and index fields), 
+ * single-score feature generator, whose score can be computed (exactly or approximately)
  * as an inner product between two vectors. Note, again,
  * that query and index fields can be different.
  * 
@@ -19,7 +22,7 @@ import no.uib.cipr.matrix.DenseVector;
  */
 public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatExtractor {
 
-  public SingleFieldInnerProdFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public SingleFieldInnerProdFeatExtractor(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
   }
 
@@ -35,7 +38,7 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
 
   @Override
   public abstract Map<String, DenseVector> 
-                  getFeatures(CandidateEntry cands[], Map<String, String> queryData) throws Exception;
+                  getFeatures(CandidateEntry cands[], DataEntryFields queryFields) throws Exception;
   
   /**
    * Generates query vector that together with respective document vector (possibly
@@ -84,12 +87,32 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
   }
   
   /**
+   * Generates query vector that together with document vectors (possibly
+   * approximately) reproduce feature values via inner-product computation. 
+   * An implementation may be missing for some types of extractors.
+   * 
+   * @param query    a parsed query
+   * 
+   * @return a vector wrapper object or null if the inner-product representation is not possible.
+   * @throws Exception 
+   */
+  public VectorWrapper getFeatInnerProdQueryVector(byte[] query) throws Exception {
+    return null;
+  }
+  
+  public VectorWrapper getFeatInnerProdDocVector(byte[] doc) throws Exception {
+    return null;
+  }
+  
+  /**
    * Generate a batch of document feature vectors that together with query vectors (possibly
    * approximately) reproduce feature values via inner-product computation.
    * 
-   * This top-level function merely calls {@link #getFeatDocInnerProdVector(DocEntryParsed, boolean)}
-   * or {@link #getFeatDocInnerProdVector(String, boolean)}.
-   * But child classes can override it and provide a more efficient batched version.
+   * <p>This top-level function merely calls {@link #getFeatDocInnerProdVector(DocEntryParsed, boolean)}
+   * or {@link #getFeatDocInnerProdVector(String, boolean)}.</p>
+   * 
+   * <p>But child classes can override it and provide a more efficient batched version, e.g., by
+   * processing it on a GPU.</p>
    * 
    * @param fwdIndx     a forward index.
    * @param docIds      an array of document IDs.
@@ -102,18 +125,26 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
     
     for (int i = 0; i < qty; i++) {
       String did = docIds[i];
-      if (fwdIndx.isRaw()) {
-        String docEntryRaw = fwdIndx.getDocEntryRaw(did);
+      if (fwdIndx.isTextRaw()) {
+        String docEntryRaw = fwdIndx.getDocEntryTextRaw(did);
         if (docEntryRaw == null) {
           throw new Exception("Inconsistent data or bug: can't find document with id ='" + did + "'");
         }
         res[i] = getFeatInnerProdDocVector(docEntryRaw);
-      } else {
+      } else if (fwdIndx.isParsed()) {
         DocEntryParsed docEntryParsed = fwdIndx.getDocEntryParsed(did);
         if (docEntryParsed == null) {
           throw new Exception("Inconsistent data or bug: can't find document with id ='" + did + "'");
         }
         res[i] = getFeatInnerProdDocVector(docEntryParsed);
+      } else if (fwdIndx.isBinary()) {
+        byte [] docEntryBinary = fwdIndx.getDocEntryBinary(did);
+        if (docEntryBinary == null) {
+          throw new Exception("Inconsistent data or bug: can't find document with id ='" + did + "'");
+        }
+        res[i] = getFeatInnerProdDocVector(docEntryBinary);
+      } else {
+        throw new Exception("Unsupported index type: " + fwdIndx.getIndexFieldType());
       }
     }
     

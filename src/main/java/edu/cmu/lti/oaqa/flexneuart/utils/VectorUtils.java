@@ -18,7 +18,6 @@ package edu.cmu.lti.oaqa.flexneuart.utils;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
@@ -58,23 +57,29 @@ public class VectorUtils {
   }
   
   
-  protected static VectorWrapper getFeatInnerProdQueryVector(Map<String, String> queryData,
+  protected static VectorWrapper getFeatInnerProdQueryVector(DataEntryFields queryFields,
                                                             ForwardIndex compIndx, 
                                                             SingleFieldInnerProdFeatExtractor extr) throws Exception {
-
       String queryFieldName = extr.getQueryFieldName();
 
-      String queryText = queryData.get(queryFieldName);
-      if (queryText == null) {
-        throw new Exception("No query information for field: " + queryFieldName);
-      }
-      
-      if (compIndx.isRaw()) {
-        return extr.getFeatInnerProdQueryVector(queryText);
+      if (!compIndx.isBinary()) {
+        String queryText = queryFields.getString(queryFieldName);
+        if (queryText == null) {
+          throw new Exception("No query information for field: " + queryFieldName);
+        }
+        if (compIndx.isTextRaw()) {
+          return extr.getFeatInnerProdQueryVector(queryText);
+        } else {
+          DocEntryParsed queryEntry = compIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), 
+                                                                    true); // true means including positions
+          return extr.getFeatInnerProdQueryVector(queryEntry);
+        }
       } else {
-        DocEntryParsed queryEntry = compIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), 
-                                                                  true); // true means including positions
-        return extr.getFeatInnerProdQueryVector(queryEntry);
+        byte [] queryBinary = queryFields.getBinary(queryFieldName);
+        if (queryBinary == null) {
+          throw new Exception("No query information for field: " + queryFieldName);
+        }
+        return extr.getFeatInnerProdQueryVector(queryBinary);
       }
   }
   
@@ -119,17 +124,17 @@ public class VectorUtils {
   /**
    * Write NMSLIB-compatible inner-product generating query vectors to a byte stream.
    * 
-   * @param queryData       query data
+   * @param queryFields     a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
    * @param compIndices     forward indices (one per each component extractor)
    * @param compExtractors  component extractor 
    * @param out             an output stream
    * 
    * @throws Exception
    */
-  public static void writeInnerProdQueryVecsToNMSLIBStream(Map<String, String> queryData,
-                                                              ForwardIndex[] compIndices, 
-                                                              SingleFieldInnerProdFeatExtractor[] compExtractors,
-                                                              OutputStream out) throws Exception  {
+  public static void writeInnerProdQueryVecsToNMSLIBStream(DataEntryFields queryFields,
+                                                          ForwardIndex[] compIndices, 
+                                                          SingleFieldInnerProdFeatExtractor[] compExtractors,
+                                                          OutputStream out) throws Exception  {
     int featExtrQty = compIndices.length;
     
     if (featExtrQty != compExtractors.length) {
@@ -138,7 +143,7 @@ public class VectorUtils {
     
     for (int i = 0; i < featExtrQty; ++i) {
       SingleFieldInnerProdFeatExtractor extr = compExtractors[i];
-      VectorWrapper featVect = getFeatInnerProdQueryVector(queryData, compIndices[i], extr);
+      VectorWrapper featVect = getFeatInnerProdQueryVector(queryFields, compIndices[i], extr);
       
       if (null == featVect) {
         throw new RuntimeException("Inner product representation is not available for extractor: " + 
@@ -153,7 +158,7 @@ public class VectorUtils {
    * Create an interleaved version of the inner-product reproducing query feature vectors. 
    * Each feature vector value is multiplied by a weight.
    * 
-   * @param queryData       query data (a map)
+   * @param queryFields     a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
    * @param compIndices     forward indices (one per each component extractor)
    * @param compExtractors  component extractor 
    * @param compWeights     a vector of feature weights.
@@ -161,7 +166,7 @@ public class VectorUtils {
    * @throws Exception
    */
   public static TrulySparseVector createInterleavedInnerProdQueryFeatVect(
-                                                    Map<String, String> queryData,
+                                                    DataEntryFields queryFields,
                                                     ForwardIndex[] compIndices, 
                                                     SingleFieldInnerProdFeatExtractor[] compExtractors,
                                                     DenseVector compWeights) throws Exception  {
@@ -178,7 +183,7 @@ public class VectorUtils {
     
     for (int compId = 0; compId < featExtrQty; ++compId) {
       SingleFieldInnerProdFeatExtractor extr = compExtractors[compId];
-      VectorWrapper featVect = getFeatInnerProdQueryVector(queryData, compIndices[compId], extr);
+      VectorWrapper featVect = getFeatInnerProdQueryVector(queryFields, compIndices[compId], extr);
       if (null == featVect) {
         throw new RuntimeException("Inner product representation is not available for extractor: " + 
                                   compExtractors[compId].getName());
@@ -193,20 +198,20 @@ public class VectorUtils {
    * Write NMSLIB-compatible inner-product generating query vector to a byte stream
    * by first interleaving and weighting individual sub-vectors.
    * 
-   * @param queryData       query data
+   * @param queryFields     a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
    * @param compIndices     forward indices (one per each component extractor)
    * @param compExtractors  component extractor 
    * @param out             an output stream
    * 
    * @throws Exception
    */
-  public static void writeInterleavedInnerProdQueryVectToNMSLIBStream(Map<String, String> queryData,
-                                                                       ForwardIndex[] compIndices, 
-                                                                       SingleFieldInnerProdFeatExtractor[] compExtractors,
-                                                                       DenseVector compWeights,
-                                                                       OutputStream out) throws Exception  {
+  public static void writeInterleavedInnerProdQueryVectToNMSLIBStream(DataEntryFields queryFields,
+                                                                     ForwardIndex[] compIndices, 
+                                                                     SingleFieldInnerProdFeatExtractor[] compExtractors,
+                                                                     DenseVector compWeights,
+                                                                     OutputStream out) throws Exception  {
     
-    TrulySparseVector featVec = createInterleavedInnerProdQueryFeatVect(queryData, compIndices, compExtractors, compWeights);
+    TrulySparseVector featVec = createInterleavedInnerProdQueryFeatVect(queryFields, compIndices, compExtractors, compWeights);
     
     VectorWrapper.writeSparseVect(featVec, out);
   }
@@ -240,6 +245,7 @@ public class VectorUtils {
     }
     
     for (int resId = 0; resId < docIds.length; ++resId) {
+      BinReadWriteUtils.writeStringId(docIds[resId], out);      
       for (int compId = 0; compId < featExtrQty; ++compId) {
         VectorWrapper featVect = docVectBatches.get(compId)[resId];
         if (null == featVect) {
@@ -268,8 +274,13 @@ public class VectorUtils {
                                                                           DenseVector compWeights,
                                                                           OutputStream out) throws Exception  {
 
-    for (TrulySparseVector featVec : createInterleavedInnerProdDocFeatureVecBatch(docIds, compIndices, compExtractors, compWeights)) {
-      VectorWrapper.writeSparseVect(featVec, out);
+    TrulySparseVector[] batchVecs = createInterleavedInnerProdDocFeatureVecBatch(docIds,  
+                                                                                compIndices, 
+                                                                                compExtractors, 
+                                                                                compWeights);
+    for (int resId = 0; resId < batchVecs.length; resId++) {
+      BinReadWriteUtils.writeStringId(docIds[resId], out);  
+      VectorWrapper.writeSparseVect(batchVecs[resId], out);
     }
   }
 

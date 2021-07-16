@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
 # It has some modifications/extensions and it relies on our custom BERT
@@ -7,7 +6,6 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
-#from pytools import memoize_method
 import torch
 import torch.nn.functional as F
 import pytorch_pretrained_bert

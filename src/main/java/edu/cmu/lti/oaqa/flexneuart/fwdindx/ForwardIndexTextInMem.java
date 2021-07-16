@@ -56,6 +56,7 @@ class DocEntryExt implements Comparable<DocEntryExt> {
  *
  */
 public class ForwardIndexTextInMem extends ForwardIndex {  
+  private static String NOT_SUPPORTED_PREFIX = ForwardIndexBackendType.inmem.toString() + " does not support";
  
   protected ForwardIndexTextInMem(String fileName) {
     mFileName = fileName;
@@ -216,12 +217,22 @@ public class ForwardIndexTextInMem extends ForwardIndex {
   private final String mFileName;
 
 	@Override
-	public String getDocEntryRaw(String docId) throws Exception {
-		throw new RuntimeException("Text-based forward index does not support raw fields!");
+	public String getDocEntryTextRaw(String docId) throws Exception {
+		throw new RuntimeException(NOT_SUPPORTED_PREFIX + " raw text fields");
 	}
 
 	@Override
-	protected void addDocEntryRaw(String docId, String docText) throws IOException {
-		throw new RuntimeException("Text-based forward index does not support raw fields!");
+	protected void addDocEntryTextRaw(String docId, String docText) throws IOException {
+	  throw new RuntimeException(NOT_SUPPORTED_PREFIX + " raw text fields");
 	}
+
+  @Override
+  public byte[] getDocEntryBinary(String docId) throws Exception {
+    throw new RuntimeException(NOT_SUPPORTED_PREFIX + " binary fields");
+  }
+
+  @Override
+  protected void addDocEntryBinary(String docId, byte[] docBin) throws IOException {
+    throw new RuntimeException(NOT_SUPPORTED_PREFIX + " binary fields");
+  }
 }

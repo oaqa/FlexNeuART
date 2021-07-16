@@ -1,4 +1,18 @@
-# Common evaluation routines, including pure-Python computation of NDCG & MAP
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import collections
 import numpy as np
 import subprocess
@@ -186,6 +200,16 @@ def write_qrels(qrel_list, file_name):
             f.write('\n')
 
 
+def write_qrel_dict(qrel_dict, file_name):
+    """Write a QREL dictionary where entries are added using, e.g., add_qrel_entry
+
+    :param qrel_dict:  dictionary of QRELs.
+    :param file_name:  output file name
+    """
+    qrel_list = [qrel_entry for qrel_key, qrel_entry in qrel_dict.items()]
+    write_qrels(qrel_list, file_name)
+
+
 def gen_run_entry_str(query_id, doc_id, rank, score, run_id):
     """A simple function to generate one run entry.
 
@@ -245,6 +269,9 @@ def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
     :return:  the average metric value
     """
     res_arr = []
+
+    assert type(qrels_dict) == dict, \
+        "Relevance info object must be a dictionary, make sure you used read_qrels_dict and not read_qrels!"
 
     for qid, score_dict in rerank_run.items():
         rels_sorted_by_scores = []
@@ -355,3 +382,21 @@ def trec_eval(runf, qrelf, metric):
 
     raise Exception(
         f'Cannot get the value of the metric {metric} by evaluating file {runf} with qrels {qrelf}')
+
+
+def add_qrel_entry(qrel_dict, qid, did, grade):
+    """Add a QREL entry to the QREL dictionary. Repeated entries are ignored. However if they
+       have a different grade, an exception is throw.
+
+    :param qrel_dict:  a QREL dictionary
+    :param qid:        query id
+    :param did:        document id
+    :param grade:      QREL grade
+    """
+    qrel_key = (qid, did)
+    if qrel_key in qrel_dict:
+        prev_grade = qrel_dict[qrel_key].rel_grade
+        if prev_grade != grade:
+            raise Exception(f'Repeating inconsistent QREL values for query {qid} and document {did}, got grades: ',
+                            grade, prev_grade)
+    qrel_dict[qrel_key] = QrelEntry(query_id=qid, doc_id=did, rel_grade=grade)

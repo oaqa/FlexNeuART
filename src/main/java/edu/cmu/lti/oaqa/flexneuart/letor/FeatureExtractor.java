@@ -15,10 +15,8 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -26,6 +24,7 @@ import java.util.*;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 public abstract class FeatureExtractor {  
@@ -35,12 +34,12 @@ public abstract class FeatureExtractor {
    * Obtains features for a set of documents, this function should be <b>thread-safe!</b>.
    * 
    * @param     cands        an array of candidate entries.
-   * @param     queryData    a multifield representation of the query (map keys are field names). 
+   * @param     queryFields  a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}. 
 
    * @return a map docId -> sparse feature vector
    */
-  public abstract Map<String,DenseVector> getFeatures(CandidateEntry[]     cands, 
-                                                      Map<String, String>  queryData) throws Exception;
+  public abstract Map<String,DenseVector> getFeatures(CandidateEntry[] cands, 
+                                                      DataEntryFields  queryFields) throws Exception;
   
   /**
    * @return the total number of features (some may be missing, though).
@@ -65,97 +64,6 @@ public abstract class FeatureExtractor {
          
     outFile.close();    
   }
-  
-  /**
-   * Reads feature weights from a file.
-   * 
-   * @param fileName    input file (in the RankLib format): all weights must be present
-   *                    there should be no gaps!
-   * @return            a sparse vector that keeps weights
-   * @throws Exception
-   */
-  public static DenseVector readFeatureWeights(String fileName) throws Exception {
-    BufferedReader inFile = new BufferedReader(new FileReader(new File(fileName)));
-    
-    
-    try {
-      String line = null;
-      
-      while ((line = inFile.readLine()) != null) {
-        line = line.trim();
-        if (line.isEmpty() || line.startsWith("#")) continue;
-        
-        String parts0[] = line.split("\\s+");
-        
-        DenseVector res = new DenseVector(parts0.length);
-        
-        int ind = 0;
-        for (String onePart: parts0) {
-          try {
-            String parts1[] = onePart.split(":");
-            if (parts1.length != 2) {
-              throw new Exception(
-                  String.format(
-                      "The line in file '%s' has a field '%s' without exactly one ':', line: %s", fileName, onePart, line));
-            }
-            int partId = Integer.parseInt(parts1[0]);
-            if (partId != ind + 1) {
-              throw new Exception(
-                  String.format("Looks like there's a missing feature weight, field %d has id %d", ind + 1, partId));
-            }
-            res.set(ind, Double.parseDouble(parts1[1]));
-            ind++;
-          } catch (NumberFormatException e) {
-            throw new Exception(
-                String.format(
-                    "The line in file '%s' has non-number '%s', line: %s", fileName, onePart, line));
-          }
-        }
-        return res;
-      }
-      
-    } finally {    
-      inFile.close();
-    }
-    
-    throw new Exception("No features found in '" + fileName + "'");
-  }
-
-
-  public void normZeroOne(Map<String, DenseVector> docFeats) {
-    int featureQty = this.getFeatureQty();
-    
-    double minVals[] = new double[featureQty];
-    double maxVals[] = new double[featureQty];
-
-    if (!docFeats.isEmpty()) {
-      for (int i = 0; i < featureQty; ++i) {
-        minVals[i] = Double.POSITIVE_INFINITY;
-        maxVals[i] = Double.NEGATIVE_INFINITY;
-      }
-      // Let's 0-1 normalize
-      for (Map.Entry<String, DenseVector> e : docFeats.entrySet()) {
-        for (int i = 0; i < featureQty; ++i) {
-          double val = e.getValue().get(i);
-          minVals[i] = Math.min(val, minVals[i]);
-          maxVals[i] = Math.max(val, maxVals[i]);
-        }
-      }
-
-      for (int i = 0; i < featureQty; ++i) { 
-        double diff = maxVals[i] - minVals[i];
-        if (diff > Float.MIN_NORMAL) {
-          for (Map.Entry<String, DenseVector> e : docFeats.entrySet()) {
-            double val = e.getValue().get(i);
-            e.getValue().set(i, (val - minVals[i]) / diff);
-          }
-        } else {
-          for (Map.Entry<String, DenseVector> e : docFeats.entrySet())
-            e.getValue().set(i, 0);
-        }
-      }
-    }
-  }
 
   public static HashMap<String, DenseVector> initResultSet(CandidateEntry[] cands, int featureQty) {
     HashMap<String, DenseVector> res = new HashMap<String,DenseVector>();
@@ -167,8 +75,10 @@ public abstract class FeatureExtractor {
     return res;
   }
   
-  public static DocEntryParsed getQueryEntry(String fieldName, ForwardIndex fieldIndex, Map<String, String> queryData) {
-    String query = queryData.get(fieldName);
+  public static DocEntryParsed getQueryEntry(String fieldName, 
+                                             ForwardIndex fieldIndex, 
+                                             DataEntryFields queryFields) {
+    String query = queryFields.getString(fieldName);
     if (null == query) return null;
     query = query.trim();
     if (query.isEmpty()) return null;

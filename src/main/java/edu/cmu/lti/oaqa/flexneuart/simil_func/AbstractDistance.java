@@ -25,7 +25,7 @@ package edu.cmu.lti.oaqa.flexneuart.simil_func;
  */
 public abstract class AbstractDistance {
   public static final String L2 = "l2";
-  private static final String EUCLIDEAN = "euclidean";
+  public static final String EUCLIDEAN = "euclidean";
   public static final String COSINE = "cosine";
 
   public abstract float compute(float [] vec1, float [] vec2);

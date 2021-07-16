@@ -50,6 +50,7 @@ checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "BITEXT_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
+checkVarNonEmpty "QUESTION_FILE_PREFIX"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$bitextOutSubDir"
@@ -94,20 +95,12 @@ echo "Embedding directory:          $embedDir"
 echo "Max ratio:                    $maxRatio"
 echo "=========================================================================="
 
-retVal=""
-getIndexQueryDataInfo "$inputDataDir"
-queryFileName=${retVal[3]}
-if [ "$queryFileName" = "" ] ; then
-  echo "Cannot guess the type of data, perhaps, your data uses different naming conventions."
-  exit 1
-fi
-
 target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
                                   -embed_dir $embedDir \
                                   -index_field $field \
                                   -query_field $query_field \
                                   -output_dir "$outDir" \
-                                  -q "$inputPartDir/$queryFileName" \
+                                  -query_file_pref  "$inputPartDir/${QUESTION_FILE_PREFIX}" \
                                   -qrel_file "$inputPartDir/$QREL_FILE" \
                                   -max_doc_query_qty_ratio "$maxRatio"
 

@@ -27,11 +27,11 @@ import org.kohsuke.args4j.ParserProperties;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.RandomUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
@@ -53,21 +53,24 @@ public class CheckDenseSparseExportScores {
     public final static String MAX_NUM_DOC_DESC  = "maximum number of documents to use";
     public final static String MAX_NUM_DOC_PARAM = "max_num_doc"; 
    
-    
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
-    String mMemIndexPref;
+    String mFwdIndexPref;
     
-    @Option(name = "-" + CommonParams.GIZA_ROOT_DIR_PARAM, usage = CommonParams.GIZA_ROOT_DIR_DESC)
-    String mGizaRootDir;
+    @Option(name = "-" + CommonParams.MODEL1_ROOT_DIR_PARAM, usage = CommonParams.MODEL1_ROOT_DIR_DESC)
+    String mModel1RootDir;
     
-    @Option(name = "-" + CommonParams.EMBED_DIR_PARAM, usage = CommonParams.EMBED_DIR_DESC)
-    String mEmbedDir;
+    
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
+    
+    @Option(name = "-" + CommonParams.EMBED_ROOT_DIR_PARAM, usage = CommonParams.EMBED_ROOT_DIR_DESC)
+    String mEmbedRootDir;
     
     @Option(name = "-extr_json", required = true, usage = "A JSON file with a descripton of the extractors")
     String mExtrJson;
     
-    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, required = true, usage = "A query file.")
-    String mQueryFile;
+    @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, usage = CommonParams.QUERY_FILE_PREFIX_EXPORT_DESC)
+    String mQueryFilePrefix;
 
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, required = true, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery;
@@ -106,10 +109,13 @@ public class CheckDenseSparseExportScores {
 
       int compQty = 0, diffQty = 0;
       
-      FeatExtrResourceManager resourceManager = 
-          new FeatExtrResourceManager(args.mMemIndexPref, args.mGizaRootDir, args.mEmbedDir);
+      ResourceManager resourceManager = 
+          new ResourceManager(args.mCollectDir, 
+                              args.mFwdIndexPref, 
+                              args.mModel1RootDir, 
+                              args.mEmbedRootDir);
       
-      CompositeFeatureExtractor compositeFeatureExtractor = new CompositeFeatureExtractor(resourceManager, args.mExtrJson);
+      CompositeFeatureExtractor compositeFeatureExtractor = resourceManager.getFeatureExtractor(args.mExtrJson);
       
       SingleFieldFeatExtractor[] allExtractors = compositeFeatureExtractor.getCompExtr();    
       int featExtrQty = allExtractors.length;
@@ -134,83 +140,87 @@ public class CheckDenseSparseExportScores {
       
       ArrayList<String> docIdSample =  rand.reservoirSampling(allDocIds, args.mMaxNumDoc);
       
-      Map<String, String> queryFields = null;
-             
-      try (DataEntryReader inp = new DataEntryReader(args.mQueryFile)) {
-        for (int queryNo = 0; ((queryFields = inp.readNext()) != null) && queryNo < args.mMaxNumQuery;  ++queryNo) {
+      ArrayList<DataEntryFields> queries = DataEntryReader.readParallelQueryData(args.mQueryFilePrefix);
+ 
+      for (int queryNo = 0;  queryNo < Math.min(args.mMaxNumQuery, queries.size());  ++queryNo) {
+        DataEntryFields queryFields = queries.get(queryNo);
+        String queryId = queryFields.mEntryId;
+        
+        for (int k = 0; k < featExtrQty; ++k) {
+          SingleFieldInnerProdFeatExtractor   oneExtr = compExtractors[k];
+          ForwardIndex                        oneIndx = compIndices[k];
+          String                              queryFieldName = oneExtr.getQueryFieldName();
+          String                              indexFieldName = oneExtr.getIndexFieldName();
           
-          String queryId = queryFields.get(Const.TAG_DOCNO);
-          
-          for (int k = 0; k < featExtrQty; ++k) {
-            SingleFieldInnerProdFeatExtractor   oneExtr = compExtractors[k];
-            ForwardIndex                        oneIndx = compIndices[k];
-            boolean                             isRaw = oneIndx.isRaw();
-            String                              queryFieldName = oneExtr.getQueryFieldName();
-            String                              indexFieldName = oneExtr.getIndexFieldName();
-            
-            Map<String, DenseVector> res = 
-                oneExtr.getFeatures(CandidateEntry.createZeroScoreCandListFromDocIds(docIdSample), queryFields);
-            
-            String queryText = queryFields.get(queryFieldName);
+          Map<String, DenseVector> res = 
+              oneExtr.getFeatures(CandidateEntry.createZeroScoreCandListFromDocIds(docIdSample), queryFields);
+
+         
+          VectorWrapper queryVect = null;
+          if (oneIndx.isBinary()) {
+            byte queryEntry[] = queryFields.getBinary(queryFieldName);
+            queryVect = oneExtr.getFeatInnerProdQueryVector(queryEntry);
+          } else {
+            String queryText = queryFields.getString(queryFieldName);
             
             if (queryText == null) {
               System.out.println("No query text, query ID:" + queryId + " query field: "+ queryFieldName);
               queryText = "";
             }
-           
-            VectorWrapper queryVect = null;
-            if (isRaw) {
+            
+            if (oneIndx.isTextRaw()) {
               queryVect = oneExtr.getFeatInnerProdQueryVector(queryText);
-            } else {
+            } if (oneIndx.isParsed()) {
               DocEntryParsed queryEntry = oneIndx.createDocEntryParsed(StringUtils.splitOnWhiteSpace(queryText), 
                                                                       true); // true means including positions
               queryVect = oneExtr.getFeatInnerProdQueryVector(queryEntry);
+            } else {
+              System.err.println("Bug: should not reach this point!");
+              System.exit(1);
             }
+          }
 
-            for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
-              int actualBatchQty = Math.min(args.mBatchSize, docIdSample.size() - batchStart);
-              
-              String docIds[] = new String[actualBatchQty];
-  
-              for (int i = 0; i < actualBatchQty; ++i) {
-                docIds[i] = docIdSample.get(batchStart + i);
-              }
-              
-              VectorWrapper[] docVectArr = null;
-              
-              docVectArr = oneExtr.getFeatInnerProdDocVectorBatch(oneIndx, docIds);
-              
-              for (int i = 0; i < actualBatchQty; ++i) {
-                String did = docIds[i];
-                VectorWrapper docVect = docVectArr[i];
+          for (int batchStart = 0; batchStart < docIdSample.size(); batchStart += args.mBatchSize) {
+            int actualBatchQty = Math.min(args.mBatchSize, docIdSample.size() - batchStart);
+            
+            String docIds[] = new String[actualBatchQty];
 
-                float innerProdVal = VectorWrapper.scalarProduct(docVect, queryVect);
-                DenseVector oneFeatVecScore = res.get(did);
-                if (oneFeatVecScore == null) {
-                  throw new Exception("Bug: no score for " + did + " extractor: " + oneExtr.getName()
-                      + " index field: " + indexFieldName);
-                }
-                if (oneFeatVecScore.size() != 1) {
-                  throw new Exception(
-                      "Bug: feature vector for " + did + " extractor: " + oneExtr.getName() + " index field: "
-                          + indexFieldName + " has size " + oneFeatVecScore.size() + " but we expect size one!");
-                }
-                float featureVal = (float) oneFeatVecScore.get(0);
-
-                boolean isDiff = Math.abs(innerProdVal - featureVal) > args.mEpsDiff;
-                compQty++;
-                diffQty += isDiff ? 1 : 0;
-
-                System.out.println(String.format(
-                    "Query id: %s Doc id: %s field names: %s/%s feature val: %g inner product val: %g extractor: %s %s",
-                    queryId, did, queryFieldName, indexFieldName, featureVal, innerProdVal, oneExtr.getName(),
-                    isDiff ? "SIGN. DIFF." : ""));
-              } 
+            for (int i = 0; i < actualBatchQty; ++i) {
+              docIds[i] = docIdSample.get(batchStart + i);
             }
             
-          }
-          
-        }
+            VectorWrapper[] docVectArr = null;
+            
+            docVectArr = oneExtr.getFeatInnerProdDocVectorBatch(oneIndx, docIds);
+            
+            for (int i = 0; i < actualBatchQty; ++i) {
+              String did = docIds[i];
+              VectorWrapper docVect = docVectArr[i];
+
+              float innerProdVal = VectorWrapper.scalarProduct(docVect, queryVect);
+              DenseVector oneFeatVecScore = res.get(did);
+              if (oneFeatVecScore == null) {
+                throw new Exception("Bug: no score for " + did + " extractor: " + oneExtr.getName()
+                    + " index field: " + indexFieldName);
+              }
+              if (oneFeatVecScore.size() != 1) {
+                throw new Exception(
+                    "Bug: feature vector for " + did + " extractor: " + oneExtr.getName() + " index field: "
+                        + indexFieldName + " has size " + oneFeatVecScore.size() + " but we expect size one!");
+              }
+              float featureVal = (float) oneFeatVecScore.get(0);
+
+              boolean isDiff = Math.abs(innerProdVal - featureVal) > args.mEpsDiff;
+              compQty++;
+              diffQty += isDiff ? 1 : 0;
+
+              System.out.println(String.format(
+                  "Query id: %s Doc id: %s field names: %s/%s feature val: %g inner product val: %g extractor: %s %s",
+                  queryId, did, queryFieldName, indexFieldName, featureVal, innerProdVal, oneExtr.getName(),
+                  isDiff ? "SIGN. DIFF." : ""));
+            } 
+          }         
+        }      
       }
 
       System.out.println(String.format("# of comparisons: %d # of differences: %d", compQty, diffQty));

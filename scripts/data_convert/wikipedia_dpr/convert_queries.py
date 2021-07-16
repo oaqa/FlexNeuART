@@ -1,4 +1,19 @@
 #!/usr/bin/env python
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import sys
 import os
 import json
@@ -20,12 +35,15 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
     BITEXT_QUESTION_PREFIX, BITEXT_ANSWER_PREFIX,\
     ANSWER_LIST_FIELD_NAME
 from scripts.data_convert.wikipedia_dpr.utils import dpr_json_reader, get_passage_id
-from scripts.common_eval import QrelEntry, write_qrels
+from scripts.common_eval import write_qrels, add_qrel_entry
 
+#
+# Script converts raw query files from DPR repository into the FlexNeuArt internal format.
+#
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Script converts raw queries files from DPR repository '
-                                                 'into FlexNeuArt internal format.')
+    parser = argparse.ArgumentParser(description='Script converts raw query files from the DPR repository '
+                                                 'into the FlexNeuArt internal format.')
     parser.add_argument('--input', metavar='input file',
                         help='input file',
                         type=str, required=True)
@@ -76,15 +94,6 @@ bi_quest_files = {}
 bi_answ_files = {}
 
 glob_qrel_dict = {}
-
-def add_qrel_entry(qrel_dict, qid, did, grade):
-    qrel_key = (qid, did)
-    if qrel_key in qrel_dict:
-        prev_grade = qrel_dict[qrel_key].rel_grade
-        if prev_grade != grade:
-            raise Exception(f'Repeating inconsistent QREL values for query {qid} and document {did}, got grades: ',
-                            grade, prev_grade)
-    qrel_dict[qrel_key] = QrelEntry(query_id=qid, doc_id=did, rel_grade=grade)
 
 if out_bitext_dir:
     if not os.path.exists(out_bitext_dir):

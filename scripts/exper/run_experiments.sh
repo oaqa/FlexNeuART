@@ -79,7 +79,7 @@ Additional options:
   -parallel_exper_qty     # of experiments to run in parallel (default $parallelExperQty)
   -reuse_feat             reuse previously generated features
   -delete_trec_runs       delete TREC run files
-  -giza_subdir            GIZA sub-directory (relative to $DERIVED_DATA_SUBDIR)
+  -model1_subdir          Model1 sub-directory (relative to $DERIVED_DATA_SUBDIR)
   -no_separate_shell      use this for debug purposes only
   -debug_print            print every executed command
 EOF
@@ -142,7 +142,7 @@ while [ $# -ne 0 ] ; do
         -add_exper_subdir)
           addExperSubDir=$optValue
           ;;
-        -giza_subdir)
+        -model1_subdir)
           globalParams+=" $optName \"$optValue\""
           ;;
         -train_cand_qty)
@@ -257,14 +257,11 @@ jsonParamMap=(\
   model_final modelFinal \
   train_cand_qty trainCandQty \
   cand_prov candProv \
-  cand_qty candQty \
+  cand_prov_qty candProvQty \
   test_cand_qty_list testCandQtyList \
   use_lmart useLMART \
   num_trees numTrees
 )
-
-# Some locations are always relative to the collection root
-adjustLocForParams=(extrType extrTypeInterm modelInterm modelFinal candProvAddConfParam)
 
 childPIDs=()
 nrun=0
@@ -272,6 +269,11 @@ nfail=0
 for ((ivar=1;;++ivar)) ; do
 
   stat=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
+
+  if [ "$?" != "0" ] ; then
+    echo "Failed to parse configuration $ivar from the file $experDescPath"
+    exit 1
+  fi
 
   if [ "stat" = "#ERR" ] ; then
     echo "Failed to get entry $ivar from experiment config $experDescPath"
@@ -326,7 +328,7 @@ for ((ivar=1;;++ivar)) ; do
     # Each experiment should run in its own sub-directory
     experDirBase=`getExperDirBase "$collectSubdir" "$experPart" "$experSubdir"`
     if [ "$?" != "0" ] ; then
-      echo "Failed to obtain the experimental directory!"
+      echo "Failed to obtain an experimental directory!"
       exit 1
     fi
 
@@ -365,24 +367,24 @@ for ((ivar=1;;++ivar)) ; do
       if [ "$paramName" = "model_final" -a "$paramVal" = "" ] ; then
         paramVal="$defaultModelFinal"
       fi
-      if [ "$paramVal" != "" ] ; then
-        for adjParamName in ${adjustLocForParams[*]} ; do
-          if [ "$adjParamName" = "$jsonParamName" ] ; then
-            paramVal="$collectSubdir/$paramVal"
-          fi
-        done
-      fi
 
       if [ "$paramVal" != "" ] ; then
         singleConfParams+=" -${paramName} \"$paramVal\""
       fi
     done
 
+
+    experDirBaseRelative=`getExperDirBase "" "$experPart" "$experSubdir"`
+    if [ "$?" != "0" ] ; then
+      echo "Failed to obtain a relative experimental directory!"
+      exit 1
+    fi
+
 # Don't quote $globalParams or any other "*Param*
   cmd=`cat <<EOF
         scripts/exper/run_one_experiment.sh \
             "$collect" \
-            "$experDirBase" \
+            "$experDirBaseRelative" \
             "$testPart" \
             $globalParams $singleConfParams
 EOF

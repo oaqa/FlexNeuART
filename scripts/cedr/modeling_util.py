@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
 # It has some modifications/extensions and it relies on our custom BERT

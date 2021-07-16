@@ -19,35 +19,39 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValPair;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValParamByValDesc;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
  * Re-ranking RM3 similarity (i.e., without extra retrieval step),
- * largely as described in 
- * Condensed List Relevance Models, Fernando Diaz, ICTIR 2015.
- * but with a BM25 scorer instead of the QL.
+ * largely as described in "Condensed List Relevance Models", Fernando Diaz, ICTIR 2015.
+ * However, this implementation uses a BM25 scorer instead of the QL.
  * That is we replace  p(w|D) with BM25 scores. 
  * 
  * @author Leonid Boytsov
  *
  */
 public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
+  private static final Logger logger = LoggerFactory.getLogger(FeatExtractorRM3Similarity.class);
   public static String EXTR_TYPE = "RM3Similarity";
   
   public static String TOP_DOC_QTY_PARAM = "topDocQty";
   public static String TOP_TERM_QTY_PARAM = "topTermQty";
   public static String ORIG_WEIGHT_PARAM = "origWeight";
-  
-  public static Boolean DEBUG_PRINT = false;
 
-  public FeatExtractorRM3Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtractorRM3Similarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 
@@ -70,23 +74,28 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+
+    HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty());
+    
+    String queryId = queryFields.mEntryId;
+    
+    if (queryId == null) {
+      throw new Exception("Undefined query ID!");
+    }
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
+    
+    if (queryEntry == null) {
+      warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+      return res;
+    }
     
     int docQty = cands.length;
-    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
+    
     HashMap<Integer, Float>     topTerms = new HashMap<Integer, Float>();
     ArrayList<IdValPair>        topDocTerms = new ArrayList<IdValPair>();
     ArrayList<DocEntryParsed>   queryDocEntries = new ArrayList<DocEntryParsed>();
     ArrayList<Float>            topDocScore = new ArrayList<Float>();
-    
-    if (DEBUG_PRINT) {
-      System.out.println("==========");
-      for (int qid : queryEntry.mWordIds) {
-        if (qid >= 0) {
-          System.out.println(mFieldIndex.getWord(qid));
-        }
-      }
-    }
     
     int topQty = Math.min(mTopDocQty, docQty);
     
@@ -109,8 +118,6 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
       }
     }
     float invTopDocScoreNorm = (float) (1.0/Math.max(topDocScoreNorm, 1e-9));
-    if (DEBUG_PRINT) 
-      System.out.println(String.format("!!!! %f %f", topDocScoreNorm, invTopDocScoreNorm));
     
     for (int i = 0; i < topQty; ++i) {
       DocEntryParsed docEntry = queryDocEntries.get(i);
@@ -139,9 +146,6 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
       IdValPair e = topDocTerms.get(k);
       
       float score = e.mVal * invTopDocTermNorm;
- 
-      if (DEBUG_PRINT) 
-        System.out.println(String.format("%s %g", mFieldIndex.getWord(e.mId), score));
       
       topTerms.put(e.mId, score);
     }
@@ -151,8 +155,6 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
      * common terms between queries and documents.
      */
     topDocScoreNorm = 1.0f / Math.max(topDocScoreNorm, Float.MIN_NORMAL);
-
-    HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty());
     
     for (int i = 0; i < docQty; ++i) {
       String docId = cands[i].mDocId;
@@ -173,9 +175,6 @@ public class FeatExtractorRM3Similarity extends SingleFieldFeatExtractor {
       
       float origScore =  mSimilObj.compute(queryEntry, docEntry);
       float finalScore = origScore* mOrigWeight + (1-mOrigWeight) * rm1score;
-      
-      if (DEBUG_PRINT) 
-        System.out.println(String.format("### %g %g -> %g", origScore, rm1score, finalScore));
       
       v.set(0, finalScore);
     }

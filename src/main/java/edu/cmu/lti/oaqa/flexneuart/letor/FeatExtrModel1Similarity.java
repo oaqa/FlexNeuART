@@ -29,7 +29,11 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaOneWordTranRecs;
 import edu.cmu.lti.oaqa.flexneuart.giza.TranRecSortByProb;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.Model1Data;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TrulySparseVector;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValPair;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValParamByValDesc;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
@@ -48,13 +52,12 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public static String GIZA_ITER_QTY = "gizaIterQty";
   public static String PROB_SELF_TRAN = "probSelfTran";
   public static String MIN_MODEL1_PROB = "minModel1Prob";
-  public static String MODEL1_SUBDIR = "model1SubDir";
+  public static String MODEL1_FILE_PREFIX = "model1FilePrefr";
   public static String LAMBDA = "lambda";
   public static String OOV_PROB = "ProbOOV";
   public static String FLIP_DOC_QUERY = "flipDocQuery";
   public static String TOP_TRAN_SCORES_PER_DOCWORD_QTY = "topTranScoresPerDocWordQty";
   public static String TOP_TRAN_CANDWORD_QTY = "topTranCandWordQty";
-  public static String MIN_TRAN_SCORE_PERDOCWORD = "minTranScorePerDocWord";
   private static float MIN_ZERO_LABMDA_TRAN_PROB = 1e-8f;
  
   @Override
@@ -62,10 +65,15 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     return this.getClass().getName();
   }
   
-  public FeatExtrModel1Similarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+   /*
+    * Important note: although this similarity scores should be (approximately) reproducible 
+    * by generating query and document vectors with subsequent inner-product computation,
+    * this feature seems to be broken and it is not completely clear why. 
+    */
+  public FeatExtrModel1Similarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
    
-    mModel1SubDir = conf.getParam(MODEL1_SUBDIR, getIndexFieldName());
+    mModel1FilePref = conf.getParam(MODEL1_FILE_PREFIX, getIndexFieldName());
     mGizaIterQty = conf.getReqParamInt(GIZA_ITER_QTY);
     mProbSelfTran = conf.getReqParamFloat(PROB_SELF_TRAN);
     mMinModel1Prob = conf.getReqParamFloat(MIN_MODEL1_PROB);
@@ -74,12 +82,10 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     // There might be an integer overflow then
     mTopTranScoresPerDocWordQty = conf.getParam(TOP_TRAN_SCORES_PER_DOCWORD_QTY, Integer.MAX_VALUE);
     mTopTranCandWordQty = conf.getParam(TOP_TRAN_CANDWORD_QTY, Integer.MAX_VALUE);
-   // This default is a bit adhoc, but typically we are not interested in tran scores that are these small
-    mMinTranScorePerDocWord = conf.getParam(MIN_TRAN_SCORE_PERDOCWORD, 1e-6f); 
 
     logger.info("Computing " + mTopTranScoresPerDocWordQty + 
         " top per doc-word scores from top " + mTopTranCandWordQty + 
-        " translations per document word, ignoring scores < " + mMinTranScorePerDocWord);
+        " translations per document word");
     
     mLambda = conf.getReqParamFloat(LAMBDA);
     mProbOOV = conf.getParam(OOV_PROB, 1e-9f); 
@@ -87,7 +93,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     mFlipDocQuery = conf.getParamBool(FLIP_DOC_QUERY);
     
     mModel1Data = resMngr.getModel1Tran(getIndexFieldName(), 
-                                        mModel1SubDir,
+                                        mModel1FilePref,
                                         false /* no translation table flip */, 
                                         mGizaIterQty, mProbSelfTran, mMinModel1Prob);
     
@@ -96,11 +102,20 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
-    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
-    if (queryEntry == null) return res;
+    
+    String queryId = queryFields.mEntryId;  
+    if (queryId == null) {
+      throw new Exception("Undefined query ID!");
+    }
+    
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
+    if (queryEntry == null) {
+      warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+      return res;
+    }
 
     for (CandidateEntry e: cands) {
       DocEntryParsed docEntry = mFieldIndex.getDocEntryParsed(e.mDocId);
@@ -179,7 +194,8 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
 
     int queryWordQty = queryEntry.mWordIds.length;
 
-    if ( mTopTranScoresPerDocWordQty == Integer.MAX_VALUE) {
+    if (mTopTranScoresPerDocWordQty == Integer.MAX_VALUE && 
+        mTopTranCandWordQty == Integer.MAX_VALUE) {
       double queryWordScores[] = computeWordScores(queryEntry.mWordIds, docEntry);
       
       for (int iq=0; iq < queryWordQty;++iq) {                                        
@@ -221,9 +237,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     
     for (int i = 0; i < topCandWordIds.length; ++i) {
       double score = topCandWorIdsScores[i];
-      if (score > mMinTranScorePerDocWord) {
-        res.add(new IdValPair(topCandWordIds[i], (float)score));
-      }
+      res.add(new IdValPair(topCandWordIds[i], (float)score));
     }
     
     res.sort(mDescByValComp);
@@ -231,8 +245,9 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
     if (mTopTranScoresPerDocWordQty < Integer.MAX_VALUE) {
     
       int maxQty = doc.mWordIds.length * mTopTranScoresPerDocWordQty;
-      while (res.size() > maxQty) {
-        res.remove(res.size()-1);
+      
+      if (res.size() > maxQty) {
+        res.subList(maxQty, res.size()).clear();
       }
       
     }
@@ -382,7 +397,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
   
   final ForwardIndex    mFieldIndex;
-  final String          mModel1SubDir;
+  final String          mModel1FilePref;
   final Model1Data      mModel1Data;
   final int             mGizaIterQty;
   final float           mProbSelfTran;
@@ -393,7 +408,6 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   
   final int             mTopTranScoresPerDocWordQty;
   final int             mTopTranCandWordQty;
-  final float           mMinTranScorePerDocWord;
   
   final IdValParamByValDesc mDescByValComp = new IdValParamByValDesc();
   

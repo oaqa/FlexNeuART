@@ -19,6 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
@@ -39,7 +42,7 @@ public class FeatExtrPassRetrScore extends SingleFieldFeatExtractor  {
   // Always use the original retrieval score even if there's an intermediate re-ranker
   public static String USE_ORIG_RETR_SCORE = "useOrigRetrScore";
   
-  FeatExtrPassRetrScore(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrPassRetrScore(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     
     mUseOrigScore = conf.getParamBool(USE_ORIG_RETR_SCORE);
@@ -51,7 +54,7 @@ public class FeatExtrPassRetrScore extends SingleFieldFeatExtractor  {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, 1); 
  
     for (CandidateEntry e : cands) {

@@ -6,7 +6,7 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
 checkVarNonEmpty "GIZA_ITER_QTY"
-checkVarNonEmpty "GIZA_SUBDIR"
+checkVarNonEmpty "MODEL1_SUBDIR"
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
@@ -15,7 +15,7 @@ boolOpts=(\
 )
 
 paramOpts=(\
-   "giza_subdir" "gizaSubDir" "GIZA sub-dir to store translation table, if not specified we use $GIZA_SUBDIR"
+   "model1_subdir" "model1SubDir" "Model1 sub-dir to store translation table, if not specified we use $MODEL1_SUBDIR"
 )
 
 parseArguments $@
@@ -27,8 +27,8 @@ if [ "$help" = "1" ] ; then
   exit 1
 fi
 
-if [ "$gizaSubDir" = "" ] ; then
-  gizaSubDir=$GIZA_SUBDIR
+if [ "$model1SubDir" = "" ] ; then
+  model1SubDir=$MODEL1_SUBDIR
 fi
 
 collect=${posArgs[0]}
@@ -43,7 +43,8 @@ if [ "$field" = "" ] ; then
   exit 1
 fi
 
-filterDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR"
+collectDir="$COLLECT_ROOT/$collect"
+filterDir="$collectDir/$FWD_INDEX_SUBDIR"
 
 minProb="${posArgs[2]}"
 if [ "$minProb" = "" ] ; then
@@ -57,11 +58,11 @@ if [ "$maxWordQty" = "" ] ; then
   exit 1
 fi
 
-dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field.orig"
-dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field"
+dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$model1SubDir/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$model1SubDir/$field"
 
 echo "========================================================================================================================="
-echo " This script uses (but doesn't modify) the data created by scripts/giza/create_tran.sh which is placed in the directory:"
+echo " This script uses (but doesn't modify), e.g. the data created by scripts/giza/create_tran.sh which is placed in directory:"
 echo "$dirSrc"
 echo "The filtered output is stored in the following directory:"
 echo "$dirDst"
@@ -113,12 +114,19 @@ function do_filter() {
   echo "Filtering translation tables : '$dirSrc' -> '$dirDst'"
 
   echo "Translation table file: $TRAN_TABLE_FILE"
-  target/appassembler/bin/FilterTranTable -o  "$dirDst/output.t1.${GIZA_ITER_QTY}" -giza_root_dir "$dirSrc" -giza_iter_qty $GIZA_ITER_QTY -min_prob "$minProb" -flt_fwd_index_header "$filterDir/$field"  -max_word_qty "$maxWordQty"
+  target/appassembler/bin/FilterTranTable \
+      -o  "$dirDst/output.t1.${GIZA_ITER_QTY}" \
+      -model1_dir "$dirSrc" \
+      -giza_iter_qty $GIZA_ITER_QTY \
+      -min_prob "$minProb" \
+      -flt_fwd_index_header "$filterDir/$field"  \
+      -max_word_qty "$maxWordQty"
+
   check "filter_tran_table"
 }
 
-dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field.orig"
-dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$gizaSubDir/$field"
+dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$model1SubDir/$field.orig"
+dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$model1SubDir/$field"
 
 if [ ! -d "$dirSrc" ] ; then
   echo "Error, '$dirSrc' doesn't exist"

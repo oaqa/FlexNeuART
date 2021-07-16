@@ -25,11 +25,12 @@ import org.apache.thrift.transport.TTransport;
 import com.google.common.base.Splitter;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorUtils;
 import edu.cmu.lti.oaqa.nmslib.QueryService;
 import edu.cmu.lti.oaqa.nmslib.ReplyEntry;
@@ -53,8 +54,8 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   public final static String SPARSE_INTERLEAVE_PARAM = "sparseInterleave";
   
   Splitter splitOnColon = Splitter.on(':');	
-  final private Client 			              mKNNClient;
-  final private FeatExtrResourceManager       mResourceManager;
+  final private Client 			                  mKNNClient;
+  final private ResourceManager       mResourceManager;
   final private SingleFieldInnerProdFeatExtractor  mCompExtractors[];
   final private ForwardIndex                  mCompIndices[];
   final int                                   mFeatExtrQty;
@@ -65,13 +66,13 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
    * 
    * @param knnServiceURL       an address/port for the NMSLIB server.
    * @param resourceManager     a resource manager.
-   * @param addConf             additional (but mandatory) paramters
+   * @param addConf             additional (but mandatory) parameters
    * 
    * @throws Exception
    */
   public NmslibKNNCandidateProvider(String knnServiceURL, 
-                                    FeatExtrResourceManager resourceManager,
-                                    CandProvAddConfig addConf) throws Exception {
+                                    ResourceManager resourceManager,
+                                    RestrictedJsonConfig addConf) throws Exception {
 
     String host = null;
     int    port = -1;
@@ -83,7 +84,7 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     String extrType = addConf.getReqParamStr(EXTRACTOR_TYPE_PARAM);
     boolean sparseInterleave = addConf.getParamBool(SPARSE_INTERLEAVE_PARAM);
     
-    CompositeFeatureExtractor featExtr = new CompositeFeatureExtractor(resourceManager, extrType);
+    CompositeFeatureExtractor featExtr = resourceManager.getFeatureExtractor(extrType);
     
     mResourceManager = resourceManager;   
     
@@ -158,9 +159,9 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
   public boolean isThreadSafe() { return false; }   	
 
   @Override
-  public CandidateInfo getCandidates(int queryNum, Map<String, String> queryData, int maxQty) throws Exception {
+  public CandidateInfo getCandidates(int queryNum, DataEntryFields queryFields, int maxQty) throws Exception {
        
-    String queryId = queryData.get(Const.TAG_DOCNO);
+    String queryId = queryFields.mEntryId;
     
     if (queryId == null) {
       throw new Exception("No query ID");
@@ -170,13 +171,13 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
     
     if (null == mCompQueryWeights) {
       VectorUtils.writeInnerProdQueryVecsToNMSLIBStream(
-                                                  queryData, 
+                                                  queryFields, 
                                                   mCompIndices, 
                                                   mCompExtractors, 
                                                   out);
     } else {
       VectorUtils.writeInterleavedInnerProdQueryVectToNMSLIBStream(
-                                                            queryData, 
+                                                            queryFields, 
                                                             mCompIndices, 
                                                             mCompExtractors, 
                                                             mCompQueryWeights, 
@@ -199,6 +200,8 @@ public class NmslibKNNCandidateProvider  extends CandidateProvider {
       String externId = e.getExternId();
       if (seen.contains(externId)) continue;
       seen.add(externId);
+      // Note we take the negative of the distance (smaller is better) to 
+      // convert it to a similarity score (higher is better)
       res[ind++] = new CandidateEntry(externId, (float) -e.getDist());
     }		
 

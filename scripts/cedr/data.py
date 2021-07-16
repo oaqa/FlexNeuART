@@ -11,12 +11,25 @@ import pickle
 
 from collections import Counter
 
+QUERY_ID_FIELD = 'query_id'
+DOC_ID_FIELD = 'doc_id'
+CAND_SCORE_FIELD = 'cand_score'
+QUERY_TOK_FIELD = 'query_tok'
+DOC_TOK_FIELD = 'doc_tok'
+QUERY_MASK_FIELD = 'query_mask'
+DOC_MASK_FIELD = 'doc_mask'
+
 PAD_CODE=-1
 DEFAULT_MAX_QUERY_LEN=32
 DEFAULT_MAX_DOC_LEN=512 - DEFAULT_MAX_QUERY_LEN - 4
 
 
 def read_datafiles(files):
+    """Read train and test files.
+
+    :param files:   an array of file objects, which represent queries or documents (in any order)
+    :return: a dataset, which is tuple of two dictionaries representing queries and documents, respectively.
+    """
     queries = {}
     docs = {}
     for file in files:
@@ -35,18 +48,26 @@ def read_datafiles(files):
 
 
 def read_pairs_dict(file):
-    """Read training pairs.
+    """Read training pairs and scores provided by a candidate generator.
 
     :param file: an open file, not a file name!
-    :return:  training pairs in the dictionary of dictionary formats.
+    :return:    Training pairs in the dictionary of dictionary formats.
+                Candidate generator scores are
+                values of the inner-most dictionary.
     """
     result = {}
     for ln, line in enumerate(tqdm(file, desc='loading pairs (by line)', leave=False)):
         fields = line.split()
-        if len(fields) != 2:
+        if not len(fields) in [2, 3]:
             raise Exception(f'Wrong # of fields {len(fields)} in file {file}, line #: {ln+1}')
-        qid, docid = fields
-        result.setdefault(qid, {})[docid] = 1
+        qid, docid = fields[0: 2]
+        if len(fields) == 3:
+            score = fields[2]
+        else:
+            score = 0
+
+        result.setdefault(qid, {})[docid] = float(score)
+
     return result
 
 
@@ -58,20 +79,40 @@ def write_pairs_dict(train_pairs, file_name):
     """
     with open(file_name, 'w') as outf:
         for qid, docid_dict in train_pairs.items():
-            for did in docid_dict.keys():
-                outf.write(f'{qid}\t{did}\n')
+            for did, score in docid_dict.items():
+                outf.write(f'{qid}\t{did}\t{score}\n')
+
+
+def create_empty_batch():
+    return {QUERY_ID_FIELD: [], DOC_ID_FIELD: [], CAND_SCORE_FIELD: [], QUERY_TOK_FIELD: [], DOC_TOK_FIELD: []}
+
 
 def iter_train_pairs(model, device_name, dataset, train_pairs, do_shuffle, qrels,
                      batch_size, max_query_len, max_doc_len):
-    batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
-    for qid, did, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
-        batch['query_id'].append(qid)
-        batch['doc_id'].append(did)
-        batch['query_tok'].append(query_tok)
-        batch['doc_tok'].append(doc_tok)
-        if len(batch['query_id']) // 2 == batch_size:
+    """Training pair iterator.
+
+    :param model:           a model object
+    :param device_name:     a device name
+    :param dataset:         a dataset object: a tuple returned by read_datafiles
+    :param train_pairs:     training pairs returned by read_pairs_dict
+    :param do_shuffle:      True to shuffle
+    :param qrels:           a QREL dictionary returned by read_qrels_dict
+    :param batch_size:      the size of the batch
+    :param max_query_len:   max. query length
+    :param max_doc_len:     max. document length
+
+    :return:
+    """
+    batch = create_empty_batch()
+    for qid, did, score, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
+        batch[QUERY_ID_FIELD].append(qid)
+        batch[DOC_ID_FIELD].append(did)
+        batch[CAND_SCORE_FIELD].append(score)
+        batch[QUERY_TOK_FIELD].append(query_tok)
+        batch[DOC_TOK_FIELD].append(doc_tok)
+        if len(batch[QUERY_ID_FIELD]) // 2 == batch_size:
             yield _pack_n_ship(batch, device_name, max_query_len, max_doc_len)
-            batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
+            batch = create_empty_batch()
 
 
 def train_item_qty_upper_bound(train_pairs):
@@ -85,13 +126,15 @@ def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
         if do_shuffle:
             random.shuffle(qids)
         for qid in qids:
-            pos_ids = [did for did in train_pairs[qid] if qrels.get(qid, {}).get(did, 0) > 0]
+            query_train_pairs = train_pairs[qid]
+
+            pos_ids = [did for did in query_train_pairs if qrels.get(qid, {}).get(did, 0) > 0]
             if len(pos_ids) == 0:
                 continue
             pos_id = random.choice(pos_ids)
             pos_ids_lookup = set(pos_ids)
 
-            neg_ids = [did for did in train_pairs[qid] if did not in pos_ids_lookup]
+            neg_ids = [did for did in query_train_pairs if did not in pos_ids_lookup]
             if len(neg_ids) == 0:
                 continue
             neg_id = random.choice(neg_ids)
@@ -104,23 +147,26 @@ def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
             if neg_doc is None:
                 tqdm.write(f'missing doc {neg_id}! Skipping')
                 continue
-            yield qid, pos_id, query_tok, model.tokenize(pos_doc)
-            yield qid, neg_id, query_tok, model.tokenize(neg_doc)
+            yield qid, pos_id, query_train_pairs[pos_id], \
+                  query_tok, model.tokenize(pos_doc)
+            yield qid, neg_id, query_train_pairs[neg_id], \
+                  query_tok, model.tokenize(neg_doc)
 
 
 def iter_valid_records(model, device_name, dataset, run,
                        batch_size, max_query_len, max_doc_len):
-    batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
-    for qid, did, query_tok, doc_tok in _iter_valid_records(model, dataset, run):
-        batch['query_id'].append(qid)
-        batch['doc_id'].append(did)
-        batch['query_tok'].append(query_tok)
-        batch['doc_tok'].append(doc_tok)
-        if len(batch['query_id']) == batch_size:
+    batch = create_empty_batch()
+    for qid, did, score, query_tok, doc_tok in _iter_valid_records(model, dataset, run):
+        batch[QUERY_ID_FIELD].append(qid)
+        batch[DOC_ID_FIELD].append(did)
+        batch[CAND_SCORE_FIELD].append(score)
+        batch[QUERY_TOK_FIELD].append(query_tok)
+        batch[DOC_TOK_FIELD].append(doc_tok)
+        if len(batch[QUERY_ID_FIELD]) == batch_size:
             yield _pack_n_ship(batch, device_name, max_query_len, max_doc_len)
-            batch = {'query_id': [], 'doc_id': [], 'query_tok': [], 'doc_tok': []}
+            batch = create_empty_batch()
     # final batch
-    if len(batch['query_id']) > 0:
+    if len(batch[QUERY_ID_FIELD]) > 0:
         yield _pack_n_ship(batch, device_name, max_query_len, max_doc_len)
 
 
@@ -128,24 +174,25 @@ def _iter_valid_records(model, dataset, run):
     ds_queries, ds_docs = dataset
     for qid in run:
         query_tok = model.tokenize(ds_queries[qid])
-        for did in run[qid]:
+        for did, score in run[qid].items():
             doc = ds_docs.get(did)
             if doc is None:
                 tqdm.write(f'missing doc {did}! Skipping')
                 continue
             doc_tok = model.tokenize(doc)
-            yield qid, did, query_tok, doc_tok
+            yield qid, did, score, query_tok, doc_tok
 
 
 def _pack_n_ship(batch, device_name, max_query_len, max_doc_len):
-    dlen = min(max_doc_len, max(len(b) for b in batch['doc_tok']))
+    dlen = min(max_doc_len, max(len(b) for b in batch[DOC_TOK_FIELD]))
     return {
-        'query_id': batch['query_id'],
-        'doc_id': batch['doc_id'],
-        'query_tok': _pad_crop(device_name, batch['query_tok'], max_query_len),
-        'doc_tok': _pad_crop(device_name, batch['doc_tok'], dlen),
-        'query_mask': _mask(device_name, batch['query_tok'], max_query_len),
-        'doc_mask': _mask(device_name, batch['doc_tok'], dlen),
+        QUERY_ID_FIELD:     batch[QUERY_ID_FIELD],
+        DOC_ID_FIELD:       batch[DOC_ID_FIELD],
+        CAND_SCORE_FIELD:   torch.FloatTensor(batch[CAND_SCORE_FIELD]).to(device_name),
+        QUERY_TOK_FIELD:    _pad_crop(device_name, batch[QUERY_TOK_FIELD], max_query_len),
+        DOC_TOK_FIELD:      _pad_crop(device_name, batch[DOC_TOK_FIELD], dlen),
+        QUERY_MASK_FIELD:   _mask(device_name, batch[QUERY_TOK_FIELD], max_query_len),
+        DOC_MASK_FIELD:     _mask(device_name, batch[DOC_TOK_FIELD], dlen),
     }
 
 

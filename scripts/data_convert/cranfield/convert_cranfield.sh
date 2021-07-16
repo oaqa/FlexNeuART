@@ -3,8 +3,8 @@
 # It is called after download_msmarco_pass.sh
 . scripts/data_convert/common_conv.sh
 
-checkVarNonEmpty "ANSWER_FILE"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "ANSWER_FILE_JSONL"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 checkVarNonEmpty "inputDataDir"
 checkVarNonEmpty "QREL_FILE"
 
@@ -17,12 +17,12 @@ done
 python -u scripts/data_convert/cranfield/convert_docs.py \
  $BERT_TOK_OPT \
 --input "$src/cran.all.1400" \
---output "$inputDataDir/docs/${ANSWER_FILE}.gz"
+--output "$inputDataDir/docs/${ANSWER_FILE_JSONL}.gz"
 
 python -u scripts/data_convert/cranfield/convert_queries.py \
  $BERT_TOK_OPT \
 --input "$src/cran.qry" \
---output "$inputDataDir/queries/${QUESTION_FILE}"
+--output "$inputDataDir/queries/${QUESTION_FILE_JSONL}"
 
 # binary QRELs (just in case we would want to use them later)
 cat "$src/cranqrel" | awk '{qrel=$3 > 0; print $1" 0 "$2" "qrel}' > "$inputDataDir/queries/qrels.txt.binary"

@@ -18,7 +18,6 @@ package edu.cmu.lti.oaqa.flexneuart.apps;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -31,11 +30,11 @@ import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateInfo;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.EvalUtils;
-import edu.cmu.lti.oaqa.flexneuart.utils.ExtendedIndexEntry;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.MiscHelper;
 
 
@@ -45,16 +44,13 @@ import edu.cmu.lti.oaqa.flexneuart.utils.MiscHelper;
  * an answer string is considered to be relevant. However,
  * clearly, some of such passages are spurious. To generate such
  * QRELs, we retrieve a number of passages using Lucene and check
- * if they contain an answer string (we look ).</p>
+ * if they contain an answer string.</p>
  * 
  * <p>To make it possible,
  * questions and answers passages need to be converted to JSON files.
  * The question JSON-file needs to contain a special extra field
  * with the list of answers. We will then check if an answer
- * appears into one of the retrieved passages. To make matching
- * more robust, the data processing step can do stopping and lemmatization.
- * After such transformation, all tokens are supposed to be separated
- * by a single space.</p>
+ * appears into one of the retrieved passages. The passage index must be text-raw index.</p>
  * 
  * @author Leonid Boytsov
  *
@@ -65,16 +61,19 @@ public class AnswerBasedQRELGenerator {
   
   public static final class Args {
     @Option(name = "-" + CommonParams.FWDINDEX_PARAM, required = true, usage = CommonParams.FWDINDEX_DESC)
-    String mMemFwdIndex;
+    String mFwdIndexDir;
     
-    @Option(name = "-" + CommonParams.QUERY_FILE_PARAM, required = true, usage = "A query file.")
-    String mQueryFile;
+    @Option(name = "-" + CommonParams.QUERY_FILE_PREFIX_PARAM, required = true, usage = "A query file.")
+    String mQueryFilePrefix;
 
     @Option(name = "-" + CommonParams.MAX_NUM_QUERY_PARAM, usage = CommonParams.MAX_NUM_QUERY_DESC)
     int mMaxNumQuery = Integer.MAX_VALUE;
     
     @Option(name = "-" + CommonParams.FIELD_NAME_PARAM, usage = "The field whose text we use to find answers")
-    String mFieldName = Const.TEXT_FIELD_NAME;
+    String mFieldName;
+    
+    @Option(name = "-" + CommonParams.COLLECTION_DIR_PARAM, usage = CommonParams.COLLECTION_DIR_DESC)
+    String mCollectDir;
     
     @Option(name = "-" + CommonParams.PROVIDER_URI_PARAM, required = true, usage = CommonParams.PROVIDER_URI_DESC)
     String mCandProviderURI;
@@ -88,8 +87,8 @@ public class AnswerBasedQRELGenerator {
     @Option(name = "-" + CommonParams.OUTPUT_FILE_PARAM, required = true, usage = CommonParams.OUTPUT_FILE_DESC)
     String mOutFile;
     
-    @Option(name = "-" + CommonParams.MAX_CAND_QTY_PARAM, required = true, usage = CommonParams.MAX_CAND_QTY_DESC)
-    int mCandQty;
+    @Option(name = "-" + CommonParams.MAX_CAND_PROV_QTY_PARAM, required = true, usage = CommonParams.MAX_CAND_PROV_QTY_DESC)
+    int mCandProvQty;
     
     @Option(name = "-" +  CommonParams.THREAD_QTY_PARAM, usage =  CommonParams.THREAD_QTY_DESC)
     int mThreadQty = 1;
@@ -118,36 +117,37 @@ public class AnswerBasedQRELGenerator {
       logger.info("Candidate provider type: " + args.mCandProviderType + " URI: " + args.mCandProviderURI + " config: " + args.mCandProviderConfigName);
       logger.info("Number of threads: " + args.mThreadQty);
       
-      FeatExtrResourceManager resourceManager = new FeatExtrResourceManager(args.mMemFwdIndex, null, null);
+      ResourceManager resourceManager = new ResourceManager(args.mCollectDir, args.mFwdIndexDir, null, null);
       ForwardIndex fwdIndexText = resourceManager.getFwdIndex(args.mFieldName);
+      
+      if (!fwdIndexText.isTextRaw()) {
+        System.out.println("The answer-based QREL-generator works only with raw text indices!");
+        System.exit(1);
+      }
       
       CandidateProvider  [] candProviders = new CandidateProvider[args.mThreadQty];
       
-      candProviders = CandidateProvider.createCandProviders(resourceManager, 
-                                                            args.mCandProviderType, 
+      candProviders = resourceManager.createCandProviders(args.mCandProviderType, 
                                                             args.mCandProviderURI, 
-                                                            args.mCandProviderConfigName, args.mThreadQty);    
+                                                            args.mCandProviderConfigName, 
+                                                            args.mThreadQty);    
       if (candProviders == null) {
         System.err.println("Wrong candidate record provider type: '" + args.mCandProviderType + "'");
         parser.printUsage(System.err);
         System.exit(1);
       }
       
-      DataEntryReader inp = new DataEntryReader(args.mQueryFile);
-      ExtendedIndexEntry inpEntry = null;
+      ArrayList<DataEntryFields> queryArr = DataEntryReader.readParallelQueryData(args.mQueryFilePrefix);
 
       AnswBasedQRELGenWorker[] workers = new AnswBasedQRELGenWorker[args.mThreadQty];
       
       for (int i = 0; i < args.mThreadQty; ++i) {
-        workers[i] = new AnswBasedQRELGenWorker(candProviders[i], args.mFieldName, fwdIndexText, args.mCandQty); 
+        workers[i] = new AnswBasedQRELGenWorker(candProviders[i], args.mFieldName, fwdIndexText, args.mCandProvQty); 
       }
       
-      for (int queryQty = 0; 
-          ((inpEntry = inp.readNextExt()) != null) && queryQty < args.mMaxNumQuery; 
-          ++queryQty) {
-        workers[queryQty % args.mThreadQty].addQuery(inpEntry, queryQty);
+      for (int qnum = 0; qnum < Math.min(queryArr.size(), args.mMaxNumQuery); ++qnum) {
+        workers[qnum % args.mThreadQty].addQuery(queryArr.get(qnum), qnum);
       }    
-      inp.close();
       
       logger.info("Finished loading queries!");
         
@@ -205,7 +205,7 @@ class AnswBasedQRELGenWorker extends Thread {
     mCandQty = candQty;
   }
   
-  public void addQuery(ExtendedIndexEntry e, int queryId) {
+  public void addQuery(DataEntryFields e, int queryId) {
     mQueries.add(e);
     mQueryIds.add(queryId);
   }
@@ -217,17 +217,16 @@ class AnswBasedQRELGenWorker extends Thread {
       ArrayList<String> relDocIds = new ArrayList<String>();
       
       for (int eid = 0; eid < mQueries.size(); ++eid) {
-        ExtendedIndexEntry inpEntry = mQueries.get(eid);     
-        Map<String, String> queryFields = inpEntry.mStringDict;        
+        DataEntryFields queryFields = mQueries.get(eid);         
         
-        String queryId = queryFields.get(Const.TAG_DOCNO);
+        String queryId = queryFields.mEntryId;
         
         if (queryId == null || queryId.isEmpty()) {
-          logger.info("Query " + mQueryIds.get(eid) + " no field: " + Const.TAG_DOCNO + ", ignoring.");
+          logger.info("Query ID: " + mQueryIds.get(eid) + " has no entry ID ignoring.");
           continue;
         }
         
-        String queryFieldText = queryFields.get(mFieldName);
+        String queryFieldText = queryFields.getString(mFieldName);
         if (queryFieldText == null) {
           queryFieldText = "";
         }
@@ -239,8 +238,8 @@ class AnswBasedQRELGenWorker extends Thread {
 
         CandidateInfo cands = mCandProvider.getCandidates(mQueryIds.get(eid), queryFields, mCandQty);
         
-        ArrayList<String> answList = inpEntry.mStringArrDict.get(Const.ANSWER_LIST_FIELD_NAME);
-        if (answList == null || answList.isEmpty()) {
+        String[] answList = queryFields.getStringArray(Const.ANSWER_LIST_FIELD_NAME);
+        if (answList == null || answList.length == 0) {
           logger.info("Query " + queryId + " has no answers, ignoring.");
           continue;
         }
@@ -248,12 +247,12 @@ class AnswBasedQRELGenWorker extends Thread {
         relDocIds.clear();
 
         for (CandidateEntry e : cands.mEntries) {
-          String text = mFwdIndex.getDocEntryParsedText(e.mDocId);
+          String text = mFwdIndex.getDocEntryTextRaw(e.mDocId);
           if (text == null) {
             logger.warn("No text for doc: " + e.mDocId + 
                         " did you create a positional forward index for the field " + mFieldName);
           }
-          text = " " + text.trim().toLowerCase() + " "; // adding sentinels
+          text = text.trim().toLowerCase();
           boolean hasAnsw = false; 
           for (String answ : answList) {
             if (answ == null) continue;
@@ -283,7 +282,7 @@ class AnswBasedQRELGenWorker extends Thread {
   final String mFieldName;
   final ForwardIndex mFwdIndex;
   final int mCandQty;
-  final ArrayList<ExtendedIndexEntry> mQueries = new ArrayList<ExtendedIndexEntry>();
+  final ArrayList<DataEntryFields> mQueries = new ArrayList<DataEntryFields>();
   final ArrayList<Integer> mQueryIds = new ArrayList<Integer>();
   boolean mFail = false;
 }

@@ -13,11 +13,12 @@ threadQty=1
 hardNegQty=0
 sampleMedNegQty=5
 sampleEasyNegQty=0
-candTrainQty=500
+candTrainQty=100
+candTrain4PosQty=1000
 candTestQty=20
 randSeed=0
 maxDocWhitespaceQty=-1 # means no truncation
-queryFieldName=""
+queryExportFieldName=""
 candProv=$CAND_PROV_LUCENE
 providerURI=""
 candProvAddConf=""
@@ -34,11 +35,12 @@ paramOpts=(
 "cand_prov_uri"          "providerURI"         "Provider URI: an index location, a query server address, etc"
 "cand_prov_add_conf"     "candProvAddConf"     "JSON with additional candidate provider parameters"
 "out_subdir"             "outSubdir"           "output sub-directory (default $outSubdir)"
-"query_field"            "queryFieldName"      "an optional query field name (if different from the index field name)"
+"query_export_field"     "queryExportFieldName" "an optional name of the query field name whose content we export (if different from the index field name)"
 "hard_neg_qty"           "hardNegQty"          "A max. # of *HARD* negative examples (all K top-score candidates) per query (default $hardNegQty)"
 "sample_med_neg_qty"     "sampleMedNegQty"     "A max. # of *MEDIUM* negative samples (negative candidate and QREL samples) per query (default $sampleMedNegQty)"
 "sample_easy_neg_qty"    "sampleEasyNegQty"    "A max. # of *EASY* negative samples (sampling arbitrary docs) per query (default $sampleEasyNegQty)"
-"cand_train_qty"         "candTrainQty"        "A max. # of candidate records to generate training data (default $candTrainQty)"
+"cand_train_qty"         "candTrainQty"        "A max. # of candidate records from which we sample medium negatives (default $candTrainQty)"
+"cand_train_4pos_qty"    "candTrain4PosQty"    "A max. # of candidate records from which we select positive samples. (default $candTrain4PosQty)"
 "cand_test_qty"          "candTestQty"         "A max. # of candidate records to generate test data (default $candTestQty)"
 "max_num_query_train"    "maxNumQueryTrain"    "Optional max. # of train queries"
 "max_num_query_test"     "maxNumQueryTest"     "Optional max. # of test/dev queries"
@@ -71,13 +73,13 @@ if [ "$collect" = "" ] ; then
   exit 1
 fi
 
-indexFieldName=${posArgs[1]}
-if [ "$indexFieldName" = "" ] ; then
-  genUsage "$usageMain" "Specify the name of the index field (2d arg)"
+indexExportFieldName=${posArgs[1]}
+if [ "$indexExportFieldName" = "" ] ; then
+  genUsage "$usageMain" "Specify the name of the exported index field (2d arg)"
   exit 1
 fi
-if [ "$queryFieldName" = "" ] ; then
-  queryFieldName="$indexFieldName"
+if [ "$queryExportFieldName" = "" ] ; then
+  queryFieldName="$queryExportFieldName"
 fi
 
 partTrain=${posArgs[2]}
@@ -96,21 +98,22 @@ fi
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "EMBED_SUBDIR"
-checkVarNonEmpty "GIZA_SUBDIR"
+checkVarNonEmpty "MODEL1_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-checkVarNonEmpty "QUERY_FIELD_NAME"
 checkVarNonEmpty "QREL_FILE"
 
-inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
-fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
-embedDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
-gizaRootDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$GIZA_SUBDIR"
+collectDir="$COLLECT_ROOT/$collect"
+inputDataDir="$collectDir/$INPUT_DATA_SUBDIR"
+fwdIndexDir="$FWD_INDEX_SUBDIR/"
+embedDir="$DERIVED_DATA_SUBDIR/$EMBED_SUBDIR/"
+model1Dir="$DERIVED_DATA_SUBDIR/$MODEL1_SUBDIR"
 
 commonResourceParams="\
--fwd_index_dir \"$fwdIndexDir\" \
--embed_dir \"$embedDir\" \
--giza_root_dir \"$gizaRootDir\" "
+-collect_dir $collectDir  \
+-fwd_index_dir $fwdIndexDir \
+-embed_dir $embedDir \
+-model1_dir $model1Dir "
 
 if [ "$providerURI" = "" ] ; then
   if [ "$candProv" = "$CAND_PROV_LUCENE" ] ; then
@@ -121,15 +124,10 @@ if [ "$providerURI" = "" ] ; then
   fi
 fi
 
-# All provider URIs except for NMSLIB are relative to the collection location
-if [ "$candProv" != "$CAND_PROV_NMSLIB" ] ; then
-  providerURI="$COLLECT_ROOT/$collect/$providerURI"
-fi
-
 candProvParams=" -cand_prov \"$candProv\" -u \"$providerURI\" "
 if [ "$candProvAddConf" != "" ] ; then
   # Additional config is collection-location relative
-  candProvParams="$candProvParams -cand_prov_add_conf \"$COLLECT_ROOT/$collect/$candProvAddConf\""
+  candProvParams="$candProvParams -cand_prov_add_conf \"$candProvAddConf\""
 fi
 
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$outSubdir/$indexFieldName"
@@ -143,14 +141,19 @@ if [ "$keepCase" = "1" ] ; then
   handleCaseParam=" -keep_case "
 fi
 
+if [ "$queryExportFieldName" = "" ] ; then
+  queryExportFieldName="$indexExportFieldName"
+fi
+
 echo "========================================================"
+echo "Collection directory:      $collectDir"
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
 echo "Random seed: $randSeed"
 echo "Output directory: $outDir"
 echo "# of threads: $threadQty"
-echo "Index field: $indexFieldName"
-echo "Query field: $queryFieldName"
+echo "Index export field: $indexExportFieldName"
+echo "Query export field: $queryExportFieldName"
 echo "Candidate provider parameters: $candProvParams"
 echo "Resource parameters: $commonResourceParams"
 echo "A # of hard/medium/easy samples per query: $hardNegQty/$sampleMedNegQty/$sampleEasyNegQty"

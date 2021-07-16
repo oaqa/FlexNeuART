@@ -20,10 +20,13 @@ import java.util.Map;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.CosineTextSimilarity;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TFIDFSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
@@ -36,7 +39,7 @@ import no.uib.cipr.matrix.DenseVector;
 public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  {
   public static String EXTR_TYPE = "TFIDFSimilarity";
   
-  FeatExtrTFIDFSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrTFIDFSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
     String similType = conf.getReqParamStr(CommonParams.SIMIL_TYPE);
@@ -74,8 +77,8 @@ public class FeatExtrTFIDFSimilarity extends SingleFieldInnerProdFeatExtractor  
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+    return getSimpleFeatures(EXTR_TYPE, cands, queryFields, mFieldIndex, mSimilObjs);
   }
   
   @Override

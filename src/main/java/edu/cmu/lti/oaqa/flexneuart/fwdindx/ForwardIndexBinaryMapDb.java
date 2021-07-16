@@ -21,6 +21,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 
@@ -33,6 +35,8 @@ import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
  *
  */
 public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
+  
+  private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryMapDb.class);
   
   public static final int COMMIT_INTERV = 1000000;
   public static final int MEM_ALLOCATE_INCREMENT = 1024*1024*256; // Allocating memory in 256 MB chunks
@@ -68,13 +72,13 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
     mDbMap.put(docId, binDoc);
     
     if (mDocIds.size() % COMMIT_INTERV == 0) {
-      System.out.println("Committing");
+      logger.info("Committing");
       mDb.commit();
     }
   }
   
   @Override
-  public String getDocEntryRaw(String docId) throws Exception {
+  public String getDocEntryTextRaw(String docId) throws Exception {
     byte[] zippedStr =  mDbMap.get(docId);
     if (zippedStr != null) {
       return CompressUtils.decomprStr(zippedStr);
@@ -83,14 +87,30 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   }
 
   @Override
-  protected void addDocEntryRaw(String docId, String docText) throws IOException {
+  protected void addDocEntryTextRaw(String docId, String docText) throws IOException {
     mDocIds.add(docId);
     mDbMap.put(docId, CompressUtils.comprStr(docText));
 
     if (mDocIds.size() % COMMIT_INTERV == 0) {
-      System.out.println("Committing");
+      logger.info("Committing");
       mDb.commit();
     }    
+  }
+  
+  @Override
+  public byte[] getDocEntryBinary(String docId) throws Exception {
+    return mDbMap.get(docId);
+  }
+
+  @Override
+  protected void addDocEntryBinary(String docId, byte[] docBin) throws IOException {
+    mDocIds.add(docId);
+    mDbMap.put(docId, docBin);
+
+    if (mDocIds.size() % COMMIT_INTERV == 0) {
+      logger.info("Committing");
+      mDb.commit();
+    }  
   }
   
   @Override
@@ -98,10 +118,10 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
     readHeaderAndDocIds();
     
     // Note that we disable file locking and concurrence to enable accessing the file by different programs at the same time
-    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).concurrencyDisable().fileLockDisable().closeOnJvmShutdown().fileMmapEnable().make();
+    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).concurrencyDisable().fileLockDisable().closeOnJvmShutdown().fileMmapEnable().readOnly().make();
     mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).open();
     
-    System.out.println("Finished loading context from file: " + mBinFile);
+    logger.info("Finished loading context from file: " + mBinFile);
   }
 
   @Override

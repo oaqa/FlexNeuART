@@ -8,8 +8,9 @@ checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "DEFAULT_TRAIN_SUBDIR"
+checkVarNonEmpty "DEFAULT_QUERY_FIELD_NAME"
 checkVarNonEmpty "DEV1_SUBDIR"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 checkVarNonEmpty "QREL_FILE"
 
 boolOpts=("h" "help" "print help")
@@ -18,10 +19,12 @@ usageMain="<collection> <token field name> <train part>"
 
 partDev=""
 minRelGrade="1"
+queryFieldName="$DEFAULT_QUERY_FIELD_NAME"
 
 paramOpts=(
 "part_dev"               "partDev"             "development data sub-directory (optional)"
 "part_test"              "partTest"            "test data sub-directory (optional)"
+"query_field_name"       "queryFieldName"      "the name of the query field"
 "min_rel_grade"          "minRelGrade"         "minimum grade of a relevant document (default $minRelGrade)"
 )
 
@@ -71,8 +74,8 @@ partArr=($partTrain $partDev $partTest)
 
 for part in ${partArr[*]} ; do
   inpDir="$colRoot/$INPUT_DATA_SUBDIR/$part/"
-  questFile="$inpDir/$QUESTION_FILE"
-  inf1=$(scripts/report/count_toks.py --input $questFile --field $QUERY_FIELD_NAME)
+  questFile="$inpDir/$QUESTION_FILE_JSONL"
+  inf1=$(scripts/report/count_toks.py --input $questFile --field $queryFieldName)
   dummy=' ' read -r -a tokQtys1 <<< "$inf1"
 
   queryQty=${tokQtys1[0]}

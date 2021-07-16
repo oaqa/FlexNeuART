@@ -6,8 +6,7 @@ source scripts/config.sh
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "INPUT_RAW_SUBDIR"
-checkVarNonEmpty "ANSWER_FILE"
-checkVarNonEmpty "QUESTION_FILE"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
 collect=$1
@@ -24,7 +23,7 @@ python -u scripts/data_convert/msmarco/concatenate_datasets.py \
 
 
 for inpSubDir in "${COLLECT_ROOT}/${collect}/${INPUT_DATA_SUBDIR}/"/* ; do
-    questFilePath="${inpSubDir}/${QUESTION_FILE}"
+    questFilePath="${inpSubDir}/${QUESTION_FILE_JSONL}"
     echo "Checking existence of the file: $questFilePath"
     # Produce annotations for all available files
     if [ -f "${questFilePath}" ] ;

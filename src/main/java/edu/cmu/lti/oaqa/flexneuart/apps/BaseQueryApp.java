@@ -31,15 +31,14 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 
+import ciir.umass.edu.learning.Ranker;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.*;
-import edu.cmu.lti.oaqa.flexneuart.letor.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatureExtractor;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.QrelReader;
-import ciir.umass.edu.learning.*;
 
 
 class BaseProcessingUnit {
@@ -51,31 +50,17 @@ class BaseProcessingUnit {
   }  
   
   public void procQuery(CandidateProvider candProvider, int queryNum) throws Exception {
-    Map<String, String>    queryFields = mAppRef.mParsedQueries.get(queryNum);
+    DataEntryFields    queryFields = mAppRef.mQueries.get(queryNum);
 
-    String queryId = queryFields.get(Const.TAG_DOCNO);
+    String queryId = queryFields.mEntryId;
             
     // 2. Obtain results
     long start = System.currentTimeMillis();
     
     CandidateInfo qres = null;
     
-    if (mAppRef.mResultCache != null) 
-      qres = mAppRef.mResultCache.getCacheEntry(queryId);
     if (qres == null) {            
-
-      String text = queryFields.get(Const.TEXT_FIELD_NAME);
-      if (text != null) {
-        // This was a workaround for a pesky problem: didn't previously notice that the string
-        // n't (obtained by tokenization of can't is indexed. Querying using this word
-        // add a non-negligible overhead (although this doesn't affect overall accuracy)
-        // However, we believe data processing scripts should now always remove these extra stop-words
-        //queryFields.put(Const.TEXT_FIELD_NAME, CandidateProvider.removeAddStopwords(text));
-        queryFields.put(Const.TEXT_FIELD_NAME, text);
-      }
       qres = candProvider.getCandidates(queryNum, queryFields, mAppRef.mMaxCandRet);
-      if (mAppRef.mResultCache != null) 
-        mAppRef.mResultCache.addOrReplaceCacheEntry(queryId, qres);
     }
     CandidateEntry [] cands = qres.mEntries;
     // Let's re-rank candidates just in case the candidate provider fails to retrieve entries in the right order
@@ -156,13 +141,11 @@ class BaseProcessingUnit {
     }
     
     Ranker modelFinal = mAppRef.mModelFinal;
+    // If -max_final_rerank_qty is not specified, we re-rank all candidates even if we 
+    // have to return fewer than that (as defined by mMaxNumRet). 
     int rerankQty = Math.min(cands.length, mAppRef.mMaxFinalRerankQty);
     // 5. If the final re-ranking model is specified, let's re-rank again and save all the results
     if (mAppRef.mExtrFinal!= null && rerankQty > 0 && cands.length > 0) {
-      
-      if (cands.length > maxNumRet) {
-        throw new RuntimeException("Bug or you are using old/different cache: cands.size()=" + cands.length + " > maxNumRet=" + maxNumRet);
-      }
       // Compute features once for all documents using a final re-ranker.
       // Note, however, we might choose to re-rank only top candidates not all of them
       
@@ -226,8 +209,9 @@ class BaseProcessingUnit {
       end = System.currentTimeMillis();
       long rerankFinalTimeMS = end - start;
       mAppRef.logger.info(
-          String.format("Final-feature generation & re-ranking for the query # %d queryId='%s', final. reranking took %d ms", 
-                        queryNum, queryId, rerankFinalTimeMS));
+          String.format("Final feature generation & re-ranking for the query # %d queryId='%s', " + 
+                        "final. reranking took %d ms for %d entries", 
+                        queryNum, queryId, rerankFinalTimeMS, rerankQty));
       mAppRef.mFinalRerankTimeStat.addValue(rerankFinalTimeMS);                        
     }
     
@@ -322,7 +306,7 @@ class BaseQueryAppProcessingThread extends Thread  {
       
       CandidateProvider candProvider = mProcUnit.mAppRef.mCandProviders[mThreadId];
 
-      for (int iq = 0; iq < mProcUnit.mAppRef.mParsedQueries.size(); ++iq)
+      for (int iq = 0; iq < Math.min(mProcUnit.mAppRef.mMaxNumQuery, mProcUnit.mAppRef.mQueries.size()); ++iq)
         if (iq % mThreadQty == mThreadId) 
           mProcUnit.procQuery(candProvider, iq);
       
@@ -379,9 +363,8 @@ public abstract class BaseQueryApp {
    *              an ID of the run
    * @param   queryId
    *              a query ID
-   * @param   docFields
-   *              a map, where keys are field names, while values represent
-   *              values of indexable fields.
+   * @param   queryFields
+   *              a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
    * @param   scoredDocs
    *              a list of scored document entries
    * @param   numRet
@@ -393,7 +376,7 @@ public abstract class BaseQueryApp {
   abstract void procResults(
       String                              runId,
       String                              queryId,
-      Map<String, String>                 docFields, 
+      DataEntryFields                           queryFields, 
       CandidateEntry[]                    scoredDocs,
       int                                 numRet,
       @Nullable Map<String, DenseVector>  docFeats
@@ -442,8 +425,7 @@ public abstract class BaseQueryApp {
     
     mOptions.addOption(CommonParams.RUN_ID_PARAM,              null, true, CommonParams.RUN_ID_DESC);
     
-    mOptions.addOption(CommonParams.QUERY_CACHE_FILE_PARAM,    null, true, CommonParams.QUERY_CACHE_FILE_DESC);
-    mOptions.addOption(CommonParams.QUERY_FILE_PARAM,          null, true, CommonParams.QUERY_FILE_DESC);
+    mOptions.addOption(CommonParams.QUERY_FILE_PREFIX_PARAM,   null, true, CommonParams.QUERY_FILE_PREFIX_DESC);
     mOptions.addOption(CommonParams.MAX_NUM_RESULTS_PARAM,     null, true, mMultNumRetr ? 
                                                                              CommonParams.MAX_NUM_RESULTS_DESC : 
                                                                              "A number of candidate records (per-query)");
@@ -465,9 +447,10 @@ public abstract class BaseQueryApp {
    * 
    */
   void addResourceOpts() {    
+    mOptions.addOption(CommonParams.COLLECTION_DIR_PARAM,      null, true,  CommonParams.COLLECTION_DIR_DESC);
     mOptions.addOption(CommonParams.FWDINDEX_PARAM,            null, true,  CommonParams.FWDINDEX_DESC);    
-    mOptions.addOption(CommonParams.GIZA_ROOT_DIR_PARAM,       null, true,  CommonParams.GIZA_ROOT_DIR_DESC);
-    mOptions.addOption(CommonParams.EMBED_DIR_PARAM,           null, true,  CommonParams.EMBED_DIR_DESC);         
+    mOptions.addOption(CommonParams.MODEL1_ROOT_DIR_PARAM,     null, true,  CommonParams.MODEL1_ROOT_DIR_DESC);
+    mOptions.addOption(CommonParams.EMBED_ROOT_DIR_PARAM,      null, true,  CommonParams.EMBED_ROOT_DIR_DESC);         
   }
   
   /**
@@ -483,12 +466,13 @@ public abstract class BaseQueryApp {
     
     if (mUseIntermModel) {
       mOptions.addOption(CommonParams.MODEL_FILE_INTERM_PARAM, null, true, CommonParams.MODEL_FILE_INTERM_DESC);
-      mOptions.addOption(CommonParams.MAX_CAND_QTY_PARAM,      null, true, CommonParams.MAX_CAND_QTY_DESC);
+
     }
     if (mUseFinalModel) {
       mOptions.addOption(CommonParams.MODEL_FILE_FINAL_PARAM,  null, true, CommonParams.MODEL_FILE_FINAL_DESC);
-    }
-    mOptions.addOption(CommonParams.MAX_FINAL_RERANK_QTY_PARAM, null, true, CommonParams.MAX_CAND_QTY_DESC);
+    }      
+    mOptions.addOption(CommonParams.MAX_CAND_PROV_QTY_PARAM,      null, true, CommonParams.MAX_CAND_PROV_QTY_DESC);
+    mOptions.addOption(CommonParams.MAX_FINAL_RERANK_QTY_PARAM, null, true, CommonParams.MAX_FINAL_RERANK_QTY_DESC);
   }
   
   /**
@@ -502,16 +486,16 @@ public abstract class BaseQueryApp {
       mCandProviderType = CandidateProvider.CAND_TYPE_LUCENE;
     else { 
       mCandProviderType = mCmd.getOptionValue(CommonParams.CAND_PROVID_PARAM);
-      if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_DESC);
+      if (null == mCandProviderType) showUsageSpecify(CommonParams.CAND_PROVID_PARAM);
     }
     mCandProviderConfigName = mCmd.getOptionValue(CommonParams.CAND_PROVID_ADD_CONF_PARAM);
     mRunId = mCmd.getOptionValue(CommonParams.RUN_ID_PARAM);
     if (mRunId == null) showUsageSpecify(CommonParams.RUN_ID_PARAM);
     
     mProviderURI = mCmd.getOptionValue(CommonParams.PROVIDER_URI_PARAM);
-    if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_DESC);              
-    mQueryFile = mCmd.getOptionValue(CommonParams.QUERY_FILE_PARAM);
-    if (null == mQueryFile) showUsageSpecify(CommonParams.QUERY_FILE_DESC);
+    if (null == mProviderURI) showUsageSpecify(CommonParams.PROVIDER_URI_PARAM);              
+    mQueryFilePrefix = mCmd.getOptionValue(CommonParams.QUERY_FILE_PREFIX_PARAM);
+    if (null == mQueryFilePrefix) showUsageSpecify(CommonParams.QUERY_FILE_PREFIX_PARAM);
     {
       String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_QUERY_PARAM);
       if (tmpn != null) {
@@ -524,7 +508,7 @@ public abstract class BaseQueryApp {
     }
     {
       String tmpn = mCmd.getOptionValue(CommonParams.MAX_NUM_RESULTS_PARAM);
-      if (null == tmpn) showUsageSpecify(CommonParams.MAX_NUM_RESULTS_DESC);
+      if (null == tmpn) showUsageSpecify(CommonParams.MAX_NUM_RESULTS_PARAM);
       
       // mMaxNumRet must be init before mMaxCandRet
       mMaxNumRet = Integer.MIN_VALUE;
@@ -556,16 +540,33 @@ public abstract class BaseQueryApp {
         } 
       }
     }
-    
-    if (mResultCacheName != null) logger.info("Cache file name: " + mResultCacheName);
 
-    mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
+    // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce,
+    // which is initialized above
+    mMaxCandRet = mMaxNumRet; 
+    {
+      String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_PROV_QTY_PARAM);
+      if (null == tmpn)
+        showUsageSpecify(CommonParams.MAX_CAND_PROV_QTY_PARAM);
+      try {
+        mMaxCandRet = Integer.parseInt(tmpn);
+        if (mMaxCandRet < mMaxNumRet)
+          mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
+      } catch (NumberFormatException e) {
+        showUsage("The value of '" + CommonParams.MAX_CAND_PROV_QTY_PARAM + "' isn't integer: '" + tmpn + "'");
+      }
+    }
     
     logger.info(
         String.format(
-            "Candidate provider type: %s URI: %s Query file: %s Max. # of queries: %d # of cand. records: %d Max. # to re-rank w/ final re-ranker: %d", 
-        mCandProviderType, mProviderURI, mQueryFile, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
-    mResultCacheName = mCmd.getOptionValue(CommonParams.QUERY_CACHE_FILE_PARAM);
+            "Candidate provider information:\n" + 
+            "type: %s URI: %s\n" +
+            "query file prefix: %s\n" + 
+            "Max. # of queries: %d\n"+
+            "# of cand. records: %d\n" + 
+            "Max. # of records to re-rank using the final re-ranker: %d", 
+        mCandProviderType, mProviderURI, mQueryFilePrefix, mMaxNumQuery, mMaxCandRet, mMaxFinalRerankQty));
+
     logger.info("An array of number of entries to retrieve:");
     for (int topk : mNumRetArr) {
       logger.info("" + topk);
@@ -588,50 +589,16 @@ public abstract class BaseQueryApp {
     }
     logger.info(String.format("Number of threads: %d", mThreadQty));
 
-    mGizaRootDir = mCmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
-    mEmbedDir = mCmd.getOptionValue(CommonParams.EMBED_DIR_PARAM);
+    mCollectDir = mCmd.getOptionValue(CommonParams.COLLECTION_DIR_PARAM);
+    
+    mModel1RootDir = mCmd.getOptionValue(CommonParams.MODEL1_ROOT_DIR_PARAM);
+    mEmbedRootDir = mCmd.getOptionValue(CommonParams.EMBED_ROOT_DIR_PARAM);
     
     mUseThreadPool = mCmd.hasOption(CommonParams.USE_THREAD_POOL_PARAM);
 
     mFwdIndexPref = mCmd.getOptionValue(CommonParams.FWDINDEX_PARAM);
     mExtrTypeInterm = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_INTERM_PARAM);
-    if (mExtrTypeInterm != null) {
-      String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_INTERM_PARAM);
-      if (null == modelFile) 
-        showUsageSpecify(CommonParams.MODEL_FILE_INTERM_PARAM);
-      mMaxCandRet = mMaxNumRet; // if the user doesn't specify the # of candidates, it's set to the maximum # of answers to produce
-      mModelInterm = FeatureExtractor.readFeatureWeights(modelFile);
-      {
-        String tmpn = mCmd.getOptionValue(CommonParams.MAX_CAND_QTY_PARAM);
-        if (null == tmpn)
-          showUsageSpecify(CommonParams.MAX_CAND_QTY_DESC);
-        try {
-          mMaxCandRet = Integer.parseInt(tmpn);
-          if (mMaxCandRet < mMaxNumRet)
-            mMaxCandRet = mMaxNumRet; // The number of candidate records can't be < the the # of records we need to retrieve
-        } catch (NumberFormatException e) {
-          showUsage("The value of '" + CommonParams.MAX_CAND_QTY_DESC + "' isn't integer: '" + tmpn + "'");
-        }
-      }
-
-      logger.info("Using the following weights for the intermediate re-ranker:");
-      logger.info(mModelInterm.toString());
-    }
     mExtrTypeFinal = mCmd.getOptionValue(CommonParams.EXTRACTOR_TYPE_FINAL_PARAM);
-    if (mExtrTypeFinal != null) {
-      if (mUseFinalModel) {
-        String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_FINAL_PARAM);
-        if (null == modelFile) 
-          showUsageSpecify(CommonParams.MODEL_FILE_FINAL_PARAM);
-        RankerFactory rf = new RankerFactory();
-        File tmp = new File(modelFile);
-        if (!tmp.exists()) {
-          throw new Exception(String.format("Model file does not exist: %s", modelFile));
-        }
-        mModelFinal = rf.loadRankerFromFile(modelFile);
-        logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
-      }
-    }
 
     mSaveStatFile = mCmd.getOptionValue(CommonParams.SAVE_STAT_FILE_PARAM);
     if (mSaveStatFile != null)
@@ -644,13 +611,31 @@ public abstract class BaseQueryApp {
    * @throws Exception 
    */
   void initExtractors() throws Exception {
-    mResourceManager = new FeatExtrResourceManager(mFwdIndexPref, mGizaRootDir, mEmbedDir);
+    mResourceManager = new ResourceManager(mCollectDir, mFwdIndexPref, mModel1RootDir, mEmbedRootDir);
 
-    if (mExtrTypeFinal != null)
-      mExtrFinal = new CompositeFeatureExtractor(mResourceManager, mExtrTypeFinal);
-    if (mExtrTypeInterm != null)
-      mExtrInterm = new CompositeFeatureExtractor(mResourceManager, mExtrTypeInterm);
+    if (mExtrTypeInterm != null) {
+      mExtrInterm = mResourceManager.getFeatureExtractor(mExtrTypeInterm);
+      
+      String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_INTERM_PARAM);
+      if (null == modelFile) 
+        showUsageSpecify(CommonParams.MODEL_FILE_INTERM_PARAM);
+   
+      mModelInterm = mResourceManager.readFeatureWeights(modelFile);
 
+      logger.info("Using the following weights for the intermediate re-ranker:");
+      logger.info(mModelInterm.toString());
+    }
+    
+    if (mExtrTypeFinal != null) {
+      mExtrFinal = mResourceManager.getFeatureExtractor(mExtrTypeFinal);
+      
+      if (mUseFinalModel) {
+        String modelFile = mCmd.getOptionValue(CommonParams.MODEL_FILE_FINAL_PARAM);
+
+        mModelFinal = mResourceManager.loadRankLibModel(modelFile);
+        logger.info("Loaded the final-stage model from the following file: '" + modelFile + "'");
+      }
+    }
   }
   
   /**
@@ -661,10 +646,9 @@ public abstract class BaseQueryApp {
    * @throws Exception
    */
   void initProvider() throws Exception {
-    mCandProviders = CandidateProvider.createCandProviders(mResourceManager, 
-    														mCandProviderType, 
-    														mProviderURI, 
-    														mCandProviderConfigName, mThreadQty);    
+    mCandProviders = mResourceManager.createCandProviders(mCandProviderType, 
+                              														mProviderURI, 
+                              														mCandProviderConfigName, mThreadQty);    
     if (mCandProviders == null) {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
@@ -694,31 +678,13 @@ public abstract class BaseQueryApp {
       initExtractors();
       // Note that providers must be initialized after resources and extractors are initialized
       // because they may some of the resources (e.g., NMSLIB needs an in-memory feature extractor)
-      initProvider();
+      initProvider();    
+
+      mQueries = DataEntryReader.readParallelQueryData(mQueryFilePrefix);
       
-      if (mResultCacheName != null) {
-        mResultCache = new CandidateInfoCache();
-        // If the cache file name is specified and it exists, read the cache!
-        if (CandidateInfoCache.cacheExists(mResultCacheName)) { 
-          mResultCache.readCache(mResultCacheName);
-          logger.info("Result cache is loaded from '" + mResultCacheName + "'");
-        }
-      }      
+      int queryQty = mQueries.size();
       
-      int queryQty = 0;
-      
-      try (DataEntryReader inp = new DataEntryReader(mQueryFile)) {
-        Map<String, String> queryFields = null;      
-        
-        for (; ((queryFields = inp.readNext()) != null) && queryQty < mMaxNumQuery; ) {
-           
-          mParsedQueries.add(queryFields);
-          ++queryQty;
-          if (queryQty % 1000 == 0) logger.info("Read " + queryQty + " documents from " + mQueryFile);
-        }
-      }
-      
-      logger.info("Read " + queryQty + " documents from " + mQueryFile);
+      logger.info("Read " + queryQty + " queries, query file prefix: " + mQueryFilePrefix);
       
       init();
           
@@ -726,7 +692,7 @@ public abstract class BaseQueryApp {
         ExecutorService executor = Executors.newFixedThreadPool(mThreadQty);
         logger.info(String.format("Created a fixed thread pool with %d threads", mThreadQty));
         
-        for (int iq = 0; iq < mParsedQueries.size(); ++iq) {
+        for (int iq = 0; iq < Math.min(mMaxNumQuery, mQueries.size()); ++iq) {
           executor.execute(new BaseQueryAppProcessingWorker(this, iq));
         }                  
        
@@ -775,12 +741,6 @@ public abstract class BaseQueryApp {
         f.close();
       }
       
-      // Overwrite cache only if it doesn't exist or is incomplete
-      if (mResultCacheName != null && !CandidateInfoCache.cacheExists(mResultCacheName)) {
-        mResultCache.writeCache(mResultCacheName);
-        logger.info("Result cache is loaded from '" + mResultCacheName + "'");        
-      }
-      
     } catch (ParseException e) {
       showUsageSpecify("Cannot parse arguments: " + e);
     } catch(Exception e) {
@@ -794,7 +754,7 @@ public abstract class BaseQueryApp {
   
   String       mRunId;
   String       mProviderURI;
-  String       mQueryFile;
+  String       mQueryFilePrefix;
   Integer      mMaxCandRet;
   int          mMaxFinalRerankQty = Integer.MAX_VALUE;
   Integer      mMaxNumRet;
@@ -805,9 +765,10 @@ public abstract class BaseQueryApp {
   String       mQrelFile;
   QrelReader   mQrels;
   int          mThreadQty = 1;
-  String       mSaveStatFile;     
-  String       mGizaRootDir;
-  String       mEmbedDir;
+  String       mSaveStatFile;    
+  String       mCollectDir; // collection top-level (sub) directory
+  String       mModel1RootDir;
+  String       mEmbedRootDir;
   String       mFwdIndexPref;
   String       mExtrTypeFinal;
   String       mExtrTypeInterm;
@@ -815,10 +776,7 @@ public abstract class BaseQueryApp {
   Ranker       mModelFinal;
   boolean      mKnnInterleave = false;
   boolean      mUseThreadPool = false;
-  FeatExtrResourceManager mResourceManager;
-  
-  String             mResultCacheName = null; 
-  CandidateInfoCache mResultCache = null;
+  ResourceManager mResourceManager;
   
   FeatureExtractor mExtrInterm;
   FeatureExtractor mExtrFinal;
@@ -844,5 +802,5 @@ public abstract class BaseQueryApp {
   SynchronizedSummaryStatistics mFinalRerankTimeStat  = new SynchronizedSummaryStatistics();
   SynchronizedSummaryStatistics mNumRetStat           = new SynchronizedSummaryStatistics();
   
-  ArrayList<Map<String, String>> mParsedQueries = new ArrayList<Map<String, String>>();      
+  ArrayList<DataEntryFields> mQueries = new ArrayList<DataEntryFields>();      
 }

@@ -19,12 +19,16 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.SDMSimilarityAnserini;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
- * A sequential dependency similarity feature extractor that wraps up
- * Anserini's port of SDM.
+ * A sequential dependency similarity feature extractor that incorporates Anserini's port of SDM.
+ * It was ported to the best of our undersanding: Bugs are possible.
+ * It seems to be a bit worse than our {@link FeatExtrBM25ClosePairSimilarity}. 
  * 
  * @author Leonid Boytsov
  *
@@ -38,7 +42,7 @@ public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
   public static String LAMBDA_O_PARAM = "lambdaO";
 
 
-  public FeatExtrSDMSimilarity(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtrSDMSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
     //String similType = conf.getReqParamStr(FeatExtrConfig.SIMIL_TYPE);
@@ -56,8 +60,8 @@ public class FeatExtrSDMSimilarity extends SingleFieldFeatExtractor {
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData) throws Exception {
-    return getSimpleFeatures(cands, queryData, mFieldIndex, mSimilObjs);
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+    return getSimpleFeatures(EXTR_TYPE, cands, queryFields, mFieldIndex, mSimilObjs);
   }
 
   @Override

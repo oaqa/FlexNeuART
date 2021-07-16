@@ -1,5 +1,21 @@
 #!/usr/bin/env python
-# Convert MSMARCO document collection
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+# Convert MSMARCO documents
+#
 import sys
 import json
 import argparse
@@ -18,7 +34,7 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
 
 
-parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc documents.')
+parser = argparse.ArgumentParser(description='Convert MSMARCO documents.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--output', metavar='output file', help='output file',
@@ -68,9 +84,9 @@ class DocParseWorker:
         title_lemmas, title_unlemm = nlp.proc_text(title)
         body_lemmas, body_unlemm = nlp.proc_text(body)
 
-        text = title_lemmas + ' ' + body_lemmas
+        text = ' '.join([url_lemmas, title_lemmas, body_lemmas])
         text = text.strip()
-        text_raw = (title.strip() + ' ' + body.strip())
+        text_raw = ' '.join([url, title, body])
 
         doc = {DOCID_FIELD: did,
                'url' : url_lemmas,

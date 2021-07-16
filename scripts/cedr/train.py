@@ -22,6 +22,10 @@ sys.path.append('.')
 import scripts.utils as utils
 import scripts.cedr.data as data
 
+from scripts.cedr.data import QUERY_ID_FIELD, DOC_ID_FIELD, CAND_SCORE_FIELD, \
+                                DOC_TOK_FIELD, DOC_MASK_FIELD, \
+                                QUERY_TOK_FIELD, QUERY_MASK_FIELD
+
 from scripts.cedr.model_init_utils import MODEL_PARAM_PREF
 
 import scripts.cedr.model_init_utils as model_init_utils
@@ -38,11 +42,11 @@ from multiprocessing import Barrier
 # 10 minutes should be more than enough while waiting
 # for other processes to reach the same training point
 BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*10
-# However (see comment below) we should wait more before validation completes
-# Let's optimistically assume, it is not longer than two hours, but this
-# might need to be fixed in the future. And a good fix should make validation
-# use all GPUs
-BARRIER_WAIT_VALIDATION_TIMEOUT=60*240
+# However (see comment below) we should wait more before validation completes.
+# Let's some optimisticially assume, it is not longer than 24 hours,
+# This needs to be fixed in the future:
+# A good fix should make validation use all GPUs.
+BARRIER_WAIT_VALIDATION_TIMEOUT=3600 * 24
 
 OPT_SGD='sgd'
 OPT_ADAMW='adamw'
@@ -92,6 +96,7 @@ TrainParams = namedtuple('TrainParams',
                      'batches_per_train_epoch',
                      'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
+                     'cand_score_weight',
                      'backprop_batch_size',
                      'epoch_qty',
                      'save_epoch_snapshots', 'save_last_snapshot_every_k_batch',
@@ -186,13 +191,15 @@ def train_iteration(model, sync_barrier,
     else:
         pbar = None
 
+    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
+
     for record in data.iter_train_pairs(model, train_params.device_name, dataset, train_pairs, train_params.shuffle_train,
                                         qrels, train_params.backprop_batch_size,
                                         train_params.max_query_len, train_params.max_doc_len):
-        scores = model(record['query_tok'],
-                       record['query_mask'],
-                       record['doc_tok'],
-                       record['doc_mask'])
+        scores = model(record[QUERY_TOK_FIELD],
+                       record[QUERY_MASK_FIELD],
+                       record[DOC_TOK_FIELD],
+                       record[DOC_MASK_FIELD]) + record[CAND_SCORE_FIELD] * cand_score_weight
         count = len(record['query_id']) // 2
         scores = scores.reshape(count, 2)
         loss = loss_obj.compute(scores)
@@ -229,7 +236,7 @@ def train_iteration(model, sync_barrier,
                     try:
                         sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
                     except BrokenBarrierError:
-                        raise Exception('A model parameter synchronization timeout!')
+                        raise Exception('A waiting-for-model-parameter-synchronization timeout!')
 
                     avg_model_params(model)
 
@@ -277,7 +284,7 @@ def train_iteration(model, sync_barrier,
         try:
             sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
         except BrokenBarrierError:
-            raise Exception('A model parameter synchronization timeout!')
+            raise Exception('A waiting-for-model-parameter-synchronization (in the end of epoch) timeout!')
 
         avg_model_params(model)
 
@@ -324,6 +331,7 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
     rerank_run = {}
     clean_memory(train_params.device_name)
+    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
     with torch.no_grad(), \
             tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
 
@@ -334,13 +342,14 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
                                                dataset, orig_run,
                                                train_params.batch_size_val,
                                                train_params.max_query_len, train_params.max_doc_len):
-            scores = model(records['query_tok'],
-                           records['query_mask'],
-                           records['doc_tok'],
-                           records['doc_mask'])
-            for qid, did, score in zip(records['query_id'], records['doc_id'], scores):
+            scores = model(records[QUERY_TOK_FIELD],
+                       records[QUERY_MASK_FIELD],
+                       records[DOC_TOK_FIELD],
+                       records[DOC_MASK_FIELD]) + records[CAND_SCORE_FIELD] * cand_score_weight
+
+            for qid, did, score in zip(records[QUERY_ID_FIELD], records[DOC_ID_FIELD], scores):
                 rerank_run.setdefault(qid, {})[did] = score.item()
-            pbar.update(len(records['query_id']))
+            pbar.update(len(records[QUERY_ID_FIELD]))
 
     return rerank_run
 
@@ -500,7 +509,7 @@ def do_train(sync_barrier,
             try:
                 sync_barrier.wait(BARRIER_WAIT_VALIDATION_TIMEOUT)
             except BrokenBarrierError:
-                raise Exception('A model parameter synchronization timeout!')
+                raise Exception('A model validation synchronization timeout!')
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
@@ -578,6 +587,10 @@ def main_cli():
     parser.add_argument('--momentum', metavar='SGD momentum',
                         type=float, default=0.9, help='SGD momentum')
 
+    parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
+                        type=float, default=0.0,
+                        help='a weight of the candidate generator score used to combine it with the model score.')
+
     parser.add_argument('--init_bert_lr', metavar='init BERT learn. rate',
                         type=float, default=0.00005, help='initial learning rate for BERT parameters')
 
@@ -628,10 +641,6 @@ def main_cli():
 
     args = parser.parse_args()
 
-    print(args)
-    utils.sync_out_streams()
-    
-
     all_arg_names = vars(args).keys()
 
     if args.json_conf is not None:
@@ -659,6 +668,9 @@ def main_cli():
     if args.save_last_snapshot_every_k_batch is not None and args.save_last_snapshot_every_k_batch < 2:
         print('--save_last_snapshot_every_k_batch should be > 1')
         sys.exit(1)
+
+    print(args)
+    utils.sync_out_streams()
 
     utils.set_all_seeds(args.seed)
 
@@ -751,6 +763,7 @@ def main_cli():
                                     batch_size=args.batch_size, batch_size_val=args.batch_size_val,
                                     max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
                                     epoch_qty=args.epoch_qty, device_name=device_name,
+                                    cand_score_weight=args.cand_score_weight,
                                     use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                                     print_grads=args.print_grads,
                                     shuffle_train=not args.no_shuffle_train,

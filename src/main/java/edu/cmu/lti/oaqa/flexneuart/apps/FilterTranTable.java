@@ -47,45 +47,52 @@ public class FilterTranTable {
   private static final String OUTPUT_DESC  = "A name of the output file (can have a .gz extension to be compressed)";
    
 
-  static void Usage(String err, Options options) {
+  static void showUsage(String err) {
     System.err.println("Error: " + err);
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp("FilterTranTable", options );      
+    formatter.printHelp(mAppName, mOptions);      
     System.exit(1);
-  }  
-
+  }
+  static void showUsageSpecify(String optName) {
+    showUsage("Specify: '" + optName + "'");
+  }
+  
+  static Options mOptions = new Options();
+  static String  mAppName = "Filter translation table";
+  
   public static void main(String[] args) {
-    Options options = new Options();
+
     
-    options.addOption(INPUT_PARAM,                      null, true, INPUT_DESC);
-    options.addOption(OUTPUT_PARAM,                     null, true, OUTPUT_DESC);
-    options.addOption(CommonParams.FLT_FWD_INDEX_PARAM, null, true, CommonParams.FLT_FWD_INDEX_DESC);
-    options.addOption(CommonParams.GIZA_ITER_QTY_PARAM, null, true, CommonParams.GIZA_ITER_QTY_PARAM);
-    options.addOption(CommonParams.GIZA_ROOT_DIR_PARAM, null, true, CommonParams.GIZA_ROOT_DIR_PARAM);
-    options.addOption(CommonParams.MIN_PROB_PARAM,      null, true, CommonParams.MIN_PROB_DESC);
-    options.addOption(CommonParams.MAX_WORD_QTY_PARAM,  null, true, CommonParams.MAX_WORD_QTY_PARAM);  
+    mOptions.addOption(INPUT_PARAM,                        null, true, INPUT_DESC);
+    mOptions.addOption(OUTPUT_PARAM,                       null, true, OUTPUT_DESC);
+
+    mOptions.addOption(CommonParams.FLT_FWD_INDEX_PARAM,   null, true, CommonParams.FLT_FWD_INDEX_DESC);
+    mOptions.addOption(CommonParams.GIZA_ITER_QTY_PARAM,   null, true, CommonParams.GIZA_ITER_QTY_DESC);
+    mOptions.addOption(CommonParams.MODEL1_ROOT_DIR_PARAM, null, true, CommonParams.MODEL1_ROOT_DIR_DESC);
+    mOptions.addOption(CommonParams.MIN_PROB_PARAM,        null, true, CommonParams.MIN_PROB_DESC);
+    mOptions.addOption(CommonParams.MAX_WORD_QTY_PARAM,    null, true, CommonParams.MAX_WORD_QTY_PARAM);  
     
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
 
     try {
-      CommandLine cmd = parser.parse(options, args);
+      CommandLine cmd = parser.parse(mOptions, args);
       
       String outputFile = null;
       
       outputFile = cmd.getOptionValue(OUTPUT_PARAM);
       if (null == outputFile) {
-        Usage("Specify 'A name of the output file'", options);
+        showUsageSpecify(OUTPUT_PARAM);
       }
       
-      String gizaRootDir = cmd.getOptionValue(CommonParams.GIZA_ROOT_DIR_PARAM);
-      if (null == gizaRootDir) {
-        Usage("Specify '" + CommonParams.GIZA_ROOT_DIR_DESC + "'", options);
+      String model1RootDir = cmd.getOptionValue(CommonParams.MODEL1_ROOT_DIR_PARAM);
+      if (null == model1RootDir) {
+        showUsageSpecify(CommonParams.MODEL1_ROOT_DIR_PARAM + "'");
       }
       
       String gizaIterQty = cmd.getOptionValue(CommonParams.GIZA_ITER_QTY_PARAM);
       
       if (null == gizaIterQty) {
-        Usage("Specify '" + CommonParams.GIZA_ITER_QTY_DESC + "'", options);
+        showUsageSpecify(CommonParams.GIZA_ITER_QTY_DESC);
       }
             
 
@@ -108,7 +115,7 @@ public class FilterTranTable {
                  
       String fwdIndxName = cmd.getOptionValue(CommonParams.FLT_FWD_INDEX_PARAM);
       if (null == fwdIndxName) {
-        Usage("Specify '" + CommonParams.FLT_FWD_INDEX_DESC + "'", options);
+        showUsageSpecify(CommonParams.FLT_FWD_INDEX_DESC);
       }      
 
       System.out.println("Filtering index: " + fwdIndxName + " max # of frequent words: " + maxWordQty + " min. probability:" + minProb);
@@ -116,21 +123,21 @@ public class FilterTranTable {
       VocabularyFilterAndRecoder filter 
             = new FrequentIndexWordFilterAndRecoder(fwdIndxName, maxWordQty);
       
-      String srcVocFile = CompressUtils.findFileVariant(gizaRootDir + File.separator + "source.vcb");
+      String srcVocFile = CompressUtils.findFileVariant(model1RootDir + File.separator + "source.vcb");
       
       System.out.println("Source vocabulary file: " + srcVocFile);
       
       GizaVocabularyReader srcVoc = 
           new GizaVocabularyReader(srcVocFile, filter);
       
-      String dstVocFile = CompressUtils.findFileVariant(gizaRootDir + File.separator + "target.vcb");
+      String dstVocFile = CompressUtils.findFileVariant(model1RootDir + File.separator + "target.vcb");
       
       System.out.println("Target vocabulary file: " + dstVocFile);
       
       GizaVocabularyReader dstVoc = 
           new GizaVocabularyReader(CompressUtils.findFileVariant(dstVocFile), filter);            
 
-      String inputFile = CompressUtils.findFileVariant(gizaRootDir + File.separator + "output.t1." + gizaIterQty);
+      String inputFile = CompressUtils.findFileVariant(model1RootDir + File.separator + "output.t1." + gizaIterQty);
       
       BufferedReader finp = new BufferedReader(new InputStreamReader(
                                                 CompressUtils.createInputStream(inputFile)));
@@ -211,7 +218,7 @@ public class FilterTranTable {
         }
       }      
     } catch (ParseException e) {
-      Usage("Cannot parse arguments", options);
+      showUsage("Cannot parse arguments");
     } catch (Exception e) {
       e.printStackTrace();
       System.err.println("Terminating due to an exception: " + e);

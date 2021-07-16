@@ -35,11 +35,39 @@ import edu.cmu.lti.oaqa.flexneuart.letor.external.TextEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.letor.external.TextEntryRaw;
 import edu.cmu.lti.oaqa.flexneuart.letor.external.WordEntryInfo;
 import edu.cmu.lti.oaqa.flexneuart.letor.external.ExternalScorer.Client;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLucene;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.BM25SimilarityLuceneNorm;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TFIDFSimilarity;
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
-import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
+
+class HostPort {
+  public final String mHost;
+  public final int    mPort;
+  
+  protected HostPort(String addr) throws Exception {
+    // This parsing is a bit simplistic, but it should work as long as the sticks to the 
+    // following notation: <address or host name without http and/or https prefix> : <numeric port>
+    int sepChar = addr.indexOf(':');
+    if (sepChar < 0) {
+      throw new Exception("No port separator : is present in the host address: '" + addr + "'");
+    }
+    mHost = addr.substring(0, sepChar);
+    String port = addr.substring(sepChar + 1);
+    try {
+      mPort = Integer.valueOf(port);
+    } catch (NumberFormatException e) {
+      throw new Exception("Port is not ineger in the host address: '" + addr + "'");
+    }
+  }
+  
+  @Override
+  public String toString() {
+    return "host: " + mHost + " port: " + mPort;
+    
+  }
+}
 
 /**
  * A single-field feature extractor that calls an external code (via Apache Thrift) to compute 
@@ -52,15 +80,11 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor {
   private static final Logger logger = LoggerFactory.getLogger(FeatExtractorExternalApacheThrift.class);
 
-  public static final String NORM_BY_QUERY_LEN = "normByQueryLen";
-  
-  public static String EXTR_TYPE = "externalThrift";
+  public static String EXTR_TYPE = "ExternalThrift";
   
   public static String FEAT_QTY = "featureQty";
 
-  public static String HOST = "host";
-  public static String PORT = "port";
-  public static String PORT_LIST = "portList";
+  public static String HOST_LIST = "hostList";
   
   public static String POSITIONAL = "useWordSeq";
   
@@ -68,7 +92,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   
   public static String PARSED_AS_RAW = "sendParsedAsRaw";
 
-  public FeatExtractorExternalApacheThrift(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public FeatExtractorExternalApacheThrift(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     // getReqParamStr throws an exception if the parameter is not defined
     
@@ -76,33 +100,11 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
 
     mFieldIndex = resMngr.getFwdIndex(getIndexFieldName());
 
-    int port = conf.getParam(PORT, -1);
-    String portArrStr = conf.getParam(PORT_LIST, null);
-    
-    if (port >= 0) {
-      if (portArrStr != null) {
-        throw new Exception("One shouldn't specify both " + PORT + " and " + PORT_LIST);
-      }
-      mPortArr = new int[1];
-      mPortArr[0] = port;
-    } else {
-      String tmp[] = StringUtils.splitNoEmpty(portArrStr, ",");
-      mPortArr = new int[tmp.length];
-      for (int k = 0; k < tmp.length; ++k) {
-        try {
-          mPortArr[k] = Integer.parseInt(tmp[k]);
-        } catch (NumberFormatException e) {
-          throw new Exception("Invalid port number in: " + portArrStr);
-        }
-      }
+    for (String hostStr : conf.getParamNestedConfig(HOST_LIST).getParamStringArray()) {
+      mHostArr.add(new HostPort(hostStr));
     }
     
-    
-    mHost = conf.getReqParamStr(HOST);
-    
     mUnkWord = conf.getReqParamStr(UNK_WORD);
-    
-    mNormByQueryLen = conf.getParamBool(NORM_BY_QUERY_LEN);
     
     mTextAsRaw = conf.getParamBool(PARSED_AS_RAW);
     
@@ -152,7 +154,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   }
   
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, Map<String, String> queryData)
+  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields)
       throws Exception {
     HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
     
@@ -162,8 +164,8 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
      * connection is quite fast compared to re-ranking the output of a single query using
      * SOTA neural models. 
      */
-    int port = getPort();
-    TTransport transp = new TSocket(mHost, port);
+    HostPort hostInfo = getHostInfo();
+    TTransport transp = new TSocket(hostInfo.mHost, hostInfo.mPort);
     transp.open();
      
     try {
@@ -173,21 +175,23 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
 
       Map<String, List<Double>> scores = null;
       
-      String queryId = queryData.get(Const.TAG_DOCNO);
-      
+      String queryId = queryFields.mEntryId;  
       if (queryId == null) {
         throw new Exception("Undefined query ID!");
       }
       
-      if (mFieldIndex.isRaw()) {
-        logger.info("Sending raw/unparsed entry, port: " + port);
-        String queryTextRaw = queryData.get(getQueryFieldName());
-        if (queryTextRaw == null) return res;
+      if (mFieldIndex.isTextRaw()) {
+        logger.info("Sending raw/unparsed entry: " + hostInfo);
+        String queryTextRaw = queryFields.getString(getQueryFieldName());
+        if (queryTextRaw == null) {
+          warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+          return res;
+        }
         
         ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
         
         for (CandidateEntry e : cands) {
-          String docEntryRaw = mFieldIndex.getDocEntryRaw(e.mDocId);
+          String docEntryRaw = mFieldIndex.getDocEntryTextRaw(e.mDocId);
 
           if (docEntryRaw == null) {
             throw new Exception("Inconsistent data or bug: can't find document with id ='" + e.mDocId + "'");
@@ -196,12 +200,15 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           docEntries.add(new TextEntryRaw(e.mDocId, docEntryRaw));
         }
         scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
-      } else {        
+      } else if (mFieldIndex.isParsed()) {        
         if (mTextAsRaw) {
           // This can be a lot faster on the Python side!
-          logger.info("Sending parsed entry in the unparsed/raw format, port: " + port);
-          String queryTextRaw = queryData.get(getQueryFieldName());
-          if (queryTextRaw == null) return res;
+          logger.info("Sending parsed entry in the unparsed/raw format to " + hostInfo);
+          String queryTextRaw = queryFields.getString(getQueryFieldName());
+          if (queryTextRaw == null) {
+            warnEmptyQueryField(logger, EXTR_TYPE, queryId);
+            return res;
+          }
           
           ArrayList<TextEntryRaw> docEntries = new ArrayList<>();
           
@@ -217,10 +224,12 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           scores = clnt.getScoresFromRaw(new TextEntryRaw(queryId, queryTextRaw), docEntries);
           
         } else {
-          logger.info("Sending parsed entry, port: " + port);
-          DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryData);
-          if (queryEntry == null)
+          logger.info("Sending parsed entry to " + hostInfo);
+          DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), mFieldIndex, queryFields);
+          if (queryEntry == null) {
+            warnEmptyQueryField(logger, EXTR_TYPE, queryId);
             return res;
+          }
           
           TextEntryParsed queryTextEntry = createTextEntryParsed(queryId, queryEntry);
           ArrayList<TextEntryParsed> docTextEntries = new ArrayList<>();
@@ -235,19 +244,9 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
           }
           scores = clnt.getScoresFromParsed(queryTextEntry, docTextEntries);
         }
-      }
-      
-      String query = queryData.get(Const.TEXT_FIELD_NAME);
-      if (query == null) {
-        query = "";
-      }
-      float queryQty = StringUtils.splitOnWhiteSpace(query).length;
-      if (queryQty <= 1) {
-        queryQty = 1;
-      }
-      float invQueryQty = 1.0f / queryQty;
-      if (mNormByQueryLen) {
-        logger.info(String.format("Query: '%s' Normalization factor: %f", query, invQueryQty));
+      } else {
+        throw new RuntimeException(EXTR_TYPE + " works only with parsed or raw text fields, " + 
+                                   "but " + this.getIndexFieldName() + " is binary");
       }
       
       for (CandidateEntry e : cands) {
@@ -266,9 +265,6 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
         int idx = 0;
         
         for (double v : scoreList) {
-          if (mNormByQueryLen) {
-            v *= invQueryQty;
-          }
           scoreVect.set(idx, v);
           idx++;
         }
@@ -288,22 +284,19 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   
   final TFIDFSimilarity              mSimilObj;
   final ForwardIndex                 mFieldIndex;
-  final String                       mHost;
-  final int                          mPortArr[];
+  final ArrayList<HostPort>          mHostArr = new ArrayList<HostPort>();
   final String                       mUnkWord;
   
   final int                          mFeatQty;
   final boolean                      mUseWordSeq;
   
-  final boolean                      mNormByQueryLen;
-  
   final boolean                      mTextAsRaw;
   
-  int                                mPortIdToUse = -1; // getPort will first increment it
+  int                                mHostIdToUse = -1; // getPort will first increment it
   
-  synchronized int getPort() {
-    mPortIdToUse = (mPortIdToUse + 1) % mPortArr.length;
-    return mPortArr[mPortIdToUse];
+  synchronized HostPort getHostInfo() {
+    mHostIdToUse = (mHostIdToUse + 1) % mHostArr.size();
+    return mHostArr.get(mHostIdToUse);
   }
   
   @Override

@@ -1,3 +1,19 @@
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 """
 Access to FlexNeuART forward index.
 """
@@ -25,18 +41,49 @@ class ForwardIndex:
         """
         self.field_name = field_name
         self.indx = resource_manager.getFwdIndex(field_name)
-        self.is_raw = self.indx.isRaw()
+        self.indx_fld_type = self.indx.getIndexFieldType()
 
+    def check_is_text_raw(self):
+        if not self.indx.isTextRaw():
+            raise Exception(f'Field {self.field_name} is not raw text but {self.indx_fld_type}')
+
+    def check_is_parsed(self):
+        if not self.indx.isParsed():
+            raise Exception(f'Field {self.field_name} is not parsed but {self.indx_fld_type}')
+
+    def check_is_binary(self):
+        if not self.indx.isBinary():
+            raise Exception(f'Field {self.field_name} is not binary but {self.indx_fld_type}')
 
     def get_doc_raw(self, doc_id):
+        """For backwards compatibility only."""
+        return self.get_doc_text_raw(doc_id)
+
+    def get_doc_text_raw(self, doc_id):
         """Obtain the raw-document text. Must be a raw-field.
 
         :param doc_id: a document ID (e.g., returned by a candidate provider)
         :return:   document text or None if no such document exists
         """
-        self.check_raw_or_not(check_raw=True)
+        self.check_is_text_raw()
 
-        return self.indx.getDocEntryRaw(doc_id)
+        return self.indx.getDocEntryTextRaw(doc_id)
+
+    def get_doc_parsed(self, doc_id):
+        """Get a parsed document entry.
+
+        :param doc_id:  a document ID (e.g., returned by a candidate provider)
+        :return:        an object of the type DocEntryParsed
+        """
+        self.check_is_parsed()
+
+        entry = self.indx.getDocEntryParsed(doc_id)
+        if entry is None:
+            return None
+
+        return DocEntryParsed(word_ids=entry.mWordIds, word_qtys=entry.mQtys,
+                              word_id_seq=entry.mWordIdSeq, doc_len=entry.mDocLen)
+
 
     def get_word_entry_by_id(self, word_id):
         """Retrieve word entry/info by word ID
@@ -44,7 +91,7 @@ class ForwardIndex:
         :param word_id:  an integer word ID
         :return: an object of the type WordEntry or None
         """
-        self.check_raw_or_not(check_raw=False)
+        self.check_is_parsed()
         assert type(word_id) == int, "word_id must be integer!"
 
         entry = self.indx.getWordEntry(word_id)
@@ -59,33 +106,10 @@ class ForwardIndex:
         :param word_id:  an integer word ID
         :return: a word or None if ID does not exist
         """
-        self.check_raw_or_not(check_raw=False)
+        self.check_is_parsed()
         assert type(word_id) == int, "word_id must be integer!"
 
         return self.indx.getWord(word_id)
-
-    def get_doc_parsed(self, doc_id):
-        """Get a parsed document entry.
-
-        :param doc_id:  a document ID (e.g., returned by a candidate provider)
-        :return:        an object of the type DocEntryParsed
-        """
-        self.check_raw_or_not(check_raw=False)
-
-        entry = self.indx.getDocEntryParsed(doc_id)
-        if entry is None:
-            return None
-
-        return DocEntryParsed(word_ids=entry.mWordIds, word_qtys=entry.mQtys,
-                              word_id_seq=entry.mWordIdSeq, doc_len=entry.mDocLen)
-
-    def check_raw_or_not(self, check_raw):
-        if check_raw:
-            if not self.is_raw:
-                raise Exception(f'Field {self.field_name} is parsed and not raw text!')
-        else:
-            if self.is_raw:
-                raise Exception(f'Field {self.field_name} is raw text rather than parsed documents!')
 
 
 def get_forward_index(resource_manager, field_name):

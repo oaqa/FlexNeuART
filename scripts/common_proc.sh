@@ -2,11 +2,32 @@
 # This should be consistent with common_proc.sh and config.py
 
 CAND_PROV_LUCENE="lucene"
+DEFAULT_QUERY_TEXT_FIELD_NAME="text"
 CAND_PROV_NMSLIB="nmslib"
-FWD_INDEX_TYPES="mapdb, lucene, flatdata"
-ANSWER_FILE="AnswerFields.jsonl"
-QUESTION_FILE="QuestionFields.jsonl"
+FWD_INDEX_BACKEND_TYPES="mapdb, flatdata"
+
+# Both query/question and answer/data files can be in two formats:
+# 1. JSONL (always present)
+# 2. binary
+
+# Assumptions:
+# 1. JSONL answer/data file may be compressed, but a query JSONL file never is.
+# 2. Binary query/data files should not be compressed either.
+# 3. The compression method (gz, bz2, or no compression) should be the same in all sub-directories
+# 4. Binary files are optional, but JSONL files are mandatory
+
+ANSWER_FILE_PREFIX="AnswerFields"
+ANSWER_FILE_JSONL="${ANSWER_FILE_PREFIX}.jsonl"
+ANSWER_FILE_BIN="${ANSWER_FILE_PREFIX}.bin"
+QUESTION_FILE_PREFIX="QuestionFields"
+QUESTION_FILE_JSONL="${QUESTION_FILE_PREFIX}.jsonl"
+QUESTION_FILE_BIN="${QUESTION_FILE_PREFIX}.bin"
+
 SAMPLE_COLLECT_ARG="collection sub-directory, e.g., msmarco_pass"
+
+function check_has_azcopy() {
+  azcopy --help &>/dev/null || { echo "Please, install Microsoft azcopy (Azure copying tool), no auth is needed!" ; exit 1 ; }
+}
 
 function div1() {
   awk "BEGIN{printf(\"%.1f\", $1/$2)}"|sed 's/[.]0$//'
@@ -45,18 +66,11 @@ function extractFieldValue {
   echo "$line" | cut -d " " -f $fn
 }
 
-# This command may initiate compilation,
-# but due to -o and -q switch it:
-# 1) It works offline (i.e, it doesn't print a bunch of annoying messages caused by Maven re-checking dependencies status)
-# 3) Works in a quite mode, i.e., doesn't print other warnings and stuff.
-#export MVN_RUN_CMD="mvn -q -o compile exec:java "
-export MVN_RUN_CMD="mvn -o compile exec:java "
-
-
+#
 # I think the use of check, checkPipe, and execAndCheck should be limited,
 # especially for execAndCheck, as it prevents proper escaping of arguments (with say spaces).
 # It is advised to use "set -euxo pipefail" or "set -euxo pipefail" after are done using grep
-# for some sort of control flow. Thus, there are cases when execAndCheck is still useful.
+# for some sort of control flow. If this not possible, one can still rely on execAndCheck.
 #
 # Notes:
 # 1. set -u aborts execution when uninitialized variables are used
@@ -138,8 +152,11 @@ function waitChildren {
   done
 }
 
-# A hacky procedure to start a CEDR server
-# one can specify either initial model weights or the complete initial model to load.
+#
+# A hacky procedure (by now likely not updated to be used with latest set of parameters)
+# # to start a CEDR server one can specify either initial model weights or the complete
+# initial model to load.
+#
 # All other parameters are required.
 # IMPORTANT NOTE:
 # don't use with:
@@ -251,51 +268,40 @@ function getNumCpuCores {
 }
 
 # This function:
-# 1. Identifies guesses what is the format of data: new JSONL or old series-of-XML format
-# 2. Finds all sub-directories containing indexable data and makes a string 
-#    that represents a list of comma-separated sub-directories with data. This string
-#    can be passed to indexing (and querying) apps.
+# 1. Finds all sub-directories containing indexable data and returns them as
+#    a list of comma-separated strings.
+# 2. Identifies the compression type of the data JSONL file.
 # Attention: it "returns" an array by setting a variable retVal (ugly but works reliably)
-function getIndexQueryDataInfo {
+
+function getIndexQueryDataDirs {
   topDir="$1"
   indexDirs=""
-  oldFile="SolrAnswerFile.txt"
-  oldQueryFile="SolrQuestionFile.txt"
-  newFile=$ANSWER_FILE
-  newQueryFile=$QUESTION_FILE
   dataFileName=""
-  queryFileName=""
+
   currDir="$PWD"
   cd "$topDir"
   for subDir in * ; do
-    echo "Checking data sub-directory: $subDir"
+    echo "Checking input sub-directory: $subDir"
     if [ -d "$subDir" ] ; then
       hasData=0
-      if [ -f "$subDir/$oldFile" ] ; then
-        if [ -f "$subDir/$oldFile" ] ; then
-          if [ "$dataFileName" = "$newFile" ] ; then
-            echo "Inconsistent use of XML/JSONL formats"
-            exit 1
-          fi
-          dataFileName=$oldFile
-          qyeryFileName=$oldQueryFile
-          hasData=1
-        fi
-      fi
 
-      # New-layout/format data may be compressed, but queries shouldn't be compressed (and there's little sense to do so)
+      # Data can be (and normally is) compressed, but queries shouldn't be compressed.
       for suff in "" ".gz" ".bz2" ; do
-        fn=$subDir/${newFile}${suff}
+        fn=$subDir/${ANSWER_FILE_JSONL}${suff}
+
         if [ -f "$fn" ] ; then
           echo "Found indexable data file: $fn"
-          if [ "$dataFileName" = "$oldFile" ] ; then
-            echo "Inconsistent use of XML/JSONL formats"
-            exit 1
-          fi
-          dataFileName=${newFile}${suff}
-          queryFileName=$newQueryFile
           hasData=1
-          break
+
+          dataFileNameCurr=${ANSWER_FILE_JSONL}${suff}
+          if [ "$dataFileName" = "" ] ; then
+            dataFileName="$dataFileNameCurr"
+          else
+            if [ "$dataFileName" != "$dataFileNameCurr" ] ; then
+              echo "Inconsistent naming of data files: $dataFileName and $dataFileNameCurr"
+              exit 1
+            fi
+          fi
         fi
       done
 
@@ -306,16 +312,16 @@ function getIndexQueryDataInfo {
         indexDirs="${indexDirs}$subDir"
       fi
     else
-      echo "No $subdir"
+      echo "Not a directory: $subdir"
     fi # if [ -d "$subDir"]
   done
   queryDirs=""
   for subDir in * ; do
     if [ -d "$subDir" ] ; then
-      fn=$subDir/${queryFileName}
+      fn=$subDir/${QUESTION_FILE_JSONL}
       if [ -f "$fn" ] ; then
         echo "Found query file: $fn"
-        if [ "queryDirs" != "" ] ; then
+        if [ "$queryDirs" != "" ] ; then
           queryDirs="$queryDirs,"
         fi
         queryDirs="${queryDirs}$subDir"
@@ -324,7 +330,7 @@ function getIndexQueryDataInfo {
   done
   cd "$currDir"
   # This is kinda ugly, but is better than other non-portable solutions.
-  retVal=("${indexDirs}" "${dataFileName}" "${queryDirs}" "${queryFileName}")
+  retVal=("${indexDirs}" "${dataFileName}" "${queryDirs}")
 }
 
 function getCatCmd {
@@ -363,7 +369,6 @@ function removeComment {
     line=""
   fi
 
-
   echo $line
 }
 
@@ -373,6 +378,10 @@ function removeComment {
 # The genUsage and parseArguments
 # make assumptions about how parameter-describing
 # variables are stored and presented.
+#
+# LIMITATION: it won't handle gracefully arguments with spaces inside (avoid using these).
+#
+#
 # For simplicity, it expects the following
 # arrays to exist:
 #
@@ -464,4 +473,21 @@ function isGreater {
   val1=$1
   val2=$2
   python -c "print(int($val1 > $val2))"
+}
+
+function getExperDirBase {
+  collectSubdir="$1"
+  testSet="$2"
+  experSubdir="$3"
+
+  checkVarNonEmpty "testSet"
+  checkVarNonEmpty "experSubdir"
+  checkVarNonEmpty "EXPER_SUBDIR"
+
+  if [ "$collectSubdir" != "" ] ; then
+    echo "$collectSubdir/$EXPER_SUBDIR/$testSet/$experSubdir"
+  else
+    echo "$EXPER_SUBDIR/$testSet/$experSubdir"
+  fi
+
 }

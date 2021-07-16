@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,19 +17,22 @@ package edu.cmu.lti.oaqa.flexneuart.letor;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+import edu.cmu.lti.oaqa.flexneuart.resources.RestrictedJsonConfig;
+import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.QueryDocSimilarityFunc;
+import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
- * A single-field feature extractor interface (enforcing 
- * implementation of some common functions). Note that
- * the query-field can be different from an index-field.
- * This permits "between" a single query field such as "text"
- * with multiple document fields, e.g., "title", and "body".
+ * A feature extractor interface, which computes one or more similarity scores 
+ * for a single pair of query and index fields. 
+ * Note that the query field name can be different from the index field name: 
  * If the user does not specify the query field name
  * it is assumed to be equal to the index field name.
  * 
@@ -37,8 +40,9 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
+  private static final Logger logger = LoggerFactory.getLogger(SingleFieldFeatExtractor.class);
   
-  public SingleFieldFeatExtractor(FeatExtrResourceManager resMngr, OneFeatExtrConf conf) throws Exception {
+  public SingleFieldFeatExtractor(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     mIndexFieldName = conf.getReqParamStr(CommonParams.INDEX_FIELD_NAME);
     mQueryFieldName = conf.getParam(CommonParams.QUERY_FIELD_NAME, mIndexFieldName);
   }
@@ -59,22 +63,38 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
     return mIndexFieldName;
   }
   
+  protected void warnEmptyQueryField(Logger logger, String extrType, String queryId) {
+    logger.warn("Empty field " + getQueryFieldName() + " query ID: " + queryId + " extractor: " + extrType);
+  }
+
   /**
-   * A helper function that computes a simple single-score similarity
+   * A helper function that computes one or more simple single-field similarity
    * 
-   * @param arrDocIds       document IDs
-   * @param queryData
-   * @param fieldIndex
-   * @param similObj
+   * @param extrType    extractor type
+   * @param cands       candidate records
+   * @param queryFields a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}.
+   * @param fieldIndex  a field forward index object.
+   * @param similObj    an array of objects that computer features (query-document similarity).
    * @return
    * @throws Exception
    */
-  protected Map<String, DenseVector> getSimpleFeatures(CandidateEntry[] cands, 
-                                                       Map<String, String> queryData,
-                                                       ForwardIndex fieldIndex, QueryDocSimilarityFunc[] similObj) throws Exception {
+  protected Map<String, DenseVector> getSimpleFeatures(String extrType,
+                                                       CandidateEntry[] cands, 
+                                                       DataEntryFields queryFields,
+                                                       ForwardIndex fieldIndex, 
+                                                       QueryDocSimilarityFunc[] similObj) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, similObj.length); 
-    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryData);
-    if (queryEntry == null) return res;
+    
+    String queryId = queryFields.mEntryId;  
+    if (queryId == null) {
+      throw new Exception("Undefined query ID!");
+    }
+    
+    DocEntryParsed queryEntry = getQueryEntry(getQueryFieldName(), fieldIndex, queryFields);
+    if (queryEntry == null) {
+      warnEmptyQueryField(logger, extrType, queryId);
+      return res;
+    }
     
     for (CandidateEntry e : cands) {
       DocEntryParsed docEntry = fieldIndex.getDocEntryParsed(e.mDocId);

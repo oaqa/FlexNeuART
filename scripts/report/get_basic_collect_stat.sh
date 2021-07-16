@@ -18,25 +18,25 @@ fi
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
+checkVarNonEmpty "QUESTION_FILE_JSONL"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 
 retVal=""
-getIndexQueryDataInfo "$inputDataDir"
-echo "getIndexQueryDataInfo return value: " ${retVal[*]}
+getIndexQueryDataDirs "$inputDataDir"
+echo "getIndexQueryDataDirs return value: " ${retVal[*]}
 indexDirs=`echo ${retVal[0]}|sed 's/,/ /g'`
 dataFileName=${retVal[1]}
 queryDirs=`echo ${retVal[2]}|sed 's/,/ /g'`
-queryFileName=${retVal[3]}
 if [ "$indexDirs" = "" ] ; then
   echo "Cannot get a list of relevant data directories, did you dump the data?"
   exit 1
 fi
 if [ "$dataFileName" = "" ] ; then
-  echo "Cannot guess the type of data. Data can be incomplete or inconsistent, e.g., it can mix new and old naming conventions."
+  echo "No data file is found!"
   exit 1
 else
-  echo "Using the data input files: $dataFileName, $queryFileName"
+  echo "Using data file: $dataFileName"
 fi
 
 total_qty=0
@@ -48,7 +48,7 @@ echo "Query dirs: ${queryDirs[*]}"
 
 echo "Queries/questions:"
 for part in ${queryDirs[*]}  ; do
-  queryFilePath="$inputDataDir/$part/$queryFileName"
+  queryFilePath="$inputDataDir/$part/$QUESTION_FILE_JSONL"
 
   # Not all parts correspond have a query file
   if [ -f "$queryFilePath" ] ; then

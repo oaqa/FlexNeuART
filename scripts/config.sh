@@ -23,12 +23,11 @@ echo "Using collection root: $COLLECT_ROOT"
 #             $DEV_SUBDIR (optional)
 #             $DEV1_SUBDIR (optional)
 #             $DEV2_SUBDIR (optional)
-#             $BITEXT_SUBDIR (optional, can also be created using
-#                                   scripts/data_convert/split_train4bitext.sh
-#                                   from the train subdir data)
+#             $BITEXT_SUBDIR (optional)
 #
 #         $DERIVED_DATA_SUBDIR
 #             $BITEXT_SUBDIR (optional)
+#             $MODEL1_SUBDIR (optional)
 #             $EMBED_SUBDIR (optional)
 #             $LM_FINETUNE_SUBDIR (optional)
 #             $IR_MODELS_SUBDIR (optional)
@@ -74,7 +73,7 @@ IR_MODELS_SUBDIR="ir_models"
 # Parallel corpora sub-directory
 BITEXT_SUBDIR="bitext"
 # Parameters to train Model 1
-GIZA_SUBDIR="giza"
+MODEL1_SUBDIR="giza"
 GIZA_ITER_QTY=5
 
 # Coordinate ascent (LETOR algorithm) training parameters
@@ -88,9 +87,9 @@ QREL_FILE="qrels.txt"
 FAKE_RUN_ID="fake_run"
 
 # This value should match Lucene's query field
-QUERY_FIELD_NAME=text
+DEFAULT_QUERY_FIELD_NAME=text
 
-DEFAULT_INTERM_CAND_QTY=1000
+DEFAULT_CAND_PROV_QTY=1000
 DEFAULT_TRAIN_CAND_QTY=20
 DEFAULT_TEST_CAND_QTY_LIST=10,50,100,250,500,1000
 
@@ -110,16 +109,3 @@ TEST_ONLY_PARAM="testOnly"
 TRAIN_ONLY_PARAM="trainOnly"
 
 
-function getExperDirBase {
-  collectSubdir="$1"
-  testSet="$2"
-  experSubdir="$3"
-
-  checkVarNonEmpty "collectSubdir"
-  checkVarNonEmpty "testSet"
-  checkVarNonEmpty "experSubdir"
-  checkVarNonEmpty "EXPER_SUBDIR"
-
-  echo "$collectSubdir/$EXPER_SUBDIR/$testSet/$experSubdir"
-
-}

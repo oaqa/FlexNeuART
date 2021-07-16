@@ -11,8 +11,8 @@ checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
-checkVarNonEmpty "QUERY_FIELD_NAME"
 checkVarNonEmpty "QREL_FILE"
+checkVarNonEmpty "QUESTION_FILE_PREFIX"
 
 CEDR_DOCS_FILE="data_docs.tsv"
 CEDR_QUERY_FILE="data_query.tsv"
@@ -20,7 +20,8 @@ CEDR_TEST_RUN_FILE="test_run.txt"
 CEDR_TRAIN_PAIRS_FILE="train_pairs.tsv"
 
 checkVarNonEmpty "randSeed"
-checkVarNonEmpty "indexFieldName"
+checkVarNonEmpty "indexExportFieldName"
+checkVarNonEmpty "queryExportFieldName"
 checkVarNonEmpty "threadQty"
 checkVarNonEmpty "candTrainQty"
 checkVarNonEmpty "candTestQty"
@@ -53,12 +54,12 @@ $candProvParams \
 -sample_med_neg_qty $sampleMedNegQty \
 -sample_easy_neg_qty $sampleEasyNegQty \
 \
--index_field $indexFieldName \
--query_field $queryFieldName \
+-index_export_field $indexExportFieldName \
+-query_export_field $queryExportFieldName \
 \
--query_file_train "$inputDataDir/$partTrain/QuestionFields.jsonl" \
+-query_file_train_pref "$inputDataDir/$partTrain/$QUESTION_FILE_PREFIX" \
 -qrel_file_train "$inputDataDir/$partTrain/$QREL_FILE" \
--query_file_test "$inputDataDir/$partTest/QuestionFields.jsonl" \
+-query_file_test_pref "$inputDataDir/$partTest/$QUESTION_FILE_PREFIX" \
 -qrel_file_test "$inputDataDir/$partTest/$QREL_FILE" \
 \
 -data_file_docs "$outDir/$CEDR_DOCS_FILE" \
