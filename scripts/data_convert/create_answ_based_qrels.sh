@@ -9,7 +9,8 @@ checkVarNonEmpty "INPUT_DATA_SUBDIR"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
 checkVarNonEmpty "LUCENE_INDEX_SUBDIR"
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
-checkVarNonEmpty "QUESTION_FILE_JSONL"
+checkVarNonEmpty "QUESTION_FILE_PREFIX"
+checkVarNonEmpty "DEFAULT_CAND_PROV_QTY"
 
 numCoresCPU=`getNumCpuCores`
 check "getting the number of CPU cores, do you have /proc/cpu/info?"
@@ -18,17 +19,18 @@ threadQty=$numCoresCPU
 boolOpts=("h" "help" "print help")
 
 candProvOpts=""
-outputFile=""
+
+candProvQty="$DEFAULT_CAND_PROV_QTY"
 
 paramOpts=(
 "thread_qty"             "threadQty"           "# of threads"
-"out_file"               "outputFile"          "An optional output file: by default we will override existing QRELs"
 "cand_prov"              "candProv"            "Candidate record provider type"
+"cand_prov_qty"          "candProvQty"         "# of candidate provider entries (default $candProvQty)"
 "cand_prov_uri"          "providerURI"         "Provider URI: an index location, a query server address, etc"
 "cand_prov_add_conf"     "candProvAddConf"     "JSON with additional candidate provider parameters"
 )
 
-usageMain="<$SAMPLE_COLLECT_ARG> <part type> <field name> <top-K candidates to use>"
+usageMain="<$SAMPLE_COLLECT_ARG> <part type> <field name> <output file name (relative to collection dir)>"
 
 parseArguments $@
 
@@ -55,9 +57,9 @@ if [ "$fieldName" = "" ] ; then
   exit 1
 fi
 
-candQty=${posArgs[3]}
-if [ "$candQty" = "" ] ; then
-  echo "Specify a number of candidate entries, e.g., 1000  (4th arg)"
+outputFile=${posArgs[3]}
+if [ "$outputFile" = "" ] ; then
+  echo "Specify an output file relative to the collection directory  (4th arg)"
   exit 1
 fi
 
@@ -66,6 +68,7 @@ if [ "$providerURI" = "" ] ; then
 fi
 
 collectDir="$COLLECT_ROOT/$collect"
+outputFile="$collectDir/$outputFile"
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR/$trainPart"
 fwdIndexDir="$FWD_INDEX_SUBDIR/"
@@ -80,20 +83,17 @@ if [ "$candProv" != "" ] ; then
   candProvOpts="-cand_prov $candProv $candProvOpts "
 fi
 
-if [ "$outputFile" = "" ] ; then
-  outputFile="$inputDataDir/$QREL_FILE"
-fi
-
-queryFileName="$inputDataDir/$QUESTION_FILE_JSONL"
+queryFileNamePref="$inputDataDir/$QUESTION_FILE_PREFIX"
 
 echo "=========================================================================="
 echo "Collection directory:      $collectDir"
 echo "Data directory:            $inputDataDir"
 echo "Output file:               $outputFile"
 echo "Candidate provider options:$candProvOpts"
+echo "# of candidate documents:  $candProvQty"
 echo "Field name:                $fieldName"
 echo "Forward index directory:   $fwdIndexDir"
-echo "Query file name:           $queryFileName"
+echo "Query file name prefix:    $queryFileNamePref"
 echo "# of threads:              $threadQty"
 echo "=========================================================================="
 
@@ -101,9 +101,10 @@ echo "==========================================================================
 target/appassembler/bin/AnswerBasedQRELGenerator \
     -collect_dir $collectDir \
     $candProvOpts \
-    -cand_qty $candQty \
+    -field_name $fieldName \
+    -cand_prov_qty $candProvQty \
     -thread_qty $threadQty \
     -fwd_index_dir $fwdIndexDir \
     -out_file "$outputFile"  \
-    -q  "$queryDir/$queryFileName"
+    -query_file_pref "$queryFileNamePref"
 
