@@ -22,6 +22,8 @@ import argparse
 import multiprocessing
 import pytorch_pretrained_bert
 
+from tqdm import tqdm
+
 ORIG_DOCID = 'orig_docid'
 
 sys.path.append('.')
@@ -126,7 +128,7 @@ out_file.close()
 print('Saving a document to passage ID mapping')
 
 with FileWrapper(args.output_doc2pass, 'w') as out_file:
-    for did, pid_arr in doc2pass_map.items():
+    for did, pid_arr in tqdm(doc2pass_map.items()):
         doc = { DOCID_FIELD : did,
                 'pass_ids' : ' '.join(list(set(pid_arr)))
                 }

@@ -13,7 +13,9 @@ for part in pass train dev dev2 ; do
   mkdir -p "$inputDataDir/$part"
 done
 
-inputDoc2PassDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR/doc2pass"
+inputDoc2PassDir="$COLLECT_ROOT/$collect/input_data_doc2pass/docs"
+echo "Additional input sub-directory with doc2pass mapping data: $inputDoc2PassDir"
+mkdir -p "$inputDoc2PassDir"
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"

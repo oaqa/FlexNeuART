@@ -146,6 +146,7 @@ if [ "$queryExportFieldName" = "" ] ; then
 fi
 
 echo "========================================================"
+echo "Collection directory:      $collectDir"
 echo "Train split: $partTrain"
 echo "Eval split: $partTest"
 echo "Random seed: $randSeed"

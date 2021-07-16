@@ -62,11 +62,13 @@ if [ "$candQty" = "" ] ; then
 fi
 
 if [ "$providerURI" = "" ] ; then
-  providerURI="$COLLECT_ROOT/$collect/$LUCENE_INDEX_SUBDIR/"
+  providerURI="$LUCENE_INDEX_SUBDIR/"
 fi
 
+collectDir="$COLLECT_ROOT/$collect"
+
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR/$trainPart"
-fwdIndexDir="$COLLECT_ROOT/$collect/$FWD_INDEX_SUBDIR/"
+fwdIndexDir="$FWD_INDEX_SUBDIR/"
 
 candProvOpts=" -u $providerURI "
 
@@ -85,6 +87,7 @@ fi
 queryFileName="$inputDataDir/$QUESTION_FILE_JSONL"
 
 echo "=========================================================================="
+echo "Collection directory:      $collectDir"
 echo "Data directory:            $inputDataDir"
 echo "Output file:               $outputFile"
 echo "Candidate provider options:$candProvOpts"
@@ -96,6 +99,7 @@ echo "==========================================================================
 
 
 target/appassembler/bin/AnswerBasedQRELGenerator \
+    -collect_dir $collectDir \
     $candProvOpts \
     -cand_qty $candQty \
     -thread_qty $threadQty \
