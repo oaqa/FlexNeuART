@@ -57,7 +57,7 @@ class FileWrapper:
     def __enter__(self):
         return self
 
-    def __init__(self, file_name, flags='r', encoding='utf8'):
+    def __init__(self, file_name, flags='r'):
         """Constructor, which opens a regular or gzipped-file
 
           :param  file_name a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
@@ -67,13 +67,13 @@ class FileWrapper:
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
         if file_name.endswith('.gz'):
-            self._file = gzip.open(file_name, flags, encoding=encoding)
+            self._file = gzip.open(file_name, flags)
             self._isCompr = True
         elif file_name.endswith('.bz2'):
-            self._file = bz2.open(file_name, flags, encoding=encoding)
+            self._file = bz2.open(file_name, flags)
             self._isCompr = True
         else:
-            self._file = open(file_name, flags, encoding=encoding)
+            self._file = open(file_name, flags)
             self._isCompr = False
 
     def write(self, s):
