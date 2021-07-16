@@ -124,15 +124,10 @@ if [ "$providerURI" = "" ] ; then
   fi
 fi
 
-# All provider URIs except for NMSLIB are relative to the collection location
-if [ "$candProv" != "$CAND_PROV_NMSLIB" ] ; then
-  providerURI="$COLLECT_ROOT/$collect/$providerURI"
-fi
-
 candProvParams=" -cand_prov \"$candProv\" -u \"$providerURI\" "
 if [ "$candProvAddConf" != "" ] ; then
   # Additional config is collection-location relative
-  candProvParams="$candProvParams -cand_prov_add_conf \"$COLLECT_ROOT/$collect/$candProvAddConf\""
+  candProvParams="$candProvParams -cand_prov_add_conf \"$candProvAddConf\""
 fi
 
 outDir="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$outSubdir/$indexFieldName"
