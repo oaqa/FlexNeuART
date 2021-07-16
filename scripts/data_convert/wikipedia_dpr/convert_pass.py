@@ -96,6 +96,7 @@ class PassParseWorker:
             return ''
 
         assert len(fields) == 3, f"Wrong format fline: {line}"
+        # The passage text is not lower cased, please keep it this way.
         pass_id, raw_text, title = fields
 
         if flt_pass_ids is not None:

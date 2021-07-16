@@ -49,7 +49,7 @@ inputDataDir="$COLLECT_ROOT/$collect/$inputDataSubDir"
 indexDir="$COLLECT_ROOT/$collect/$indexSubDir"
 
 echo "=========================================================================="
-echo "Input dta directory:  $inputDataDir"
+echo "Input data directory: $inputDataDir"
 echo "Index directory:      $indexDir"
 echo "Index field name:     $indexFieldName"
 echo "Exact match param:    $exactMatchParam"

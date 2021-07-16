@@ -45,6 +45,7 @@ ENDIANNES_TYPE = '<'
 PACKED_TYPE_DENSE = 0
 
 MSMARCO_DOC_V2_FILE_PATTERN = "^msmarco_doc_.*"
+MSMARCO_PASS_V2_FILE_PATTERN = "^msmarco_passage_.*"
 
 # Replace \n and \r characters with spaces
 def replace_chars_nl(s):
