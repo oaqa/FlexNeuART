@@ -52,7 +52,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   public static String GIZA_ITER_QTY = "gizaIterQty";
   public static String PROB_SELF_TRAN = "probSelfTran";
   public static String MIN_MODEL1_PROB = "minModel1Prob";
-  public static String MODEL1_FILE_PREFIX = "model1FilePrefr";
+  public static String MODEL1_FILE_PREFIX = "model1FilePref";
   public static String LAMBDA = "lambda";
   public static String OOV_PROB = "ProbOOV";
   public static String FLIP_DOC_QUERY = "flipDocQuery";
