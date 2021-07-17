@@ -20,6 +20,7 @@ SPACY_MODEL = 'en_core_web_sm'
 # Constants defined here mostly can't be modified as they should be in sync with Java and bash code
 STOPWORD_FILE = 'data/stopwords.txt'
 MAX_DOC_SIZE=32768 # 32 K of text is enough for most applications
+MAX_PASS_SIZE=8192 # Let's have passages fitting into a single BERT input chunk
 REPORT_QTY=10000
 
 # A size of the chunk passed used in imap
