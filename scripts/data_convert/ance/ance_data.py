@@ -46,6 +46,7 @@ DATA_TYPE_CHOICES = [DATA_TYPE_DPR_NQ,
                      DATA_TYPE_DPR_TRIVIA,
                      DATA_TYPE_MSMARCO_DOC_FIRSTP,
                      DATA_TYPE_MSMARCO_DOC_V2_FIRSTP,
+                     DATA_TYPE_MSMARCO_PASS_V2,
                      DATA_TYPE_MSMARCO_PASS]
 
 
