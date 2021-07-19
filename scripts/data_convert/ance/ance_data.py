@@ -13,7 +13,7 @@ import torch
 import json
 
 from scripts.data_convert.text_proc import replace_tab
-from scripts.data_convert.convert_common import MSMARCO_DOC_V2_FILE_PATTERN, \
+from scripts.data_convert.convert_common import MSMARCO_DOC_V2_FILE_PATTERN, MSMARCO_PASS_V2_FILE_PATTERN, \
     FileWrapper, jsonl_gen, DOCID_FIELD, multi_file_linegen
 from scripts.config import TEXT_RAW_FIELD_NAME
 
@@ -28,16 +28,18 @@ DPR_MAX_SEQ_LEN = 256
 DATA_TYPE_MSMARCO_DOC_FIRSTP = 'msmarco_doc_firstp'
 DATA_TYPE_MSMARCO_DOC_V2_FIRSTP = 'msmarco_doc_v2_firstp'
 DATA_TYPE_MSMARCO_PASS = 'msmarco_pass'
+DATA_TYPE_MSMARCO_PASS_V2 = 'msmarco_pass_v2'
 DATA_TYPE_DPR_NQ = 'dpr_nq'
 DATA_TYPE_DPR_TRIVIA = 'dpr_trivia'
 
 # Must match download_ance_models.sh
 DATA_TYPE_PATHS = {
-    DATA_TYPE_MSMARCO_DOC_FIRSTP : 'Document_ANCE_FirstP_Checkpoint',
-    DATA_TYPE_MSMARCO_DOC_V2_FIRSTP : 'Document_ANCE_FirstP_Checkpoint',
-    DATA_TYPE_MSMARCO_PASS : 'Passage_ANCE_FirstP_Checkpoint',
-    DATA_TYPE_DPR_NQ : 'nq.cp',
-    DATA_TYPE_DPR_TRIVIA : 'trivia.cp'
+    DATA_TYPE_MSMARCO_DOC_FIRSTP      : 'Document_ANCE_FirstP_Checkpoint',
+    DATA_TYPE_MSMARCO_DOC_V2_FIRSTP   : 'Document_ANCE_FirstP_Checkpoint',
+    DATA_TYPE_MSMARCO_PASS            : 'Passage_ANCE_FirstP_Checkpoint',
+    DATA_TYPE_MSMARCO_PASS_V2         : 'Passage_ANCE_FirstP_Checkpoint',
+    DATA_TYPE_DPR_NQ                  : 'nq.cp',
+    DATA_TYPE_DPR_TRIVIA              : 'trivia.cp'
 }
 
 DATA_TYPE_CHOICES = [DATA_TYPE_DPR_NQ,
@@ -246,6 +248,23 @@ def msmarco_doc_v2_body_generator(input_dir, tokenizer):
         url = replace_tab(fields['url'])
         yield parse_and_tokenize_msmarco(is_doc=True,
                                          line='\t'.join([did, url, title, body]),
+                                         tokenizer=tokenizer)
+
+
+def msmarco_pass_v2_body_generator(input_dir, tokenizer):
+    """MS MARCO (v2) passage generator.
+
+    :param input_dir:   an input directory with un-tarred (compressed) JSONL files
+    :param tokenizer:   tokenizer: a tokenizer object
+    :return:  yields a triple: (passage/document id, attention mask, a list of padded token IDs)
+    """
+
+    for line in multi_file_linegen(input_dir, MSMARCO_PASS_V2_FILE_PATTERN):
+        fields = json.loads(line)
+        passage = fields['passage']
+        did = fields['pid']
+        yield parse_and_tokenize_msmarco(is_doc=False,
+                                         line='\t'.join([did, passage]),
                                          tokenizer=tokenizer)
 
 

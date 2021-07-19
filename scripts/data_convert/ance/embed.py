@@ -31,9 +31,10 @@ from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_d
 from scripts.data_convert.ance.ance_models import create_ance_firstp, create_dpr
 from scripts.data_convert.ance.ance_data import DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, \
                                                 DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_DOC_V2_FIRSTP, \
-                                                DATA_TYPE_MSMARCO_PASS, \
+                                                DATA_TYPE_MSMARCO_PASS, DATA_TYPE_MSMARCO_PASS_V2, \
                                                 DATA_TYPE_CHOICES, DATA_TYPE_PATHS, \
-                                                msmarco_body_generator, msmarco_doc_v2_body_generator, \
+                                                msmarco_body_generator, \
+                                                msmarco_doc_v2_body_generator, msmarco_pass_v2_body_generator, \
                                                 wikipedia_dpr_body_generator, \
                                                 jsonl_query_generator, tokenize_query_msmarco, tokenize_query_dpr
 
@@ -88,12 +89,20 @@ if data_type in [DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_PASS]:
         text_generator = msmarco_body_generator(args.input, is_doc, tokenizer)
 
 elif data_type in [DATA_TYPE_MSMARCO_DOC_V2_FIRSTP]:
-    print('Creating ANCE FirstP type model for MS MARCO v2')
+    print('Creating ANCE FirstP type model for MS MARCO v2 documents')
     model, tokenizer = create_ance_firstp(model_path)
     if is_query:
         text_generator = jsonl_query_generator(args.input, tokenizer, tokenize_query_msmarco)
     else:
         text_generator = msmarco_doc_v2_body_generator(args.input, tokenizer)
+
+elif data_type in [DATA_TYPE_MSMARCO_PASS_V2]:
+    print('Creating ANCE FirstP type model for MS MARCO v2 passages')
+    model, tokenizer = create_ance_firstp(model_path)
+    if is_query:
+        text_generator = jsonl_query_generator(args.input, tokenizer, tokenize_query_msmarco)
+    else:
+        text_generator = msmarco_pass_v2_body_generator(args.input, tokenizer)
 
 elif data_type in [DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA]:
 
