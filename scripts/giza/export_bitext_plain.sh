@@ -21,7 +21,7 @@ boolOpts=(\
 
 paramOpts=(\
 "bitext_in_subdir" "bitextInSubDir" "bitext input sub-dir (default $bitextInSubDir)"
-"bitext_out_subdir" "bitextOutSubDir" "bitext input sub-dir (default $bitextOutSubDir)"
+"bitext_out_subdir" "bitextOutSubDir" "bitext targed sub-dir (default $bitextOutSubDir)"
 )
 
 parseArguments $@

@@ -32,7 +32,7 @@ from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import MSMARCO_PASS_V2_FILE_PATTERN, \
                                                 STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
     multi_file_linegen, FileWrapper, read_stop_words, add_retokenized_field, pretokenize_url
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
+from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_PASS_SIZE, \
     TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
     TEXT_RAW_FIELD_NAME, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
@@ -48,6 +48,9 @@ parser.add_argument('--output_main', metavar='main JSONL output',
 parser.add_argument('--output_doc2pass', metavar='recoding JSONL',
                     help='JSONL containing a mapping from a document to all its passage IDs',
                     type=str, required=True)
+parser.add_argument('--max_pass_size', metavar='max passage size bytes',
+                    help='the threshold for the document size, if a document is larger it is truncated',
+                    type=int, default=MAX_PASS_SIZE)
 
 # Default is: Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
@@ -60,6 +63,7 @@ arg_vars = vars(args)
 
 inp_source = multi_file_linegen(args.input, MSMARCO_PASS_V2_FILE_PATTERN)
 out_file = FileWrapper(args.output_main, 'w')
+max_pass_size = args.max_pass_size
 
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
@@ -78,7 +82,7 @@ class DocParseWorker:
             return None
 
         fields = json.loads(line)
-        passage = fields['passage']
+        passage = fields['passage'][:max_pass_size] # cut passages that are too long, for some reason they do occur in the corpus
         pid = fields['pid']
         docid = fields['docid']
 
