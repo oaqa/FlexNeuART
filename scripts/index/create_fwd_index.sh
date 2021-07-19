@@ -98,7 +98,7 @@ for fieldDef in $fieldListDef ; do
 
   # This APP can require a lot of memory
   NO_MAX=0
-  setJavaMem 1 8 $NO_MAX
+  setJavaMem 4 8 $NO_MAX
 
   if [ "$fwdIndexFieldType" = "binary" ] ; then
     dataFileNameCurr="$ANSWER_FILE_BIN"    
