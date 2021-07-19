@@ -262,8 +262,8 @@ def msmarco_pass_v2_body_generator(input_dir, tokenizer):
 
     for line in multi_file_linegen(input_dir, MSMARCO_PASS_V2_FILE_PATTERN):
         fields = json.loads(line)
-        passage = fields['passage']
-        did = fields['pid']
+        passage = replace_tab(fields['passage'])
+        did = replace_tab(fields['pid'])
         yield parse_and_tokenize_msmarco(is_doc=False,
                                          line='\t'.join([did, passage]),
                                          tokenizer=tokenizer)
