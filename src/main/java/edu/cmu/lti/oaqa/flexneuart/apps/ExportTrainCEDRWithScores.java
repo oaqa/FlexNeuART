@@ -16,6 +16,7 @@
 package edu.cmu.lti.oaqa.flexneuart.apps;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -42,7 +43,7 @@ class ExportTrainCEDRWithScores extends ExportTrainNegSampleWithScoresBase {
  
   protected ExportTrainCEDRWithScores(ForwardIndex fwdIndex, 
                             String queryExportFieldName, String indexExportFieldName,
-                            QrelReader qrelsTrain, QrelReader qrelsTest) {
+                            QrelReader qrelsTrain, QrelReader qrelsTest) throws IOException {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
   }
 
