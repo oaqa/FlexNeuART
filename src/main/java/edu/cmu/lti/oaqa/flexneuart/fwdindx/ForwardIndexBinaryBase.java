@@ -22,8 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * A base class for (mostly) binary forward indices, which keeps
@@ -35,7 +33,6 @@ import java.util.Collections;
 public abstract class ForwardIndexBinaryBase extends ForwardIndex {
   
   protected ForwardIndexBinaryBase(String vocabAndDocIdsFile) {
-    mDocIds = new ArrayList<String>();
     mVocabAndDocIdsFile = vocabAndDocIdsFile;
   }
   
@@ -45,7 +42,7 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
    * variant of the forward index.
    * 
    */
-  protected void readHeaderAndDocIds() throws Exception {
+  protected void readHeader() throws Exception {
   	
     try (BufferedReader inp = new BufferedReader(new InputStreamReader(new FileInputStream(mVocabAndDocIdsFile)))) {
 
@@ -53,20 +50,7 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
       
       int lineNum = readHeader(mVocabAndDocIdsFile, inp);
 
-      mDocIds.clear();
-      // Next read document entries
       line = inp.readLine(); lineNum++; 
-      
-      for (; line != null && !line.isEmpty(); line = inp.readLine(), ++lineNum) {
-        String docId = line.trim();
-        mDocIds.add(docId);
-      }
-      if (line == null) {
-        throw new Exception(
-            String.format(
-                    "Can't read a document line (line number %d): the file '%s' may have been truncated.",
-                    lineNum, mVocabAndDocIdsFile));          
-      }
 
       if (line != null) {
         if (!line.isEmpty()) {
@@ -82,39 +66,16 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
     }
   }
   
-  protected void writeHeaderAndDocIds() throws IOException {
-    try (BufferedWriter out =  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mVocabAndDocIdsFile)))) {
-                                                
+  protected void writeHeader() throws IOException {
+    try (BufferedWriter out =  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mVocabAndDocIdsFile)))) {                                               
       writeHeader(out);
-      
-      // 3. Write the document IDs
-      for (String docId : mDocIds) {          
-        out.write(docId);
-        out.newLine();
-
-      }
-      out.newLine();
     } 
   }
  
   @Override
-  protected void sortDocEntries() {
-    Collections.sort(mDocIds);
-  }
-  
-
-  @Override
-  public String[] getAllDocIds() {
-    String res[] = new String[mDocIds.size()];
-    
-    for (int i = 0; i < mDocIds.size(); ++i) {
-      res[i] = mDocIds.get(i);
-    }
-    
-    return res;
+  protected void postIndexCompAdd() {
+    // Potentially can do some useful extra work after the index is loaded
   }
   
   protected final String              mVocabAndDocIdsFile;
-  protected final ArrayList<String>   mDocIds;
-
 }

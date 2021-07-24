@@ -273,7 +273,7 @@ public abstract class ForwardIndex {
     return res;
   }
   
-  abstract public String[] getAllDocIds();
+  abstract public String[] getAllDocIds() throws IOException;
    
   /**
    * Retrieves a previously stored index.
@@ -284,7 +284,7 @@ public abstract class ForwardIndex {
   
   public abstract void saveIndex() throws IOException;
   
-  protected abstract void sortDocEntries();
+  protected abstract void postIndexCompAdd();
   
   /**
    *  Pre-compute some values.
@@ -297,7 +297,7 @@ public abstract class ForwardIndex {
     // MUST go after buildWordListSortedById()
     buildInt2WordEntry();
     
-    sortDocEntries();
+    postIndexCompAdd();
     
     if (mDocQty > 0) {
       mAvgDocLen = mTotalWordQty;

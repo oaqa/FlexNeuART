@@ -175,7 +175,7 @@ public class ForwardIndexTextInMem extends ForwardIndex {
   }
   
   @Override
-  protected void sortDocEntries() {
+  protected void postIndexCompAdd() {
     buildDocListSortedById();
   }
 

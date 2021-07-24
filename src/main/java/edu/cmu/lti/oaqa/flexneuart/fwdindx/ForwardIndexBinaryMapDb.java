@@ -38,8 +38,19 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryMapDb.class);
   
-  public static final int COMMIT_INTERV = 1000000;
-  public static final int MEM_ALLOCATE_INCREMENT = 1024*1024*256; // Allocating memory in 256 MB chunks
+  public static final int COMMIT_INTERV = 10000000; // 10M
+  public static final int MEM_ALLOCATE_INCREMENT = 1024*1024*32; // Allocating memory in 32 MB chunks
+
+  /* 
+   * According to https://jankotek.gitbooks.io/mapdb/content/htreemap/
+   * Maximal Hash Table Size is calculated as: segment# * node size ^ level count
+   * So, the settings below give us approximately 16M : 16 * 16^5 
+   * 
+   */
+  private static final int SEGMENT_QTY = 16;
+  private static final int MAX_NODE_SIZE = 16;
+  private static final int LEVEL_QTY = 5;
+  
   
   protected String mBinFile = null;
 
@@ -50,10 +61,15 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   @Override
   protected void initIndex() throws IOException {
-    mDocIds.clear();
-  
-    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).closeOnJvmShutdown().fileMmapEnable().make();
-    mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).create();
+    mDb = DBMaker.fileDB(mBinFile)
+                .allocateIncrement(MEM_ALLOCATE_INCREMENT)
+                .closeOnJvmShutdown()
+                .fileMmapEnable().make();
+    // With respect to layout see https://jankotek.gitbooks.io/mapdb/content/htreemap/
+    mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY)
+                .layout(SEGMENT_QTY, MAX_NODE_SIZE, LEVEL_QTY)
+                .counterEnable()
+                .create();
   }
 
   @Override
@@ -67,11 +83,10 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   @Override
   protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {
-  	mDocIds.add(docId);
   	byte binDoc[] = doc.toBinary();
     mDbMap.put(docId, binDoc);
     
-    if (mDocIds.size() % COMMIT_INTERV == 0) {
+    if (mDbMap.size() % COMMIT_INTERV == 0) {
       logger.info("Committing");
       mDb.commit();
     }
@@ -88,10 +103,9 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
 
   @Override
   protected void addDocEntryTextRaw(String docId, String docText) throws IOException {
-    mDocIds.add(docId);
     mDbMap.put(docId, CompressUtils.comprStr(docText));
 
-    if (mDocIds.size() % COMMIT_INTERV == 0) {
+    if (mDbMap.size() % COMMIT_INTERV == 0) {
       logger.info("Committing");
       mDb.commit();
     }    
@@ -104,10 +118,9 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
 
   @Override
   protected void addDocEntryBinary(String docId, byte[] docBin) throws IOException {
-    mDocIds.add(docId);
     mDbMap.put(docId, docBin);
 
-    if (mDocIds.size() % COMMIT_INTERV == 0) {
+    if (mDbMap.size() % COMMIT_INTERV == 0) {
       logger.info("Committing");
       mDb.commit();
     }  
@@ -115,10 +128,17 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   @Override
   public void readIndex() throws Exception {
-    readHeaderAndDocIds();
+    readHeader();
     
     // Note that we disable file locking and concurrence to enable accessing the file by different programs at the same time
-    mDb = DBMaker.fileDB(mBinFile).allocateIncrement(MEM_ALLOCATE_INCREMENT).concurrencyDisable().fileLockDisable().closeOnJvmShutdown().fileMmapEnable().readOnly().make();
+    mDb = DBMaker.fileDB(mBinFile)
+                .allocateIncrement(MEM_ALLOCATE_INCREMENT)
+                .concurrencyDisable()
+                .fileLockDisable()
+                .closeOnJvmShutdown()
+                .fileMmapEnable()
+                .readOnly()
+                .make();
     mDbMap = mDb.hashMap("map", Serializer.STRING, Serializer.BYTE_ARRAY).open();
     
     logger.info("Finished loading context from file: " + mBinFile);
@@ -126,12 +146,19 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
 
   @Override
   public void saveIndex() throws IOException {
-    writeHeaderAndDocIds();
-   
+    writeHeader();
+ 
     mDb.commit();
     mDb.close();
   }
 
+  @Override
+  public String[] getAllDocIds() {
+    String res[] = new String[0];
+    return mDbMap.keySet().toArray(res);
+  }
+  
   private DB mDb;
   ConcurrentMap<String,byte[]> mDbMap;
+
 }

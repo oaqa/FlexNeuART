@@ -78,7 +78,7 @@ class QtyOffsetPair {
 public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryFlatFileData.class);
-  public static final int COMMIT_INTERV = 2000000;
+  public static final int COMMIT_INTERV = 10000000; // 10M
   public static final String DATA_SUFFIX = ".dat";
   public static final String BIN_DATA_FIELD_NAME = "bin_dta";
   
@@ -91,8 +91,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   
   @Override
   protected void initIndex() throws IOException {
-    mDocIds.clear();
-  
+    mDocQty = 0;
     mDataFileWrite = new BufferedOutputStream(new FileOutputStream(new File(mBinFile + DATA_SUFFIX)));
     
     File outputDir = new File(mBinFile);
@@ -166,7 +165,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   
   @Override
   public void readIndex() throws Exception {
-    readHeaderAndDocIds();
+    readHeader();
     
     mReader = DirectoryReader.open(FSDirectory.open(Paths.get(mBinFile)));
     mSearcher = new IndexSearcher(mReader);
@@ -178,7 +177,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
 
   @Override
   public void saveIndex() throws IOException {
-    writeHeaderAndDocIds();
+    writeHeader();
    
     mDataFileWrite.close();
     
@@ -187,8 +186,6 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   }
   
   private void addDocEntryPacked(String docId, byte [] binEntry)  throws IOException {  	
-		mDocIds.add(docId);
-    
     byte [] offLenPair = intLongPairToBytes(binEntry.length, mDataSize);
     
     Document luceneDoc = new Document();
@@ -201,8 +198,9 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
     
     mDataFileWrite.write(binEntry);
     mDataSize += binEntry.length;
-  			
-    if (mDocIds.size() % COMMIT_INTERV == 0) {
+    
+    mDocQty++;
+    if (mDocQty % COMMIT_INTERV == 0) {
       logger.info("Committing");
       mIndexWriter.commit();
     }
@@ -254,6 +252,18 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   	
   	return new QtyOffsetPair(in.getInt(), in.getLong());
   }
+  
+
+  @Override
+  public String[] getAllDocIds() throws IOException {
+    String res[] = new String[mDocQty];
+    
+    for (int i = 0; i < mDocQty; ++i) {
+      res[i] = mSearcher.doc(i).get(Const.DOC_ID_FIELD_NAME);
+    }
+    
+    return res;
+  }
 
   RandomAccessFile 								mDataFileRead;
   BufferedOutputStream            mDataFileWrite;
@@ -262,6 +272,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   private DirectoryReader mReader;
   private IndexSearcher mSearcher;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
-  
-  long                            mDataSize = 0;
+
+  long          mDataSize = 0;
+
 }
