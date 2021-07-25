@@ -37,20 +37,18 @@ import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryMapDb.class);
-  
-  public static final int COMMIT_INTERV = 10000000; // 10M
+ 
   public static final int MEM_ALLOCATE_INCREMENT = 1024*1024*32; // Allocating memory in 32 MB chunks
 
   /* 
    * According to https://jankotek.gitbooks.io/mapdb/content/htreemap/
    * Maximal Hash Table Size is calculated as: segment# * node size ^ level count
-   * So, the settings below give us approximately 16M : 16 * 16^5 
+   * So, the settings below give us approximately 134M : 16 * 16^5 
    * 
    */
-  private static final int SEGMENT_QTY = 16;
-  private static final int MAX_NODE_SIZE = 16;
+  private static final int SEGMENT_QTY = 4;
+  private static final int MAX_NODE_SIZE = 32;
   private static final int LEVEL_QTY = 5;
-  
   
   protected String mBinFile = null;
 
@@ -85,11 +83,6 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   protected void addDocEntryParsed(String docId, DocEntryParsed doc) throws IOException {
   	byte binDoc[] = doc.toBinary();
     mDbMap.put(docId, binDoc);
-    
-    if (mDbMap.size() % COMMIT_INTERV == 0) {
-      logger.info("Committing");
-      mDb.commit();
-    }
   }
   
   @Override
@@ -103,12 +96,7 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
 
   @Override
   protected void addDocEntryTextRaw(String docId, String docText) throws IOException {
-    mDbMap.put(docId, CompressUtils.comprStr(docText));
-
-    if (mDbMap.size() % COMMIT_INTERV == 0) {
-      logger.info("Committing");
-      mDb.commit();
-    }    
+    mDbMap.put(docId, CompressUtils.comprStr(docText));   
   }
   
   @Override
@@ -118,12 +106,7 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
 
   @Override
   protected void addDocEntryBinary(String docId, byte[] docBin) throws IOException {
-    mDbMap.put(docId, docBin);
-
-    if (mDbMap.size() % COMMIT_INTERV == 0) {
-      logger.info("Committing");
-      mDb.commit();
-    }  
+    mDbMap.put(docId, docBin); 
   }
   
   @Override

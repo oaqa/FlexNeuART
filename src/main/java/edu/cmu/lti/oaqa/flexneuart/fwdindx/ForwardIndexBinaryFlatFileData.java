@@ -78,7 +78,6 @@ class QtyOffsetPair {
 public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryFlatFileData.class);
-  public static final int COMMIT_INTERV = 10000000; // 10M
   public static final String DATA_SUFFIX = ".dat";
   public static final String BIN_DATA_FIELD_NAME = "bin_dta";
   
@@ -200,10 +199,6 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
     mDataSize += binEntry.length;
     
     mDocQty++;
-    if (mDocQty % COMMIT_INTERV == 0) {
-      logger.info("Committing");
-      mIndexWriter.commit();
-    }
   }
     
   private byte [] getDocEntryPacked(String docId) throws IOException, ParseException {
