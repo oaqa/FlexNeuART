@@ -43,7 +43,7 @@ public class ForwardIndexBinaryMapDb extends ForwardIndexBinaryBase {
   /* 
    * According to https://jankotek.gitbooks.io/mapdb/content/htreemap/
    * Maximal Hash Table Size is calculated as: segment# * node size ^ level count
-   * So, the settings below give us approximately 134M : 16 * 16^5 
+   * So, the settings below give us approximately 134M : 4 * 32^5 
    * 
    */
   private static final int SEGMENT_QTY = 4;

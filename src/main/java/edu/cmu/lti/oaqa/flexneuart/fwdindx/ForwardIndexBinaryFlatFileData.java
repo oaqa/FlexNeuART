@@ -79,7 +79,7 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
   
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndexBinaryFlatFileData.class);
   public static final String DATA_SUFFIX = ".dat";
-  public static final String BIN_DATA_FIELD_NAME = "bin_dta";
+  public static final String BIN_DATA_FIELD_NAME = "bin_data";
   
   protected String mBinFile = null;
 
@@ -197,8 +197,6 @@ public class ForwardIndexBinaryFlatFileData extends ForwardIndexBinaryBase {
     
     mDataFileWrite.write(binEntry);
     mDataSize += binEntry.length;
-    
-    mDocQty++;
   }
     
   private byte [] getDocEntryPacked(String docId) throws IOException, ParseException {
