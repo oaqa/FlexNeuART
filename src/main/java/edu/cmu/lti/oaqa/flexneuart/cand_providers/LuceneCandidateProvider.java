@@ -47,10 +47,7 @@ public class LuceneCandidateProvider extends CandidateProvider {
 
 	final Logger logger = LoggerFactory.getLogger(LuceneCandidateProvider.class);
 	
-  // 8 GB is quite reasonable, but if you increase this value, 
-  // you may need to modify the following line in *.sh files
-  // export MAVEN_OPTS="-Xms8192m -server"
-  public static double DEFAULT_RAM_BUFFER_SIZE = 1024 * 8; // 8 GB
+  public static double DEFAULT_RAM_BUFFER_SIZE = 1024 * 4; // 4 GB
   
   @Override
   public String getName() {

@@ -1,7 +1,5 @@
 package edu.cmu.lti.oaqa.flexneuart.apps;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.slf4j.Logger;
@@ -31,7 +29,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   public static final String KEEP_CASE_DESC = "do not lower-case queries and documents";
   
   public ExportTrainNegSampleBase(ForwardIndex fwdIndex, String queryExportFieldName, String indexExportFieldName,
-      QrelReader qrelsTrain, QrelReader qrelsTest) throws IOException {
+      QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
     
     mAllDocIds = fwdIndex.getAllDocIds();

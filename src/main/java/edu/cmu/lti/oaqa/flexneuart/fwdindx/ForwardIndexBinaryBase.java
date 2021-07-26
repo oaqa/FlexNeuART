@@ -32,8 +32,8 @@ import java.io.OutputStreamWriter;
  */
 public abstract class ForwardIndexBinaryBase extends ForwardIndex {
   
-  protected ForwardIndexBinaryBase(String vocabAndDocIdsFile) {
-    mVocabAndDocIdsFile = vocabAndDocIdsFile;
+  protected ForwardIndexBinaryBase(String headerFile) {
+    mHeaderFile = headerFile;
   }
   
   /**
@@ -44,11 +44,11 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
    */
   protected void readHeader() throws Exception {
   	
-    try (BufferedReader inp = new BufferedReader(new InputStreamReader(new FileInputStream(mVocabAndDocIdsFile)))) {
+    try (BufferedReader inp = new BufferedReader(new InputStreamReader(new FileInputStream(mHeaderFile)))) {
 
       String line;
       
-      int lineNum = readHeader(mVocabAndDocIdsFile, inp);
+      int lineNum = readHeader(mHeaderFile, inp);
 
       line = inp.readLine(); lineNum++; 
 
@@ -57,7 +57,7 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
           throw new Exception(
               String.format(
                       "Wrong format, expecting the end of flie at the number %d, file '%s'.",
-                      lineNum, mVocabAndDocIdsFile));                  
+                      lineNum, mHeaderFile));                  
         }
 
       }
@@ -67,7 +67,7 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
   }
   
   protected void writeHeader() throws IOException {
-    try (BufferedWriter out =  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mVocabAndDocIdsFile)))) {                                               
+    try (BufferedWriter out =  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mHeaderFile)))) {                                               
       writeHeader(out);
     } 
   }
@@ -77,5 +77,5 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
     // Potentially can do some useful extra work after the index is loaded
   }
   
-  protected final String              mVocabAndDocIdsFile;
+  protected final String              mHeaderFile;
 }

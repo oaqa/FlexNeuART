@@ -384,10 +384,10 @@ echo "Candidate provider add. configuration     $candProvAddConf"
 
 echo "$SEP_DEBUG_LINE"
 
-echo "Maximum number of test queries parameter: $maxQueryQtyTrainParam"
-echo "Number of candidate records for training: $trainCandQty"
-echo "Maximum number of train candidates:       $maxQueryQtyTestParam"
-echo "A list for the number of test candidates: $testCandQtyList"
+echo "Maximum number of train queries parameter: $maxQueryQtyTrainParam"
+echo "Number of candidate records for training:  $trainCandQty"
+echo "A list for the number of test candidates:  $testCandQtyList"
+echo "Maximum number of test queries parameter:  $maxQueryQtyTestParam"
 
 echo "$SEP_DEBUG_LINE"
 

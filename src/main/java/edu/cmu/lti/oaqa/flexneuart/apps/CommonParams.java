@@ -103,6 +103,9 @@ public class CommonParams {
   public final static String MAX_NUM_REC_DESC = "maximum number of records to process";
   public final static String MAX_NUM_REC_PARAM = "max_num_rec";
   
+  public final static String EXPECTED_DOC_QTY_DESC = "expected # of documents in the index";
+  public final static String EXPECTED_DOC_QTY_PARAM = "expect_doc_qty";
+  
   public final static String MAX_NUM_QUERY_DESC  = "maximum number of queries to process";
   public final static String MAX_NUM_QUERY_PARAM = "max_num_query";
   
@@ -141,10 +144,12 @@ public class CommonParams {
 
   public final static String FOWARD_INDEX_FIELD_TYPE_PARAM = "fwd_index_field_type";
   public final static String FOWARD_INDEX_FIELD_TYPE_DESC  = "A forward index field type: " + ForwardIndex.getIndexFieldTypeList();
-
   
-  public final static String FOWARD_INDEX_BACKEND_TYPE_PARAM = "fwd_index_backend_type";
-  public final static String FOWARD_INDEX_BACKEND_TYPE_DESC  = "A forward index backend type: " + ForwardIndex.getIndexBackendTypeList();
+  public final static String FOWARD_INDEX_STORE_TYPE_PARAM = "fwd_index_store_type";
+  public final static String FOWARD_INDEX_STORE_TYPE_DESC  = "A forward backend storage type: " + ForwardIndex.getStoreTypeList();
+  
+  public final static String FOWARD_INDEX_TYPE_PARAM = "fwd_index_type";
+  public final static String FOWARD_INDEX_TYPE_DESC  = "A forward index type: " + ForwardIndex.getIndexTypeList();
  
   public static final String OUTPUT_FILE_PARAM = "out_file";
   public static final String OUTPUT_FILE_DESC = "Output file";

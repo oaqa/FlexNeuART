@@ -56,7 +56,7 @@ class DocEntryExt implements Comparable<DocEntryExt> {
  *
  */
 public class ForwardIndexTextInMem extends ForwardIndex {  
-  private static String NOT_SUPPORTED_PREFIX = ForwardIndexBackendType.inmem.toString() + " does not support";
+  private static String NOT_SUPPORTED_PREFIX = ForwardIndexType.inmem.toString() + " does not support";
  
   protected ForwardIndexTextInMem(String fileName) {
     mFileName = fileName;
@@ -198,7 +198,7 @@ public class ForwardIndexTextInMem extends ForwardIndex {
   protected ArrayList<DocEntryExt> mDocEntInAdditionOrder = new ArrayList<DocEntryExt>();
   
   @Override
-  protected void initIndex() throws IOException {
+  protected void initIndex(int dummy) throws Exception {
     // We do nothing here
   }
 

@@ -15,8 +15,6 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.apps;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.*;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
@@ -30,7 +28,7 @@ public abstract class ExportTrainBase {
   static ExportTrainBase createExporter(String expType,
                                         ForwardIndex fwdIndex,
                                         String queryExportFieldName, String indexExportFieldName,
-                                        QrelReader qrelsTrain, QrelReader qrelsTest) throws IOException {
+                                        QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     if (expType.compareToIgnoreCase(ExportTrainMatchZoo.FORMAT_NAME) == 0) {
       return new ExportTrainMatchZoo(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
     }

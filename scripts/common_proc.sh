@@ -4,7 +4,6 @@
 CAND_PROV_LUCENE="lucene"
 DEFAULT_QUERY_TEXT_FIELD_NAME="text"
 CAND_PROV_NMSLIB="nmslib"
-FWD_INDEX_BACKEND_TYPES="mapdb, flatdata"
 
 # Both query/question and answer/data files can be in two formats:
 # 1. JSONL (always present)

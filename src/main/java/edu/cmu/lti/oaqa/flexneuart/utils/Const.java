@@ -64,9 +64,10 @@ public class Const {
   
   public static final Pattern PATTERN_WHITESPACE = Pattern.compile("[\\s\n\r\t]");
   
-  public static final int PROGRESS_REPORT_QTY = 10000;
+  public static final int PROGRESS_REPORT_QTY = 100000;
   
   public static final String FAKE_RUN_ID = "fake_run";
+
   
   public static final int MAX_RELEV_GRADE = 4;
   

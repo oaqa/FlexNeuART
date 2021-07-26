@@ -1,7 +1,6 @@
 package edu.cmu.lti.oaqa.flexneuart.apps;
 
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,7 +32,7 @@ class ExportTrainMatchZoo extends ExportTrainNegSampleWithoutScoresBase {
   
   protected ExportTrainMatchZoo(ForwardIndex fwdIndex, 
                                String queryExportFieldName, String indexExportFieldName,
-                               QrelReader qrelsTrain, QrelReader qrelsTest) throws IOException {
+                               QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
   }
 
