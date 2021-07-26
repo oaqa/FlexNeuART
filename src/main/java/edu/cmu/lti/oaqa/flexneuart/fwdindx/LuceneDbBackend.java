@@ -26,7 +26,7 @@ import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 
 public class LuceneDbBackend extends PersistentKeyValBackend {
-  private static final Logger logger = LoggerFactory.getLogger(PersistentKeyValBackend.class);
+  private static final Logger logger = LoggerFactory.getLogger(LuceneDbBackend.class);
   
   public static final String BIN_DATA_FIELD_NAME = "bin_data";
 
@@ -107,11 +107,12 @@ public class LuceneDbBackend extends PersistentKeyValBackend {
   }
 
   @Override
+  // This function assumes we have no deleted documents
   public int size() throws Exception {
     if (mReader == null) {
       throw new Exception("Trying to get a # of documents on an index that is not open!");
     }
-    return mReader.getDocCount(BIN_DATA_FIELD_NAME);
+    return mReader.maxDoc();
   }
   
   private IndexWriter mIndexWriter;
