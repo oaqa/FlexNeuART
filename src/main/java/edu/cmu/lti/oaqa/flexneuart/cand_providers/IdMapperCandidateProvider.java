@@ -99,7 +99,9 @@ public class IdMapperCandidateProvider extends CandidateProvider {
     CandidateEntry tmpEntries[] = mappedEntries.toArray(new CandidateEntry[0]);
     Arrays.sort(tmpEntries);
     
-    return new CandidateInfo(tmpEntries.length, Arrays.copyOf(tmpEntries, maxQty));
+    int qty = Math.min(maxQty, tmpEntries.length);
+    
+    return new CandidateInfo(tmpEntries.length, Arrays.copyOf(tmpEntries, qty));
   }
 
   private final CandidateProvider mBackendProv;
