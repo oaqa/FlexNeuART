@@ -251,7 +251,7 @@ jsonParamMap=(\
   num_rand_restart numRandRestart \
   train_part trainPart \
   run_id runId \
-  extr_type extrType \
+  extr_type_final extrTypeFinal \
   extr_type_interm  extrTypeInterm \
   model_interm modelInterm \
   model_final modelFinal \

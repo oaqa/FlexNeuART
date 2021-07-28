@@ -40,7 +40,7 @@ numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
 metricType=$DEFAULT_METRIC_TYPE
 
-extrType=""
+extrTypeFinal=""
 
 skipEval=0
 
@@ -141,8 +141,8 @@ while [ $# -ne 0 ] ; do
         -train_part)
           trainPart=$optValue
           ;;
-        -extr_type)
-          extrType=$optValue
+        -extr_type_final)
+          extrTypeFinal=$optValue
           ;;
         -model_interm)
           modelIntermParam=$opt
@@ -216,7 +216,7 @@ fi
 
 testCandQtyListSpaceSep=`echo $testCandQtyList|sed 's/,/ /g'`
 
-if [ "$modelFinal" != "" -a "$extrType" = "" ] ; then
+if [ "$modelFinal" != "" -a "$extrTypeFinal" = "" ] ; then
   echo "You specified the final model, but not the extractor type!"
   exit 1
 fi
@@ -225,13 +225,13 @@ if [ "$testOnly" = "0" ] ; then
   # Should be set to a default value in the beginning
   checkVarNonEmpty "trainPart"
   echo "Running training in addition to test b/c we have an extractor, but not the final model!"
-   if [ "$extrType" = "" ] ; then
+   if [ "$extrTypeFinal" = "" ] ; then
     echo "In the training mode, you need to specify the feature extractor -extr_type!"
     exit 1
   fi
 else
   echo "Running in test only model"
-  if [ "$modelFinal" == "" -a "$extrType" != "" ] ; then
+  if [ "$modelFinal" == "" -a "$extrTypeFinal" != "" ] ; then
     echo "You specified the extractor type, but not the final model!"
     exit 1
   fi
@@ -350,8 +350,8 @@ else
   modelFinalRelative="$modelFinal"
 fi
 if [ "$modelFinal" != "" ] ; then
-  checkVarNonEmpty "extrType"
-  modelFinalParams="-extr_type_final \"$extrType\" -model_final \"$modelFinalRelative\""
+  checkVarNonEmpty "extrTypeFinal"
+  modelFinalParams="-extr_type_final \"$extrTypeFinal\" -model_final \"$modelFinalRelative\""
 fi
 
 echo "$SEP_DEBUG_LINE"
@@ -426,7 +426,7 @@ if [ "$testOnly" = "0" ] ; then
   fi
 
   if [ "$regenFeat" = "1" ] ; then
-    checkVarNonEmpty "extrType"
+    checkVarNonEmpty "extrTypeFinal"
 
     # For the final training, we re-rank only top-K candidates.
     if [ "$maxFinalRerankQtyParam" != "" ] ; then
@@ -441,7 +441,7 @@ if [ "$testOnly" = "0" ] ; then
                                     -n "$trainCandQty" \
                                     -max_final_rerank_qty "$trainCandQty" \
                                     -f "$fullOutPrefTrain" \
-                                    -extr_type_final \"$extrType\" \
+                                    -extr_type_final \"$extrTypeFinal\" \
                                      $commonAddParams \
                                      $maxQueryQtyTrainParam  \
                                      $queryCacheParamTrain 2>&1 | tee "${fullOutPrefTrain}_${trainCandQty}.log"
