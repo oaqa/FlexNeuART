@@ -90,10 +90,12 @@ public class IdMapperCandidateProvider extends CandidateProvider {
       // The re-mapping index contains white-space separated IDs
       String mappedIdStr = mIdMapper.getDocEntryTextRaw(e.mDocId);
       if (mappedIdStr == null) {
-        throw new Exception("Cannot map id '" + e.mDocId + "' using the field: " + mIdMapFieldName);
-      }
-      for (String mappedId : StringUtils.splitOnWhiteSpace(mappedIdStr)) {
-        mappedEntries.add(new CandidateEntry(mappedId, e.mScore, e.mOrigScore));
+        // There can be documents without correspondence
+        logger.warn("Cannot map id '" + e.mDocId + "' using the field: " + mIdMapFieldName);
+      } else {
+        for (String mappedId : StringUtils.splitOnWhiteSpace(mappedIdStr)) {
+          mappedEntries.add(new CandidateEntry(mappedId, e.mScore, e.mOrigScore));
+        }
       }
     }
     CandidateEntry tmpEntries[] = mappedEntries.toArray(new CandidateEntry[0]);
