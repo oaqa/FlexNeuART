@@ -27,7 +27,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 
 
 public class BackendTest {
@@ -53,15 +57,30 @@ public class BackendTest {
     
     backend.openIndexForReading(indexPrefix);
     
-    String keys[] = backend.getKeyArray();
-    
-    assertEquals(keys.length, data.size());
-    
-    for (int i = 0; i < keys.length; i++) {
-      byte[] binValue = backend.get(keys[i]);
-      assertTrue(binValue != null);
-      String value = new String(binValue);
-      assertTrue(value.compareTo(data.get(keys[i])) == 0);
+    // At one stage retrieve keys using getKeyArray, at the other stage retrieve keys using the iterator interface
+    for (int testStage = 0; testStage < 2; testStage++) {
+      String keys[] = new String[0];
+      if (testStage == 0)
+        keys = backend.getKeyArray();
+      else {
+        ArrayList<String> keysArrList = new ArrayList<String>();
+        for (Iterator<String> it = backend.getKeyIterator(); it.hasNext(); ) {
+          keysArrList.add(it.next());
+        }
+        keys = keysArrList.toArray(keys);
+      }
+      
+      HashSet<String> keySet = new HashSet<String>(Arrays.asList(keys));
+      
+      assertEquals(keySet.size(), data.size()); 
+      assertEquals(keys.length, data.size());
+      
+      for (int i = 0; i < keys.length; i++) {
+        byte[] binValue = backend.get(keys[i]);
+        assertTrue(binValue != null);
+        String value = new String(binValue);
+        assertTrue(value.compareTo(data.get(keys[i])) == 0);
+      }
     }
     
     FileUtils.deleteDirectory(tmpDir.toFile());

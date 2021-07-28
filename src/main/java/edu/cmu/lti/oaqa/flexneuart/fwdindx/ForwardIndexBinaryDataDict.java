@@ -15,6 +15,8 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.fwdindx;
 
+import java.util.Iterator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,6 +108,11 @@ public class ForwardIndexBinaryDataDict extends ForwardIndexBinaryBase {
   @Override
   public String[] getAllDocIds() throws Exception {
     return mBackend.getKeyArray();
+  }
+  
+  @Override
+  public Iterator<String> getDocIdIterator() throws Exception {
+    return mBackend.getKeyIterator();
   }
   
   PersistentKeyValBackend  mBackend;

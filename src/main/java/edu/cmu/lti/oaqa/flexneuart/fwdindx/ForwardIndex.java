@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -308,6 +309,8 @@ public abstract class ForwardIndex {
   }
   
   abstract public String[] getAllDocIds() throws Exception;
+  
+  abstract public Iterator<String> getDocIdIterator() throws Exception;
    
   /**
    * Retrieves a previously stored index.

@@ -22,6 +22,7 @@ import java.util.Arrays;
 import no.uib.cipr.matrix.sparse.SparseVector;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.letor.EmbeddingReaderAndRecoder;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
 
 /**
@@ -31,7 +32,6 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
  *
  */
 public class DistanceFunctions {
-  public static final float FLOAT_EPS = Float.MIN_NORMAL * 2;
   public static final int LCS_LIKE_QTY = 3;
   public static final int EMD_LIKE_QTY = 4;
 
@@ -129,7 +129,7 @@ public class DistanceFunctions {
      * This throws off other functions that use scalar product, e.g., acos
      */
     float normMul = norm1 * norm2;
-    normMul =  (float) Math.sqrt(Math.max(FLOAT_EPS, normMul));
+    normMul =  (float) Math.sqrt(Math.max(Const.FLOAT_EPS, normMul));
 
     float normSum = (float) (sum / normMul);
 
@@ -598,5 +598,56 @@ public class DistanceFunctions {
       System.out.println("Thresholded LCS (fuzzy): " + res[1]);
       System.out.println("Subsequence sum : " + res[2]);
     }
+  }
+  
+  /**
+   * Computes the unnormalized scalar product between two sparse vectors.
+   * 
+   * @param v1
+   * @param v2
+   * @return
+   */
+  public static float compScalar(TrulySparseVector v1, TrulySparseVector v2) {
+    float res = 0;
+    
+    int qty1 = v1.mIDs.length;
+    int qty2 = v2.mIDs.length;
+    
+    int i1 = 0, i2 = 0;
+    
+    while(i1 < qty1 && i2 < qty2) {
+      int wordId1 = v1.mIDs[i1];
+      int wordId2 = v2.mIDs[i2];
+      if (wordId1 < wordId2) {
+        i1++;
+      } else if (wordId1 > wordId2) {
+        i2++;
+      } else {
+     /*
+      *  Ignore OOV words  (id < 0), if they slip through the cracks.
+      *  Note that if wordId1 >= 0, then wordId2 >= 0 too (because word IDs are equal at this point)       
+      */
+        if (wordId1 >=0) { 
+          res += v1.mVals[i1] * v2.mVals[i2];
+        }
+        i1++; i2++;
+      }
+    }
+    
+    return res;
+  }
+  
+  /**
+   * Computes the normalized scalar product between two sparse vectors.
+   * 
+   * @param v1
+   * @param v2
+   * @return
+   */
+  public static float compNormScalar(TrulySparseVector v1, TrulySparseVector v2) {
+    float norm1 = v1.l2Norm();
+    float norm2 = v2.l2Norm();
+    
+    return compScalar(v1, v2) / Math.max(Const.FLOAT_EPS, norm1 * norm2);
   }
 }

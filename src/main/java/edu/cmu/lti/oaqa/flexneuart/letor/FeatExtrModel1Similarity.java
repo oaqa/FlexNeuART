@@ -102,7 +102,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields)
+  public Map<String, DenseVector> getFeaturesMappedIds(CandidateEntry[] cands, DataEntryFields queryFields)
       throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
     
@@ -340,7 +340,7 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
   }
   
   @Override
-  public VectorWrapper getFeatInnerProdDocVector(DocEntryParsed e) throws Exception {
+  protected VectorWrapper getFeatInnerProdDocVector(DocEntryParsed e) throws Exception {
     if (mFlipDocQuery) { 
       return getQueryFeatureVectorsForInnerProd(e);
     } else {

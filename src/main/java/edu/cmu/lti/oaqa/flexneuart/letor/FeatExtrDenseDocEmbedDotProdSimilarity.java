@@ -16,6 +16,7 @@
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -32,30 +33,28 @@ import edu.cmu.lti.oaqa.flexneuart.utils.VectorWrapper;
 import no.uib.cipr.matrix.DenseVector;
 
 /**
- * This feature extractor computes the dot (inner) product between a precomputed
- * document and query vector. This type of the feature extractor does not tolerate
- * 
+ * This feature extractor computes the dot (inner) product between pre-computed *DENSE* vectors for a documents and a query. 
  * 
  * @author Leonid Boytsov
  *
  */
-public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatExtractor {
-  public static String EXTR_TYPE = "DocEmbedDotProd";
-  final Logger logger = LoggerFactory.getLogger(FeatExtrDocEmbedDotProdSimilarity.class);
+public class FeatExtrDenseDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatExtractor {
+  public static String EXTR_TYPE = "DocDenseEmbedDotProd";
+  final Logger logger = LoggerFactory.getLogger(FeatExtrDenseDocEmbedDotProdSimilarity.class);
   
-  public FeatExtrDocEmbedDotProdSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
+  public FeatExtrDenseDocEmbedDotProdSimilarity(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     super(resMngr, conf);
     
     String indexFieldName = getIndexFieldName();
  
     mFieldIndex = resMngr.getFwdIndex(indexFieldName);
     
-    String docIds[] = mFieldIndex.getAllDocIds();
-    if (docIds.length == 0) {
+    Iterator<String> docIdIter = mFieldIndex.getDocIdIterator();
+    if (!docIdIter.hasNext()) {
       throw new Exception("Cannot work with an empty index!");
     }
     // Infer dimensions from the first available vector
-    float vec[] = BinReadWriteUtils.readPackedDenseVector(mFieldIndex.getDocEntryBinary(docIds[0]));
+    float vec[] = BinReadWriteUtils.readPackedDenseVector(mFieldIndex.getDocEntryBinary(docIdIter.next()));
     mDim = vec.length;
     
     mNormalize = conf.getParam(FeatExtrWordEmbedSimilarity.USE_L2_NORM, false);
@@ -87,7 +86,7 @@ public class FeatExtrDocEmbedDotProdSimilarity extends SingleFieldInnerProdFeatE
   }
 
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
+  public Map<String, DenseVector> getFeaturesMappedIds(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String, DenseVector> res = initResultSet(cands, getFeatureQty()); 
     
     String queryId = queryFields.mEntryId;  

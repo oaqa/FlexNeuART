@@ -35,7 +35,7 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
     TEXT_RAW_FIELD_NAME, \
     REPORT_QTY, SPACY_MODEL, QUESTION_FILE_JSON, QREL_FILE
 
-from scripts.common_eval import QrelEntry, write_qrels
+from scripts.eval_common import QrelEntry, write_qrels
 
 ORCAS_QID_PREF='orcas_'
 

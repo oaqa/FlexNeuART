@@ -31,6 +31,7 @@ import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldInnerProdFeatExtractor;
 import edu.cmu.lti.oaqa.flexneuart.resources.CompositeFeatureExtractor;
 import edu.cmu.lti.oaqa.flexneuart.resources.ResourceManager;
+import edu.cmu.lti.oaqa.flexneuart.simil_func.DistanceFunctions;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.TrulySparseVector;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryReader;
@@ -181,7 +182,7 @@ public class CheckSparseExportScores {
             String did = docIds[i];
             TrulySparseVector docVect = docVectArr[i];
 
-            float innerProdVal = TrulySparseVector.scalarProduct(docVect, queryVect);
+            float innerProdVal = DistanceFunctions.compScalar(docVect, queryVect);
             DenseVector featVect = res.get(did);
             float featBasedVal = (float) compWeights.dot(featVect);
 

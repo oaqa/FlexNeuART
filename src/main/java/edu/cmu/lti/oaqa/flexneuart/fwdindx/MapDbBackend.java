@@ -1,5 +1,6 @@
 package edu.cmu.lti.oaqa.flexneuart.fwdindx;
 
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentMap;
 
 import org.mapdb.DB;
@@ -76,6 +77,11 @@ public class MapDbBackend extends PersistentKeyValBackend {
   @Override
   public byte[] get(String key) {
     return mDbMap.get(key);
+  }
+  
+  @Override
+  public Iterator<String> getKeyIterator() throws Exception {
+    return mDbMap.keySet().iterator();
   }
 
   @Override

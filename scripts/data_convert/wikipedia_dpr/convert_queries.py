@@ -35,7 +35,7 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
     BITEXT_QUESTION_PREFIX, BITEXT_ANSWER_PREFIX,\
     ANSWER_LIST_FIELD_NAME
 from scripts.data_convert.wikipedia_dpr.utils import dpr_json_reader, get_passage_id
-from scripts.common_eval import write_qrels, add_qrel_entry
+from scripts.eval_common import write_qrels, add_qrel_entry
 
 #
 # Script converts raw query files from DPR repository into the FlexNeuArt internal format.

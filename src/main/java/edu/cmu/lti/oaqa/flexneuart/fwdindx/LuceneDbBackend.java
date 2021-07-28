@@ -1,6 +1,8 @@
 package edu.cmu.lti.oaqa.flexneuart.fwdindx;
 
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Iterator;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
@@ -24,6 +26,35 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
+
+class LuceneDbKeyIterator implements Iterator<String> {
+  private static final Logger logger = LoggerFactory.getLogger(LuceneDbKeyIterator.class);
+
+  protected LuceneDbKeyIterator(IndexSearcher searcher, int qty) {
+    mQty = qty;
+    mSearcher = searcher;
+  }
+
+  @Override
+  public boolean hasNext() {
+    return mIdx < mQty;
+  }
+
+  @Override
+  public String next() {
+    try {
+      return mSearcher.doc(mIdx++).get(Const.DOC_ID_FIELD_NAME);
+    } catch (IOException e) {
+      logger.error("Failed to retrieve entry: " + mIdx + "  # of entries: " + mQty);
+      e.printStackTrace();
+      return null;
+    }
+  }
+  
+  private final IndexSearcher mSearcher;
+  private final int mQty;
+  private int mIdx = 0; 
+}
 
 public class LuceneDbBackend extends PersistentKeyValBackend {
   private static final Logger logger = LoggerFactory.getLogger(LuceneDbBackend.class);
@@ -105,6 +136,11 @@ public class LuceneDbBackend extends PersistentKeyValBackend {
     
     return res;
   }
+  
+  @Override
+  public Iterator<String> getKeyIterator() throws Exception {
+    return new LuceneDbKeyIterator(mSearcher, size());
+  }
 
   @Override
   // This function assumes we have no deleted documents
@@ -119,5 +155,4 @@ public class LuceneDbBackend extends PersistentKeyValBackend {
   private DirectoryReader mReader;
   private IndexSearcher mSearcher;
   private Analyzer      mAnalyzer = new WhitespaceAnalyzer();
-
 }

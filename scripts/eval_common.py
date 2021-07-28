@@ -25,6 +25,7 @@ sys.path.append('.')
 from scripts.data_convert.convert_common import FileWrapper
 
 FAKE_RUN_ID = "fake_run"
+FAKE_DOC_ID = "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES"
 
 METRIC_MAP = 'map'
 # We hardcode 20, b/c it's hardcoded in gdeval.pl

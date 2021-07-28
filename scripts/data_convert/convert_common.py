@@ -40,9 +40,10 @@ OUT_BITEXT_PATH_OPT = 'out_bitext_path'
 OUT_BITEXT_PATH_OPT_META = 'optional bitext path'
 OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
 
-
+# '<' stands for Little-endian
 ENDIANNES_TYPE = '<'
 PACKED_TYPE_DENSE = 0
+BIN_DATA_SPARSE_VECTOR = 1
 
 MSMARCO_DOC_V2_FILE_PATTERN = "^msmarco_doc_.*"
 MSMARCO_PASS_V2_FILE_PATTERN = "^msmarco_passage_.*"
@@ -337,36 +338,6 @@ def add_retokenized_field(data_entry,
             dst = get_retokenized(tokenizer, data_entry[src_field])
 
         data_entry[dst_field] = dst
-
-
-def read_doc_ids_from_forward_file_header(fwd_file_name):
-    """Read document IDs from the textual header
-       of a forward index. Some basic integrity checkes are done.
-
-       :param   fwd_file_name: input file name
-       :return  a set of document IDs.
-    """
-    f = open(fwd_file_name)
-    lines = [s.strip() for s in f]
-    assert len(lines) > 3, f"File {fwd_file_name} is too short"
-    f.close()
-    doc_qty, _ = lines[1].split()
-    doc_qty = int(doc_qty)
-
-    assert len(lines) > doc_qty + 4, f"File {fwd_file_name} is too short: length isn't consistent with the header info"
-    assert lines[2] == "", f"The second line in {fwd_file_name} isn't empty as expected!"
-    assert lines[-1] == "", f"The last line in {fwd_file_name} isn't empty as expected!"
-    k = 3
-    while k < len(lines) and lines[k] != '':
-        k = k + 1
-    assert lines[k] == ''  # We check that the last line is empty, we must find the empty line!
-    k = k + 1
-
-    assert k + doc_qty + 1 == len(lines)
-    res = lines[k:len(lines) - 1]
-    assert len(res) == doc_qty
-
-    return set(res)
 
 
 def build_query_id_to_partition(query_ids, sizes):

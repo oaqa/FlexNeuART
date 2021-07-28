@@ -17,6 +17,8 @@ package edu.cmu.lti.oaqa.flexneuart.letor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,16 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
   public SingleFieldFeatExtractor(ResourceManager resMngr, RestrictedJsonConfig conf) throws Exception {
     mIndexFieldName = conf.getReqParamStr(CommonParams.INDEX_FIELD_NAME);
     mQueryFieldName = conf.getParam(CommonParams.QUERY_FIELD_NAME, mIndexFieldName);
+    mIdMapFieldName = conf.getParam(CommonParams.ID_MAP_FIELD_NAME, "");
+    if (mIdMapFieldName.length() == 0) {
+      mIdMapper = null;
+    } else {
+      logger.info("Using field: " + mIdMapFieldName + " to map entry/document IDs");
+      mIdMapper = resMngr.getFwdIndex(mIdMapFieldName);
+      if (!mIdMapper.isTextRaw()) {
+        throw new Exception("Remapping field " + mIdMapFieldName + " should have the raw text type!");
+      }
+    }
   }
 
   /**
@@ -65,6 +77,69 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
   
   protected void warnEmptyQueryField(Logger logger, String extrType, String queryId) {
     logger.warn("Empty field " + getQueryFieldName() + " query ID: " + queryId + " extractor: " + extrType);
+  }
+  
+  /**
+   * Obtains features for a set of documents, this function should be <b>thread-safe!</b>. 
+   * This function uses entry IDs, which are not necessarily collection entry IDs. This can be used to score passages
+   * using, e.g., a document index.
+   * 
+   * @param     cands        an array of candidate entries.
+   * @param     queryFields  a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}. 
+
+   * @return a map docId -> sparse feature vector
+   */
+  protected abstract Map<String,DenseVector> getFeaturesMappedIds(CandidateEntry[] cands, 
+                                                                  DataEntryFields  queryFields) throws Exception;
+  
+  /**
+   * A wrapper function, which obtains features for a set of documents by calling {@link getFeaturesMappedIds}. 
+   * This function uses entry IDs, which must be collection entry IDs. If there is no ID mapper defined in the configuration
+   * file, the function simply calls {@link getFeaturesMappedIds} with the provided input. Otherwise, it first
+   * maps IDs using the remapping index and calls {@link getFeaturesMappedIds} using mapped IDs.
+   * 
+   * @param     cands        an array of candidate entries.
+   * @param     queryFields  a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}. 
+
+   * @return a map docId -> sparse feature vector
+   */
+  @Override
+  public Map<String,DenseVector> getFeatures(CandidateEntry[] cands, 
+                                             DataEntryFields  queryFields) throws Exception {
+    if (mIdMapper == null) {
+      return getFeaturesMappedIds(cands, queryFields);
+    } else {
+      CandidateEntry[] candsMappedId = new CandidateEntry[cands.length];
+      HashMap<String, String> backMap = new HashMap<String, String>();
+      
+      for (int i = 0; i < cands.length; i++) {
+        CandidateEntry e = cands[i];
+        String origId = e.mDocId;
+        String mappedId = mIdMapper.getDocEntryTextRaw(origId);
+        if (mappedId == null) {
+          throw new Exception("Cannot map id '" + origId + "' using the field: " + mIdMapFieldName);
+        }
+        if (backMap.containsKey(mappedId)) {
+          throw new Exception("Repeating mapped id '" + mappedId + "' for the remapping field: '" + mIdMapFieldName + "' original id: '" + origId + "'");
+        }
+        backMap.put(mappedId, origId);
+        candsMappedId[i] = new CandidateEntry(mappedId, e.mScore, e.mOrigScore);
+      }
+      
+      Map<String, DenseVector> tmpRes = getFeaturesMappedIds(candsMappedId, queryFields);
+      HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
+      
+      for (Entry<String, DenseVector> tmpResEntry : tmpRes.entrySet()) {
+        String mappedId = tmpResEntry.getKey();
+        DenseVector feats = tmpResEntry.getValue();
+        String origId = backMap.get(mappedId);
+        if (origId == null) {
+          throw new Exception("Cannot backmap id '" + mappedId + "' after feature generation, the remapping field: " + mIdMapFieldName);
+        }
+        res.put(origId, feats);
+      }
+      return res;
+    }
   }
 
   /**
@@ -120,4 +195,6 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
 
   protected final String mQueryFieldName;
   protected final String mIndexFieldName;
+  protected final String mIdMapFieldName;
+  protected final ForwardIndex mIdMapper;
 }

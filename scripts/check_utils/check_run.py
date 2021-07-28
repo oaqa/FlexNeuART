@@ -21,7 +21,12 @@ import argparse
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import read_doc_ids_from_forward_file_header, read_queries, DOCID_FIELD, FileWrapper
+from scripts.eval_common import FAKE_DOC_ID
+from scripts.data_convert.convert_common import read_queries, DOCID_FIELD, FileWrapper
+from scripts.py_flexneuart.setup import *
+from scripts.py_flexneuart.fwd_index import get_forward_index
+
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='Run basic run checks')
 parser.add_argument('--run_file', metavar='run file',
@@ -34,20 +39,37 @@ parser.add_argument('--run_id', metavar='run id',
                     help='optional run id to check',
                     default=None,
                     type=str)
-parser.add_argument('--fwd_index_file', metavar='forward index catalog file',
-                    help='the "catalog" file of the forward index',
+parser.add_argument('--collect_root', metavar='collection dir',
+                    help='a top-level collection directory')
+parser.add_argument('--fwd_index_subdir',
+                    help='forward index files sub-directory')
+parser.add_argument('--index_field', metavar='index field',
+                    help='the name of the field for which we previously created the forward index',
                     type=str, required=True)
 parser.add_argument('--min_exp_doc_qty',
                     metavar='min # of docs per query to expect',
                     help='min # of docs per query to expect',
                     type=int, required=True)
 
+
 args = parser.parse_args()
 
+
+# add Java JAR to the class path
+configure_classpath('target')
+
+# create a resource manager
+resource_manager=create_featextr_resource_manager(resource_root_dir=args.collect_root,
+                                                  fwd_index_dir=args.fwd_index_subdir)
+
+fwd_index = get_forward_index(resource_manager, args.index_field)
+
 print('Reading document IDs from the index')
-all_doc_ids = read_doc_ids_from_forward_file_header(args.fwd_index_file)
+all_doc_ids = fwd_index.get_all_doc_ids()
+print('The number of documents: ', len(all_doc_ids))
 print('Reading queries')
 queries = read_queries(args.query_file)
+print('The number of queries: ', len(queries))
 
 query_ids = []
 query_doc_qtys = {}
@@ -56,13 +78,13 @@ for e in queries:
     qid = e[DOCID_FIELD]
     query_ids.append(qid)
 
-# Some copy-paste from common_eval.read_run_dict, but ok for now
+# Some copy-paste from eval_common.read_run_dict, but ok for now
 file_name = args.run_file
 with FileWrapper(file_name) as f:
     prev_query_id = None
 
     # Check for repeating document IDs and improperly sorted entries
-    for ln, line in enumerate(f):
+    for ln, line in tqdm(enumerate(f), 'checking run'):
         line = line.strip()
         if not line:
             continue
@@ -87,7 +109,7 @@ with FileWrapper(file_name) as f:
         if score > prev_score:
             raise Exception(
                 f'Invalid line {ln} in run file {file_name} increasing score!')
-        if docid not in all_doc_ids:
+        if docid not in all_doc_ids and doc_id != FAKE_DOC_ID:
             raise Exception(
                 f'Invalid line {ln} in run file {file_name} document id not found in the index: {docid}')
         if docid in seen_docs:

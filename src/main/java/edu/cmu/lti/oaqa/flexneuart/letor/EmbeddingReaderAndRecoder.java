@@ -27,6 +27,7 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.simil_func.*;
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import net.openhft.koloboke.collect.map.hash.*;
 
 class ParsedEmbedRec {  
@@ -150,7 +151,7 @@ public class EmbeddingReaderAndRecoder {
     float norm = 0;
     for (float f: vec) norm += f*f;
     norm = (float) Math.sqrt(norm);
-    if (Math.abs(norm) >= DistanceFunctions.FLOAT_EPS) {
+    if (Math.abs(norm) >= Const.FLOAT_EPS) {
       for (int i = 0; i < vec.length; ++i)
         vec[i] /= norm;
     }

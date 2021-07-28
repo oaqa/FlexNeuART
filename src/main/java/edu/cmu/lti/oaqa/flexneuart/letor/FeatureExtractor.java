@@ -27,11 +27,19 @@ import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields;
 import no.uib.cipr.matrix.DenseVector;
 
+/*
+ *  A feature extractor class that generates scores for entry IDs for a given collection.
+ *  While a candidate provider is expected to produce ID of the current document collection of, e.g.,
+ *  passages, we support computing scores using a forward index from a related collection,
+ *  e.g., the collection of documents from which passages were extracted. This can be achieved
+ *  using an id mapping forward index. 
+ *  
+ */
 public abstract class FeatureExtractor {  
   public abstract String getName();
   
   /**
-   * Obtains features for a set of documents, this function should be <b>thread-safe!</b>.
+   * Obtains features for a set of documents, this function should be <b>thread-safe!</b>. T
    * 
    * @param     cands        an array of candidate entries.
    * @param     queryFields  a multi-field representation of the query {@link edu.cmu.lti.oaqa.flexneuart.utils.DataEntryFields}. 

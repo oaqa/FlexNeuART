@@ -22,6 +22,8 @@ import java.io.IOException;
 
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
+
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 
@@ -196,6 +198,11 @@ public class ForwardIndexBinaryOffsetDict extends ForwardIndexBinaryBase {
   @Override
   public String[] getAllDocIds() throws Exception {
     return mBackend.getKeyArray();
+  }
+  
+  @Override
+  public Iterator<String> getDocIdIterator() throws Exception {
+    return mBackend.getKeyIterator();
   }
 
   RandomAccessFile 								mDataFileRead;

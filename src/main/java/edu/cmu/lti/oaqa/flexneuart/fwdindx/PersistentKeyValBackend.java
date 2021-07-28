@@ -15,6 +15,8 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.fwdindx;
 
+import java.util.Iterator;
+
 /**
  * 
  * An abstract class to hide implementation details of one or more persistent
@@ -50,6 +52,9 @@ public abstract class PersistentKeyValBackend {
    * @return an array of keys
    */
   public abstract String[] getKeyArray() throws Exception;
+  
+  public abstract Iterator<String> getKeyIterator() throws Exception;
+  
   /**
    * @return a number of stored elements
    */

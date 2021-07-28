@@ -27,7 +27,7 @@ import json
 
 sys.path.append('.')
 import argparse
-from scripts.common_eval import read_qrels_dict
+from scripts.eval_common import read_qrels_dict
 from scripts.config import ANSWER_FILE_JSON, QREL_FILE, DOCID_FIELD
 from scripts.data_convert.convert_common import jsonl_gen, FileWrapper
 

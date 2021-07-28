@@ -31,6 +31,7 @@ public class Const {
   public static final String ENCODING_NAME = "UTF-8";
   public static final Charset ENCODING = Charset.forName(ENCODING_NAME);
   public static final String USER_AGENT = "Mozilla/4.0";
+  public static final float FLOAT_EPS = Float.MIN_NORMAL * 2;
   
   // Most platforms including Apple M1 and NEON ARM by default use little-endian format
   public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; 

@@ -246,7 +246,7 @@ tmpConf=`mktemp`
 
 # Mapping between JSON field names and corresponding script parameters
 jsonParamMap=(\
-  cand_prov_add_conf candProvAddConfParam \
+  cand_prov_add_conf candProvAddConf \
   cand_prov_uri candProvURI \
   num_rand_restart numRandRestart \
   train_part trainPart \

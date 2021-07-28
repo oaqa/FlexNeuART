@@ -31,6 +31,13 @@ public class CandidateEntry implements Comparable<CandidateEntry>, java.io.Seria
     mDocId = docId;
     mOrigScore = mScore = score;
   }
+  
+
+  public CandidateEntry(String docId, float score, float origScore) {
+    mDocId = docId;
+    mScore = score;
+    mOrigScore = origScore;
+  }
 
   @Override
   public int compareTo(CandidateEntry o) {

@@ -111,6 +111,10 @@ class ForwardIndex:
 
         return self.indx.getWord(word_id)
 
+    def get_all_doc_ids(self):
+        """Retrieve all document IDs"""
+        return self.indx.getAllDocIds()
+
 
 def get_forward_index(resource_manager, field_name):
     """Create a wrapper for a forward index class.

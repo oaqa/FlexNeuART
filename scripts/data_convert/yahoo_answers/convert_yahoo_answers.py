@@ -28,7 +28,7 @@ sys.path.append('.')
 
 
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.common_eval import gen_qrel_str
+from scripts.eval_common import gen_qrel_str
 from scripts.data_convert.convert_common import FileWrapper, read_stop_words, \
                                                 BERT_TOK_OPT, BERT_TOK_OPT_HELP, \
                                                 OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP, \

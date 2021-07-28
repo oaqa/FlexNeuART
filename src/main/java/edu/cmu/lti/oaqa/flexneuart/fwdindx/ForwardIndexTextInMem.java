@@ -25,7 +25,7 @@ import java.io.OutputStreamWriter;
 import java.util.*;
 
 /**
-* One document entry of an in-memory forward index.
+* One document entry of an in-memory forward index. This class is used for testing purposes only!
 * 
 * @author Leonid Boytsov
 *
@@ -213,6 +213,15 @@ public class ForwardIndexTextInMem extends ForwardIndex {
     
     return res;
   }  
+  
+  @Override
+  public Iterator<String> getDocIdIterator() throws Exception {
+    ArrayList<String> ids = new ArrayList<String>();
+    for (String s : getAllDocIds()) {
+      ids.add(s);
+    }
+    return ids.iterator();
+  }
 
   private final String mFileName;
 
