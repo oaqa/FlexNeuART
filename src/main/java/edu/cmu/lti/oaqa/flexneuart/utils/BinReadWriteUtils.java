@@ -108,8 +108,9 @@ public class BinReadWriteUtils {
     if (qty4 < 2) { // should be at least two integers (data type flag + # of non-zero dimensions)
       throw new RuntimeException("Data size: " + data.length + " is too small.");
     }
-    int dim = (qty4 - 2) / 2; // we need to exclude data type + # of non-zero dims
-    if (qty4 > dim * 2) {
+    int qty4vect = qty4 - 2;
+    int dim = (qty4vect) / 2; // we need to exclude data type + # of non-zero dims
+    if (qty4vect > dim * 2) {
       throw new RuntimeException("Data size: " + data.length + " isn't appropriate for packed sparse data.");
     }
 
