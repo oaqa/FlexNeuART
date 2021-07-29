@@ -412,7 +412,9 @@ public abstract class ForwardIndex {
 
 
   /***
-   * This function constructs a textual representation of parsed document/query entry.
+   * This function constructs a textual representation of a parsed document.
+   * It should not be used for queries, b/c they may containing words with IDs
+   * set to {@link Const.UNKNOWN_WORD_ID}.
    * This function needs a positional index. If the input is null, we return an empty string.
    * 
    * @param e a parsed entry
@@ -461,6 +463,66 @@ public abstract class ForwardIndex {
     }
     return getDocEntryParsedText(e);
   }
+  
+  /***
+   * This function constructs a pseudo-textual representation of a parsed document entry
+   * by concatenating containing tokens. It should not be used for queries, 
+   * b/c they may containing words with IDs set to {@link Const.UNKNOWN_WORD_ID}.
+   * 
+   * <p>If a token T frequency is F in the original document,
+   * this pseudo-representation would contains a sequence of F tokens T. 
+   * This function does not require positional information in the forward index.
+   * If the input is null, we return an empty string.</p>
+   * 
+   * @param e a parsed entry
+   * @return parsed entry pseudo-text (concatenated original words,  each repeated 
+   *                                  the number of times they appear in the original doc)
+   *                                  
+   * @throws Exception
+   */
+  public String getDocEntryParsedTextBOW(DocEntryParsed e) throws Exception {
+    if (e == null) {
+      return "";
+    }
+    StringBuffer sb = new StringBuffer();
+
+    for (int i = 0; i < e.mWordIds.length; ++i) {
+      int wid = e.mWordIds[i];
+      String w = getWord(wid);
+      if (w == null) {
+        throw new Exception("Looks like bug or inconsistent data, no word for word id: " + wid);
+      }
+      int qty = e.mQtys[i];
+      for (int k = 0; k < qty; k++) {
+        sb.append(w);
+        sb.append(' ');
+      }    
+    }
+    
+    return sb.toString();
+  }
+  
+  
+  /**
+   * Retrieves an existing parsed document entry and constructs  a pseudo-textual representation 
+   * of a parsed document entry by concatenating containing tokens.
+   * Unlike {@link getDocEntryParsedText} this function does *NOT* need a positional index.
+   * 
+   * @param docId document id.
+   * @return null if there is no document with the specified document ID.
+   *         Otherwise: parsed entry pseudo-text (concatenated original words,  each repeated 
+   *                    the number of times they appear in the original doc).
+   *         
+   * @throws An exception if there is a retrieval error, or if the index type is raw.
+   */
+  public String getDocEntryParsedTextBOW(String docId) throws Exception {
+    DocEntryParsed e = getDocEntryParsed(docId);
+    if (e == null) {
+      return null;
+    }
+    return getDocEntryParsedTextBOW(e);
+  }
+
 
   /**
    * Creates a parsed document entry: a sequence of word IDs,

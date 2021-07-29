@@ -28,8 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 
-import edu.cmu.lti.oaqa.flexneuart.utils.Const;
-
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexStoreType;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexFieldType;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexType;

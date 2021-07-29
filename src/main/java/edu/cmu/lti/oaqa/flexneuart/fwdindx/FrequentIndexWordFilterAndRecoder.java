@@ -189,9 +189,4 @@ public class FrequentIndexWordFilterAndRecoder extends VocabularyFilterAndRecode
 
   HashMap<String, Integer>    mStr2Int = new HashMap<String, Integer>();
   HashSet<Integer>            mInt = new HashSet<Integer>();
-  
-  public static void main(String args[]) throws NumberFormatException, Exception {
-    FrequentIndexWordFilterAndRecoder flt =
-        new FrequentIndexWordFilterAndRecoder(args[0], Integer.parseInt(args[1]));
-  }
 }
