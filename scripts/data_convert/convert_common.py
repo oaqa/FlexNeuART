@@ -43,7 +43,7 @@ OUT_BITEXT_PATH_OPT_HELP = 'An optional output directory to store bitext'
 # '<' stands for Little-endian
 ENDIANNES_TYPE = '<'
 PACKED_TYPE_DENSE = 0
-BIN_DATA_SPARSE_VECTOR = 1
+PACKED_TYPE_SPARSE = 1
 
 MSMARCO_DOC_V2_FILE_PATTERN = "^msmarco_doc_.*"
 MSMARCO_PASS_V2_FILE_PATTERN = "^msmarco_passage_.*"
@@ -384,6 +384,34 @@ def pack_dense_batch(data):
     mask = dense_vect_pack_mask(dim)
 
     return [struct.pack(mask, PACKED_TYPE_DENSE, *list(data[i])) for i in range(bqty)]
+
+def pack_sparse_vect(vect):
+    """Pack the sparse vector that comes in as a
+
+    :param vect: tuple or list containing alteranting integer ids and float values.
+    :return:  a packed byte sequence
+    """
+    dim = len(vect) // 2
+    assert dim * 2 == len(vect)
+    mask = f'{ENDIANNES_TYPE}II' + ''.join(['If'] * dim)
+
+    return struct.pack(mask, PACKED_TYPE_SPARSE, dim, *(vect))
+
+
+def unpack_int(b):
+    """Just unpack an integer value"""
+    assert len(b) == 4
+    return struct.unpack(f'{ENDIANNES_TYPE}I', b)[0]
+
+
+def read_and_unpack_int(f):
+    return unpack_int(f.read(4))
+
+
+def read_ascii_str(f):
+    id_len = read_and_unpack_int(f)
+    b = struct.unpack(''.join(['s'] * id_len), f.read(id_len))
+    return ''.join(c.decode() for c in b)
 
 
 def write_json_to_bin(data_elem, out_file):
