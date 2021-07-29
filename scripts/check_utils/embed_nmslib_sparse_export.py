@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, \
+from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, ENDIANNES_TYPE, \
                                                 pack_sparse_vect, write_json_to_bin, \
                                                 read_and_unpack_int, read_ascii_str
 
