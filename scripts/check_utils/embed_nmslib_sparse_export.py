@@ -59,5 +59,5 @@ with FileWrapper(args.output, 'wb') as out_file:
         mask = f'{ENDIANNES_TYPE}' + ''.join(['If'] * dim)
         vect = struct.unpack(mask, f.read(8 * dim))
 
-        data_elem = {DOCID_FIELD: dim, args.field_name: pack_sparse_vect(vect)}
+        data_elem = {DOCID_FIELD: doc_id, args.field_name: pack_sparse_vect(vect)}
         write_json_to_bin(data_elem, out_file)
