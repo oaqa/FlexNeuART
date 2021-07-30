@@ -142,6 +142,9 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     logger.info(String.format("# top-scoring training candidates to select positives from %d (only for export with scores)", mCandTrain4PosQty));
     logger.info(String.format("# top candidates for validation %d", mCandTestQty));
     
+    logger.info(String.format("# of hard/medium/easy negative samples: %d/%d/%d", 
+                              mHardNegQty, mSampleMedNegQty, mSampleEasyNegQty));
+    
     
     tmpn = cmd.getOptionValue(MAX_DOC_WHITESPACE_TOK_QTY_PARAM);
     if (tmpn != null) {
