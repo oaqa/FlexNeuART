@@ -24,6 +24,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import org.apache.commons.cli.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.VocabularyFilterAndRecoder;
@@ -35,6 +37,8 @@ import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 
 
 public class FilterTranTable {  
+  static final Logger logger = LoggerFactory.getLogger(FilterTranTable.class);
+  
   private final static boolean BINARY_OUTUPT = true;
 
 
@@ -116,21 +120,21 @@ public class FilterTranTable {
         showUsageSpecify(CommonParams.FLT_FWD_INDEX_DESC);
       }      
 
-      System.out.println("Filtering index: " + fwdIndxName + " max # of frequent words: " + maxWordQty + " min. probability:" + minProb);
+      logger.info("Filtering index: " + fwdIndxName + " max # of frequent words: " + maxWordQty + " min. probability:" + minProb);
       
       VocabularyFilterAndRecoder filter 
             = new FrequentIndexWordFilterAndRecoder(fwdIndxName, maxWordQty);
       
       String srcVocFile = CompressUtils.findFileVariant(model1RootDir + File.separator + "source.vcb");
       
-      System.out.println("Source vocabulary file: " + srcVocFile);
+      logger.info("Source vocabulary file: " + srcVocFile);
       
       GizaVocabularyReader srcVoc = 
           new GizaVocabularyReader(srcVocFile, filter);
       
       String dstVocFile = CompressUtils.findFileVariant(model1RootDir + File.separator + "target.vcb");
       
-      System.out.println("Target vocabulary file: " + dstVocFile);
+      logger.info("Target vocabulary file: " + dstVocFile);
       
       GizaVocabularyReader dstVoc = 
           new GizaVocabularyReader(CompressUtils.findFileVariant(dstVocFile), filter);            
@@ -170,7 +174,7 @@ public class FilterTranTable {
             ++wordQty;
           }
           if (totalQty % (10 * Const.PROGRESS_REPORT_QTY) == 0) {
-            System.out.println(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
+            logger.info(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
                                               totalQty, wordQty, inputFile, addedQty));
           }
           
@@ -203,7 +207,7 @@ public class FilterTranTable {
           }          
         }
         
-        System.out.println(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
+        logger.info(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
             totalQty, wordQty, inputFile, addedQty));
         
       } finally {
