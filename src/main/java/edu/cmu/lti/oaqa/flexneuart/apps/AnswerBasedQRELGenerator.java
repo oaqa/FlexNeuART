@@ -186,7 +186,7 @@ public class AnswerBasedQRELGenerator {
       EvalUtils.saveQrelOneEntry(out, queryId, did, Const.MAX_RELEV_GRADE);
     }
     mQueryQty += 1;
-    if (mQueryQty % 100 == 0) {
+    if (mQueryQty % Const.PROGRESS_REPORT_QTY == 0) {
       logger.info("Processed " + mQueryQty + " queries");
     }
   }
