@@ -31,12 +31,10 @@ import edu.cmu.lti.oaqa.flexneuart.giza.GizaTranRec;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaTranTableReaderAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.giza.GizaVocabularyReader;
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 
 
-public class FilterTranTable {
-  
-  private static final int REPORT_INTERVAL_QTY = 100000;
-  
+public class FilterTranTable {  
   private final static boolean BINARY_OUTUPT = true;
 
 
@@ -171,7 +169,7 @@ public class FilterTranTable {
           if (rec.mSrcId != prevSrcId) {
             ++wordQty;
           }
-          if (totalQty % REPORT_INTERVAL_QTY == 0) {
+          if (totalQty % (10 * Const.PROGRESS_REPORT_QTY) == 0) {
             System.out.println(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
                                               totalQty, wordQty, inputFile, addedQty));
           }
