@@ -31,8 +31,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   public ExportTrainNegSampleBase(ForwardIndex fwdIndex, String queryExportFieldName, String indexExportFieldName,
       QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
-    
-    mAllDocIds = fwdIndex.getAllDocIds();
+
   }
 
   protected static void addOptionsDesc(Options opts) {
@@ -53,7 +52,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   protected int mHardNegQty = 0;
 
   @Override
-  protected String readAddOptions(CommandLine cmd) {
+  protected String readAddOptions(CommandLine cmd) throws Exception {
     
     // Only this sampling parameter should be mandatory
     String tmpn = cmd.getOptionValue(MAX_SAMPLE_MEDIUM_NEG_QTY);
@@ -79,6 +78,12 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     if (null != tmpn) {
       try {
         mSampleEasyNegQty = Math.max(0, Integer.parseInt(tmpn));
+        
+        if (mSampleEasyNegQty > 0) {
+          // This is a very expensive operation, so we don't retrieve all IDs by default
+          logger.info("Reading all document IDs from the index!");
+          mAllDocIds = mFwdIndex.getAllDocIds();
+        }
       } catch (NumberFormatException e) {
         return MAX_SAMPLE_EASY_NEG_QTY + " isn't integer: '" + tmpn + "'";
       }

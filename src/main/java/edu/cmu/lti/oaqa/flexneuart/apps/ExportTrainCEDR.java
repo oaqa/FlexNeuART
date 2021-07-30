@@ -49,7 +49,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleWithoutScoresBase {
   }
 
   @Override
-  protected String readAddOptions(CommandLine cmd) {
+  protected String readAddOptions(CommandLine cmd) throws Exception {
     String err = super.readAddOptions(cmd);
     if (!err.isEmpty()) {
       return err;
