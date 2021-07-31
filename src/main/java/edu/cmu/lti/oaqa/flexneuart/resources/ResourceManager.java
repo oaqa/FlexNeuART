@@ -149,7 +149,13 @@ public class ResourceManager {
        */
 
       for (int ic = 0; ic < threadQty; ++ic) {
-        res[ic] = new NmslibKNNCandidateProvider(provURI, this, addConf);
+        try {
+          res[ic] = new NmslibKNNCandidateProvider(provURI, this, addConf);
+        } catch (java.net.ConnectException e) {
+          logger.error("Unable to connect to NMSLIB server using address: " + provURI);
+          e.printStackTrace();
+          throw e;
+        }
       }
     } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_ID_MAPPER)) {
       /*
