@@ -94,10 +94,6 @@ while [ $# -ne 0 ] ; do
       skipEval=1
       # option without an argument shift by 1
       shift 1
-    elif [ "$optName" = "-test_model_results" ] ; then
-      testModelResults="1"
-      # option without an argument shift by 1
-      shift 1
     elif [ "$optName" = "-delete_trec_runs" ] ; then
       deleteTrecRuns="1"
       # option without an argument shift by 1
