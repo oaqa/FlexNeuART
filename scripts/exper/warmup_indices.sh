@@ -39,8 +39,8 @@ if [ ! -d "$fwdIndexDir" ] ; then
 fi
 
 for f in "$fwdIndexDir"/* ; do
-  echo "Catting $f to /dev/null"
   if [ -f "$f" ] ; then
+    echo "Catting $f to /dev/null"
     time cat "$f" > /dev/null
   fi
   if [ -d "$f" ] ; then
