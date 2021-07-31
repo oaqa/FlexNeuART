@@ -72,7 +72,6 @@ Additional options:
   -metric_type            evaluation metric (default $metricType)
   -add_exper_subdir       additional experimental sub-directory
   -skip_eval              skip/disable evaluation, just produce TREC runs
-  -test_model_results     additionally test model performance on the training set
   -max_num_query_train    max. # of training queries
   -num_cpu_cores          # of available CPU cores
   -thread_qty             # of threads
@@ -101,10 +100,6 @@ while [ $# -ne 0 ] ; do
       globalParams+=" $optName"
       set -x
       debuPrint=1
-      # option without an argument shift by 1
-      shift 1
-    elif [ "$optName" = "-test_model_results" ] ; then
-      globalParams+=" $optName"
       # option without an argument shift by 1
       shift 1
     elif [ "$optName" = "-delete_trec_runs" ] ; then
