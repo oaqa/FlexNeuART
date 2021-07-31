@@ -433,7 +433,8 @@ if [ "$testOnly" = "0" ] ; then
       echo "WARNING: during training we set -max_final_rerank_qty to $trainCandQty"
     fi
 
-    setJavaMem 2 9
+    NO_MAX=1
+    setJavaMem 1 8 $NO_MAX
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
                                     -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
@@ -478,7 +479,8 @@ fi
 
 statFile="$reportDir/$STAT_FILE"
 $resourceDirParams
-setJavaMem 2 9
+NO_MAX=1
+setJavaMem 1 8 $NO_MAX
 target/appassembler/bin/QueryAppMultThread \
                             -u "$candProvURI" -cand_prov "$candProvType" \
                             -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \
