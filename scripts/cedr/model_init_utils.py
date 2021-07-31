@@ -1,24 +1,34 @@
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import inspect
 import argparse
 
 import scripts.cedr.data as data
 import scripts.cedr.modeling as modeling
-import scripts.cedr.modeling_model1 as modeling_model1
 
 MODEL_PARAM_LIST = ['dropout', 'bert_large']
 MODEL_PARAM_PREF = 'model.'
 
 VANILLA_BERT = 'vanilla_bert'
-MODEL1_BERT = 'model1_bert'
-MODEL1_LEX  = 'model1_lex'
 
 MODEL_MAP = {
     VANILLA_BERT: modeling.VanillaBertRanker,
     'cedr_pacrr': modeling.CedrPacrrRanker,
     'cedr_knrm': modeling.CedrKnrmRanker,
-    'cedr_drmm': modeling.CedrDrmmRanker,
-    MODEL1_BERT: modeling_model1.BertModel1,
-    MODEL1_LEX: modeling_model1.LexicalModel1
+    'cedr_drmm': modeling.CedrDrmmRanker
 }
 
 def add_model_init_basic_args(parser, add_train_params):
@@ -64,22 +74,10 @@ def add_model_init_basic_args(parser, add_train_params):
                             action='store_true',
                             help='use the BERT large mode instead of a base one')
 
-        parser.add_argument(f'--{MODEL_PARAM_PREF}top_k',
-                            metavar='max # of words',
-                            type=str, default=None,
-                            help='maximum # of frequent words to use')
-
         parser.add_argument(f'--{MODEL_PARAM_PREF}vocab_file',
                             metavar='vocabulary file',
                             type=str, default=None,
                             help='a previously built vocabulary file')
-
-
-        parser.add_argument(f'--{MODEL_PARAM_PREF}prob_network_type',
-                            metavar='prob network type',
-                            default=modeling_model1.DEFAULT_PROB_NETWORK,
-                            help='a network type to compute probabilities: ' + ' '.join(modeling_model1.PROB_NETWORK_TYPE_NAMES),
-                            choices=modeling_model1.PROB_NETWORK_TYPE_NAMES)
 
         parser.add_argument(f'--{MODEL_PARAM_PREF}use_fasttext',
                             action='store_true',
@@ -98,15 +96,6 @@ def add_model_init_basic_args(parser, add_train_params):
         parser.add_argument(f'--{MODEL_PARAM_PREF}proj_dim', type=int, default=128,
                             metavar='model1 projection dim',
                             help='neural lexical model1 projection dimensionionality')
-
-        parser.add_argument(f'--{MODEL_PARAM_PREF}proj_interact_dim', type=int, default=16,
-                            metavar='model1 projection dim for interactions',
-                            help='neural lexical model1 projection dimensionionality for interaction features')
-
-        parser.add_argument(f'--{MODEL_PARAM_PREF}tanh_after_embed',
-                            action='store_true',
-                            help='use layer norm. + tanh after embedding')
-
 
 
 def get_model_param_dict(args, model_class):

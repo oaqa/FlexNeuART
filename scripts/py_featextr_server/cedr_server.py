@@ -172,6 +172,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    print(args)
+
     model_list = []
 
     assert(args.init_model is None or type(args.init_model) == list)
