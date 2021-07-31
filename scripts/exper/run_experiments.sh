@@ -240,22 +240,27 @@ echo "$SEP_DEBUG_LINE"
 tmpConf=`mktemp`
 
 # Mapping between JSON field names and corresponding script parameters
-jsonParamMap=(\
-  cand_prov_add_conf candProvAddConf \
-  cand_prov_uri candProvURI \
-  num_rand_restart numRandRestart \
-  train_part trainPart \
-  run_id runId \
-  extr_type_final extrTypeFinal \
-  extr_type_interm  extrTypeInterm \
-  model_interm modelInterm \
-  model_final modelFinal \
-  train_cand_qty trainCandQty \
-  cand_prov candProv \
-  cand_prov_qty candProvQty \
-  test_cand_qty_list testCandQtyList \
-  use_lmart useLMART \
-  num_trees numTrees
+jsonParamMap=(
+  # candidate provider options
+  cand_prov           candProv          # candidate provider type
+  cand_prov_add_conf  candProvAddConf   # optional additional config
+  cand_prov_uri       candProvURI       # candidate provider file location or IP address
+  cand_prov_qty       candProvQty       # number of candidates (can be overriden by -test_cand_qty_list)
+  # TREC run id
+  run_id runId
+
+  # Feaure extractor configuration files
+  extr_type_final     extrTypeFinal    # an optional final re-ranker config
+  extr_type_interm    extrTypeInterm   # an optional intermediate re-ranker config
+
+  # Model files
+  model_interm  modelInterm   # optional model for the intermediate re-ranker
+  model_final   modelFinal    # optional model for the final re-ranker
+
+  # Learning-to-rank (LETOR) parameters
+  use_lmart         useLMART # if true we use LambdaMART
+  num_rand_restart  numRandRestart   # number of random restarts in coordinate ascent
+  num_trees         numTrees   # number of trees for LambdaMart
 )
 
 childPIDs=()
