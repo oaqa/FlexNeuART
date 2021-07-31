@@ -299,16 +299,11 @@ public class EmbeddingReaderAndRecoder {
         if (q.size() < k) {
           VectorSearchEntry toAdd = new VectorSearchEntry(e.getKey(), sim);
           q.add(toAdd);
-          //System.out.println("Add " + toAdd);
         }
         else if (sim < q.peek().mDist) {
           VectorSearchEntry toAdd = new VectorSearchEntry(e.getKey(), sim);
           q.add(toAdd);
-          q.poll();
-          /*
-           * VectorSearchEntry toDel = q.poll();
-           * System.out.println("Delete " + toDel + " add " + toAdd);
-           */      
+          q.poll();    
         }
       }
       int qty = q.size();
@@ -329,47 +324,4 @@ public class EmbeddingReaderAndRecoder {
   float[]                   mZeroVector;
   
   int       mDim = 0;
-  
-  /**
-   * A simple test function that can also search for the closest embedding.
-   * @throws Exception 
-   * 
-   */
-  public static void main(String[] args) throws Exception {
-    EmbeddingReaderAndRecoder wr = new EmbeddingReaderAndRecoder(args[0], null);
-    
-    BufferedReader sysInReader = new BufferedReader(new InputStreamReader(System.in));
-
-    while (true) {
-      String word = null;
-      
-      System.out.println("Input a search word or document ID: ");
-      word = sysInReader.readLine();
-      if (null == word) break;
-      word = word.trim();
-      if (word.isEmpty()) break;
-      System.out.println("Input K for k-NN:");
-      String ks = sysInReader.readLine();
-      int k = Integer.parseInt(ks);
-      if (k < 0) {
-        System.err.println("Invalid k: " + k);
-        System.exit(1);
-      }
-      System.out.println("Inpupt distance type (l2, cosine):");
-      String dtype = sysInReader.readLine();
-      try {      
-        VectorSearchEntry[] res = wr.kNNSearch(word, AbstractDistance.create(dtype), true /* exclude the same word */, k);
-        System.out.println("==== Results ====");
-        for (VectorSearchEntry e: res) {
-          System.out.println(e);
-        }
-        System.out.println("=================");
-      } catch (Exception e) {        
-        e.printStackTrace();
-        System.err.println("Failed with an exception: " + e);
-      }
-   
-    }
-  }
-
 }

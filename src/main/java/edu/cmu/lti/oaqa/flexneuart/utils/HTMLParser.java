@@ -45,7 +45,7 @@ public class HTMLParser {
       try {
         HtmlParser.visitAllNodesWith(res);
       } catch (StackOverflowError e) {
-        System.out.println("Ouch HtmlParser has overflown the Stack!");
+        System.err.println("Ouch HtmlParser has overflown the Stack!");
       }
 
       title = res.GetTitleText();

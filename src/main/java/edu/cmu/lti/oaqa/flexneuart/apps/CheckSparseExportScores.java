@@ -24,6 +24,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
@@ -48,8 +50,10 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class CheckSparseExportScores {
+  static final Logger logger = LoggerFactory.getLogger(CheckSparseExportScores.class);
+  
   public static final class Args {
-    
+     
     public final static String MAX_NUM_DOC_DESC  = "maximum number of documents to use";
     public final static String MAX_NUM_DOC_PARAM = "max_num_doc"; 
    
@@ -121,7 +125,7 @@ public class CheckSparseExportScores {
       
       DenseVector compWeights = resourceManager.readFeatureWeights(args.mLinModelFile);
       
-      System.out.println("Weights: " + VectorUtils.toString(compWeights));
+      logger.info("Weights: " + VectorUtils.toString(compWeights));
       
       CompositeFeatureExtractor compositeFeatureExtractor = resourceManager.getFeatureExtractor(args.mExtrJson);
       
@@ -190,12 +194,12 @@ public class CheckSparseExportScores {
             compQty++;
             diffQty += isDiff ? 1 : 0;
 
-            System.out.println(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
+            logger.info(String.format("Query id: %s Doc id: %s feature-based val: %g inner product val: %g %s",
                                               queryId, did, featBasedVal, innerProdVal, isDiff ? "SIGN. DIFF." : ""));
 
             if (args.mVerbose) {
-              System.out.println("Weights: " + VectorUtils.toString(compWeights));
-              System.out.println("Features: " + VectorUtils.toString(featVect));
+              logger.info("Weights: " + VectorUtils.toString(compWeights));
+              logger.info("Features: " + VectorUtils.toString(featVect));
             }
 
           } 

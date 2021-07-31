@@ -251,12 +251,6 @@ public class FeatExtrModel1Similarity extends SingleFieldInnerProdFeatExtractor 
       }
       
     }
-    /*
-    for (int i = 0; i < res.size(); ++i) {
-      System.out.println(res.get(i).toString());
-    }
-    System.out.println("=============");
-    */
     
     return res;
    

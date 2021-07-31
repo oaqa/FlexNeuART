@@ -2,6 +2,9 @@ package edu.cmu.lti.oaqa.flexneuart.apps;
 
 import java.io.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.XmlIterator;
@@ -33,6 +36,7 @@ class Diff {
  *  heuristics.
  */
 public class TextXmlIterAndParserApp {
+  static final Logger logger = LoggerFactory.getLogger(TextXmlIterAndParserApp.class);
 
   public static void usage(String err) {
     System.err.println("Error: " + err);
@@ -107,9 +111,11 @@ public class TextXmlIterAndParserApp {
 
           System.exit(1);
         }
-        if (recNum % 10000 == 0) System.out.println(String.format("# of rec processed: %d", recNum));
+        if (recNum % Const.PROGRESS_REPORT_QTY == 0) {
+          logger.info(String.format("# of rec processed: %d", recNum));
+        }
       }
-      System.out.println(String.format("# of rec processed: %d", recNum));
+      logger.info(String.format("# of rec processed: %d", recNum));
     } catch (Exception e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

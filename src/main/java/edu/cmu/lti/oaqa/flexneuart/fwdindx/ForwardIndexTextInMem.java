@@ -24,6 +24,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
 * One document entry of an in-memory forward index. This class is used for testing purposes only!
 * 
@@ -56,6 +59,8 @@ class DocEntryExt implements Comparable<DocEntryExt> {
  *
  */
 public class ForwardIndexTextInMem extends ForwardIndex {  
+  static final Logger logger = LoggerFactory.getLogger(ForwardIndexTextInMem.class);
+  
   private static String NOT_SUPPORTED_PREFIX = ForwardIndexType.inmem.toString() + " does not support";
  
   protected ForwardIndexTextInMem(String fileName) {
@@ -128,7 +133,7 @@ public class ForwardIndexTextInMem extends ForwardIndex {
       
       postIndexComp();
       
-      System.out.println("Finished loading context from file: " + fileName);
+      logger.info("Finished loading context from file: " + fileName);
     } finally {    
       if (null != inp) inp.close();
     }

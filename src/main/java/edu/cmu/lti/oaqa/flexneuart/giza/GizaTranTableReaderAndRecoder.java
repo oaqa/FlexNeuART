@@ -107,10 +107,10 @@ public class GizaTranTableReaderAndRecoder {
     String binFileName = binaryFileName(fileName);
     
     if ((new File(binFileName).exists())) {
-      System.out.println("Opening binary translation table.");
+      logger.info("Opening binary translation table.");
       frBin = new DataInputStream(new BufferedInputStream(CompressUtils.createInputStream(binFileName)));    
     } else {
-      System.out.println("Opening text translation table.");
+      logger.info("Opening text translation table.");
       fr = new BufferedReader(new InputStreamReader(
                                   CompressUtils.createInputStream(fileName)));
     }

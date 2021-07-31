@@ -654,15 +654,6 @@ public abstract class BaseQueryApp {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
   }
-
-  
-  /**
-   * For debugging only.
-   */
-  static void printFloatArr(float a[]) {
-    for (float v: a)  System.out.print(v + " ");
-    System.out.println();
-  }
   
   void run(String appName, String args[]) throws Exception {
     mAppName = appName;

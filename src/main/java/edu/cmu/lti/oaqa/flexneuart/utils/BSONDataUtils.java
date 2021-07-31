@@ -16,7 +16,6 @@
 package edu.cmu.lti.oaqa.flexneuart.utils;
 
 import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -113,25 +112,5 @@ public class BSONDataUtils {
       return res;
     }
   }
-  
-  public static void main(String [] args) throws Exception {
-   
-    DataInputStream inp = new DataInputStream(new FileInputStream(args[0]));
-    DataEntryFields dataEntry = parseBSONEntry(readNextBSONEntry(inp, 1), 1);
 
-    System.out.println(dataEntry.mEntryId);
-    float [] fvec = BinReadWriteUtils.readPackedDenseVector(dataEntry.getBinary(args[1]));
-    for (int i = 0; i < fvec.length; i++)
-      System.out.println(fvec[i] );
-
-//    byte curr[];
-//    int line = 0;
-//    while ((curr = readNextBSONEntry(inp, ++line)) != null) {
-//      if (line % 10000 == 0) {
-//        System.out.println(line);
-//      }
-//      DataEntry dataEntry = parseBSONEntry(curr, line);
-//    }
-//    System.out.println(line);
-  }
 }

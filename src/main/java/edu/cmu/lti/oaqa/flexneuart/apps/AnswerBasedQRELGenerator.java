@@ -121,7 +121,7 @@ public class AnswerBasedQRELGenerator {
       ForwardIndex fwdIndexText = resourceManager.getFwdIndex(args.mFieldName);
       
       if (!fwdIndexText.isTextRaw()) {
-        System.out.println("The answer-based QREL-generator works only with raw text indices!");
+        System.err.println("The answer-based QREL-generator works only with raw text indices!");
         System.exit(1);
       }
       

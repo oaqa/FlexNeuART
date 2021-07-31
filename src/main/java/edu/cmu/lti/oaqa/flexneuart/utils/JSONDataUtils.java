@@ -18,7 +18,6 @@ package edu.cmu.lti.oaqa.flexneuart.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -117,14 +116,6 @@ public class JSONDataUtils {
    */
   public static synchronized String genJSONIndexEntry(Map <String,String> fields) {
     return mGson.toJson(fields, fields.getClass());
-  }
-  
-  public static void main(String [] args) { 
-    HashMap<String, String> e1 = new HashMap<String, String>();
-    e1.put("DOCNO", "doc0");
-    e1.put("text", "This is a short text. This is a second text sentence.");
-    
-    System.out.print(genJSONIndexEntry(e1));
   }
   
   final static Gson mGson = new Gson();

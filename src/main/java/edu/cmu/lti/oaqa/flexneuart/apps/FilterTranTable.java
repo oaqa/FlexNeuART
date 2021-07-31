@@ -1,5 +1,5 @@
 /*
- *  Copyright 2015 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -208,7 +208,7 @@ public class FilterTranTable {
         }
         
         logger.info(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
-            totalQty, wordQty, inputFile, addedQty));
+                                   totalQty, wordQty, inputFile, addedQty));
         
       } finally {
         finp.close();

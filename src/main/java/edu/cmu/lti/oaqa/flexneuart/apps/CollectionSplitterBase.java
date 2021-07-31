@@ -24,10 +24,14 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
 
 public class CollectionSplitterBase {
+  static final Logger logger = LoggerFactory.getLogger(CollectionSplitterBase.class);
+  
   protected static final String PART_NAMES_DESC = "Comma separated part names, e.g., dev,test,train";
   protected static final String PART_NAMES_PARAM = "n";
   
@@ -122,10 +126,10 @@ public class CollectionSplitterBase {
       showUsage("Specify Output file prefix");      
     }
     
-    System.out.println("Using probabilities:");
+    logger.info("Using probabilities:");
     for (int partId = 0; partId < mPartNames.length; ++partId) 
-      System.out.println(mPartNames[partId] + " : " + mProbs.get(partId));
-    System.out.println("=================================================");  
+      logger.info(mPartNames[partId] + " : " + mProbs.get(partId));
+    logger.info("=================================================");  
     
   }
   protected static void closeFiles() throws IOException {
