@@ -35,7 +35,7 @@ public abstract class ExportTrainNegSampleWithScoresBase extends ExportTrainNegS
   
   public ExportTrainNegSampleWithScoresBase(ForwardIndex fwdIndex, 
                                   String queryExportFieldName, String indexExportFieldName,
-                                  QrelReader qrelsTrain, QrelReader qrelsTest) {
+                                  QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
   }
 

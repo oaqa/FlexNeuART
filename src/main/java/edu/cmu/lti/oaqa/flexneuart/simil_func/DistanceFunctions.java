@@ -15,14 +15,12 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.simil_func;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 
 import no.uib.cipr.matrix.sparse.SparseVector;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
 import edu.cmu.lti.oaqa.flexneuart.letor.EmbeddingReaderAndRecoder;
-import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 
 /**
  * Implementations for some distance functions between vectors and/or strings.
@@ -31,7 +29,6 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
  *
  */
 public class DistanceFunctions {
-  public static final float FLOAT_EPS = Float.MIN_NORMAL * 2;
   public static final int LCS_LIKE_QTY = 3;
   public static final int EMD_LIKE_QTY = 4;
 
@@ -129,7 +126,7 @@ public class DistanceFunctions {
      * This throws off other functions that use scalar product, e.g., acos
      */
     float normMul = norm1 * norm2;
-    normMul =  (float) Math.sqrt(Math.max(FLOAT_EPS, normMul));
+    normMul =  (float) Math.sqrt(Math.max(Const.FLOAT_EPS, normMul));
 
     float normSum = (float) (sum / normMul);
 
@@ -558,45 +555,56 @@ public class DistanceFunctions {
     
     return res / 2;
   }
+ 
   
-  public static void main(String[] arg) throws Exception {
-    EmbeddingReaderAndRecoder wr = new EmbeddingReaderAndRecoder(arg[0], null);
+  /**
+   * Computes the unnormalized scalar product between two sparse vectors.
+   * 
+   * @param v1
+   * @param v2
+   * @return
+   */
+  public static float compScalar(TrulySparseVector v1, TrulySparseVector v2) {
+    float res = 0;
     
-    BufferedReader sysInReader = new BufferedReader(new InputStreamReader(System.in));
-
-    while (true) {
-      String word1 = null, word2 = null;
-      
-      System.out.println("Input 1st line of space-separated words: ");
-      word1 = sysInReader.readLine();
-      System.out.println("Input 2d line of space-separted words: ");
-      word2 = sysInReader.readLine();
-      float thresh = 0;
-      System.out.println("Input the distance threshold (<1): ");
-      String tmp = sysInReader.readLine();
-      thresh = Float.parseFloat(tmp);
-      
-      String[] seq1=StringUtils.splitNoEmpty(word1, "\\s+");
-      String[] seq2=word2.split("\\s+");
-      
-      float [][] distMatr = compDistMatrix(AbstractDistance.create("cosine"),
-                                             seq1, seq2, wr);
-      
-      System.out.println("Distance matrix: ");
-      
-      for (int i = 0; i < distMatr.length; ++i) {
-        for (int k = 0; k < distMatr[i].length; ++k) {
-          System.out.print(
-              String.format("d(%s,%s)=%f ", seq1[i], seq2[k], distMatr[i][k]));
+    int qty1 = v1.mIDs.length;
+    int qty2 = v2.mIDs.length;
+    
+    int i1 = 0, i2 = 0;
+    
+    while(i1 < qty1 && i2 < qty2) {
+      int wordId1 = v1.mIDs[i1];
+      int wordId2 = v2.mIDs[i2];
+      if (wordId1 < wordId2) {
+        i1++;
+      } else if (wordId1 > wordId2) {
+        i2++;
+      } else {
+     /*
+      *  Ignore OOV words  (id < 0), if they slip through the cracks.
+      *  Note that if wordId1 >= 0, then wordId2 >= 0 too (because word IDs are equal at this point)       
+      */
+        if (wordId1 >=0) { 
+          res += v1.mVals[i1] * v2.mVals[i2];
         }
-        System.out.println();
+        i1++; i2++;
       }
-      
-      
-      float res[] = compLCSLike(distMatr, thresh); 
-      System.out.println("Thresholded LCS:         " + res[0]);
-      System.out.println("Thresholded LCS (fuzzy): " + res[1]);
-      System.out.println("Subsequence sum : " + res[2]);
     }
+    
+    return res;
+  }
+  
+  /**
+   * Computes the normalized scalar product between two sparse vectors.
+   * 
+   * @param v1
+   * @param v2
+   * @return
+   */
+  public static float compNormScalar(TrulySparseVector v1, TrulySparseVector v2) {
+    float norm1 = v1.l2Norm();
+    float norm2 = v2.l2Norm();
+    
+    return compScalar(v1, v2) / Math.max(Const.FLOAT_EPS, norm1 * norm2);
   }
 }

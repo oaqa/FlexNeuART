@@ -18,8 +18,11 @@ package edu.cmu.lti.oaqa.flexneuart.apps;
 import java.io.*;
 
 import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.XmlIterator;
 
 /**
@@ -30,6 +33,7 @@ import edu.cmu.lti.oaqa.flexneuart.utils.XmlIterator;
  *
  */
 public class YahooAnswersCollectionSplitter extends CollectionSplitterBase {
+  static final Logger logger = LoggerFactory.getLogger(YahooAnswersCollectionSplitter.class);
   
   private static String DOCUMENT_TAG = "document";
 
@@ -48,8 +52,8 @@ public class YahooAnswersCollectionSplitter extends CollectionSplitterBase {
       for (; !oneRec.isEmpty() ; ++docNum, oneRec = inpIter.readNext()) {
         double p = Math.random();
         
-        if (docNum % 1000 == 0) {
-          System.out.println(String.format("Processed %d documents", docNum));
+        if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
+          logger.info(String.format("Processed %d documents", docNum));
         }
         
         BufferedWriter out = null;
@@ -66,7 +70,7 @@ public class YahooAnswersCollectionSplitter extends CollectionSplitterBase {
         oneRec = oneRec.trim() + System.getProperty("line.separator");
         out.write(oneRec);
       }
-      System.out.println(String.format("Processed %d documents", docNum - 1));
+      logger.info(String.format("Processed %d documents", docNum - 1));
       // It's important to close all the streams here!
       closeFiles();
     } catch (ParseException e) {

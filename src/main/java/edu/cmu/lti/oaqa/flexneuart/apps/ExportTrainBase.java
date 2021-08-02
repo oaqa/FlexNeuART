@@ -28,10 +28,7 @@ public abstract class ExportTrainBase {
   static ExportTrainBase createExporter(String expType,
                                         ForwardIndex fwdIndex,
                                         String queryExportFieldName, String indexExportFieldName,
-                                        QrelReader qrelsTrain, QrelReader qrelsTest) {
-    if (expType.compareToIgnoreCase(ExportTrainMatchZoo.FORMAT_NAME) == 0) {
-      return new ExportTrainMatchZoo(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
-    }
+                                        QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     if (expType.compareToIgnoreCase(ExportTrainCEDR.FORMAT_NAME) == 0) {
       return new ExportTrainCEDR(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
     }
@@ -42,12 +39,11 @@ public abstract class ExportTrainBase {
   }
 
   static void addAllOptionDesc(Options opts) {
-    ExportTrainMatchZoo.addOptionDesc(opts);
     ExportTrainNegSampleBase.addOptionsDesc(opts);
     ExportTrainCEDR.addOptionsDesc(opts);
   }
   // Supposed to return an error message, if some options are missing or poorly formatted
-  abstract String readAddOptions(CommandLine cmd);
+  abstract String readAddOptions(CommandLine cmd) throws Exception;
   
 
   /**

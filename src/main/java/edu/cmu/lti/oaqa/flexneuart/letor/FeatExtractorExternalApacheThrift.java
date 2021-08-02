@@ -154,8 +154,7 @@ public class FeatExtractorExternalApacheThrift extends SingleFieldFeatExtractor 
   }
   
   @Override
-  public Map<String, DenseVector> getFeatures(CandidateEntry[] cands, DataEntryFields queryFields)
-      throws Exception {
+  public Map<String, DenseVector> getFeaturesMappedIds(CandidateEntry[] cands, DataEntryFields queryFields) throws Exception {
     HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
     
     /*

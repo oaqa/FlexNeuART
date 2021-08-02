@@ -34,7 +34,8 @@ checkVarNonEmpty "sampleMedNegQty"
 
 cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"
 
-setJavaMem 1 2
+NO_MAX=1
+setJavaMem 1 8 $NO_MAX
 
 target/appassembler/bin/ExportTrainPairs \
 $handleCaseParam \

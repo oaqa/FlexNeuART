@@ -19,7 +19,7 @@ import argparse
 
 sys.path.append('.')
 
-from scripts.common_eval import read_qrels_dict
+from scripts.eval_common import read_qrels_dict
 
 parser = argparse.ArgumentParser(description='Count tokens and number of entries in JSONL')
 

@@ -19,7 +19,7 @@ import argparse
 import json
 
 # These parameter names must match parameter names in config.sh
-EXTR_TYPE_PARAM = "extrType"
+EXTR_TYPE_FINAL_PARAM = "extrTypeFinal"
 EXPER_SUBDIR_PARAM = "experSubdir"
 TEST_ONLY_PARAM = "testOnly"
 MODEL_FINAL_PARAM = "modelFinal"
@@ -84,7 +84,7 @@ def gen_rerank_descriptors(args, extr_json_gen_func, json_desc_name, json_sub_di
         json_file_name = file_id + '.json'
 
         desc = {EXPER_SUBDIR_PARAM: os.path.join(args.exper_subdir, json_sub_dir, file_id),
-                EXTR_TYPE_PARAM: os.path.join(args_var[REL_DESC_PATH_PARAM], json_sub_dir, json_file_name),
+                EXTR_TYPE_FINAL_PARAM: os.path.join(args_var[REL_DESC_PATH_PARAM], json_sub_dir, json_file_name),
                 TEST_ONLY_PARAM: int(test_only)}
         if model_final is not None:
             desc[MODEL_FINAL_PARAM] = model_final

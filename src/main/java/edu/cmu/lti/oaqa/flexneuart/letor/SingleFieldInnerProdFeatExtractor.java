@@ -38,7 +38,7 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
 
   @Override
   public abstract Map<String, DenseVector> 
-                  getFeatures(CandidateEntry cands[], DataEntryFields queryFields) throws Exception;
+                  getFeaturesMappedIds(CandidateEntry cands[], DataEntryFields queryFields) throws Exception;
   
   /**
    * Generates query vector that together with respective document vector (possibly
@@ -59,12 +59,14 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
    * approximately) reproduce feature values via inner-product computation. 
    * An implementation may be missing for some types of extractors.
    * 
+   * <b>getFeatInnerProDocVector functions should not be called directly, use {@link getFeatInnerProdDocVectorBatch) instead.</b>
+   * 
    * @param query   a document string.
    * 
    * @return a vector wrapper object or null if the inner-product representation is not possible.
    * @throws Exception 
    */
-  public VectorWrapper getFeatInnerProdDocVector(String doc) throws Exception {
+  protected VectorWrapper getFeatInnerProdDocVector(String doc) throws Exception {
     return null;
   }
   
@@ -82,7 +84,17 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
     return null;
   }
   
-  public VectorWrapper getFeatInnerProdDocVector(DocEntryParsed doc) throws Exception {
+  /**
+   * Generates query vector that together with query vectors (possibly  approximately) 
+   * reproduce feature values via inner-product computation. An implementation may be missing for some types of extractors.
+   * 
+   * <b>getFeatInnerProDocVector functions should not be called directly, use {@link getFeatInnerProdDocVectorBatch) instead.</b>
+   * 
+   * @param doc  parsed document entry
+   * @return a vector wrapper object or null if the inner-product representation is not possible.
+   * @throws Exception
+   */
+  protected VectorWrapper getFeatInnerProdDocVector(DocEntryParsed doc) throws Exception {
     return null;
   }
   
@@ -100,7 +112,16 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
     return null;
   }
   
-  public VectorWrapper getFeatInnerProdDocVector(byte[] doc) throws Exception {
+  /**
+   * Generates query vector that together with query vectors (possibly  approximately) 
+   * reproduce feature values via inner-product computation. An implementation may be missing for some types of extractors.
+   *  <b>getFeatInnerProDocVector functions should not be called directly, use {@link getFeatInnerProdDocVectorBatch) instead.</b>
+   * 
+   * @param doc  binary document entry
+   * @return a vector wrapper object or null if the inner-product representation is not possible.
+   * @throws Exception
+   */
+  protected VectorWrapper getFeatInnerProdDocVector(byte[] doc) throws Exception {
     return null;
   }
   
@@ -124,23 +145,32 @@ public abstract class SingleFieldInnerProdFeatExtractor extends SingleFieldFeatE
     VectorWrapper[] res = new VectorWrapper[qty];
     
     for (int i = 0; i < qty; i++) {
-      String did = docIds[i];
+      String origDocId = docIds[i];
+      String mappedId = origDocId;
+      
+      if (mIdMapper != null) {
+        mappedId = mIdMapper.getDocEntryTextRaw(origDocId);
+        if (mappedId == null) {
+          throw new Exception("Cannot map id '" + origDocId + "' using the field: " + mIdMapFieldName);
+        }
+      }
+      
       if (fwdIndx.isTextRaw()) {
-        String docEntryRaw = fwdIndx.getDocEntryTextRaw(did);
+        String docEntryRaw = fwdIndx.getDocEntryTextRaw(mappedId);
         if (docEntryRaw == null) {
-          throw new Exception("Inconsistent data or bug: can't find document with id ='" + did + "'");
+          throw new Exception("Inconsistent data or bug: can't find document with id ='" + mappedId + "'");
         }
         res[i] = getFeatInnerProdDocVector(docEntryRaw);
       } else if (fwdIndx.isParsed()) {
-        DocEntryParsed docEntryParsed = fwdIndx.getDocEntryParsed(did);
+        DocEntryParsed docEntryParsed = fwdIndx.getDocEntryParsed(mappedId);
         if (docEntryParsed == null) {
-          throw new Exception("Inconsistent data or bug: can't find document with id ='" + did + "'");
+          throw new Exception("Inconsistent data or bug: can't find document with id ='" + mappedId + "'");
         }
         res[i] = getFeatInnerProdDocVector(docEntryParsed);
       } else if (fwdIndx.isBinary()) {
-        byte [] docEntryBinary = fwdIndx.getDocEntryBinary(did);
+        byte [] docEntryBinary = fwdIndx.getDocEntryBinary(mappedId);
         if (docEntryBinary == null) {
-          throw new Exception("Inconsistent data or bug: can't find document with id ='" + did + "'");
+          throw new Exception("Inconsistent data or bug: can't find document with id ='" + mappedId + "'");
         }
         res[i] = getFeatInnerProdDocVector(docEntryBinary);
       } else {

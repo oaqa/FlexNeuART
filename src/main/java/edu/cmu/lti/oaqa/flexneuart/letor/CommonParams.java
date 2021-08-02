@@ -23,6 +23,8 @@ public class CommonParams {
   public static String QUERY_FIELD_NAME = "queryFieldName";
   public static String INDEX_FIELD_NAME = "indexFieldName";
   
+  public static String ID_MAP_FIELD_NAME = "idMapFieldName";
+  
   public static String EXTR_TYPE = "extrType";
   
   public static String SIMIL_TYPE = "similType";

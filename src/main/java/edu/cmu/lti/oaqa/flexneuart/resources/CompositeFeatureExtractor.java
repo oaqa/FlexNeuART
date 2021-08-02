@@ -21,10 +21,11 @@ import java.util.Map;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrBM25ClosePairSimilarity;
-import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrDocEmbedDotProdSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrDenseDocEmbedDotProdSimilarity;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrModel1Similarity;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrPassRetrScore;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrSDMSimilarity;
+import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrSparseDocEmbedDotProdSimilarity;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrTFIDFSimilarity;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrTermMatchSimilarity;
 import edu.cmu.lti.oaqa.flexneuart.letor.FeatExtrWordEmbedSimilarity;
@@ -78,8 +79,10 @@ public class CompositeFeatureExtractor extends FeatureExtractor {
         fe = new FeatExtrModel1Similarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtrWordEmbedSimilarity.EXTR_TYPE)) {
         fe = new FeatExtrWordEmbedSimilarity(resMngr, oneExtrConf);
-      } else if (extrType.equalsIgnoreCase(FeatExtrDocEmbedDotProdSimilarity.EXTR_TYPE)) {
-        fe = new FeatExtrDocEmbedDotProdSimilarity(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(FeatExtrDenseDocEmbedDotProdSimilarity.EXTR_TYPE)) {
+        fe = new FeatExtrDenseDocEmbedDotProdSimilarity(resMngr, oneExtrConf);
+      } else if (extrType.equalsIgnoreCase(FeatExtrSparseDocEmbedDotProdSimilarity.EXTR_TYPE)) {
+        fe = new FeatExtrSparseDocEmbedDotProdSimilarity(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtractorExternalApacheThrift.EXTR_TYPE)) {
         fe = new FeatExtractorExternalApacheThrift(resMngr, oneExtrConf);
       } else if (extrType.equalsIgnoreCase(FeatExtrSDMSimilarity.EXTR_TYPE)) {

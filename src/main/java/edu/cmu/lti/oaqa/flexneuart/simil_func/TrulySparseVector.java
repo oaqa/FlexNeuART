@@ -17,6 +17,7 @@ package edu.cmu.lti.oaqa.flexneuart.simil_func;
 
 import java.util.ArrayList;
 
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.IdValPair;
 
 public class TrulySparseVector {
@@ -44,34 +45,14 @@ public class TrulySparseVector {
     return mIDs.length;
   }
   
-  public static float scalarProduct(TrulySparseVector v1, TrulySparseVector v2) {
-    float res = 0;
+  public float l2Norm() {
+    float sumSquared = 0;
     
-    int qty1 = v1.mIDs.length;
-    int qty2 = v2.mIDs.length;
-    
-    int i1 = 0, i2 = 0;
-    
-    while(i1 < qty1 && i2 < qty2) {
-      int wordId1 = v1.mIDs[i1];
-      int wordId2 = v2.mIDs[i2];
-      if (wordId1 < wordId2) {
-        i1++;
-      } else if (wordId1 > wordId2) {
-        i2++;
-      } else {
-     /*
-      *  Ignore OOV words  (id < 0), if they slip through the cracks.
-      *  Note that if wordId1 >= 0, then wordId2 >= 0 too (because word IDs are equal at this point)       
-      */
-        if (wordId1 >=0) { 
-          res += v1.mVals[i1] * v2.mVals[i2];
-        }
-        i1++; i2++;
-      }
+    for (float s : mVals) {
+      sumSquared += s * s;
     }
     
-    return res;
+    return (float) Math.sqrt(Math.max(Const.FLOAT_EPS, sumSquared));
   }
   
   public void print() {

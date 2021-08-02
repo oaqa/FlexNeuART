@@ -22,8 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * A base class for (mostly) binary forward indices, which keeps
@@ -34,9 +32,8 @@ import java.util.Collections;
  */
 public abstract class ForwardIndexBinaryBase extends ForwardIndex {
   
-  protected ForwardIndexBinaryBase(String vocabAndDocIdsFile) {
-    mDocIds = new ArrayList<String>();
-    mVocabAndDocIdsFile = vocabAndDocIdsFile;
+  protected ForwardIndexBinaryBase(String headerFile) {
+    mHeaderFile = headerFile;
   }
   
   /**
@@ -45,35 +42,22 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
    * variant of the forward index.
    * 
    */
-  protected void readHeaderAndDocIds() throws Exception {
+  protected void readHeader() throws Exception {
   	
-    try (BufferedReader inp = new BufferedReader(new InputStreamReader(new FileInputStream(mVocabAndDocIdsFile)))) {
+    try (BufferedReader inp = new BufferedReader(new InputStreamReader(new FileInputStream(mHeaderFile)))) {
 
       String line;
       
-      int lineNum = readHeader(mVocabAndDocIdsFile, inp);
+      int lineNum = readHeader(mHeaderFile, inp);
 
-      mDocIds.clear();
-      // Next read document entries
       line = inp.readLine(); lineNum++; 
-      
-      for (; line != null && !line.isEmpty(); line = inp.readLine(), ++lineNum) {
-        String docId = line.trim();
-        mDocIds.add(docId);
-      }
-      if (line == null) {
-        throw new Exception(
-            String.format(
-                    "Can't read a document line (line number %d): the file '%s' may have been truncated.",
-                    lineNum, mVocabAndDocIdsFile));          
-      }
 
       if (line != null) {
         if (!line.isEmpty()) {
           throw new Exception(
               String.format(
                       "Wrong format, expecting the end of flie at the number %d, file '%s'.",
-                      lineNum, mVocabAndDocIdsFile));                  
+                      lineNum, mHeaderFile));                  
         }
 
       }
@@ -82,39 +66,16 @@ public abstract class ForwardIndexBinaryBase extends ForwardIndex {
     }
   }
   
-  protected void writeHeaderAndDocIds() throws IOException {
-    try (BufferedWriter out =  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mVocabAndDocIdsFile)))) {
-                                                
+  protected void writeHeader() throws IOException {
+    try (BufferedWriter out =  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mHeaderFile)))) {                                               
       writeHeader(out);
-      
-      // 3. Write the document IDs
-      for (String docId : mDocIds) {          
-        out.write(docId);
-        out.newLine();
-
-      }
-      out.newLine();
     } 
   }
  
   @Override
-  protected void sortDocEntries() {
-    Collections.sort(mDocIds);
+  protected void postIndexCompAdd() {
+    // Potentially can do some useful extra work after the index is loaded
   }
   
-
-  @Override
-  public String[] getAllDocIds() {
-    String res[] = new String[mDocIds.size()];
-    
-    for (int i = 0; i < mDocIds.size(); ++i) {
-      res[i] = mDocIds.get(i);
-    }
-    
-    return res;
-  }
-  
-  protected final String              mVocabAndDocIdsFile;
-  protected final ArrayList<String>   mDocIds;
-
+  protected final String              mHeaderFile;
 }

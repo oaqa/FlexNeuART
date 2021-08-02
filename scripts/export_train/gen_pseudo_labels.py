@@ -22,7 +22,7 @@ import sys
 
 sys.path.append('.')
 
-from scripts.common_eval import read_run_dict, write_qrels, QrelEntry, get_sorted_scores_from_score_dict
+from scripts.eval_common import read_run_dict, write_qrels, QrelEntry, get_sorted_scores_from_score_dict
 
 parser = argparse.ArgumentParser('Generate pseudo-QRELs from a run')
 

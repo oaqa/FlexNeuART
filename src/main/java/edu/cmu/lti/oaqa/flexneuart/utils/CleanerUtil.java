@@ -97,7 +97,6 @@ class CleanerUtil extends NodeVisitor {
   public void visitTag(Tag tag) {
     String Name = tag.getTagName().toLowerCase();
 
-    // System.out.println(Name + " -> " + tag.isEndTag());
     String attr, content;
 
     if (Name.equals("meta")) {
@@ -141,7 +140,6 @@ class CleanerUtil extends NodeVisitor {
 
       /* More than one link to the same URL can be present on a page */
       if (OldText != null) {
-        // System.out.println(ResolvedAddr + "@@ " + OldText + " >" + LinkText + "<");
         OldText = OldText + " " + LinkText;
       } else {
         OldText = LinkText;
@@ -158,8 +156,6 @@ class CleanerUtil extends NodeVisitor {
     if (mInHref && mHrefAddr != null) {
       AddLinkOut(mHrefAddr, mLinkText);
     }
-
-    // System.out.println(Name + " -> " + tag.isEndTag());
 
     SetFlags(Name, false);
     if (Name.equals("head")) {
@@ -211,8 +207,6 @@ class CleanerUtil extends NodeVisitor {
       String text = CleanText(TextNode.getText());
 
       if (!text.isEmpty()) {
-        // System.out.println(mCurrentTag + "->" + text);
-
         if (mInTitle) {
           mTitle += text;
           mTitle += " ";

@@ -20,6 +20,9 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexFieldType;
 
 class WordEntryStr {
@@ -58,6 +61,8 @@ class CompareWordEntryByFreqDesc implements Comparator<WordEntryStr> {
  *
  */
 public class FrequentIndexWordFilterAndRecoder extends VocabularyFilterAndRecoder {
+  static final Logger logger = LoggerFactory.getLogger(FrequentIndexWordFilterAndRecoder.class);
+  
   public FrequentIndexWordFilterAndRecoder(String fileName, int maxWordQty) throws Exception {
     ArrayList<WordEntryStr> words = new ArrayList<WordEntryStr>();
     
@@ -148,7 +153,7 @@ public class FrequentIndexWordFilterAndRecoder extends VocabularyFilterAndRecode
                     lineNum, fileName));
             
       
-      System.out.println("Finished loading dictionary from file: " + fileName + " # of entries: " + words.size());
+      logger.info("Finished loading dictionary from file: " + fileName + " # of entries: " + words.size());
       
       int minFreq = 0;
       
@@ -164,7 +169,7 @@ public class FrequentIndexWordFilterAndRecoder extends VocabularyFilterAndRecode
         mInt.add(e.mWordId);
       }
       
-      System.out.println("Retained " + mStr2Int.size() + " words for filtering!");      
+      logger.info("Retained " + mStr2Int.size() + " words for filtering!");      
     } finally {    
       if (null != inp) inp.close();
     }    
@@ -189,9 +194,4 @@ public class FrequentIndexWordFilterAndRecoder extends VocabularyFilterAndRecode
 
   HashMap<String, Integer>    mStr2Int = new HashMap<String, Integer>();
   HashSet<Integer>            mInt = new HashSet<Integer>();
-  
-  public static void main(String args[]) throws NumberFormatException, Exception {
-    FrequentIndexWordFilterAndRecoder flt =
-        new FrequentIndexWordFilterAndRecoder(args[0], Integer.parseInt(args[1]));
-  }
 }

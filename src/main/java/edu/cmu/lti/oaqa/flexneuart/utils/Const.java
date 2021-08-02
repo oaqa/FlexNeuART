@@ -31,6 +31,7 @@ public class Const {
   public static final String ENCODING_NAME = "UTF-8";
   public static final Charset ENCODING = Charset.forName(ENCODING_NAME);
   public static final String USER_AGENT = "Mozilla/4.0";
+  public static final float FLOAT_EPS = Float.MIN_NORMAL * 2;
   
   // Most platforms including Apple M1 and NEON ARM by default use little-endian format
   public static ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN; 
@@ -64,9 +65,10 @@ public class Const {
   
   public static final Pattern PATTERN_WHITESPACE = Pattern.compile("[\\s\n\r\t]");
   
-  public static final int PROGRESS_REPORT_QTY = 10000;
+  public static final int PROGRESS_REPORT_QTY = 100000;
   
   public static final String FAKE_RUN_ID = "fake_run";
+
   
   public static final int MAX_RELEV_GRADE = 4;
   

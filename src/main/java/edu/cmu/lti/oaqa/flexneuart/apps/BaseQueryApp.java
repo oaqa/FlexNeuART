@@ -109,6 +109,7 @@ class BaseProcessingUnit {
         }
       }
       // Re-sorting after updating scores
+      int intermRerankQty = cands.length;
       Arrays.sort(cands);
       // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
       if (cands.length > maxNumRet) {
@@ -118,8 +119,8 @@ class BaseProcessingUnit {
       end = System.currentTimeMillis();
       long rerankIntermTimeMS = end - start;
       mAppRef.logger.info(
-          String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' took %d ms", 
-                         queryNum, queryId, rerankIntermTimeMS));
+          String.format("Intermediate-feature generation & re-ranking for the query # %d queryId='%s' took %d ms  for %d entries", 
+                         queryNum, queryId, rerankIntermTimeMS, intermRerankQty));
       mAppRef.mIntermRerankTimeStat.addValue(rerankIntermTimeMS);          
     }
             
@@ -652,15 +653,6 @@ public abstract class BaseQueryApp {
     if (mCandProviders == null) {
       showUsage("Wrong candidate record provider type: '" + mCandProviderType + "'");
     }
-  }
-
-  
-  /**
-   * For debugging only.
-   */
-  static void printFloatArr(float a[]) {
-    for (float v: a)  System.out.print(v + " ");
-    System.out.println();
   }
   
   void run(String appName, String args[]) throws Exception {

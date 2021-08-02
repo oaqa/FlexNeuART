@@ -105,22 +105,30 @@ public class BinReadWriteUtils {
     if (qty4 * 4 < data.length) {
       throw new RuntimeException("Data size: " + data.length + " isn't divisible by 4.");
     }
-    if (qty4 < 3) {
-      throw new RuntimeException("Data size: " + data.length + " too small.");
+    if (qty4 < 2) { // should be at least two integers (data type flag + # of non-zero dimensions)
+      throw new RuntimeException("Data size: " + data.length + " is too small.");
     }
-    int qty2 = (qty4 - 1) / 2;
-    if ((qty4 - 1) > qty2 * 2) {
+    int qty4vect = qty4 - 2;
+    int dimExp = (qty4vect) / 2; // we need to exclude data type + # of non-zero dims
+    if (qty4vect > dimExp * 2) {
       throw new RuntimeException("Data size: " + data.length + " isn't appropriate for packed sparse data.");
     }
 
     ByteBuffer in = ByteBuffer.wrap(data);
     in.order(Const.BYTE_ORDER);
-    TrulySparseVector res = new TrulySparseVector(qty2);
+    
     int type = in.getInt();
     if (type != BIN_DATA_SPARSE_VECTOR) {
       throw new RuntimeException("Data type code: " + type + " is not the code for dense vectors.");
     }
-    for (int i = 0; i < qty2 - 1; i++) {
+    int dim = in.getInt();
+    if (dim != dimExp) {
+      throw new RuntimeException("The stored dim. value: " + dim + " doesn't match the value computed from data len: " + dimExp);
+    }
+    
+    TrulySparseVector res = new TrulySparseVector(dimExp);
+
+    for (int i = 0; i < dim; i++) {
       res.mIDs[i] = in.getInt();
       res.mVals[i] = in.getFloat();
     }

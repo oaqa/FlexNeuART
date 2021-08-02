@@ -40,7 +40,7 @@ numRandRestart=$DEFAULT_NUM_RAND_RESTART
 numTrees=$DEFAULT_NUM_TREES
 metricType=$DEFAULT_METRIC_TYPE
 
-extrType=""
+extrTypeFinal=""
 
 skipEval=0
 
@@ -94,10 +94,6 @@ while [ $# -ne 0 ] ; do
       skipEval=1
       # option without an argument shift by 1
       shift 1
-    elif [ "$optName" = "-test_model_results" ] ; then
-      testModelResults="1"
-      # option without an argument shift by 1
-      shift 1
     elif [ "$optName" = "-delete_trec_runs" ] ; then
       deleteTrecRuns="1"
       # option without an argument shift by 1
@@ -141,8 +137,8 @@ while [ $# -ne 0 ] ; do
         -train_part)
           trainPart=$optValue
           ;;
-        -extr_type)
-          extrType=$optValue
+        -extr_type_final)
+          extrTypeFinal=$optValue
           ;;
         -model_interm)
           modelIntermParam=$opt
@@ -216,7 +212,7 @@ fi
 
 testCandQtyListSpaceSep=`echo $testCandQtyList|sed 's/,/ /g'`
 
-if [ "$modelFinal" != "" -a "$extrType" = "" ] ; then
+if [ "$modelFinal" != "" -a "$extrTypeFinal" = "" ] ; then
   echo "You specified the final model, but not the extractor type!"
   exit 1
 fi
@@ -225,13 +221,13 @@ if [ "$testOnly" = "0" ] ; then
   # Should be set to a default value in the beginning
   checkVarNonEmpty "trainPart"
   echo "Running training in addition to test b/c we have an extractor, but not the final model!"
-   if [ "$extrType" = "" ] ; then
+   if [ "$extrTypeFinal" = "" ] ; then
     echo "In the training mode, you need to specify the feature extractor -extr_type!"
     exit 1
   fi
 else
   echo "Running in test only model"
-  if [ "$modelFinal" == "" -a "$extrType" != "" ] ; then
+  if [ "$modelFinal" == "" -a "$extrTypeFinal" != "" ] ; then
     echo "You specified the extractor type, but not the final model!"
     exit 1
   fi
@@ -350,8 +346,8 @@ else
   modelFinalRelative="$modelFinal"
 fi
 if [ "$modelFinal" != "" ] ; then
-  checkVarNonEmpty "extrType"
-  modelFinalParams="-extr_type_final \"$extrType\" -model_final \"$modelFinalRelative\""
+  checkVarNonEmpty "extrTypeFinal"
+  modelFinalParams="-extr_type_final \"$extrTypeFinal\" -model_final \"$modelFinalRelative\""
 fi
 
 echo "$SEP_DEBUG_LINE"
@@ -384,10 +380,10 @@ echo "Candidate provider add. configuration     $candProvAddConf"
 
 echo "$SEP_DEBUG_LINE"
 
-echo "Maximum number of test queries parameter: $maxQueryQtyTrainParam"
-echo "Number of candidate records for training: $trainCandQty"
-echo "Maximum number of train candidates:       $maxQueryQtyTestParam"
-echo "A list for the number of test candidates: $testCandQtyList"
+echo "Maximum number of train queries parameter: $maxQueryQtyTrainParam"
+echo "Number of candidate records for training:  $trainCandQty"
+echo "A list for the number of test candidates:  $testCandQtyList"
+echo "Maximum number of test queries parameter:  $maxQueryQtyTestParam"
 
 echo "$SEP_DEBUG_LINE"
 
@@ -426,14 +422,15 @@ if [ "$testOnly" = "0" ] ; then
   fi
 
   if [ "$regenFeat" = "1" ] ; then
-    checkVarNonEmpty "extrType"
+    checkVarNonEmpty "extrTypeFinal"
 
     # For the final training, we re-rank only top-K candidates.
     if [ "$maxFinalRerankQtyParam" != "" ] ; then
       echo "WARNING: during training we set -max_final_rerank_qty to $trainCandQty"
     fi
 
-    setJavaMem 2 9
+    NO_MAX=1
+    setJavaMem 1 16 $NO_MAX
     target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
                                     -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
@@ -441,7 +438,7 @@ if [ "$testOnly" = "0" ] ; then
                                     -n "$trainCandQty" \
                                     -max_final_rerank_qty "$trainCandQty" \
                                     -f "$fullOutPrefTrain" \
-                                    -extr_type_final \"$extrType\" \
+                                    -extr_type_final \"$extrTypeFinal\" \
                                      $commonAddParams \
                                      $maxQueryQtyTrainParam  \
                                      $queryCacheParamTrain 2>&1 | tee "${fullOutPrefTrain}_${trainCandQty}.log"
@@ -478,7 +475,8 @@ fi
 
 statFile="$reportDir/$STAT_FILE"
 $resourceDirParams
-setJavaMem 2 9
+NO_MAX=1
+setJavaMem 1 16 $NO_MAX
 target/appassembler/bin/QueryAppMultThread \
                             -u "$candProvURI" -cand_prov "$candProvType" \
                             -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \

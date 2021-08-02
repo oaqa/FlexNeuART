@@ -30,7 +30,7 @@ from scripts.cedr.model_init_utils import MODEL_PARAM_PREF
 
 import scripts.cedr.model_init_utils as model_init_utils
 
-from scripts.common_eval import METRIC_LIST, read_qrels_dict, read_run_dict, get_eval_results
+from scripts.eval_common import METRIC_LIST, read_qrels_dict, read_run_dict, get_eval_results
 from scripts.config import DEVICE_CPU
 
 from tqdm import tqdm

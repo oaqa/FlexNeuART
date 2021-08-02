@@ -23,6 +23,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
@@ -48,6 +50,8 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class CheckDenseSparseExportScores {
+  static final Logger logger = LoggerFactory.getLogger(CheckDenseSparseExportScores.class);
+  
   public static final class Args {
     
     public final static String MAX_NUM_DOC_DESC  = "maximum number of documents to use";
@@ -164,7 +168,7 @@ public class CheckDenseSparseExportScores {
             String queryText = queryFields.getString(queryFieldName);
             
             if (queryText == null) {
-              System.out.println("No query text, query ID:" + queryId + " query field: "+ queryFieldName);
+              logger.warn("No query text, query ID:" + queryId + " query field: "+ queryFieldName);
               queryText = "";
             }
             
@@ -214,7 +218,7 @@ public class CheckDenseSparseExportScores {
               compQty++;
               diffQty += isDiff ? 1 : 0;
 
-              System.out.println(String.format(
+              logger.info(String.format(
                   "Query id: %s Doc id: %s field names: %s/%s feature val: %g inner product val: %g extractor: %s %s",
                   queryId, did, queryFieldName, indexFieldName, featureVal, innerProdVal, oneExtr.getName(),
                   isDiff ? "SIGN. DIFF." : ""));

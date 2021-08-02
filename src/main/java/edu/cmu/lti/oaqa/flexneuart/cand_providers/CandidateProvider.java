@@ -29,12 +29,14 @@ public abstract class CandidateProvider {
   // If you add a new provider, update CAND_PROVID_DESC below
   public static final String CAND_TYPE_LUCENE      = "lucene";
   public static final String CAND_TYPE_NMSLIB      = "nmslib";
+  public static final String CAND_TYPE_ID_MAPPER   = "id_mapper";
   public static final String CAND_TYPE_TREC_RUNS   = "trec_runs";
  
   public final static String CAND_PROVID_DESC = "candidate record provider type: " + 
       CandidateProvider.CAND_TYPE_LUCENE + ", " + 
       CandidateProvider.CAND_TYPE_NMSLIB + ", " +
-      CandidateProvider.CAND_TYPE_TREC_RUNS;
+      CandidateProvider.CAND_TYPE_TREC_RUNS + ", " +
+      CandidateProvider.CAND_TYPE_ID_MAPPER;
 
   /**
    * @return  true if {@link #getCandidates(int, Map, int)} can be called by 

@@ -35,7 +35,7 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
   
   public ExportTrainNegSampleWithoutScoresBase(ForwardIndex fwdIndex, 
                                   String queryExportFieldName, String indexExportFieldName,
-                                  QrelReader qrelsTrain, QrelReader qrelsTest) {
+                                  QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
   }
 
@@ -193,6 +193,10 @@ public abstract class ExportTrainNegSampleWithoutScoresBase extends ExportTrainN
     //    ii) have very low query-document score, i.e., they should be easy to distinguish from 
     //        a majority of relevant documents, which would have rather large query-document 
     //        similarity scores.
+    
+    if (mAllDocIds == null && mSampleEasyNegQty > 0) {
+      throw new RuntimeException("Bug: mAllDocIds is null despite easy negatives are requested.");
+    }
     
     for (int k = 0; k < mSampleEasyNegQty; ++k) {
       int idx = Math.abs(mRandUtils.nextInt()) % mAllDocIds.length;

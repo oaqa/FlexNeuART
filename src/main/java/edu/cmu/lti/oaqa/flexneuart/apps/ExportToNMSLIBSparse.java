@@ -24,6 +24,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
 import edu.cmu.lti.oaqa.flexneuart.letor.SingleFieldFeatExtractor;
@@ -45,6 +47,7 @@ import no.uib.cipr.matrix.DenseVector;
  *
  */
 public class ExportToNMSLIBSparse {
+  static final Logger logger = LoggerFactory.getLogger(ExportToNMSLIBSparse.class);
   
   public static final class Args {
     
@@ -147,7 +150,7 @@ public class ExportToNMSLIBSparse {
       
       int entryQty = queries == null ?  allDocIds.length  : queries.size();
       
-      System.out.println("Writing the number of entries (" + entryQty + ") to the output file");
+      logger.info("Writing the number of entries (" + entryQty + ") to the output file");
       
       out.write(BinReadWriteUtils.intToBytes(entryQty));
       
@@ -167,12 +170,12 @@ public class ExportToNMSLIBSparse {
           for (int i = 0; i < actualBatchQty; ++i) {
             ++docNum;
             if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
-              System.out.println("Exported " + docNum + " docs");
+              logger.info("Exported " + docNum + " docs");
             }
           }
         }
 
-        System.out.println("Exported " + docNum + " docs");
+        logger.info("Exported " + docNum + " docs");
       } else {
         int queryQty = 0;
         for (DataEntryFields queryFields : queries) {
@@ -189,7 +192,7 @@ public class ExportToNMSLIBSparse {
                                                                         compIndices, compExtractors, 
                                                                         unitWeights, out);
         }
-        System.out.println("Exported " + queries.size() + " queries");
+        logger.info("Exported " + queries.size() + " queries");
       }
       
     } catch (Exception e) {

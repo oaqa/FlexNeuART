@@ -121,7 +121,7 @@ public class AnswerBasedQRELGenerator {
       ForwardIndex fwdIndexText = resourceManager.getFwdIndex(args.mFieldName);
       
       if (!fwdIndexText.isTextRaw()) {
-        System.out.println("The answer-based QREL-generator works only with raw text indices!");
+        System.err.println("The answer-based QREL-generator works only with raw text indices!");
         System.exit(1);
       }
       
@@ -186,7 +186,7 @@ public class AnswerBasedQRELGenerator {
       EvalUtils.saveQrelOneEntry(out, queryId, did, Const.MAX_RELEV_GRADE);
     }
     mQueryQty += 1;
-    if (mQueryQty % 100 == 0) {
+    if (mQueryQty % Const.PROGRESS_REPORT_QTY == 0) {
       logger.info("Processed " + mQueryQty + " queries");
     }
   }

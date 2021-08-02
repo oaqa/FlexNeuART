@@ -54,9 +54,6 @@ public class GizaVocabularyFilterStand extends VocabularyFilter {
    * @throws  Exception
    */
   private void readVocFile(String fileName) throws Exception {
-    int         qty = 0;
-    double      totOccQty = 0;
-            
     {
       // Pass 1: compute the # of records and the total # of occurrences
       BufferedReader fr = new BufferedReader(new FileReader(fileName));
@@ -69,7 +66,6 @@ public class GizaVocabularyFilterStand extends VocabularyFilter {
         
         GizaVocRec rec = new GizaVocRec(line);
         mWords.add(rec.mWord);
-        ++qty; totOccQty += rec.mQty;
       }
 
       fr.close();

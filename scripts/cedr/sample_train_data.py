@@ -29,7 +29,7 @@ import argparse
 import numpy as np
 import shutil
 
-from scripts.common_eval import read_run_dict, write_run_dict
+from scripts.eval_common import read_run_dict, write_run_dict
 from scripts.cedr.data import read_pairs_dict, write_pairs_dict
 from scripts.config import QREL_FILE
 import scripts.utils as utils

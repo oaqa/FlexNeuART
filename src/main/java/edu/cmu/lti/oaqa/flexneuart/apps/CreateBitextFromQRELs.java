@@ -25,6 +25,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.ParserProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.DocEntryParsed;
@@ -50,6 +52,8 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
  *
  */
 public class CreateBitextFromQRELs {
+  static final Logger logger = LoggerFactory.getLogger(CreateBitextFromQRELs.class);
+  
   public final static String EMBED_FILE_NAME_PARAM = "-embed_file";
   public final static String MAX_DOC_QUERY_QTY_RATIO_PARAM = "-max_doc_query_qty_ratio";
   
@@ -159,7 +163,7 @@ public class CreateBitextFromQRELs {
         String [] queryWords = StringUtils.splitOnWhiteSpace(queryText);
       
         if (queryText.isEmpty() || queryWords.length == 0) {
-          System.out.println("Empty text in query: " + qid + " ignoring");
+          logger.warn("Empty text in query: " + qid + " ignoring");
           continue;
         }
         
@@ -167,7 +171,7 @@ public class CreateBitextFromQRELs {
         
         HashMap<String, String> relInfo = qrels.getQueryQrels(qid);
         if (relInfo == null) {
-          System.out.println("Warning: no QRELs for query id: " + qid);
+          logger.warn("Warning: no QRELs for query id: " + qid);
           continue;
         }
         for (Entry<String, String> e : relInfo.entrySet()) {
@@ -206,7 +210,7 @@ public class CreateBitextFromQRELs {
     }
     DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
     if (dentry == null) {
-      System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+      logger.warn("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
       return;
     }
 
@@ -214,7 +218,7 @@ public class CreateBitextFromQRELs {
     
     int docWordQty = dentry.mWordIds.length;
     if (docWordQty == 0) {
-      System.out.println("Empty doc " + did + " for field: " + fieldName);
+      logger.warn("Empty doc " + did + " for field: " + fieldName);
       return; // emtpy doc
     }
     float weights[] = new float[docWordQty];
@@ -272,7 +276,7 @@ public class CreateBitextFromQRELs {
     }
     DocEntryParsed dentry = fwdIndex.getDocEntryParsed(did);
     if (dentry == null) {
-      System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+      logger.warn("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
       return;
     }
     if (dentry.mWordIdSeq == null) {
@@ -313,7 +317,7 @@ public class CreateBitextFromQRELs {
     }
     String docTextRaw = fwdIndex.getDocEntryTextRaw(did);
     if (docTextRaw == null) {
-      System.out.println("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
+      logger.warn("Seems like data inconsistency, there is no document " + did + " index, but there is a QREL entry with it");
       return;
     }
     

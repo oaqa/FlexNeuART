@@ -24,8 +24,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
-* One document entry of an in-memory forward index.
+* One document entry of an in-memory forward index. This class is used for testing purposes only!
 * 
 * @author Leonid Boytsov
 *
@@ -56,7 +59,9 @@ class DocEntryExt implements Comparable<DocEntryExt> {
  *
  */
 public class ForwardIndexTextInMem extends ForwardIndex {  
-  private static String NOT_SUPPORTED_PREFIX = ForwardIndexBackendType.inmem.toString() + " does not support";
+  static final Logger logger = LoggerFactory.getLogger(ForwardIndexTextInMem.class);
+  
+  private static String NOT_SUPPORTED_PREFIX = ForwardIndexType.inmem.toString() + " does not support";
  
   protected ForwardIndexTextInMem(String fileName) {
     mFileName = fileName;
@@ -128,7 +133,7 @@ public class ForwardIndexTextInMem extends ForwardIndex {
       
       postIndexComp();
       
-      System.out.println("Finished loading context from file: " + fileName);
+      logger.info("Finished loading context from file: " + fileName);
     } finally {    
       if (null != inp) inp.close();
     }
@@ -175,7 +180,7 @@ public class ForwardIndexTextInMem extends ForwardIndex {
   }
   
   @Override
-  protected void sortDocEntries() {
+  protected void postIndexCompAdd() {
     buildDocListSortedById();
   }
 
@@ -198,7 +203,7 @@ public class ForwardIndexTextInMem extends ForwardIndex {
   protected ArrayList<DocEntryExt> mDocEntInAdditionOrder = new ArrayList<DocEntryExt>();
   
   @Override
-  protected void initIndex() throws IOException {
+  protected void initIndex(int dummy) throws Exception {
     // We do nothing here
   }
 
@@ -213,6 +218,15 @@ public class ForwardIndexTextInMem extends ForwardIndex {
     
     return res;
   }  
+  
+  @Override
+  public Iterator<String> getDocIdIterator() throws Exception {
+    ArrayList<String> ids = new ArrayList<String>();
+    for (String s : getAllDocIds()) {
+      ids.add(s);
+    }
+    return ids.iterator();
+  }
 
   private final String mFileName;
 

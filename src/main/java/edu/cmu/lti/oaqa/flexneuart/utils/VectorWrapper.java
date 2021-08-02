@@ -1,5 +1,5 @@
 /*
- *  Copyright 2019 Carnegie Mellon University
+ *  Copyright 2014+ Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ public class VectorWrapper {
       throw new Exception("Computing scalar product between vectors of incompatible sparsity type!");
     }
     if (vec1.isSparse()) {
-      return TrulySparseVector.scalarProduct(vec1.mSparseVector, vec2.mSparseVector);
+      return DistanceFunctions.compScalar(vec1.mSparseVector, vec2.mSparseVector);
     } else {
       return DistanceFunctions.compScalar(vec1.mDenseVec, vec2.mDenseVec);
     }

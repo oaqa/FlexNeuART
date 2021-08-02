@@ -39,7 +39,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleWithoutScoresBase {
  
   protected ExportTrainCEDR(ForwardIndex fwdIndex, 
                             String queryExportFieldName, String indexExportFieldName,
-                            QrelReader qrelsTrain, QrelReader qrelsTest) {
+                            QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
   }
 
@@ -49,7 +49,7 @@ class ExportTrainCEDR extends ExportTrainNegSampleWithoutScoresBase {
   }
 
   @Override
-  protected String readAddOptions(CommandLine cmd) {
+  protected String readAddOptions(CommandLine cmd) throws Exception {
     String err = super.readAddOptions(cmd);
     if (!err.isEmpty()) {
       return err;

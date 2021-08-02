@@ -29,10 +29,9 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   public static final String KEEP_CASE_DESC = "do not lower-case queries and documents";
   
   public ExportTrainNegSampleBase(ForwardIndex fwdIndex, String queryExportFieldName, String indexExportFieldName,
-      QrelReader qrelsTrain, QrelReader qrelsTest) {
+      QrelReader qrelsTrain, QrelReader qrelsTest) throws Exception {
     super(fwdIndex, queryExportFieldName, indexExportFieldName, qrelsTrain, qrelsTest);
-    
-    mAllDocIds = fwdIndex.getAllDocIds();
+
   }
 
   protected static void addOptionsDesc(Options opts) {
@@ -53,7 +52,7 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
   protected int mHardNegQty = 0;
 
   @Override
-  protected String readAddOptions(CommandLine cmd) {
+  protected String readAddOptions(CommandLine cmd) throws Exception {
     
     // Only this sampling parameter should be mandatory
     String tmpn = cmd.getOptionValue(MAX_SAMPLE_MEDIUM_NEG_QTY);
@@ -79,6 +78,12 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     if (null != tmpn) {
       try {
         mSampleEasyNegQty = Math.max(0, Integer.parseInt(tmpn));
+        
+        if (mSampleEasyNegQty > 0) {
+          // This is a very expensive operation, so we don't retrieve all IDs by default
+          logger.info("Reading all document IDs from the index!");
+          mAllDocIds = mFwdIndex.getAllDocIds();
+        }
       } catch (NumberFormatException e) {
         return MAX_SAMPLE_EASY_NEG_QTY + " isn't integer: '" + tmpn + "'";
       }
@@ -136,6 +141,9 @@ public abstract class ExportTrainNegSampleBase extends ExportTrainBase {
     logger.info(String.format("# top-scoring training candidates to sample/select from %d", mCandTrainQty));
     logger.info(String.format("# top-scoring training candidates to select positives from %d (only for export with scores)", mCandTrain4PosQty));
     logger.info(String.format("# top candidates for validation %d", mCandTestQty));
+    
+    logger.info(String.format("# of hard/medium/easy negative samples: %d/%d/%d", 
+                              mHardNegQty, mSampleMedNegQty, mSampleEasyNegQty));
     
     
     tmpn = cmd.getOptionValue(MAX_DOC_WHITESPACE_TOK_QTY_PARAM);

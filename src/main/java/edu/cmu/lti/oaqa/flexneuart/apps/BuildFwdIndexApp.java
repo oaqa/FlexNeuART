@@ -27,8 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex;
+
+import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexStoreType;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexFieldType;
-import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexBackendType;
+import edu.cmu.lti.oaqa.flexneuart.fwdindx.ForwardIndex.ForwardIndexType;
 
 public class BuildFwdIndexApp {  
   
@@ -44,14 +46,16 @@ public class BuildFwdIndexApp {
   public static void main(String[] args) {
     Options options = new Options();
     
-    options.addOption(CommonParams.INPUT_DATA_DIR_PARAM,         null, true, CommonParams.INPUT_DATA_DIR_DESC);
-    options.addOption(CommonParams.INPDATA_SUB_DIR_TYPE_PARAM,   null, true, CommonParams.INPDATA_SUB_DIR_TYPE_DESC);
-    options.addOption(CommonParams.MAX_NUM_REC_PARAM,            null, true, CommonParams.MAX_NUM_REC_DESC); 
-    options.addOption(CommonParams.DATA_FILE_PARAM,              null, true, CommonParams.DATA_FILE_DESC);   
-    options.addOption(CommonParams.OUT_INDEX_PARAM,              null, true, CommonParams.OUT_INDEX_DESC);
-    options.addOption(CommonParams.FIELD_NAME_PARAM,             null, true, CommonParams.FIELD_NAME_DESC);
-    options.addOption(CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM, null, true, CommonParams.FOWARD_INDEX_BACKEND_TYPE_DESC);
-    options.addOption(CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM,null, true, CommonParams.FOWARD_INDEX_FIELD_TYPE_DESC);
+    options.addOption(CommonParams.INPUT_DATA_DIR_PARAM,          null, true, CommonParams.INPUT_DATA_DIR_DESC);
+    options.addOption(CommonParams.INPDATA_SUB_DIR_TYPE_PARAM,    null, true, CommonParams.INPDATA_SUB_DIR_TYPE_DESC);
+    options.addOption(CommonParams.MAX_NUM_REC_PARAM,             null, true, CommonParams.MAX_NUM_REC_DESC); 
+    options.addOption(CommonParams.EXPECTED_DOC_QTY_PARAM,        null, true, CommonParams.EXPECTED_DOC_QTY_DESC); 
+    options.addOption(CommonParams.DATA_FILE_PARAM,               null, true, CommonParams.DATA_FILE_DESC);   
+    options.addOption(CommonParams.OUT_INDEX_PARAM,               null, true, CommonParams.OUT_INDEX_DESC);
+    options.addOption(CommonParams.FIELD_NAME_PARAM,              null, true, CommonParams.FIELD_NAME_DESC);
+    options.addOption(CommonParams.FOWARD_INDEX_TYPE_PARAM,       null, true, CommonParams.FOWARD_INDEX_TYPE_DESC);
+    options.addOption(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, null, true, CommonParams.FOWARD_INDEX_STORE_TYPE_DESC);
+    options.addOption(CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM, null, true, CommonParams.FOWARD_INDEX_FIELD_TYPE_DESC);
 
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -78,7 +82,7 @@ public class BuildFwdIndexApp {
       if (null == dataFileName) {
         Usage("Specify: " + CommonParams.DATA_FILE_PARAM, options);
       }
-            
+
       int maxNumRec = Integer.MAX_VALUE;
       
       String tmp = cmd.getOptionValue(CommonParams.MAX_NUM_REC_PARAM);
@@ -87,12 +91,29 @@ public class BuildFwdIndexApp {
         try {
           maxNumRec = Integer.parseInt(tmp);
           if (maxNumRec <= 0) {
-            Usage("The maximum number of records should be a positive integer", options);
+            Usage(CommonParams.MAX_NUM_REC_PARAM + " should be a positive integer", options);
           }
         } catch (NumberFormatException e) {
-          Usage("The maximum number of records should be a positive integer", options);
+          Usage(CommonParams.MAX_NUM_REC_PARAM + " should be a positive integer", options);
         }
       }
+      
+      // There seems to be no harm in "over-specify" the number of expected entries as opposed to under-specifying,
+      // which slows indexing down quite a bit
+      int expectedQty = (int)1e9;
+      
+      tmp = cmd.getOptionValue(CommonParams.EXPECTED_DOC_QTY_PARAM);
+      if (tmp != null) {
+        try {
+          expectedQty = (int)Float.parseFloat(tmp);
+          if (expectedQty <= 0) {
+            Usage(CommonParams.EXPECTED_DOC_QTY_PARAM + " should be a positive integer < " + Integer.MAX_VALUE, options);
+          }
+        } catch (NumberFormatException e) {
+          Usage(CommonParams.EXPECTED_DOC_QTY_PARAM + " should be a positive integer", options);
+        }
+      }
+      
             
       String fieldName = cmd.getOptionValue(CommonParams.FIELD_NAME_PARAM);
       if (fieldName == null) {
@@ -107,20 +128,32 @@ public class BuildFwdIndexApp {
       for (int i = 0; i < fileNames.length; ++i)
         fileNames[i] = inputDataDir + File.separator + subDirs[i] + File.separator + dataFileName;
       
-      String fwdIndexBackendType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM);
       
-      if (fwdIndexBackendType == null) {
-        Usage("Specify: " + CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM, options);
+      ForwardIndexType iIndexType = ForwardIndexType.dataDict;
+      String fwdIndexType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_TYPE_PARAM);
+      
+      if (fwdIndexType != null) {
+        iIndexType = ForwardIndex.getIndexType(fwdIndexType);
+        if (iIndexType == ForwardIndexType.unknown) {
+          Usage("Wrong value '" + fwdIndexType + "' for " + CommonParams.FOWARD_INDEX_TYPE_PARAM, options);
+        }
       }
       
+      logger.info("Forward index type: " + iIndexType);
       
-      ForwardIndexBackendType iBackendType = ForwardIndex.getIndexBackendType(fwdIndexBackendType);
+      String fwdIndexStoreType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM);
+      ForwardIndexStoreType iStoreType = ForwardIndexStoreType.mapdb;
       
-      if (iBackendType == ForwardIndexBackendType.unknown) {
-        Usage("Wrong value '" + fwdIndexBackendType + "' for " + CommonParams.FOWARD_INDEX_BACKEND_TYPE_PARAM, options);
+      if (fwdIndexStoreType != null) {
+          
+        iStoreType = ForwardIndex.getStoreType(fwdIndexStoreType);
+      
+        if (iStoreType == ForwardIndexStoreType.unknown) {
+          Usage("Wrong value '" + fwdIndexStoreType + "' for " + CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, options);
+        }
       }
       
-      logger.info("Forward index backend type: " + iBackendType);
+      logger.info("Forward index storage type: " + iStoreType);
       
       String fwdIndexFieldType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM);
       
@@ -137,9 +170,9 @@ public class BuildFwdIndexApp {
       logger.info("Forward index field type: " + iFieldType);
         
       ForwardIndex indx = ForwardIndex.createWriteInstance(outPrefix + File.separator + fieldName, 
-                                                          iBackendType, iFieldType);
+                                                          iIndexType, iStoreType, iFieldType);
       
-      indx.createIndex(fieldName, fileNames, maxNumRec);
+      indx.createIndex(fieldName, fileNames, maxNumRec, expectedQty);
       indx.saveIndex();
       
     } catch (ParseException e) {

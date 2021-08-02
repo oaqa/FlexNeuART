@@ -21,16 +21,18 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import org.apache.commons.cli.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.FrequentIndexWordFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.giza.*;
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 import edu.cmu.lti.oaqa.flexneuart.utils.ParamHelper;
 
 public class FilterVocabulary {
-  
-  private static final int REPORT_INTERVAL_QTY = 10000;
+  static final Logger logger = LoggerFactory.getLogger(FilterVocabulary.class);
   
   private static final String OUT_VOC_FILE_DESC = "a name of the output file (can have a .gz extension to be compressed)";
   private static final String OUT_VOC_FILE_PARAM = "o";
@@ -115,10 +117,12 @@ public class FilterVocabulary {
             addedQty++;
           }
         
-          if (totalQty % REPORT_INTERVAL_QTY == 0)
-          System.out.println(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
-                                            totalQty, wordQty, inputFile, addedQty));
+          if (totalQty % Const.PROGRESS_REPORT_QTY == 0)
+            logger.info(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
+                                       totalQty, wordQty, inputFile, addedQty));
         }
+        logger.info(String.format("Processed %d lines (%d source word entries) from '%s', added %d lines", 
+            totalQty, wordQty, inputFile, addedQty));
         
       } finally {
         finp.close();

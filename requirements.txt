@@ -1,5 +1,7 @@
+jupyter
 lxml
 bson
+tqdm
 transformers
 urllib3
 pytools

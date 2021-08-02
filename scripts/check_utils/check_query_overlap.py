@@ -33,12 +33,12 @@ from tqdm import tqdm
 
 sys.path.append('.')
 
-from scripts.check_utils.common_check import get_token_ids, str_to_nmslib_vect, jaccard, read_sample_queries, create_jaccard_index
+from scripts.check_utils.check_common import get_token_ids, str_to_nmslib_vect, jaccard, read_sample_queries, create_jaccard_index
 from scripts.config import BERT_BASE_MODEL, \
                             DOCID_FIELD, \
                             TEXT_FIELD_NAME, TEXT_RAW_FIELD_NAME
 
-from scripts.common_eval import read_qrels_dict
+from scripts.eval_common import read_qrels_dict
 
 QUERY_BATCH_SIZE=32
 

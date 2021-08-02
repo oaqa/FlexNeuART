@@ -24,7 +24,7 @@ import os
 
 sys.path.append('.')
 
-from scripts.common_eval import *
+from scripts.eval_common import *
 from scripts.utils import create_temp_file
 
 parser = argparse.ArgumentParser('Comparing external and internal eval tools')

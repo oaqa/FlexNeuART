@@ -26,7 +26,7 @@ import argparse
 sys.path.append('.')
 from scripts.data_convert.split_queries_args import add_basic_query_split_args, QuerySplitArgumentsBase
 from scripts.data_convert.convert_common import read_queries
-from scripts.common_eval import read_qrels, qrel_entry2_str
+from scripts.eval_common import read_qrels, qrel_entry2_str
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 from scripts.data_convert.convert_common import FileWrapper, build_query_id_to_partition
 

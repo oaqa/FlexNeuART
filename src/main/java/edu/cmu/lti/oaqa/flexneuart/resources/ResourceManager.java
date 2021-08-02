@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.cmu.lti.oaqa.flexneuart.apps.CommonParams;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider;
+import edu.cmu.lti.oaqa.flexneuart.cand_providers.IdMapperCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.LuceneCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.NmslibKNNCandidateProvider;
 import edu.cmu.lti.oaqa.flexneuart.cand_providers.TrecRunCandidateProvider;
@@ -148,9 +149,24 @@ public class ResourceManager {
        */
 
       for (int ic = 0; ic < threadQty; ++ic) {
-        res[ic] = new NmslibKNNCandidateProvider(provURI, this, addConf);
+        try {
+          res[ic] = new NmslibKNNCandidateProvider(provURI, this, addConf);
+        } catch (java.net.ConnectException e) {
+          logger.error("Unable to connect to NMSLIB server using address: " + provURI);
+          e.printStackTrace();
+          throw e;
+        }
       }
-             
+    } else if (provType.equalsIgnoreCase(CandidateProvider.CAND_TYPE_ID_MAPPER)) {
+      /*
+       * The wrapper ID-mapping provider may or may not be thread-safe.
+       */
+      res[0] = new IdMapperCandidateProvider(this, provURI, addConf);
+      
+      for (int ic = 1; ic < threadQty; ++ic) {
+        res[ic] = res[0].isThreadSafe() ? res[0] : new IdMapperCandidateProvider(this, provURI, addConf);
+      }
+            
     } else {
       return null;
     }
