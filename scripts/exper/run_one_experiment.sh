@@ -220,7 +220,7 @@ fi
 if [ "$testOnly" = "0" ] ; then
   # Should be set to a default value in the beginning
   checkVarNonEmpty "trainPart"
-  echo "Running training in addition to test b/c we have an extractor, but not the final model!"
+  echo "Running training in addition to testing"
    if [ "$extrTypeFinal" = "" ] ; then
     echo "In the training mode, you need to specify the feature extractor -extr_type!"
     exit 1
