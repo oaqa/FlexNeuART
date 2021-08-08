@@ -168,7 +168,7 @@ public class GizaTranTableReaderAndRecoder {
         ++wordQty;
       }
       
-      if (totalQty % Const.PROGRESS_REPORT_QTY == 0) {
+      if (totalQty % (10 * Const.PROGRESS_REPORT_QTY) == 0) {
         logger.info(String.format("Processed %d lines (%d source word entries) from '%s'", 
                                     totalQty, wordQty, fileName));
       }
