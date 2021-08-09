@@ -345,13 +345,24 @@ for ((ivar=1;;++ivar)) ; do
     if [ -d "$experDirBase" ] ; then
       # The helper experimental script will clean it up
       if [ "$clean" = "1" ] ; then
-        echo "Experimental directory already exists (going to override): $experDirBase"
+        echo "Experimental directory already exists (removing contents): $experDirBase"
+        # Be very careful with this sort of deletions,
+        # double-check it's not empty again, otherwise we might try to delete
+        # files at the root file-system directory
+        if [ "$experDirBase" != "" ] ; then
+          echo "Cleaning the experimental directory: $experDirBase"
+          rm -rf $experDirBase/*
+        else
+          echo "Bug: empty experDirBase here!"
+          exit 1
+        fi
       else
         echo "Experimental directory already exists (ignoring): $experDirBase"
         continue
       fi
+    else
+      mkdir -p "$experDirBase"
     fi
-    mkdir -p "$experDirBase"
 
     singleConfParams="-thread_qty $threadQty"
 
@@ -413,7 +424,7 @@ EOF
       echo "Starting a process, working dir: $experDirBase"
       #echo "Command run: $cmd"
       echo "Process log file: $logFileName"
-      bash -c "$cmd"  2>&1 |tee "$logFileName"
+      bash -c "$cmd"  2>&1 | tee "$logFileName"
       checkPipe
     fi
     nRunning=$(($nRunning+1))
