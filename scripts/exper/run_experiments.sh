@@ -55,6 +55,7 @@ threadQty=""
 defaultTestPart=""
 defaultTrainPart="$DEFAULT_TRAIN_SUBDIR"
 addExperSubdir=""
+clean="0"
 
 function usage {
   msg=$1
@@ -64,6 +65,7 @@ Usage: <collection> <feature desc. file relative to collection root> [additional
 Additional options:
   -max_num_query_test     max. # of test queries
   -test_part              default test set, e.g., $DEV1_SUBDIR (can be redefined in the experimental config)
+  -clean                  remove an existing experimental directory
   -model_final            final-stage model (relative to the collection root)
   -train_part             default train set, e.g., $DEFAULT_TRAIN_SUBDIR (can be redefined in the experimental config)
   -train_cand_qty         # of candidates for training (default $trainCandQty)
@@ -108,6 +110,10 @@ while [ $# -ne 0 ] ; do
       shift 1
     elif [ "$optName" = "-skip_eval" ] ; then
       globalParams+=" $optName"
+      # option without an argument shift by 1
+      shift 1
+    elif [ "$optName" = "-clean" ] ; then
+      clean="1"
       # option without an argument shift by 1
       shift 1
     elif [ "$optName" = "-no_separate_shell" ] ; then
@@ -337,8 +343,13 @@ for ((ivar=1;;++ivar)) ; do
     fi
 
     if [ -d "$experDirBase" ] ; then
-      echo "Experimental directory already exists (ignoring): $experDirBase"
-      continue
+      # The helper experimental script will clean it up
+      if [ "$clean" = "1" ] ; then
+        echo "Experimental directory already exists (going to override): $experDirBase"
+      else
+        echo "Experimental directory already exists (ignoring): $experDirBase"
+        continue
+      fi
     fi
     mkdir -p "$experDirBase"
 
