@@ -220,7 +220,7 @@ fi
 if [ "$testOnly" = "0" ] ; then
   # Should be set to a default value in the beginning
   checkVarNonEmpty "trainPart"
-  echo "Running training in addition to test b/c we have an extractor, but not the final model!"
+  echo "Running training in addition to testing"
    if [ "$extrTypeFinal" = "" ] ; then
     echo "In the training mode, you need to specify the feature extractor -extr_type!"
     exit 1
@@ -261,17 +261,6 @@ trecRunDir="$experDirBase/$TRECRUNS_SUBDIR"
 reportDir="$experDirBase/$REP_SUBDIR"
 
 checkVarNonEmpty "experDirBase"
-if [ -d "$experDirBase" ] ; then
-  # Be very careful with this sort of deletions,
-  # double-check it's not empty again, otherwise we might try to delete
-  # files at the root file-system directory
-  if [ "$experDirBase" != "" ] ; then
-    rm -rf "$experDirBase/*"
-  else
-    echo "Bug: empty experDirBase here!"
-    exit 1
-  fi
-fi
 
 mkdir -p "$letorDir"
 mkdir -p "$trecRunDir"

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import net.openhft.koloboke.collect.map.hash.*;
 import edu.cmu.lti.oaqa.flexneuart.fwdindx.VocabularyFilterAndRecoder;
 import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
+import edu.cmu.lti.oaqa.flexneuart.utils.Const;
 
 /**
  * 
@@ -53,8 +54,6 @@ import edu.cmu.lti.oaqa.flexneuart.utils.CompressUtils;
  */
 public class GizaTranTableReaderAndRecoder {
   private static final Logger logger = LoggerFactory.getLogger(GizaTranTableReaderAndRecoder.class);
-  
-  private static final int  REPORT_INTERVAL_QTY = 100000;
   
   private static final String BINARY_SUFFIX = ".bin";
 
@@ -169,7 +168,7 @@ public class GizaTranTableReaderAndRecoder {
         ++wordQty;
       }
       
-      if (totalQty % REPORT_INTERVAL_QTY == 0) {
+      if (totalQty % (10 * Const.PROGRESS_REPORT_QTY) == 0) {
         logger.info(String.format("Processed %d lines (%d source word entries) from '%s'", 
                                     totalQty, wordQty, fileName));
       }

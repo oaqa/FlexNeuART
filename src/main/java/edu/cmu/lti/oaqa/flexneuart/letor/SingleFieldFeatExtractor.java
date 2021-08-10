@@ -16,7 +16,9 @@
 package edu.cmu.lti.oaqa.flexneuart.letor;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
@@ -109,9 +111,10 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
     if (mIdMapper == null) {
       return getFeaturesMappedIds(cands, queryFields);
     } else {
-      CandidateEntry[] candsMappedId = new CandidateEntry[cands.length];
-      HashMap<String, String> backMap = new HashMap<String, String>();
+      CandidateEntry[] candsMappedIdTmp = new CandidateEntry[cands.length];
+      HashSet<String>  seen = new HashSet<String>();
       
+      int mapUniqQty = 0;
       for (int i = 0; i < cands.length; i++) {
         CandidateEntry e = cands[i];
         String origId = e.mDocId;
@@ -119,25 +122,31 @@ public abstract class SingleFieldFeatExtractor extends FeatureExtractor {
         if (mappedId == null) {
           throw new Exception("Cannot map id '" + origId + "' using the field: " + mIdMapFieldName);
         }
-        if (backMap.containsKey(mappedId)) {
-          throw new Exception("Repeating mapped id '" + mappedId + "' for the remapping field: '" + mIdMapFieldName + "' original id: '" + origId + "'");
+        if (!seen.contains(mappedId)) {
+          seen.add(mappedId);
+          candsMappedIdTmp[mapUniqQty++] = new CandidateEntry(mappedId, e.mScore, e.mOrigScore);
         }
-        backMap.put(mappedId, origId);
-        candsMappedId[i] = new CandidateEntry(mappedId, e.mScore, e.mOrigScore);
       }
+
+      CandidateEntry[] candsMappedId = Arrays.copyOf(candsMappedIdTmp, mapUniqQty);
       
       Map<String, DenseVector> tmpRes = getFeaturesMappedIds(candsMappedId, queryFields);
       HashMap<String, DenseVector> res = new HashMap<String, DenseVector>();
-      
-      for (Entry<String, DenseVector> tmpResEntry : tmpRes.entrySet()) {
-        String mappedId = tmpResEntry.getKey();
-        DenseVector feats = tmpResEntry.getValue();
-        String origId = backMap.get(mappedId);
-        if (origId == null) {
-          throw new Exception("Cannot backmap id '" + mappedId + "' after feature generation, the remapping field: " + mIdMapFieldName);
+
+      for (int i = 0; i < cands.length; i++) {
+        CandidateEntry e = cands[i];
+        String origId = e.mDocId;
+        String mappedId = mIdMapper.getDocEntryTextRaw(origId);
+        if (mappedId == null) {
+          throw new Exception("Cannot map id '" + origId + "' using the field: " + mIdMapFieldName);
+        }
+        DenseVector feats = tmpRes.get(mappedId);
+        if (feats == null) {
+          throw new RuntimeException("Bug no features for mapped id '" + mappedId + "' original id '" + origId + "', the remapping field: " + mIdMapFieldName);
         }
         res.put(origId, feats);
       }
+
       return res;
     }
   }

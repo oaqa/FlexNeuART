@@ -18,6 +18,7 @@
 #
 import sys
 import argparse
+import gc
 
 sys.path.append('.')
 
@@ -40,12 +41,15 @@ parser.add_argument('--run_id', metavar='run id',
                     default=None,
                     type=str)
 parser.add_argument('--collect_root', metavar='collection dir',
-                    help='a top-level collection directory')
+                    help='a top-level collection directory',
+                    default=None)
 parser.add_argument('--fwd_index_subdir',
-                    help='forward index files sub-directory')
+                    help='forward index files sub-directory',
+                    default=None)
 parser.add_argument('--index_field', metavar='index field',
                     help='the name of the field for which we previously created the forward index',
-                    type=str, required=True)
+                    type=str, 
+                    default=None)
 parser.add_argument('--min_exp_doc_qty',
                     metavar='min # of docs per query to expect',
                     help='min # of docs per query to expect',
@@ -58,15 +62,23 @@ args = parser.parse_args()
 # add Java JAR to the class path
 configure_classpath('target')
 
-# create a resource manager
-resource_manager=create_featextr_resource_manager(resource_root_dir=args.collect_root,
+if args.index_field is not None:
+    assert args.collect_root is not None, "Specify a top-level collection directory!"
+    assert args.fwd_index_subdir is not None, "Specify the forward index directory!"
+    # create a resource manager
+    resource_manager=create_featextr_resource_manager(resource_root_dir=args.collect_root,
                                                   fwd_index_dir=args.fwd_index_subdir)
 
-fwd_index = get_forward_index(resource_manager, args.index_field)
+    fwd_index = get_forward_index(resource_manager, args.index_field)
 
-print('Reading document IDs from the index')
-all_doc_ids = fwd_index.get_all_doc_ids()
-print('The number of documents: ', len(all_doc_ids))
+    print('Reading document IDs from the index')
+    all_doc_ids = set(fwd_index.get_all_doc_ids())
+    gc.collect()
+    print('The number of documents: ', len(all_doc_ids))
+else:
+    print('Not checking document ID correctness b/c no field/forward index info is specified!')
+    all_doc_ids = None
+
 print('Reading queries')
 queries = read_queries(args.query_file)
 print('The number of queries: ', len(queries))
@@ -109,9 +121,10 @@ with FileWrapper(file_name) as f:
         if score > prev_score:
             raise Exception(
                 f'Invalid line {ln} in run file {file_name} increasing score!')
-        if docid not in all_doc_ids and doc_id != FAKE_DOC_ID:
-            raise Exception(
-                f'Invalid line {ln} in run file {file_name} document id not found in the index: {docid}')
+        if all_doc_ids is not None:
+            if docid not in all_doc_ids and doc_id != FAKE_DOC_ID:
+                raise Exception(
+                    f'Invalid line {ln} in run file {file_name} document id not found in the index: {docid}')
         if docid in seen_docs:
             raise Exception(
                 f'Invalid line {ln} in run file {file_name} repeating document {docid}')
