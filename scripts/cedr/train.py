@@ -67,7 +67,7 @@ class CrossEntropyLossWrapper:
     '''This is a wrapper class for the cross-entropy loss. It expects
        positive/negative-document scores arranged in equal-sized tuples, where
        the first score is for the positive document.'''
-    def __init__(self, margin):
+    def __init__(self):
         self.loss = torch.nn.CrossEntropyLoss(reduction='sum')
 
     def compute(self, scores):
