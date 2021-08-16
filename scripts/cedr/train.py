@@ -752,6 +752,8 @@ def main_cli():
         print('Unsupported loss: ' + loss_name)
         sys.exit(1)
 
+    print('Loss:', loss_obj)
+
     # If we have the complete model, we just load it,
     # otherwise we first create a model and load *SOME* of its weights.
     # For example, if we start from an original BERT model, which has
