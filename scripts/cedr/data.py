@@ -87,15 +87,18 @@ def create_empty_batch():
     return {QUERY_ID_FIELD: [], DOC_ID_FIELD: [], CAND_SCORE_FIELD: [], QUERY_TOK_FIELD: [], DOC_TOK_FIELD: []}
 
 
-def iter_train_pairs(model, device_name, dataset, train_pairs, do_shuffle, qrels,
-                     batch_size, max_query_len, max_doc_len):
-    """Training pair iterator.
+def iter_train_data(model, device_name, dataset,
+                      train_pairs, do_shuffle, neg_qty_per_query,
+                      qrels,
+                      batch_size, max_query_len, max_doc_len):
+    """Training data iterator.
 
     :param model:           a model object
     :param device_name:     a device name
     :param dataset:         a dataset object: a tuple returned by read_datafiles
     :param train_pairs:     training pairs returned by read_pairs_dict
     :param do_shuffle:      True to shuffle
+    :param neg_qty_per_query:   a number of negative examples in each query
     :param qrels:           a QREL dictionary returned by read_qrels_dict
     :param batch_size:      the size of the batch
     :param max_query_len:   max. query length
@@ -104,13 +107,18 @@ def iter_train_pairs(model, device_name, dataset, train_pairs, do_shuffle, qrels
     :return:
     """
     batch = create_empty_batch()
-    for qid, did, score, query_tok, doc_tok in _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
+    for qid, did, score, query_tok, doc_tok in _iter_train_data(model, dataset,
+                                                                 train_pairs=train_pairs,
+                                                                 do_shuffle=do_shuffle,
+                                                                 neg_qty_per_query=neg_qty_per_query,
+                                                                 qrels=qrels):
         batch[QUERY_ID_FIELD].append(qid)
         batch[DOC_ID_FIELD].append(did)
         batch[CAND_SCORE_FIELD].append(score)
         batch[QUERY_TOK_FIELD].append(query_tok)
         batch[DOC_TOK_FIELD].append(doc_tok)
-        if len(batch[QUERY_ID_FIELD]) // 2 == batch_size:
+
+        if len(batch[QUERY_ID_FIELD]) // (1 + neg_qty_per_query) == batch_size:
             yield _pack_n_ship(batch, device_name, max_query_len, max_doc_len)
             batch = create_empty_batch()
 
@@ -119,7 +127,9 @@ def train_item_qty_upper_bound(train_pairs):
     return len(list(train_pairs.keys()))
 
 
-def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
+def _iter_train_data(model, dataset,
+                    train_pairs, do_shuffle, neg_qty_per_query,
+                    qrels):
     ds_queries, ds_docs = dataset
     while True:
         qids = list(train_pairs.keys())
@@ -134,23 +144,41 @@ def _iter_train_pairs(model, dataset, train_pairs, do_shuffle, qrels):
             pos_id = random.choice(pos_ids)
             pos_ids_lookup = set(pos_ids)
 
-            neg_ids = [did for did in query_train_pairs if did not in pos_ids_lookup]
-            if len(neg_ids) == 0:
+            neg_id_arr = [did for did in query_train_pairs if did not in pos_ids_lookup]
+            if len(neg_id_arr) < neg_qty_per_query:
                 continue
-            neg_id = random.choice(neg_ids)
-            query_tok = model.tokenize(ds_queries[qid])
+
             pos_doc = ds_docs.get(pos_id)
-            neg_doc = ds_docs.get(neg_id)
             if pos_doc is None:
                 tqdm.write(f'missing doc {pos_id}! Skipping')
                 continue
-            if neg_doc is None:
-                tqdm.write(f'missing doc {neg_id}! Skipping')
+
+            neg_data_arr = []
+            sample_fail = False
+
+            # sampling *WITHOUT* replacement
+            for neg_id in random.sample(neg_id_arr, neg_qty_per_query):
+                neg_doc = ds_docs.get(neg_id)
+
+                if neg_doc is None:
+                    tqdm.write(f'missing doc {neg_id}! Skipping')
+                    sample_fail = True
+                    break
+
+                neg_data_arr.append( (neg_id, neg_doc) )
+
+            if sample_fail:
                 continue
+
+            query_tok = model.tokenize(ds_queries[qid])
+
             yield qid, pos_id, query_train_pairs[pos_id], \
                   query_tok, model.tokenize(pos_doc)
-            yield qid, neg_id, query_train_pairs[neg_id], \
-                  query_tok, model.tokenize(neg_doc)
+
+            assert len(neg_data_arr) == neg_qty_per_query
+            for neg_id, neg_doc in neg_data_arr:
+                yield qid, neg_id, query_train_pairs[neg_id], \
+                      query_tok, model.tokenize(neg_doc)
 
 
 def iter_valid_records(model, device_name, dataset, run,
