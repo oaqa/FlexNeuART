@@ -55,6 +55,25 @@ VALID_ALWAYS = 'always'
 VALID_LAST = 'last_epoch'
 VALID_NONE = 'never'
 
+# Important NOTE!!!: all the losses should have a reduction type sum!
+class CrossEntropyLossWrapper:
+    @staticmethod
+    def name():
+        return 'cross_entropy'
+
+    def is_listwise(self):
+        return True
+
+    '''This is a wrapper class for the cross-entropy loss. It expects
+       positive/negative-document scores arranged in equal-sized tuples, where
+       the first score is for the positive document.'''
+    def __init__(self, margin):
+        self.loss = torch.nn.CrossEntropyLoss(reduction='sum')
+
+    def compute(self, scores):
+        zeros = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
+        return self.loss.forward(scores, target=zeros)
+
 # Important: all the losses should have a reduction type sum!
 class MultiMarginRankingLossWrapper:
     @staticmethod
@@ -113,6 +132,7 @@ class PairwiseSoftmaxLoss:
 
 
 LOSS_FUNC_LIST = [MultiMarginRankingLossWrapper.name(),
+                  CrossEntropyLossWrapper.name(),
                   PairwiseMarginRankingLossWrapper.name(),
                   PairwiseSoftmaxLoss.name()]
 
@@ -722,7 +742,9 @@ def main_cli():
     loss_name = args.loss_func
     if loss_name == PairwiseSoftmaxLoss.name():
         loss_obj = PairwiseSoftmaxLoss()
-    if loss_name == MultiMarginRankingLossWrapper.name():
+    elif loss_name == CrossEntropyLossWrapper.name():
+        loss_obj = CrossEntropyLossWrapper()
+    elif loss_name == MultiMarginRankingLossWrapper.name():
         loss_obj = MultiMarginRankingLossWrapper(margin = args.loss_margin)
     elif loss_name == PairwiseMarginRankingLossWrapper.name():
         loss_obj = PairwiseMarginRankingLossWrapper(margin = args.loss_margin)
