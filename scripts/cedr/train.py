@@ -101,7 +101,7 @@ class PairwiseMarginRankingLossWrapper:
         return 'pairwise_margin'
 
     def is_listwise(self):
-        return True
+        return False
 
     '''This is a wrapper class for the margin ranking loss.
        It expects that positive/negative document scores are arranged in pairs'''
@@ -122,7 +122,7 @@ class PairwiseSoftmaxLoss:
         return 'pairwise_softmax'
 
     def is_listwise(self):
-        return True
+        return False
 
     '''This is a wrapper class for the pairwise softmax ranking loss.
        It expects that positive/negative document scores are arranged in pairs'''
