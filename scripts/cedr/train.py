@@ -61,7 +61,6 @@ class MultiMarginRankingLossWrapper:
     def name():
         return 'multi_margin'
 
-    @staticmethod
     def is_listwise(self):
         return True
 
@@ -73,7 +72,7 @@ class MultiMarginRankingLossWrapper:
         self.loss = torch.nn.MultiMarginLoss(margin, reduction='sum')
 
     def compute(self, scores):
-        zeros = torch.zeros_like(scores)
+        zeros = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
         return self.loss.forward(scores, target=zeros)
 
 
@@ -82,9 +81,8 @@ class PairwiseMarginRankingLossWrapper:
     def name():
         return 'pairwise_margin'
 
-    @staticmethod
     def is_listwise(self):
-        return False
+        return True
 
     '''This is a wrapper class for the margin ranking loss.
        It expects that positive/negative document scores are arranged in pairs'''
@@ -104,9 +102,8 @@ class PairwiseSoftmaxLoss:
     def name():
         return 'pairwise_softmax'
 
-    @staticmethod
     def is_listwise(self):
-        return False
+        return True
 
     '''This is a wrapper class for the pairwise softmax ranking loss.
        It expects that positive/negative document scores are arranged in pairs'''
@@ -222,7 +219,7 @@ def train_iteration(model, sync_barrier,
     else:
         pbar = None
 
-    if loss.is_listwise():
+    if loss_obj.is_listwise():
         neg_qty_per_query = train_params.neg_qty_per_query
         assert neg_qty_per_query >= 1
     else:
@@ -236,7 +233,7 @@ def train_iteration(model, sync_barrier,
                                          qrels, train_params.backprop_batch_size,
                                          train_params.max_query_len, train_params.max_doc_len):
 
-        data_qty = (record['query_id'])
+        data_qty = len(record['query_id'])
         scores = model(record[QUERY_TOK_FIELD],
                        record[QUERY_MASK_FIELD],
                        record[DOC_TOK_FIELD],
