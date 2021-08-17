@@ -55,14 +55,56 @@ VALID_ALWAYS = 'always'
 VALID_LAST = 'last_epoch'
 VALID_NONE = 'never'
 
+# Important NOTE!!!: all the losses should have a reduction type sum!
+class CrossEntropyLossWrapper:
+    @staticmethod
+    def name():
+        return 'cross_entropy'
+
+    def is_listwise(self):
+        return True
+
+    '''This is a wrapper class for the cross-entropy loss. It expects
+       positive/negative-document scores arranged in equal-sized tuples, where
+       the first score is for the positive document.'''
+    def __init__(self):
+        self.loss = torch.nn.CrossEntropyLoss(reduction='sum')
+
+    def compute(self, scores):
+        zeros = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
+        return self.loss.forward(scores, target=zeros)
+
 # Important: all the losses should have a reduction type sum!
-class MarginRankingLossWrapper:
+class MultiMarginRankingLossWrapper:
+    @staticmethod
+    def name():
+        return 'multi_margin'
+
+    def is_listwise(self):
+        return True
+
+    '''This is a wrapper class for the multi-margin ranking loss. It expects
+       positive/negative-document scores arranged in equal-sized tuples, where
+       the first score is for the positive document.'''
+
+    def __init__(self, margin):
+        self.loss = torch.nn.MultiMarginLoss(margin, reduction='sum')
+
+    def compute(self, scores):
+        zeros = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
+        return self.loss.forward(scores, target=zeros)
+
+
+class PairwiseMarginRankingLossWrapper:
     @staticmethod
     def name():
         return 'pairwise_margin'
 
+    def is_listwise(self):
+        return False
+
     '''This is a wrapper class for the margin ranking loss.
-       It expects that positive/negative scores are arranged in pairs'''
+       It expects that positive/negative document scores are arranged in pairs'''
 
     def __init__(self, margin):
         self.loss = torch.nn.MarginRankingLoss(margin, reduction='sum')
@@ -79,14 +121,20 @@ class PairwiseSoftmaxLoss:
     def name():
         return 'pairwise_softmax'
 
+    def is_listwise(self):
+        return False
+
     '''This is a wrapper class for the pairwise softmax ranking loss.
-       It expects that positive/negative scores are arranged in pairs'''
+       It expects that positive/negative document scores are arranged in pairs'''
 
     def compute(self, scores):
         return torch.sum(1. - scores.softmax(dim=1)[:, 0])  # pairwise softmax
 
 
-LOSS_FUNC_LIST = [PairwiseSoftmaxLoss.name(), MarginRankingLossWrapper.name()]
+LOSS_FUNC_LIST = [MultiMarginRankingLossWrapper.name(),
+                  CrossEntropyLossWrapper.name(),
+                  PairwiseMarginRankingLossWrapper.name(),
+                  PairwiseSoftmaxLoss.name()]
 
 TrainParams = namedtuple('TrainParams',
                     ['optim',
@@ -96,7 +144,7 @@ TrainParams = namedtuple('TrainParams',
                      'batches_per_train_epoch',
                      'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
-                     'cand_score_weight',
+                     'cand_score_weight', 'neg_qty_per_query',
                      'backprop_batch_size',
                      'epoch_qty',
                      'save_epoch_snapshots', 'save_last_snapshot_every_k_batch',
@@ -191,17 +239,29 @@ def train_iteration(model, sync_barrier,
     else:
         pbar = None
 
+    if loss_obj.is_listwise():
+        neg_qty_per_query = train_params.neg_qty_per_query
+        assert neg_qty_per_query >= 1
+    else:
+        neg_qty_per_query = 1
+
     cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
 
-    for record in data.iter_train_pairs(model, train_params.device_name, dataset, train_pairs, train_params.shuffle_train,
-                                        qrels, train_params.backprop_batch_size,
-                                        train_params.max_query_len, train_params.max_doc_len):
+    for record in data.iter_train_data(model, train_params.device_name, dataset,
+                                         train_pairs,
+                                         train_params.shuffle_train, neg_qty_per_query,
+                                         qrels, train_params.backprop_batch_size,
+                                         train_params.max_query_len, train_params.max_doc_len):
+
+        data_qty = len(record['query_id'])
         scores = model(record[QUERY_TOK_FIELD],
                        record[QUERY_MASK_FIELD],
                        record[DOC_TOK_FIELD],
                        record[DOC_MASK_FIELD]) + record[CAND_SCORE_FIELD] * cand_score_weight
-        count = len(record['query_id']) // 2
-        scores = scores.reshape(count, 2)
+        # +1 b/c one score is for the positive document
+        count = data_qty // (neg_qty_per_query + 1)
+        assert count * (neg_qty_per_query + 1) == data_qty
+        scores = scores.reshape(count, 1 + neg_qty_per_query)
         loss = loss_obj.compute(scores)
         loss.backward()
         total_qty += count
@@ -579,7 +639,12 @@ def main_cli():
                         help='Optimizer')
 
     parser.add_argument('--loss_margin', metavar='loss margin', help='Margin in the margin loss',
-                        type=float, default=1)
+                        type=float, default=1.0)
+
+    # If we use the listwise loss, it should be at least two negatives by default
+    parser.add_argument('--neg_qty_per_query', metavar='listwise negatives',
+                        help='Number of negatives per query for a listwise losse',
+                        type=int, default=2)
 
     parser.add_argument('--init_lr', metavar='init learn. rate',
                         type=float, default=0.001, help='initial learning rate for BERT-unrelated parameters')
@@ -677,11 +742,17 @@ def main_cli():
     loss_name = args.loss_func
     if loss_name == PairwiseSoftmaxLoss.name():
         loss_obj = PairwiseSoftmaxLoss()
-    elif loss_name == MarginRankingLossWrapper.name():
-        loss_obj = MarginRankingLossWrapper(margin = args.loss_margin)
+    elif loss_name == CrossEntropyLossWrapper.name():
+        loss_obj = CrossEntropyLossWrapper()
+    elif loss_name == MultiMarginRankingLossWrapper.name():
+        loss_obj = MultiMarginRankingLossWrapper(margin = args.loss_margin)
+    elif loss_name == PairwiseMarginRankingLossWrapper.name():
+        loss_obj = PairwiseMarginRankingLossWrapper(margin = args.loss_margin)
     else:
         print('Unsupported loss: ' + loss_name)
         sys.exit(1)
+
+    print('Loss:', loss_obj)
 
     # If we have the complete model, we just load it,
     # otherwise we first create a model and load *SOME* of its weights.
@@ -698,6 +769,11 @@ def main_cli():
     else:
         print('Creating the model from scratch!')
         model = model_init_utils.create_model_from_args(args)
+
+
+    if args.neg_qty_per_query < 1:
+        print('A number of negatives per query cannot be < 1')
+        sys.exit(1)
 
     os.makedirs(args.model_out_dir, exist_ok=True)
     print(model)
@@ -764,6 +840,7 @@ def main_cli():
                                     max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
                                     epoch_qty=args.epoch_qty, device_name=device_name,
                                     cand_score_weight=args.cand_score_weight,
+                                    neg_qty_per_query=args.neg_qty_per_query,
                                     use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                                     print_grads=args.print_grads,
                                     shuffle_train=not args.no_shuffle_train,
