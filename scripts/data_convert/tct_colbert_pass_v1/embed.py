@@ -23,7 +23,7 @@ import os
 import sys
 import torch
 import numpy as np
-from tqdm import tqmd
+from tqdm import tqdm
 
 DEVICE_NAME='cuda'
 
@@ -74,7 +74,7 @@ def proc_batch(batch_input, model, out_file, field_name):
         bqty = len(batch_input)
 
         batch_data = model.encode(texts)
-        print(batch_data.shape)
+        #print(batch_data.shape)
 
         batch_data_packed = pack_dense_batch(batch_data)
 
