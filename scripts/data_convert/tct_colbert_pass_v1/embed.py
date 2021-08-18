@@ -60,20 +60,29 @@ is_query = is_json_query_file(args.input)
 print(f'Query?: {is_query}')
 
 if is_query:
-    model = TctColBertQueryEnecoder(args.model, fp16=args.fp16, device=DEVICE_NAME)
+    model = TctColBertQueryEncoder(args.model, device=DEVICE_NAME)
 else:
-    model = TctColBertDocumentEncoder(args.model, device=DEVICE_NAME)
+    model = TctColBertDocumentEncoder(args.model, fp16=args.fp16, device=DEVICE_NAME)
 
 
 batch_input = []
 
-def proc_batch(batch_input, model, out_file, field_name):
+def proc_batch(batch_input, is_query, model, out_file, field_name):
     if batch_input:
         doc_ids, texts = zip(*batch_input)
 
         bqty = len(batch_input)
 
-        batch_data = model.encode(texts)
+        if is_query:
+            # It's unfortunate to encode them one-by-one, but we try
+            # to preserve the original PySerini encoder (which is not batched)
+            # b/c query encoding i supposed to happen on CPU
+            batch_data_arr = []
+            for query in texts:
+                batch_data_arr.append(model.encode(query))
+            batch_data = np.vstack(batch_data_arr)
+        else:
+            batch_data = model.encode(texts)
         #print(batch_data.shape)
 
         batch_data_packed = pack_dense_batch(batch_data)
@@ -95,6 +104,6 @@ with FileWrapper(args.output, 'wb') as out_file:
         batch_input.append((doc_id, text))
 
         if len(batch_input) >= args.batch_size:
-            proc_batch(batch_input, model, out_file, args.field_name)
+            proc_batch(batch_input, is_query, model, out_file, args.field_name)
 
-    proc_batch(batch_input, model, out_file, args.field_name)
+    proc_batch(batch_input, is_query, model, out_file, args.field_name)
