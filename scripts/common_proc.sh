@@ -285,7 +285,7 @@ function getIndexQueryDataDirs {
       hasData=0
 
       # Data can be (and normally is) compressed, but queries shouldn't be compressed.
-      for suff in "" ".gz" ".bz2" ".bin" ; do
+      for suff in "" ".gz" ".bz2" ; do
         fn=$subDir/${ANSWER_FILE_JSONL}${suff}
 
         if [ -f "$fn" ] ; then
