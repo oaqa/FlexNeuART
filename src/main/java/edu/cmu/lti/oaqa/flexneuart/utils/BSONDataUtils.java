@@ -98,7 +98,6 @@ public class BSONDataUtils {
             throw new RuntimeException("The type of the field '" + fieldName + "' should be binary!");
           }         
           tmpRes.put(fieldName, breader.readBinaryData().getData());
-          break;
         }
       }
       breader.readEndDocument(); 

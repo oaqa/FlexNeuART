@@ -20,10 +20,13 @@
 #   1. Each query has equal number of BSONL entries with matching keys. The order does not matter
 #   2. There is no overlap in fields except for the document/query ID field
 #
+import sys
 import argparse
 from tqdm import tqdm
 
-from scripts.data_convert.convert_common import write_json_to_bin, read_json_from_bin, DOCID_FIELD
+sys.path.append('.')
+
+from scripts.data_convert.convert_common import FileWrapper, write_json_to_bin, read_json_from_bin, DOCID_FIELD
 
 parser = argparse.ArgumentParser(description='Merge two files in "BSONL" format.')
 
@@ -51,11 +54,11 @@ inp1 = load_data(args.input1)
 inp2 = load_data(args.input2)
 
 if len(inp1) != len(inp2):
-    print('Different number of unique entries: ', len(inp1), ' vs ' + len(inp2))
+    print('Different number of unique entries: ', str(len(inp1)), ' vs ' + str(len(inp2)))
     sys.exit(1)
 
 with FileWrapper(args.output, 'wb') as out_file:
-    for did, e1 in tqdm(inp1, "Merging files"):
+    for did, e1 in tqdm(inp1.items(), "Merging files"):
         if not did in inp2:
             print(f'Key {did} is present only in the first input file')
             sys.exit(1)

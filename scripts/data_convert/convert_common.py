@@ -83,11 +83,11 @@ class FileWrapper:
         else:
             self._file.write(s)
 
-    def read(self, s):
+    def read(self, qty):
         if self._isCompr:
-            return self._file.read().decode()
+            return self._file.read(qty).decode()
         else:
-            return self._file.read()
+            return self._file.read(qty)
 
     def close(self):
         self._file.close()
@@ -435,9 +435,10 @@ def read_json_from_bin(inp_file):
     :param a parased JSON entry or None when we reach the end of file.
     """
     data_len_packed = inp_file.read(4)
-    if len(data_len_packed) == 0:
+    rqty = len(data_len_packed)
+    if rqty == 0:
         return None
-    assert len(data_len_packed) == 4, "possibly truncated file, not enough input data to read the entry length"
+    assert rqty == 4, f"possibly corrputed/truncated file, asked to read 4 bytes, but read {rqty}"
     data_len = struct.unpack(f'{ENDIANNES_TYPE}I', data_len_packed)[0]
     data_packed = inp_file.read(data_len)
     assert len(data_packed) == data_len, "possibly truncated file, not enough input data to read BSON entry"
