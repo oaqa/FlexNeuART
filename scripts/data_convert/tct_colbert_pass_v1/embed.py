@@ -49,7 +49,7 @@ parser.add_argument('--field_name', metavar='field name', help='the name of the 
 parser.add_argument('--model', metavar='model name or path',
                     help='a directory with downloaded and unpacked models',
                     type=str, default="castorini/tct_colbert-msmarco")
-parser.add_argument('--fp16', action='store_true', help="Use half-precision")
+parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
 
 args = parser.parse_args()
 
@@ -62,7 +62,7 @@ print(f'Query?: {is_query}')
 if is_query:
     model = TctColBertQueryEncoder(args.model, device=DEVICE_NAME)
 else:
-    model = TctColBertDocumentEncoder(args.model, fp16=args.fp16, device=DEVICE_NAME)
+    model = TctColBertDocumentEncoder(args.model, amp=args.amp, device=DEVICE_NAME)
 
 
 batch_input = []
