@@ -25,6 +25,8 @@ import scripts.cedr.data as data
 from scripts.cedr.data import QUERY_ID_FIELD, DOC_ID_FIELD, CAND_SCORE_FIELD, \
                                 DOC_TOK_FIELD, DOC_MASK_FIELD, \
                                 QUERY_TOK_FIELD, QUERY_MASK_FIELD
+from scripts.cedr.loss import *
+from scripts.cedr.amp import *
 
 from scripts.cedr.model_init_utils import MODEL_PARAM_PREF
 
@@ -55,91 +57,11 @@ VALID_ALWAYS = 'always'
 VALID_LAST = 'last_epoch'
 VALID_NONE = 'never'
 
-# Important NOTE!!!: all the losses should have a reduction type sum!
-class CrossEntropyLossWrapper:
-    @staticmethod
-    def name():
-        return 'cross_entropy'
-
-    def is_listwise(self):
-        return True
-
-    '''This is a wrapper class for the cross-entropy loss. It expects
-       positive/negative-document scores arranged in equal-sized tuples, where
-       the first score is for the positive document.'''
-    def __init__(self):
-        self.loss = torch.nn.CrossEntropyLoss(reduction='sum')
-
-    def compute(self, scores):
-        zeros = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
-        return self.loss.forward(scores, target=zeros)
-
-# Important: all the losses should have a reduction type sum!
-class MultiMarginRankingLossWrapper:
-    @staticmethod
-    def name():
-        return 'multi_margin'
-
-    def is_listwise(self):
-        return True
-
-    '''This is a wrapper class for the multi-margin ranking loss. It expects
-       positive/negative-document scores arranged in equal-sized tuples, where
-       the first score is for the positive document.'''
-
-    def __init__(self, margin):
-        self.loss = torch.nn.MultiMarginLoss(margin, reduction='sum')
-
-    def compute(self, scores):
-        zeros = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
-        return self.loss.forward(scores, target=zeros)
-
-
-class PairwiseMarginRankingLossWrapper:
-    @staticmethod
-    def name():
-        return 'pairwise_margin'
-
-    def is_listwise(self):
-        return False
-
-    '''This is a wrapper class for the margin ranking loss.
-       It expects that positive/negative document scores are arranged in pairs'''
-
-    def __init__(self, margin):
-        self.loss = torch.nn.MarginRankingLoss(margin, reduction='sum')
-
-    def compute(self, scores):
-        pos_doc_scores = scores[:, 0]
-        neg_doc_scores = scores[:, 1]
-        ones = torch.ones_like(pos_doc_scores)
-        return self.loss.forward(pos_doc_scores, neg_doc_scores, target=ones)
-
-
-class PairwiseSoftmaxLoss:
-    @staticmethod
-    def name():
-        return 'pairwise_softmax'
-
-    def is_listwise(self):
-        return False
-
-    '''This is a wrapper class for the pairwise softmax ranking loss.
-       It expects that positive/negative document scores are arranged in pairs'''
-
-    def compute(self, scores):
-        return torch.sum(1. - scores.softmax(dim=1)[:, 0])  # pairwise softmax
-
-
-LOSS_FUNC_LIST = [MultiMarginRankingLossWrapper.name(),
-                  CrossEntropyLossWrapper.name(),
-                  PairwiseMarginRankingLossWrapper.name(),
-                  PairwiseSoftmaxLoss.name()]
-
 TrainParams = namedtuple('TrainParams',
                     ['optim',
                      'init_lr', 'init_bert_lr', 'epoch_lr_decay', 'weight_decay',
                      'momentum',
+                     'amp',
                      'warmup_pct', 'batch_sync_qty',
                      'batches_per_train_epoch',
                      'batch_size', 'batch_size_val',
@@ -153,12 +75,18 @@ TrainParams = namedtuple('TrainParams',
                      'valid_type',
                      'use_external_eval', 'eval_metric'])
 
-def avg_model_params(model):
-    """Average model parameters across all GPUs."""
-    qty = float(dist.get_world_size())
-    for prm in model.parameters():
-        dist.all_reduce(prm.data, op=torch.distributed.ReduceOp.SUM)
-        prm.data /= qty
+def avg_model_params(model, amp):
+    """
+       Average model parameters across all GPUs. 
+       Set amp to True, to enable automatic mixed-precision.
+    """
+    auto_cast_class, scaler = get_amp_processors(amp)
+
+    with auto_cast_class():
+        qty = float(dist.get_world_size())
+        for prm in model.parameters():
+            dist.all_reduce(prm.data, op=torch.distributed.ReduceOp.SUM)
+            prm.data /= qty
 
 def clean_memory(device_name):
     utils.sync_out_streams()
@@ -247,6 +175,8 @@ def train_iteration(model, sync_barrier,
 
     cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
 
+    auto_cast_class, scaler = get_amp_processors(train_params.amp)
+
     for record in data.iter_train_data(model, train_params.device_name, dataset,
                                          train_pairs,
                                          train_params.shuffle_train, neg_qty_per_query,
@@ -254,16 +184,19 @@ def train_iteration(model, sync_barrier,
                                          train_params.max_query_len, train_params.max_doc_len):
 
         data_qty = len(record['query_id'])
-        scores = model(record[QUERY_TOK_FIELD],
+        with auto_cast_class():
+            scores = model(record[QUERY_TOK_FIELD],
                        record[QUERY_MASK_FIELD],
                        record[DOC_TOK_FIELD],
                        record[DOC_MASK_FIELD]) + record[CAND_SCORE_FIELD] * cand_score_weight
-        # +1 b/c one score is for the positive document
-        count = data_qty // (neg_qty_per_query + 1)
-        assert count * (neg_qty_per_query + 1) == data_qty
-        scores = scores.reshape(count, 1 + neg_qty_per_query)
-        loss = loss_obj.compute(scores)
-        loss.backward()
+
+            # +1 b/c one score is for the positive document
+            count = data_qty // (neg_qty_per_query + 1)
+            assert count * (neg_qty_per_query + 1) == data_qty
+            scores = scores.reshape(count, 1 + neg_qty_per_query)
+            loss = loss_obj.compute(scores)
+
+        scaler.scale(loss).backward()
         total_qty += count
 
         if train_params.print_grads:
@@ -281,7 +214,10 @@ def train_iteration(model, sync_barrier,
         # If it's time to validate, we need to interrupt the batch
         if total_qty - total_prev_qty >= batch_size or run_chkpt_val:
 
-            optimizer.step()
+            #optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
+
             optimizer.zero_grad()
             total_prev_qty = total_qty
 
@@ -298,7 +234,7 @@ def train_iteration(model, sync_barrier,
                     except BrokenBarrierError:
                         raise Exception('A waiting-for-model-parameter-synchronization timeout!')
 
-                    avg_model_params(model)
+                    avg_model_params(model, train_params.amp)
 
             batch_id += 1
 
@@ -346,7 +282,7 @@ def train_iteration(model, sync_barrier,
         except BrokenBarrierError:
             raise Exception('A waiting-for-model-parameter-synchronization (in the end of epoch) timeout!')
 
-        avg_model_params(model)
+        avg_model_params(model, train_params.amp)
 
     if pbar is not None:
         pbar.close()
@@ -389,6 +325,7 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
 
 
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
+    auto_cast_class, scaler = get_amp_processors(train_params.amp)
     rerank_run = {}
     clean_memory(train_params.device_name)
     cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
@@ -402,7 +339,8 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
                                                dataset, orig_run,
                                                train_params.batch_size_val,
                                                train_params.max_query_len, train_params.max_doc_len):
-            scores = model(records[QUERY_TOK_FIELD],
+            with auto_cast_class():
+                scores = model(records[QUERY_TOK_FIELD],
                        records[QUERY_MASK_FIELD],
                        records[DOC_TOK_FIELD],
                        records[DOC_MASK_FIELD]) + records[CAND_SCORE_FIELD] * cand_score_weight
@@ -697,9 +635,12 @@ def main_cli():
                         default=PairwiseSoftmaxLoss.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
+    parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
+
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
+
 
     parser.add_argument('--valid_run_dir', metavar='', type=str, default=None, help='directory to store predictions on validation set')
     parser.add_argument('--valid_checkpoints', metavar='', type=str, default=None, help='validation checkpoints (in # of batches)')
@@ -829,7 +770,7 @@ def main_cli():
         is_master_proc = rank == 0
 
         train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
-                                   momentum=args.momentum,
+                                   momentum=args.momentum, amp=args.amp,
                                     warmup_pct=args.warmup_pct, batch_sync_qty=args.batch_sync_qty,
                                     epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
                                     backprop_batch_size=args.backprop_batch_size,
