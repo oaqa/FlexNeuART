@@ -1,0 +1,7 @@
+@inproceedings{boytsov2020flexible,
+  title={Flexible retrieval with NMSLIB and FlexNeuART},
+  author={Boytsov, Leonid and Nyberg, Eric},
+  booktitle={Proceedings of Second Workshop for NLP Open Source Software (NLP-OSS)},
+  pages={32--43},
+  year={2020}
+}
