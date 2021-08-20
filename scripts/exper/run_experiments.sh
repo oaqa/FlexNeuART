@@ -381,10 +381,6 @@ for ((ivar=1;;++ivar)) ; do
       if [ "$paramName" = "use_lmart" -a "$paramVal" != "1" ] ; then
         paramVal=""
       fi
-      # Overriding the value of the default training set
-      if [ "$paramName" = "train_part" -a "$paramVal" = "" ] ; then
-        paramVal="$defaultTrainPart"
-      fi
       # Overriding the value of the final model
       if [ "$paramName" = "model_final" -a "$paramVal" = "" ] ; then
         paramVal="$defaultModelFinal"
@@ -408,6 +404,7 @@ for ((ivar=1;;++ivar)) ; do
             "$collect" \
             "$experDirBaseRelative" \
             "$testPart" \
+            -train_part $trainPart \
             $globalParams $singleConfParams
 EOF
 `
