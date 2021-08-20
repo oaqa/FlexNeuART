@@ -47,7 +47,7 @@ public class TrecRunCandidateProvider extends CandidateProvider {
 
     mTrecRuns = EvalUtils.readTrecResults(trecFileName);
     
-    logger.info("Read " + mQueryTextToId.size() + " queries from " + trecFileName);
+    logger.info("Read " + mTrecRuns.size() + " queries from " + trecFileName);
   }
 
   @Override
@@ -86,6 +86,5 @@ public class TrecRunCandidateProvider extends CandidateProvider {
   }
   
   private CandidateInfo mEmpty = new CandidateInfo(0, new CandidateEntry[0]);
-  private HashMap<String, String>   mQueryTextToId = new HashMap<String, String>();
   private HashMap<String, ArrayList<CandidateEntry>>  mTrecRuns = null;
 }
