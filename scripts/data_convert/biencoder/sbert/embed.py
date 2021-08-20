@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# A script to convert MS MARCO v1 passages or queries to dense vectors using PySerini's TCT-COLBERT models
+# A script to convert documents/passages or queries to dense vectors using sentence-bert models.
 # These vectors are stored in "BSONL" format, which can be used to create a forward index.
 #
 
@@ -25,6 +25,8 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
+from sentence_transformers import SentenceTransformer
+
 DEVICE_NAME='cuda'
 
 sys.path.append('.')
@@ -32,8 +34,6 @@ sys.path.append('.')
 from scripts.config import TEXT_RAW_FIELD_NAME
 from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, \
                                                 write_json_to_bin, is_json_query_file, jsonl_gen
-from scripts.data_convert.tct_colbert_pass_v1.tct_colbert_models import TctColBertDocumentEncoder, TctColBertQueryEncoder
-
 
 parser = argparse.ArgumentParser(description='Convert passages and/or documents to dense vectors and store them in "BSONL" format.')
 
@@ -46,10 +46,9 @@ parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
 parser.add_argument('--field_name', metavar='field name', help='the name of the BSONL field',
                     type=str, required=True)
-parser.add_argument('--model', metavar='model name or path',
-                    help='a directory with downloaded and unpacked models',
-                    type=str, default="castorini/tct_colbert-msmarco")
-parser.add_argument('--fp16', action='store_true', help="Use half-precision")
+parser.add_argument('--model', metavar='model name',
+                    help='sentence-transformer model name',
+                    type=str, required=True)
 
 args = parser.parse_args()
 
@@ -59,31 +58,18 @@ is_query = is_json_query_file(args.input)
 
 print(f'Query?: {is_query}')
 
-if is_query:
-    model = TctColBertQueryEncoder(args.model, device=DEVICE_NAME)
-else:
-    model = TctColBertDocumentEncoder(args.model, fp16=args.fp16, device=DEVICE_NAME)
-
+model = SentenceTransformer(args.model)
+model.to(DEVICE_NAME)
 
 batch_input = []
 
-def proc_batch(batch_input, is_query, model, out_file, field_name):
+def proc_batch(batch_input, model, out_file, field_name):
     if batch_input:
         doc_ids, texts = zip(*batch_input)
 
         bqty = len(batch_input)
 
-        if is_query:
-            # It's unfortunate to encode them one-by-one, but we try
-            # to preserve the original PySerini encoder (which is not batched)
-            # b/c query encoding i supposed to happen on CPU
-            batch_data_arr = []
-            for query in texts:
-                batch_data_arr.append(model.encode(query))
-            batch_data = np.vstack(batch_data_arr)
-        else:
-            batch_data = model.encode(texts)
-        #print(batch_data.shape)
+        batch_data = model.encode(texts)
 
         batch_data_packed = pack_dense_batch(batch_data)
 
@@ -104,6 +90,6 @@ with FileWrapper(args.output, 'wb') as out_file:
         batch_input.append((doc_id, text))
 
         if len(batch_input) >= args.batch_size:
-            proc_batch(batch_input, is_query, model, out_file, args.field_name)
+            proc_batch(batch_input, model, out_file, args.field_name)
 
-    proc_batch(batch_input, is_query, model, out_file, args.field_name)
+    proc_batch(batch_input, model, out_file, args.field_name)

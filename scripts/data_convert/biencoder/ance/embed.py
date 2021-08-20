@@ -27,8 +27,8 @@ from tqdm import tqdm
 sys.path.append('.')
 
 from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, write_json_to_bin, is_json_query_file
-from scripts.data_convert.ance.ance_models import create_ance_firstp, create_dpr
-from scripts.data_convert.ance.ance_data import DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, \
+from scripts.data_convert.biencoder.ance.ance_models import create_ance_firstp, create_dpr
+from scripts.data_convert.biencoder.ance.ance_data import DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, \
                                                 DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_DOC_V2_FIRSTP, \
                                                 DATA_TYPE_MSMARCO_PASS, DATA_TYPE_MSMARCO_PASS_V2, \
                                                 DATA_TYPE_CHOICES, DATA_TYPE_PATHS, \

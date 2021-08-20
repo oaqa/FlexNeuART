@@ -40,13 +40,13 @@ class QueryEncoder:
 
 
 class TctColBertDocumentEncoder(DocumentEncoder):
-    def __init__(self, model_name: str, device, fp16=False, tokenizer_name=None):
+    def __init__(self, model_name: str, device, amp=False, tokenizer_name=None):
         self.device = device
 
         self.model = BertModel.from_pretrained(model_name)
         self.model.to(self.device)
         self.tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name or model_name)
-        self.fp16 = fp16
+        self.amp = amp
 
     def encode(self, texts, titles=None, **kwargs):
         if titles is not None:
@@ -64,7 +64,7 @@ class TctColBertDocumentEncoder(DocumentEncoder):
         )
         
         inputs.to(self.device)
-        if self.fp16:
+        if self.amp:
             with autocast():
                 with torch.no_grad():
                     outputs = self.model(**inputs)
