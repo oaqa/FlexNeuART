@@ -23,9 +23,11 @@ import json
 import struct
 import urllib
 import urllib.parse
+import transformers
+
 from bs4 import BeautifulSoup
 
-from scripts.config import DEFAULT_ENCODING, STOPWORD_FILE, DOCID_FIELD, QUESTION_FILE_JSON
+from scripts.config import DEFAULT_ENCODING, BERT_BASE_MODEL, STOPWORD_FILE, DOCID_FIELD, QUESTION_FILE_JSON
 
 YahooAnswerRecParsed = collections.namedtuple('YahooAnswerRecParsed',
                                               'uri subject content best_answer_id answer_list')
@@ -309,6 +311,12 @@ def write_queries(query_list, file_name):
 
 def unique(arr):
     return list(set(arr))
+
+def get_bert_tokenizer():
+    """
+    Returns: a fast BERT tokenizer
+    """
+    return transformers.PreTrainedTokenizerFast(BERT_BASE_MODEL)
 
 
 def get_retokenized(tokenizer, text):

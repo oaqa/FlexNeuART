@@ -16,8 +16,7 @@
 #
 import sys, os
 import json
-import argparse
-import pytorch_pretrained_bert
+import argpars
 
 #
 # This collection converts data in a quasi Yahoo Answers format (with preamble removed).
@@ -26,15 +25,14 @@ import pytorch_pretrained_bert
 
 sys.path.append('.')
 
-
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.eval_common import gen_qrel_str
 from scripts.data_convert.convert_common import FileWrapper, read_stop_words, \
                                                 BERT_TOK_OPT, BERT_TOK_OPT_HELP, \
                                                 OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP, \
-                                                get_retokenized, SimpleXmlRecIterator,\
+                                                get_retokenized, get_bert_tokenizer, SimpleXmlRecIterator,\
                                                 proc_yahoo_answers_record
-from scripts.config import SPACY_MODEL, BERT_BASE_MODEL, ANSWER_FILE_JSON, BITEXT_QUESTION_PREFIX,\
+from scripts.config import SPACY_MODEL, ANSWER_FILE_JSON, BITEXT_QUESTION_PREFIX,\
                             QREL_FILE, BITEXT_ANSWER_PREFIX, REPORT_QTY
 from scripts.config import DOCID_FIELD, QUESTION_FILE_JSON, TEXT_FIELD_NAME, \
                             TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME, \
@@ -70,7 +68,7 @@ bitext_fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME]
 
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = get_bert_tokenizer()
     bitext_fields.append(TEXT_BERT_TOKENIZED_NAME)
 
 if not os.path.exists(out_main_dir):

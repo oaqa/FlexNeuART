@@ -20,17 +20,14 @@ import sys
 import json
 import argparse
 import multiprocessing
-import pytorch_pretrained_bert
 
 sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field, pretokenize_url
+    FileWrapper, get_bert_tokenizer, read_stop_words, add_retokenized_field, pretokenize_url
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
-    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
-    TITLE_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
-    TEXT_RAW_FIELD_NAME, \
+    TEXT_FIELD_NAME, DOCID_FIELD, TITLE_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
 
 
@@ -62,7 +59,7 @@ print(stop_words)
 bert_tokenizer=None
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = get_bert_tokenizer()
 
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 

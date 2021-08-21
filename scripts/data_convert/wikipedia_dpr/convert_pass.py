@@ -32,15 +32,14 @@ import multiprocessing
 
 sys.path.append('.')
 
-from scripts.data_convert.convert_common import read_stop_words, FileWrapper, add_retokenized_field, \
+from scripts.data_convert.convert_common import read_stop_words, FileWrapper, add_retokenized_field, get_bert_tokenizer, \
                                                 BERT_TOK_OPT, BERT_TOK_OPT_HELP
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.config import STOPWORD_FILE, BERT_BASE_MODEL, SPACY_MODEL, \
+from scripts.config import STOPWORD_FILE, SPACY_MODEL, \
                         DOCID_FIELD, TEXT_RAW_FIELD_NAME, \
                         REPORT_QTY, IMAP_PROC_CHUNK_QTY, \
                         TEXT_BERT_TOKENIZED_NAME,\
                         TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME
-from pytorch_pretrained_bert import BertTokenizer
 
 parser = argparse.ArgumentParser(description='Convert a Wikipedia corpus downloaded from github.com/facebookresearch/DPR.')
 parser.add_argument('--input_file', metavar='input file', help='input directory',
@@ -62,7 +61,7 @@ print(args)
 bert_tokenizer=None
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = get_bert_tokenizer()
 
 # Lower cased
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)

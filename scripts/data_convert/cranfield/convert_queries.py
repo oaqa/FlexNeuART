@@ -19,7 +19,6 @@
 import sys
 import argparse
 import json
-import pytorch_pretrained_bert
 
 from tqdm import tqdm
 
@@ -27,10 +26,10 @@ sys.path.append('.')
 
 from scripts.data_convert.cranfield.cranfield_common import *
 from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.config import BERT_BASE_MODEL, TEXT_BERT_TOKENIZED_NAME, SPACY_MODEL
+from scripts.config import TEXT_BERT_TOKENIZED_NAME, SPACY_MODEL
 from scripts.data_convert.convert_common \
     import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field
+    FileWrapper, read_stop_words, add_retokenized_field, get_bert_tokenizer
 
 
 parser = argparse.ArgumentParser(description='Convert Cranfield queries.')
@@ -54,7 +53,7 @@ stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 bert_tokenizer=None
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = get_bert_tokenizer()
 
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 

@@ -22,16 +22,16 @@ import sys
 import os
 import json
 import argparse
-import pytorch_pretrained_bert
 
 sys.path.append('.')
 
 from scripts.data_convert.text_proc import SpacyTextParser
 from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field, read_queries, MAX_NUM_QUERY_OPT_HELP, MAX_NUM_QUERY_OPT
+    FileWrapper, get_bert_tokenizer, read_stop_words, add_retokenized_field, read_queries, \
+    MAX_NUM_QUERY_OPT_HELP, MAX_NUM_QUERY_OPT
 
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
-    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
+    TEXT_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, \
     REPORT_QTY, SPACY_MODEL, QUESTION_FILE_JSON, QREL_FILE
 
@@ -87,7 +87,7 @@ nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_c
 
 if arg_vars[BERT_TOK_OPT]:
     print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+    bert_tokenizer = get_bert_tokenizer()
 
 qrel_list = []
 
