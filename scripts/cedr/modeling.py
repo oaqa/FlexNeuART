@@ -8,13 +8,41 @@
 #
 import torch
 import torch.nn.functional as F
-import pytorch_pretrained_bert
+from transformers import AutoTokenizer, AutoModel
 
 import scripts.cedr.modeling_util as modeling_util
 from scripts.config import BERT_LARGE_MODEL, BERT_BASE_MODEL
 
 USE_BATCH_COEFF=True
 DEFAULT_BERT_DROPOUT=0.1
+
+"""
+   The base class for all Transformer-based ranking models. We generally consider these
+   models as BERT-variants, hence, the name of the base class.
+"""
+class BertBaseRanker(torch.nn.Module):
+    def __init__(self, bert_flavor, use_fast_tok=False):
+        """Ranker constructor
+
+        :param bert_flavor:   the name of the underlying Transformer/BERT
+        :param use_fast_tok:   use a fast tokenizer instead of a regular one
+
+        """
+        super().__init__()
+        self.bert = AutoModel.from_pretrained(bert_flavor)
+        self.tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
+
+        self.bert_flavor = bert_flavor
+        self.channel_qty = model.config.num_hidden_layers + 1
+        self.hidden_size = model.config.hidden_size
+
+    def tokenize(self, text):
+        toks = self.tokenizer.tokenize(text)
+        toks = [self.tokenizer.vocab[t] for t in toks]
+        return toks
+
+    def forward(self, **inputs):
+        raise NotImplementedError
 
 
 def init_bert_params(obj_ref, is_large):
@@ -48,19 +76,11 @@ class BertRanker(torch.nn.Module):
         self.bert = modeling_util.CustomBertModel.from_pretrained(self.BERT_MODEL)
         self.tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(self.BERT_MODEL)
 
-    def set_grad_checkpoint_param(self, param):
-        self.bert.set_grad_checkpoint_param(param)
-
-    def forward(self, **inputs):
-        raise NotImplementedError
 
     #@memoize_method
     # memoization of the tokenizer is not very useful with large datasets,
     # but it can cause a huge memory bloating
-    def tokenize(self, text):
-        toks = self.tokenizer.tokenize(text)
-        toks = [self.tokenizer.vocab[t] for t in toks]
-        return toks
+
 
     def encode_bert(self, query_tok, query_mask, doc_tok, doc_mask):
         batch_qty, max_qlen = query_tok.shape
