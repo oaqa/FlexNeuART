@@ -2,3 +2,4 @@
 2. Remove is_large (also from parameters).
 3. Get rid of import pytorch_pretrained_bert.
 4. Remove BERT_LARGE_MODEL, BERT_BASE_MODEL from the config, have instead some DEFAULT_BERT_MODEL instead.
+5. Need to check that unsubbatch works properly as before, e.g., by re-running one of those latest document models.

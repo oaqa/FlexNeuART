@@ -1,6 +1,8 @@
 #
 # This code is a modified version of CEDR: https://github.com/Georgetown-IR-Lab/cedr
+#
 # (c) Georgetown IR lab & Carnegie Mellon University
+#
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
@@ -19,7 +21,7 @@ DOC_TOK_FIELD = 'doc_tok'
 QUERY_MASK_FIELD = 'query_mask'
 DOC_MASK_FIELD = 'doc_mask'
 
-PAD_CODE=-1
+PAD_CODE=1 # your typical padding symbol
 DEFAULT_MAX_QUERY_LEN=32
 DEFAULT_MAX_DOC_LEN=512 - DEFAULT_MAX_QUERY_LEN - 4
 

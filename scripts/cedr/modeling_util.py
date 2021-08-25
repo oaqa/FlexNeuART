@@ -1,186 +1,80 @@
 #
-# This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
-# It has some modifications/extensions and it relies on our custom BERT
-# library: https://github.com/searchivarius/pytorch-pretrained-BERT-mod
+# This code is a modified version of CEDR: https://github.com/Georgetown-IR-Lab/cedr
+#
 # (c) Georgetown IR lab & Carnegie Mellon University
+#
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import math
 import torch
 
-import pytorch_pretrained_bert
-
-
-class CustomBertModel(pytorch_pretrained_bert.BertModel):
-    """
-    Based on pytorch_pretrained_bert.BertModel, but also outputs un-contextualized embeddings.
-    """
-    def forward(self, input_ids, token_type_ids, attention_mask, output_all_encoded_layers=True):
-        """
-        Based on pytorch_pretrained_bert.BertModel
-        """
-        embedding_output = self.embeddings(input_ids, token_type_ids)
-
-        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
-        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
-        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
-
-        encoded_layers = self.encoder(embedding_output, extended_attention_mask, output_all_encoded_layers=output_all_encoded_layers)
-
-        return [embedding_output] + encoded_layers
-
-
-# This function should produce averaging coefficients compatiable
-# with the split in get_batch_avg_coeff
+#
+# This function should produce averaging coefficients compatible with the split produced by subbatch
+#
 def get_batch_avg_coeff(mask, maxlen):
-    # Fortunately for us, the mask type is float or else divivision would
+    # Fortunately for us, the mask type is float or else division would
     # have resulted in zeros as 1.0 / torch.LongTensor([4]) == 0
     return 1.0/torch.ceil(torch.sum(mask, dim=-1) / maxlen)
 
 
 def subbatch(toks, maxlen):
+    """Splits tokens into sub-batches each containing at most maxlen tokens."""
     assert(maxlen > 0)
-    _, DLEN = toks.shape[:2]
-    SUBBATCH = math.ceil(DLEN / maxlen)
-    S = math.ceil(DLEN / SUBBATCH) if SUBBATCH > 0 else 0 # minimize the size given the number of subbatch
+    _, dlen = toks.shape[:2]
+    subbatch_qty = math.ceil(dlen / maxlen)
+    S = math.ceil(dlen / subbatch_qty) if subbatch_qty > 0 else 0 # minimize the size given the number of subbatches
     stack = []
-    if SUBBATCH == 1:
-        return toks, SUBBATCH
+    if subbatch_qty == 1:
+        return toks, subbatch_qty
     else:
-        for s in range(SUBBATCH):
+        for s in range(subbatch_qty):
             stack.append(toks[:, s*S:(s+1)*S])
             if stack[-1].shape[1] != S:
                 nulls = torch.zeros_like(toks[:, :S - stack[-1].shape[1]])
                 stack[-1] = torch.cat([stack[-1], nulls], dim=1)
-        return torch.cat(stack, dim=0), SUBBATCH
+        return torch.cat(stack, dim=0), subbatch_qty
 
 
-# TODO it's better to pass sbcount to this function rather than make
-#      un_subbatch recomputed sbcount again from maxlen
-def un_subbatch(embed, toks, maxlen):
-    BATCH, DLEN = toks.shape[:2]
-    SUBBATCH = math.ceil(DLEN / maxlen)
-    if SUBBATCH == 1:
+def un_subbatch(embed, toks, subbatch_qty):
+    """Reverts the subbatching"""
+    batch, dlen = toks.shape[:2]
+
+    if subbatch_qty == 1:
         return embed
     else:
         embed_stack = []
-        for b in range(SUBBATCH):
-            embed_stack.append(embed[b*BATCH:(b+1)*BATCH])
+        for b in range(subbatch_qty):
+            embed_stack.append(embed[b*batch:(b+1)*batch])
         embed = torch.cat(embed_stack, dim=1)
-        embed = embed[:, :DLEN]
+        embed = embed[:, :dlen]
         return embed
 
 
-class PACRRConvMax2dModule(torch.nn.Module):
+def sliding_window_subbatch(toks, window_size, stride):
+    """A sliding-window sub-batching function.
 
-    def __init__(self, shape, n_filters, k, channels):
-        super().__init__()
-        self.shape = shape
-        if shape != 1:
-            self.pad = torch.nn.ConstantPad2d((0, shape-1, 0, shape-1), 0)
-        else:
-            self.pad = None
-        self.conv = torch.nn.Conv2d(channels, n_filters, shape)
-        self.activation = torch.nn.ReLU()
-        self.k = k
-        self.shape = shape
-        self.channels = channels
+    :param toks:            batched (and encoded) input tokens
+    :param window_size:     a sliding window size
+    :param stride:          a sliding window stride
 
-    def forward(self, simmat):
-        BATCH, CHANNELS, QLEN, DLEN = simmat.shape
-        if self.pad:
-            simmat = self.pad(simmat)
-        conv = self.activation(self.conv(simmat))
-        top_filters, _ = conv.max(dim=1)
-        # LB: This a work around for rarely occurring weird cases of very short documents
-        if DLEN < self.k:
-            # padding with zeros the last dim to make it have it at least DLEN elements
-            top_filters = torch.nn.functional.pad(top_filters, (0, self.k - DLEN))
-        top_toks, _ = top_filters.topk(self.k, dim=2)
-        result = top_toks.reshape(BATCH, QLEN, self.k)
-        return result
+    :return:  a tuple (stack sub-batched tokens, the number of sub-batches)
+    """
+    _, dlen = toks.shape[:2]
+    assert dlen > 0
+    # Ceiling of the negative number is a negative number too!!!
+    # Hence, max(0, ...
+    subbatch_qty = math.ceil(max(0, dlen-window_size)/stride) + 1
+    assert subbatch_qty > 0, f'Bad sub-batch: {subbatch_qty} dlen {dlen} window_size {window_size} stride {stride}'
+    stack = []
+    if subbatch_qty == 1:
+       return toks, subbatch_qty
+    else:
+        for s in range(subbatch_qty):
+            if s*stride+window_size < dlen:
+                stack.append(toks[:, s*stride: s*stride+window_size])
+            else:
+                nulls = torch.zeros_like(toks[:, :s*stride+window_size - dlen])
+                stack.append(torch.cat([toks[:, s*stride:], nulls], dim=1))
 
-
-class SimmatModule(torch.nn.Module):
-
-    def __init__(self, padding=-1):
-        super().__init__()
-        self.padding = padding
-        self._hamming_index_loaded = None
-        self._hamming_index = None
-
-    def forward(self, query_embed, doc_embed, query_tok, doc_tok):
-        simmat = []
-
-        for a_emb, b_emb in zip(query_embed, doc_embed):
-            BAT, A, B = a_emb.shape[0], a_emb.shape[1], b_emb.shape[1]
-            # embeddings -- cosine similarity matrix
-            a_denom = a_emb.norm(p=2, dim=2).reshape(BAT, A, 1).expand(BAT, A, B) + 1e-9 # avoid 0div
-            b_denom = b_emb.norm(p=2, dim=2).reshape(BAT, 1, B).expand(BAT, A, B) + 1e-9 # avoid 0div
-            perm = b_emb.permute(0, 2, 1)
-            sim = a_emb.bmm(perm)
-            sim = sim / (a_denom * b_denom)
-
-            # nullify padding (indicated by -1 by default)
-            nul = torch.zeros_like(sim)
-            sim = torch.where(query_tok.reshape(BAT, A, 1).expand(BAT, A, B) == self.padding, nul, sim)
-            sim = torch.where(doc_tok.reshape(BAT, 1, B).expand(BAT, A, B) == self.padding, nul, sim)
-
-            simmat.append(sim)
-        return torch.stack(simmat, dim=1)
-
-
-class DRMMLogCountHistogram(torch.nn.Module):
-    def __init__(self, bins):
-        super().__init__()
-        self.bins = bins
-
-    def forward(self, simmat, dtoks, qtoks):
-        # THIS IS SLOW ... Any way to make this faster? Maybe it's not worth doing on GPU?
-        BATCH, CHANNELS, QLEN, DLEN = simmat.shape
-        # +1e-5 to nudge scores of 1 to above threshold
-        bins = ((simmat + 1.000001) / 2. * (self.bins - 1)).int()
-        # set weights of 0 for padding (in both query and doc dims)
-        weights = ((dtoks != -1).reshape(BATCH, 1, DLEN).expand(BATCH, QLEN, DLEN) * \
-                  (qtoks != -1).reshape(BATCH, QLEN, 1).expand(BATCH, QLEN, DLEN)).float()
-
-        # no way to batch this... loses gradients here. https://discuss.pytorch.org/t/histogram-function-in-pytorch/5350
-        bins, weights = bins.cpu(), weights.cpu()
-        histogram = []
-        for superbins, w in zip(bins, weights):
-            result = []
-            for b in superbins:
-                result.append(torch.stack([torch.bincount(q, x, self.bins) for q, x in zip(b, w)], dim=0))
-            result = torch.stack(result, dim=0)
-            histogram.append(result)
-        histogram = torch.stack(histogram, dim=0)
-
-        # back to GPU
-        histogram = histogram.to(simmat.device)
-        return (histogram.float() + 1e-5).log()
-
-
-class KNRMRbfKernelBank(torch.nn.Module):
-    def __init__(self, mus=None, sigmas=None, dim=1, requires_grad=True):
-        super().__init__()
-        self.dim = dim
-        kernels = [KNRMRbfKernel(m, s, requires_grad=requires_grad) for m, s in zip(mus, sigmas)]
-        self.kernels = torch.nn.ModuleList(kernels)
-
-    def count(self):
-        return len(self.kernels)
-
-    def forward(self, data):
-        return torch.stack([k(data) for k in self.kernels], dim=self.dim)
-
-
-class KNRMRbfKernel(torch.nn.Module):
-    def __init__(self, initial_mu, initial_sigma, requires_grad=True):
-        super().__init__()
-        self.mu = torch.nn.Parameter(torch.tensor(initial_mu), requires_grad=requires_grad)
-        self.sigma = torch.nn.Parameter(torch.tensor(initial_sigma), requires_grad=requires_grad)
-
-    def forward(self, data):
-        adj = data - self.mu
-        return torch.exp(-0.5 * adj * adj / self.sigma / self.sigma)
+        return torch.cat(stack, dim=0), subbatch_qty

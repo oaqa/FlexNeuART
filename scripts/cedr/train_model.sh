@@ -44,6 +44,7 @@ validRunDir=""
 maxQueryVal=""
 valType=""
 batchesPerEpoch=""
+bertFlavor="bert-base-uncased"
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
@@ -62,8 +63,8 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "vocab_file"         "vocabFile"        "vocabulary file relative to derived-data directory (optional)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
-      "valid_type"          "valType"          "validation type: always (every epoch), last (last epoch), never"
-      "bert_large"         "bertLarge"        "specify 1 to use *LARGE* BERT"
+      "valid_type"         "valType"          "validation type: always (every epoch), last (last epoch), never"
+      "bert_flavor"        "bertFlavor"       "a name of the pre-trained BERT model (default $bertFlavor)"
 )
 
 parseArguments $@
@@ -107,12 +108,9 @@ else
   echo "WARNING: neither -init_model_weights nor -init_model specified, training from random init!"
 fi
 
-bertLargeArg=""
-bertTypeSubdir="base"
-if [ "$bertLarge" = "1" ] ; then
-  bertLargeArg="  --model.bert_large"
-  bertTypeSubdir="large"
-fi
+bertTypeArg="  --model.bert_flavor $bertFlavor "
+bertTypeSubdir="$bertFlavor"
+
 
 outModelDir="$derivedDataDir/$IR_MODELS_SUBDIR/$modelType/$addExperSubdir/$bertTypeSubdir/$seed/"
 trainDir="$derivedDataDir/$trainSubDir"
@@ -179,7 +177,7 @@ echo "Output model directory:                         $outModelDir"
 echo "# of epochs:                                    $epochQty"
 echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
 echo "Validation type arg:                            $valTypeArg"
-echo "BERT large?:                                    $bertLarge"
+echo "BERT flavor/type :                              $bertFlavor"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
 echo "# of batches before model sync:                 $batchSyncQty"
@@ -214,7 +212,7 @@ echo "==========================================================================
 python -u scripts/cedr/train.py \
   $initModelArgs \
   $jsonConfArg \
-  $bertLargeArg \
+  $bertTypeArg \
   $vocabFileArg \
   $validCheckPointsArg \
   $validRunDirArg \

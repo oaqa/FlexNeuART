@@ -30,7 +30,6 @@ IMAP_PROC_CHUNK_QTY=500
 DEVICE_CPU = 'cpu'
 
 BERT_BASE_MODEL='bert-base-uncased'
-BERT_LARGE_MODEL='bert-large-uncased'
 
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_JSON = 'QuestionFields.jsonl'

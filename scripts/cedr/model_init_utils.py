@@ -16,10 +16,11 @@
 import inspect
 import argparse
 
-import scripts.cedr.data as data
-import scripts.cedr.modeling as modeling
+from scripts.config import BERT_BASE_MODEL
 
-MODEL_PARAM_LIST = ['dropout', 'bert_large']
+import scripts.cedr.data as data
+import scripts.cedr.modeling_basic as modeling
+
 MODEL_PARAM_PREF = 'model.'
 
 VANILLA_BERT = 'vanilla_bert'
@@ -70,14 +71,15 @@ def add_model_init_basic_args(parser, add_train_params):
                             metavar='grad. checkpoint param',
                             help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
 
-        parser.add_argument(f'--{MODEL_PARAM_PREF}bert_large',
-                            action='store_true',
-                            help='use the BERT large mode instead of a base one')
+        parser.add_argument(f'--{MODEL_PARAM_PREF}bert_flavor',
+                            type=str, default=BERT_BASE_MODEL,
+                            metavar=f'BERT model name',
+                            help='A name of the pre-trained BERT model, e.g., {BERT_BASE_MODEL}')
 
         parser.add_argument(f'--{MODEL_PARAM_PREF}vocab_file',
                             metavar='vocabulary file',
                             type=str, default=None,
-                            help='a previously built vocabulary file')
+                            help='a previously created vocabulary file')
 
         parser.add_argument(f'--{MODEL_PARAM_PREF}use_fasttext',
                             action='store_true',

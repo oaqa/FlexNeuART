@@ -22,16 +22,6 @@ pip install --upgrade -r requirements.txt
 
 python -m spacy download en_core_web_sm
 
-# This should be installed after numpy or else it will try to isntall an incompatible version!
-cd $curr_dir
-if [ -d pytorch-pretrained-BERT-mod ] ; then
-  rm -rf pytorch-pretrained-BERT-mod
-fi
-
-git clone https://github.com/searchivarius/pytorch-pretrained-BERT-mod
-cd pytorch-pretrained-BERT-mod
-python setup.py install
-
 cd $curr_dir
 
 if [ "$withGiza" = "1" ] ; then
