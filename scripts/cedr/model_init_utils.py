@@ -19,17 +19,18 @@ import argparse
 from scripts.config import BERT_BASE_MODEL
 
 import scripts.cedr.data as data
-import scripts.cedr.modeling_basic as modeling
+import scripts.cedr.modeling_basic as modeling_basic
+import scripts.cedr.modeling_cedr as modeling_cedr
 
 MODEL_PARAM_PREF = 'model.'
 
 VANILLA_BERT = 'vanilla_bert'
 
 MODEL_MAP = {
-    VANILLA_BERT: modeling.VanillaBertRanker,
-    'cedr_pacrr': modeling.CedrPacrrRanker,
-    'cedr_knrm': modeling.CedrKnrmRanker,
-    'cedr_drmm': modeling.CedrDrmmRanker
+    VANILLA_BERT: modeling_basic.VanillaBertRanker,
+    'cedr_pacrr': modeling_cedr.CedrPacrrRanker,
+    'cedr_knrm': modeling_cedr.CedrKnrmRanker,
+    'cedr_drmm': modeling_cedr.CedrDrmmRanker
 }
 
 def add_model_init_basic_args(parser, add_train_params):
@@ -63,7 +64,7 @@ def add_model_init_basic_args(parser, add_train_params):
     if add_train_params:
 
         parser.add_argument(f'--{MODEL_PARAM_PREF}dropout', type=float,
-                            default=modeling.DEFAULT_BERT_DROPOUT,
+                            default=modeling_basic.DEFAULT_BERT_DROPOUT,
                             metavar='optional model droput',
                             help='optional model droput (not for every model)')
 
