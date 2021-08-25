@@ -20,8 +20,10 @@ sampleProb=1
 saveEpochSnapshots=0
 saveEpochSnapshotsArg=""
 noFinalValArg=""
+amp=""
 
 boolOpts=("h" "help" "print help"
+          "amp" "amp" "use automatic mixed precision"
           "save_epoch_snapshots" "saveEpochSnapshots" "save snapshot after each epoch")
 
 seed=0
@@ -171,6 +173,10 @@ if [ "$batchesPerEpoch" != "" ] ; then
   batchesPerEpochArg=" --batches_per_train_epoch $batchesPerEpoch "
 fi
 
+if [ "$amp" = "1" ] ; then
+  ampArg=" --amp "
+fi
+
 echo "=========================================================================="
 echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
@@ -186,6 +192,7 @@ echo "validation checkpoints arg:                     $validCheckPointsArg"
 echo "validation run dir  arg:                        $validRunDirArg"
 echo "batches per train epoch arg:                    $batchesPerEpochArg"
 echo "max # of valid. queries arg:                    $maxQueryValArg"
+echo "Auto-mixed precision arg:                       $ampArg"
 
 if [ "$deviceQty" = "1" ] ; then
   echo "device name:                                    $deviceName"
@@ -211,6 +218,7 @@ echo "==========================================================================
 
 python -u scripts/cedr/train.py \
   $initModelArgs \
+  $ampArg \
   $jsonConfArg \
   $bertTypeArg \
   $vocabFileArg \
