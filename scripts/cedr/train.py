@@ -719,7 +719,6 @@ def main_cli():
     os.makedirs(args.model_out_dir, exist_ok=True)
     print(model)
     utils.sync_out_streams()
-    model.set_grad_checkpoint_param(args.grad_checkpoint_param)
 
     dataset = data.read_datafiles(args.datafiles)
     qrelf = args.qrels.name

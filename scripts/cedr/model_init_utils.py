@@ -67,10 +67,6 @@ def add_model_init_basic_args(parser, add_train_params):
                             metavar='optional model droput',
                             help='optional model droput (not for every model)')
 
-        parser.add_argument('--grad_checkpoint_param', type=int, default=0,
-                            metavar='grad. checkpoint param',
-                            help='gradient checkpointing param (0, no checkpointing, 2 every other layer, 3 every 3rd layer, ...)')
-
         parser.add_argument(f'--{MODEL_PARAM_PREF}bert_flavor',
                             type=str, default=BERT_BASE_MODEL,
                             metavar=f'BERT model name',
