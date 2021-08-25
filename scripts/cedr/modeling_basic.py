@@ -63,7 +63,8 @@ class BertBaseRanker(torch.nn.Module):
         init_model(self, bert_flavor)
 
 
-    def tokenize(self, text):
+    def tokenize_and_encode(self, text):
+        """Tokenizes the text and converts tokens to respective IDs"""
         toks = self.tokenizer.tokenize(text)
         return self.tokenizer.convert_tokens_to_ids(toks)
 

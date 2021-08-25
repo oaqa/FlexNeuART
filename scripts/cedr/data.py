@@ -172,15 +172,15 @@ def _iter_train_data(model, dataset,
             if sample_fail:
                 continue
 
-            query_tok = model.tokenize(ds_queries[qid])
+            query_tok_ids = model.tokenize_and_encode(ds_queries[qid])
 
             yield qid, pos_id, query_train_pairs[pos_id], \
-                  query_tok, model.tokenize(pos_doc)
+                  query_tok_ids, model.tokenize_and_encode(pos_doc)
 
             assert len(neg_data_arr) == neg_qty_per_query
             for neg_id, neg_doc in neg_data_arr:
                 yield qid, neg_id, query_train_pairs[neg_id], \
-                      query_tok, model.tokenize(neg_doc)
+                      query_tok_ids, model.tokenize_and_encode(neg_doc)
 
 
 def iter_valid_records(model, device_name, dataset, run,
@@ -203,14 +203,14 @@ def iter_valid_records(model, device_name, dataset, run,
 def _iter_valid_records(model, dataset, run):
     ds_queries, ds_docs = dataset
     for qid in run:
-        query_tok = model.tokenize(ds_queries[qid])
+        query_tok_ids = model.tokenize_and_encode(ds_queries[qid])
         for did, score in run[qid].items():
             doc = ds_docs.get(did)
             if doc is None:
                 tqdm.write(f'missing doc {did}! Skipping')
                 continue
-            doc_tok = model.tokenize(doc)
-            yield qid, did, score, query_tok, doc_tok
+            doc_tok_ids = model.tokenize_and_encode(doc)
+            yield qid, did, score, query_tok_ids, doc_tok_ids
 
 
 def _pack_n_ship(batch, device_name, max_query_len, max_doc_len):
