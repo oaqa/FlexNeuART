@@ -135,7 +135,7 @@ class BertRanker(BertBaseRanker):
         # execute BERT model
         outputs : BaseModelOutputWithPoolingAndCrossAttentions = \
                             self.bert(input_ids=toks,
-                                      segment_ids=segment_ids.long(),
+                                      token_type_ids=segment_ids.long(),
                                       attention_mask=mask,
                                       output_hidden_states=True)
         result = outputs.hidden_states
