@@ -65,8 +65,7 @@ class BertBaseRanker(torch.nn.Module):
 
     def tokenize(self, text):
         toks = self.tokenizer.tokenize(text)
-        toks = [self.tokenizer.vocab[t] for t in toks]
-        return toks
+        return self.tokenizer.convert_tokens_to_ids(toks)
 
     def forward(self, **inputs):
         raise NotImplementedError
