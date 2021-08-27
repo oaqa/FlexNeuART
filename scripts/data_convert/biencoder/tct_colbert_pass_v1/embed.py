@@ -46,6 +46,8 @@ parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
 parser.add_argument('--field_name', metavar='field name', help='the name of the BSONL field',
                     type=str, required=True)
+parser.add_argument('--max_len', metavar='maximum # of tokens', help='the maximum input length (in the # of subword tokens)',
+                    type=int, default=512)
 parser.add_argument('--model', metavar='model name or path',
                     help='a directory with downloaded and unpacked models',
                     type=str, default="castorini/tct_colbert-msmarco")
@@ -82,7 +84,7 @@ def proc_batch(batch_input, is_query, model, out_file, field_name):
                 batch_data_arr.append(model.encode(query))
             batch_data = np.vstack(batch_data_arr)
         else:
-            batch_data = model.encode(texts)
+            batch_data = model.encode(texts, max_length=args.max_len)
         #print(batch_data.shape)
 
         batch_data_packed = pack_dense_batch(batch_data)
