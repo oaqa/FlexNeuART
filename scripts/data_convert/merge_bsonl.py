@@ -30,11 +30,12 @@ from scripts.data_convert.convert_common import FileWrapper, write_json_to_bin, 
 
 parser = argparse.ArgumentParser(description='Merge two files in "BSONL" format.')
 
-parser.add_argument('--input1', metavar='1st input file', type=str, required=True)
-parser.add_argument('--input2', metavar='1st input file', type=str, required=True)
+parser.add_argument('--input', metavar='1st input file', type=str,
+                    nargs='+', required=True)
 parser.add_argument('--output', metavar='output file', type=str, required=True)
 
 args = parser.parse_args()
+
 
 def load_data(file_name):
     res = {}
@@ -50,26 +51,34 @@ def load_data(file_name):
     return res
 
 
-inp1 = load_data(args.input1)
-inp2 = load_data(args.input2)
+input_arr = []
+for file_id in range(len(args.input)):
+    input_arr.append(load_data(args.input[file_id]))
+    if file_id > 0 and len(input_arr[file_id]) != len(input_arr[file_id-1]):
+        print('Different number of unique entries: ',
+              str(len(input_arr[file_id])), ' vs ' + str(len(input_arr[file_id-1])),
+              'for files ', args.input[file_id], 'and', args.input[file_id-1])
+        sys.exit(1)
 
-if len(inp1) != len(inp2):
-    print('Different number of unique entries: ', str(len(inp1)), ' vs ' + str(len(inp2)))
-    sys.exit(1)
 
 with FileWrapper(args.output, 'wb') as out_file:
-    for did, e1 in tqdm(inp1.items(), "Merging files"):
-        if not did in inp2:
-            print(f'Key {did} is present only in the first input file')
-            sys.exit(1)
+    inp0 = input_arr[0]
+    fn0 = args.input[0]
+    for did, e0 in tqdm(inp0.items(), "Merging files"):
+        for file_id in range(1, len(input_arr)):
+            inp1 = input_arr[file_id]
+            fn1 = args.input[file_id]
+            if not did in inp1:
+                print(f'Key {did} is present only in {inp0} but not in {inp1}')
+                sys.exit(1)
 
-        for k, v in inp2[did].items():
-            if k != DOCID_FIELD:
-                if k in e1:
-                    raise Exception(f'Field name overlap between input files: {k} entry ID: {did}')
-                e1[k] = v
+            for field_name, field_val in inp1[did].items():
+                if field_name != DOCID_FIELD:
+                    if field_name in e0:
+                        raise Exception(f'Field name overlap between input files:  entry ID: {did}')
+                    e0[field_name] = field_val
 
-        write_json_to_bin(e1, out_file)
+        write_json_to_bin(e0, out_file)
 
 
 
