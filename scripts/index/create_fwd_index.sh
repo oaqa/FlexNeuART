@@ -93,6 +93,7 @@ if [ ! -d "$indexDir" ] ; then
 else
   if [ "$clean" = "1" ] ; then
     echo "Removing previously created index for the field ${field} (if exists)"
+    rm -rf "$indexDir"/"${field}"
     rm -rf "$indexDir"/"${field}."*
   fi
 fi
