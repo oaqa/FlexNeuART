@@ -18,8 +18,8 @@ import sys
 # ./src/main/java/edu/cmu/lti/oaqa/flexneuart/letor/external/protocol.thrift
 #
 
-from scripts.py_featextr_server.python_generated.protocol.ExternalScorer import Processor
-from scripts.py_featextr_server.python_generated.protocol.ttypes import ScoringException
+from scripts.featextr_server.python_generated.protocol.ExternalScorer import Processor
+from scripts.featextr_server.python_generated.protocol.ttypes import ScoringException
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport

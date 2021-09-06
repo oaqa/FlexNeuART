@@ -21,8 +21,8 @@ import time
 
 sys.path.append('.')
 
-from scripts.py_featextr_server.python_generated.protocol.ttypes import TextEntryRaw
-from scripts.py_featextr_server.base_server import BaseQueryHandler, start_query_server
+from scripts.featextr_server.python_generated.protocol.ttypes import TextEntryRaw
+from scripts.featextr_server.base_server import BaseQueryHandler, start_query_server
 
 import scripts.cedr.model_init_utils as model_init_utils
 import scripts.cedr.data as data

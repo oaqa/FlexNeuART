@@ -20,15 +20,15 @@ import sys
 
 sys.path.append('.')
 
-from scripts.py_featextr_server.python_generated.protocol.ExternalScorer import Client
-from scripts.py_featextr_server.python_generated.protocol.ttypes import \
+from scripts.featextr_server.python_generated.protocol.ExternalScorer import Client
+from scripts.featextr_server.python_generated.protocol.ttypes import \
     WordEntryInfo, TextEntryParsed, TextEntryRaw
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-from scripts.py_featextr_server.base_server import SAMPLE_PORT, SAMPLE_HOST
+from scripts.featextr_server.base_server import SAMPLE_PORT, SAMPLE_HOST
 
 # Make socket
 transport = TSocket.TSocket(SAMPLE_HOST, SAMPLE_PORT)

@@ -21,7 +21,7 @@ import sys
 
 sys.path.append('.')
 
-from scripts.py_featextr_server.base_server import BaseQueryHandler, start_query_server, \
+from scripts.featextr_server.base_server import BaseQueryHandler, start_query_server, \
     SAMPLE_HOST, SAMPLE_PORT
 
 

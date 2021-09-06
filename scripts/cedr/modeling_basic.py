@@ -7,6 +7,117 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 import torch
+import inspect
+
+from scripts.config import DEVICE_CPU
+
+MODEL_PARAM_PREF = 'model.'
+MODEL_ARGS = 'model_args'
+MODEL_STATE_DICT = 'model_weights'
+
+def get_model_param_dict(args, model_class):
+    """This function iterates over the list of arguments starting with model.
+       and checks if the model constructor supports them. It creates
+       a parameter dictionary that can be used to initialize the model.
+
+       If the arguments object contains extra model parameters, an exception is
+       thrown.
+
+       Limitation: it supports only regular arguments.
+    """
+    param_dict = {}
+    arg_vars = vars(args)
+    model_init_args = inspect.signature(model_class).parameters.keys()
+
+    for param_name, param_val in arg_vars.items():
+        if param_name.startswith(MODEL_PARAM_PREF):
+            param_name = param_name[len(MODEL_PARAM_PREF):]
+            if param_name in model_init_args:
+                arg_vars[param_name] = param_val
+            else:
+                raise Exception(f'{model_class} does not have parameter {param_name}, but it is provided via arguments!')
+
+    return arg_vars
+
+
+"""
+    1. Models can be arbitrary: Not just BERT-based models or models from
+          the HuggingFace repository.
+    2. However, we need to load/save them nonetheless.
+    3. Saving only model weights is inconvenient as it does not preserve
+          model parameters and objects (such as vocabularies)
+          passed to the model constructor.
+    4. Saving complete models is also bad, because loading models requires
+          the presence of the model code in the path.
+    5. At the same time HuggingFace function from_pretrained() works only for
+          HuggingFace models.
+    
+    A solution to these woes is as follows:
+    
+    1. Use a helper model save/restore wrapper object that saves model init parameters
+          and constructs a model.
+    2. It serialized both the model weights and constructor parameters.
+    3. One tricky part is saving objects that a model constructor would load. 
+        We cannot  let the model do this directly.
+    
+      Instead, we require a model to implement a pre-constructor (pre_init) function
+      that takes all the parameters an processes them as necessary. By default,
+      it just returns the unmodified parameter dictionary.
+
+"""
+class ModelWrapper:
+    def __init__(self, model_class):
+        self.model_class = model_class
+        self.params = {}
+        self.model = None
+
+    def create_model_from_args(self, args):
+        model_args_orig = get_model_param_dict(args, self.model_class)
+        self.model_args_processed = self.model_class.pre_init(model_args_orig)
+
+        self.model = self.model_class(**self.model_args_processed)
+
+    def forward(self, **inputs):
+        return self.model(inputs)
+
+    def save(self, file_name):
+        torch.save({MODEL_ARGS : self.model, MODEL_STATE_DICT : self.model.state_dict()}, file_name)
+
+    def load(self, file_name):
+        data = torch.load(file_name, map_location=DEVICE_CPU)
+        if not MODEL_ARGS in data:
+            raise Exception(f'Missing key {MODEL_ARGS} in {file_name}')
+        if not MODEL_STATE_DICT in data:
+            raise Exception(f'Missing key {MODEL_STATE_DICT} in {file_name}')
+        self.model_args_processed = data[MODEL_ARGS]
+        self.model = self.model_class(**self.model_args_processed)
+        self.model.load_state_dict(data[MODEL_STATE_DICT])
+
+
+"""The base class for all models."""
+class BaseModel(torch.nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    def pre_init(self, model_param_dict):
+        """a pre-constructor (pre_init) function
+          that takes all the parameters an processes them as necessary. By default,
+          it just returns the unmodified parameter dictionary.
+
+        :param model_param_dict:
+        :return:
+        """
+        raise model_param_dict
+
+    @staticmethod
+    def model_name():
+        """
+        :return: a model name, which is used to register and create a model
+        """
+        raise NotImplementedError
+
+
 
 
 from transformers import AutoTokenizer, AutoModel
@@ -46,11 +157,12 @@ def init_model(obj_ref, bert_flavor):
           'input window size:', obj_ref.MAXLEN)
 
 
+
 """
    The base class for all Transformer-based ranking models. We generally consider these
    models as BERT-variants, hence, the name of the base class.
 """
-class BertBaseRanker(torch.nn.Module):
+class BertBaseRanker(BaseModel):
     def __init__(self, bert_flavor):
         """Bert ranker constructor.
 
@@ -69,6 +181,13 @@ class BertBaseRanker(torch.nn.Module):
         return self.tokenizer.convert_tokens_to_ids(toks)
 
     def forward(self, **inputs):
+        raise NotImplementedError
+
+    @staticmethod
+    def model_name():
+        """
+        :return: a model name, which is used to register and create a model
+        """
         raise NotImplementedError
 
 
