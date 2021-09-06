@@ -62,7 +62,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "vocab_file"         "vocabFile"        "vocabulary file relative to derived-data directory (optional)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
-      "valid_type"          "valType"          "validation type: always (every epoch), last (last epoch), never"
+      "valid_type"          "valType"          "validation type: always (every epoch), last_epoch (last epoch), never"
       "bert_large"         "bertLarge"        "specify 1 to use *LARGE* BERT"
 )
 
