@@ -48,12 +48,11 @@ class TctColBertDocumentEncoder(DocumentEncoder):
         self.tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name or model_name)
         self.amp = amp
 
-    def encode(self, texts, titles=None, **kwargs):
+    def encode(self, texts, max_length = 512, titles=None, **kwargs):
         if titles is not None:
             texts = [f'[CLS] [D] {title} {text}' for title, text in zip(titles, texts)]
         else:
             texts = ['[CLS] [D] ' + text for text in texts]
-        max_length = 512  # hardcode for now
         inputs = self.tokenizer(
             texts,
             max_length=max_length,
