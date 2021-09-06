@@ -81,7 +81,7 @@ class MeanAveragePrecision:
         :return: Mean average precision.
         """
         result = 0.
-        post_qty = len(qrel_dict)
+        post_qty = sum([int(rel > RELEVANCE_THRESHOLD) for did, rel in qrel_dict])
 
         pos = 0
         for i, rel in enumerate(rels_sorted_by_scores):
