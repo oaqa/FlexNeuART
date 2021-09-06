@@ -80,5 +80,3 @@ with FileWrapper(args.output, 'wb') as out_file:
 
         write_json_to_bin(e0, out_file)
 
-
-
