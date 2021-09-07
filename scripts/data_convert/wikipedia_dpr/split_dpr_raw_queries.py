@@ -17,16 +17,13 @@
 # A script to randomly split queries
 # Instead of using this directly, one can use a convenience wrapper shell script split_queries.sh.
 #
-import sys
-import os
 import tqdm
 import random
 import argparse
 
-sys.path.append('.')
-from scripts.data_convert.split_queries_args import QuerySplitArgumentsBase, add_basic_query_split_args
-from scripts.data_convert.convert_common import FileWrapper, build_query_id_to_partition
-from scripts.data_convert.wikipedia_dpr.utils import dpr_json_reader
+from flexneuart.data_convert import QuerySplitArgumentsBase, add_basic_query_split_args, build_query_id_to_partition
+from flexneuart.io import FileWrapper
+from flexneuart.data_convert.wikipedia_dpr import dpr_json_reader
 
 
 class QuerySplitArguments(QuerySplitArgumentsBase):

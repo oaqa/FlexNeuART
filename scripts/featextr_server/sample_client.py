@@ -18,8 +18,6 @@
 
 import sys
 
-sys.path.append('.')
-
 from scripts.featextr_server.python_generated.protocol.ExternalScorer import Client
 from scripts.featextr_server.python_generated.protocol.ttypes import \
     WordEntryInfo, TextEntryParsed, TextEntryRaw

@@ -14,12 +14,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
 import argparse
 
-sys.path.append('.')
-
-from scripts.eval_common import read_qrels_dict
+from flexneuart.eval import read_qrels_dict
 
 parser = argparse.ArgumentParser(description='Count tokens and number of entries in JSONL')
 

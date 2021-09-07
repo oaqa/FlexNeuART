@@ -1,0 +1,32 @@
+import json
+import os
+
+from flexneuart.io.utils import jsonl_gen
+from flexneuart.config import QUESTION_FILE_JSON
+
+
+def is_json_query_file(file_name):
+    """Checks if the input is a JSONL query file (using name only)."""
+    return os.path.split(file_name)[1] == QUESTION_FILE_JSON
+
+
+def read_queries(file_name):
+    """Read queries from a JSONL file and checks the document ID is set.
+
+    :param file_name: an input file name
+    :return: an array where each entry is a parsed query JSON.
+    """
+    return list(jsonl_gen(file_name))
+
+
+def write_queries(query_list, file_name):
+    """Write queries to a JSONL file.
+
+    :param query_list: an array of parsed JSON query entries
+    :param file_name: an output file
+    """
+    with open(file_name, 'w') as f:
+        for e in query_list:
+            f.write(json.dumps(e))
+            f.write('\n')
+

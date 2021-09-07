@@ -18,15 +18,12 @@
 # ORCAS: 18 Million Clicked Query-Document Pairs for Analyzing Search.
 # Nick Craswell Daniel Campos Bhaskar Mitra Emine Yilmaz Bodo von Billerbeck.
 #
-import sys
 import os
 import json
 import argparse
 
-sys.path.append('.')
-
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
+from flexneuart.text_proc import SpacyTextParser
+from flexneuart.data_convert.utils import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
     FileWrapper, get_bert_tokenizer, read_stop_words, add_retokenized_field, read_queries, \
     MAX_NUM_QUERY_OPT_HELP, MAX_NUM_QUERY_OPT
 
@@ -35,7 +32,7 @@ from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
     TEXT_RAW_FIELD_NAME, \
     REPORT_QTY, SPACY_MODEL, QUESTION_FILE_JSON, QREL_FILE
 
-from scripts.eval_common import QrelEntry, write_qrels
+from flexneuart.eval import QrelEntry, write_qrels
 
 ORCAS_QID_PREF='orcas_'
 

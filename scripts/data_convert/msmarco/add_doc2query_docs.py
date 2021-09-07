@@ -19,16 +19,13 @@
 #
 # It reads all the predictions into memory
 #
-import sys
 import argparse
 import json
 
 from tqdm import tqdm
 
-sys.path.append('.')
-
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import read_stop_words, jsonl_gen, FileWrapper, STOPWORD_FILE
+from flexneuart.text_proc import SpacyTextParser
+from flexneuart.data_convert.utils import read_stop_words, jsonl_gen, FileWrapper, STOPWORD_FILE
 from scripts.config import SPACY_MODEL
 
 from scripts.config import DOCID_FIELD, TEXT_FIELD_NAME

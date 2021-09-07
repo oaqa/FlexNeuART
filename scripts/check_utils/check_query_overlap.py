@@ -14,13 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
-import os
-import json
 import argparse
-import random
-import math
-import time
 import numpy as np
 from tqdm import tqdm
 
@@ -30,12 +24,8 @@ from tqdm import tqdm
 # Second, it checks for approximate (high-enough) match with respect to BERT tokens
 #
 
-sys.path.append('.')
-
 from scripts.check_utils.check_common import get_token_ids, str_to_nmslib_vect, jaccard, read_sample_queries, create_jaccard_index
 from scripts.config import get_bert_tokenizer, DOCID_FIELD, TEXT_FIELD_NAME, TEXT_RAW_FIELD_NAME
-
-from scripts.eval_common import read_qrels_dict
 
 QUERY_BATCH_SIZE=32
 

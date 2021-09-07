@@ -17,17 +17,14 @@
 import sys
 import argparse
 import torch
-import time
-
-sys.path.append('.')
 
 from scripts.featextr_server.python_generated.protocol.ttypes import TextEntryRaw
 from scripts.featextr_server.base_server import BaseQueryHandler, start_query_server
 
-import scripts.cedr.model_init_utils as model_init_utils
-import scripts.cedr.data as data
+import flexneuart.models.model_init_utils as model_init_utils
+import flexneuart.models.train.data as data
 
-from scripts.cedr.data import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
+from flexneuart.models import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
                                 QUERY_ID_FIELD, DOC_ID_FIELD
 
 DEFAULT_BATCH_SIZE = 32
@@ -72,7 +69,7 @@ class CedrQueryHandler(BaseQueryHandler):
         print('Processing query:', query.id, query.text, '# of docs: ', len(docs))
 
         query_data = {query.id: query.text}
-        # Run maps queries to arrays of document IDs see iter_valid_records (train.py)
+        # Run maps queries to arrays of document IDs see iter_valid_records (train_model.py)
         run = {query.id: {e.id : 0 for e in docs}}
 
         doc_data = {}
@@ -85,7 +82,7 @@ class CedrQueryHandler(BaseQueryHandler):
 
         if doc_data:
 
-            # based on the code from run_model function (train.py)
+            # based on the code from run_model function (train_model.py)
             data_set = query_data, doc_data
             # must disable gradient computation to greatly reduce memory requirements and speed up things
             with torch.no_grad():

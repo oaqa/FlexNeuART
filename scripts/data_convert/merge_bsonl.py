@@ -14,19 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-#  A script to merge to files in BSONL formats. Because it loads everything into memory
-#  it is probably not practical to merge data files, but it should be generally fine to merge queries
-#  Assumptions:
-#   1. Each query has equal number of BSONL entries with matching keys. The order does not matter
-#   2. There is no overlap in fields except for the document/query ID field
-#
+
+"""
+  A script to merge to files in BSONL formats. Because it loads everything into memory
+  it is not practical to merge data files. However, it is not strictly necessary, because
+  we can create forward files using different input data root sub-directories.
+
+  However, it is crucial (and possible) to merge queries.
+
+  Assumptions:
+   1. Each query has equal number of BSONL entries with matching keys. The order does not matter
+   2. There is no overlap in fields except for the document/query ID field
+"""
 import sys
 import argparse
 from tqdm import tqdm
 
-sys.path.append('.')
-
-from scripts.data_convert.convert_common import FileWrapper, write_json_to_bin, read_json_from_bin, DOCID_FIELD
+from flexneuart.io import FileWrapper
+from flexneuart.io.pack import  write_json_to_bin, read_json_from_bin
+from flexneuart.config import DOCID_FIELD
 
 parser = argparse.ArgumentParser(description='Merge two files in "BSONL" format.')
 

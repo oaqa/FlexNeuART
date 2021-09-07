@@ -16,15 +16,12 @@
 #
 # Convert MSMARCO passages
 #
-import sys
 import json
 import argparse
 import multiprocessing
 
-sys.path.append('.')
-
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
+from flexneuart.text_proc import SpacyTextParser
+from flexneuart.data_convert.utils import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
     FileWrapper, get_bert_tokenizer, read_stop_words, add_retokenized_field
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
     TEXT_FIELD_NAME, DOCID_FIELD, \

@@ -20,9 +20,9 @@ import time
 
 from tqdm import tqdm
 
-from scripts.data_convert.convert_common import unique
+from flexneuart.data_convert.utils import unique
 from scripts.config import QUESTION_FILE_JSON, TEXT_RAW_FIELD_NAME
-from scripts.data_convert.convert_common import read_queries
+from flexneuart.data_convert.utils import read_queries
 
 QUERY_BATCH_SIZE=32
 

@@ -16,7 +16,6 @@
 #
 # Convert MSMARCO (v2) documents
 #
-import sys
 import json
 import argparse
 import multiprocessing
@@ -25,12 +24,10 @@ from tqdm import tqdm
 
 ORIG_DOCID = 'orig_docid'
 
-sys.path.append('.')
-
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import MSMARCO_PASS_V2_FILE_PATTERN, \
+from flexneuart.text_proc import SpacyTextParser
+from flexneuart.data_convert.utils import MSMARCO_PASS_V2_FILE_PATTERN, \
                                                 STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    multi_file_linegen, FileWrapper, read_stop_words, add_retokenized_field, pretokenize_url, get_bert_tokenizer
+    multi_file_linegen, FileWrapper, read_stop_words, add_retokenized_field, get_bert_tokenizer
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_PASS_SIZE, \
     TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, \

@@ -23,10 +23,8 @@ import sys
 import os
 import argparse
 
-sys.path.append('.')
-
-from scripts.data_convert.convert_common import read_queries
-from scripts.eval_common import read_qrels, qrel_entry2_str
+from flexneuart.data_convert.utils import read_queries
+from flexneuart.eval import read_qrels, qrel_entry2_str
 from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(

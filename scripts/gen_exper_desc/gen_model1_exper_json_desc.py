@@ -16,8 +16,6 @@
 #
 import os, sys, json, re
 
-sys.path.append('.')
-
 from scripts.gen_exper_desc.gen_desc_common import gen_rerank_descriptors, BaseParser
 from scripts.config import TEXT_FIELD_NAME
 

@@ -17,15 +17,10 @@
 # This script compares output from trec_eval with our reimplementation
 # Sample QREL & RUNS can be found in this directory.
 #
-import sys
 import argparse
-import tempfile
-import os
 
-sys.path.append('.')
-
-from scripts.eval_common import *
-from scripts.utils import create_temp_file
+from flexneuart.eval import *
+from flexneuart.io import create_temp_file
 
 parser = argparse.ArgumentParser('Comparing external and internal eval tools')
 

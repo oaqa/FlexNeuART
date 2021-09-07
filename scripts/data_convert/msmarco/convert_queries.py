@@ -16,19 +16,16 @@
 #
 # Convert MSMARCO queries
 #
-import sys
 import json
 import argparse
 
-sys.path.append('.')
-
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
+from flexneuart.text_proc import SpacyTextParser
+from flexneuart.data_convert.utils import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
     FileWrapper, read_stop_words, add_retokenized_field, get_bert_tokenizer
 from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
     TEXT_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
-    IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
+    REPORT_QTY, SPACY_MODEL
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc queries.')
 parser.add_argument('--input', metavar='input file', help='input file',

@@ -16,14 +16,11 @@
 #
 # A simple script to assess validity of (TREC) runs before submission.
 #
-import sys
 import argparse
 import gc
 
-sys.path.append('.')
-
-from scripts.eval_common import FAKE_DOC_ID
-from scripts.data_convert.convert_common import read_queries, DOCID_FIELD, FileWrapper
+from flexneuart.eval import FAKE_DOC_ID
+from flexneuart.data_convert.utils import read_queries, DOCID_FIELD, FileWrapper
 from scripts.py_flexneuart.setup import *
 from scripts.py_flexneuart.fwd_index import get_forward_index
 

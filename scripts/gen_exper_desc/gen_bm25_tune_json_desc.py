@@ -18,8 +18,6 @@ import sys
 import os
 import shutil
 
-sys.path.append('.')
-
 from scripts.gen_exper_desc.gen_desc_common import gen_rerank_descriptors, BaseParser, OUT_DIR_PARAM, REL_DESC_PATH_PARAM
 
 MODEL_SRC_PATH = 'scripts/exper/sample_exper_desc/one_feat.model'

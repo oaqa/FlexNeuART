@@ -17,8 +17,6 @@ import sys
 import re
 import json
 
-sys.path.append('.')
-
 from scripts.data_convert.msmarco.similarity_funcs import is_equal, tokenized_equal
 
 

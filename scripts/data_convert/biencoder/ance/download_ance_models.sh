@@ -20,7 +20,7 @@ storePref="https://webdatamltrainingdiag842.blob.core.windows.net/semistructstor
 #mv 'Document ANCE(MaxP) Checkpoint' Document_ANCE_MaxP_Checkpoint
 
 # Unpacked model names/directories should match values
-# in the dictionary DATA_TYPE_PATHS in ance_data.py
+# in the dictionary DATA_TYPE_PATHS in flexneuart.data_convert.ance.data
 
 # Document FirstP
 wget "$storePref/Document_ANCE_FirstP_Checkpoint.zip"

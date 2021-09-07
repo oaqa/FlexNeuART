@@ -14,13 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
 import os
-import json
 import argparse
-import random
-import math
-import time
 import numpy as np
 from tqdm import tqdm
 
@@ -47,16 +42,14 @@ from tqdm import tqdm
 # and brute-force search is certainly a safer option.
 #
 
-sys.path.append('.')
-
 from scripts.check_utils.check_common import get_token_ids, QUERY_BATCH_SIZE, jaccard, \
                                             read_sample_queries, create_jaccard_index, str_to_nmslib_vect
 
-from scripts.data_convert.convert_common import get_bert_tokenizer, jsonl_gen, unique
+from flexneuart.data_convert.utils import get_bert_tokenizer, jsonl_gen, unique
 from scripts.config import ANSWER_FILE_JSON, QREL_FILE, \
                          DOCID_FIELD, TEXT_RAW_FIELD_NAME
 
-from scripts.eval_common import read_qrels_dict
+from flexneuart.eval import read_qrels_dict
 
 PRINT_TOO_CLOSE_THRESHOLD=0.9 # We want to inspect answers that are too close
 

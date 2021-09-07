@@ -14,17 +14,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# Filtering out queries that may textually match queries from a set of sub-directories
-#
-import sys
+
+"""
+    Filtering out queries that may textually match queries from a set of sub-directories.
+"""
 import os
 import json
 import argparse
 
-sys.path.append('.')
-
-from scripts.data_convert.convert_common import FileWrapper, read_queries
-from scripts.config import TEXT_FIELD_NAME, QUESTION_FILE_JSON
+from flexneuart.io import FileWrapper
+from flexneuart.io.queries import read_queries
+from flexneuart.config import TEXT_FIELD_NAME, QUESTION_FILE_JSON
 
 parser = argparse.ArgumentParser(description='Filter queries to exclude queries from given sub-directories')
 parser.add_argument('--input_dir', metavar='input dir', help='input dir',

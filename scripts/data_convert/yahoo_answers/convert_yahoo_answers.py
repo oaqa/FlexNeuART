@@ -14,27 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys, os
+import os
 import json
-import argpars
+import argparse
 
-#
-# This collection converts data in a quasi Yahoo Answers format (with preamble removed).
-# It expects a collection produced by the Yahoo Answers collection splitter: split_yahoo_answers_input.sh
-#
+"""
+    This script converts data in a quasi Yahoo Answers format (with preamble removed).
+    It expects a collection produced by the Yahoo Answers collection splitter: split_yahoo_answers_input.sh
+"""
+from flexneuart.text_proc.formats import proc_yahoo_answers_record, SimpleXmlRecIterator
+from flexneuart.text_proc.parse import SpacyTextParser, get_retokenized
+from flexneuart.io import FileWrapper
+from flexneuart.io.qrels import gen_qrel_str
+from flexneuart.io.stopwords import read_stop_words
 
-sys.path.append('.')
-
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.eval_common import gen_qrel_str
-from scripts.data_convert.convert_common import FileWrapper, read_stop_words, \
-                                                BERT_TOK_OPT, BERT_TOK_OPT_HELP, \
-                                                OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP, \
-                                                get_retokenized, get_bert_tokenizer, SimpleXmlRecIterator,\
-                                                proc_yahoo_answers_record
-from scripts.config import SPACY_MODEL, ANSWER_FILE_JSON, BITEXT_QUESTION_PREFIX,\
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed, \
+                            OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP
+from flexneuart.config import SPACY_MODEL, ANSWER_FILE_JSON, BITEXT_QUESTION_PREFIX,\
                             QREL_FILE, BITEXT_ANSWER_PREFIX, REPORT_QTY
-from scripts.config import DOCID_FIELD, QUESTION_FILE_JSON, TEXT_FIELD_NAME, \
+from flexneuart.config import DOCID_FIELD, QUESTION_FILE_JSON, TEXT_FIELD_NAME, \
                             TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME, \
                             STOPWORD_FILE, TEXT_BERT_TOKENIZED_NAME, MAX_RELEV_GRADE
 
@@ -47,7 +45,7 @@ parser.add_argument('--out_main_path', metavar='main output directory',
 parser.add_argument('--' + OUT_BITEXT_PATH_OPT, metavar=OUT_BITEXT_PATH_OPT_META,
                     help=OUT_BITEXT_PATH_OPT_HELP,
                     type=str, default=None)
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
@@ -58,18 +56,13 @@ inp_file_name = args.input
 out_main_dir = args.out_main_path
 out_bitext_dir = arg_vars[OUT_BITEXT_PATH_OPT]
 
-bert_tokenizer = None
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME]
 # It doesn't make sense to have bitext data for a raw-text field,
 # because MGIZA needs data to be white-space tokenized,
 # however, it makes sense to create a bitext set for a BERT-tokenized field.
 bitext_fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME]
-
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = get_bert_tokenizer()
-    bitext_fields.append(TEXT_BERT_TOKENIZED_NAME)
 
 if not os.path.exists(out_main_dir):
     os.makedirs(out_main_dir)

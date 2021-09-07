@@ -18,11 +18,9 @@
 #
 
 import argparse
-import sys
 
-sys.path.append('.')
-
-from scripts.eval_common import read_run_dict, write_qrels, QrelEntry, get_sorted_scores_from_score_dict
+from flexneuart.io.runs import read_run_dict, get_sorted_scores_from_score_dict
+from flexneuart.io.qrels import write_qrels, QrelEntry
 
 parser = argparse.ArgumentParser('Generate pseudo-QRELs from a run')
 
