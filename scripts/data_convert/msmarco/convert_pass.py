@@ -20,10 +20,12 @@ import json
 import argparse
 import multiprocessing
 
-from flexneuart.text_proc import SpacyTextParser
-from flexneuart.data_convert.utils import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, get_bert_tokenizer, read_stop_words, add_retokenized_field
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
+from flexneuart.io import FileWrapper, multi_file_linegen
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, add_retokenized_field, pretokenize_url
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
+
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
     TEXT_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
@@ -39,7 +41,7 @@ parser.add_argument('--max_doc_size', metavar='max doc size bytes',
 # Default is: Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
                     type=int, default=multiprocessing.cpu_count() - 1)
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
@@ -49,11 +51,7 @@ inp_file = FileWrapper(args.input)
 out_file = FileWrapper(args.output, 'w')
 max_doc_size = args.max_doc_size
 
-
-bert_tokenizer=None
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = get_bert_tokenizer()
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)

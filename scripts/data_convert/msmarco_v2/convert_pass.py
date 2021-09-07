@@ -13,9 +13,11 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# Convert MSMARCO (v2) documents
-#
+
+"""
+    Convert MSMARCO (v2) documents
+"""
+
 import json
 import argparse
 import multiprocessing
@@ -24,11 +26,14 @@ from tqdm import tqdm
 
 ORIG_DOCID = 'orig_docid'
 
-from flexneuart.text_proc import SpacyTextParser
-from flexneuart.data_convert.utils import MSMARCO_PASS_V2_FILE_PATTERN, \
-                                                STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    multi_file_linegen, FileWrapper, read_stop_words, add_retokenized_field, get_bert_tokenizer
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_PASS_SIZE, \
+from flexneuart.io import FileWrapper, multi_file_linegen
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, add_retokenized_field
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
+
+from flexneuart.data_convert import MSMARCO_PASS_V2_FILE_PATTERN
+
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, MAX_PASS_SIZE, \
     TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
@@ -51,7 +56,7 @@ parser.add_argument('--max_pass_size', metavar='max passage size bytes',
 # Default is: Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
                     type=int, default=multiprocessing.cpu_count() - 1)
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
@@ -64,10 +69,7 @@ max_pass_size = args.max_pass_size
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
 
-bert_tokenizer=None
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = get_bert_tokenizer()
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 

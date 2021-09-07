@@ -19,10 +19,13 @@
 import json
 import argparse
 
-from flexneuart.text_proc import SpacyTextParser
-from flexneuart.data_convert.utils import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field, get_bert_tokenizer
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
+from flexneuart.io import FileWrapper
+from flexneuart.io.qrels import write_qrels, add_qrel_entry
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, Sentencizer, get_retokenized, add_retokenized_field
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
+
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, \
     TEXT_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
     REPORT_QTY, SPACY_MODEL
@@ -34,7 +37,7 @@ parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
 parser.add_argument('--min_query_token_qty', type=int, default=0,
                     metavar='min # of query tokens', help='ignore queries that have smaller # of tokens')
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
@@ -48,9 +51,7 @@ stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = get_bert_tokenizer()
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 # Input file is a TSV file
 ln = 0

@@ -23,9 +23,9 @@ import sys
 import os
 import argparse
 
-from flexneuart.data_convert.utils import read_queries
-from flexneuart.eval import read_qrels, qrel_entry2_str
-from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
+from flexneuart.io.queries import read_queries
+from flexneuart.io.qrels import read_qrels, qrel_entry2_str
+from flexneuart.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(
     description='Checking correctness of split for queries and corresponding QREL files.')

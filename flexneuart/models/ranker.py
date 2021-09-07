@@ -28,9 +28,9 @@ from flexneuart.models import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QU
                                 QUERY_ID_FIELD, DOC_ID_FIELD
 
 from scripts.py_flexneuart.utils import query_dict_to_dataentry_fields
-from scripts.py_flexneuart.cand_provider import JCandidateEntry
+from flexneuart.retrieval.cand_provider import JCandidateEntry
 from scripts.py_flexneuart.utils import DataEntryFields
-from scripts.py_flexneuart.fwd_index import get_forward_index
+from flexneuart.retrieval.fwd_index import get_forward_index
 
 JDataPointWrapper = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper')
 

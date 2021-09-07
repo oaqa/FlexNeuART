@@ -20,11 +20,12 @@ import time
 
 from tqdm import tqdm
 
-from flexneuart.data_convert.utils import unique
-from scripts.config import QUESTION_FILE_JSON, TEXT_RAW_FIELD_NAME
-from flexneuart.data_convert.utils import read_queries
+from flexneuart.data_convert import unique
+from flexneuart.config import QUESTION_FILE_JSON, TEXT_RAW_FIELD_NAME
+from flexneuart.io.queries import read_queries
 
 QUERY_BATCH_SIZE=32
+
 
 def jaccard(toks1, toks2):
     set1 = set(toks1)
@@ -34,13 +35,16 @@ def jaccard(toks1, toks2):
         return 0
     return float(len(set1.intersection(set2))) / tot_qty
 
+
 def get_token_ids(tokenizer, text):
     toks = tokenizer.tokenize(text)
     toks = [tokenizer.vocab[t] for t in toks]
     return toks
 
+
 def toks_to_str(arr):
     return ' '.join([str(k) for k in arr])
+
 
 def str_to_nmslib_vect(tokenizer, text):
     """Converts to a string that can be fed to NMSLIB"""

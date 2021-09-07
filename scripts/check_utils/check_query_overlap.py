@@ -24,8 +24,10 @@ from tqdm import tqdm
 # Second, it checks for approximate (high-enough) match with respect to BERT tokens
 #
 
-from scripts.check_utils.check_common import get_token_ids, str_to_nmslib_vect, jaccard, read_sample_queries, create_jaccard_index
-from scripts.config import get_bert_tokenizer, DOCID_FIELD, TEXT_FIELD_NAME, TEXT_RAW_FIELD_NAME
+from flexneuart.check_utils import get_token_ids, str_to_nmslib_vect, jaccard, \
+                                    read_sample_queries, create_jaccard_index
+from flexneuart.text_proc.parse import get_bert_tokenizer
+from flexneuart.config import DOCID_FIELD, TEXT_FIELD_NAME, TEXT_RAW_FIELD_NAME
 
 QUERY_BATCH_SIZE=32
 

@@ -20,9 +20,12 @@ import argparse
 import gc
 
 from flexneuart.eval import FAKE_DOC_ID
-from flexneuart.data_convert.utils import read_queries, DOCID_FIELD, FileWrapper
+from flexneuart.config import DOCID_FIELD
+from flexneuart.io import FileWrapper
+from flexneuart.io.queries import read_queries
+
 from scripts.py_flexneuart.setup import *
-from scripts.py_flexneuart.fwd_index import get_forward_index
+from flexneuart.retrieval.fwd_index import get_forward_index
 
 from tqdm import tqdm
 

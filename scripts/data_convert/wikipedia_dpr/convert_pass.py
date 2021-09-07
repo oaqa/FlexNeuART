@@ -60,7 +60,6 @@ args = parser.parse_args()
 arg_vars = vars(args)
 print(args)
 
-bert_tokenizer=None
 bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 # Lower cased

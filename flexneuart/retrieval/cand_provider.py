@@ -20,8 +20,8 @@ Access to FlexNeuART candidate providers (i.e., basic querying)
 from collections import namedtuple
 from jnius import autoclass
 
-from scripts.config import TEXT_FIELD_NAME
-from scripts.py_flexneuart.utils import DataEntryFields, query_dict_to_dataentry_fields
+from flexneuart.config import TEXT_FIELD_NAME
+from flexneuart.retrieval import DataEntryFields, query_dict_to_dataentry_fields
 
 CandidateEntry = namedtuple('CandidateEntry', ['doc_id', 'score'])
 JCandidateEntry = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry')

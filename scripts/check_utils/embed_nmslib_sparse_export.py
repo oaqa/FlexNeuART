@@ -14,21 +14,28 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# A script to convert sparse vectors export from NMSLIB into a "BSONL" format,
-# (using target/appassembler/bin/ExportToNMSLIBSparse),
-# which can be furhter processed by the creator of forward files.
-# This scripts is exclusively for demonstration and debugging purposes, i.e.,
-# to verify that the ranking components that compute the inner product between
-# sparse vectors work properly.
-#
+
+"""
+
+    A script to convert sparse vectors export from NMSLIB into a "BSONL" format,
+    (using target/appassembler/bin/ExportToNMSLIBSparse),
+    which can be furhter processed by the creator of forward files.
+    This scripts is exclusively for demonstration and debugging purposes, i.e.,
+    to verify that the ranking components that compute the inner product between
+    sparse vectors work properly.
+
+"""
+
 import argparse
 import struct
 
 from tqdm import tqdm
 
-from flexneuart.data_convert.utils import FileWrapper, DOCID_FIELD, ENDIANNES_TYPE, \
-                                                pack_sparse_vect, write_json_to_bin, \
-                                                read_and_unpack_int, read_ascii_str
+from flexneuart.io import FileWrapper
+from flexneuart.config import DOCID_FIELD
+from flexneuart.io.pack import ENDIANNES_TYPE, \
+                                pack_sparse_vect, write_json_to_bin, \
+                                read_and_unpack_int, read_ascii_str
 
 parser = argparse.ArgumentParser(description='Store previously exported sparse vectors in "BSONL" format.')
 

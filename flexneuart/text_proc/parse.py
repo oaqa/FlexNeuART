@@ -21,7 +21,7 @@ import urllib
 from flexneuart.config import BERT_BASE_MODEL
 
 """
-    Various procedureds/classes to parse text (including basic tokenization)
+    Various procedureds/classes to parse text (including tokenization)
 """
 
 SPACY_POS = 'tagger'
