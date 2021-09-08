@@ -18,7 +18,7 @@ if [ "$help" = "1" ] ; then
   exit 1
 fi
 
-pip install --upgrade -r requirements.txt
+#pip install --upgrade -r requirements.txt
 
 python -m spacy download en_core_web_sm
 
