@@ -5,15 +5,15 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
-from flexneuart import models
+from flexneuart.models import register
 
 import torch
 import torch.nn.functional as F
 
-from flexneuart.models.base_bert import BertSplitMaxChunkRanker
+from flexneuart.models.base_bert_split_max_chunk import BertSplitMaxChunkRanker
 from flexneuart.models.cedr import SimmatModule, PACRRConvMax2dModule
 
-@models.register('cedr_pacrr')
+@register('cedr_pacrr')
 class CedrPacrrRanker(BertSplitMaxChunkRanker):
     """
         CEDR PACRR model.

@@ -14,14 +14,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import os
-import json
-import argparse
 
 """
     This script converts data in a quasi Yahoo Answers format (with preamble removed).
     It expects a collection produced by the Yahoo Answers collection splitter: split_yahoo_answers_input.sh
 """
+
+import os
+import json
+import argparse
+
+
 from flexneuart.text_proc.formats import proc_yahoo_answers_record, SimpleXmlRecIterator
 from flexneuart.text_proc.parse import SpacyTextParser, get_retokenized
 from flexneuart.io import FileWrapper

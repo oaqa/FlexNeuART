@@ -20,7 +20,7 @@ import argparse
 
 from tqdm import tqdm
 
-from flexneuart.data_convert import jsonl_gen
+from flexneuart.io.utils import jsonl_gen
 from flexneuart.models.train.data import VocabBuilder
 
 parser = argparse.ArgumentParser('Build vocabularies from several processed fiels')

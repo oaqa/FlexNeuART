@@ -14,15 +14,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import numpy as np
-import json
-import argparse
-import multiprocessing
 
 """
     Convert a Wikipedia corpus used in the Facebook DPR project:
     https://github.com/facebookresearch/DPR/tree/master/data
-    
+
     Optionally, one can specify a subset of the corpus by providing
     a numpy array with passage IDs to include (otherwise we will
     use all the passages).
@@ -30,6 +26,12 @@ import multiprocessing
     The input is a TAB-separated file with three columns: id, passage text, title
     This conversion script preserves original passages, but it also tokenizes them.
 """
+
+import numpy as np
+import json
+import argparse
+import multiprocessing
+
 
 from flexneuart.io import FileWrapper
 from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE

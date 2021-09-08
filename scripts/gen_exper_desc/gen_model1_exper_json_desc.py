@@ -14,10 +14,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import os, sys, json, re
 
-from scripts.gen_exper_desc.gen_desc_common import gen_rerank_descriptors, BaseParser
-from scripts.config import TEXT_FIELD_NAME
+from flexneuart.gen_exper_desc import gen_rerank_descriptors, BaseParser
+from flexneuart.config import TEXT_FIELD_NAME
 
 class ExtrModel1JsonGEN:
 

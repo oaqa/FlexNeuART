@@ -36,18 +36,17 @@ def get_model_param_dict(args, model_class):
        Limitation: it supports only regular arguments.
     """
     param_dict = {}
-    arg_vars = vars(args)
     model_init_args = inspect.signature(model_class).parameters.keys()
 
-    for param_name, param_val in arg_vars.items():
+    for param_name, param_val in vars(args).items():
         if param_name.startswith(MODEL_PARAM_PREF):
             param_name = param_name[len(MODEL_PARAM_PREF):]
             if param_name in model_init_args:
-                arg_vars[param_name] = param_val
+                param_dict[param_name] = param_val
             else:
                 raise Exception(f'{model_class} does not have parameter {param_name}, but it is provided via arguments!')
 
-    return arg_vars
+    return param_dict
 
 
 """

@@ -9,14 +9,15 @@
 #
 import torch
 
-from flexneuart import models
+import flexneuart.models.base_bert_split_max_chunk
+from flexneuart.models import register
 import flexneuart.models.base_bert as base_bert
 
 VANILLA_BERT='vanilla_bert'
 
 
-@models.register(VANILLA_BERT)
-class VanillaBertRanker(base_bert.BertSplitMaxChunkRanker):
+@register(VANILLA_BERT)
+class VanillaBertRanker(flexneuart.models.base_bert_split_max_chunk.BertSplitMaxChunkRanker):
     """
         Vanilla BERT Ranker.
 
@@ -31,10 +32,6 @@ class VanillaBertRanker(base_bert.BertSplitMaxChunkRanker):
         print('Dropout', self.dropout)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
-
-    @staticmethod
-    def model_name():
-        return VANILLA_BERT
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         cls_reps, _, _ = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)

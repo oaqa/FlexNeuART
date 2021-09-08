@@ -19,28 +19,30 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 
-#
-# This utility scripts checks for possible leakage across different data splits.
-# Importantly it works only for bitext. In the context of a community QA collection,
-# such bitext arises naturally. For regular document collections, a pseudo-bitext
-# needs to be created user the scripts/giza/export_bitext_plain.sh:
-# importantly one needs to use the text_raw field (and text as an index field)
-# and use 0 for the  "max query to doc word ratio" so documents are not split
-# into chunks.
-#
+"""
+   
+    This utility scripts checks for possible leakage across different data splits.
+    Importantly it works only for bitext. In the context of a community QA collection,
+    such bitext arises naturally. For regular document collections, a pseudo-bitext
+    needs to be created user the scripts/giza/export_bitext_plain.sh:
+    importantly one needs to use the text_raw field (and text as an index field)
+    and use 0 for the  "max query to doc word ratio" so documents are not split
+    into chunks.
+   
 
-# Specifically, we search for very similar question-answer pairs, which might
-# be duplicates or near duplicates. Hence, we check the following:
-# 1. Are there very similar questions?
-# 2. For sufficiently similar questions, e.g., Jaccard >= 0.75, we check
-#    all pairwise similarities among all relevant answers.
-#
-# By default this method uses brute-force search with the Jaccard similarity.
-# The exhaustiveness of the search ensures we won't miss anything. However, for quicker-and-easier
-# checks, one can use HNSW with sufficently high values of M (>= 30), efConstruction (>=200),
-# and efSearch (>=1000). These parameters might need to be bumped up for "harder" collections
-# and brute-force search is certainly a safer option.
-#
+    Specifically, we search for very similar question-answer pairs, which might
+    be duplicates or near duplicates. Hence, we check the following:
+    1. Are there very similar questions?
+    2. For sufficiently similar questions, e.g., Jaccard >= 0.75, we check
+       all pairwise similarities among all relevant answers.
+   
+    By default this method uses brute-force search with the Jaccard similarity.
+    The exhaustiveness of the search ensures we won't miss anything. However, for quicker-and-easier
+    checks, one can use HNSW with sufficently high values of M (>= 30), efConstruction (>=200),
+    and efSearch (>=1000). These parameters might need to be bumped up for "harder" collections
+    and brute-force search is certainly a safer option.
+   
+"""
 
 from flexneuart.check_utils import get_token_ids, QUERY_BATCH_SIZE, jaccard, \
                                    read_sample_queries, create_jaccard_index, str_to_nmslib_vect

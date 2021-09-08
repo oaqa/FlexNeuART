@@ -18,18 +18,18 @@ import sys
 import argparse
 import torch
 
-from scripts.featextr_server.python_generated.protocol.ttypes import TextEntryRaw
-from scripts.featextr_server.base_server import BaseQueryHandler, start_query_server
+from flexneuart.featextr_server.python_generated.protocol.ExternalScorer import TextEntryRaw
+from flexneuart.featextr_server.base import BaseQueryHandler, start_query_server
 
 import flexneuart.models.model_init_utils as model_init_utils
 import flexneuart.models.train.data as data
 
-from flexneuart.models import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
-                                QUERY_ID_FIELD, DOC_ID_FIELD
+from flexneuart.models.train.data import DOC_TOK_FIELD, DOC_MASK_FIELD, \
+    QUERY_TOK_FIELD, QUERY_MASK_FIELD, QUERY_ID_FIELD, DOC_ID_FIELD
 
 DEFAULT_BATCH_SIZE = 32
 
-class CedrQueryHandler(BaseQueryHandler):
+class RankQueryHandler(BaseQueryHandler):
     # Exclusive==True means single-threaded processing, which seems to be necessary here (there were hang ups otherwise)
     def __init__(self,
                     model_list,
@@ -201,10 +201,10 @@ if __name__ == '__main__':
             model_list.append(model)
 
     multi_threaded = False  # if we set to True, we can often run out of CUDA memory.
-    start_query_server(args.host, args.port, multi_threaded, CedrQueryHandler(model_list=model_list,
-                                                                           batch_size=args.batch_size,
-                                                                           debug_print=args.debug_print,
-                                                                           device_name=args.device_name,
-                                                                           max_query_len=args.max_query_len,
-                                                                           max_doc_len=args.max_doc_len,
-                                                                           exclusive=not multi_threaded))
+    start_query_server(args.host, args.port, multi_threaded, RankQueryHandler(model_list=model_list,
+                                                                              batch_size=args.batch_size,
+                                                                              debug_print=args.debug_print,
+                                                                              device_name=args.device_name,
+                                                                              max_query_len=args.max_query_len,
+                                                                              max_doc_len=args.max_doc_len,
+                                                                              exclusive=not multi_threaded))

@@ -14,15 +14,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+"""
+    This script checks for possibly overlapping queries in different folders.
+    First, it checks for exact match with respect to tokenized text.
+    Second, it checks for approximate (high-enough) match with respect to BERT tokens
+"""
+
 import argparse
 import numpy as np
 from tqdm import tqdm
 
-#
-# This script checks for possibly overlapping queries in different folders.
-# First, it checks for exact match with respect to tokenized text.
-# Second, it checks for approximate (high-enough) match with respect to BERT tokens
-#
+
 
 from flexneuart.check_utils import get_token_ids, str_to_nmslib_vect, jaccard, \
                                     read_sample_queries, create_jaccard_index

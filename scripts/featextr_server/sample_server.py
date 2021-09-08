@@ -17,9 +17,8 @@
 # This is a sample server that illustrates how to generate query-document scores
 # and pass them to the client.
 #
-import sys
 
-from scripts.featextr_server.base_server import BaseQueryHandler, start_query_server, \
+from flexneuart.featextr_server.base import BaseQueryHandler, start_query_server, \
     SAMPLE_HOST, SAMPLE_PORT
 
 

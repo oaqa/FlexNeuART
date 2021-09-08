@@ -14,11 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-#
-# Checking correctness of the split for queries and corresponding QREL files.
-# Basically this is to double-check if the split queries script did the right job.
-# Instead of using this directly, one can use a convenience wrapper shell script check_split_queries.sh.
-#
+"""
+   
+    Checking correctness of the split for queries and corresponding QREL files.
+    Basically this is to double-check if the split queries script did the right job.
+    Instead of using this directly, one can use a convenience wrapper shell script check_split_queries.sh.
+   
+"""
 import sys
 import os
 import argparse

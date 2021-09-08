@@ -17,16 +17,16 @@
 """
 Access to FlexNeuART candidate providers (i.e., basic querying)
 """
+
 from collections import namedtuple
 from jnius import autoclass
 
 from flexneuart.config import TEXT_FIELD_NAME
-from flexneuart.retrieval import DataEntryFields, query_dict_to_dataentry_fields
+from flexneuart.retrieval.utils import query_dict_to_dataentry_fields, DataEntryFields
 
 CandidateEntry = namedtuple('CandidateEntry', ['doc_id', 'score'])
 JCandidateEntry = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateEntry')
 JCandidateProvider = autoclass('edu.cmu.lti.oaqa.flexneuart.cand_providers.CandidateProvider')
-
 
 PROVIDER_TYPE_LUCENE = JCandidateProvider.CAND_TYPE_LUCENE
 PROVIDER_TYPE_NMSLIB = JCandidateProvider.CAND_TYPE_NMSLIB

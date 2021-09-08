@@ -13,9 +13,11 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A simple script to remove unnecessary fields from an input file (to make it leaner and smaller).
-# The document ID field will not be removed.
+
+"""
+    A simple script to remove unnecessary fields from an input file (to make it leaner and smaller).
+    The document ID field will not be removed.
+"""
 
 import json
 import argparse

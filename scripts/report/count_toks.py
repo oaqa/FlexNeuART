@@ -16,7 +16,7 @@
 #
 import argparse
 
-from flexneuart.io import jsonl_gen
+from flexneuart.io.utils import jsonl_gen
 
 parser = argparse.ArgumentParser(description='Count tokens and number of entries in JSONL')
 

@@ -16,6 +16,9 @@ import argparse
 import torch.distributed as dist
 
 import flexneuart.models.train.data as data
+from flexneuart.models import model_registry
+from flexneuart.models.vanilla_bert import VANILLA_BERT
+
 
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import *
@@ -23,11 +26,13 @@ from flexneuart.models.train.data import QUERY_ID_FIELD, DOC_ID_FIELD, CAND_SCOR
                                     DOC_TOK_FIELD, DOC_MASK_FIELD, \
                                     QUERY_TOK_FIELD, QUERY_MASK_FIELD
 
-from flexneuart.models import MODEL_PARAM_PREF
+from flexneuart.models.base import MODEL_PARAM_PREF
 
 import flexneuart.models.model_init_utils as model_init_utils
 
-from flexneuart.eval import METRIC_LIST, read_qrels_dict, read_run_dict, get_eval_results
+from flexneuart.io.runs import read_run_dict
+from flexneuart.io.qrels import read_qrels_dict
+from flexneuart.eval import METRIC_LIST, get_eval_results
 
 from flexneuart.config import DEVICE_CPU
 
@@ -70,6 +75,38 @@ TrainParams = namedtuple('TrainParams',
                      'shuffle_train',
                      'valid_type',
                      'use_external_eval', 'eval_metric'])
+
+def add_model_init_basic_args(parser):
+
+    model_list = list(model_registry.registered.keys())
+    parser.add_argument('--model', metavar='model',
+                        help='a model to use: ' + ' '.join(),
+                        choices=model_list, default=VANILLA_BERT)
+
+    parser.add_argument('--init_model_weights',
+                        metavar='model weights',
+                        help='initial model weights will be loaded in non-strict mode',
+                        type=argparse.FileType('rb'), default=None)
+
+    parser.add_argument('--init_model',
+                        metavar='initial model',
+                        help='previously serialized model',
+                        type=argparse.FileType('rb'), default=None)
+
+    parser.add_argument('--max_query_len', metavar='max. query length',
+                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
+                        help='max. query length')
+
+    parser.add_argument('--max_doc_len', metavar='max. document length',
+                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
+                        help='max. document length')
+
+    parser.add_argument('--device_name', metavar='CUDA device name or cpu', default='cuda:0',
+                        help='The name of the CUDA device to use')
+
+
+
+
 
 def avg_model_params(model, amp):
     """
@@ -637,7 +674,6 @@ def main_cli():
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
 
-
     parser.add_argument('--valid_run_dir', metavar='', type=str, default=None, help='directory to store predictions on validation set')
     parser.add_argument('--valid_checkpoints', metavar='', type=str, default=None, help='validation checkpoints (in # of batches)')
 
@@ -664,6 +700,7 @@ def main_cli():
 
     # This hack copies max query and document length parameters to the model space parameters
     # maybe some other approach is more elegant, but this one should at least work
+    # NEED TO USE THIS DIRECTLY
     setattr(args, f'{MODEL_PARAM_PREF}max_query_len', args.max_query_len)
     setattr(args, f'{MODEL_PARAM_PREF}max_doc_len', args.max_doc_len)
 

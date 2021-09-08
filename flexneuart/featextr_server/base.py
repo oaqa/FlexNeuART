@@ -1,4 +1,3 @@
-import sys
 #
 #  Copyright 2014+ Carnegie Mellon University
 #
@@ -18,8 +17,8 @@ import sys
 # ./src/main/java/edu/cmu/lti/oaqa/flexneuart/letor/external/protocol.thrift
 #
 
-from scripts.featextr_server.python_generated.protocol.ExternalScorer import Processor
-from scripts.featextr_server.python_generated.protocol.ttypes import ScoringException
+from flexneuart.featextr_server.python_generated.protocol.ExternalScorer import Processor
+from flexneuart.featextr_server.python_generated.protocol.ttypes import ScoringException
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport

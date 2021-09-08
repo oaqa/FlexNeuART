@@ -5,15 +5,15 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
-from flexneuart import models
+from flexneuart.models import register
 
 import torch
 
-from flexneuart.models.base_bert import BertSplitMaxChunkRanker
+from flexneuart.models.base_bert_split_max_chunk import BertSplitMaxChunkRanker
 from flexneuart.models.cedr import SimmatModule, DRMMLogCountHistogram
 
 
-@models.register('cedr_drmm')
+@register('cedr_drmm')
 class CedrDrmmRanker(BertSplitMaxChunkRanker):
     """
         CEDR DRMM model.

@@ -13,10 +13,12 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# This script generates pseudo-label QREL files from a an existing run-file.
-#
 
+"""
+   
+    This script generates pseudo-label QREL files from a an existing run-file.
+   
+"""
 import argparse
 
 from flexneuart.io.runs import read_run_dict, get_sorted_scores_from_score_dict

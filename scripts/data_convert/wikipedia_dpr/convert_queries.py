@@ -14,6 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+"""
+    This script converts raw query files from DPR repository into the FlexNeuArt internal format.
+
+    In addition, it can generate BITEXT data to train Model 1.
+"""
+
 import os
 import json
 import argparse
@@ -33,12 +40,6 @@ from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, \
     BITEXT_QUESTION_PREFIX, BITEXT_ANSWER_PREFIX,\
     ANSWER_LIST_FIELD_NAME
 from flexneuart.data_convert.wikipedia_dpr import dpr_json_reader, get_passage_id
-
-"""
-    This script converts raw query files from DPR repository into the FlexNeuArt internal format.
-    
-    In addition, it can generate BITEXT data to train Model 1.
-"""
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Script converts raw query files from the DPR repository '

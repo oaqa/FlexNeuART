@@ -13,10 +13,11 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A script to convert passages/documents or queries to dense vectors using ANCE models
-# These vectors are stored in "BSONL" format, which can be used to create a forward index.
-#
+
+"""
+    A script to convert passages/documents or queries to dense vectors using ANCE models
+    These vectors are stored in "BSONL" format, which can be used to create a forward index.
+"""
 import argparse
 import os
 import torch

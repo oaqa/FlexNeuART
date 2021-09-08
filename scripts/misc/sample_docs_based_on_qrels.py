@@ -13,13 +13,16 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A simple script that
-# 1. reads QRELs and memorizes relevant documents
-# 2. scans an input part, e.g., a bunch of passages
-# 3. saves all the relevant ones
-# 4. optionally save a sample of potentially non-relevant documents.
-#
+
+"""
+   
+    A simple script that
+    1. reads QRELs and memorizes relevant documents
+    2. scans an input part, e.g., a bunch of passages
+    3. saves all the relevant ones
+    4. optionally save a sample of potentially non-relevant documents.
+   
+"""
 import sys
 import os
 import random

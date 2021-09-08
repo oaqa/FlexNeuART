@@ -14,21 +14,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# Adding predicted query fields for the MS MARCO *DOCUMENT* collection.
-# https://github.com/castorini/docTTTTTquery
-#
-# It reads all the predictions into memory
-#
+"""
+    Adding predicted query fields for the MS MARCO *DOCUMENT* collection.
+    https://github.com/castorini/docTTTTTquery
+   
+    It reads all the predictions into memory
+"""
 import argparse
 import json
 
 from tqdm import tqdm
 
-from flexneuart.text_proc import SpacyTextParser
-from flexneuart.data_convert.utils import read_stop_words, jsonl_gen, FileWrapper, STOPWORD_FILE
-from scripts.config import SPACY_MODEL
+from flexneuart.text_proc.parse import SpacyTextParser
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.io import jsonl_gen, FileWrapper
+from flexneuart.config import SPACY_MODEL
 
-from scripts.config import DOCID_FIELD, TEXT_FIELD_NAME
+from flexneuart.config import DOCID_FIELD, TEXT_FIELD_NAME
 
 DOC2QUERY_FIELD_TEXT = 'doc2query_text'
 DOC2QUERY_FIELD_TEXT_UNLEMM = 'doc2query_text_unlemm'

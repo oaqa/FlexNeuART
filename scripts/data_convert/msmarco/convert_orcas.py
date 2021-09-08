@@ -13,11 +13,13 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A file to generate queries & qrels from the ORCAS query collection:
-# ORCAS: 18 Million Clicked Query-Document Pairs for Analyzing Search.
-# Nick Craswell Daniel Campos Bhaskar Mitra Emine Yilmaz Bodo von Billerbeck.
-#
+
+"""
+    A file to generate queries & qrels from the ORCAS query collection:
+    ORCAS: 18 Million Clicked Query-Document Pairs for Analyzing Search.
+    Nick Craswell Daniel Campos Bhaskar Mitra Emine Yilmaz Bodo von Billerbeck.
+   
+"""
 import os
 import json
 import argparse
