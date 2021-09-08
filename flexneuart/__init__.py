@@ -1,24 +1,35 @@
 import os
-import glob
+
+import flexneuart
 
 from .utils import *
 
-def configure_classpath(source_root):
-    """Add the latest FlexNeuART jar to the path.
+# Version *MUST* be in Sync with pom.xml
+__version__ = '2.0'
 
-       This function is based on Pyserini code https://github.com/castorini/pyserini
+def configure_classpath_auto():
+    """Automatically configures the class path (see configure_classpath)."""
+    root_dir = os.path.dirname(flexneuart.__file__)
+    configure_classpath(os.path.join(root_dir, 'resources/jars/'))
+
+
+def configure_classpath(source_root):
+    """Add the FlexNeuART jar to the path. The version of the jar *MUST* match
+       the version of the package.
+
+       This function is inspired by Pyserini code https://github.com/castorini/pyserini
 
     :param source_root: source root
     """
 
     from jnius_config import set_classpath
 
-    paths = glob.glob(os.path.join(source_root, 'FlexNeuART-*-fatjar.jar'))
-    if not paths:
-        raise Exception('No matching jar file found in {}'.format(os.path.abspath(source_root)))
+    jar_path = os.path.join(source_root, f'FlexNeuART-{__version__}-fatjar.jar')
+    if not os.path.exists(jar_path):
+        raise Exception(f'JAR file {jar_path} is missing!')
 
-    latest = max(paths, key=os.path.getctime)
-    set_classpath(latest)
+    set_classpath(jar_path)
+
 #
 # The Register class is taken from OpenNIR:
 # https://github.com/Georgetown-IR-Lab/OpenNIR
