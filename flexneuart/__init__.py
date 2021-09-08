@@ -5,7 +5,7 @@ import flexneuart
 from .utils import *
 
 # Version *MUST* be in Sync with pom.xml
-__version__ = '2.0'
+__version__ = '1.1'
 
 def configure_classpath_auto():
     """Automatically configures the class path (see configure_classpath)."""

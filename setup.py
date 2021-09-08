@@ -17,7 +17,7 @@ jar_file=f'resources/jars/FlexNeuART-{__version__}-fatjar.jar'
 EXCLUDE_DIRS = 'build data dist lemur-code* lib scripts src target testdata trec_eval*'.split()
 
 setup(
-    name='FlexNeuART',
+    name=ROOT_DIR_NAME,
     version=__version__,
     description='FlexNeuART (flex-noo-art) is a Flexible classic and NeurAl Retrieval Toolkit',
     python_requires='>=3.6',
