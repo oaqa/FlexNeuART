@@ -1,6 +1,6 @@
 #!/bin/bash -e
-. scripts/common_proc.sh
-. scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "BITEXT_SUBDIR"
@@ -53,7 +53,7 @@ fi
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 
-scripts/data_convert/split_queries.py \
+./data_convert/split_queries.py \
   --seed $seed \
   --src_dir "$inputDataDir/$inputPart" \
   --dst_dir "$inputDataDir" \

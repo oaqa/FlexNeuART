@@ -1,7 +1,7 @@
 #!/bin/bash -e
 # The main script to convert MSMARCO passage collection 
 # It is called after download_msmarco_pass.sh
-. scripts/data_convert/common_conv.sh
+source ./data_convert/common_conv.sh
 
 checkVarNonEmpty "ANSWER_FILE_JSONL"
 checkVarNonEmpty "QUESTION_FILE_JSONL"
@@ -15,13 +15,13 @@ for part in pass train dev eval dev.small eval.small test2019 test2020 ; do
 done
 
 for year in 2019 2020 ; do
-  python -u scripts/data_convert/msmarco/convert_queries.py \
+  python -u ./data_convert/msmarco/convert_queries.py \
     $BERT_TOK_OPT \
     --input  "$src/msmarco-test${year}-queries.tsv" \
     --output "$inputDataDir/test${year}/$QUESTION_FILE_JSONL"
 done
 
-python -u scripts/data_convert/msmarco/convert_pass.py \
+python -u ./data_convert/msmarco/convert_pass.py \
     $BERT_TOK_OPT \
     --input "$src/collection.tsv.gz"  \
     --output "$inputDataDir/pass/${ANSWER_FILE_JSONL}.gz"
@@ -32,7 +32,7 @@ for part in train dev dev.small eval eval.small ; do
     cp "$src/qrels.$part.tsv" "$inputDataDir/$part/$QREL_FILE"
   fi
 
-  python -u scripts/data_convert/msmarco/convert_queries.py \
+  python -u ./data_convert/msmarco/convert_queries.py \
     $BERT_TOK_OPT \
     --input  "$src/queries.$part.tsv" \
     --output "$inputDataDir/$part/$QUESTION_FILE_JSONL"

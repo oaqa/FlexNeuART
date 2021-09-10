@@ -6,7 +6,7 @@ dstDir="$1"
 
 [ -d "$dstDir" ] || { echo "Not a directory: $dstDir (1st arg)" ; exit 1 ; }
 
-source scripts/common_proc.sh
+source ./common_proc.sh
 
 cd "$dstDir"
 
@@ -38,5 +38,7 @@ mv 'Passage ANCE(FirstP) Checkpoint' Passage_ANCE_FirstP_Checkpoint
 
 # NQ
 wget $storePref/nq.cp
-
+# Trivia QA
 wget $storePref/trivia.cp
+
+
