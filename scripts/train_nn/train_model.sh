@@ -8,8 +8,8 @@
 set -eo pipefail
 
 
-. ./common_proc.sh
-. ./config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
@@ -200,7 +200,7 @@ fi
 
 echo "=========================================================================="
 
-python -u scripts/train_nn/train_model.py \
+python -u ./train_nn/train_model.py \
   $initModelArgs \
   $ampArg \
   $jsonConfArg \

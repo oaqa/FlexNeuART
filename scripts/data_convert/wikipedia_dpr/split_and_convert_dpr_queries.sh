@@ -5,8 +5,8 @@
 #    It is possible to specify partition sizes.
 # 2. then it converts all the queries
 #
-source scripts/config.sh
-source scripts/common_proc.sh
+source ./config.sh
+source ./common_proc.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
@@ -64,7 +64,7 @@ fi
 
 cp "$downloadDir/${colType}_dev.json.gz" "$inputRawDir/${colType}_dev_official.json.gz"
 
-scripts/data_convert/wikipedia_dpr/split_dpr_raw_queries.py \
+./data_convert/wikipedia_dpr/split_dpr_raw_queries.py \
   --seed $seed \
   --src_file "$downloadDir/${colType}_train.json.gz" \
   --partitions_names "$partNames" \
@@ -83,7 +83,7 @@ for part in bitext train_fusion dev dev_official ; do
   else
     bitextPathOpt=""
   fi
-  scripts/data_convert/wikipedia_dpr/convert_queries.py \
+  ./data_convert/wikipedia_dpr/convert_queries.py \
     --bert_tokenize \
     --input "$inputRawDir/${colType}_${part}.json.gz" \
     --part_type $part \

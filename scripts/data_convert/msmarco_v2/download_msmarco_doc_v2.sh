@@ -6,7 +6,7 @@ dstDir="$1"
 
 [ -d "$dstDir" ] || { echo "Not a directory: $dstDir (1st arg)" ; exit 1 ; }
 
-source scripts/common_proc.sh
+source ./common_proc.sh
 
 check_has_azcopy
 
