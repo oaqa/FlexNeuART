@@ -7,8 +7,8 @@
 # "transplating" runs within the *SAME* collection.
 set -eo pipefail
 
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"

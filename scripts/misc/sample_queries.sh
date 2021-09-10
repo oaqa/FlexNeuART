@@ -1,6 +1,6 @@
 #!/bin/bash -e
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "QREL_FILE"
@@ -66,7 +66,7 @@ echo "Seed:              $seed"
 echo "# of queries:      $qty"
 echo "============================="
 
-scripts/data_convert/sample_queries.py \
+./data_convert/sample_queries.py \
   --data_dir "$inputDataDir" \
   --input_subdir $inputSubdir \
   --out_subdir $outSubdir --qty $qty
