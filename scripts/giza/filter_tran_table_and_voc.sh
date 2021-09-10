@@ -1,6 +1,6 @@
 #!/bin/bash
-source scripts/config.sh
-source scripts/common_proc.sh
+source ./config.sh
+source ./common_proc.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "FWD_INDEX_SUBDIR"
@@ -62,7 +62,7 @@ dirSrc="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$model1SubDir/$field.orig"
 dirDst="$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$model1SubDir/$field"
 
 echo "========================================================================================================================="
-echo " This script uses (but doesn't modify), e.g. the data created by scripts/giza/create_tran.sh which is placed in directory:"
+echo " This script uses (but doesn't modify), e.g. the data created by ./giza/create_tran.sh which is placed in directory:"
 echo "$dirSrc"
 echo "The filtered output is stored in the following directory:"
 echo "$dirDst"

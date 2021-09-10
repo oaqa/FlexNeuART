@@ -2,9 +2,9 @@
 # Set this var before common scripts
 outSubdir="cedr_train"
 
-source scripts/common_proc.sh
-source scripts/config.sh
-source scripts/export_train/export_common.sh
+source ./common_proc.sh
+source ./config.sh
+source ./export_train/export_common.sh
 
 
 checkVarNonEmpty "COLLECT_ROOT"

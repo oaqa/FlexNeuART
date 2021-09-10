@@ -6,8 +6,8 @@
 # There is a parameter defining how much longer document chunks can be compared
 # to queries (in terms of the relative number of words)
 
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "BITEXT_SUBDIR"

@@ -1,11 +1,10 @@
 #!/bin/bash -e
 
-. scripts/common_proc.sh
-
 # Downloads MS MARCO QA and NLG dataset v2.1
 # to collections directory
 
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_RAW_SUBDIR"

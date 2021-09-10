@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"

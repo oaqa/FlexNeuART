@@ -5,8 +5,8 @@
 # and produce more fine-grained data
 
 
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
