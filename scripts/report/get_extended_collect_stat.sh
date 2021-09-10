@@ -57,7 +57,7 @@ fi
 colRoot="$COLLECT_ROOT/$collect"
 fwdIndexHead="$colRoot/$FWD_INDEX_SUBDIR/$tokFieldName"
 inpDataRoot="$colRoot/$INPUT_DATA_SUBDIR/"
-inf0=`head -1 $fwdIndexHead`
+inf0=`head -2 $fwdIndexHead|tail -1`
 dummy=' ' read -r -a indQtys <<< "$inf0"
 
 docQty=${indQtys[0]}

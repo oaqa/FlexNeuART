@@ -8,23 +8,28 @@ from .utils import *
 __version__ = '1.1'
 
 
-def configure_classpath_auto():
+def get_jars_location():
     """
-        Automatically configures the class path (see configure_classpath).
+        Return the location of the JAR files for installed library.
     """
     root_dir = os.path.dirname(flexneuart.__file__)
-    configure_classpath(os.path.join(root_dir, 'resources/repo/'))
+    return os.path.join(root_dir, 'resources/jars/')
 
 
-def configure_classpath(jar_dir):
+def configure_classpath(jar_dir=None):
     """
         Add the FlexNeuART jar to the path. The version of the jar *MUST* match
-       the version of the package.
+       the version of the package. If the directory is explicitly specified, we
+       use jar from that directory. Otherwise, we determine it automatically
+       (via location of installed packages).
 
         :param jar_dir: a directory with the JAR file
     """
 
     from jnius_config import set_classpath
+
+    if jar_dir is None:
+        jar_dir = get_jars_location()
 
     jar_path = os.path.join(jar_dir, f'FlexNeuART-{__version__}-fatjar.jar')
     if not os.path.exists(jar_path):
