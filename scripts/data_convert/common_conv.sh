@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-source scripts/config.sh
-source scripts/common_proc.sh
+source ./config.sh
+source ./common_proc.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
