@@ -1,6 +1,6 @@
 #!/bin/bash
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 checkVarNonEmpty "REP_SUBDIR"
 checkVarNonEmpty "COLLECT_ROOT"
@@ -105,7 +105,7 @@ bestSubdir=""
 
 for ((ivar=1;;++ivar)) ; do
 
-  stat=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
+  stat=`./exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
 
   if [ "stat" = "#ERR" ] ; then
     echo "Failed to get entry $ivar from experiment config $experDescPath"
@@ -114,8 +114,8 @@ for ((ivar=1;;++ivar)) ; do
     break
   else
 
-    testPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
-    experSubdir=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $EXPER_SUBDIR_PARAM`
+    testPart=`$currDir/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
+    experSubdir=`$currDir/grep_file_for_val.py "$tmpConf" $EXPER_SUBDIR_PARAM`
     if [ "$testPart" = "" ] ; then
       testPart=$defaultTestPart
     fi
@@ -154,13 +154,13 @@ for ((ivar=1;;++ivar)) ; do
 
     for f in `ls -tr out_${fltN}.rep` ; do
       top_k=`echo $f|sed 's/out_//'|sed 's/.rep//'`
-      query_qty=`$currDir/scripts/grep_file_for_val.py "$f" "# of queries"`
+      query_qty=`$currDir/grep_file_for_val.py "$f" "# of queries"`
 
       row="$testPart\t$experSubdir\t$top_k\t$query_qty"
       for ((i=0;i<${#metrListGrep[*]};i++)) ; do
         metrGrepName=${metrListGrep[$i]}
         metrPrintName=${metrListPrint[$i]}
-        val=`$currDir/scripts/grep_file_for_val.py "$f" "$metrGrepName" "1"`
+        val=`$currDir/grep_file_for_val.py "$f" "$metrGrepName" "1"`
         if [ "$metrGrepName" = "$printBestMetr" -o "$metrPrintName" = "$printBestMetr" ] ; then
           cmp=`isGreater "$val" "$bestVal"`
           if [ "$bestSubdir" = "" -o "$cmp" = "1" ] ; then

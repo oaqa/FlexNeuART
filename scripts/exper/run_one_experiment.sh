@@ -1,6 +1,6 @@
 #!/bin/bash
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 # This script works in two modes:
 # 1. Train and test the model (if the final model is not specified)
@@ -446,12 +446,12 @@ if [ "$testOnly" = "0" ] ; then
     # We simply specify only one value in this case, namely, $trainCandQty
     if [ "$useLMART" = "1" ] ; then
       checkVarNonEmpty "numTrees"
-      scripts/letor/ranklib_train_lmart.sh "${fullOutPrefTrain}_${trainCandQty}.feat" \
+      ./letor/ranklib_train_lmart.sh "${fullOutPrefTrain}_${trainCandQty}.feat" \
                                             "$modelFinal" \
                                             "$numTrees" "$metricType" 2>&1 | tee -a "$modelLogFile"
     else
       checkVarNonEmpty "numRandRestart"
-      scripts/letor/ranklib_train_coordasc.sh "${fullOutPrefTrain}_${trainCandQty}.feat" "$modelFinal" \
+      ./letor/ranklib_train_coordasc.sh "${fullOutPrefTrain}_${trainCandQty}.feat" "$modelFinal" \
                                             "$numRandRestart" "$metricType" 2>&1 | tee -a "$modelLogFile"
     fi
 
@@ -490,7 +490,7 @@ if [ "$skipEval" != "1" ] ; then
     echo "$SEP_DEBUG_LINE"
     reportPref="${reportDir}/out_${oneN}"
 
-    scripts/exper/eval_output.py "$qrels"  "${trecRunDir}/run_${oneN}" "$reportPref" "$oneN"
+    ./exper/eval_output.py "$qrels"  "${trecRunDir}/run_${oneN}" "$reportPref" "$oneN"
   done
 
   echo "Bzipping trec_eval output in the directory: ${reportDir}"

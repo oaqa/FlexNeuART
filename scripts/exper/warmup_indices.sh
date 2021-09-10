@@ -2,8 +2,8 @@
 # Just a silly script to warm up forward index,
 # b/c otherwise it sometimes takes too long to
 # warm up through the normal course of re-ranking
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 

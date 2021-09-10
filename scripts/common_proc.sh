@@ -179,7 +179,7 @@ function startRankServer {
   checkVarNonEmpty "serverPidFile"
 
   # Note -u
-  python -u scripts/featextr_server/rank_server.py \
+  python -u ./featextr_server/rank_server.py \
     --device_name $deviceName \
     --port $port \
     $initModelArg \

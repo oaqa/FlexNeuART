@@ -8,8 +8,8 @@
 set -eo pipefail
 
 
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "DERIVED_DATA_SUBDIR"
