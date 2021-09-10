@@ -8,5 +8,8 @@ run.txt
 main.build.log
 collections*
 pytorch-pretrained-BERT-mod
+flexneuart/resources/repo
+flexneuart/resources/lib
+flexneuart/resources/bin
 trec_eval
 trec_eval-9.0.7

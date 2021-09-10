@@ -17,11 +17,14 @@
 """
     This file defines a number of constants/settings.
 
-    *IMPORTANT NOTE*: Most of these constants *SHOULD* also be in sync with values in:
+    *IMPORTANT NOTE*: When a constant is used in the shell script, it must have have the same value.
+    See the following files for the reference:
 
     1. config.sh
     2. common_proc.sh
 """
+
+import sys
 
 SPACY_MODEL = 'en_core_web_sm'
 PYTORCH_DISTR_BACKEND='gloo'
@@ -71,3 +74,6 @@ DEFAULT_GIZA_ITER_QTY=5
 
 DEFAULT_TRAIN_SUBDIR='train_fusion'
 DEFAULT_BITEXT_SUBDIR='bitext'
+
+# Let's use STDOUT, it makes it easier to sync output
+TQDM_FILE=sys.stdout

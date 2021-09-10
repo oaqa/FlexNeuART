@@ -4,9 +4,13 @@
 # the root directory for all collections/indices.
 
 if [ "$COLLECT_ROOT" = "" ] ; then
-  COLLECT_ROOT="collections"
+  echo "Specify the collection root location using the environment variable COLLECT_ROOT!"
+  exit 1
 fi
 echo "Using collection root: $COLLECT_ROOT"
+
+# Setting path for Java-binary-calling scripts
+export PATH=../target/appassembler/bin/:$PATH
 
 # The structure of sub-directories is outlined below
 

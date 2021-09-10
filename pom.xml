@@ -246,10 +246,6 @@
                   <id>BuildFwdIndexApp</id>
                 </program>
                 <program>
-                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ConvertDataXMLJson</mainClass>
-                  <id>ConvertDataXMLJson</id>
-                </program>
-                <program>
                   <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.GenFeaturesAppMultThread</mainClass>
                   <id>GenFeaturesAppMultThread</id>
                 </program>

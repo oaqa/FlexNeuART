@@ -52,12 +52,12 @@ class NormalizedDiscountedCumulativeGain:
 
     def __call__(self, rels_sorted_by_scores, qrel_dict):
         """
-        Calculate NDCG. The function assumes,
-        we already sorted everything in the order of decreasing scores.
+            Calculate NDCG. The function assumes,
+            we already sorted everything in the order of decreasing scores.
 
-        :param rels_sorted_by_scores: true relevance judgements sorted by scores.
-        :param qrel_dict: true relevance scores indexed by document ids
-        :return: NDCG.
+            :param rels_sorted_by_scores: true relevance judgements sorted by scores.
+            :param qrel_dict: true relevance scores indexed by document ids
+            :return: NDCG.
         """
         idcg = self._dcg(sorted(qrel_dict.values(), reverse=True))
         return self._dcg(rels_sorted_by_scores) / idcg if idcg > 0 else 0
@@ -66,12 +66,12 @@ class NormalizedDiscountedCumulativeGain:
 class MeanAveragePrecision:
     def __call__(self, rels_sorted_by_scores, qrel_dict):
         """
-        Calculate mean average precision. The function assumes,
-        we already sorted everything in the order of decreasing scores.
+            Calculate mean average precision. The function assumes,
+            we already sorted everything in the order of decreasing scores.
 
-        :param rels_sorted_by_scores: true relevance judgements sorted by scores.
-        :param qrel_dict: true relevance scores indexed by document ids
-        :return: Mean average precision.
+            :param rels_sorted_by_scores: true relevance judgements sorted by scores.
+            :param qrel_dict: true relevance scores indexed by document ids
+            :return: Mean average precision.
         """
         result = 0.
         post_qty = sum([int(rel > RELEVANCE_THRESHOLD) for did, rel in qrel_dict.items()])
@@ -94,13 +94,14 @@ class MeanReciprocalRank:
 
 
 def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
-    """Evaluate run stored in a file using QRELs stored in a file.
+    """
+        Evaluate run stored in a file using QRELs stored in a file.
 
-    :param rerank_run:     a run dictionary (of dictionaries)
-    :param qrels_dict:     a QRELs dictionary read by the function read_qrels_dict
-    :param metric_func:    a metric function or class instance with overloaded __call__
+        :param rerank_run:     a run dictionary (of dictionaries)
+        :param qrels_dict:     a QRELs dictionary read by the function read_qrels_dict
+        :param metric_func:    a metric function or class instance with overloaded __call__
 
-    :return:  the average metric value
+        :return:  the average metric value
     """
     res_arr = []
 
@@ -142,16 +143,17 @@ def get_eval_results(use_external_eval,
                    qrel_file,
                    run_file=None,
                    use_qrel_cache=False):
-    """Carry out internal or external evaluation.
+    """
+        Carry out internal or external evaluation.
 
-    :param use_external_eval:   True to use external evaluation tools.
-    :param eval_metric:        Evaluation metric (from the METRIC_LIST above)
-    :param run_file:           A run file to store results (or None).
-    :param qrel_file:          A QREL file.
-    :param use_qrel_cache:  use global QREL file cache (dangerous option: there should
-                          be no file-name collisions to for this)
+        :param use_external_eval:   True to use external evaluation tools.
+        :param eval_metric:        Evaluation metric (from the METRIC_LIST above)
+        :param run_file:           A run file to store results (or None).
+        :param qrel_file:          A QREL file.
+        :param use_qrel_cache:  use global QREL file cache (dangerous option: there should
+                              be no file-name collisions to for this)
 
-    :return:  average metric value.
+        :return:  average metric value.
     """
 
     if use_external_eval:
@@ -196,12 +198,13 @@ def get_eval_results(use_external_eval,
 
 
 def trec_eval(runf, qrelf, metric):
-    """Run an external tool: trec_eval and retrieve results.
+    """
+        Run an external tool: trec_eval and retrieve results.
 
-    :param runf:    a run file name
-    :param qrelf:   a QREL file name
-    :param metric:  a metric code (should match what trec_eval prints)
-    :return:
+        :param runf:    a run file name
+        :param qrelf:   a QREL file name
+        :param metric:  a metric code (should match what trec_eval prints)
+        :return:
     """
     trec_eval_f = 'trec_eval/trec_eval'
     trec_eval_params = [trec_eval_f,

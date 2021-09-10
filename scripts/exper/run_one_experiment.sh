@@ -420,7 +420,7 @@ if [ "$testOnly" = "0" ] ; then
 
     NO_MAX=1
     setJavaMem 1 16 $NO_MAX
-    target/appassembler/bin/GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
+    GenFeaturesAppMultThread -u "$candProvURI" -cand_prov "$candProvType" \
                                     -run_id "$runId" \
                                     -query_file_pref "$inputDataDir/$trainPart/$QUESTION_FILE_PREFIX" \
                                     -qrel_file "$inputDataDir/$trainPart/$QREL_FILE" \
@@ -466,17 +466,17 @@ statFile="$reportDir/$STAT_FILE"
 $resourceDirParams
 NO_MAX=1
 setJavaMem 1 16 $NO_MAX
-target/appassembler/bin/QueryAppMultThread \
-                            -u "$candProvURI" -cand_prov "$candProvType" \
-                            -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \
-                            -n "$testCandQtyList" \
-                            -run_id "$runId" \
-                            -o "$trecRunDir/run"  -save_stat_file "$statFile" \
-                            $commonAddParams \
-                            $maxFinalRerankQtyParam \
-                            $maxQueryQtyTestParam \
-                            $modelFinalParams \
-                            $queryCacheParamTest 2>&1|tee "$queryLogFile"
+QueryAppMultThread \
+    -u "$candProvURI" -cand_prov "$candProvType" \
+    -query_file_pref "$inputDataDir/$testPart/$QUESTION_FILE_PREFIX" \
+    -n "$testCandQtyList" \
+    -run_id "$runId" \
+    -o "$trecRunDir/run"  -save_stat_file "$statFile" \
+    $commonAddParams \
+    $maxFinalRerankQtyParam \
+    $maxQueryQtyTestParam \
+    $modelFinalParams \
+    $queryCacheParamTest 2>&1|tee "$queryLogFile"
 
 
 qrels="$inputDataDir/$testPart/$QREL_FILE"

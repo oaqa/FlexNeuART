@@ -29,6 +29,6 @@ setup(
     # see https://setuptools.readthedocs.io/en/latest/userguide/miscellaneous.html#setting-the-zip-safe-flag
     zip_safe=False,
     packages=find_packages(exclude=EXCLUDE_DIRS),
-    package_data={ROOT_DIR_NAME: [jar_file]},
+    package_data={ROOT_DIR_NAME: [jar_file, 'resources/scripts/index/create_lucene_index.sh']},
     install_requires=[l for l in open('requirements.txt') if not l.startswith('#') and not l.startswith('git+') and l.strip() != ''],
 )

@@ -37,8 +37,6 @@ addExperSubdir=""
 jsonConf=""
 initModelWeights=""
 initModel=""
-bertLarge="0"
-vocabFile=""
 optim="adamw"
 momentum="0.9"
 validCheckPoints=""
@@ -46,7 +44,6 @@ validRunDir=""
 maxQueryVal=""
 valType=""
 batchesPerEpoch=""
-bertFlavor="bert-base-uncased"
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
@@ -62,11 +59,9 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "batch_sync_qty"     "batchSyncQty"     "# of batches before model sync"
       "add_exper_subdir"   "addExperSubdir"   "additional experimental sub-directory (optional)"
       "json_conf"          "jsonConf"         "collection relative JSON configuration file (optional)"
-      "vocab_file"         "vocabFile"        "vocabulary file relative to derived-data directory (optional)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
       "valid_type"         "valType"          "validation type: always (every epoch), last (last epoch), never"
-      "bert_flavor"        "bertFlavor"       "a name of the pre-trained BERT model (default $bertFlavor)"
 )
 
 parseArguments $@
@@ -110,11 +105,7 @@ else
   echo "WARNING: neither -init_model_weights nor -init_model specified, training from random init!"
 fi
 
-bertTypeArg="  --model.bert_flavor $bertFlavor "
-bertTypeSubdir="$bertFlavor"
-
-
-outModelDir="$derivedDataDir/$IR_MODELS_SUBDIR/$modelType/$addExperSubdir/$bertTypeSubdir/$seed/"
+outModelDir="$derivedDataDir/$IR_MODELS_SUBDIR/$modelType/$addExperSubdir/$seed/"
 trainDir="$derivedDataDir/$trainSubDir"
 
 
@@ -183,7 +174,6 @@ echo "Output model directory:                         $outModelDir"
 echo "# of epochs:                                    $epochQty"
 echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
 echo "Validation type arg:                            $valTypeArg"
-echo "BERT flavor/type :                              $bertFlavor"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
 echo "# of batches before model sync:                 $batchSyncQty"
@@ -208,20 +198,12 @@ if [ "$jsonConf" != "" ] ; then
   echo "JSON config:                                    $jsonConfDest"
 fi
 
-if [ "$vocabFile" != "" ] ; then
-  vocabFileFullPath="$derivedDataDir/$vocabFile"
-  vocabFileArg=" --model.vocab_file $vocabFileFullPath "
-  echo "Vocabulary file path:                           $vocabFileFullPath"
-fi
-
 echo "=========================================================================="
 
 python -u scripts/train_nn/train_model.py \
   $initModelArgs \
   $ampArg \
   $jsonConfArg \
-  $bertTypeArg \
-  $vocabFileArg \
   $validCheckPointsArg \
   $validRunDirArg \
   $maxQueryValArg \

@@ -14,3 +14,17 @@ cp target/FlexNeuART*fatjar.jar flexneuart/resources/jars/
 echo "======================="
 echo "BUILD IS COMPLETE!"
 echo "======================="
+
+MUST COPY THINGS TO:
+
+  resources/bin/
+
+    flexneuart/bin : all *.py and *.sh scripts
+
+    target/bin/* : all except \.bat scripts
+
+  resources/lib/
+
+    we must pull it from flexneuart/lib or even from a more specific directory
+
+    RankLib.jar

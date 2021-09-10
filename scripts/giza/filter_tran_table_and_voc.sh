@@ -103,18 +103,18 @@ function do_filter() {
   echo "Filtering vocabularies : '$dirSrc' -> '$dirDst'"
   SOURCE_VCB_FILE=`get_file_name "$dirSrc/source.vcb"`
   echo "Source vocabulary file: $SOURCE_VCB_FILE"
-  target/appassembler/bin/FilterVocabulary -i "$SOURCE_VCB_FILE"  -o  "$dirDst/source.vcb"  -flt_fwd_index_header "$filterDir/$field" -max_word_qty $maxWordQty
+  FilterVocabulary -i "$SOURCE_VCB_FILE"  -o  "$dirDst/source.vcb"  -flt_fwd_index_header "$filterDir/$field" -max_word_qty $maxWordQty
   check "filter_voc source"
 
   TARGET_VCB_FILE=`get_file_name "$dirSrc/target.vcb"`
   echo "Target vocabulary file: $TARGET_VCB_FILE"
-  target/appassembler/bin/FilterVocabulary -i "$TARGET_VCB_FILE" -o  "$dirDst/target.vcb"  -flt_fwd_index_header "$filterDir/$field" -max_word_qty $maxWordQty
+  FilterVocabulary -i "$TARGET_VCB_FILE" -o  "$dirDst/target.vcb"  -flt_fwd_index_header "$filterDir/$field" -max_word_qty $maxWordQty
   check "filter_voc target"
 
   echo "Filtering translation tables : '$dirSrc' -> '$dirDst'"
 
   echo "Translation table file: $TRAN_TABLE_FILE"
-  target/appassembler/bin/FilterTranTable \
+  FilterTranTable \
       -o  "$dirDst/output.t1.${GIZA_ITER_QTY}" \
       -model1_dir "$dirSrc" \
       -giza_iter_qty $GIZA_ITER_QTY \

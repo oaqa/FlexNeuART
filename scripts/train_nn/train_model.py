@@ -16,25 +16,22 @@ import argparse
 import torch.distributed as dist
 
 import flexneuart.models.train.data as data
-from flexneuart.models import model_registry
-from flexneuart.models.vanilla_bert import VANILLA_BERT
+from flexneuart.models import add_model_init_basic_args
 
-
+from flexneuart.models.base import ModelSerializer
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import *
 from flexneuart.models.train.data import QUERY_ID_FIELD, DOC_ID_FIELD, CAND_SCORE_FIELD, \
                                     DOC_TOK_FIELD, DOC_MASK_FIELD, \
                                     QUERY_TOK_FIELD, QUERY_MASK_FIELD
 
-from flexneuart.models.base import MODEL_PARAM_PREF
-
-import flexneuart.models.model_init_utils as model_init_utils
-
+from flexneuart import sync_out_streams, set_all_seeds, join_and_check_stat, enable_spawn
+from flexneuart.io.json import read_json, save_json
 from flexneuart.io.runs import read_run_dict
 from flexneuart.io.qrels import read_qrels_dict
 from flexneuart.eval import METRIC_LIST, get_eval_results
 
-from flexneuart.config import DEVICE_CPU
+from flexneuart.config import DEVICE_CPU, TQDM_FILE, PYTORCH_DISTR_BACKEND
 
 from tqdm import tqdm
 from collections import namedtuple
@@ -76,37 +73,6 @@ TrainParams = namedtuple('TrainParams',
                      'valid_type',
                      'use_external_eval', 'eval_metric'])
 
-def add_model_init_basic_args(parser):
-
-    model_list = list(model_registry.registered.keys())
-    parser.add_argument('--model', metavar='model',
-                        help='a model to use: ' + ' '.join(),
-                        choices=model_list, default=VANILLA_BERT)
-
-    parser.add_argument('--init_model_weights',
-                        metavar='model weights',
-                        help='initial model weights will be loaded in non-strict mode',
-                        type=argparse.FileType('rb'), default=None)
-
-    parser.add_argument('--init_model',
-                        metavar='initial model',
-                        help='previously serialized model',
-                        type=argparse.FileType('rb'), default=None)
-
-    parser.add_argument('--max_query_len', metavar='max. query length',
-                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
-                        help='max. query length')
-
-    parser.add_argument('--max_doc_len', metavar='max. document length',
-                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
-                        help='max. document length')
-
-    parser.add_argument('--device_name', metavar='CUDA device name or cpu', default='cuda:0',
-                        help='The name of the CUDA device to use')
-
-
-
-
 
 def avg_model_params(model, amp):
     """
@@ -122,9 +88,9 @@ def avg_model_params(model, amp):
             prm.data /= qty
 
 def clean_memory(device_name):
-    utils.sync_out_streams()
+    sync_out_streams()
     print('\n', 'Clearning memory device:', device_name)
-    utils.sync_out_streams()
+    sync_out_streams()
     gc.collect()
     if device_name != DEVICE_CPU:
         with torch.cuda.device(device_name):
@@ -194,9 +160,9 @@ def train_iteration(model, sync_barrier,
 
     if is_master_proc:
 
-        utils.sync_out_streams()
+        sync_out_streams()
 
-        pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False)
+        pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False, file=TQDM_FILE)
     else:
         pbar = None
 
@@ -276,13 +242,13 @@ def train_iteration(model, sync_barrier,
                 if is_master_proc:
                     os.makedirs(model_out_dir, exist_ok=True)
                     out_tmp = os.path.join(model_out_dir, f'model.last.{snap_id}')
-                    torch.save(model, out_tmp)
+                    model.save_all(out_tmp)
                     snap_id += 1
 
         if pbar is not None:
             pbar.update(count)
             pbar.refresh()
-            utils.sync_out_streams()
+            sync_out_streams()
             pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
 
         while run_chkpt_val:
@@ -290,16 +256,16 @@ def train_iteration(model, sync_barrier,
             os.makedirs(valid_run_dir, exist_ok=True)
             run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
             pbar.refresh()
-            utils.sync_out_streams()
+            sync_out_streams()
             score = validate(model, train_params, dataset,
                              valid_run,
                              qrelf=valid_qrel_filename, run_filename=run_file_name)
 
             pbar.refresh()
-            utils.sync_out_streams()
-            print(f'\n# of steps={validation_timer.total_steps} score={score:.4g}')
+            sync_out_streams()
+            pbar.write(f'\n# of steps={validation_timer.total_steps} score={score:.4g}\n')
             valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
-            utils.save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
+            save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
             model.train()
             # We may need to make more than one validation iteration
             run_chkpt_val = run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
@@ -319,35 +285,38 @@ def train_iteration(model, sync_barrier,
 
     if pbar is not None:
         pbar.close()
-        utils.sync_out_streams()
+        sync_out_streams()
 
     return total_loss / float(total_qty)
 
 
 def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
-    """Model validation step:
+    """
+        Model validation step:
          1. Re-rank a given run
          2. Save the re-ranked run
          3. Evaluate results
 
-    :param model:           a model reference.
-    :param train_params:    training parameters
-    :param dataset:         validation dataset
-    :param orig_run:        a run to re-rank
-    :param qrelf:           QREL files
-    :param run_filename:    a file name to store the *RE-RANKED* run
-    :return:
+        :param model:           a model reference.
+        :param train_params:    training parameters
+        :param dataset:         validation dataset
+        :param orig_run:        a run to re-rank
+        :param qrelf:           QREL files
+        :param run_filename:    a file name to store the *RE-RANKED* run
+        :return: validation score
+
+
     """
-    utils.sync_out_streams()
+    sync_out_streams()
 
     rerank_run = run_model(model, train_params, dataset, orig_run)
     eval_metric = train_params.eval_metric
 
-    utils.sync_out_streams()
+    sync_out_streams()
 
     print(f'\n', f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
-    utils.sync_out_streams()
+    sync_out_streams()
 
     # Let us always save the run
     return get_eval_results(use_external_eval=train_params.use_external_eval,
@@ -363,7 +332,7 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
     clean_memory(train_params.device_name)
     cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
     with torch.no_grad(), \
-            tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False) as pbar:
+            tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False,  file=TQDM_FILE) as pbar:
 
         model.eval()
         d = {}
@@ -392,11 +361,11 @@ def do_train(sync_barrier,
               train_pairs, valid_run,
               valid_run_dir, valid_checkpoints,
               model_out_dir,
-              model, loss_obj, train_params):
+              model_holder, loss_obj, train_params):
     if device_qty > 1:
         os.environ['MASTER_ADDR'] = '127.0.0.1'
         os.environ['MASTER_PORT'] = str(master_port)
-        dist.init_process_group(utils.PYTORCH_DISTR_BACKEND, rank=rank, world_size=device_qty)
+        dist.init_process_group(PYTORCH_DISTR_BACKEND, rank=rank, world_size=device_qty)
 
     device_name = train_params.device_name
 
@@ -407,7 +376,7 @@ def do_train(sync_barrier,
 
     print('Device name:', device_name)
 
-    model.to(device_name)
+    model_holder.model.to(device_name)
 
     lr = train_params.init_lr
     bert_lr = train_params.init_bert_lr
@@ -423,7 +392,7 @@ def do_train(sync_barrier,
     valid_scores_holder = dict()
     for epoch in range(train_params.epoch_qty):
 
-        params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
+        params = [(k, v) for k, v in model_holder.model.named_parameters() if v.requires_grad]
         non_bert_params = {'params': [v for k, v in params if not k.startswith('bert.')]}
         bert_params = {'params': [v for k, v in params if k.startswith('bert.')], 'lr': bert_lr}
 
@@ -461,7 +430,7 @@ def do_train(sync_barrier,
             if is_master_proc:
                 print('Optimizer', optimizer)
 
-            loss = train_iteration(model=model, sync_barrier=sync_barrier,
+            loss = train_iteration(model=model_holder.model, sync_barrier=sync_barrier,
                                is_master_proc=is_master_proc,
                                device_qty=device_qty, loss_obj=loss_obj,
                                train_params=train_params, max_train_qty=max_train_qty,
@@ -481,14 +450,13 @@ def do_train(sync_barrier,
 
             if train_params.save_epoch_snapshots:
                 print('Saving the model epoch snapshot')
-                torch.save(model, os.path.join(model_out_dir, f'model.{epoch}'))
+                model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
 
             os.makedirs(model_out_dir, exist_ok=True)
 
-
             print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
 
-            utils.sync_out_streams()
+            sync_out_streams()
 
             start_val_time = time.time()
 
@@ -497,7 +465,7 @@ def do_train(sync_barrier,
                       ((train_params.valid_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
 
             if run_val:
-                valid_score = validate(model,
+                valid_score = validate(model_holder.model,
                                        train_params, dataset,
                                        valid_run,
                                        qrelf=qrel_file_name,
@@ -508,7 +476,7 @@ def do_train(sync_barrier,
 
             end_val_time = time.time()
 
-            utils.sync_out_streams()
+            sync_out_streams()
 
             if valid_score is not None:
                 print(f'validation epoch={epoch} score={valid_score:.4g}')
@@ -520,16 +488,16 @@ def do_train(sync_barrier,
                                   'train_time' : end_train_time - start_train_time,
                                   'validation_time' : end_val_time - start_val_time}
 
-            utils.save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
+            save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
 
             if run_val:
                 if top_valid_score is None or valid_score > top_valid_score:
                     top_valid_score = valid_score
                     print('new top validation score, saving the whole model')
-                    torch.save(model, os.path.join(model_out_dir, 'model.best'))
+                    model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
             else:
                 print('Saving the whole model')
-                torch.save(model, os.path.join(model_out_dir, 'model.best'))
+                model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
 
         # We must sync here or else non-master processes would start training and they
         # would timeout on the model averaging barrier. However, the wait time here
@@ -546,11 +514,18 @@ def do_train(sync_barrier,
         bert_lr *= epoch_lr_decay
 
 
-
 def main_cli():
     parser = argparse.ArgumentParser('CEDR model training and validation')
 
-    model_init_utils.add_model_init_basic_args(parser, True)
+    add_model_init_basic_args(parser, True)
+
+    parser.add_argument('--max_query_len', metavar='max. query length',
+                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
+                        help='max. query length')
+
+    parser.add_argument('--max_doc_len', metavar='max. document length',
+                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
+                        help='max. document length')
 
     parser.add_argument('--datafiles', metavar='data files', help='data files: docs & queries',
                         type=argparse.FileType('rt'), nargs='+', required=True)
@@ -684,7 +659,7 @@ def main_cli():
     if args.json_conf is not None:
         conf_file = args.json_conf
         print(f'Reading configuration variables from {conf_file}')
-        add_conf = utils.read_json(conf_file)
+        add_conf = read_json(conf_file)
         for arg_name, arg_val in add_conf.items():
             if arg_name not in all_arg_names:
                 print(f'Invalid option in the configuration file: {arg_name}')
@@ -698,20 +673,14 @@ def main_cli():
             setattr(args, arg_name, arg_val)
 
 
-    # This hack copies max query and document length parameters to the model space parameters
-    # maybe some other approach is more elegant, but this one should at least work
-    # NEED TO USE THIS DIRECTLY
-    setattr(args, f'{MODEL_PARAM_PREF}max_query_len', args.max_query_len)
-    setattr(args, f'{MODEL_PARAM_PREF}max_doc_len', args.max_doc_len)
-
     if args.save_last_snapshot_every_k_batch is not None and args.save_last_snapshot_every_k_batch < 2:
         print('--save_last_snapshot_every_k_batch should be > 1')
         sys.exit(1)
 
     print(args)
-    utils.sync_out_streams()
+    sync_out_streams()
 
-    utils.set_all_seeds(args.seed)
+    set_all_seeds(args.seed)
 
     loss_name = args.loss_func
     if loss_name == PairwiseSoftmaxLoss.name():
@@ -728,30 +697,27 @@ def main_cli():
 
     print('Loss:', loss_obj)
 
-    # If we have the complete model, we just load it,
-    # otherwise we first create a model and load *SOME* of its weights.
-    # For example, if we start from an original BERT model, which has
-    # no extra heads, it we will load only the respective weights and
-    # initialize the weights of the head randomly.
+    # For details on our serialization approach, see comments in the ModelWrapper
+    model_holder : ModelSerializer = ModelSerializer(args)
+
     if args.init_model is not None:
         print('Loading a complete model from:', args.init_model.name)
-        model = torch.load(args.init_model.name, map_location='cpu')
+        model_holder.load_all(args.init_model.name)
     elif args.init_model_weights is not None:
-        model = model_init_utils.create_model_from_args(args)
+        model_holder.create_model_from_args(args)
         print('Loading model weights from:', args.init_model_weights.name)
-        model.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
+        model_holder.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
     else:
         print('Creating the model from scratch!')
-        model = model_init_utils.create_model_from_args(args)
-
+        model_holder.create_model_from_args(args)
 
     if args.neg_qty_per_query < 1:
         print('A number of negatives per query cannot be < 1')
         sys.exit(1)
 
     os.makedirs(args.model_out_dir, exist_ok=True)
-    print(model)
-    utils.sync_out_streams()
+    print(model_holder.model)
+    sync_out_streams()
 
     dataset = data.read_datafiles(args.datafiles)
     qrelf = args.qrels.name
@@ -810,7 +776,9 @@ def main_cli():
                                     save_epoch_snapshots=args.save_epoch_snapshots,
                                     save_last_snapshot_every_k_batch=args.save_last_snapshot_every_k_batch,
                                     batch_size=args.batch_size, batch_size_val=args.batch_size_val,
-                                    max_query_len=args.max_query_len, max_doc_len=args.max_doc_len,
+                                    # These lengths must come from the model serializer object, not from the arguments,
+                                    # because they can be overridden when the model is loaded.
+                                    max_query_len=model_holder.max_query_len, max_doc_len=model_holder.max_doc_len,
                                     epoch_qty=args.epoch_qty, device_name=device_name,
                                     cand_score_weight=args.cand_score_weight,
                                     neg_qty_per_query=args.neg_qty_per_query,
@@ -844,7 +812,7 @@ def main_cli():
             'valid_run_dir' : args.valid_run_dir,
             'valid_checkpoints' : valid_checkpoints,
             'model_out_dir' : args.model_out_dir,
-            'model' : model, 'loss_obj' : loss_obj, 'train_params' : train_params
+            'model_holder' : model_holder, 'loss_obj' : loss_obj, 'train_params' : train_params
         }
 
         if is_distr_train and not is_master_proc:
@@ -855,7 +823,7 @@ def main_cli():
             do_train(**param_dict)
 
     for p in processes:
-        utils.join_and_check_stat(p)
+        join_and_check_stat(p)
 
     if device_qty > 1:
         dist.destroy_process_group()
@@ -863,5 +831,5 @@ def main_cli():
 
 if __name__ == '__main__':
     # A light-weight subprocessing + this is a must for multi-processing with CUDA
-    utils.enable_spawn()
+    enable_spawn()
     main_cli()

@@ -98,7 +98,7 @@ echo "# of threads:              $threadQty"
 echo "=========================================================================="
 
 
-target/appassembler/bin/AnswerBasedQRELGenerator \
+AnswerBasedQRELGenerator \
     -collect_dir $collectDir \
     $candProvOpts \
     -field_name $fieldName \

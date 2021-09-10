@@ -152,50 +152,34 @@ function waitChildren {
 }
 
 #
-# A hacky procedure (by now likely not updated to be used with latest set of parameters)
-# # to start a CEDR server one can specify either initial model weights or the complete
-# initial model to load.
+# A hacky procedure to start a ranking server with a given model. Was not tested after recent
+# code changes. It likely requires some minor fixes (TBD next time when this procedure is going to be used).
 #
 # All other parameters are required.
 # IMPORTANT NOTE:
 # don't use with:
 # set -eo pipefail
-function startCedrServer {
+function startRankServer {
   modelType="$1"
-  initModelWeights="$2"
-  initModel="$3"
-  maxQueryLen="$4"
-  maxDocLen="$5"
-  deviceName="$6"
-  port="$7"
-  serverPidFile="$8"
+  initModel="$2"
+  deviceName="$3"
+  port="$4"
+  serverPidFile="$5"
 
-  if [ "$initModel" = "" ] ; then
-    checkVarNonEmpty "modelType"
-    checkVarNonEmpty "initModelWeights"
+  checkVarNonEmpty "initModel"
 
-    initModelArg=" --model $modelType --init_model_weights $initModelWeights"
-    initFile="$initModelWeights"
-  else
-    checkVarNonEmpty "initModel"
-
-    initModelArg=" --init_model  $initModel"
-    initFile="$initModel"
-  fi
+  initModelArg=" --init_model  $initModel"
+  initFile="$initModel"
 
   logFileName=`echo $initFile|sed s'|/|_|g'`
   logFileName="log.$logFileName"
 
-  checkVarNonEmpty "maxQueryLen"
-  checkVarNonEmpty "maxDocLen"
   checkVarNonEmpty "deviceName"
   checkVarNonEmpty "port"
   checkVarNonEmpty "serverPidFile"
 
   # Note -u
-  python -u scripts/py_featextr_server/cedr_server.py \
-    --max_query_len $maxQueryLen \
-    --max_doc_len $maxDocLen \
+  python -u scripts/featextr_server/rank_server.py \
     --device_name $deviceName \
     --port $port \
     $initModelArg \
@@ -204,7 +188,7 @@ function startCedrServer {
   PID=$!
 
   if [ "$?" != "0" ] ; then
-    echo "Starting CEDR immediate failure, check out $logFileName"
+    echo "Starting ranking server failure, check out $logFileName"
     exit 1
   fi
 
@@ -214,21 +198,21 @@ function startCedrServer {
   started=0
   while [ "$started" = "0" ]
   do
-    # Usuall the server starts quite quickly
+    # Usually the server starts quite quickly
     sleep 5
 
-    echo "Checking if CEDR server (PID=$PID) has started"
+    echo "Checking if the ranking server (PID=$PID) has started"
     ps -p $PID &>/dev/null
 
     if [ "$?" != "0" ] ; then
-      echo "CEDR server stopped unexpectedly, check logs: $logFileName"
+      echo "ranking server stopped unexpectedly, check logs: $logFileName"
       exit 1
     fi
 
     grep -iE "start.*server" $logFileName &>/dev/null
 
     if [ "$?" = "0" ] ; then
-      echo "CEDR server has started!"
+      echo "Ranking server has started!"
       started=1
     fi
   done

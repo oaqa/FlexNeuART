@@ -119,7 +119,7 @@ else
   dataFileNameCurr="$dataFileNameJSONL"
 fi
 
-target/appassembler/bin/BuildFwdIndexApp  \
+BuildFwdIndexApp  \
   $fwdIndexTypeArg \
   $fwdIndexStoreTypeArg \
   $expectedDocQtyArg \

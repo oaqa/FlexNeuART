@@ -77,7 +77,7 @@ else
 fi
 # This APP can be memory greedy
 setJavaMem 1 8
-target/appassembler/bin/LuceneIndexer \
+LuceneIndexer \
     $exactMatchParam \
     -input_data_dir "$inputDataDir" \
     -index_dir "$indexDir" \

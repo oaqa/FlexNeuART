@@ -37,7 +37,7 @@ cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  
 NO_MAX=1
 setJavaMem 1 8 $NO_MAX
 
-target/appassembler/bin/ExportTrainPairs \
+ExportTrainPairs \
 $handleCaseParam \
 -seed $randSeed \
 -export_fmt cedr_with_scores  \
