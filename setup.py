@@ -22,7 +22,7 @@ EXCLUDE_DIRS = 'build data dist lemur-code* lib scripts src target testdata trec
 class InstallWrapper(install):
     def run(self):
           # We need to build java binaries (and pack scripts) before packing everything
-          #subprocess.run(["./build.sh"])
+          subprocess.run(["./build.sh"])
           # Run the standard install
           install.run(self)
 
