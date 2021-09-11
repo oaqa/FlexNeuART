@@ -3,10 +3,7 @@ import os
 import flexneuart
 
 from flexneuart.utils import *
-
-# Version *MUST* be in Sync with pom.xml
-__version__ = '1.0.1'
-
+from .version import __version__
 
 def get_jars_location():
     """

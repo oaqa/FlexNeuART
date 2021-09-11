@@ -5,11 +5,14 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from glob import glob
 import subprocess
-# Version *MUST* be in Sync with pom.xml
-from flexneuart import __version__
+import sys
 
 PY_CACHE = '__pycache__'
 ROOT_DIR_NAME = 'flexneuart'
+
+# Version *MUST* be in Sync with pom.xml
+sys.path.append(ROOT_DIR_NAME)
+from version import __version__
 
 curr_dir = path.abspath(path.dirname(__file__))
 with open(path.join(curr_dir, 'README.md'), encoding='utf-8') as f:
