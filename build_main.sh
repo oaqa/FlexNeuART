@@ -32,7 +32,7 @@ cd scripts
 rm -f scripts.tar.gz
 
 tar cvfz scripts.tar.gz \
-  exper/sample_exper_desc/one_feat.model
+  exper/sample_exper_desc/one_feat.model \
   data/stopwords.txt \
   bin/* \
   lib/RankLib.jar \

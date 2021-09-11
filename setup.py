@@ -9,7 +9,14 @@ import sys
 
 # We need to build java binaries (and pack scripts) before packing everything
 # This script also cleans up vestiges of the previous build
-print(subprocess.check_output(["./build.sh"]).decode())
+BUILD_SCRIPT="./build.sh"
+try:
+    print(subprocess.check_output([BUILD_SCRIPT]).decode())
+except:
+    # Make sure build.log is consistent is the log file name used in the build script
+    # That is if you change the name in a build script, it should be changed here as well.
+    print(f'The build script {BUILD_SCRIPT} failed, please, check out the log: build.log')
+    sys.exit(1)
 
 PY_CACHE = '__pycache__'
 ROOT_DIR_NAME = 'flexneuart'
