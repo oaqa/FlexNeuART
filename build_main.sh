@@ -31,7 +31,13 @@ mkdir -p flexneuart/resources/extra
 cd scripts
 rm -f scripts.tar.gz
 
-tar cvfz scripts.tar.gz  bin/* `find  . -name '*.sh'` `find  . -name '*.py'`
+tar cvfz scripts.tar.gz \
+  exper/sample_exper_desc/one_feat.model
+  data/stopwords.txt \
+  bin/* \
+  lib/RankLib.jar \
+  `find  . -name '*.sh'` \
+  `find  . -name '*.py'`
 mv scripts.tar.gz ../flexneuart/resources/extra
 
 echo "All is done!"
