@@ -14,7 +14,7 @@ echo "=============================================="
 echo " Installing additional scripts & binaries "
 echo " log: $log_file"
 
-install_extra_flexneuart_main.sh"$dstDir" "$withGiza" &> $log_file || { echo "Install failed!" ; exit 1; }
+install_extra_flexneuart_main.sh "$dstDir" "$withGiza" &> $log_file || { echo "Install failed!" ; exit 1; }
 
 echo "=============================================="
 echo "            INSTALL IS COMPLETE!"

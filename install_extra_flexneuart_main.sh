@@ -26,6 +26,6 @@ rm -rf "$dstDir"
 mkdir -p "$dstDir"
 
 cd "$dstDir"
-tar jxvf "$EXTRA_LOC"/scripts.tar.gz
+tar zxvf "$EXTRA_LOC"/scripts.tar.gz
 
 ./flexneuart_install_extra_bin.sh "$withGiza"
