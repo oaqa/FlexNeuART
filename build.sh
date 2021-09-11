@@ -6,7 +6,7 @@ set -o pipefail
 curr_dir=$PWD
 
 log_file="$curr_dir/build.log"
-echo "========================"
+echo "==================================="
 echo " BUILDING main codebase "
 echo " log: $log_file"
 
@@ -14,7 +14,7 @@ echo " log: $log_file"
 
 ./build_main.sh &> $log_file || { echo "Build failed!" ; exit 1; }
 
-echo "======================="
-echo "BUILD IS COMPLETE!"
-echo "======================="
+echo "=================================="
+echo "       BUILD IS COMPLETE!         "
+echo "=================================="
 

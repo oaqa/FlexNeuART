@@ -43,9 +43,9 @@ setup(
     # We want to distribute source code as well
     # see https://setuptools.readthedocs.io/en/latest/userguide/miscellaneous.html#setting-the-zip-safe-flag
     zip_safe=False,
-    scripts=glob('flexneuart_install_extra*') + glob(f'{ROOT_DIR_NAME}/resources/bin/*'),
+    scripts=glob('flexneuart_install_extra*'),
     packages=find_packages(exclude=EXCLUDE_DIRS),
-    package_data={ROOT_DIR_NAME: [jar_file, 'resources/scripts.tar.gz']},
+    package_data={ROOT_DIR_NAME: [jar_file, 'resources/extra/scripts.tar.gz']},
     install_requires=[l for l in open('requirements.txt') if not l.startswith('#') and not l.startswith('git+') and l.strip() != ''],
     cmdclass={'build_py': BuildWrapper}
 )

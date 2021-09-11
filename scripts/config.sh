@@ -10,7 +10,9 @@ fi
 echo "Using collection root: $COLLECT_ROOT"
 
 # Setting path for Java-binary-calling scripts
-export PATH=../target/appassembler/bin/:$PATH
+# These scripts should be copied to ./bin by either
+# a build or an installation script.
+export PATH=./bin/:$PATH
 
 # The structure of sub-directories is outlined below
 
