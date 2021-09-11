@@ -7,6 +7,10 @@ from glob import glob
 import subprocess
 import sys
 
+# We need to build java binaries (and pack scripts) before packing everything
+# This script also cleans up vestiges of the previous build
+print(subprocess.check_output(["./build.sh"]).decode())
+
 PY_CACHE = '__pycache__'
 ROOT_DIR_NAME = 'flexneuart'
 
@@ -24,12 +28,12 @@ jar_file=f'resources/jars/FlexNeuART-{__version__}-fatjar.jar'
 
 EXCLUDE_DIRS = 'build data dist lemur-code* lib scripts src target testdata trec_eval*'.split()
 
-class BuildWrapper(build_py):
-    def run(self):
-          # We need to build java binaries (and pack scripts) before packing everything
-          subprocess.run(["./build.sh"])
-          # Run the standard install
-          build_py.run(self)
+# class BuildWrapper(build_py):
+#     def run(self):
+#
+#           subprocess.run(["./build.sh"])
+#           # Run the standard install
+#           build_py.run(self)
 
 setup(
     name=ROOT_DIR_NAME,
@@ -43,9 +47,9 @@ setup(
     # We want to distribute source code as well
     # see https://setuptools.readthedocs.io/en/latest/userguide/miscellaneous.html#setting-the-zip-safe-flag
     zip_safe=False,
-    scripts=glob('flexneuart_install_extra*'),
+    scripts=['flexneuart_install_extra.sh', 'install_extra_flexneuart_main.sh'],
     packages=find_packages(exclude=EXCLUDE_DIRS),
     package_data={ROOT_DIR_NAME: [jar_file, 'resources/extra/scripts.tar.gz']},
-    install_requires=[l for l in open('requirements.txt') if not l.startswith('#') and not l.startswith('git+') and l.strip() != ''],
-    cmdclass={'build_py': BuildWrapper}
+    install_requires=[l for l in open('requirements.txt') if not l.startswith('#') and not l.startswith('git+') and l.strip() != '']
+    #cmdclass={'build_py': BuildWrapper}
 )
