@@ -2,7 +2,7 @@
 import os
 from os import path
 from setuptools import setup, find_packages
-from setuptools.command.install import install
+from setuptools.command.build_py import build_py
 from glob import glob
 import subprocess
 import sys
@@ -14,6 +14,8 @@ ROOT_DIR_NAME = 'flexneuart'
 sys.path.append(ROOT_DIR_NAME)
 from version import __version__
 
+print('Building version:', __version__)
+
 curr_dir = path.abspath(path.dirname(__file__))
 with open(path.join(curr_dir, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
@@ -22,12 +24,12 @@ jar_file=f'resources/jars/FlexNeuART-{__version__}-fatjar.jar'
 
 EXCLUDE_DIRS = 'build data dist lemur-code* lib scripts src target testdata trec_eval*'.split()
 
-class InstallWrapper(install):
+class BuildWrapper(build_py):
     def run(self):
           # We need to build java binaries (and pack scripts) before packing everything
           subprocess.run(["./build.sh"])
           # Run the standard install
-          install.run(self)
+          build_py.run(self)
 
 setup(
     name=ROOT_DIR_NAME,
@@ -45,5 +47,5 @@ setup(
     packages=find_packages(exclude=EXCLUDE_DIRS),
     package_data={ROOT_DIR_NAME: [jar_file, 'resources/scripts.tar.gz']},
     install_requires=[l for l in open('requirements.txt') if not l.startswith('#') and not l.startswith('git+') and l.strip() != ''],
-    cmdclass={'install': InstallWrapper}
+    cmdclass={'build_py': BuildWrapper}
 )

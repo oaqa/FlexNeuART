@@ -6,8 +6,9 @@ tqdm
 transformers
 urllib3
 pytools
-numpy
-bs4
+# higher versions require Python 3.7
+numpy==1.19.0
+beautifulsoup4
 pyjnius
 torch
 torchtext

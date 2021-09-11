@@ -9,9 +9,13 @@ run.txt
 build.log
 collections*
 pytorch-pretrained-BERT-mod
+flexneuart/resources
 flexneuart/resources/jars
 flexneuart/resources/bin
 scripts/mgiza
 scripts/install.log
 scripts/trec_eval
 scripts/trec_eval-9.0.7
+build/
+dist/
+flexneuart.egg-info
