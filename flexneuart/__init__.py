@@ -2,7 +2,7 @@ import os
 
 import flexneuart
 
-from .utils import *
+from flexneuart.utils import *
 
 # Version *MUST* be in Sync with pom.xml
 __version__ = '1.1'
@@ -63,5 +63,4 @@ class Registry:
             fn.name = name
             return fn
         return wrapped
-
 

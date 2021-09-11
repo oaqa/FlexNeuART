@@ -6,15 +6,14 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
-
-import flexneuart.models.base as base
-import flexneuart.models.utils as modeling_util
+from flexneuart.models.base import BaseModel
+from flexneuart.models.utils import init_model
 
 USE_BATCH_COEFF = True
 DEFAULT_BERT_DROPOUT = 0.1
 
 
-class BertBaseRanker(base.BaseModel):
+class BertBaseRanker(BaseModel):
     """
        The base class for all Transformer-based ranking models.
 
@@ -30,7 +29,7 @@ class BertBaseRanker(base.BaseModel):
 
         """
         super().__init__()
-        modeling_util.init_model(self, bert_flavor)
+        init_model(self, bert_flavor)
 
     def tokenize_and_encode(self, text):
         """Tokenizes the text and converts tokens to respective IDs

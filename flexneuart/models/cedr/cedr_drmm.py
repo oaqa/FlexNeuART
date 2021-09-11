@@ -10,7 +10,7 @@ from flexneuart.models import register
 import torch
 
 from flexneuart.models.base_bert_split_max_chunk import BertSplitMaxChunkRanker
-from flexneuart.models.cedr import SimmatModule, DRMMLogCountHistogram
+from .utils import SimmatModule, DRMMLogCountHistogram
 
 
 @register('cedr_drmm')

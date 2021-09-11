@@ -10,7 +10,7 @@ from flexneuart.models import register
 import torch
 
 from flexneuart.models.base_bert_split_max_chunk import BertSplitMaxChunkRanker
-from flexneuart.models.cedr import SimmatModule, KNRMRbfKernelBank
+from .utils import SimmatModule, KNRMRbfKernelBank
 
 
 @register('cedr_knrm')

@@ -15,8 +15,9 @@ import math
 import argparse
 import torch.distributed as dist
 
+
 import flexneuart.models.train.data as data
-from flexneuart.models import add_model_init_basic_args
+from flexneuart.models.utils import add_model_init_basic_args
 
 from flexneuart.models.base import ModelSerializer
 from flexneuart.models.train.loss import *

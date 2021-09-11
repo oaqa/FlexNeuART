@@ -11,7 +11,7 @@ import torch
 import torch.nn.functional as F
 
 from flexneuart.models.base_bert_split_max_chunk import BertSplitMaxChunkRanker
-from flexneuart.models.cedr import SimmatModule, PACRRConvMax2dModule
+from .utils import SimmatModule, PACRRConvMax2dModule
 
 @register('cedr_pacrr')
 class CedrPacrrRanker(BertSplitMaxChunkRanker):

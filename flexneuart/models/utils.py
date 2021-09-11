@@ -8,8 +8,11 @@
 #
 import math
 import torch
+import argparse
 
+from flexneuart.config import DEFAULT_DEVICE_GPU
 from transformers import AutoTokenizer, AutoModel
+from flexneuart.models import VANILLA_BERT, model_registry
 
 
 def init_model(obj_ref, bert_flavor):
@@ -109,3 +112,23 @@ def sliding_window_subbatch(toks, window_size, stride):
                 stack.append(torch.cat([toks[:, s*stride:], nulls], dim=1))
 
         return torch.cat(stack, dim=0), subbatch_qty
+
+def add_model_init_basic_args(parser, add_device_name):
+    model_list = list(model_registry.registered.keys())
+    parser.add_argument('--model', metavar='model',
+                        help='a model to use: ' + ', '.join(model_list),
+                        choices=model_list, default=VANILLA_BERT)
+
+    parser.add_argument('--init_model_weights',
+                        metavar='model weights',
+                        help='initial model weights will be loaded in non-strict mode',
+                        type=argparse.FileType('rb'), default=None)
+
+    parser.add_argument('--init_model',
+                        metavar='initial model',
+                        help='previously serialized model',
+                        type=argparse.FileType('rb'), default=None)
+
+    if add_device_name:
+        parser.add_argument('--device_name', metavar='CUDA device name or cpu', default=DEFAULT_DEVICE_GPU,
+                            help='The name of the CUDA device to use')

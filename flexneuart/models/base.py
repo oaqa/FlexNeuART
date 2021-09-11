@@ -17,7 +17,6 @@ import torch
 import inspect
 
 from flexneuart.config import DEVICE_CPU
-from flexneuart.models import model_registry
 
 MODEL_PARAM_PREF = 'model.'
 MODEL_ARGS = 'model_args'

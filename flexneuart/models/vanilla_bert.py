@@ -9,15 +9,13 @@
 #
 import torch
 
-import flexneuart.models.base_bert_split_max_chunk
-from flexneuart.models import register
-import flexneuart.models.base_bert as base_bert
-
-VANILLA_BERT='vanilla_bert'
+from flexneuart import models
+from .base_bert_split_max_chunk import BertSplitMaxChunkRanker
+from .base_bert import DEFAULT_BERT_DROPOUT
 
 
-@register(VANILLA_BERT)
-class VanillaBertRanker(flexneuart.models.base_bert_split_max_chunk.BertSplitMaxChunkRanker):
+@models.register(models.VANILLA_BERT)
+class VanillaBertRanker(BertSplitMaxChunkRanker):
     """
         Vanilla BERT Ranker.
 
@@ -26,7 +24,7 @@ class VanillaBertRanker(flexneuart.models.base_bert_split_max_chunk.BertSplitMax
 
     """
 
-    def __init__(self, bert_flavor, dropout=base_bert.DEFAULT_BERT_DROPOUT):
+    def __init__(self, bert_flavor, dropout=DEFAULT_BERT_DROPOUT):
         super().__init__(bert_flavor)
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)

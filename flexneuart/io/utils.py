@@ -22,7 +22,6 @@ import tempfile
 
 from flexneuart.config import DOCID_FIELD
 
-
 def create_temp_file():
     """"Create a temporary file
     :return temporary file name
@@ -116,3 +115,4 @@ def multi_file_linegen(dir_name, pattern):
             with FileWrapper(full_path) as inp:
                 for line in inp:
                     yield line
+
