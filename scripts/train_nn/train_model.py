@@ -707,7 +707,7 @@ def main_cli():
     elif args.init_model_weights is not None:
         model_holder.create_model_from_args(args)
         print('Loading model weights from:', args.init_model_weights.name)
-        model_holder.load_state_dict(torch.load(args.init_model_weights.name, map_location='cpu'), strict=False)
+        model_holder.load_weights(args.init_model_weights.name, strict=False)
     else:
         print('Creating the model from scratch!')
         model_holder.create_model_from_args(args)

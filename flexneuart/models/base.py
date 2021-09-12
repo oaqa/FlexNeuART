@@ -18,7 +18,6 @@ import inspect
 
 from flexneuart.config import DEVICE_CPU
 from flexneuart.models import model_registry
-from flexneuart.models.base import BaseModel
 
 MODEL_PARAM_PREF = 'model.'
 MODEL_ARGS = 'model_args'
@@ -50,6 +49,36 @@ def get_model_param_dict(args, model_class):
                 raise Exception(f'{model_class} does not have parameter {param_name}, but it is provided via arguments!')
 
     return param_dict
+
+
+"""The base class for *ALL* models."""
+class BaseModel(torch.nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def pre_init(model_param_dict):
+        """A pre-constructor (pre_init) function
+          that takes all the parameters an processes them as necessary. 
+
+          By default, it just returns the unmodified parameter dictionary.
+
+          This *MUST* be static method, which doesn't have access to the self variable,
+          which should not exist at the moment of the call.
+
+        :param model_param_dict:
+        :return:
+        """
+        return model_param_dict
+
+    def tokenize_and_encode(self, text):
+        """Tokenizes the text and converts tokens to respective IDs
+
+        :param text:  input text
+        :return:      an array of token IDs
+        """
+        raise NotImplementedError
 
 
 class ModelSerializer:
@@ -89,7 +118,7 @@ class ModelSerializer:
         if model_class is None:
             assert model_name is not None, 'No model class or name is specified!'
 
-            model_class = model_registry.registered.get(model_name, default=None)
+            model_class = model_registry.registered.get(model_name)
             if model_class is None:
                 raise Exception(f'Model name {model_name} is not defined!')
 
@@ -118,7 +147,7 @@ class ModelSerializer:
         self.max_doc_len = max_doc_len
 
     def save_all(self, file_name):
-        torch.save({MODEL_ARGS : self.model,
+        torch.save({MODEL_ARGS : self.model_args_processed,
                     MODEL_STATE_DICT : self.model.state_dict(),
                     MAX_QUERY_LEN : self.max_query_len,
                     MAX_DOC_LEN : self.max_doc_len},
@@ -142,32 +171,7 @@ class ModelSerializer:
         assert self.model is not None, "The model needs to be created using 'create_model_from_args'"
         weights = torch.load(file_name, map_location=DEVICE_CPU)
 
-        self.model.load_state_dict(weights, strict=strict)
-
-
-"""The base class for *ALL* models."""
-class BaseModel(torch.nn.Module):
-
-    def __init__(self):
-        super().__init__()
-
-    def pre_init(self, model_param_dict):
-        """a pre-constructor (pre_init) function
-          that takes all the parameters an processes them as necessary. By default,
-          it just returns the unmodified parameter dictionary.
-
-        :param model_param_dict:
-        :return:
-        """
-        raise model_param_dict
-
-    def tokenize_and_encode(self, text):
-        """Tokenizes the text and converts tokens to respective IDs
-
-        :param text:  input text
-        :return:      an array of token IDs
-        """
-        raise NotImplementedError
+        print(self.model.load_state_dict(weights, strict=strict))
 
 
 
