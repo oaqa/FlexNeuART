@@ -1,2 +1,2 @@
 # Version *MUST* be in sync with the version in pom.xml
-__version__ = '0.7'
+__version__ = '0.8'

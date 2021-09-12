@@ -162,7 +162,8 @@ def get_bert_tokenizer():
     """
     Returns: a fast BERT tokenizer
     """
-    return transformers.PreTrainedTokenizerFast(BERT_BASE_MODEL)
+    from transformers import AutoTokenizer
+    return AutoTokenizer.from_pretrained(BERT_BASE_MODEL)
 
 
 def get_retokenized(tokenizer, text):

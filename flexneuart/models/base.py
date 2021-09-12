@@ -17,6 +17,8 @@ import torch
 import inspect
 
 from flexneuart.config import DEVICE_CPU
+from flexneuart.models import model_registry
+from flexneuart.models.base import BaseModel
 
 MODEL_PARAM_PREF = 'model.'
 MODEL_ARGS = 'model_args'
@@ -24,6 +26,7 @@ MODEL_STATE_DICT = 'model_weights'
 MAX_QUERY_LEN = 'max_query_len'
 MAX_DOC_LEN = 'max_doc_len'
 
+TYPE_CLASS = type(str) # can be any class, we just need
 
 def get_model_param_dict(args, model_class):
     """This function iterates over the list of arguments starting with model.
@@ -76,11 +79,12 @@ class ModelSerializer:
           as input.
 
     """
-    def __init__(self, model_class=None, model_name=None):
+    def __init__(self, model_name=None, model_class : BaseModel =None):
         """Constructor that accepts either the model class or model name.
 
-        :param model_class:
-        :param model_name:
+        :param model_name: a name of the registered model
+        :param model_class: a model class, which is a subclass of the BaseModel
+
         """
         if model_class is None:
             assert model_name is not None, 'No model class or name is specified!'
@@ -88,6 +92,7 @@ class ModelSerializer:
             model_class = model_registry.registered.get(model_name, default=None)
             if model_class is None:
                 raise Exception(f'Model name {model_name} is not defined!')
+
 
         self.model_class = model_class
         self.params = {}

@@ -3,15 +3,22 @@ pandas
 lxml
 bson
 tqdm
-transformers
 urllib3
 pytools
+
 # higher versions require Python 3.7
 numpy==1.19.0
+
 beautifulsoup4
+
 pyjnius
+
 torch
 torchtext
+
+transformers
 sentence-transformers
+sentencepiece
+
 thrift==0.13.0
 spacy==2.2.3

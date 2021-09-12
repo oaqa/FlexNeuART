@@ -699,7 +699,7 @@ def main_cli():
     print('Loss:', loss_obj)
 
     # For details on our serialization approach, see comments in the ModelWrapper
-    model_holder : ModelSerializer = ModelSerializer(args)
+    model_holder : ModelSerializer = ModelSerializer(args.model)
 
     if args.init_model is not None:
         print('Loading a complete model from:', args.init_model.name)
