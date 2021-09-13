@@ -21,15 +21,16 @@ import os
 import torch
 from jnius import autoclass
 
-from scripts.config import DOCID_FIELD
+from flexneuart.config import DOCID_FIELD
 
-from flexneuart.models import iter_valid_records
-from flexneuart.models import DOC_TOK_FIELD, DOC_MASK_FIELD, QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
+from flexneuart.models.base import ModelSerializer
+from flexneuart.models.train.data import iter_valid_records
+from flexneuart.models.train.data  import DOC_TOK_FIELD, DOC_MASK_FIELD, \
+                                QUERY_TOK_FIELD, QUERY_MASK_FIELD,\
                                 QUERY_ID_FIELD, DOC_ID_FIELD
 
-from scripts.py_flexneuart.utils import query_dict_to_dataentry_fields
+from flexneuart.retrieval.utils import query_dict_to_dataentry_fields, DataEntryFields
 from flexneuart.retrieval.cand_provider import JCandidateEntry
-from scripts.py_flexneuart.utils import DataEntryFields
 from flexneuart.retrieval.fwd_index import get_forward_index
 
 JDataPointWrapper = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper')
@@ -149,36 +150,43 @@ class JavaQueryRanker(BaseQueryRanker):
 class PythonNNQueryRanker(BaseQueryRanker):
     "A neural Python-layer re-ranker. The model file name is relative to the collection (resource root) directory!"
     def __init__(self, resource_manager,
-                       query_field_name, max_query_len,
-                       index_field_name, max_doc_len,
+                       query_field_name,
+                       index_field_name,
                        device_name, batch_size,
-                       model_file_name):
+                       model, model_path_rel):
         """Reranker constructor.
 
         :param resource_manager:      a resource manager object
         :param query_field_name:      the name of the query field
-        :param max_query_len:         max. query length
         :param index_field_name:      the name of the text field
-        :param max_doc_len:           max. document length
         :param device_name:           a device name
         :param batch_size:            the size of the batch
-        :param model_file_name:       a (previously trained) CEDR model file name
+        :param model:                 a model_type name
+        :param model_path_rel:        a path to a (previously trained) and serialized model relative to the resource root
 
         """
         super().__init__()
         self.resource_manager = resource_manager
         # It is important to check before passing this to RankLib,
         # which does not handle missing files gracefully
-        model_file_name_full_path = os.path.join(resource_manager.getResourceRootDir(), model_file_name)
+        model_file_name_full_path = os.path.join(resource_manager.getResourceRootDir(), model_path_rel)
         if not os.path.exists(model_file_name_full_path):
             raise Exception(f'Missing model file: {model_file_name_full_path}')
-        self.model = torch.load(model_file_name_full_path, map_location='cpu')
+
         self.device_name = device_name
-        self.max_query_len = max_query_len
-        self.max_doc_len = max_doc_len
-        self.batch_size = batch_size
+        model_holder: ModelSerializer = ModelSerializer(model)
+        model_holder.load_all(model_file_name_full_path)
+
+        self.model = model_holder.model
         self.model.to(device_name)
+
+        self.max_query_len = model_holder.max_query_len
+        self.max_doc_len = model_holder.max_doc_len
+
+        self.batch_size = batch_size
+
         self.query_field_name = query_field_name
+
         self.fwd_indx = get_forward_index(resource_manager, index_field_name)
         self.fwd_indx.check_is_text_raw()
 

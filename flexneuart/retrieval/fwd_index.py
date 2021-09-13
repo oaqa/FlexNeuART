@@ -115,6 +115,19 @@ class ForwardIndex:
         """Retrieve all document IDs"""
         return self.indx.getAllDocIds()
 
+    def get_doc_qty(self):
+        """
+        :return: a number of documents in the index.
+        """
+        return self.indx.getDocQty()
+
+    def get_avg_doc_len(self):
+        """
+        :return: the average document length in the number of tokens (it makes sense only for parsed indices)
+        """
+        self.check_is_parsed()
+        return self.indx.getAvgDocLen()
+
 
 def get_forward_index(resource_manager, field_name):
     """Create a wrapper for a forward index class.
