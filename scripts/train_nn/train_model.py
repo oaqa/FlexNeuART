@@ -19,7 +19,7 @@ import torch.distributed as dist
 import flexneuart.models.train.data as data
 from flexneuart.models.utils import add_model_init_basic_args
 
-from flexneuart.models.base import ModelSerializer
+from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import *
 from flexneuart.models.train.data import QUERY_ID_FIELD, DOC_ID_FIELD, CAND_SCORE_FIELD, \
@@ -662,7 +662,8 @@ def main_cli():
         print(f'Reading configuration variables from {conf_file}')
         add_conf = read_json(conf_file)
         for arg_name, arg_val in add_conf.items():
-            if arg_name not in all_arg_names:
+            arg_name : str
+            if arg_name not in all_arg_names and not arg_name.startswith(MODEL_PARAM_PREF):
                 print(f'Invalid option in the configuration file: {arg_name}')
                 sys.exit(1)
             arg_default = getattr(args, arg_name)
