@@ -2,14 +2,13 @@
 import os
 from os import path
 from setuptools import setup, find_packages
-from setuptools.command.build_py import build_py
-from glob import glob
 import subprocess
 import sys
 
 # We need to build java binaries (and pack scripts) before packing everything
 # This script also cleans up vestiges of the previous build
 BUILD_SCRIPT="./build.sh"
+
 try:
     print(subprocess.check_output([BUILD_SCRIPT]).decode())
 except:
@@ -34,13 +33,6 @@ with open(path.join(curr_dir, 'README.md'), encoding='utf-8') as f:
 jar_file=f'resources/jars/FlexNeuART-{__version__}-fatjar.jar'
 
 EXCLUDE_DIRS = 'build data dist lemur-code* lib scripts src target testdata trec_eval*'.split()
-
-# class BuildWrapper(build_py):
-#     def run(self):
-#
-#           subprocess.run(["./build.sh"])
-#           # Run the standard install
-#           build_py.run(self)
 
 setup(
     name=ROOT_DIR_NAME,

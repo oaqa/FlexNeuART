@@ -12,6 +12,7 @@ pytorch-pretrained-BERT-mod
 flexneuart/resources
 flexneuart/resources/jars
 flexneuart/resources/bin
+scripts/bin
 scripts/mgiza
 scripts/install.log
 scripts/trec_eval
