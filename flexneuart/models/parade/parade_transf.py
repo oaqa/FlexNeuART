@@ -28,7 +28,7 @@ from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 class Empty:
     pass
 
-@register('parade_transformer')
+@register('parade_transf')
 class ParadeMaxRanker(BertSplitSlideWindowRanker):
     """
         PARADE Max ranker. Contributed by Tianyi Lin
@@ -52,7 +52,9 @@ class ParadeMaxRanker(BertSplitSlideWindowRanker):
         self.bert_aggreg = init_data.bert
 
         self.BERT_AGGREG_SIZE = init_data.BERT_SIZE
-        self.bert_aggreg_cls_embed = torch.nn.Parameter(torch.FloatTensor(self.BERT_AGGREG_SIZE))
+        
+        self.bert_aggreg_cls_embed = torch.nn.Parameter(torch.randn(self.BERT_AGGREG_SIZE))
+
         # If there's a mismatch between the embedding size of the aggregating BERT and the
         # hidden size of the main BERT, a projection is required
         if self.BERT_SIZE != self.BERT_AGGREG_SIZE:
@@ -71,21 +73,23 @@ class ParadeMaxRanker(BertSplitSlideWindowRanker):
         B, N, _ = last_layer_cls_rep.shape
 
         if self.proj_out is not None:
-            last_layer_cls_rep_proj = self.proj_out(last_layer_cls_rep.view(B * N, -1)).view(B, N, -1) # [B, N, BERT_AGGREG_SIZE]
+            last_layer_cls_rep_proj = self.proj_out(last_layer_cls_rep) # [B, N, BERT_AGGREG_SIZE]
         else:
             last_layer_cls_rep_proj = last_layer_cls_rep
 
+        # +two singletown dimensions before the CLS embedding
+        aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1, self.BERT_AGGREG_SIZE)
+
         # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
-        last_layer_cls_rep_proj = torch.cat(last_layer_cls_rep_proj,
-                                        # +two singletown dimensions before the CLS embedding
-                                        self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0), # [1, 1, BERT_AGGREG_SIZE]
-                                        dim=1) #[B, N+1, BERT_AGGREG_SIZE]
+        last_layer_cls_rep_proj = torch.cat([last_layer_cls_rep_proj, aggreg_cls_tok_exp], dim=1) #[B, N+1, BERT_AGGREG_SIZE]
 
         # run aggregating BERT and get the last layer output
         # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
         # it's pointless at this stage
-        outputs : BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(input_embeds=last_layer_cls_rep_proj)
+        outputs : BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(inputs_embeds=last_layer_cls_rep_proj)
         result = outputs.last_hidden_state
+
+        #import pdb ; pdb.set_trace()
 
         # The cls vector of the last Transformer output layer
         parade_cls_reps = result[:, 0, :] #

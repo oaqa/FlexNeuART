@@ -17,6 +17,7 @@
 
 import torch
 
+from flexneuart.config import BERT_BASE_MODEL, MSMARCO_MINILM_L2
 from flexneuart.models import register
 from flexneuart.models.base_bert_split_slide_window import \
         BertSplitSlideWindowRanker, CLS_AGGREG_STACK, DEFAULT_STRIDE, DEFAULT_WINDOW_SIZE
@@ -52,9 +53,9 @@ class BertAggregPRanker(BertSplitSlideWindowRanker):
         last_layer_cls_rep = torch.transpose(cls_reps[-1], 1, 2)
         out = self.cls(self.dropout(last_layer_cls_rep))
 
-        if self.cls_aggreg_type == BERT_MAXP:
+        if self.aggreg_type == BERT_MAXP:
             out, _ = out.squeeze(dim=-1).max(dim=1)
-        elif self.cls_aggreg_type == BERT_SUMP:
+        elif self.aggreg_type == BERT_SUMP:
             out, _ = out.squeeze(dim=-1).sum(dim=1)
         else:
             raise Exception(f'Unsupported aggregation type: {self.aggreg_type}')
@@ -64,20 +65,18 @@ class BertAggregPRanker(BertSplitSlideWindowRanker):
 
 @register(BERT_MAXP)
 class BertMaxPRanker(BertAggregPRanker):
-    def __init__(self, bert_flavor,
+    def __init__(self, bert_flavor=BERT_BASE_MODEL,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  dropout=DEFAULT_BERT_DROPOUT):
-        super().__init__(bert_flavor,
+        super().__init__(bert_flavor=bert_flavor,
                          aggreg_type=BERT_MAXP,
-                         cls_aggreg_type=CLS_AGGREG_STACK,
                          window_size=window_size, stride=stride, dropout=dropout)
 
 @register(BERT_SUMP)
 class BertMaxPRanker(BertAggregPRanker):
-    def __init__(self, bert_flavor,
+    def __init__(self, bert_flavor=BERT_BASE_MODEL,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  dropout=DEFAULT_BERT_DROPOUT):
-        super().__init__(bert_flavor,
+        super().__init__(bert_flavor=bert_flavor,
                          aggreg_type=BERT_MAXP,
-                         cls_aggreg_type=CLS_AGGREG_STACK,
                          window_size=window_size, stride=stride, dropout=dropout)
