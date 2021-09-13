@@ -113,7 +113,8 @@ def sliding_window_subbatch(toks, window_size, stride):
 
         return torch.cat(stack, dim=0), subbatch_qty
 
-def add_model_init_basic_args(parser, add_device_name, add_init_model_weights):
+
+def add_model_init_basic_args(parser, add_device_name, add_init_model_weights, mult_model):
     model_list = list(model_registry.registered.keys())
     parser.add_argument('--model', metavar='model',
                         help='a model to use: ' + ', '.join(model_list),
@@ -125,10 +126,18 @@ def add_model_init_basic_args(parser, add_device_name, add_init_model_weights):
                             help='initial model weights will be loaded in non-strict mode',
                             type=argparse.FileType('rb'), default=None)
 
-    parser.add_argument('--init_model',
-                        metavar='initial model',
-                        help='previously serialized model',
-                        type=argparse.FileType('rb'), default=None)
+    if not mult_model:
+        parser.add_argument('--init_model',
+                            metavar='initial model',
+                            help='previously serialized model',
+                            type=argparse.FileType('rb'), default=None)
+    else:
+        parser.add_argument('--init_model_list',
+                            metavar='initial models',
+                            help='previously serialized models',
+                            type=argparse.FileType('rb'),
+                            nargs='+',
+                            default=None)
 
     if add_device_name:
         parser.add_argument('--device_name', metavar='CUDA device name or cpu', default=DEFAULT_DEVICE_GPU,

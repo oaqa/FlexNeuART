@@ -519,7 +519,7 @@ def do_train(sync_barrier,
 def main_cli():
     parser = argparse.ArgumentParser('CEDR model training and validation')
 
-    add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=True)
+    add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=True, mult_model=False)
 
     parser.add_argument('--max_query_len', metavar='max. query length',
                         type=int, default=data.DEFAULT_MAX_QUERY_LEN,

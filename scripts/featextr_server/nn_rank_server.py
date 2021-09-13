@@ -120,7 +120,7 @@ class RankQueryHandler(BaseQueryHandler):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Serving CEDR models.')
 
-    add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=False)
+    add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=False, mult_model=True)
 
     parser.add_argument('--debug_print', action='store_true',
                         help='Provide debug output')
@@ -144,15 +144,15 @@ if __name__ == '__main__':
 
     model_list = []
 
-    assert(args.init_model is not None and type(args.init_model) == list)
+    assert(args.init_model_list is not None and type(args.init_model_list) == list)
 
     model_list = []
 
     all_max_query_len = None
     all_max_doc_len = None
 
-    if args.init_model is not None:
-        for fname in args.init_model.name:
+    if args.init_model_list is not None:
+        for fname in args.init_model_list.name:
             model_holder: ModelSerializer = ModelSerializer(args.model)
 
             print('Loading model weights from:', fname)
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
             model_list.append(model_holder.model)
     else:
-        print('Specify the model file: --init_model')
+        print('Specify model files: --init_model_list')
         sys.exit(1)
 
 
