@@ -178,6 +178,9 @@ if __name__ == '__main__':
         sys.exit(1)
 
 
+    print(f'Max query/document lenghts: {all_max_query_len}/{all_max_doc_len}')
+
+
     multi_threaded = False  # if we set to True, we can often run out of CUDA memory.
     start_query_server(args.host, args.port, multi_threaded, RankQueryHandler(model_list=model_list,
                                                                               batch_size=args.batch_size,
