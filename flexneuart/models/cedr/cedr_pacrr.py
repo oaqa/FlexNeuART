@@ -6,6 +6,7 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 from flexneuart.models import register
+from flexneuart.config import BERT_BASE_MODEL
 
 import torch
 import torch.nn.functional as F
@@ -22,7 +23,7 @@ class CedrPacrrRanker(BertSplitMaxChunkRanker):
         Proceedings of the 42nd International ACM SIGIR Conference on Research and Development in Information Retrieval. 2019.
 
     """
-    def __init__(self, max_query_len, bert_flavor):
+    def __init__(self, max_query_len, bert_flavor=BERT_BASE_MODEL):
         super().__init__(bert_flavor)
         QLEN = max_query_len
         KMAX = 2

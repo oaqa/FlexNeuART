@@ -6,6 +6,7 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 from flexneuart.models import register
+from flexneuart.config import BERT_BASE_MODEL
 
 import torch
 
@@ -22,7 +23,7 @@ class CedrKnrmRanker(BertSplitMaxChunkRanker):
         Proceedings of the 42nd International ACM SIGIR Conference on Research and Development in Information Retrieval. 2019.
 
     """
-    def __init__(self, bert_flavor):
+    def __init__(self, bert_flavor=BERT_BASE_MODEL):
         super().__init__(bert_flavor)
         MUS = [-0.9, -0.7, -0.5, -0.3, -0.1, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
         SIGMAS = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.001]

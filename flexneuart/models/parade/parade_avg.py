@@ -16,6 +16,7 @@
 
 import torch
 
+from flexneuart.config import BERT_BASE_MODEL
 from flexneuart.models import register
 from flexneuart.models.base_bert_split_slide_window import \
         BertSplitSlideWindowRanker, DEFAULT_STRIDE, DEFAULT_WINDOW_SIZE, \
@@ -32,7 +33,7 @@ class ParadeAvgRanker(BertSplitSlideWindowRanker):
         Passage representation aggregation for document reranking.
         arXiv preprint arXiv:2008.09093.
     """
-    def __init__(self, bert_flavor,
+    def __init__(self, bert_flavor=BERT_BASE_MODEL,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  dropout=DEFAULT_BERT_DROPOUT):
         super().__init__(bert_flavor, cls_aggreg_type=CLS_AGGREG_AVG,

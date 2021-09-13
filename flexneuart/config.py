@@ -43,6 +43,7 @@ DEVICE_CPU = 'cpu'
 DEFAULT_DEVICE_GPU = 'cuda'
 
 BERT_BASE_MODEL='bert-base-uncased'
+MSMARCO_MINILM_L2='cross-encoder/ms-marco-MiniLM-L-2-v2'
 
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_JSON = 'QuestionFields.jsonl'
