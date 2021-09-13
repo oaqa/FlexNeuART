@@ -17,6 +17,7 @@ import torch.distributed as dist
 
 
 import flexneuart.models.train.data as data
+
 from flexneuart.models.utils import add_model_init_basic_args
 
 from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
@@ -518,7 +519,7 @@ def do_train(sync_barrier,
 def main_cli():
     parser = argparse.ArgumentParser('CEDR model training and validation')
 
-    add_model_init_basic_args(parser, True)
+    add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=True)
 
     parser.add_argument('--max_query_len', metavar='max. query length',
                         type=int, default=data.DEFAULT_MAX_QUERY_LEN,

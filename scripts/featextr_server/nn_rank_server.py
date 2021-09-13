@@ -18,10 +18,12 @@ import sys
 import argparse
 import torch
 
+from flexneuart.models.utils import add_model_init_basic_args
+from flexneuart.models.base import ModelSerializer
+
 from flexneuart.featextr_server.python_generated.protocol.ExternalScorer import TextEntryRaw
 from flexneuart.featextr_server.base import BaseQueryHandler, start_query_server
 
-import flexneuart.models.model_init_utils as model_init_utils
 import flexneuart.models.train.data as data
 
 from flexneuart.models.train.data import DOC_TOK_FIELD, DOC_MASK_FIELD, \
@@ -114,42 +116,11 @@ class RankQueryHandler(BaseQueryHandler):
         return sample_ret
 
 
-def add_eval_model_init_args(parser):
-
-    parser.add_argument('--model', metavar='model',
-                        help='a model to use: ' + ' '.join(list(model_init_utils.MODEL_MAP.keys())),
-                        choices=model_init_utils.MODEL_MAP.keys(), default='vanilla_bert')
-
-    parser.add_argument('--init_model_weights',
-                        metavar='model weights', help='initial model weights',
-                        type=argparse.FileType('rb'),
-                        nargs='+',
-                        default=None)
-
-    parser.add_argument('--init_model',
-                        metavar='initial model',
-                        help='initial *COMPLETE* model with heads and extra parameters',
-                        type=argparse.FileType('rb'),
-                        nargs='+',
-                        default=None)
-
-    parser.add_argument('--max_query_len', metavar='max. query length',
-                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
-                        help='max. query length')
-
-    parser.add_argument('--max_doc_len', metavar='max. document length',
-                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
-                        help='max. document length')
-
-
-    parser.add_argument('--device_name', metavar='CUDA device name or cpu', default='cuda:0',
-                        help='The name of the CUDA device to use')
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Serving CEDR models.')
 
-    add_eval_model_init_args(parser)
+    add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=False)
 
     parser.add_argument('--debug_print', action='store_true',
                         help='Provide debug output')
@@ -173,38 +144,45 @@ if __name__ == '__main__':
 
     model_list = []
 
-    assert(args.init_model is None or type(args.init_model) == list)
-    assert (args.init_model_weights is None or type(args.init_model_weights) == list)
+    assert(args.init_model is not None and type(args.init_model) == list)
 
     model_list = []
 
-    if args.init_model is None:
-        # TODO this one isn't properly tested
-        if args.model is not None and args.init_model_weights is not None:
-            for fname in args.init_model_weights.name:
-                model = model_init_utils.create_model_from_args(args)
-                print('Loading model weights from:', fname.name)
-                # If we load weights here, we must set strict to True:
-                # this would prevent accidental loading of partial models.
-                # Partial models are sure fine to load during training (as a reasonable
-                # initialization), but not during test time.
-                model.load_state_dict(torch.load(fname.name, map_location='cpu'),
-                                      strict=True)
-                model_list.append(model)
-        else:
-            print('Specify the model file: --init_model or model type and model weights')
-            sys.exit(1)
+    all_max_query_len = None
+    all_max_doc_len = None
+
+    if args.init_model is not None:
+        for fname in args.init_model.name:
+            model_holder: ModelSerializer = ModelSerializer(args.model)
+
+            print('Loading model weights from:', fname)
+
+            model_holder.load_all(fname)
+
+            if all_max_doc_len is None:
+                all_max_doc_len = model_holder.max_doc_len
+                all_max_query_len = model_holder.max_query_len
+            else:
+                if all_max_doc_len != model_holder.max_doc_len:
+                    print(f'Inconsistent max. doc len, previous value {all_max_doc_len} '
+                          f'model {fname} has: {model_holder.max_doc_len}')
+                    sys.exit(1)
+                if all_max_query_len != model_holder.max_query_len:
+                    print(f'Inconsistent max. query len, previous value {all_max_query_len} '
+                          f'model {fname} has: {model_holder.max_query_len}')
+                    sys.exit(1)
+
+            model_list.append(model_holder.model)
     else:
-        for fname in args.init_model:
-            print('Loading model from:', fname.name)
-            model = torch.load(fname.name, map_location='cpu')
-            model_list.append(model)
+        print('Specify the model file: --init_model')
+        sys.exit(1)
+
 
     multi_threaded = False  # if we set to True, we can often run out of CUDA memory.
     start_query_server(args.host, args.port, multi_threaded, RankQueryHandler(model_list=model_list,
                                                                               batch_size=args.batch_size,
                                                                               debug_print=args.debug_print,
                                                                               device_name=args.device_name,
-                                                                              max_query_len=args.max_query_len,
-                                                                              max_doc_len=args.max_doc_len,
+                                                                              max_query_len=all_max_query_len,
+                                                                              max_doc_len=all_max_doc_len,
                                                                               exclusive=not multi_threaded))

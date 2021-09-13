@@ -113,16 +113,17 @@ def sliding_window_subbatch(toks, window_size, stride):
 
         return torch.cat(stack, dim=0), subbatch_qty
 
-def add_model_init_basic_args(parser, add_device_name):
+def add_model_init_basic_args(parser, add_device_name, add_init_model_weights):
     model_list = list(model_registry.registered.keys())
     parser.add_argument('--model', metavar='model',
                         help='a model to use: ' + ', '.join(model_list),
                         choices=model_list, default=VANILLA_BERT)
 
-    parser.add_argument('--init_model_weights',
-                        metavar='model weights',
-                        help='initial model weights will be loaded in non-strict mode',
-                        type=argparse.FileType('rb'), default=None)
+    if add_init_model_weights:
+        parser.add_argument('--init_model_weights',
+                            metavar='model weights',
+                            help='initial model weights will be loaded in non-strict mode',
+                            type=argparse.FileType('rb'), default=None)
 
     parser.add_argument('--init_model',
                         metavar='initial model',
