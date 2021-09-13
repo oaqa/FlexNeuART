@@ -666,7 +666,7 @@ def main_cli():
             if arg_name not in all_arg_names and not arg_name.startswith(MODEL_PARAM_PREF):
                 print(f'Invalid option in the configuration file: {arg_name}')
                 sys.exit(1)
-            arg_default = getattr(args, arg_name)
+            arg_default = getattr(args, arg_name, None)
             exp_type = type(arg_default)
             if arg_default is not None and type(arg_val) != exp_type:
                 print(f'Invalid type in the configuration file: {arg_name} expected type: '+str(type(exp_type)) + f' default {arg_default}')
