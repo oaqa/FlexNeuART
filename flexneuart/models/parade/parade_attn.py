@@ -15,7 +15,7 @@
 #
 
 import torch
-import torch.functional as F
+import torch.nn.functional as F
 
 from flexneuart.config import BERT_BASE_MODEL
 from flexneuart.models import register
