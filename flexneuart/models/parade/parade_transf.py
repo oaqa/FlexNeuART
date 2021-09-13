@@ -125,7 +125,7 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         # Let's create an aggregator Transformer
         encoder_layer = torch.nn.TransformerEncoderLayer(d_model=self.BERT_SIZE, nhead=aggreg_head_qty)
         norm_layer = torch.nn.LayerNorm(self.BERT_SIZE)
-        self.bert_aggreg = torch.nn.TransformerEncoder(encoder_layer, aggreg_layer_qty, norm=norm_layer)
+        self.transf_aggreg = torch.nn.TransformerEncoder(encoder_layer, aggreg_layer_qty, norm=norm_layer)
 
         self.bert_aggreg_cls_embed = torch.nn.Parameter(torch.randn(self.BERT_SIZE))
 
@@ -148,7 +148,7 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         # run aggregating BERT and get the last layer output
         # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
         # it's pointless at this stage
-        outputs: BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(inputs_embeds=last_layer_cls_rep)
+        outputs: BaseModelOutputWithPoolingAndCrossAttentions = self.transf_aggreg(last_layer_cls_rep)
         result = outputs.last_hidden_state
 
         # import pdb ; pdb.set_trace()
