@@ -91,8 +91,6 @@ class ParadeTransfPretrAggregRanker(BertSplitSlideWindowRanker):
         outputs : BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(inputs_embeds=last_layer_cls_rep_proj)
         result = outputs.last_hidden_state
 
-        #import pdb ; pdb.set_trace()
-
         # The cls vector of the last Transformer output layer
         parade_cls_reps = result[:, 0, :] #
 
@@ -148,10 +146,7 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         # run aggregating BERT and get the last layer output
         # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
         # it's pointless at this stage
-        outputs: BaseModelOutputWithPoolingAndCrossAttentions = self.transf_aggreg(last_layer_cls_rep)
-        result = outputs.last_hidden_state
-
-        # import pdb ; pdb.set_trace()
+        result = self.transf_aggreg(last_layer_cls_rep)
 
         # The cls vector of the last Transformer output layer
         parade_cls_reps = result[:, 0, :]  #
