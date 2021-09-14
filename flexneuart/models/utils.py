@@ -118,7 +118,8 @@ def add_model_init_basic_args(parser, add_device_name, add_init_model_weights, m
     model_list = list(model_registry.registered.keys())
     parser.add_argument('--model_name', metavar='model_name',
                         help='a model to use: ' + ', '.join(model_list),
-                        choices=model_list, default=VANILLA_BERT)
+                        choices=model_list,
+                        default=None)
 
     if add_init_model_weights:
         parser.add_argument('--init_model_weights',

@@ -706,15 +706,19 @@ def main_cli():
     if args.init_model is not None:
         print('Loading a complete model from:', args.init_model.name)
         model_holder = ModelSerializer.load_all(args.init_model.name)
-    elif args.init_model_weights is not None:
-        model_holder = ModelSerializer(args.model_name)
-        model_holder.create_model_from_args(args)
-        print('Loading model weights from:', args.init_model_weights.name)
-        model_holder.load_weights(args.init_model_weights.name, strict=False)
     else:
-        model_holder = ModelSerializer(args.model_name)
-        print('Creating the model from scratch!')
-        model_holder.create_model_from_args(args)
+        if args.model_name is None:
+            print('--model_name argument must be provided unless --init_model points to a fully serialized model!')
+            sys.exit(1)
+        if args.init_model_weights is not None:
+            model_holder = ModelSerializer(args.model_name)
+            model_holder.create_model_from_args(args)
+            print('Loading model weights from:', args.init_model_weights.name)
+            model_holder.load_weights(args.init_model_weights.name, strict=False)
+        else:
+            model_holder = ModelSerializer(args.model_name)
+            print('Creating the model from scratch!')
+            model_holder.create_model_from_args(args)
 
     if args.neg_qty_per_query < 1:
         print('A number of negatives per query cannot be < 1')
