@@ -108,7 +108,7 @@ class ModelSerializer:
           as input.
 
     """
-    def __init__(self, model_name=None, model_class : BaseModel =None):
+    def __init__(self, model_name=None, model_class : BaseModel=None):
         """Constructor that accepts either the model class or model name.
 
         :param model_name: a name of the registered model
@@ -121,6 +121,7 @@ class ModelSerializer:
             model_class = model_registry.registered.get(model_name)
             if model_class is None:
                 raise Exception(f'Model name {model_name} is not defined!')
+            print(f'Model type name: {model_name}, registered class:', model_class)
 
 
         self.model_class = model_class
