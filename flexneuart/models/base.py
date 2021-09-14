@@ -20,6 +20,7 @@ from flexneuart.config import DEVICE_CPU
 from flexneuart.models import model_registry
 
 MODEL_PARAM_PREF = 'model.'
+MODEL_NAME = 'model_name'
 MODEL_ARGS = 'model_args'
 MODEL_STATE_DICT = 'model_weights'
 MAX_QUERY_LEN = 'max_query_len'
@@ -148,24 +149,33 @@ class ModelSerializer:
         self.max_doc_len = max_doc_len
 
     def save_all(self, file_name):
-        torch.save({MODEL_ARGS : self.model_args_processed,
+        torch.save({MODEL_NAME : self.model_name,
+                    MODEL_ARGS : self.model_args_processed,
                     MODEL_STATE_DICT : self.model.state_dict(),
                     MAX_QUERY_LEN : self.max_query_len,
                     MAX_DOC_LEN : self.max_doc_len},
                    file_name)
 
-    def load_all(self, file_name):
-        """Load the previous version saved using the save_all function."""
+    @staticmethod
+    def load_all(file_name):
+        """Load the previous version saved using the save_all function.
+
+            :return a reference to the object that contains model parameters & reference
+        """
         data = torch.load(file_name, map_location=DEVICE_CPU)
-        for exp_key in [MODEL_ARGS, MODEL_STATE_DICT, MAX_QUERY_LEN, MAX_DOC_LEN]:
+        for exp_key in [MODEL_NAME, MODEL_ARGS, MODEL_STATE_DICT, MAX_QUERY_LEN, MAX_DOC_LEN]:
             if not exp_key in data:
                 raise Exception(f'Missing key {exp_key} in {file_name}')
 
-        self.model_args_processed = data[MODEL_ARGS]
-        self.model = self.model_class(**self.model_args_processed)
-        self.model.load_state_dict(data[MODEL_STATE_DICT], strict=True)
-        self.max_query_len = data[MAX_QUERY_LEN]
-        self.max_doc_len = data[MAX_DOC_LEN]
+        model_holder = ModelSerializer(model_name=data[MODEL_NAME])
+
+        model_holder.model_args_processed = data[MODEL_ARGS]
+        model_holder.model = model_holder.model_class(**model_holder.model_args_processed)
+        model_holder.model.load_state_dict(data[MODEL_STATE_DICT], strict=True)
+        model_holder.max_query_len = data[MAX_QUERY_LEN]
+        model_holder.max_doc_len = data[MAX_DOC_LEN]
+
+        return model_holder
 
     def load_weights(self, file_name, strict=False):
         """Load only weights."""

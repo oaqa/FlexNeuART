@@ -89,23 +89,23 @@ if [ "$trainSubDir" = "" ] ; then
   exit 1
 fi
 
-modelType=${posArgs[2]}
-if [ "$modelType" = "" ] ; then
-  genUsage "$usageMain" "Specify model type, e.g., vanilla_bert (3rd arg)"
+modelName=${posArgs[2]}
+if [ "$modelName" = "" ] ; then
+  genUsage "$usageMain" "Specify model name/type, e.g., vanilla_bert (3rd arg)"
   exit 1
 fi
 
 initModelArgs=""
 if [ "$initModelWeights" != "" ] ; then
-  initModelArgs=" --model $modelType --init_model_weights $initModelWeights "
+  initModelArgs=" --model_name $modelName --init_model_weights $initModelWeights "
 elif [ "$initModel" != "" ] ; then
   initModelArgs=" --init_model $initModel "
 else
-  initModelArgs=" --model $modelType "
+  initModelArgs=" --model_name $modelName "
   echo "WARNING: neither -init_model_weights nor -init_model specified, training from random init!"
 fi
 
-outModelDir="$derivedDataDir/$IR_MODELS_SUBDIR/$modelType/$addExperSubdir/$seed/"
+outModelDir="$derivedDataDir/$IR_MODELS_SUBDIR/$modelName/$addExperSubdir/$seed/"
 trainDir="$derivedDataDir/$trainSubDir"
 
 

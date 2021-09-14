@@ -701,16 +701,18 @@ def main_cli():
     print('Loss:', loss_obj)
 
     # For details on our serialization approach, see comments in the ModelWrapper
-    model_holder : ModelSerializer = ModelSerializer(args.model)
+    model_holder : ModelSerializer = None
 
     if args.init_model is not None:
         print('Loading a complete model from:', args.init_model.name)
-        model_holder.load_all(args.init_model.name)
+        model_holder = ModelSerializer.load_all(args.init_model.name)
     elif args.init_model_weights is not None:
+        model_holder = ModelSerializer(args.model_name)
         model_holder.create_model_from_args(args)
         print('Loading model weights from:', args.init_model_weights.name)
         model_holder.load_weights(args.init_model_weights.name, strict=False)
     else:
+        model_holder = ModelSerializer(args.model_name)
         print('Creating the model from scratch!')
         model_holder.create_model_from_args(args)
 
