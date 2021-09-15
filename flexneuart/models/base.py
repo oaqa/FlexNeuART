@@ -74,7 +74,7 @@ class BaseModel(torch.nn.Module):
         return model_param_dict
 
 
-    def bert_params(self):
+    def bert_param_names(self):
         """
         :return: for BERT-based models, it returns a set of parameters related to the main BERT-encoder.
                  for other models, we should return an empty set.

@@ -31,7 +31,7 @@ class BertBaseRanker(BaseModel):
         super().__init__()
         init_model(self, bert_flavor)
 
-    def bert_params(self):
+    def bert_param_names(self):
         """
         :return: a list of the main BERT-parameters. Because we assigned the main BERT model
                  to an attribute with the name BERT_ATTR, all parameter keys must start with this
