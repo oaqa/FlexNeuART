@@ -32,7 +32,12 @@ class BertBaseRanker(BaseModel):
         init_model(self, bert_flavor)
 
     def bert_params(self):
-        return set(getattr(self, BERT_ATTR).state_dict().keys())
+        """
+        :return: a list of the main BERT-parameters. Because we assigned the main BERT model
+                 to an attribute with the name BERT_ATTR, all parameter keys must start with this
+                 value followed by a dot.
+        """
+        return set([k for k in self.state_dict().keys() if k.startswith( f'{BERT_ATTR}.')])
 
     def tokenize_and_encode(self, text):
         """Tokenizes the text and converts tokens to respective IDs
