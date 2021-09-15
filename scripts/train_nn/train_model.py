@@ -400,8 +400,8 @@ def do_train(sync_barrier,
 
         params = [(k, v) for k, v in model_holder.model.named_parameters() if v.requires_grad]
         # BERT parameters use a special learning weight
-        bert_params =     {'params': [v for k, v in params if k     in bert_params], 'lr': bert_lr}
-        non_bert_params = {'params': [v for k, v in params if k not in bert_params]}
+        bert_params =     {'params': [v for k, v in params if     k in bert_params], 'lr': bert_lr}
+        non_bert_params = {'params': [v for k, v in params if not k in bert_params]}
 
         if train_params.optim == OPT_ADAMW:
             optimizer = torch.optim.AdamW([non_bert_params, bert_params],
