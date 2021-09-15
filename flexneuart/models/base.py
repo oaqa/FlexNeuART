@@ -131,6 +131,7 @@ class ModelSerializer:
         print(f'Model type name: {model_name}, registered class:', model_class)
 
         self.model_class = model_class
+        self.model_name = model_name
         self.params = {}
         self.model = None
 
