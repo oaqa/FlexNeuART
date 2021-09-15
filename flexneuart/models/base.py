@@ -73,6 +73,14 @@ class BaseModel(torch.nn.Module):
         """
         return model_param_dict
 
+
+    def bert_params(self):
+        """
+        :return: for BERT-based models, it returns a set of parameters related to the main BERT-encoder.
+                 for other models, we should return an empty set.
+        """
+        return set([])
+
     def tokenize_and_encode(self, text):
         """Tokenizes the text and converts tokens to respective IDs
 
@@ -109,21 +117,18 @@ class ModelSerializer:
           as input.
 
     """
-    def __init__(self, model_name=None, model_class : BaseModel=None):
+    def __init__(self, model_name):
         """Constructor that accepts either the model class or model name.
 
         :param model_name: a name of the registered model
-        :param model_class: a model class, which is a subclass of the BaseModel
 
         """
+        assert model_name is not None, 'No model name/type is specified!'
+
+        model_class = model_registry.registered.get(model_name)
         if model_class is None:
-            assert model_name is not None, 'No model class or name is specified!'
-
-            model_class = model_registry.registered.get(model_name)
-            if model_class is None:
-                raise Exception(f'Model name {model_name} is not defined!')
-            print(f'Model type name: {model_name}, registered class:', model_class)
-
+            raise Exception(f'Model name {model_name} is not defined!')
+        print(f'Model type name: {model_name}, registered class:', model_class)
 
         self.model_class = model_class
         self.params = {}
@@ -167,9 +172,11 @@ class ModelSerializer:
             if not exp_key in data:
                 raise Exception(f'Missing key {exp_key} in {file_name}')
 
-        model_holder = ModelSerializer(model_name=data[MODEL_NAME])
+        model_name = data[MODEL_NAME]
+        model_holder = ModelSerializer(model_name)
 
         model_holder.model_args_processed = data[MODEL_ARGS]
+        model_holder.model_name = model_name
         model_holder.model = model_holder.model_class(**model_holder.model_args_processed)
         model_holder.model.load_state_dict(data[MODEL_STATE_DICT], strict=True)
         model_holder.max_query_len = data[MAX_QUERY_LEN]

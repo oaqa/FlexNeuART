@@ -12,8 +12,10 @@ import argparse
 
 from flexneuart.config import DEFAULT_DEVICE_GPU
 from transformers import AutoTokenizer, AutoModel
-from flexneuart.models import VANILLA_BERT, model_registry
+from flexneuart.models import model_registry
 
+# An attribute to store the main BERT encoder
+BERT_ATTR='bert'
 
 def init_model(obj_ref, bert_flavor):
     """Instantiate a model, a tokenizer, and remember their parameters.
@@ -26,7 +28,7 @@ def init_model(obj_ref, bert_flavor):
 
     model = AutoModel.from_pretrained(bert_flavor)
     config = model.config
-    obj_ref.bert = model
+    setattr(obj_ref, BERT_ATTR, model)
     obj_ref.config = config
     obj_ref.tokenizer = tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
 

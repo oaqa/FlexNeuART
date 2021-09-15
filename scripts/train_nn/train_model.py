@@ -371,9 +371,13 @@ def do_train(sync_barrier,
 
     device_name = train_params.device_name
 
+    bert_params = model_holder.model.bert_params()
+
     if is_master_proc:
         print('Training parameters:')
         print(train_params)
+        print('BERT parameters:')
+        print(bert_params)
         print('Loss function:', loss_obj.name())
 
     print('Device name:', device_name)
@@ -395,8 +399,9 @@ def do_train(sync_barrier,
     for epoch in range(train_params.epoch_qty):
 
         params = [(k, v) for k, v in model_holder.model.named_parameters() if v.requires_grad]
-        non_bert_params = {'params': [v for k, v in params if not k.startswith('bert.')]}
-        bert_params = {'params': [v for k, v in params if k.startswith('bert.')], 'lr': bert_lr}
+        # BERT parameters use a special learning weight
+        bert_params =     {'params': [v for k, v in params if k     in bert_params], 'lr': bert_lr}
+        non_bert_params = {'params': [v for k, v in params if k not in bert_params]}
 
         if train_params.optim == OPT_ADAMW:
             optimizer = torch.optim.AdamW([non_bert_params, bert_params],

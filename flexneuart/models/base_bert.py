@@ -7,7 +7,7 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 from flexneuart.models.base import BaseModel
-from flexneuart.models.utils import init_model
+from flexneuart.models.utils import init_model, BERT_ATTR
 
 USE_BATCH_COEFF = True
 DEFAULT_BERT_DROPOUT = 0.1
@@ -30,6 +30,9 @@ class BertBaseRanker(BaseModel):
         """
         super().__init__()
         init_model(self, bert_flavor)
+
+    def bert_params(self):
+        return set(getattr(BERT_ATTR).state_dict().keys())
 
     def tokenize_and_encode(self, text):
         """Tokenizes the text and converts tokens to respective IDs
