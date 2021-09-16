@@ -136,7 +136,8 @@ def add_model_init_basic_args(parser, add_device_name, add_init_model_weights, m
                             type=argparse.FileType('rb'), default=None)
     else:
         parser.add_argument('--init_model_list',
-                            metavar='initial models',
+                            metavar='serialized models',
+                            required=True,
                             help='previously serialized models',
                             type=argparse.FileType('rb'),
                             nargs='+',
