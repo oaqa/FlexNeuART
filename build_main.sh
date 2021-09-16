@@ -31,7 +31,8 @@ mkdir -p flexneuart/resources/extra
 cd scripts
 rm -f scripts.tar.gz
 
-tar cvfz scripts.tar.gz \
+# Note the h it tells us to follow symlinks!
+tar cvfzh scripts.tar.gz \
   exper/sample_exper_desc/one_feat.model \
   data/stopwords.txt \
   bin/* \
