@@ -154,11 +154,10 @@ if __name__ == '__main__':
     if args.init_model_list is not None:
         for model_file in args.init_model_list:
             fname = model_file.name
-            model_holder: ModelSerializer = ModelSerializer(fname)
 
-            print('Loading model weights from:', fname)
+            print('Loading model from:', fname)
 
-            model_holder.load_all(fname)
+            model_holder = ModelSerializer.load_all(fname)
 
             if all_max_doc_len is None:
                 all_max_doc_len = model_holder.max_doc_len
