@@ -154,7 +154,7 @@ if __name__ == '__main__':
     if args.init_model_list is not None:
         for model_file in args.init_model_list:
             fname = model_file.name
-            model_holder: ModelSerializer = ModelSerializer(args.model)
+            model_holder: ModelSerializer = ModelSerializer(fname)
 
             print('Loading model weights from:', fname)
 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
 
-    print(f'Max query/document lenghts: {all_max_query_len}/{all_max_doc_len}')
+    print(f'Max query/document lengths: {all_max_query_len}/{all_max_doc_len}')
 
 
     multi_threaded = False  # if we set to True, we can often run out of CUDA memory.
