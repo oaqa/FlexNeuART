@@ -5,8 +5,12 @@
 set -o pipefail
 curr_dir=$PWD
 
+if [ "$MAVEN_OFFILNE" = "1" ] ; then
+  offlineBuildFlag=" --offline "
+fi
+
 # 1. build a fat jar and wrapper scripts
-mvn -U clean package appassembler:assemble
+mvn $offlineBuildFlag -U clean package appassembler:assemble
 
 target_dir="flexneuart/resources/jars"
 mkdir -p "$target_dir"

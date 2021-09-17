@@ -153,7 +153,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
                        query_field_name,
                        index_field_name,
                        device_name, batch_size,
-                       model, model_path_rel):
+                       model_path_rel):
         """Reranker constructor.
 
         :param resource_manager:      a resource manager object
@@ -161,7 +161,6 @@ class PythonNNQueryRanker(BaseQueryRanker):
         :param index_field_name:      the name of the text field
         :param device_name:           a device name
         :param batch_size:            the size of the batch
-        :param model:                 a model_type name
         :param model_path_rel:        a path to a (previously trained) and serialized model relative to the resource root
 
         """
@@ -174,8 +173,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
             raise Exception(f'Missing model file: {model_file_name_full_path}')
 
         self.device_name = device_name
-        model_holder: ModelSerializer = ModelSerializer(model)
-        model_holder.load_all(model_file_name_full_path)
+        model_holder = ModelSerializer.load_all(model_file_name_full_path)
 
         self.model = model_holder.model
         self.model.to(device_name)
