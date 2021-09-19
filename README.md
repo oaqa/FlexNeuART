@@ -18,7 +18,7 @@ Documentation:
 * [Legacy notebooks for MS MARCO and Yahoo Answers](legacy_docs/README.md)
 * [Former life (as a knn4qa package), including acknowledgements and publications](knn4qa.md)
 
-We support [a number BERT-based ranking models](flexneuart/models), but we currently do not provide detailed description.
+We support [a number BERT-based ranking models](flexneuart/models), a more detailed description is coming. We also work on writing a description of Java-layer ranking modules.
 
 The framework supports data in generic JSONL format. We provide conversion (and in some cases download) scripts for the following collections:
 * Cranfield (a small toy collection)
