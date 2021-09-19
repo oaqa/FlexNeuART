@@ -21,10 +21,10 @@ Documentation:
 We support [a number BERT-based ranking models](flexneuart/models), but we currently do not provide detailed description.
 
 The framework supports data in generic JSONL format. We provide conversion (and in some cases download) scripts for the following collections:
-* MS MARCO data v1 and v2 (documents and passages)
-* Wikipedia DPR (Natural Questions, SQuAD)
-* Yahoo Answers collections
 * Cranfield (a small toy collection)
+* MS MARCO data v1 and v2 (documents and passages)
+* Wikipedia DPR (Natural Questions, Trivia QA, SQuAD)
+* Yahoo Answers collections
 
 
 For neural network training FlexNeuART incorporates
