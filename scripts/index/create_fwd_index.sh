@@ -28,7 +28,7 @@ FIELD_DEF="examples: text:parsedBOW, text_unlemm:parsedText, text_raw:textRaw, d
 
 parseArguments $@
 
-usageMain="<collection> <field definition: $FIELD_DEF>"
+usageMain="<$SAMPLE_COLLECT_ARG> <field definition: $FIELD_DEF>"
 
 if [ "$help" = "1" ] ; then
   genUsage "$usageMain"

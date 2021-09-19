@@ -39,8 +39,8 @@ export PATH=./bin/:$PATH
 #
 #         $EXPER_SUBDIR
 #
-#         $FWD_INDEX_SUBDIR
-#         $LUCENE_INDEX_SUBDIR
+#         $FWD_INDEX_SUBDIR (default location)
+#         $LUCENE_INDEX_SUBDIR (default location)
 #
 
 # Original input data directory
