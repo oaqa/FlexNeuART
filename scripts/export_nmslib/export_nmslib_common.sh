@@ -28,6 +28,7 @@ paramOpts=(
   "embed_dir"       "embedSubDir"   "a root dir for embeddings"
   "query_file_pref" "queryFilePref" "query file prefix relative to input data directory (without a dot): \
 If specified, we generate queries rather than documents."
+  "model_file"      "modelFile"     "Linear-model file used to compute a fusion score (we don't need it for queries)."
 )
 
 parseArguments $@
@@ -76,6 +77,10 @@ if [ "$fwdIndexDir" != "" ] ; then
   params="$params -fwd_index_dir $fwdIndexDir"
 fi
 
+if [ "$modelFile" != "" ] ; then
+  params="$params -model_file $modelFile "
+fi
+
 echo "=========================================================================="
 echo "Collection directory:      $collectDir                                    "
 echo "Extractor JSON:            $extrJson                                      "
@@ -83,5 +88,6 @@ echo "Output file:               $outFile                                       
 echo "Forward index directory:   $fwdIndexDir                                   "
 echo "Model 1 directory:         $model1SubDir                                  "
 echo "Embedding directory:       $embedSubDir                                   "
+echo "Model file:                $modelFile                                     "
 echo "=========================================================================="
 
