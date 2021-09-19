@@ -1,4 +1,10 @@
 # MSMARCO
+**This notebook is kept for historical purposes mainly: It uses an older framework version** you can use, e.g., the following
+mini-release to reproduce results:
+```
+git checkout tags/repr2020-12-06
+```
+
 1. [Document ranking](DOCS.md)
 2. [Passage ranking](PASSAGES.md)
 3. Step-by-step notebooks to reproduce our run submitted 

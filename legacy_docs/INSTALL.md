@@ -27,8 +27,7 @@ git clone https://github.com/oaqa/FlexNeuART.git
 cd FlexNeuART/
 ```
 
-Optionally check out a specific branch or tag.
-For example:
+Check out the previous-version tag:
 ```
 git checkout tags/repr2020-12-06
 ```
