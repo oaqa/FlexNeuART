@@ -1,6 +1,7 @@
 # MSMARCO
-**This notebook is kept for historical purposes mainly: It uses an older framework version** you can use, e.g., the following
-mini-release to reproduce results:
+**This notebook is kept for historical purposes mainly: It uses an older framework version**
+
+One has to use the following mini-release to reproduce results:
 ```
 git checkout tags/repr2020-12-06
 ```
