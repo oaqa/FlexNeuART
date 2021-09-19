@@ -14,25 +14,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# A script to convert MS MARCO v1 passages or queries to dense vectors using PySerini's TCT-COLBERT models
-# These vectors are stored in "BSONL" format, which can be used to create a forward index.
-#
 
+"""
+    A script to convert MS MARCO v1 passages or queries to dense vectors using PySerini's TCT-COLBERT models.
+    These vectors are stored in "BSONL" format, which can be used to create a forward index.
+"""
 import argparse
-import os
-import sys
-import torch
 import numpy as np
 from tqdm import tqdm
 
-DEVICE_NAME='cuda'
+from flexneuart.config import DEFAULT_DEVICE_GPU
 
-sys.path.append('.')
+DEVICE_NAME=DEFAULT_DEVICE_GPU
 
-from scripts.config import TEXT_RAW_FIELD_NAME
-from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, \
-                                                write_json_to_bin, is_json_query_file, jsonl_gen
-from scripts.data_convert.biencoder.tct_colbert_pass_v1.tct_colbert_models import TctColBertDocumentEncoder, TctColBertQueryEncoder
+from flexneuart.config import  DOCID_FIELD, TEXT_RAW_FIELD_NAME
+from flexneuart.io import FileWrapper, jsonl_gen
+from flexneuart.io.queries import is_json_query_file
+from flexneuart.io.pack import pack_dense_batch, write_json_to_bin
+
+from flexneuart.data_convert.biencoder.tct_colbert_pass_v1.models import TctColBertDocumentEncoder, TctColBertQueryEncoder
 
 
 parser = argparse.ArgumentParser(description='Convert passages and/or documents to dense vectors and store them in "BSONL" format.')

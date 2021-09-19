@@ -1,8 +1,8 @@
 #!/bin/bash -e
 # A script to derive Model 1 translation probabilities using MGIZA.
 
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
@@ -121,14 +121,14 @@ echo "Full target dir: $full_target_dir"
 # 1. Filtering out sentences where the difference in the number of words is too large 
 # 2. Applying symmetrization if requested
 MAX_FERTILITY=9
-scripts/giza/sample_and_filter_long_bitext.py "${source_dir}/answer_${field}"   \
+./giza/sample_and_filter_long_bitext.py "${source_dir}/answer_${field}"   \
                             "${source_dir}/question_${field}" \
                             "$MAX_FERTILITY" \
                             "$full_target_dir/source" "$full_target_dir/target" \
                             "$SYMMETRIZE" \
                             "$sampleProb"
 
-scripts/giza/run_mgiza.sh "$mgizaDir" "$dir" \
+./giza/run_mgiza.sh "$mgizaDir" "$dir" \
                           "$full_target_dir/source" "$full_target_dir/target" \
                           "$GIZA_ITER_QTY"
 

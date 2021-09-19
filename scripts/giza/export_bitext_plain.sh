@@ -6,8 +6,8 @@
 # There is a parameter defining how much longer document chunks can be compared
 # to queries (in terms of the relative number of words)
 
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "BITEXT_SUBDIR"
@@ -95,12 +95,12 @@ echo "Embedding directory:          $embedDir"
 echo "Max ratio:                    $maxRatio"
 echo "=========================================================================="
 
-target/appassembler/bin/CreateBitextFromQRELs -fwd_index_dir $indexDir \
-                                  -embed_dir $embedDir \
-                                  -index_field $field \
-                                  -query_field $query_field \
-                                  -output_dir "$outDir" \
-                                  -query_file_pref  "$inputPartDir/${QUESTION_FILE_PREFIX}" \
-                                  -qrel_file "$inputPartDir/$QREL_FILE" \
-                                  -max_doc_query_qty_ratio "$maxRatio"
+CreateBitextFromQRELs -fwd_index_dir $indexDir \
+          -embed_dir $embedDir \
+          -index_field $field \
+          -query_field $query_field \
+          -output_dir "$outDir" \
+          -query_file_pref  "$inputPartDir/${QUESTION_FILE_PREFIX}" \
+          -qrel_file "$inputPartDir/$QREL_FILE" \
+          -max_doc_query_qty_ratio "$maxRatio"
 

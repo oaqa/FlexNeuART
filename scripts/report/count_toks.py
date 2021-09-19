@@ -14,12 +14,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
 import argparse
 
-sys.path.append('.')
-
-from scripts.data_convert.convert_common import jsonl_gen
+from flexneuart.io.utils import jsonl_gen
 
 parser = argparse.ArgumentParser(description='Count tokens and number of entries in JSONL')
 

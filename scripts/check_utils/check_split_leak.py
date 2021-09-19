@@ -14,57 +14,51 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
 import os
-import json
 import argparse
-import random
-import math
-import pytorch_pretrained_bert
-import time
 import numpy as np
 from tqdm import tqdm
 
-#
-# This utility scripts checks for possible leakage across different data splits.
-# Importantly it works only for bitext. In the context of a community QA collection,
-# such bitext arises naturally. For regular document collections, a pseudo-bitext
-# needs to be created user the scripts/giza/export_bitext_plain.sh:
-# importantly one needs to use the text_raw field (and text as an index field)
-# and use 0 for the  "max query to doc word ratio" so documents are not split
-# into chunks.
-#
+"""
+   
+    This utility scripts checks for possible leakage across different data splits.
+    Importantly it works only for bitext. In the context of a community QA collection,
+    such bitext arises naturally. For regular document collections, a pseudo-bitext
+    needs to be created user the scripts/giza/export_bitext_plain.sh:
+    importantly one needs to use the text_raw field (and text as an index field)
+    and use 0 for the  "max query to doc word ratio" so documents are not split
+    into chunks.
+   
 
-# Specifically, we search for very similar question-answer pairs, which might
-# be duplicates or near duplicates. Hence, we check the following:
-# 1. Are there very similar questions?
-# 2. For sufficiently similar questions, e.g., Jaccard >= 0.75, we check
-#    all pairwise similarities among all relevant answers.
-#
-# By default this method uses brute-force search with the Jaccard similarity.
-# The exhaustiveness of the search ensures we won't miss anything. However, for quicker-and-easier
-# checks, one can use HNSW with sufficently high values of M (>= 30), efConstruction (>=200),
-# and efSearch (>=1000). These parameters might need to be bumped up for "harder" collections
-# and brute-force search is certainly a safer option.
-#
+    Specifically, we search for very similar question-answer pairs, which might
+    be duplicates or near duplicates. Hence, we check the following:
+    1. Are there very similar questions?
+    2. For sufficiently similar questions, e.g., Jaccard >= 0.75, we check
+       all pairwise similarities among all relevant answers.
+   
+    By default this method uses brute-force search with the Jaccard similarity.
+    The exhaustiveness of the search ensures we won't miss anything. However, for quicker-and-easier
+    checks, one can use HNSW with sufficently high values of M (>= 30), efConstruction (>=200),
+    and efSearch (>=1000). These parameters might need to be bumped up for "harder" collections
+    and brute-force search is certainly a safer option.
+   
+"""
 
-sys.path.append('.')
+from flexneuart.check_utils import get_token_ids, QUERY_BATCH_SIZE, jaccard, \
+                                   read_sample_queries, create_jaccard_index, str_to_nmslib_vect
 
-from scripts.check_utils.check_common import get_token_ids, QUERY_BATCH_SIZE, jaccard, \
-                                            read_sample_queries, create_jaccard_index, str_to_nmslib_vect
+from flexneuart.text_proc.parse import get_bert_tokenizer
+from flexneuart.io import jsonl_gen
+from flexneuart.data_convert import unique
+from flexneuart.config import ANSWER_FILE_JSON, QREL_FILE, DOCID_FIELD, TEXT_RAW_FIELD_NAME
 
-from scripts.data_convert.convert_common import jsonl_gen, unique
-from scripts.config import BERT_BASE_MODEL, \
-                         ANSWER_FILE_JSON, QREL_FILE, \
-                         DOCID_FIELD, TEXT_RAW_FIELD_NAME
-
-from scripts.eval_common import read_qrels_dict
+from flexneuart.eval import read_qrels_dict
 
 PRINT_TOO_CLOSE_THRESHOLD=0.9 # We want to inspect answers that are too close
 
 np.random.seed(0)
 
-BERT_TOKENIZER = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+tokenizer = get_bert_tokenizer()
 
 parser = argparse.ArgumentParser(description='Checking for possible high overlaps among QA pairs.')
 
@@ -129,7 +123,7 @@ for fn in [apath1, apath2]:
 
     print('Read %d answers from %s' % (qty, fn))
 
-index = create_jaccard_index(args.use_hnsw, BERT_TOKENIZER, sample_query_list2)
+index = create_jaccard_index(args.use_hnsw, tokenizer, sample_query_list2)
 
 K = args.k
 print('K=', K)
@@ -141,7 +135,7 @@ nbr_answ_simils = []
 for start in tqdm(range(0, len(sample_query_list1), QUERY_BATCH_SIZE), desc='query w/ 1st query set'):
     qbatch = []
     for e in sample_query_list1[start:start + QUERY_BATCH_SIZE]:
-        qbatch.append(str_to_nmslib_vect(BERT_TOKENIZER, e[TEXT_RAW_FIELD_NAME]))
+        qbatch.append(str_to_nmslib_vect(tokenizer, e[TEXT_RAW_FIELD_NAME]))
 
     if qbatch:
         nbrs = index.knnQueryBatch(qbatch, k=K, num_threads=0)
@@ -168,8 +162,8 @@ for start in tqdm(range(0, len(sample_query_list1), QUERY_BATCH_SIZE), desc='que
                             for aid2, grade2 in qrel_dict2[qid2].items():
                                 if grade1 > 0 and grade2 > 0 and \
                                     aid1 in answ_dict_text and aid2 in answ_dict_text:
-                                    toks1 = unique(get_token_ids(BERT_TOKENIZER, answ_dict_text[aid1]))
-                                    toks2 = unique(get_token_ids(BERT_TOKENIZER, answ_dict_text[aid2]))
+                                    toks1 = unique(get_token_ids(tokenizer, answ_dict_text[aid1]))
+                                    toks2 = unique(get_token_ids(tokenizer, answ_dict_text[aid2]))
                                     answ_simil = jaccard(toks1, toks2)
                                     nbr_answ_simils.append(answ_simil)
                                     if answ_simil >= PRINT_TOO_CLOSE_THRESHOLD:

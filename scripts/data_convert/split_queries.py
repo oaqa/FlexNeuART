@@ -14,21 +14,24 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# A script to randomly split queries
-# Instead of using this directly, one can use a convenience wrapper shell script split_queries.sh.
-#
-import sys
+
+"""
+    A script to randomly split queries.
+
+    Instead of using this directly, one can use a convenience wrapper shell script split_queries.sh.
+"""
 import os
 import random
 import json
 import argparse
 
-sys.path.append('.')
-from scripts.data_convert.split_queries_args import add_basic_query_split_args, QuerySplitArgumentsBase
-from scripts.data_convert.convert_common import read_queries
-from scripts.eval_common import read_qrels, qrel_entry2_str
-from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
-from scripts.data_convert.convert_common import FileWrapper, build_query_id_to_partition
+from flexneuart.data_convert import build_query_id_to_partition, \
+                                    add_basic_query_split_args, \
+                                    QuerySplitArgumentsBase
+from flexneuart.io.queries import read_queries
+from flexneuart.io.qrels import read_qrels, qrel_entry2_str
+from flexneuart.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
+from flexneuart.io import FileWrapper
 
 
 def write_queries_files(queries, query_id_to_partition, dst_dir, partitions_names):

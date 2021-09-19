@@ -14,33 +14,36 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
+
+"""
+    Convert a Wikipedia corpus used in the Facebook DPR project:
+    https://github.com/facebookresearch/DPR/tree/master/data
+
+    Optionally, one can specify a subset of the corpus by providing
+    a numpy array with passage IDs to include (otherwise we will
+    use all the passages).
+
+    The input is a TAB-separated file with three columns: id, passage text, title
+    This conversion script preserves original passages, but it also tokenizes them.
+"""
+
 import numpy as np
 import json
 import argparse
 import multiprocessing
 
-#
-# Convert a Wikipedia corpus used in the Facebook DPR project:
-# https://github.com/facebookresearch/DPR/tree/master/data
-# Optionally, one can specify a subset of the corpus by providing
-# a numpy array with passage IDs to select.
-#
-# The input is a TAB-separated file with three columns: id, passage text, title
-# This conversion script preserves original passages, but it also tokenizes them.
-#
 
-sys.path.append('.')
+from flexneuart.io import FileWrapper
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, add_retokenized_field
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
 
-from scripts.data_convert.convert_common import read_stop_words, FileWrapper, add_retokenized_field, \
-                                                BERT_TOK_OPT, BERT_TOK_OPT_HELP
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.config import STOPWORD_FILE, BERT_BASE_MODEL, SPACY_MODEL, \
-                        DOCID_FIELD, TEXT_RAW_FIELD_NAME, \
-                        REPORT_QTY, IMAP_PROC_CHUNK_QTY, \
-                        TEXT_BERT_TOKENIZED_NAME,\
-                        TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME
-from pytorch_pretrained_bert import BertTokenizer
+from flexneuart.config import IMAP_PROC_CHUNK_QTY, REPORT_QTY, \
+    TEXT_BERT_TOKENIZED_NAME, \
+    TEXT_FIELD_NAME, DOCID_FIELD, \
+    TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
+    SPACY_MODEL
+
 
 parser = argparse.ArgumentParser(description='Convert a Wikipedia corpus downloaded from github.com/facebookresearch/DPR.')
 parser.add_argument('--input_file', metavar='input file', help='input directory',
@@ -53,16 +56,13 @@ parser.add_argument('--out_file', metavar='output file',
 # Default is: Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
                     type=int, default=multiprocessing.cpu_count() - 1)
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 arg_vars = vars(args)
 print(args)
 
-bert_tokenizer=None
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 # Lower cased
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)

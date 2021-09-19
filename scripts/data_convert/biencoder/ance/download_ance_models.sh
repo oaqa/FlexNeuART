@@ -6,7 +6,7 @@ dstDir="$1"
 
 [ -d "$dstDir" ] || { echo "Not a directory: $dstDir (1st arg)" ; exit 1 ; }
 
-source scripts/common_proc.sh
+source ./common_proc.sh
 
 cd "$dstDir"
 
@@ -20,7 +20,7 @@ storePref="https://webdatamltrainingdiag842.blob.core.windows.net/semistructstor
 #mv 'Document ANCE(MaxP) Checkpoint' Document_ANCE_MaxP_Checkpoint
 
 # Unpacked model names/directories should match values
-# in the dictionary DATA_TYPE_PATHS in ance_data.py
+# in the dictionary DATA_TYPE_PATHS in flexneuart.data_convert.ance.data
 
 # Document FirstP
 wget "$storePref/Document_ANCE_FirstP_Checkpoint.zip"
@@ -38,5 +38,7 @@ mv 'Passage ANCE(FirstP) Checkpoint' Passage_ANCE_FirstP_Checkpoint
 
 # NQ
 wget $storePref/nq.cp
-
+# Trivia QA
 wget $storePref/trivia.cp
+
+

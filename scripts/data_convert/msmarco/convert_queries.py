@@ -13,23 +13,23 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# Convert MSMARCO queries
-#
-import sys
+
+"""
+    Convert MSMARCO queries
+"""
 import json
 import argparse
-import pytorch_pretrained_bert
 
-sys.path.append('.')
+from flexneuart.io import FileWrapper
+from flexneuart.io.qrels import write_qrels, add_qrel_entry
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, Sentencizer, get_retokenized, add_retokenized_field
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
 
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
-    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, \
+    TEXT_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
-    IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
+    REPORT_QTY, SPACY_MODEL
 
 parser = argparse.ArgumentParser(description='Convert MSMARCO-adhoc queries.')
 parser.add_argument('--input', metavar='input file', help='input file',
@@ -38,7 +38,7 @@ parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
 parser.add_argument('--min_query_token_qty', type=int, default=0,
                     metavar='min # of query tokens', help='ignore queries that have smaller # of tokens')
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
@@ -52,9 +52,7 @@ stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 # Input file is a TSV file
 ln = 0

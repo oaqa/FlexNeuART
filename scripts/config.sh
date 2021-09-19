@@ -4,9 +4,15 @@
 # the root directory for all collections/indices.
 
 if [ "$COLLECT_ROOT" = "" ] ; then
-  COLLECT_ROOT="collections"
+  echo "Specify the collection root location using the environment variable COLLECT_ROOT!"
+  exit 1
 fi
 echo "Using collection root: $COLLECT_ROOT"
+
+# Setting path for Java-binary-calling scripts
+# These scripts should be copied to ./bin by either
+# a build or an installation script.
+export PATH=./bin/:$PATH
 
 # The structure of sub-directories is outlined below
 
@@ -26,16 +32,15 @@ echo "Using collection root: $COLLECT_ROOT"
 #             $BITEXT_SUBDIR (optional)
 #
 #         $DERIVED_DATA_SUBDIR
+#             $IR_MODELS_SUBDIR (optional)
 #             $BITEXT_SUBDIR (optional)
 #             $MODEL1_SUBDIR (optional)
 #             $EMBED_SUBDIR (optional)
-#             $LM_FINETUNE_SUBDIR (optional)
-#             $IR_MODELS_SUBDIR (optional)
 #
 #         $EXPER_SUBDIR
 #
-#         $FWD_INDEX_SUBDIR
-#         $LUCENE_INDEX_SUBDIR
+#         $FWD_INDEX_SUBDIR (default location)
+#         $LUCENE_INDEX_SUBDIR (default location)
 #
 
 # Original input data directory
@@ -53,7 +58,7 @@ EXPER_SUBDIR="results"
 FWD_INDEX_SUBDIR="forward_index"
 LUCENE_INDEX_SUBDIR="lucene_index"
 
-# Embeddings are stored within the derived-data sub-directory
+# Word embeddings are (historically) stored within the derived-data sub-directory
 EMBED_SUBDIR="embeddings"
 
 # This is a bunch of sub-directories for input data
@@ -62,10 +67,6 @@ DEFAULT_TRAIN_SUBDIR="train_fusion" # This only a default that can be overriden
 DEV_SUBDIR="dev"
 DEV1_SUBDIR="dev1"
 DEV2_SUBDIR="dev2"
-
-# A directory with data for BERT LM fine-tuning
-LM_FINETUNE_SUBDIR="lm_finetune_data"
-LM_FINETUNE_SET_PREF="set"
 
 # A directory to store trained models
 IR_MODELS_SUBDIR="ir_models"

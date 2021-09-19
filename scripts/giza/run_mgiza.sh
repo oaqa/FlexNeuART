@@ -1,5 +1,5 @@
 #!/bin/bash
-. scripts/giza/run_common.sh
+. ./giza/run_common.sh
 
 # This script produces only Model 1 alignment
 

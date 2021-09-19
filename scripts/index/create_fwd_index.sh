@@ -1,6 +1,6 @@
 #!/bin/bash -e
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
@@ -28,7 +28,7 @@ FIELD_DEF="examples: text:parsedBOW, text_unlemm:parsedText, text_raw:textRaw, d
 
 parseArguments $@
 
-usageMain="<collection> <field definition: $FIELD_DEF>"
+usageMain="<$SAMPLE_COLLECT_ARG> <field definition: $FIELD_DEF>"
 
 if [ "$help" = "1" ] ; then
   genUsage "$usageMain"
@@ -93,6 +93,7 @@ if [ ! -d "$indexDir" ] ; then
 else
   if [ "$clean" = "1" ] ; then
     echo "Removing previously created index for the field ${field} (if exists)"
+    rm -rf "$indexDir"/"${field}"
     rm -rf "$indexDir"/"${field}."*
   fi
 fi
@@ -118,7 +119,7 @@ else
   dataFileNameCurr="$dataFileNameJSONL"
 fi
 
-target/appassembler/bin/BuildFwdIndexApp  \
+BuildFwdIndexApp  \
   $fwdIndexTypeArg \
   $fwdIndexStoreTypeArg \
   $expectedDocQtyArg \

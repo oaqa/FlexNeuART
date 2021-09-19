@@ -14,47 +14,44 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# Convert Cranfield collection queries.
 #
-import sys
+
+"""
+    Convert Cranfield collection queries.
+"""
 import argparse
 import json
-import pytorch_pretrained_bert
 
 from tqdm import tqdm
 
-sys.path.append('.')
+from flexneuart.data_convert.cranfield import read_cranfield_data, BODY_FIED_NAME
 
-from scripts.data_convert.cranfield.cranfield_common import *
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.config import BERT_BASE_MODEL, TEXT_BERT_TOKENIZED_NAME, SPACY_MODEL
-from scripts.data_convert.convert_common \
-    import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field
+from flexneuart.config import DOCID_FIELD, TEXT_RAW_FIELD_NAME, TEXT_FIELD_NAME
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, SPACY_MODEL, STOPWORD_FILE
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
+from flexneuart.text_proc.parse import SpacyTextParser, add_retokenized_field
+
+from flexneuart.io import FileWrapper
+from flexneuart.io.stopwords import read_stop_words
 
 
 parser = argparse.ArgumentParser(description='Convert Cranfield queries.')
-
 
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--output', metavar='output file', help='output file',
                     type=str, required=True)
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
-arg_vars = vars(args)
 
 inp_data = read_cranfield_data(args.input)
 
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 #print(stop_words)
 
-bert_tokenizer=None
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+bert_tokenizer=create_bert_tokenizer_if_needed(args)
 
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 

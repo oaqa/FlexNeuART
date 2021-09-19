@@ -13,13 +13,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+"""
+    Tag questions with their respective types.
+"""
 import sys
-import re
 import json
 
-sys.path.append('.')
-
-from scripts.data_convert.msmarco.similarity_funcs import is_equal, tokenized_equal
+from flexneuart.data_convert.msmarco import is_equal
 
 
 def annotate_questions_using_msmarco_dataset(passage_dataset, qa_dataset, similarity_func):

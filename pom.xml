@@ -5,8 +5,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.cmu.lti.oaqa</groupId>
   <artifactId>FlexNeuART</artifactId>
-  <version>1.0</version>
-  <inceptionYear>2015</inceptionYear>
+  <version>0.14</version>
+  <inceptionYear>2014</inceptionYear>
   <name>Flexible classic and NeurAl Retrieval Toolkit</name>
   <packaging>jar</packaging>
 
@@ -85,6 +85,21 @@
       <version>1.10.11</version>
     </dependency>
 
+    <!-- more (space) efficient hashes -->
+
+    <dependency>
+      <groupId>net.openhft</groupId>
+      <artifactId>koloboke-api-jdk6-7</artifactId>
+      <version>0.6.7</version>
+    </dependency>
+    <dependency>
+      <groupId>net.openhft</groupId>
+      <artifactId>koloboke-impl-jdk6-7</artifactId>
+      <version>0.6.7</version>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- end of hashes -->
+
     <!-- Testing begins -->
     <dependency>
       <groupId>junit</groupId>
@@ -99,26 +114,6 @@
       <version>1.12.0</version>
     </dependency>
     <!-- Testing ends -->
-
-    <!-- more (space) efficient hashes -->
-    <dependency>
-      <groupId>net.sf.trove4j</groupId>
-      <artifactId>trove4j</artifactId>
-      <version>3.0.3</version>
-    </dependency>
-
-    <dependency>
-      <groupId>net.openhft</groupId>
-      <artifactId>koloboke-api-jdk6-7</artifactId>
-      <version>0.6.7</version>
-    </dependency>
-    <dependency>
-      <groupId>net.openhft</groupId>
-      <artifactId>koloboke-impl-jdk6-7</artifactId>
-      <version>0.6.7</version>
-      <scope>runtime</scope>
-    </dependency>
-    <!-- end of hashes -->
 
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -140,25 +135,6 @@
       <artifactId>lucene-codecs</artifactId>
       <version>${lucene.version}</version>
     </dependency>
-
-    <!--
-    <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr-solrj</artifactId>
-      <version>${lucene.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr-core</artifactId>
-      <version>${lucene.version}</version>
-        <exclusions>
-          <exclusion>
-            <artifactId>guava</artifactId>
-            <groupId>com.google.guava</groupId>
-          </exclusion>
-        </exclusions>
-    </dependency>
-    -->
 
     <dependency>
       <groupId>org.mapdb</groupId>
@@ -208,12 +184,6 @@
       <artifactId>json</artifactId>
       <version>20160810</version>
     </dependency>
-
-    <dependency> 
-      <groupId>com.opencsv</groupId> 
-      <artifactId>opencsv</artifactId> 
-      <version>4.1</version> 
-    </dependency> 
 
     <dependency>
       <groupId>javax.annotation</groupId>
@@ -274,10 +244,6 @@
                 <program>
                   <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.BuildFwdIndexApp</mainClass>
                   <id>BuildFwdIndexApp</id>
-                </program>
-                <program>
-                  <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.ConvertDataXMLJson</mainClass>
-                  <id>ConvertDataXMLJson</id>
                 </program>
                 <program>
                   <mainClass>edu.cmu.lti.oaqa.flexneuart.apps.GenFeaturesAppMultThread</mainClass>

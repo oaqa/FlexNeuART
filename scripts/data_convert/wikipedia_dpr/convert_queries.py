@@ -14,32 +14,32 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
+
+"""
+    This script converts raw query files from DPR repository into the FlexNeuArt internal format.
+
+    In addition, it can generate BITEXT data to train Model 1.
+"""
+
 import os
 import json
 import argparse
-import pytorch_pretrained_bert
 import tqdm
 
-sys.path.append('.')
+from flexneuart.io import FileWrapper
+from flexneuart.io.qrels import write_qrels, add_qrel_entry
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, Sentencizer, get_retokenized, add_retokenized_field
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed, \
+                    OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP
 
-from scripts.data_convert.text_proc import SpacyTextParser, Sentencizer
-from scripts.data_convert.convert_common import get_retokenized, \
-    STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP, \
-    FileWrapper, read_stop_words, add_retokenized_field
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, \
-    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, \
+    TEXT_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
     SPACY_MODEL, \
     BITEXT_QUESTION_PREFIX, BITEXT_ANSWER_PREFIX,\
     ANSWER_LIST_FIELD_NAME
-from scripts.data_convert.wikipedia_dpr.utils import dpr_json_reader, get_passage_id
-from scripts.eval_common import write_qrels, add_qrel_entry
-
-#
-# Script converts raw query files from DPR repository into the FlexNeuArt internal format.
-#
+from flexneuart.data_convert.wikipedia_dpr import dpr_json_reader, get_passage_id
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Script converts raw query files from the DPR repository '
@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument('--' + OUT_BITEXT_PATH_OPT, metavar=OUT_BITEXT_PATH_OPT_META,
                         help=OUT_BITEXT_PATH_OPT_HELP,
                         type=str, default=None)
-    parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+    add_bert_tok_args(parser)
 
     args = parser.parse_args()
 
@@ -84,11 +84,7 @@ sent_split = Sentencizer(SPACY_MODEL)
 
 bitext_fields = [TEXT_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME]
 
-bert_tokenizer=None
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
-    bitext_fields.append(TEXT_BERT_TOKENIZED_NAME)
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 bi_quest_files = {}
 bi_answ_files = {}

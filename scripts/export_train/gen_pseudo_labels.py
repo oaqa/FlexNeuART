@@ -13,16 +13,16 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# This script generates pseudo-label QREL files from a an existing run-file.
-#
 
+"""
+   
+    This script generates pseudo-label QREL files from a an existing run-file.
+   
+"""
 import argparse
-import sys
 
-sys.path.append('.')
-
-from scripts.eval_common import read_run_dict, write_qrels, QrelEntry, get_sorted_scores_from_score_dict
+from flexneuart.io.runs import read_run_dict, get_sorted_scores_from_score_dict
+from flexneuart.io.qrels import write_qrels, QrelEntry
 
 parser = argparse.ArgumentParser('Generate pseudo-QRELs from a run')
 

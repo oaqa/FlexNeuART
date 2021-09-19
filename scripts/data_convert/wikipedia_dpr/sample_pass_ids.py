@@ -14,15 +14,12 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
 import numpy as np
 import argparse
 import tqdm
 
-sys.path.append('.')
-
-from scripts.data_convert.convert_common import FileWrapper
-from scripts.data_convert.wikipedia_dpr.utils import dpr_json_reader, get_passage_id
+from flexneuart.io import FileWrapper
+from flexneuart.data_convert.wikipedia_dpr import dpr_json_reader, get_passage_id
 
 
 def parse_args():

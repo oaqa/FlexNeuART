@@ -14,18 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# This script compares output from trec_eval with our reimplementation
-# Sample QREL & RUNS can be found in this directory.
-#
-import sys
+
+"""
+   
+    This script compares output from trec_eval with our reimplementation
+    Sample QREL & RUNS can be found in this directory.
+   
+"""
+
 import argparse
-import tempfile
-import os
+import numpy as np
 
-sys.path.append('.')
-
-from scripts.eval_common import *
-from scripts.utils import create_temp_file
+from flexneuart.io.runs import read_run_dict, write_run_dict
+from flexneuart.io.qrels import read_qrels_dict, write_qrels, QrelEntry
+from flexneuart.eval import METRIC_LIST, get_eval_results
+from flexneuart.io import create_temp_file
 
 parser = argparse.ArgumentParser('Comparing external and internal eval tools')
 

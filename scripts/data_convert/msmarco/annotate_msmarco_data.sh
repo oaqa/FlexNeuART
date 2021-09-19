@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
@@ -17,7 +17,7 @@ fi
 
 dataDownloadDir="${COLLECT_ROOT}/${collect}/${INPUT_RAW_SUBDIR}"
 
-python -u scripts/data_convert/msmarco/concatenate_datasets.py \
+python -u ./data_convert/msmarco/concatenate_datasets.py \
         --input_datapath "${dataDownloadDir}/" \
         --output "${dataDownloadDir}/concatenated_data.jsonl"
 
@@ -29,7 +29,7 @@ for inpSubDir in "${COLLECT_ROOT}/${collect}/${INPUT_DATA_SUBDIR}/"/* ; do
     if [ -f "${questFilePath}" ] ;
     then
         echo "Annotating ${questFilePath}"
-        python -u scripts/data_convert/msmarco/question_tagging.py \
+        python -u ./data_convert/msmarco/question_tagging.py \
                 "${questFilePath}" \
                 "${dataDownloadDir}/concatenated_data.jsonl" \
                 "${inpSubDir}/tagged_question_ids.json"

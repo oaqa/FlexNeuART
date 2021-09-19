@@ -1,6 +1,6 @@
 #!/bin/bash
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 currDir=$PWD
 
@@ -274,7 +274,7 @@ nrun=0
 nfail=0
 for ((ivar=1;;++ivar)) ; do
 
-  stat=`scripts/exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
+  stat=`./exper/parse_exper_conf.py "$experDescPath" "$((ivar-1))" "$tmpConf"`
 
   if [ "$?" != "0" ] ; then
     echo "Failed to parse configuration $ivar from the file $experDescPath"
@@ -292,8 +292,8 @@ for ((ivar=1;;++ivar)) ; do
     cat "$tmpConf"
     echo "========================================"
 
-    testPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
-    trainPart=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TRAIN_PART_PARAM`
+    testPart=`$currDir/grep_file_for_val.py "$tmpConf" $TEST_PART_PARAM`
+    trainPart=`$currDir/grep_file_for_val.py "$tmpConf" $TRAIN_PART_PARAM`
 
     if [ "$trainPart" = "" ] ; then
       trainPart="$defaultTrainPart"
@@ -301,9 +301,9 @@ for ((ivar=1;;++ivar)) ; do
     # here trainPart must be defined
     checkVarNonEmpty "trainPart"
 
-    experSubdir=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $EXPER_SUBDIR_PARAM`
-    testOnly=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TEST_ONLY_PARAM`
-    trainOnly=`$currDir/scripts/grep_file_for_val.py "$tmpConf" $TRAIN_ONLY_PARAM`
+    experSubdir=`$currDir/grep_file_for_val.py "$tmpConf" $EXPER_SUBDIR_PARAM`
+    testOnly=`$currDir/grep_file_for_val.py "$tmpConf" $TEST_ONLY_PARAM`
+    trainOnly=`$currDir/grep_file_for_val.py "$tmpConf" $TRAIN_ONLY_PARAM`
 
     if [ "$testOnly" = "1" -a "$trainOnly" = "1" ] ; then
       echo "Incompatible options, you cannot simulataneously set $TEST_PART_PARAM and $TRAIN_ONLY_PARAM to 1!"
@@ -376,7 +376,7 @@ for ((ivar=1;;++ivar)) ; do
     for ((i=0;i<${#jsonParamMap[*]};i+=2)) ; do
       paramName=${jsonParamMap[$i]}
       jsonParamName=${jsonParamMap[$(($i+1))]}
-      paramVal=`$currDir/scripts/grep_file_for_val.py "$tmpConf" "$jsonParamName"`
+      paramVal=`$currDir/grep_file_for_val.py "$tmpConf" "$jsonParamName"`
       # useLMART requires special treatment
       if [ "$paramName" = "use_lmart" -a "$paramVal" != "1" ] ; then
         paramVal=""
@@ -400,7 +400,7 @@ for ((ivar=1;;++ivar)) ; do
 
 # Don't quote $globalParams or any other "*Param*
   cmd=`cat <<EOF
-        scripts/exper/run_one_experiment.sh \
+        ./exper/run_one_experiment.sh \
             "$collect" \
             "$experDirBaseRelative" \
             "$testPart" \

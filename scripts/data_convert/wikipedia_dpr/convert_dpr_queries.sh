@@ -1,6 +1,6 @@
 #!/bin/bash -e
-source scripts/config.sh
-source scripts/common_proc.sh
+source ./config.sh
+source ./common_proc.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
@@ -38,7 +38,7 @@ for colType in nq trivia squad ; do
       bitextOpt="--out_bitext_path "$COLLECT_ROOT/$collect/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR""
     fi
 
-    python -u scripts/data_convert/wikipedia_dpr/convert_queries.py \
+    python -u ./data_convert/wikipedia_dpr/convert_queries.py \
         --input "$inpFile" \
         --output_queries "$inputDataSubDir/$QUESTION_FILE_JSONL" \
         --output_qrels "$inputDataSubDir/$QREL_FILE" \

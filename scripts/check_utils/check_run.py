@@ -13,19 +13,22 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A simple script to assess validity of (TREC) runs before submission.
-#
-import sys
+
+"""
+   
+    A simple script to assess validity of (TREC) runs before submission.
+"""
+
 import argparse
 import gc
 
-sys.path.append('.')
+from flexneuart.eval import FAKE_DOC_ID
+from flexneuart.config import DOCID_FIELD
+from flexneuart.io import FileWrapper
+from flexneuart.io.queries import read_queries
 
-from scripts.eval_common import FAKE_DOC_ID
-from scripts.data_convert.convert_common import read_queries, DOCID_FIELD, FileWrapper
 from scripts.py_flexneuart.setup import *
-from scripts.py_flexneuart.fwd_index import get_forward_index
+from flexneuart.retrieval.fwd_index import get_forward_index
 
 from tqdm import tqdm
 

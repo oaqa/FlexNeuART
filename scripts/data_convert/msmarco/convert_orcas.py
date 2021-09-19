@@ -13,29 +13,31 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A file to generate queries & qrels from the ORCAS query collection:
-# ORCAS: 18 Million Clicked Query-Document Pairs for Analyzing Search.
-# Nick Craswell Daniel Campos Bhaskar Mitra Emine Yilmaz Bodo von Billerbeck.
-#
-import sys
+
+"""
+    A file to generate queries & qrels from the ORCAS query collection:
+    ORCAS: 18 Million Clicked Query-Document Pairs for Analyzing Search.
+    Nick Craswell Daniel Campos Bhaskar Mitra Emine Yilmaz Bodo von Billerbeck.
+   
+"""
 import os
 import json
 import argparse
-import pytorch_pretrained_bert
 
-sys.path.append('.')
+from flexneuart.io import FileWrapper
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, add_retokenized_field
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
 
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field, read_queries, MAX_NUM_QUERY_OPT_HELP, MAX_NUM_QUERY_OPT
+from flexneuart.data_convert import MAX_NUM_QUERY_OPT_HELP, MAX_NUM_QUERY_OPT
 
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
-    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, TEXT_UNLEMM_FIELD_NAME, \
+    TEXT_FIELD_NAME, DOCID_FIELD, \
     TEXT_RAW_FIELD_NAME, \
     REPORT_QTY, SPACY_MODEL, QUESTION_FILE_JSON, QREL_FILE
 
-from scripts.eval_common import QrelEntry, write_qrels
+from flexneuart.io.qrels import QrelEntry, write_qrels
+from flexneuart.io.queries import read_queries
 
 ORCAS_QID_PREF='orcas_'
 
@@ -50,8 +52,8 @@ parser.add_argument('--out_dir', metavar='output directory', help='output direct
                     type=str, required=True)
 parser.add_argument('--min_query_token_qty', type=int, default=0,
                     metavar='min # of query tokens', help='ignore queries that have smaller # of tokens')
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
 parser.add_argument('--' + MAX_NUM_QUERY_OPT, type=int, default=None, help=MAX_NUM_QUERY_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
@@ -85,9 +87,7 @@ stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 qrel_list = []
 

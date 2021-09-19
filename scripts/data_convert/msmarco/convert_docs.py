@@ -13,24 +13,21 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# Convert MSMARCO documents
-#
-import sys
+
+"""
+    Convert MSMARCO documents
+"""
 import json
 import argparse
 import multiprocessing
-import pytorch_pretrained_bert
 
-sys.path.append('.')
+from flexneuart.io import FileWrapper
+from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
+from flexneuart.text_proc.parse import SpacyTextParser, add_retokenized_field, pretokenize_url
+from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed
 
-from scripts.data_convert.text_proc import SpacyTextParser
-from scripts.data_convert.convert_common import STOPWORD_FILE, BERT_TOK_OPT_HELP, BERT_TOK_OPT, \
-    FileWrapper, read_stop_words, add_retokenized_field, pretokenize_url
-from scripts.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
-    TEXT_FIELD_NAME, DOCID_FIELD, BERT_BASE_MODEL, \
-    TITLE_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
-    TEXT_RAW_FIELD_NAME, \
+from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, MAX_DOC_SIZE, \
+    TEXT_FIELD_NAME, DOCID_FIELD, TITLE_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME, \
     IMAP_PROC_CHUNK_QTY, REPORT_QTY, SPACY_MODEL
 
 
@@ -46,7 +43,7 @@ parser.add_argument('--max_doc_size', metavar='max doc size bytes',
 # Default is: Number of cores minus one for the spaning process
 parser.add_argument('--proc_qty', metavar='# of processes', help='# of NLP processes to span',
                     type=int, default=multiprocessing.cpu_count() - 1)
-parser.add_argument('--' + BERT_TOK_OPT, action='store_true', help=BERT_TOK_OPT_HELP)
+add_bert_tok_args(parser)
 
 args = parser.parse_args()
 print(args)
@@ -59,10 +56,7 @@ max_doc_size = args.max_doc_size
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
 
-bert_tokenizer=None
-if arg_vars[BERT_TOK_OPT]:
-    print('BERT-tokenizing input into the field: ' + TEXT_BERT_TOKENIZED_NAME)
-    bert_tokenizer = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+bert_tokenizer = create_bert_tokenizer_if_needed(args)
 
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True)
 

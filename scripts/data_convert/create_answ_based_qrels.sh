@@ -1,6 +1,6 @@
 #!/bin/bash
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "QREL_FILE"
@@ -98,7 +98,7 @@ echo "# of threads:              $threadQty"
 echo "=========================================================================="
 
 
-target/appassembler/bin/AnswerBasedQRELGenerator \
+AnswerBasedQRELGenerator \
     -collect_dir $collectDir \
     $candProvOpts \
     -field_name $fieldName \

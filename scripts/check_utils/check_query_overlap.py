@@ -14,38 +14,29 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-import sys
-import os
-import json
+
+"""
+    This script checks for possibly overlapping queries in different folders.
+    First, it checks for exact match with respect to tokenized text.
+    Second, it checks for approximate (high-enough) match with respect to BERT tokens
+"""
+
 import argparse
-import random
-import math
-import pytorch_pretrained_bert
-import time
 import numpy as np
 from tqdm import tqdm
 
-#
-# This script checks for possibly overlapping queries in different folders.
-# First, it checks for exact match with respect to tokenized text.
-# Second, it checks for approximate (high-enough) match with respect to BERT tokens
-#
 
-sys.path.append('.')
 
-from scripts.check_utils.check_common import get_token_ids, str_to_nmslib_vect, jaccard, read_sample_queries, create_jaccard_index
-from scripts.config import BERT_BASE_MODEL, \
-                            DOCID_FIELD, \
-                            TEXT_FIELD_NAME, TEXT_RAW_FIELD_NAME
-
-from scripts.eval_common import read_qrels_dict
+from flexneuart.check_utils import get_token_ids, str_to_nmslib_vect, jaccard, \
+                                    read_sample_queries, create_jaccard_index
+from flexneuart.text_proc.parse import get_bert_tokenizer
+from flexneuart.config import DOCID_FIELD, TEXT_FIELD_NAME, TEXT_RAW_FIELD_NAME
 
 QUERY_BATCH_SIZE=32
 
 np.random.seed(0)
 
-
-BERT_TOKENIZER = pytorch_pretrained_bert.BertTokenizer.from_pretrained(BERT_BASE_MODEL)
+tokenizer = get_bert_tokenizer()
 
 parser = argparse.ArgumentParser(description='Checking for possible overlapping queries.')
 
@@ -102,13 +93,13 @@ for e in sample_query_list1:
         print(f'Repeating tokenized query, id: {e[DOCID_FIELD]}, text: {text}')
         rep_tok_qty += 1
 
-index = create_jaccard_index(args.use_hnsw, BERT_TOKENIZER, sample_query_list2)
+index = create_jaccard_index(args.use_hnsw, tokenizer, sample_query_list2)
 
 rep_approx_qty = 0
 for start in tqdm(range(0, len(sample_query_list1), QUERY_BATCH_SIZE), desc='query w/ 1st query set'):
     qbatch = []
     for e in sample_query_list1[start:start + QUERY_BATCH_SIZE]:
-        qbatch.append(str_to_nmslib_vect(BERT_TOKENIZER, e[TEXT_RAW_FIELD_NAME]))
+        qbatch.append(str_to_nmslib_vect(tokenizer, e[TEXT_RAW_FIELD_NAME]))
 
     if qbatch:
         nbrs = index.knnQueryBatch(qbatch, k=1, num_threads=0)
@@ -126,8 +117,8 @@ for start in tqdm(range(0, len(sample_query_list1), QUERY_BATCH_SIZE), desc='que
                     qnum2 = index_queries[0]
                     qid2 = sample_query_list2[qnum2][DOCID_FIELD]
                     raw_text2 = sample_query_list2[qnum2][TEXT_RAW_FIELD_NAME]
-                    toks1 = get_token_ids(BERT_TOKENIZER, raw_text)
-                    toks2 = get_token_ids(BERT_TOKENIZER, raw_text2)
+                    toks1 = get_token_ids(tokenizer, raw_text)
+                    toks2 = get_token_ids(tokenizer, raw_text2)
                     qsim = jaccard(toks1, toks2)
                     if qsim >= args.min_jacc:
                         rep_approx_qty += 1

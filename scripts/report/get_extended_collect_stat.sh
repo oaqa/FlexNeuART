@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "COLLECT_ROOT"
 checkVarNonEmpty "INPUT_DATA_SUBDIR"
@@ -57,7 +57,7 @@ fi
 colRoot="$COLLECT_ROOT/$collect"
 fwdIndexHead="$colRoot/$FWD_INDEX_SUBDIR/$tokFieldName"
 inpDataRoot="$colRoot/$INPUT_DATA_SUBDIR/"
-inf0=`head -1 $fwdIndexHead`
+inf0=`head -2 $fwdIndexHead|tail -1`
 dummy=' ' read -r -a indQtys <<< "$inf0"
 
 docQty=${indQtys[0]}
@@ -75,7 +75,7 @@ partArr=($partTrain $partDev $partTest)
 for part in ${partArr[*]} ; do
   inpDir="$colRoot/$INPUT_DATA_SUBDIR/$part/"
   questFile="$inpDir/$QUESTION_FILE_JSONL"
-  inf1=$(scripts/report/count_toks.py --input $questFile --field $queryFieldName)
+  inf1=$(./report/count_toks.py --input $questFile --field $queryFieldName)
   dummy=' ' read -r -a tokQtys1 <<< "$inf1"
 
   queryQty=${tokQtys1[0]}
@@ -85,7 +85,7 @@ for part in ${partArr[*]} ; do
   totQueryTokQty=$(($totQueryTokQty+${tokQtys1[1]}))
 
   qrelFile="$inpDir/$QREL_FILE"
-  relQty=$(scripts/report/count_qrels.py --min_rel_grade $minRelGrade --input $qrelFile 2>/dev/null)
+  relQty=$(./report/count_qrels.py --min_rel_grade $minRelGrade --input $qrelFile 2>/dev/null)
   totRelQty=$(($totRelQty+$relQty))
 done
 

@@ -7,8 +7,8 @@
 #
 # Data files end with <underscore> <part name> .gz  e.g., comprehensive-Oct2007_dev1.gz
 #
-source scripts/common_proc.sh
-source scripts/config.sh
+source ./common_proc.sh
+source ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 
@@ -78,7 +78,7 @@ for part in $partList ; do
   else
     mkdir "$outMainPath"
   fi
-  python -u scripts/data_convert/yahoo_answers/convert_yahoo_answers.py \
+  python -u ./data_convert/yahoo_answers/convert_yahoo_answers.py \
             --input "$inputRawDir"/"$inputFile" \
             --out_main_path $outMainPath \
             --bert_tokenize \

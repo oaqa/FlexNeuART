@@ -13,13 +13,15 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-#
-# Just a simple script to
-# 1. sample bitext
-# 2. ignore pairs where a question is much longer
-#    then the respective document (or vice versa)
-#
+
+"""
+   
+    Just a simple script to
+    1. sample bitext
+    2. ignore pairs where a question is much longer
+       then the respective document (or vice versa)
+   
+"""
 import sys
 import random
 

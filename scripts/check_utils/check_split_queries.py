@@ -14,20 +14,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-#
-# Checking correctness of the split for queries and corresponding QREL files.
-# Basically this is to double-check if the split queries script did the right job.
-# Instead of using this directly, one can use a convenience wrapper shell script check_split_queries.sh.
-#
+"""
+   
+    Checking correctness of the split for queries and corresponding QREL files.
+    Basically this is to double-check if the split queries script did the right job.
+    Instead of using this directly, one can use a convenience wrapper shell script check_split_queries.sh.
+   
+"""
 import sys
 import os
 import argparse
 
-sys.path.append('.')
-
-from scripts.data_convert.convert_common import read_queries
-from scripts.eval_common import read_qrels, qrel_entry2_str
-from scripts.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
+from flexneuart.io.queries import read_queries
+from flexneuart.io.qrels import read_qrels, qrel_entry2_str
+from flexneuart.config import QUESTION_FILE_JSON, QREL_FILE, DOCID_FIELD
 
 parser = argparse.ArgumentParser(
     description='Checking correctness of split for queries and corresponding QREL files.')

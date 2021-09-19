@@ -13,22 +13,23 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A script to convert passages/documents or queries to dense vectors using ANCE models
-# These vectors are stored in "BSONL" format, which can be used to create a forward index.
-#
+
+"""
+    A script to convert passages/documents or queries to dense vectors using ANCE models
+    These vectors are stored in "BSONL" format, which can be used to create a forward index.
+"""
 import argparse
 import os
-import sys
 import torch
 import numpy as np
 from tqdm import tqdm
 
-sys.path.append('.')
-
-from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, write_json_to_bin, is_json_query_file
-from scripts.data_convert.biencoder.ance.ance_models import create_ance_firstp, create_dpr
-from scripts.data_convert.biencoder.ance.ance_data import DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, \
+from flexneuart.io import FileWrapper
+from flexneuart.io.queries import is_json_query_file
+from flexneuart.config import DOCID_FIELD
+from flexneuart.io.pack import pack_dense_batch, write_json_to_bin
+from flexneuart.data_convert.biencoder.ance.models import create_ance_firstp, create_dpr
+from flexneuart.data_convert.biencoder.ance.data import DATA_TYPE_DPR_NQ, DATA_TYPE_DPR_TRIVIA, \
                                                 DATA_TYPE_MSMARCO_DOC_FIRSTP, DATA_TYPE_MSMARCO_DOC_V2_FIRSTP, \
                                                 DATA_TYPE_MSMARCO_PASS, DATA_TYPE_MSMARCO_PASS_V2, \
                                                 DATA_TYPE_CHOICES, DATA_TYPE_PATHS, \
@@ -122,6 +123,7 @@ print('Text generator:', text_generator)
 model.cuda()
 
 batch_input = []
+
 
 def proc_batch(batch_input, is_query, model, out_file, field_name):
     if batch_input:

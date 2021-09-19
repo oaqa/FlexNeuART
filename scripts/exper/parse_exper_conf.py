@@ -13,19 +13,22 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# Carry out a key-value data conversion
-# of a specified entry from an array of JSON entries 
-# to a stupid one-entry-per-line format, 
-# where each line has the format:
-#
-# key:value
-#
-# Note the following:
-# 1. The script expects the input JSON to contain an array of dictionaries
-# 2. If the user specifies a dictionary id outside the range, we generate the out-of-range string #OOR
-# 3. newlines in JSON keys and values will be replaced with spaces
-#
+
+"""
+   
+    Carry out a key-value data conversion
+    of a specified entry from an array of JSON entries 
+    to a stupid one-entry-per-line format, 
+    where each line has the format:
+   
+    key:value
+   
+    Note the following:
+    1. The script expects the input JSON to contain an array of dictionaries
+    2. If the user specifies a dictionary id outside the range, we generate the out-of-range string    OOR
+    3. newlines in JSON keys and values will be replaced with spaces
+   
+"""
 import json
 import sys
 import re

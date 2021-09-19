@@ -13,27 +13,24 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# A script to convert documents/passages or queries to dense vectors using sentence-bert models.
-# These vectors are stored in "BSONL" format, which can be used to create a forward index.
-#
 
+"""
+    A script to convert documents/passages or queries to dense vectors using sentence-bert models.
+    These vectors are stored in "BSONL" format, which can be used to create a forward index.
+"""
 import argparse
-import os
-import sys
-import torch
-import numpy as np
 from tqdm import tqdm
 
 from sentence_transformers import SentenceTransformer
 
-DEVICE_NAME='cuda'
+from flexneuart.config import DEFAULT_DEVICE_GPU
 
-sys.path.append('.')
+DEVICE_NAME=DEFAULT_DEVICE_GPU
 
-from scripts.config import TEXT_RAW_FIELD_NAME
-from scripts.data_convert.convert_common import FileWrapper, DOCID_FIELD, pack_dense_batch, \
-                                                write_json_to_bin, is_json_query_file, jsonl_gen
+from flexneuart.config import  DOCID_FIELD, TEXT_RAW_FIELD_NAME
+from flexneuart.io import FileWrapper, jsonl_gen
+from flexneuart.io.queries import is_json_query_file
+from flexneuart.io.pack import pack_dense_batch, write_json_to_bin
 
 parser = argparse.ArgumentParser(description='Convert passages and/or documents to dense vectors and store them in "BSONL" format.')
 

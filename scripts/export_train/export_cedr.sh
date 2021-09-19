@@ -2,9 +2,9 @@
 # Set this var before common scripts
 outSubdir="cedr_train"
 
-source scripts/common_proc.sh
-source scripts/config.sh
-source scripts/export_train/export_common.sh
+source ./common_proc.sh
+source ./config.sh
+source ./export_train/export_common.sh
 
 
 checkVarNonEmpty "COLLECT_ROOT"
@@ -37,7 +37,7 @@ cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  
 NO_MAX=1
 setJavaMem 1 8 $NO_MAX
 
-target/appassembler/bin/ExportTrainPairs \
+ExportTrainPairs \
 $handleCaseParam \
 -seed $randSeed \
 -export_fmt cedr  \

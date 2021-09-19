@@ -15,16 +15,11 @@
 #  limitations under the License.
 #
 import os
-import sys
-import json
-import re
 import shutil
 
-sys.path.append('.')
+from flexneuart.gen_exper_desc import gen_rerank_descriptors, BaseParser, OUT_DIR_PARAM, REL_DESC_PATH_PARAM
 
-from scripts.gen_exper_desc.gen_desc_common import gen_rerank_descriptors, BaseParser, OUT_DIR_PARAM, REL_DESC_PATH_PARAM
-
-MODEL_SRC_PATH = 'scripts/exper/sample_exper_desc/one_feat.model'
+MODEL_SRC_PATH = 'exper/sample_exper_desc/one_feat.model'
 MODEL_DST_REL_PATH = 'models'
 MODEL_DST_NAME = 'one_feat.model'
 

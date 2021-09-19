@@ -1,6 +1,6 @@
 #!/bin/bash -e
-. scripts/common_proc.sh
-. scripts/config.sh
+. ./common_proc.sh
+. ./config.sh
 
 checkVarNonEmpty "SAMPLE_COLLECT_ARG"
 checkVarNonEmpty "BITEXT_SUBDIR"
@@ -44,7 +44,7 @@ fi
 
 inputDataDir="$COLLECT_ROOT/$collect/$INPUT_DATA_SUBDIR"
 
-scripts/check_utils/check_split_queries.py \
+./check_utils/check_split_queries.py \
   --src_dir "$inputDataDir/$inputPart" \
   --dst_dir "$inputDataDir" \
   --partitions_names "$partNames"
