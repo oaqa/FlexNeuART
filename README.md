@@ -18,6 +18,8 @@ Documentation:
 * [Legacy notebooks for MS MARCO and Yahoo Answers](legacy_docs/README.md)
 * [Former life (as a knn4qa package), including acknowledgements and publications](knn4qa.md)
 
+We support [a number BERT-based ranking models](flexneuart/models), but we currently do not provide detailed description.
+
 The framework supports data in generic JSONL format. We provide conversion (and in some cases download) scripts for the following collections:
 * MS MARCO data v1 and v2 (documents and passages)
 * Wikipedia DPR (Natural Questions, SQuAD)
