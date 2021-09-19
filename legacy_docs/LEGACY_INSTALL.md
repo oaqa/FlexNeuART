@@ -1,3 +1,5 @@
+### ATTENTION: these are LEGACY installation instructions!!!
+
 # Pre-requisits
 FlexNeuART should work on Linux or Mac.
 
