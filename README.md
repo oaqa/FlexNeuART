@@ -38,7 +38,7 @@ The framework supports data in generic JSONL format. We provide conversion (and 
 * MS MARCO [v1](scripts/data_convert/msmarco) and [v2](scripts/data_convert/msmarco_v2) (documents and passages)
 * [Wikipedia DPR](scripts/data_convert/wikipedia_dpr/README.md) (Natural Questions, Trivia QA, SQuAD)
 * [Yahoo Answers](/scripts/data_convert/yahoo_answers)
-* Coming soon Configurable dataset processing of standard datasets provided by [ir-datasets](https://ir-datasets.com/).
+* Coming soon: Configurable dataset processing of standard datasets provided by [ir-datasets](https://ir-datasets.com/).
 
 
 ## Acknowledgements
