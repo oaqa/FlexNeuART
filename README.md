@@ -33,10 +33,10 @@ We support [a number of neural BERT-based ranking models](flexneuart/models/READ
 ranking models including IBM Model 1 (description of non-neural rankers to follow).
 
 The framework supports data in generic JSONL format. We provide conversion (and in some cases download) scripts for the following collections:
-* Cranfield (a small toy collection)
-* MS MARCO data v1 and v2 (documents and passages)
-* Wikipedia DPR (Natural Questions, Trivia QA, SQuAD)
-* Yahoo Answers collections
+* [Cranfield](scripts/data_convert/cranfield) (a small toy collection)
+* MS MARCO [v1](scripts/data_convert/msmarco) and [v2](scripts/data_convert/msmarco_v2) (documents and passages)
+* [Wikipedia DPR](scripts/data_convert/wikipedia_dpr) (Natural Questions, Trivia QA, SQuAD)
+* [Yahoo Answers](/scripts/data_convert/yahoo_answers)
 
 
 ## Acknowledgements
