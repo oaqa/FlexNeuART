@@ -1,4 +1,0 @@
-1. Remove set_grad_checkpoint_param (also from parameters).
-4. Remove BERT_LARGE_MODEL, BERT_BASE_MODEL from the config, have instead some DEFAULT_BERT_MODEL instead.
-5. Need to check that unsubbatch works properly as before, e.g., by re-running one of those latest document models.
-6. Need to walk through the PARADE & other models to make sure you didn't break them.
