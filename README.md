@@ -2,6 +2,10 @@
 [![Downloads](https://pepy.tech/badge/flexneuart)](https://pepy.tech/project/flexneuart)
 [![Downloads](https://pepy.tech/badge/flexneuart/month)](https://pepy.tech/project/flexneuart)
 
+## Objective
+
+A (relatively) light-weight modular middleware useful primarily for evaluation, research, and education purposes.
+
 ## FlexNeuART (flex-noo-art)
 Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) 
 is a substantially reworked [`knn4qa` package](knn4qa.md).  The overview can be found in our EMNLP OSS workshop paper: 
