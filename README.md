@@ -1,4 +1,6 @@
 [![Pypi version](https://img.shields.io/pypi/v/flexneuart.svg)](http://pypi.python.org/pypi/flexneuart)
+[![Downloads](https://pepy.tech/badge/flexneuart)](https://pepy.tech/project/flexneuart)
+[![Downloads](https://pepy.tech/badge/flexneuart/month)](https://pepy.tech/project/flexneuart)
 
 ## FlexNeuART (flex-noo-art)
 Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) 
