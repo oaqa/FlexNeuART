@@ -16,6 +16,7 @@ The code for the best-performing neural model will be published within 2-3 month
 * Dense, sparse, or dense-sparse retrieval using Lucene and NMSLIB.
 * Multi-field multi-level forward indices (+parent-child field relations) that can store 
   parsed and "raw" text input as well as sparse and dense vectors.
+* Forward indices can be created in append-only mode, which requires much less RAM.
 * Pluggable generic rankers (via a server)
 * SOTA neural ([BERT-based](flexneuart/models/README.md)) and non-neural models
 * Multi-GPU training **and** inference with out-of-the box support for ensembling
