@@ -13,7 +13,7 @@ In fact, our best traditional (non-neural) run slightly outperformed a couple of
 The code for the best-performing neural model will be published within 2-3 months. This model is described in our ECIR 2021 paper:
 [Boytsov, Leonid, and Zico Kolter. "Exploring Classic and Neural Lexical Translation Models for Information Retrieval: Interpretability, Effectiveness, and Efficiency Benefits." ECIR 2021](https://arxiv.org/abs/2102.06815).
 
-## Objective
+## Objectives
 
 A (relatively) light-weight modular middleware useful primarily for evaluation, research, and education purposes.
 
