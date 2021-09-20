@@ -17,7 +17,7 @@ The code for the best-performing neural model will be published within 2-3 month
 * Multi-field multi-level forward indices (+parent-child field relations) that can store 
   parsed and "raw" text input as well as sparse and dense vectors.
 * Pluggable generic rankers (via a server)
-* SOTA neural (BERT-based) and non-neural models
+* SOTA neural ([BERT-based](flexneuart/models/README.md)) and non-neural models
 * Multi-GPU training **and** inference with out-of-the box support for ensembling
 * Basic experimentation framework (+LETOR)
 * Python API to use retrievers and rankers as well as to access indexed data.
@@ -29,7 +29,7 @@ The code for the best-performing neural model will be published within 2-3 month
 * [Legacy notebooks for MS MARCO and Yahoo Answers](legacy_docs/README.md)
 * [Former life (as a knn4qa package), including acknowledgements and publications](knn4qa.md)
 
-We support [a number of neural BERT-based ranking models](flexneuart/models) as well as strong traditional
+We support [a number of neural BERT-based ranking models](flexneuart/models/README.md) as well as strong traditional
 ranking models including IBM Model 1 (description of non-neural rankers to follow).
 
 The framework supports data in generic JSONL format. We provide conversion (and in some cases download) scripts for the following collections:
