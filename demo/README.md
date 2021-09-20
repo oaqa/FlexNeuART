@@ -5,7 +5,7 @@ This directory has notebooks covering all essential functionality of FlexNeuART.
 3. [Basic indexing (inverted and forward indices)](basic_indexing.ipynb)
 4. [Training a neural model: vanilla BERT ranker](train_neural_model.ipynb)
 5. [Training IBM Model 1 (non-neural lexical translation model)](train_model1.ipynb)
-6. Experimentaion:
+6. Basic experimentaion:
 
     i. [Tuning BM25 and IBM Model 1](experimentation_tuning_bm25_and_bm25_model1.ipynb)
     
