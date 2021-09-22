@@ -5,6 +5,7 @@ import flexneuart
 from flexneuart.utils import *
 from .version import __version__
 
+
 def get_jars_location():
     """
         Return the location of the JAR files for installed library.

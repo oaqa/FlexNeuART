@@ -35,6 +35,7 @@ RELEVANCE_THRESHOLD = 1e-5
 
 qrel_cache = {}
 
+
 class NormalizedDiscountedCumulativeGain:
     def __init__(self, k):
         self._k = k

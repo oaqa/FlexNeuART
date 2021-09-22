@@ -11,6 +11,8 @@ numpy==1.19.0
 
 beautifulsoup4
 
+ir_datasets
+
 pyjnius
 
 torch

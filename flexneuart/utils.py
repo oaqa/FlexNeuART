@@ -57,3 +57,13 @@ def sync_out_streams():
     """Just flush all stdin and stderr to make streams go in sync"""
     sys.stderr.flush()
     sys.stdout.flush()
+
+
+class DictToObject(object):
+    """Create an object from a dictionary, but not recursively"""
+    def __init__(self, input_dict):
+        """Constructor.
+
+            :param input_dict: input dictionary.
+        """
+        self.__dict__ = input_dict

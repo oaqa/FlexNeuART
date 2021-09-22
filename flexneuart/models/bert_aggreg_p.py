@@ -17,7 +17,7 @@
 
 import torch
 
-from flexneuart.config import BERT_BASE_MODEL, MSMARCO_MINILM_L2
+from flexneuart.config import BERT_BASE_MODEL
 from flexneuart.models import register
 from flexneuart.models.base_bert_split_slide_window import \
         BertSplitSlideWindowRanker, CLS_AGGREG_STACK, DEFAULT_STRIDE, DEFAULT_WINDOW_SIZE

@@ -15,7 +15,9 @@
 #
 
 """
-Access to FlexNeuART re-ranking functionality
+Access to FlexNeuART re-ranking functionality.
+
+You need to call configure_classpath() before using this functionality.
 """
 import os
 import torch

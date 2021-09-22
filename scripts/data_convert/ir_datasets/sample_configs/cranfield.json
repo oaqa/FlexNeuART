@@ -1,0 +1,68 @@
+[
+      {
+          "part_name" : "docs",
+          "dataset_name" : "cranfield",
+          "is_query" : false,
+          "src_attributes" : ["title", "text", "author", "bib"],
+          "pipeline" :
+              [
+                  [
+                      {
+                          "name" : "spacy",
+                          "args" : {
+                              "model_name" : "en_core_web_sm",
+                              "input_fields" : ["title", "text", "author", "bib"]
+                          }
+                       },
+                      {
+                          "name" : "bert_tokenizer",
+                          "args" : {
+                              "input_fields" : ["text"]
+                          }
+
+                      },
+                      {
+                          "name": "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "text": "text_raw"
+                              }
+                          }
+                      }
+                  ],
+                  [
+                      {
+                          "name" : "rename",
+                          "args" : {
+                               "rename_dict" : {
+                                   "title.lemmas" :     "title",
+                                   "text.lemmas" :      "text",
+                                   "author.lemmas" :    "author",
+                                   "bib.lemmas" :       "bib",
+                                   "text.bert_tokens" : "text_bert_tok"
+                               }
+                          }
+                      },
+                      {
+                          "name" : "concat",
+                          "args" : {
+                                "input_fields" : [
+                                    "title.lemmas",
+                                    "text.lemmas",
+                                    "author.lemmas",
+                                    "bib.lemmas"
+                                ],
+                                "output_field" : "text_all"
+                          }
+                      },
+                      {
+                          "name" : "copy",
+                          "args" : {
+                              "input_fields" : ["text_raw"]
+                          }
+
+                      }
+                  ]
+              ]
+      }
+]

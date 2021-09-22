@@ -30,8 +30,10 @@ SPACY_PARSER = 'parser'
 
 ALPHANUM_TOKENS = re.compile("^[a-zA-Z-_.0-9]+$")
 
+
 def is_alpha_num(s):
     return s and (ALPHANUM_TOKENS.match(s) is not None)
+
 
 class Sentencizer:
     """A simple wrapper for the rule-based Spacy sentence splitter."""
@@ -51,13 +53,13 @@ class Sentencizer:
         return self._nlp(text).sents
 
 
-"""
-    A wrapper class to handle basic Spacy-based text processing.
-    It also implements sentence splitting, but there's a design flaw,
-    which makes it hard to obtain both sentences and other data.
-    So, instead please use the separate sentencizer class instead.
-"""
 class SpacyTextParser:
+    """
+        A wrapper class to handle basic Spacy-based text processing.
+        It also implements sentence splitting, but there's a design flaw,
+        which makes it hard to obtain both sentences and other data.
+        So, instead please use the separate sentencizer class instead.
+    """
     def __init__(self, model_name, stop_words,
                  remove_punct=True,
                  sent_split=False,

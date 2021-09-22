@@ -34,6 +34,7 @@ MSMARCO_PASS_V2_FILE_PATTERN = "^msmarco_passage_.*"
 def unique(arr):
     return list(set(arr))
 
+
 def build_query_id_to_partition(query_ids, sizes):
     """Partition a given list of query IDs.
 
