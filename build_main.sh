@@ -38,6 +38,7 @@ rm -f scripts.tar.gz
 # Note the h it tells us to follow symlinks!
 tar cvfzh scripts.tar.gz \
   exper/sample_exper_desc/one_feat.model \
+  data_convert/ir_datasets/sample_configs/* \
   data/stopwords.txt \
   bin/* \
   lib/RankLib.jar \
