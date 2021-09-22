@@ -178,7 +178,7 @@ class Pipeline:
                     for comp_def in stage_def:
                         assert type(comp_def) == dict
                         comp_name = get_val_err_msg_miss(comp_def, 'name', [str])
-                        comp_arg = get_val_err_msg_miss(comp_def, 'args', [dict], attr_default=[])
+                        comp_arg = get_val_err_msg_miss(comp_def, 'args', [dict], attr_default={})
                         if not comp_name in proc_pipeline_registry.registered:
                             raise Exception(f'we have no component with the name {comp_name}')
                         comp_class = proc_pipeline_registry.registered[comp_name]
