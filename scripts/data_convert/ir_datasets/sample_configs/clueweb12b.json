@@ -1,0 +1,47 @@
+[
+      {
+          "part_name" : "docs",
+          "dataset_name" : "cranfield",
+          "is_query" : false,
+          "src_attributes" : ["body", "body_content_type", "http_headers"],
+          "pipeline" :
+              [
+                  [
+                      {
+                          "name" : "html_parser"
+                      }
+                  ],
+                  [
+                      {
+                          "name" : "spacy",
+                          "args" : {
+                              "model_name" : "en_core_web_sm",
+                              "input_fields" : ["title", "body"]
+                          }
+                      },
+                      {
+                          "name" : "concat",
+                          "args" : {
+                                "input_fields" : [
+                                    "title",
+                                    "body"
+                                ],
+                                "output_field" : "text_raw"
+                          }
+                      }
+                  ],
+                  [
+                      {
+                          "name" : "rename",
+                          "args" : {
+                               "rename_dict" : {
+                                   "title.lemmas" :     "title",
+                                   "body.lemmas" :      "body",
+                                   "text_raw" :         "text_raw"
+                               }
+                          }
+                      }
+                  ]
+              ]
+      }
+]

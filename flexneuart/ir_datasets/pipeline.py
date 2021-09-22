@@ -113,18 +113,21 @@ class Pipeline:
 
         curr_dict = copy(input_dict)
 
+        # Looping over processing stages
         for stage_idx, stage in enumerate(self.stage_arr):
             # each stage starts from the clear output
             # if the object is not explicitly passed/processed by the stage components, it's discarded
 
             output_dict = {}
 
+            # Processing component loop
             for comp_idx, (comp_class, comp_args) in enumerate(stage):
                 comp_key = f'{stage_idx}_{comp_idx}'
                 if not comp_key  in self.comp_cache:
                     self.comp_cache[comp_key] = comp_class(**comp_args)
                 comp = self.comp_cache[comp_key]
 
+                # Pass input through each processing component
                 for k, v in comp(curr_dict).items():
                     if k in output_dict:
                         raise Exception(f'Repeating field {k} stage {stage_idx + 1} component {comp_idx+1}')

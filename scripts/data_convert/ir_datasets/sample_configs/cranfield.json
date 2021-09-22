@@ -1,5 +1,41 @@
 [
       {
+          "part_name": "queries",
+          "dataset_name": "cranfield",
+          "is_query": true,
+          "src_attributes": ["text"],
+          "pipeline" : [
+                  [
+                      {
+                          "name" : "spacy",
+                          "args" : {
+                              "model_name" : "en_core_web_sm",
+                              "input_fields" : ["text"]
+                          }
+                      },
+                      {
+                          "name" : "bert_tokenizer",
+                          "args" : {
+                              "input_fields" : ["text"]
+                          }
+
+                      }
+                  ],
+                  [
+                      {
+                          "name": "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "text.lemmas": "text",
+                                  "text.bert_tokens" : "text_bert_tok"
+                              }
+                          }
+                      }
+                  ]
+
+          ]
+      },
+      {
           "part_name" : "docs",
           "dataset_name" : "cranfield",
           "is_query" : false,
