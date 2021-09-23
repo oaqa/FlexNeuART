@@ -8,7 +8,8 @@
               [
                   [
                       {
-                          "name" : "html_parser"
+                          "name" : "html_parser",
+                          "args" : {"max_doc_size" : 32768 }
                       }
                   ],
                   [

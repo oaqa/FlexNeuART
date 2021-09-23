@@ -23,6 +23,7 @@
 """
 from jnius import autoclass
 
+from flexneuart.config import MAX_DOC_SIZE
 from flexneuart.ir_datasets.base import BaseTextProcessor
 from flexneuart.ir_datasets import register
 
@@ -37,6 +38,9 @@ DECODE_ERROR_HANDLING = 'replace'
 
 @register('html_parser')
 class HtmlParserProcessor(BaseTextProcessor):
+
+    def __init__(self, max_doc_size=MAX_DOC_SIZE):
+        self.max_doc_size = max_doc_size
 
     def __call__(self, input_dict: dict):
         output_dict = {OUTPUT_FIELD_BODY : '', OUTPUT_FIELD_TITLE : ''}
@@ -62,7 +66,8 @@ class HtmlParserProcessor(BaseTextProcessor):
                             break
 
             # TODO how this decoding would work for non-English data?
-            res = JHtmlParser.parse(encoding, '', body.decode(errors=DECODE_ERROR_HANDLING))
+            body_to_proc = body.decode(errors=DECODE_ERROR_HANDLING)[0 : self.max_doc_size]
+            res = JHtmlParser.parse(encoding, '', body_to_proc)
             output_dict[OUTPUT_FIELD_BODY] = res.mBodyText
             output_dict[OUTPUT_FIELD_TITLE] = res.mTitle
 

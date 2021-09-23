@@ -33,8 +33,13 @@ import multiprocessing
 
 from tqdm import tqdm
 
+from flexneuart import configure_classpath
+configure_classpath()
+
+from flexneuart import configure_classpath, enable_spawn
+
 from flexneuart.io import FileWrapper
-from flexneuart.config import IMAP_PROC_CHUNK_QTY, REPORT_QTY, QUESTION_FILE_JSON, ANSWER_FILE_JSON
+from flexneuart.config import QUESTION_FILE_JSON, ANSWER_FILE_JSON
 
 from flexneuart.ir_datasets.pipeline import Pipeline
 from flexneuart.io.json import read_json
@@ -91,7 +96,9 @@ def main():
     
             worker = ParseWorker(pipeline=part_processor)
     
-            for doc_str in tqdm(pool.imap(worker, part_processor.dataset_iterator(), proc_qty * 4),
+            # The size of the buffer is a bit adhoc, but it usually works well for documents with HTML,
+            # where processing is the slowest operation
+            for doc_str in tqdm(pool.imap(worker, part_processor.dataset_iterator(), proc_qty * 16),
                                 f'converting part {part_processor.part_name} query? {part_processor.is_query}'):
                 obj_id = obj_id + 1
                 if doc_str is not None:
@@ -106,5 +113,7 @@ def main():
             print('Processed %d objects' % obj_id)
 
 if __name__ == '__main__':
+
+    enable_spawn()
     main()
 
