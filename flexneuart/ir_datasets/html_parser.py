@@ -33,6 +33,8 @@ JHtmlParser = autoclass('edu.cmu.lti.oaqa.flexneuart.utils.HTMLParser')
 OUTPUT_FIELD_BODY = 'body'
 OUTPUT_FIELD_TITLE = 'title'
 
+DECODE_ERROR_HANDLING = 'replace'
+
 @register('html_parser')
 class HtmlParserProcessor(BaseTextProcessor):
 
@@ -45,9 +47,12 @@ class HtmlParserProcessor(BaseTextProcessor):
 
         if body_content_type in ('text/html', 'application/xhtml+xml'):
             encoding = None # Will become null in Java
+
             # TODO use something off-the shelf to do encoding extraction
             # Yet, so far Leo couldn't find an easy-to-use library to parse content response
-            for resp1 in http_headers.decode().split('\r\n'):
+            for resp1 in http_headers.decode(errors=DECODE_ERROR_HANDLING).split('\r\n'):
+                if encoding is not None:
+                    break
                 for resp2 in resp1.split('; '):
                     fields = resp2.split('=')
                     if len(fields) == 2:
@@ -62,7 +67,7 @@ class HtmlParserProcessor(BaseTextProcessor):
             output_dict[OUTPUT_FIELD_TITLE] = res.mTitle
 
         elif body_content_type == 'text/plain':
-            output_dict[OUTPUT_FIELD_BODY] = body.decode()
+            output_dict[OUTPUT_FIELD_BODY] = body.decode(errors=DECODE_ERROR_HANDLING)
 
         return output_dict
 
