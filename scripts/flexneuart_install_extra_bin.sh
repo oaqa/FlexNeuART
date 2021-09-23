@@ -22,6 +22,8 @@ cd $curr_dir/trec_eval
 make
 
 if [ "$withGiza" = "1" ] ; then
+  pip install cmake
+
   cd $curr_dir
   rm -rf mgiza
   git clone https://github.com/moses-smt/mgiza.git
