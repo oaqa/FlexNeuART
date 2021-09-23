@@ -18,6 +18,7 @@ import sys
 import argparse
 import torch
 
+from flexneuart.models.train.amp import get_amp_processors
 from flexneuart.models.utils import add_model_init_basic_args
 from flexneuart.models.base import ModelSerializer
 
@@ -38,11 +39,14 @@ class RankQueryHandler(BaseQueryHandler):
                     batch_size, device_name,
                     max_query_len, max_doc_len,
                     exclusive,
+                    amp,
                     debug_print=False):
         super().__init__(exclusive=exclusive)
 
         self.debug_print = debug_print
         self.batch_size = batch_size
+
+        self.amp = amp
 
         self.max_query_len = max_query_len
         self.max_doc_len = max_doc_len
@@ -82,6 +86,8 @@ class RankQueryHandler(BaseQueryHandler):
         # Initialize the return dictionary: for each document ID, a zero-element array of the size # of models.
         sample_ret = {e.id : [0.] * model_qty for e in docs}
 
+        auto_cast_class, _ = get_amp_processors(self.amp)
+
         if doc_data:
 
             # based on the code from run_model function (train_model.py)
@@ -93,10 +99,11 @@ class RankQueryHandler(BaseQueryHandler):
                                                            self.batch_size,
                                                            self.max_query_len, self.max_doc_len):
 
-                        scores = model(records[QUERY_TOK_FIELD],
-                                       records[QUERY_MASK_FIELD],
-                                       records[DOC_TOK_FIELD],
-                                       records[DOC_MASK_FIELD])
+                        with auto_cast_class():
+                            scores = model(records[QUERY_TOK_FIELD],
+                                           records[QUERY_MASK_FIELD],
+                                           records[DOC_TOK_FIELD],
+                                           records[DOC_MASK_FIELD])
 
 
                         # tolist() works much faster compared to extracting scores
@@ -136,6 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('--host', metavar='server host',
                         default='127.0.0.1', type=str,
                         help='server host addr to bind the port')
+    parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
 
 
     args = parser.parse_args()
@@ -183,6 +191,7 @@ if __name__ == '__main__':
 
     multi_threaded = False  # if we set to True, we can often run out of CUDA memory.
     start_query_server(args.host, args.port, multi_threaded, RankQueryHandler(model_list=model_list,
+                                                                              amp=args.amp,
                                                                               batch_size=args.batch_size,
                                                                               debug_print=args.debug_print,
                                                                               device_name=args.device_name,
