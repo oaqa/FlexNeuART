@@ -31,6 +31,8 @@ import json
 import argparse
 import multiprocessing
 
+from tqdm import tqdm
+
 from flexneuart import configure_classpath
 
 configure_classpath()
@@ -94,18 +96,15 @@ for e in Pipeline.parse_config(parsed_config):
 
         worker = ParseWorker(pipeline=part_processor)
 
-        for doc_str in pool.imap(ParseWorker(pipeline=part_processor),
-                                 part_processor.dataset_iterator(),
-                                 IMAP_PROC_CHUNK_QTY):
+        for doc_str in tqdm(pool.imap(ParseWorker(pipeline=part_processor),
+                                     part_processor.dataset_iterator(),
+                                     IMAP_PROC_CHUNK_QTY), f'converting part {part_processor.part_name} query? {part_processor.is_query}'):
             obj_id = obj_id + 1
             if doc_str is not None:
                 out_file.write(doc_str)
             else:
                 print(f'Failed to convert object # {obj_id}')
                 sys.exit(1)
-
-            if obj_id % REPORT_QTY == 0:
-                print('Processed %d objects' % obj_id)
 
 
         part_processor.finish_processing()
