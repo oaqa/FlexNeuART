@@ -61,8 +61,8 @@ class HtmlParserProcessor(BaseTextProcessor):
                             encoding = val
                             break
 
-            # TODO Body encoding is in bytes. Does this actually work proeprly for non-ASCII text?
-            res = JHtmlParser.parse(encoding, '', body)
+            # TODO how this decoding would work for non-English data?
+            res = JHtmlParser.parse(encoding, '', body.decode(errors=DECODE_ERROR_HANDLING))
             output_dict[OUTPUT_FIELD_BODY] = res.mBodyText
             output_dict[OUTPUT_FIELD_TITLE] = res.mTitle
 
