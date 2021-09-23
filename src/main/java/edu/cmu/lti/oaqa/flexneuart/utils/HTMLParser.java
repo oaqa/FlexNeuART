@@ -14,7 +14,6 @@ package edu.cmu.lti.oaqa.flexneuart.utils;
  */
 
 import org.htmlparser.Parser;
-import org.htmlparser.util.ParserException;
 
 /**
  * Simple HTML Parser extracting title, meta tags, and body text
@@ -53,7 +52,7 @@ public class HTMLParser {
       linkText = res.GetLinkText();
       // res.GetDescriptionText()  Let's not use this one, it's often just spam res.GetKeywordText()
 
-    } catch (ParserException e) {      
+    } catch (Exception e) {      
       System.err.println(" Parser exception: " + e + " trying simple conversion");
       // Plan B!!!
       Pair<String,String> sres = CleanerUtil.SimpleProc(html);
