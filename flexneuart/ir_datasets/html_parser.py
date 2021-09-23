@@ -39,9 +39,11 @@ class HtmlParserProcessor(BaseTextProcessor):
     def __call__(self, input_dict: dict):
         output_dict = {OUTPUT_FIELD_BODY : '', OUTPUT_FIELD_TITLE : ''}
 
-        body = get_val_err_msg_miss(input_dict, 'body', [str])
+        import pdb ; pdb.set_trace()
+
+        body = get_val_err_msg_miss(input_dict, 'body', [bytes])
         body_content_type = get_val_err_msg_miss(input_dict, 'body_content_type', [str])
-        http_headers = get_val_err_msg_miss(input_dict, 'http_headers', [str])
+        http_headers = get_val_err_msg_miss(input_dict, 'http_headers', [bytes])
 
         if body_content_type in ('text/html', 'application/xhtml+xml'):
             encoding = None # Will become null in Java
