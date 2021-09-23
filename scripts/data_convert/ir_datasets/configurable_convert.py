@@ -78,6 +78,7 @@ def main():
     print(f'Spanning {proc_qty} processes')
     pool = multiprocessing.Pool(processes=proc_qty)
 
+    error_qty = 0
 
     for e in Pipeline.parse_config(parsed_config):
         part_processor : Pipeline = e
@@ -97,20 +98,21 @@ def main():
             # The size of the buffer is a bit adhoc, but it usually works well for documents with HTML,
             # where processing is the slowest operation
             for res in tqdm(pool.imap(worker, part_processor.dataset_iterator(), proc_qty * 16),
-                                f'converting part {part_processor.part_name} query? {part_processor.is_query}'):
+                    f'converting part {part_processor.part_name} query? {part_processor.is_query}, errors: {error_qty}'):
                 obj_id = obj_id + 1
 
                 if type(res) == str:
                     out_file.write(res)
                 else:
                     print(f'Failed to convert object # {obj_id}: ' + str(res))
-                    sys.exit(1)
+                    error_qty += 1
+                    continue
 
     
     
             part_processor.finish_processing()
     
-            print('Processed %d objects' % obj_id)
+            print(f'Processed {obj_id} objects, errors: {error_qty}')
 
 if __name__ == '__main__':
 
