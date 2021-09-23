@@ -33,10 +33,8 @@ import multiprocessing
 
 from tqdm import tqdm
 
-from flexneuart import configure_classpath
-configure_classpath()
-
 from flexneuart import configure_classpath, enable_spawn
+configure_classpath()
 
 from flexneuart.io import FileWrapper
 from flexneuart.config import QUESTION_FILE_JSON, ANSWER_FILE_JSON
@@ -53,7 +51,7 @@ class ParseWorker:
             return json.dumps(self.pipeline(obj)) + '\n'
         except Exception as e:
             print('Exception when processing: ' + str(e))
-            return None
+            return e
 
 def main():
 
@@ -98,14 +96,16 @@ def main():
     
             # The size of the buffer is a bit adhoc, but it usually works well for documents with HTML,
             # where processing is the slowest operation
-            for doc_str in tqdm(pool.imap(worker, part_processor.dataset_iterator(), proc_qty * 16),
+            for res in tqdm(pool.imap(worker, part_processor.dataset_iterator(), proc_qty * 16),
                                 f'converting part {part_processor.part_name} query? {part_processor.is_query}'):
                 obj_id = obj_id + 1
-                if doc_str is not None:
-                    out_file.write(doc_str)
-                else:
-                    print(f'Failed to convert object # {obj_id}')
+
+                if type(res) == Exception:
+                    print(f'Failed to convert object # {obj_id}: ' + str(res))
                     sys.exit(1)
+                else:
+                    assert type(res) == str
+                    out_file.write(res)
     
     
             part_processor.finish_processing()
