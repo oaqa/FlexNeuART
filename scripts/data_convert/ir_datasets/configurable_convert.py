@@ -96,8 +96,10 @@ for e in Pipeline.parse_config(parsed_config):
 
         worker = ParseWorker(pipeline=part_processor)
 
-        for doc_str in tqdm(pool.imap(worker, part_processor.dataset_iterator(), IMAP_PROC_CHUNK_QTY),
-                                      f'converting part {part_processor.part_name} query? {part_processor.is_query}'):
+        #for doc_str in tqdm(pool.imap(worker, part_processor.dataset_iterator(), IMAP_PROC_CHUNK_QTY),
+        #                              f'converting part {part_processor.part_name} query? {part_processor.is_query}'):
+        for obj in part_processor.dataset_iterator():
+            doc_str = worker(obj)
             obj_id = obj_id + 1
             if doc_str is not None:
                 out_file.write(doc_str)

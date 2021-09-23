@@ -39,21 +39,22 @@ class HtmlParserProcessor(BaseTextProcessor):
     def __call__(self, input_dict: dict):
         output_dict = {OUTPUT_FIELD_BODY : '', OUTPUT_FIELD_TITLE : ''}
 
-        import pdb ; pdb.set_trace()
-
         body = get_val_err_msg_miss(input_dict, 'body', [bytes])
         body_content_type = get_val_err_msg_miss(input_dict, 'body_content_type', [str])
         http_headers = get_val_err_msg_miss(input_dict, 'http_headers', [bytes])
 
         if body_content_type in ('text/html', 'application/xhtml+xml'):
             encoding = None # Will become null in Java
-            for resp in http_headers.decode().split('; '):
-                fields = resp.split('=')
-                if len(fields) == 2:
-                    key, val = fields
-                    if key == 'charset':
-                        encoding = val
-                        break
+            # TODO use something off-the shelf to do encoding extraction
+            # Yet, so far Leo couldn't find an easy-to-use library to parse content response
+            for resp1 in http_headers.decode().split('\r\n'):
+                for resp2 in resp1.split('; '):
+                    fields = resp2.split('=')
+                    if len(fields) == 2:
+                        key, val = fields
+                        if key == 'charset':
+                            encoding = val
+                            break
 
             # TODO Body encoding is in bytes. Does this actually work proeprly for non-ASCII text?
             res = JHtmlParser.parse(encoding, '', body)

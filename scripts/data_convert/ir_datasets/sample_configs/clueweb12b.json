@@ -32,11 +32,20 @@
                   ],
                   [
                       {
+                          "name" : "concat",
+                          "args" : {
+                                "input_fields" : [
+                                    "title.lemmas",
+                                    "body.lemmas"
+                                ],
+                                "output_field" : "text"
+                          }
+                      },
+                      {
                           "name" : "rename",
                           "args" : {
                                "rename_dict" : {
                                    "title.lemmas" :     "title",
-                                   "body.lemmas" :      "body",
                                    "text_raw" :         "text_raw"
                                }
                           }
