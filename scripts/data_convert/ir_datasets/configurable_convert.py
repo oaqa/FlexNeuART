@@ -100,12 +100,12 @@ def main():
                                 f'converting part {part_processor.part_name} query? {part_processor.is_query}'):
                 obj_id = obj_id + 1
 
-                if type(res) == Exception:
+                if type(res) == str:
+                    out_file.write(res)
+                else:
                     print(f'Failed to convert object # {obj_id}: ' + str(res))
                     sys.exit(1)
-                else:
-                    assert type(res) == str
-                    out_file.write(res)
+
     
     
             part_processor.finish_processing()

@@ -49,6 +49,10 @@ class HtmlParserProcessor(BaseTextProcessor):
         body_content_type = get_val_err_msg_miss(input_dict, 'body_content_type', [str])
         http_headers = get_val_err_msg_miss(input_dict, 'http_headers', [bytes])
 
+        # TODO how this decoding would work for non-English data?
+        body_to_proc = body.decode(errors=DECODE_ERROR_HANDLING)
+        body_to_proc = body_to_proc[0: self.max_doc_size]
+
         if body_content_type in ('text/html', 'application/xhtml+xml'):
             encoding = None # Will become null in Java
 
@@ -65,14 +69,12 @@ class HtmlParserProcessor(BaseTextProcessor):
                             encoding = val
                             break
 
-            # TODO how this decoding would work for non-English data?
-            body_to_proc = body.decode(errors=DECODE_ERROR_HANDLING)[0 : self.max_doc_size]
             res = JHtmlParser.parse(encoding, '', body_to_proc)
             output_dict[OUTPUT_FIELD_BODY] = res.mBodyText
             output_dict[OUTPUT_FIELD_TITLE] = res.mTitle
 
         elif body_content_type == 'text/plain':
-            output_dict[OUTPUT_FIELD_BODY] = body.decode(errors=DECODE_ERROR_HANDLING)
+            output_dict[OUTPUT_FIELD_BODY] = body_to_proc
 
         return output_dict
 
