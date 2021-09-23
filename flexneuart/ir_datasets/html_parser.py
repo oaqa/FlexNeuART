@@ -46,10 +46,12 @@ class HtmlParserProcessor(BaseTextProcessor):
         if body_content_type in ('text/html', 'application/xhtml+xml'):
             encoding = None # Will become null in Java
             for resp in http_headers.decode().split('; '):
-                key, val = resp.split('=')
-                if key == 'charset':
-                    encoding = val
-                    break
+                fields = resp.split('=')
+                if len(fields) == 2:
+                    key, val = fields
+                    if key == 'charset':
+                        encoding = val
+                        break
 
             # TODO Body encoding is in bytes. Does this actually work proeprly for non-ASCII text?
             res = JHtmlParser.parse(encoding, '', body)
