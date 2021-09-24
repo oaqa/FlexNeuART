@@ -1,7 +1,7 @@
 [
       {
           "part_name" : "docs",
-          "dataset_name" : "clueweb12",
+          "dataset_name" : "clueweb12/b13",
           "is_query" : false,
           "src_attributes" : ["body", "body_content_type", "http_headers"],
           "pipeline" :
