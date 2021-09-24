@@ -72,24 +72,6 @@ public class ForwardIndexBinaryOffsetDict extends ForwardIndexBinaryBase {
     mDocQty = 0;
     mDataFileWrite = new BufferedOutputStream(new FileOutputStream(new File(mIndexPrefix + DATA_SUFFIX)));
     
-    /*
-    File outputDir = new File(mIndexPrefix);
-    if (!outputDir.exists()) {
-      if (!outputDir.mkdirs()) {
-        logger.error("couldn't create " + outputDir.getAbsolutePath());
-        System.exit(1);
-      }
-    }
-    if (!outputDir.isDirectory()) {
-      logger.error(outputDir.getAbsolutePath() + " is not a directory!");
-      System.exit(1);
-    }
-    if (!outputDir.canWrite()) {
-      logger.error("Can't write to " + outputDir.getAbsolutePath());
-      System.exit(1);
-    }
-    */
-    
     mBackend.initIndexForWriting(mIndexPrefix, expectedQty);
   }
 
