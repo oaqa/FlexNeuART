@@ -27,7 +27,7 @@ Develop & maintain a (relatively) light-weight modular middleware useful primari
   parsed and "raw" text input as well as sparse and dense vectors.
 * Forward indices can be created in append-only mode, which requires much less RAM.
 * Pluggable generic rankers (via a server)
-* SOTA neural ([CEDR, PARADE, BERT 1stP/MaxP/Sum](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1).
+* SOTA neural ([CEDR, PARADE, BERT FirstP/MaxP/Sum](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1).
 * Multi-GPU training **and** inference with out-of-the box support for ensembling
 * Basic experimentation framework (+LETOR)
 * Python API to use retrievers and rankers as well as to access indexed data.
