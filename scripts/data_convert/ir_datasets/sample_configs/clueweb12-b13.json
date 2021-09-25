@@ -46,8 +46,8 @@
           ]
      },
      {
-          "part_name": "trec-web-2013",
-          "dataset_name": "clueweb12/trec-web-2013",
+          "part_name": "trec-web-2014",
+          "dataset_name": "clueweb12/trec-web-2014",
           "is_query": true,
           "src_attributes": ["query"],
           "pipeline" : [
