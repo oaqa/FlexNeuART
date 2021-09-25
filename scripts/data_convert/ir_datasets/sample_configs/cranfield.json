@@ -10,6 +10,7 @@
                           "name" : "spacy",
                           "args" : {
                               "model_name" : "en_core_web_sm",
+                              "stop_word_file" : "data/stopwords.txt",
                               "input_fields" : ["text"]
                           }
                       },
@@ -19,6 +20,14 @@
                               "input_fields" : ["text"]
                           }
 
+                      },
+                      {
+                          "name" : "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "text": "text_raw"
+                              }
+                          }
                       }
                   ],
                   [
@@ -27,7 +36,8 @@
                           "args": {
                               "rename_dict": {
                                   "text.lemmas": "text",
-                                  "text.bert_tokens" : "text_bert_tok"
+                                  "text.bert_tokens" : "text_bert_tok",
+                                  "text_raw": "text_raw"
                               }
                           }
                       }
@@ -47,6 +57,7 @@
                           "name" : "spacy",
                           "args" : {
                               "model_name" : "en_core_web_sm",
+                              "stop_word_file" : "data/stopwords.txt",
                               "input_fields" : ["title", "text", "author", "bib"]
                           }
                        },

@@ -24,7 +24,6 @@ class VanillaBertRanker(BertSplitMaxChunkRanker):
         arXiv preprint arXiv:1901.04085 (2019).
 
     """
-
     def __init__(self, bert_flavor=BERT_BASE_MODEL, dropout=DEFAULT_BERT_DROPOUT):
         super().__init__(bert_flavor)
         self.dropout = torch.nn.Dropout(dropout)

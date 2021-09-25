@@ -1,5 +1,97 @@
 [
-      {
+     {
+          "part_name": "trec-web-2013",
+          "dataset_name": "clueweb12/trec-web-2013",
+          "is_query": true,
+          "src_attributes": ["query"],
+          "pipeline" : [
+                  [
+                      {
+                          "name" : "spacy",
+                          "args" : {
+                              "model_name" : "en_core_web_sm",
+                              "stop_word_file" : "data/stopwords.txt",
+                              "input_fields" : ["query"]
+                          }
+                      },
+                      {
+                          "name" : "bert_tokenizer",
+                          "args" : {
+                              "input_fields" : ["query"]
+                          }
+
+                      },
+                      {
+                          "name" : "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "query": "text_raw"
+                              }
+                          }
+                      }
+                  ],
+                  [
+                      {
+                          "name": "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "query.lemmas":        "text",
+                                  "query.bert_tokens" :  "text_bert_tok",
+                                  "text_raw":            "text_raw"
+                              }
+                          }
+                      }
+                  ]
+
+          ]
+     },
+     {
+          "part_name": "trec-web-2013",
+          "dataset_name": "clueweb12/trec-web-2013",
+          "is_query": true,
+          "src_attributes": ["query"],
+          "pipeline" : [
+                  [
+                      {
+                          "name" : "spacy",
+                          "args" : {
+                              "model_name" : "en_core_web_sm",
+                              "stop_word_file" : "data/stopwords.txt",
+                              "input_fields" : ["query"]
+                          }
+                      },
+                      {
+                          "name" : "bert_tokenizer",
+                          "args" : {
+                              "input_fields" : ["query"]
+                          }
+
+                      },
+                      {
+                          "name" : "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "query": "text_raw"
+                              }
+                          }
+                      }
+                  ],
+                  [
+                      {
+                          "name": "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "query.lemmas":        "text",
+                                  "query.bert_tokens" :  "text_bert_tok",
+                                  "text_raw":           "text_raw"
+                              }
+                          }
+                      }
+                  ]
+
+          ]
+     },
+     {
           "part_name" : "docs",
           "dataset_name" : "clueweb12/b13",
           "is_query" : false,
@@ -17,6 +109,7 @@
                           "name" : "spacy",
                           "args" : {
                               "model_name" : "en_core_web_sm",
+                              "stop_word_file" : "data/stopwords.txt",
                               "keep_only_alpha_num" : true,
                               "enable_pos" : false,
                               "input_fields" : ["title", "body"]

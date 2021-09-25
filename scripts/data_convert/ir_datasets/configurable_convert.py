@@ -26,7 +26,7 @@
 
 """
 import os
-import sys
+import ir_datasets
 import json
 import argparse
 import multiprocessing
@@ -37,10 +37,11 @@ from flexneuart import configure_classpath, enable_spawn
 configure_classpath()
 
 from flexneuart.io import FileWrapper
-from flexneuart.config import QUESTION_FILE_JSON, ANSWER_FILE_JSON
+from flexneuart.config import QUESTION_FILE_JSON, ANSWER_FILE_JSON, QREL_FILE
 
 from flexneuart.ir_datasets.pipeline import Pipeline
 from flexneuart.io.json import read_json
+from flexneuart.io.qrels import qrel_entry2_str, QrelEntry
     
 class ParseWorker:
     def __init__(self, pipeline):
@@ -86,11 +87,12 @@ def main():
         out_dir = os.path.join(args.output_root, part_processor.part_name)
         os.makedirs(out_dir, exist_ok=True)
         if part_processor.is_query:
-            out_file = QUESTION_FILE_JSON
+            out_data_file = QUESTION_FILE_JSON
         else:
-            out_file = ANSWER_FILE_JSON
-    
-        with FileWrapper(os.path.join(out_dir, out_file), 'w') as out_file:
+            out_data_file = ANSWER_FILE_JSON
+
+        # Process document or QUERIES, here it makes sense to juse multiple processes
+        with FileWrapper(os.path.join(out_dir, out_data_file), 'w') as f_out_data:
             obj_id = 0
     
             worker = ParseWorker(pipeline=part_processor)
@@ -102,7 +104,7 @@ def main():
                 obj_id = obj_id + 1
 
                 if type(res) == str:
-                    out_file.write(res)
+                    f_out_data.write(res)
                 else:
                     print(f'Failed to convert object # {obj_id}: ' + str(res))
                     error_qty += 1
@@ -113,6 +115,23 @@ def main():
             part_processor.finish_processing()
     
             print(f'Processed {obj_id} objects, errors: {error_qty}')
+
+        # Save QRELs. QRELs are very easy to process, not need to span extra processes
+        if part_processor.is_query:
+            with FileWrapper(os.path.join(out_dir, QREL_FILE), 'w') as f_out_qrel:
+
+                dataset = ir_datasets.load(part_processor.dataset_name)
+                # Although QREL type entries can be different in IR datasets (e.g. TrecQrel doesn't inherit from BaseQrel),
+                # they all seem to have the following fields:
+                #     query_id: str
+                #     doc_id: str
+                #     relevance: int
+                for qrel_orig in tqdm(dataset.qrels_iter(), 'saving QRELs'):
+                    f_out_qrel.write(qrel_entry2_str(QrelEntry(query_id=qrel_orig.query_id,
+                                                               doc_id=qrel_orig.doc_id,
+                                                               rel_grade=qrel_orig.relevance)))
+                    f_out_qrel.write('\n')
+
 
 if __name__ == '__main__':
 
