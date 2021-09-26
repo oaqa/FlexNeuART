@@ -43,7 +43,7 @@ class CedrPacrrRanker(BertSplitMaxChunkRanker):
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         cls_reps, query_reps, doc_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
-        simmat = self.simmsimmatat(query_reps, doc_reps, query_tok, doc_tok)
+        simmat = self.simmat(query_reps, doc_reps, query_tok, doc_tok)
         scores = [ng(simmat) for ng in self.ngrams]
         scores = torch.cat(scores, dim=2)
         scores = scores.reshape(scores.shape[0], scores.shape[1] * scores.shape[2])
