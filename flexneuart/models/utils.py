@@ -17,7 +17,7 @@ from flexneuart.models import model_registry
 # An attribute to store the main BERT encoder
 BERT_ATTR='bert'
 
-def init_model(obj_ref, bert_flavor):
+def init_model(obj_ref, bert_flavor : str):
     """Instantiate a model, a tokenizer, and remember their parameters.
 
     :param obj_ref:       an object to initialize.
@@ -27,6 +27,10 @@ def init_model(obj_ref, bert_flavor):
     obj_ref.BERT_MODEL = bert_flavor
 
     model = AutoModel.from_pretrained(bert_flavor)
+
+    # TODO a temporary??? hack that needs a better solution
+    obj_ref.no_token_type_ids = bert_flavor.lower().find('roberta') >= 0
+
     config = model.config
     setattr(obj_ref, BERT_ATTR, model)
     obj_ref.config = config
@@ -42,7 +46,8 @@ def init_model(obj_ref, bert_flavor):
     print('Model type:', obj_ref.BERT_MODEL,
           '# of channels:', obj_ref.CHANNELS,
           'hidden layer size:', obj_ref.BERT_SIZE,
-          'input window size:', obj_ref.MAXLEN)
+          'input window size:', obj_ref.MAXLEN,
+          'no token type IDs:', obj_ref.no_token_type_ids)
 
 
 #
