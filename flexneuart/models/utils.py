@@ -33,15 +33,8 @@ def init_model(obj_ref, bert_flavor : str):
     setattr(obj_ref, BERT_ATTR, model)
     obj_ref.config = config
 
-    # A tad hacky, but universal approach to know when not to supply token_type_ids
-    # We don't want to completely disable tokenizers
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
-    obj_ref.no_token_type_ids = not ('token_type_ids' in tokenizer(''))
-    os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
-    # To be on the safe side, let's recrate the tokenizer after the parallelism is enabled
-    obj_ref.tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
+    obj_ref.tokenizer = tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
+    obj_ref.no_token_type_ids = not 'token_type_ids' in tokenizer.model_input_names
 
     obj_ref.CHANNELS = config.num_hidden_layers + 1
     obj_ref.BERT_SIZE = config.hidden_size
