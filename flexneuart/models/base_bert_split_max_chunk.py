@@ -81,7 +81,6 @@ class BertSplitMaxChunkRanker(BertBaseRanker):
         segment_ids = torch.cat([NILS] * (2 + max_qlen) + [ONES] * (1 + doc_toks.shape[1]), dim=1)
         toks[toks == -1] = 0 # remove padding (will be masked anyway)
 
-        # An ugly hack but it's not clear how to make generic enough
         if self.no_token_type_ids:
             token_type_ids = None
         else:

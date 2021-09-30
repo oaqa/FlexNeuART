@@ -28,13 +28,13 @@ def init_model(obj_ref, bert_flavor : str):
 
     model = AutoModel.from_pretrained(bert_flavor)
 
-    # TODO a temporary??? hack that needs a better solution
-    obj_ref.no_token_type_ids = bert_flavor.lower().find('roberta') >= 0
-
     config = model.config
     setattr(obj_ref, BERT_ATTR, model)
     obj_ref.config = config
     obj_ref.tokenizer = tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
+
+    # A tad hacky, but universal approach to know when not to supply token_type_ids
+    obj_ref.no_token_type_ids = 'token_type_ids' in tokenizer('')
 
     obj_ref.CHANNELS = config.num_hidden_layers + 1
     obj_ref.BERT_SIZE = config.hidden_size
