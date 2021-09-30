@@ -6,6 +6,7 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
+import os
 import math
 import torch
 import argparse
@@ -31,10 +32,16 @@ def init_model(obj_ref, bert_flavor : str):
     config = model.config
     setattr(obj_ref, BERT_ATTR, model)
     obj_ref.config = config
-    obj_ref.tokenizer = tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
 
     # A tad hacky, but universal approach to know when not to supply token_type_ids
-    obj_ref.no_token_type_ids = 'token_type_ids' in tokenizer('')
+    # We don't want to completely disable tokenizers
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
+    obj_ref.no_token_type_ids = not ('token_type_ids' in tokenizer(''))
+    os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
+    # To be on the safe side, let's recrate the tokenizer after the parallelism is enabled
+    obj_ref.tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
 
     obj_ref.CHANNELS = config.num_hidden_layers + 1
     obj_ref.BERT_SIZE = config.hidden_size
