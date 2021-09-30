@@ -89,7 +89,7 @@ class BertSplitSlideWindowRanker(BertBaseRanker):
         toks[toks == -1] = 0 # remove padding (will be masked anyway)
 
         # An ugly hack but it's not clear how to make generic enough
-        if self.bert.no_token_type_ids:
+        if self.no_token_type_ids:
             token_type_ids = None
         else:
             token_type_ids = segment_ids.long()
