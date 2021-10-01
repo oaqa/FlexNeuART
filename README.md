@@ -15,7 +15,7 @@ The code for the best-performing neural model will be published within 2-3 month
 
 ## Objectives
 
-Develop & maintain a (relatively) light-weight modular middleware useful primarily: 
+Develop & maintain a (relatively) light-weight modular middleware useful primarily for: 
 * Research
 * Education
 * Evaluation & leaderboarding
