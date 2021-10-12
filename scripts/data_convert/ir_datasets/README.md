@@ -27,7 +27,8 @@ output attributes for the next pipeline stage.
 In the simplest case,
 no data processing is happening and the attribute/field is renamed.
 Another simple operation is concatenation of fields.
-Crucially, there are no "fall through" attributes. 
+
+Crucially, there are no "fall through" attributes, which pass a pipeline stage without explicitly defined operation. 
 If we need to pass some document attribute "as is", we need to use either a `copy` or `rename`
 processing component.
 
