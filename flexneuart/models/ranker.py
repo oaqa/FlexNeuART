@@ -25,6 +25,7 @@ from jnius import autoclass
 
 from flexneuart.config import DOCID_FIELD
 
+from flexneuart.text_proc import handle_case
 from flexneuart.models.base import ModelSerializer
 from flexneuart.models.train.data import iter_valid_records
 from flexneuart.models.train.data  import DOC_TOK_FIELD, DOC_MASK_FIELD, \
@@ -154,13 +155,15 @@ class PythonNNQueryRanker(BaseQueryRanker):
     def __init__(self, resource_manager,
                        query_field_name,
                        index_field_name,
+                       keep_case,
                        device_name, batch_size,
-                       model_path_rel):
+                       model_path_rel,):
         """Reranker constructor.
 
         :param resource_manager:      a resource manager object
         :param query_field_name:      the name of the query field
         :param index_field_name:      the name of the text field
+        :param keep_case:             do not lower case
         :param device_name:           a device name
         :param batch_size:            the size of the batch
         :param model_path_rel:        a path to a (previously trained) and serialized model relative to the resource root
@@ -185,10 +188,15 @@ class PythonNNQueryRanker(BaseQueryRanker):
 
         self.batch_size = batch_size
 
+        self.keep_case = keep_case
+
         self.query_field_name = query_field_name
 
         self.fwd_indx = get_forward_index(resource_manager, index_field_name)
         self.fwd_indx.check_is_text_raw()
+
+    def handle_case(self, text: str):
+        return handle_case(self.do_lower_case, text)
 
     def score_candidates(self, cand_list, query_info_obj_or_dict):
         """Rank a candidate list obtained from the candidate provider.
@@ -214,13 +222,14 @@ class PythonNNQueryRanker(BaseQueryRanker):
             query_text = query_info_obj_or_dict.getString(self.query_field_name)
             query_id = query_info_obj_or_dict.mEntryId
 
+        query_text = self.handle_case(query_text)
         query_data = {query_id: query_text}
 
         doc_data = {}
         retr_score = {}
         run_did_and_scores = {}
         for doc_id, score in cand_list:
-            doc_text = self.fwd_indx.get_doc_raw(doc_id)
+            doc_text = self.handle_case(self.fwd_indx.get_doc_raw(doc_id))
             doc_data[doc_id] = doc_text
             retr_score[doc_id] = score
             run_did_and_scores[doc_id] = 0
