@@ -522,7 +522,7 @@ def do_train(sync_barrier,
 
 
 def main_cli():
-    parser = argparse.ArgumentParser('CEDR model training and validation')
+    parser = argparse.ArgumentParser('model training and validation')
 
     add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=True, mult_model=False)
 

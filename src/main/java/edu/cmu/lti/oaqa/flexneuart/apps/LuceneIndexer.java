@@ -47,7 +47,6 @@ public class LuceneIndexer {
   final static Logger logger = LoggerFactory.getLogger(LuceneIndexer.class);
   
   public static final String EXACT_MATCH_PARAM = "exact_match";
-  public static final int FLUSH_INTERV = 1000000;
   
   static void Usage(String err, Options opt) {
     System.err.println("Error: " + err);
@@ -202,10 +201,7 @@ public class LuceneIndexer {
             if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
               logger.info("Indexed " + docNum + " docs");
             }
-            if (docNum % FLUSH_INTERV == 0) {
-              logger.info("Flushing");
-              indexWriter.commit();
-            }
+            
           }
           logger.info("Indexed " + docNum + " docs");
         }

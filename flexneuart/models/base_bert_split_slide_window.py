@@ -88,10 +88,14 @@ class BertSplitSlideWindowRanker(BertBaseRanker):
         segment_ids = torch.cat([NILS] * (2 + max_qlen) + [ONES] * (1 + doc_toks.shape[1]), dim=1)
         toks[toks == -1] = 0 # remove padding (will be masked anyway)
 
+        if self.no_token_type_ids:
+            token_type_ids = None
+        else:
+            token_type_ids = segment_ids.long()
         # execute BERT model
         outputs: BaseModelOutputWithPoolingAndCrossAttentions = \
             self.bert(input_ids=toks,
-                      token_type_ids=segment_ids.long(),
+                      token_type_ids=token_type_ids,
                       attention_mask=mask,
                       output_hidden_states=True)
         result = outputs.hidden_states

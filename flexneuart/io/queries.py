@@ -2,7 +2,7 @@ import json
 import os
 
 from flexneuart.io.utils import jsonl_gen
-from flexneuart.config import QUESTION_FILE_JSON
+from flexneuart.config import QUESTION_FILE_JSON, DOCID_FIELD
 
 
 def is_json_query_file(file_name):
@@ -17,6 +17,15 @@ def read_queries(file_name):
     :return: an array where each entry is a parsed query JSON.
     """
     return list(jsonl_gen(file_name))
+
+
+def read_queries_dict(file_name):
+    """Read queries from a JSONL file and checks the document ID is set.
+
+    :param file_name: an input file name
+    :return: an dictionary where keys are query IDs and values are parsed query JSONs.
+    """
+    return {e[DOCID_FIELD] : e for e in jsonl_gen(file_name) }
 
 
 def write_queries(query_list, file_name):

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 # This is a convenience wrapper that does a bit of extra heavy lifting for model training.
 # In particular, based on the collection name and few options it
 # 1. Identifies the key directories to read the training data and store the model
@@ -199,6 +199,8 @@ if [ "$jsonConf" != "" ] ; then
 fi
 
 echo "=========================================================================="
+
+set -o pipefail
 
 python -u ./train_nn/train_model.py \
   $initModelArgs \
