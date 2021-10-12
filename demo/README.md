@@ -11,8 +11,8 @@ This directory has notebooks covering all essential functionality of FlexNeuART.
     
     ii. [Testing models that do not require training a fusion model (no learning to rank)](experimentation_testing_no_need_to_train_fusion.ipynb)
     
-    iii. [Training & testing fusion models](experimentation_train_fusion_models.ipynb)
+    iii. [Learning to rank (LETOR): training & testing fusion models](experimentation_train_fusion_models.ipynb)
 7. [Python API](py_api_demo.ipynb)
 8. [Using k-NN search on dense and dense-sparse embeddings](cand_generator_nmslib.ipynb)
-9. [Data processing: Special cases (need to cover answer-based QRELs and bitext from QRELs)](special_data_processing.ipynb)
+9. [Data processing: Special cases (e.g., answer-based QRELs and bitext from QRELs)](special_data_processing.ipynb)
 
