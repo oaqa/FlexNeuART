@@ -22,6 +22,8 @@ from flexneuart.models.train.amp import get_amp_processors
 from flexneuart.models.utils import add_model_init_basic_args
 from flexneuart.models.base import ModelSerializer
 
+from flexneuart.text_proc import handle_case
+
 from flexneuart.featextr_server.python_generated.protocol.ExternalScorer import TextEntryRaw
 from flexneuart.featextr_server.base import BaseQueryHandler, start_query_server
 
@@ -36,6 +38,7 @@ class RankQueryHandler(BaseQueryHandler):
     # Exclusive==True means single-threaded processing, which seems to be necessary here (there were hang ups otherwise)
     def __init__(self,
                     model_list,
+                    keep_case,
                     batch_size, device_name,
                     max_query_len, max_doc_len,
                     exclusive,
@@ -47,6 +50,7 @@ class RankQueryHandler(BaseQueryHandler):
         self.batch_size = batch_size
 
         self.amp = amp
+        self.do_lower_case = not keep_case
 
         self.max_query_len = max_query_len
         self.max_doc_len = max_doc_len
@@ -59,6 +63,8 @@ class RankQueryHandler(BaseQueryHandler):
             # need to be in the eval mode
             model.eval()
 
+    def handle_case(self, text: str):
+        return handle_case(self.do_lower_case, text)
 
     def compute_scores_from_parsed_override(self, query, docs):
         # Sending words array with subsequent concatenation is quite inefficient in Python (very-very inefficient)
@@ -74,13 +80,13 @@ class RankQueryHandler(BaseQueryHandler):
     def compute_scores_from_raw_override(self, query, docs):
         print('Processing query:', query.id, query.text, '# of docs: ', len(docs))
 
-        query_data = {query.id: query.text}
+        query_data = {query.id: self.handle_case(query.text)}
         # Run maps queries to arrays of document IDs see iter_valid_records (train_model.py)
         run = {query.id: {e.id : 0 for e in docs}}
 
         doc_data = {}
         for e in docs:
-            doc_data[e.id] = e.text
+            doc_data[e.id] = self.handle_case(e.text)
 
         model_qty = len(self.model_list)
         # Initialize the return dictionary: for each document ID, a zero-element array of the size # of models.
@@ -143,7 +149,12 @@ if __name__ == '__main__':
     parser.add_argument('--host', metavar='server host',
                         default='127.0.0.1', type=str,
                         help='server host addr to bind the port')
-    parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
+
+    parser.add_argument('--keep_case', action='store_true',
+                        help='no lower-casing')
+
+    parser.add_argument('--amp', action='store_true',
+                        help="Use automatic mixed-precision")
 
 
     args = parser.parse_args()
@@ -192,6 +203,7 @@ if __name__ == '__main__':
     multi_threaded = False  # if we set to True, we can often run out of CUDA memory.
     start_query_server(args.host, args.port, multi_threaded, RankQueryHandler(model_list=model_list,
                                                                               amp=args.amp,
+                                                                              keep_case=args.keep_case,
                                                                               batch_size=args.batch_size,
                                                                               debug_print=args.debug_print,
                                                                               device_name=args.device_name,
