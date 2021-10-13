@@ -2,12 +2,22 @@
 import os
 from os import path
 from setuptools import setup, find_packages
+import unittest
 import subprocess
 import sys
 
 # We need to build java binaries (and pack scripts) before packing everything
 # This script also cleans up vestiges of the previous build
 BUILD_SCRIPT="./build.sh"
+
+# setup tools fail to find these tests (when one specifies test_suit arg)
+# and it's not clear why even when w
+test_loader = unittest.TestLoader()
+test_suite = test_loader.discover(start_dir='./tests', pattern='test*.py')
+test_runner = unittest.TextTestRunner()
+results : unittest.runner.TextTestResult = test_runner.run(test_suite)
+assert not results.errors
+assert not results.failures
 
 try:
     print(subprocess.check_output([BUILD_SCRIPT]).decode())
