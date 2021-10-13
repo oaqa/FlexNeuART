@@ -4,12 +4,12 @@ We support (somewhat experimentally) simple conversion pipelines for [ir-dataset
 They are processed using the script [configurable_convert.py](configurable_convert.py),
 which is guided by a JSON configuration file. 
 The output of this file is one or more JSONL files, 
-which can be processed using standard FlexNeuART scripts.
+which can be processed using standard FlexNeuART tools.
 
 There are examples
 for [Cranfield](sample_configs/cranfield.json) and [ClueWeb12B](sample_configs/clueweb12-b13.json).
 Although some datasets will be automatically downloaded by `ir-datasets`, 
-many datasets are licensed and need to be `installed` manually.
+many datasets are licensed and need to be installed **manually**.
 
 The JSON configuration file contains an array of descriptions, each of which is supposed
 to be applicable to a specific data set part or a split. 
