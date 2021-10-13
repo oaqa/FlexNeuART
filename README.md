@@ -37,7 +37,7 @@ Develop & maintain a (relatively) light-weight modular middleware useful primari
 
 * [Usage notebooks covering installation & most functionality (including experimentation and Python API demo)](demo/README.md)
 * [Legacy notebooks for MS MARCO and Yahoo Answers](legacy_docs/README.md)
-* [Former life (as a knn4qa package), including acknowledgements and publications](knn4qa.md)
+* [Former life (as a knn4qa package), including acknowledgements and publications](legacy_docs/knn4qa.md)
 
 We support [a number of neural BERT-based ranking models](flexneuart/models/README.md) as well as strong traditional
 ranking models including IBM Model 1 (description of non-neural rankers to follow).
