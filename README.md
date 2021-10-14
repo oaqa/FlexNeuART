@@ -10,7 +10,10 @@ is a substantially reworked [`knn4qa` package](legacy_docs/knn4qa.md).  The over
 In Aug-Dec 2020, we used this framework to generate best traditional and/or neural runs 
 in the [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking).
 In fact, our best traditional (non-neural) run slightly outperformed a couple of neural submissions.
-The code for the best-performing neural model will be published within 2-3 months. This model is described in our ECIR 2021 paper:
+Please, see our write-up for details: [Boytsov, Leonid. "Traditional IR rivals neural models on the MS MARCO Document Ranking Leaderboard." arXiv preprint arXiv:2012.08020 (2020).](https://arxiv.org/abs/2012.08020).
+
+The code for the best-performing neural model will be published eventually in a separate repository. 
+This model is described in our ECIR 2021 paper:
 [Boytsov, Leonid, and Zico Kolter. "Exploring Classic and Neural Lexical Translation Models for Information Retrieval: Interpretability, Effectiveness, and Efficiency Benefits." ECIR 2021](https://arxiv.org/abs/2102.06815).
 
 ## Objectives
