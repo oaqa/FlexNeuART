@@ -27,7 +27,6 @@
 import sys
 
 SPACY_MODEL = 'en_core_web_sm'
-PYTORCH_DISTR_BACKEND='gloo'
 
 # Constants defined here mostly can't be modified as they should be in sync with Java and bash code
 STOPWORD_FILE = 'data/stopwords.txt'

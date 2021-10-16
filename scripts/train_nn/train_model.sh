@@ -44,6 +44,7 @@ validRunDir=""
 maxQueryVal=""
 valType=""
 batchesPerEpoch=""
+distrBackend="gloo"
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
@@ -62,6 +63,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
       "valid_type"         "valType"          "validation type: always (every epoch), last (last epoch), never"
+      "distr_backend"      "distrBackend"     "Pytorch backend for distributed processing"
 )
 
 parseArguments $@
@@ -176,6 +178,7 @@ echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
 echo "Validation type arg:                            $valTypeArg"
 echo "seed:                                           $seed"
 echo "device #:                                       $deviceQty"
+echo "Pytorch distributed backend:                    $distrBackend"
 echo "# of batches before model sync:                 $batchSyncQty"
 echo "optimizer:                                      $optim"
 echo "validation checkpoints arg:                     $validCheckPointsArg"
@@ -216,6 +219,7 @@ python -u ./train_nn/train_model.py \
   --seed $seed \
   --device_name $deviceName \
   --device_qty $deviceQty \
+  --distr_backend $distrBackend \
   --batch_sync_qty $batchSyncQty \
   --epoch_qty $epochQty \
   $saveEpochSnapshotsArg \

@@ -44,7 +44,7 @@ from flexneuart.io.runs import read_run_dict
 from flexneuart.io.qrels import read_qrels_dict
 from flexneuart.eval import METRIC_LIST, get_eval_results
 
-from flexneuart.config import DEVICE_CPU, TQDM_FILE, PYTORCH_DISTR_BACKEND
+from flexneuart.config import DEVICE_CPU, TQDM_FILE
 
 from tqdm import tqdm
 from collections import namedtuple
@@ -377,7 +377,8 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
 
 
 def do_train(sync_barrier,
-              device_qty, master_port, rank, is_master_proc,
+              device_qty, master_port, distr_backend,
+              rank, is_master_proc,
               dataset,
               qrels, qrel_file_name,
               train_pairs, valid_run,
@@ -387,7 +388,7 @@ def do_train(sync_barrier,
     if device_qty > 1:
         os.environ['MASTER_ADDR'] = '127.0.0.1'
         os.environ['MASTER_PORT'] = str(master_port)
-        dist.init_process_group(PYTORCH_DISTR_BACKEND, rank=rank, world_size=device_qty)
+        dist.init_process_group(distr_backend, rank=rank, world_size=device_qty)
 
     device_name = train_params.device_name
 
@@ -666,6 +667,9 @@ def main_cli():
                         help='Metric list: ' +  ','.join(METRIC_LIST), 
                         metavar='eval metric')
 
+    parser.add_argument('--distr_backend', choices=['gloo', 'nccl'], default='gloo',
+                        metavar='distr backend', help='Pytorch backend for distributed processing')
+
     parser.add_argument('--loss_func', choices=LOSS_FUNC_LIST,
                         default=PairwiseSoftmaxLoss.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
@@ -837,7 +841,7 @@ def main_cli():
                             else list(map(int, args.valid_checkpoints.split(',')))
         param_dict = {
             'sync_barrier': sync_barrier,
-            'device_qty' : device_qty, 'master_port' : master_port,
+            'device_qty' : device_qty, 'master_port' : master_port, 'distr_backend' : args.distr_backend,
             'rank' : rank, 'is_master_proc' : is_master_proc,
             'dataset' : dataset,
             'qrels' : qrels, 'qrel_file_name' : qrelf,
