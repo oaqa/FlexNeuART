@@ -4,7 +4,7 @@
 
 ## FlexNeuART (flex-noo-art)
 Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intended pronunciation** flex-noo-art) 
-is a substantially reworked [`knn4qa` package](knn4qa.md).  The overview can be found in our EMNLP OSS workshop paper: 
+is a substantially reworked [`knn4qa` package](legacy_docs/knn4qa.md).  The overview can be found in our EMNLP OSS workshop paper: 
 [Flexible retrieval with NMSLIB and FlexNeuART, 2020. Leonid Boytsov, Eric Nyberg](https://arxiv.org/abs/2010.14848).
 
 In Aug-Dec 2020, we used this framework to generate best traditional and/or neural runs 
@@ -15,7 +15,7 @@ The code for the best-performing neural model will be published within 2-3 month
 
 ## Objectives
 
-Develop & maintain a (relatively) light-weight modular middleware useful primarily: 
+Develop & maintain a (relatively) light-weight modular middleware useful primarily for: 
 * Research
 * Education
 * Evaluation & leaderboarding
@@ -27,7 +27,7 @@ Develop & maintain a (relatively) light-weight modular middleware useful primari
   parsed and "raw" text input as well as sparse and dense vectors.
 * Forward indices can be created in append-only mode, which requires much less RAM.
 * Pluggable generic rankers (via a server)
-* SOTA neural ([CEDR, PARADE, BERT 1stP/MaxP/Sum](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1).
+* SOTA neural ([CEDR, PARADE, BERT FirstP/MaxP/Sum](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1).
 * Multi-GPU training **and** inference with out-of-the box support for ensembling
 * Basic experimentation framework (+LETOR)
 * Python API to use retrievers and rankers as well as to access indexed data.
