@@ -27,10 +27,9 @@ from flexneuart.text_proc import handle_case
 from flexneuart.featextr_server.python_generated.protocol.ExternalScorer import TextEntryRaw
 from flexneuart.featextr_server.base import BaseQueryHandler, start_query_server
 
-import flexneuart.models.train.data as data
 
-from flexneuart.models.train.data import DOC_TOK_FIELD, DOC_MASK_FIELD, \
-    QUERY_TOK_FIELD, QUERY_MASK_FIELD, QUERY_ID_FIELD, DOC_ID_FIELD
+from flexneuart.models.train.batch_obj import BatchObject
+from flexneuart.models.train.batching import BatchingValidationGroupByQuery
 
 DEFAULT_BATCH_SIZE = 32
 
@@ -41,6 +40,7 @@ class RankQueryHandler(BaseQueryHandler):
                     keep_case,
                     batch_size, device_name,
                     max_query_len, max_doc_len,
+                    cand_score_weight,
                     exclusive,
                     amp,
                     debug_print=False):
@@ -51,6 +51,8 @@ class RankQueryHandler(BaseQueryHandler):
 
         self.amp = amp
         self.do_lower_case = not keep_case
+
+        self.cand_score_weight = cand_score_weight
 
         self.max_query_len = max_query_len
         self.max_doc_len = max_doc_len
@@ -101,22 +103,22 @@ class RankQueryHandler(BaseQueryHandler):
             # must disable gradient computation to greatly reduce memory requirements and speed up things
             with torch.no_grad():
                 for model_id, model in enumerate(self.model_list):
-                    for records in data.iter_valid_records(model, self.device_name, data_set, run,
-                                                           self.batch_size,
-                                                           self.max_query_len, self.max_doc_len):
+                    iter_val = BatchingValidationGroupByQuery(batch_size=self.batch_size,
+                                                              dataset=data_set, model=self.model,
+                                                              max_query_len=self.max_query_len,
+                                                              max_doc_len=self.max_doc_len,
+                                                              run=run)
 
-                        with auto_cast_class():
-                            scores = model(records[QUERY_TOK_FIELD],
-                                           records[QUERY_MASK_FIELD],
-                                           records[DOC_TOK_FIELD],
-                                           records[DOC_MASK_FIELD])
-
-
-                        # tolist() works much faster compared to extracting scores
-                        # one by one using .item()
+                    for batch in iter_val:
+                        batch: BatchObject = batch
+                        batch.to(self.device_name)
+                        model_scores = self.model(*batch.features)
+                        assert len(model_scores) == len(batch)
+                        scores = model_scores + batch.cand_scores * self.cand_score_weight
+                        # tolist() works much faster compared to extracting scores one by one using .item()
                         scores = scores.tolist()
 
-                        for qid, did, score in zip(records[QUERY_ID_FIELD], records[DOC_ID_FIELD], scores):
+                        for qid, did, score in zip(batch.query_ids, batch.doc_ids, scores):
                             if self.debug_print:
                                 print('model id:', model_id, 'score & doc. id:', score, did, doc_data[did])
 
@@ -127,7 +129,6 @@ class RankQueryHandler(BaseQueryHandler):
             print('All scores:', sample_ret)
 
         return sample_ret
-
 
 
 if __name__ == '__main__':
@@ -152,6 +153,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--keep_case', action='store_true',
                         help='no lower-casing')
+    parser.add_argument('--keep_case', action='store_true',
+                        help='no lower-casing')
+    parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
+                        type=float, default=0.0,
+                        help='a weight of the candidate generator score used to combine it with the model score.')
 
     parser.add_argument('--amp', action='store_true',
                         help="Use automatic mixed-precision")
@@ -209,4 +215,5 @@ if __name__ == '__main__':
                                                                               device_name=args.device_name,
                                                                               max_query_len=all_max_query_len,
                                                                               max_doc_len=all_max_doc_len,
+                                                                              cand_score_weight=args.cand_score_weight,
                                                                               exclusive=not multi_threaded))

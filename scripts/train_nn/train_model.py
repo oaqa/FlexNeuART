@@ -1,11 +1,21 @@
 #!/usr/bin/env python
 #
-# This code is based on CEDR: https://github.com/Georgetown-IR-Lab/cedr
-# It has some modifications/extensions and it relies on our custom BERT
-# library: https://github.com/searchivarius/pytorch-pretrained-BERT-mod
-# (c) Georgetown IR lab & Carnegie Mellon University
-# It's distributed under the MIT License
-# MIT License is compatible with Apache 2 license for the code in this repo.
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Using some bits from CEDR: https://github.com/Georgetown-IR-Lab/cedr
+#  which has MIT, i.e., Apache 2 compatible license.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 #
 import os
 import time
@@ -15,17 +25,19 @@ import math
 import argparse
 import torch.distributed as dist
 
-
+import flexneuart.config
+import flexneuart.io.train_data
 import flexneuart.models.train.data as data
 
 from flexneuart.models.utils import add_model_init_basic_args
 
 from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
+from flexneuart.models.train.batch_obj import BatchObject
+from flexneuart.models.train.batching import TrainSamplerFixedChunkSize, \
+                                             BatchingValidationGroupByQuery, \
+                                             BatchingTrainFixedChunkSize
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import *
-from flexneuart.models.train.data import QUERY_ID_FIELD, DOC_ID_FIELD, CAND_SCORE_FIELD, \
-                                    DOC_TOK_FIELD, DOC_MASK_FIELD, \
-                                    QUERY_TOK_FIELD, QUERY_MASK_FIELD
 
 from flexneuart import sync_out_streams, set_all_seeds, join_and_check_stat, enable_spawn
 from flexneuart.io.json import read_json, save_json
@@ -178,22 +190,27 @@ def train_iteration(model, sync_barrier,
 
     auto_cast_class, scaler = get_amp_processors(train_params.amp)
 
-    for record in data.iter_train_data(model, train_params.device_name, dataset,
-                                       train_pairs,
-                                       train_params.shuffle_train, neg_qty_per_query,
-                                       qrels, train_params.backprop_batch_size,
-                                       train_params.max_query_len, train_params.max_doc_len):
+    train_sampler = TrainSamplerFixedChunkSize(train_pairs=train_pairs,
+                                               neg_qty_per_query=neg_qty_per_query,
+                                               qrels=qrels, do_shuffle=train_params.shuffle_train)
+    train_iterator = BatchingTrainFixedChunkSize(batch_size=train_params.backprop_batch_size,
+                                                 dataset=dataset, model=model,
+                                                 max_query_len=train_params.max_query_len,
+                                                 max_doc_len=train_params.max_doc_len,
+                                                 train_sampler=train_sampler)
 
-        data_qty = len(record['query_id'])
+    for batch in train_iterator:
+
         with auto_cast_class():
-            scores = model(record[QUERY_TOK_FIELD],
-                       record[QUERY_MASK_FIELD],
-                       record[DOC_TOK_FIELD],
-                       record[DOC_MASK_FIELD]) + record[CAND_SCORE_FIELD] * cand_score_weight
+            batch: BatchObject = batch
+            batch.to(train_params.device_name)
+            model_scores = model(*batch.features)
+            assert len(model_scores) == len(batch)
+            scores = model_scores + batch.cand_scores * cand_score_weight
 
-            # +1 b/c one score is for the positive document
-            count = data_qty // (neg_qty_per_query + 1)
-            assert count * (neg_qty_per_query + 1) == data_qty
+            data_qty = len(batch)
+            count = data_qty // train_sampler.get_chunk_size()
+            assert count * train_sampler.get_chunk_size() == data_qty
             scores = scores.reshape(count, 1 + neg_qty_per_query)
             loss = loss_obj.compute(scores)
 
@@ -270,7 +287,7 @@ def train_iteration(model, sync_barrier,
             save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
             model.train()
             # We may need to make more than one validation iteration
-            run_chkpt_val = run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
+            run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
 
         if total_qty >= max_train_qty:
             break
@@ -337,21 +354,25 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
             tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False,  file=TQDM_FILE) as pbar:
 
         model.eval()
-        d = {}
-        for records in data.iter_valid_records(model,
-                                               train_params.device_name,
-                                               dataset, orig_run,
-                                               train_params.batch_size_val,
-                                               train_params.max_query_len, train_params.max_doc_len):
-            with auto_cast_class():
-                scores = model(records[QUERY_TOK_FIELD],
-                       records[QUERY_MASK_FIELD],
-                       records[DOC_TOK_FIELD],
-                       records[DOC_MASK_FIELD]) + records[CAND_SCORE_FIELD] * cand_score_weight
 
-            for qid, did, score in zip(records[QUERY_ID_FIELD], records[DOC_ID_FIELD], scores):
-                rerank_run.setdefault(qid, {})[did] = score.item()
-            pbar.update(len(records[QUERY_ID_FIELD]))
+        iter_val = BatchingValidationGroupByQuery(batch_size=train_params.batch_size_val,
+                                                 dataset=dataset, model=model,
+                                                 max_query_len=train_params.max_query_len,
+                                                 max_doc_len=train_params.max_doc_len,
+                                                 run=orig_run)
+        for batch in iter_val:
+            with auto_cast_class():
+                batch: BatchObject = batch
+                batch.to(train_params.device_name)
+                model_scores = model(*batch.features)
+                assert len(model_scores) == len(batch)
+                scores = model_scores + batch.cand_scores * cand_score_weight
+                # tolist() works much faster compared to extracting scores one by one using .item()
+                scores = scores.tolist()
+
+            for qid, did, score in zip(batch.query_ids, batch.doc_ids, scores):
+                rerank_run.setdefault(qid, {})[did] = score
+            pbar.update(len(batch))
 
     return rerank_run
 
@@ -414,7 +435,7 @@ def do_train(sync_barrier,
             raise Exception('Unsupported optimizer: ' + train_params.optim)
 
         bpte = train_params.batches_per_train_epoch
-        max_train_qty = data.train_item_qty_upper_bound(train_pairs)
+        max_train_qty = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs)
 
         if bpte is not None and bpte >= 0:
             max_train_qty = min(max_train_qty, int(bpte) * train_params.batch_size)
@@ -527,11 +548,11 @@ def main_cli():
     add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=True, mult_model=False)
 
     parser.add_argument('--max_query_len', metavar='max. query length',
-                        type=int, default=data.DEFAULT_MAX_QUERY_LEN,
+                        type=int, default=flexneuart.config.DEFAULT_MAX_QUERY_LEN,
                         help='max. query length')
 
     parser.add_argument('--max_doc_len', metavar='max. document length',
-                        type=int, default=data.DEFAULT_MAX_DOC_LEN,
+                        type=int, default=flexneuart.config.DEFAULT_MAX_DOC_LEN,
                         help='max. document length')
 
     parser.add_argument('--datafiles', metavar='data files', help='data files: docs & queries',
@@ -733,10 +754,10 @@ def main_cli():
     print(model_holder.model)
     sync_out_streams()
 
-    dataset = data.read_datafiles(args.datafiles)
+    dataset = flexneuart.io.train_data.read_datafiles(args.datafiles)
     qrelf = args.qrels.name
     qrels = read_qrels_dict(qrelf)
-    train_pairs_all = data.read_pairs_dict(args.train_pairs)
+    train_pairs_all = flexneuart.io.train_data.read_pairs_dict(args.train_pairs)
     valid_run = read_run_dict(args.valid_run.name)
     max_query_val = args.max_query_val
     query_ids = list(valid_run.keys())

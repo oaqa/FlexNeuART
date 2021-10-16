@@ -21,7 +21,7 @@ import argparse
 from tqdm import tqdm
 
 from flexneuart.io.utils import jsonl_gen
-from flexneuart.models.train.data import VocabBuilder
+from flexneuart.io.vocab import VocabBuilder
 
 parser = argparse.ArgumentParser('Build vocabularies from several processed fiels')
 parser.add_argument('--field_name', metavar='field name', help='a JSONL field to use', required=True)

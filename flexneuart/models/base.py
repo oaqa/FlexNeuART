@@ -15,6 +15,7 @@
 #
 import torch
 import inspect
+from typing import List
 
 from flexneuart.config import DEVICE_CPU
 from flexneuart.models import model_registry
@@ -81,11 +82,18 @@ class BaseModel(torch.nn.Module):
         """
         return set([])
 
-    def tokenize_and_encode(self, text):
-        """Tokenizes the text and converts tokens to respective IDs
+    def featurize(self, max_query_len : int, max_doc_len : int,
+                        query_texts : List[str],
+                        doc_texts : List[str]) -> tuple:
+        """
+        "Featurizes" input. Convert input queries and texts to a set of features,
+        which are comptabile to the model's forward function.
 
-        :param text:  input text
-        :return:      an array of token IDs
+        :param max_query_len: max query length
+        :param max_doc_len:   max doc length
+        :param query_texts: an array of query texts
+        :param doc_texts:   an array of documen texts
+        :return: a batch object.
         """
         raise NotImplementedError
 

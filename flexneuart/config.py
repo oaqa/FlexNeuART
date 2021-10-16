@@ -78,3 +78,5 @@ DEFAULT_BITEXT_SUBDIR='bitext'
 
 # Let's use STDOUT, it makes it easier to sync output
 TQDM_FILE=sys.stdout
+DEFAULT_MAX_QUERY_LEN=32
+DEFAULT_MAX_DOC_LEN=512 - DEFAULT_MAX_QUERY_LEN - 4
