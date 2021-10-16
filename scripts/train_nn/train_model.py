@@ -27,7 +27,6 @@ import torch.distributed as dist
 
 import flexneuart.config
 import flexneuart.io.train_data
-import flexneuart.models.train.data as data
 
 from flexneuart.models.utils import add_model_init_basic_args
 
@@ -199,7 +198,7 @@ def train_iteration(model, sync_barrier,
                                                  max_doc_len=train_params.max_doc_len,
                                                  train_sampler=train_sampler)
 
-    for batch in train_iterator:
+    for batch in train_iterator():
 
         with auto_cast_class():
             batch: BatchObject = batch
@@ -360,7 +359,7 @@ def run_model(model, train_params, dataset, orig_run, desc='valid'):
                                                  max_query_len=train_params.max_query_len,
                                                  max_doc_len=train_params.max_doc_len,
                                                  run=orig_run)
-        for batch in iter_val:
+        for batch in iter_val():
             with auto_cast_class():
                 batch: BatchObject = batch
                 batch.to(train_params.device_name)

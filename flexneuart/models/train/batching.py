@@ -59,7 +59,7 @@ class BatchingBase:
     def _batchify(self) -> BatchObject:
         """Batchify data and clear the batch content."""
         model: BaseModel = self.model
-        batch: self.batch
+        batch: TempBatch = self.batch
 
         features = model.featurize(max_query_len=self.max_query_len,
                                    max_doc_len=self.max_doc_len,
@@ -107,7 +107,7 @@ class BatchingValidationGroupByQuery(BatchingBase):
 
                 self._add_to_batch(qid=qid, query_text=query_text,
                                    did=did, doc_text=doc_text,
-                                   cand_score=score, labels=0)
+                                   cand_score=score, label=0)
 
                 if len(self.batch.query_ids) >= self.batch_size:
                     # clears bach too!
@@ -164,7 +164,7 @@ class BatchingTrainFixedChunkSize(BatchingBase):
                 assert neg_doc_text is not None, f'Missing document ID: {neg_id}'
                 self._add_to_batch(qid=qobj.qid, query_text=query_text,
                                    did=neg_id, doc_text=neg_doc_text,
-                                   cand_score=neg_score, labels=0)
+                                   cand_score=neg_score, label=0)
 
             batch: TempBatch = self.batch
 

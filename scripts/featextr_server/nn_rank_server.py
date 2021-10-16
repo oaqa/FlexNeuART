@@ -109,7 +109,7 @@ class RankQueryHandler(BaseQueryHandler):
                                                               max_doc_len=self.max_doc_len,
                                                               run=run)
 
-                    for batch in iter_val:
+                    for batch in iter_val():
                         batch: BatchObject = batch
                         batch.to(self.device_name)
                         model_scores = self.model(*batch.features)
