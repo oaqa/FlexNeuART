@@ -104,7 +104,8 @@ class RankQueryHandler(BaseQueryHandler):
             with torch.no_grad():
                 for model_id, model in enumerate(self.model_list):
                     iter_val = BatchingValidationGroupByQuery(batch_size=self.batch_size,
-                                                              dataset=data_set, model=self.model,
+                                                              dataset=data_set,
+                                                              model=model,
                                                               max_query_len=self.max_query_len,
                                                               max_doc_len=self.max_doc_len,
                                                               run=run)
@@ -112,7 +113,7 @@ class RankQueryHandler(BaseQueryHandler):
                     for batch in iter_val():
                         batch: BatchObject = batch
                         batch.to(self.device_name)
-                        model_scores = self.model(*batch.features)
+                        model_scores = model(*batch.features)
                         assert len(model_scores) == len(batch)
                         scores = model_scores + batch.cand_scores * self.cand_score_weight
                         # tolist() works much faster compared to extracting scores one by one using .item()
@@ -153,7 +154,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--keep_case', action='store_true',
                         help='no lower-casing')
- 
+
     parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
                         type=float, default=0.0,
                         help='a weight of the candidate generator score used to combine it with the model score.')
