@@ -75,7 +75,7 @@ class TrainSamplerFixedChunkSize:
         if do_shuffle:
             np.random.shuffle(self.qids)
 
-        self.qnum = None
+        self.qnum = -1
 
     def get_chunk_size(self):
         """Return the number of entries in every chunk."""

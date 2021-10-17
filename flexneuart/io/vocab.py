@@ -1,6 +1,5 @@
 import pickle
-from collections.__init__ import Counter
-
+from collections import Counter
 
 class VocabBuilder:
     """Compile a vocabulary together with token stat. from *WHITE-SPACE* tokenized text."""

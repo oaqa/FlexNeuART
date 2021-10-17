@@ -51,6 +51,10 @@ class ForwardIndex:
         if not self.indx.isParsed():
             raise Exception(f'Field {self.field_name} is not parsed but {self.indx_fld_type}')
 
+    def check_is_parsed_text(self):
+        if not self.indx.isParsedText():
+            raise Exception(f'Field {self.field_name} is not parsed (with positional info) but {self.indx_fld_type}')
+
     def check_is_binary(self):
         if not self.indx.isBinary():
             raise Exception(f'Field {self.field_name} is not binary but {self.indx_fld_type}')
@@ -62,12 +66,25 @@ class ForwardIndex:
     def get_doc_text_raw(self, doc_id):
         """Obtain the raw-document text. Must be a raw-field.
 
-        :param doc_id: a document ID (e.g., returned by a candidate provider)
-        :return:   document text or None if no such document exists
+            :param doc_id: a document ID (e.g., returned by a candidate provider)
+            :return:   document text or None if no such document exists
         """
         self.check_is_text_raw()
 
         return self.indx.getDocEntryTextRaw(doc_id)
+
+
+    def get_doc_entry_parsed_text(self, doc_id):
+        """Retrieves an existing parsed document entry and constructs a textual representation.
+           This function needs a positional forward index.
+
+            :param doc_id: a document ID (e.g., returned by a candidate provider)
+            :return:   document text or None if no such document exists
+        """
+        self.check_is_parsed_text()
+
+        return self.indx.getDocEntryParsedText(doc_id)
+
 
     def get_doc_parsed(self, doc_id):
         """Get a parsed document entry.

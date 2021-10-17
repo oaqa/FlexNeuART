@@ -28,6 +28,7 @@ from flexneuart.config import DOCID_FIELD
 from flexneuart.text_proc import handle_case
 from flexneuart.models.base import ModelSerializer
 from flexneuart.models.train.batch_obj import BatchObject
+from flexneuart.models.train.amp import get_amp_processors
 from flexneuart.models.train.batching import BatchingValidationGroupByQuery
 
 from flexneuart.retrieval.utils import query_dict_to_dataentry_fields, DataEntryFields
@@ -156,7 +157,8 @@ class PythonNNQueryRanker(BaseQueryRanker):
                        keep_case,
                        device_name, batch_size,
                        model_path_rel,
-                       cand_score_weight):
+                       cand_score_weight,
+                       amp=False):
         """Reranker constructor.
 
         :param resource_manager:      a resource manager object
@@ -167,6 +169,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
         :param batch_size:            the size of the batch
         :param model_path_rel:        a path to a (previously trained) and serialized model relative to the resource root
         :param cand_score_weight      a weight for the candidate generation scores
+        :param amp                    if True, use automatic mixed precision
 
         """
         super().__init__()
@@ -184,12 +187,12 @@ class PythonNNQueryRanker(BaseQueryRanker):
         self.model = model_holder.model
         self.model.to(device_name)
 
+        self.do_lower_case = not keep_case
+
         self.max_query_len = model_holder.max_query_len
         self.max_doc_len = model_holder.max_doc_len
 
         self.batch_size = batch_size
-
-        self.keep_case = keep_case
 
         self.query_field_name = query_field_name
 
@@ -239,6 +242,8 @@ class PythonNNQueryRanker(BaseQueryRanker):
 
         res = {}
 
+        auto_cast_class, _ = get_amp_processors(self.amp)
+
         with torch.no_grad():
             iter_val = BatchingValidationGroupByQuery(batch_size=self.batch_size,
                                                       dataset=data_set, model=self.model,
@@ -247,15 +252,16 @@ class PythonNNQueryRanker(BaseQueryRanker):
                                                       run=run)
 
             for batch in iter_val():
-                batch: BatchObject = batch
-                batch.to(self.device_name)
-                model_scores = self.model(*batch.features)
-                assert len(model_scores) == len(batch)
-                scores = model_scores + batch.cand_scores * self.cand_score_weight
-                # tolist() works much faster compared to extracting scores one by one using .item()
-                scores = scores.tolist()
+                with auto_cast_class():
+                    batch: BatchObject = batch
+                    batch.to(self.device_name)
+                    model_scores = self.model(*batch.features)
+                    assert len(model_scores) == len(batch)
+                    scores = model_scores + batch.cand_scores * self.cand_score_weight
+                    # tolist() works much faster compared to extracting scores one by one using .item()
+                    scores = scores.tolist()
 
-                for qid, did, score in zip(batch.query_ids, batch.doc_ids, scores):
-                    res[did] = score
+                    for qid, did, score in zip(batch.query_ids, batch.doc_ids, scores):
+                        res[did] = score
 
         return res

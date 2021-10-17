@@ -73,7 +73,7 @@ class BertMaxPRanker(BertAggregPRanker):
                          window_size=window_size, stride=stride, dropout=dropout)
 
 @register(BERT_SUMP)
-class BertMaxPRanker(BertAggregPRanker):
+class BertSumPRanker(BertAggregPRanker):
     def __init__(self, bert_flavor=BERT_BASE_MODEL,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  dropout=DEFAULT_BERT_DROPOUT):

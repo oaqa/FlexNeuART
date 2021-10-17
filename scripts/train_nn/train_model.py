@@ -345,7 +345,7 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
 
 
 def run_model(model, train_params, dataset, orig_run, desc='valid'):
-    auto_cast_class, scaler = get_amp_processors(train_params.amp)
+    auto_cast_class, _ = get_amp_processors(train_params.amp)
     rerank_run = {}
     clean_memory(train_params.device_name)
     cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)

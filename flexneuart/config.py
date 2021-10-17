@@ -60,7 +60,7 @@ TEXT_RAW_FIELD_NAME = 'text_raw'
 
 ANSWER_LIST_FIELD_NAME = 'answer_list'
 
-# We don't really use it
+# We don't really use it yet
 DEFAULT_ENCODING = 'utf-8'
 
 # bitext naming conventions

@@ -17,6 +17,7 @@ pyjnius
 
 torch
 torchtext
+fasttext
 
 transformers
 sentence-transformers

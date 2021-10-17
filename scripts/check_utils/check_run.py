@@ -27,7 +27,8 @@ from flexneuart.config import DOCID_FIELD
 from flexneuart.io import FileWrapper
 from flexneuart.io.queries import read_queries
 
-from scripts.py_flexneuart.setup import *
+from flexneuart import configure_classpath
+from flexneuart.retrieval import create_featextr_resource_manager
 from flexneuart.retrieval.fwd_index import get_forward_index
 
 from tqdm import tqdm
@@ -43,7 +44,7 @@ parser.add_argument('--run_id', metavar='run id',
                     help='optional run id to check',
                     default=None,
                     type=str)
-parser.add_argument('--collect_root', metavar='collection dir',
+parser.add_argument('--collect_dir', metavar='collection dir',
                     help='a top-level collection directory',
                     default=None)
 parser.add_argument('--fwd_index_subdir',
@@ -61,15 +62,14 @@ parser.add_argument('--min_exp_doc_qty',
 
 args = parser.parse_args()
 
-
 # add Java JAR to the class path
-configure_classpath('target')
+configure_classpath()
 
 if args.index_field is not None:
-    assert args.collect_root is not None, "Specify a top-level collection directory!"
+    assert args.collect_dir is not None, "Specify a top-level collection directory!"
     assert args.fwd_index_subdir is not None, "Specify the forward index directory!"
     # create a resource manager
-    resource_manager=create_featextr_resource_manager(resource_root_dir=args.collect_root,
+    resource_manager=create_featextr_resource_manager(resource_root_dir=args.collect_dir,
                                                   fwd_index_dir=args.fwd_index_subdir)
 
     fwd_index = get_forward_index(resource_manager, args.index_field)
@@ -125,7 +125,7 @@ with FileWrapper(file_name) as f:
             raise Exception(
                 f'Invalid line {ln} in run file {file_name} increasing score!')
         if all_doc_ids is not None:
-            if docid not in all_doc_ids and doc_id != FAKE_DOC_ID:
+            if docid not in all_doc_ids and docid != FAKE_DOC_ID:
                 raise Exception(
                     f'Invalid line {ln} in run file {file_name} document id not found in the index: {docid}')
         if docid in seen_docs:
@@ -143,9 +143,7 @@ with FileWrapper(file_name) as f:
         query_doc_qtys[qid] += 1
 
 
-
-
-# Finally print per-query statistics and report queries that have fewer than a give number of results generated
+# Finally print per-query statistics and report queries that produced fewer results than a given threshold.
 print('# of results per query:')
 n_warn = 0
 for qid in query_ids:

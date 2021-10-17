@@ -115,8 +115,7 @@ public abstract class ForwardIndex {
    * Is the index type raw text? This functions returns a meaningful value only if the 
    * instance was created for writing, or after we read the header from the disk.
    * 
-   * @return true when the index type is not raw, or we just created
-   *              an instance for reading, but didn't actually read contents.
+   * @return true when the index type is raw text.
    */
   public boolean isTextRaw() { return mIndexFieldType == ForwardIndexFieldType.textRaw; }
   
@@ -124,8 +123,7 @@ public abstract class ForwardIndex {
    * Is it a binary field? This functions returns a meaningful value only if the 
    * instance was created for writing, or after we read the header from the disk.
    * 
-   * @return true when the index type is not raw, or we just created
-   *              an instance for reading, but didn't actually read contents.
+   * @return true when the index type is binary.
    */
   public boolean isBinary() { return mIndexFieldType == ForwardIndexFieldType.binary; }
   
@@ -133,11 +131,23 @@ public abstract class ForwardIndex {
    * Is it a parsed field? This functions returns a meaningful value only if the 
    * instance was created for writing, or after we read the header from the disk.
    * 
-   * @return true when the index type is not raw, or we just created
-   *              an instance for reading, but didn't actually read contents.
+   * @return true when the index type is parsed BOW or parsed text (BOW with extra positional information).
+   * 
    */
   public boolean isParsed() { 
     return mIndexFieldType == ForwardIndexFieldType.parsedBOW || mIndexFieldType == ForwardIndexFieldType.parsedText; 
+  }
+  
+  /**
+   * Is it a parsed field with positional information?  
+   * 
+   * This functions returns a meaningful value only if the 
+   * instance was created for writing, or after we read the header from the disk.
+   * 
+   * @return true when the index type is parsedText.
+   */
+  public boolean isParsedText() { 
+	return mIndexFieldType == ForwardIndexFieldType.parsedText; 
   }
   
   /**
@@ -764,11 +774,10 @@ public abstract class ForwardIndex {
     return filePrefix + "." + indexStoreType.toString() + "_" + indexType.toString();
   }
   
-  // ForwardIndexFieldType.unknown index type is used to create a read instance
   private static ForwardIndex createInstance(String filePrefix,
                                              ForwardIndexType indexType,
-  																					 ForwardIndexStoreType indexStoreType,
-  																					 ForwardIndexFieldType indexFieldType) throws IOException {
+											 ForwardIndexStoreType indexStoreType,
+											 ForwardIndexFieldType indexFieldType) throws IOException {
     String indexPrefixFull = getIndexPrefix(filePrefix, indexType, indexStoreType);
     
     PersistentKeyValBackend backend = null;
