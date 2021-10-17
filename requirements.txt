@@ -17,7 +17,8 @@ pyjnius
 
 torch
 torchtext
-fasttext
+# 0.9.2 fails to install in some cases
+fasttext==0.9.1
 
 transformers
 sentence-transformers
