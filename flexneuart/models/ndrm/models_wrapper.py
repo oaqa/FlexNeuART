@@ -64,7 +64,8 @@ class NDRMWrapperBase(BaseModel):
         while curr_i <= query_qty:
             if curr_i == query_qty or query_texts[curr_i] != query_texts[prev_i]:
                 query_doc_qtys.append(curr_i - prev_i)
-                single_query_feat = self.__featurize(q=query_texts[prev_i], ds=doc_texts,
+                single_query_feat = self.__featurize(q=query_texts[prev_i],
+                                                ds_orig=doc_texts,
                                                 max_query_len=max_query_len,
                                                 max_doc_len=max_doc_len,
                                                 infer_mode=not self.training)
@@ -261,31 +262,28 @@ class NDRMWrapperBase(BaseModel):
     # 2. max # of terms for docs and queries now is a minimum of two values
     # 3. this function now returns torch tensors instead of numpy arrays
     #
-    def __featurize(self, q: str, ds: List[str],
+    def __featurize(self, q: str, ds_orig: List[str],
                           max_query_len: int, max_doc_len: int,
                           infer_mode: bool =False) -> Sequence[torch.Tensor]:
         max_doc_len = min(self.args.max_terms_doc, max_doc_len)
         q = self.tokenize(q)
         max_q_terms = len(q) if infer_mode else max_query_len
-        for i in range(len(ds)):
-            fields = ds[i]
-            other_fields = self.tokenize(' '.join(fields[:-1]))
-            ds[i] = ['<S>'] + other_fields + ['</S>']
+        ds_tok = [['<S>'] + self.tokenize(ds_orig[i]) + ['</S>']for i in range(len(ds_orig))]
         feat_q, feat_mask_q = self.__get_features_lat(q, max_q_terms)
         feat_q = torch.tensor(feat_q, dtype=torch.int64)
         feat_mask_q = torch.tensor(feat_mask_q, dtype=torch.float32)
         if self.args.model != 'ndrm2':
-            features = [self.__get_features_lat(doc, max_doc_len) for doc in ds]
+            features = [self.__get_features_lat(doc, max_doc_len) for doc in ds_tok]
             feat_d = [feat[0] for feat in features]
             feat_d = torch.tensor(feat_d, dtype=torch.int64)
             feat_mask_d = [feat[1] for feat in features]
             feat_mask_d = torch.tensor(feat_mask_d, dtype=torch.float32)
         if self.args.model != 'ndrm1':
-            feat_qd = [self.__get_features_exp(q, doc, max_q_terms) for doc in ds]
+            feat_qd = [self.__get_features_exp(q, doc, max_q_terms) for doc in ds_tok]
             feat_qd = torch.tensor(feat_qd, dtype=torch.float32)
             feat_idf = self.__get_features_idf(q, max_q_terms)
             feat_idf = torch.tensor(feat_idf, dtype=torch.float32)
-            feat_dlen = self.__get_features_dlen(ds)
+            feat_dlen = self.__get_features_dlen(ds_tok)
             feat_dlen = torch.tensor(feat_dlen, dtype=torch.float32)
         if self.args.model == 'ndrm1':
             return feat_q, feat_d, feat_mask_q, feat_mask_d
