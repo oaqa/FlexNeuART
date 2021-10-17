@@ -10,7 +10,7 @@ import numpy as np
 from .conformer import PositionalEncoding, ConformerEncoderLayer, ConformerEncoder
 
 #
-# BIG REMINDER:
+# *IMPORTANT* REMINDER:
 # Don't store the ref to the parent module here: this makes __repr__ function recurse infinitely!!!
 # That's why NDRM[123] functions receive a ref to the wrapper module arguments, not to the module itself!
 #

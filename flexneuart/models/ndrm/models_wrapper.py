@@ -57,14 +57,19 @@ class NDRMWrapperBase(BaseModel):
         batch = {}
         curr_i = 0
         prev_i = 0
+        query_doc_qtys = [] # number of documents generated per query
+
+        assert query_qty > 0
 
         while curr_i <= query_qty:
             if curr_i == query_qty or query_texts[curr_i] != query_texts[prev_i]:
+                query_doc_qtys.append(curr_i - prev_i)
                 single_query_feat = self.__featurize(q=query_texts[prev_i], ds=doc_texts,
                                                 max_query_len=max_query_len,
                                                 max_doc_len=max_doc_len,
                                                 infer_mode=not self.training)
                 feat_qty = len(single_query_feat)
+
                 if prev_i == 0:
                     batch = {k : [] for k in range(feat_qty)}
                 else:
@@ -80,11 +85,19 @@ class NDRMWrapperBase(BaseModel):
 
             curr_i += 1
 
-        assert batch
 
-        features = []
+        assert batch
+        #
+        # at inference time, b/c the query length basically varies, there would be
+        # incompatibilities among features produced by diff. queries.
+        # hence mixed-query input is prohibited @ inference time
+        if not self.training:
+            assert len(query_doc_qtys) == 1, "Mixed-query input is prohibited during inference time!"
+
+        features = [torch.LongTensor(query_doc_qtys)]
         # Concatenate all features to make the batch
         for i in range(feat_qty):
+            assert len(batch[i]) == len(query_doc_qtys)
             features.append(torch.cat(batch[i]))
 
         return tuple(features)
@@ -163,7 +176,26 @@ class NDRMWrapperBase(BaseModel):
     # implemenation of the featurize function with minimum modifications.
     #
     def forward(self, *args):
-        return self.model(*args, qti_mode=self.qti_mode).squeeze(dim=0)
+        # Note that the first Tensor in the tuple must be the number of documents per query
+        y = self.model(*args[1:], qti_mode=self.qti_mode)
+
+        #
+        # the output has shape [Q x D], which gives the score of each query vs every document,
+        # but we will ignore scores for unrelated query-document pairs
+        #
+
+        query_doc_qtys = args[0].tolist()
+
+        start=0
+
+        res_mask = torch.zeros(y.shape, dtype=torch.bool)
+
+        for qpos, qty in enumerate(query_doc_qtys):
+            res_mask[qpos, start : start+qty] = True
+            start += qty
+        assert start == y.shape[1]
+
+        return y[res_mask]
 
     def tokenize(self, s):
         return s.split()
