@@ -23,6 +23,7 @@
     A script to compute and store IDFs of terms for a given (parsed) field for
     which we previously created a parsed index (with or without positions).
 """
+import os
 import math
 import argparse
 
@@ -75,6 +76,10 @@ for word_id in tqdm(fwd_index.get_all_word_ids(), 'computing IDFs'):
 
 idfs = {k: v for k, v in idfs.items() if v > 0}
 idfs = sorted(idfs.items(), key=lambda kv: kv[1])
+
+out_dir = os.path.dirname(args.output)
+os.makedirs(out_dir, exist_ok=True)
+
 with open(args.output, 'w') as f:
     for (k, v) in idfs:
         f.write('{}\t{}\n'.format(k, v))
