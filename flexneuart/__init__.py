@@ -16,6 +16,8 @@
 #
 import os
 
+from typing import Dict
+
 import flexneuart
 
 from flexneuart.utils import *
@@ -66,7 +68,7 @@ class Registry:
 
     """
     def __init__(self, default: str = None):
-        self.registered = {}
+        self.registered : Dict[str, function] = {}
         self.default = default
 
     def register(self, name):

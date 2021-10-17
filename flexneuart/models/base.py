@@ -87,7 +87,10 @@ class BaseModel(torch.nn.Module):
                         doc_texts : List[str]) -> tuple:
         """
         "Featurizes" input. Convert input queries and texts to a set of features,
-        which are comptabile to the model's forward function.
+        which are compatible to the model's forward function.
+
+        **ATTENTION!!!** This function *MUST* itself create a batch
+        b/c training code does not use a standard PyTorch loader!
 
         :param max_query_len: max query length
         :param max_doc_len:   max doc length

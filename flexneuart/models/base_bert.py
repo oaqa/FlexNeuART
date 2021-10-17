@@ -59,6 +59,13 @@ class BertBaseRanker(BaseModel):
     def featurize(self, max_query_len : int, max_doc_len : int,
                         query_texts : List[str],
                         doc_texts : List[str]) -> tuple:
+        """
+           "Featurizes" input. Convert input queries and texts to a set of features,
+            which are compatible to the model's forward function.
+
+            **ATTENTION!!!** This function *MUST* itself create a batch
+            b/c training code does not use a standard PyTorch loader!
+        """
 
         query_tok_ids = [self._tokenize_and_encode(query) for query in query_texts]
         query_tok = self._pad_crop(query_tok_ids, max_len=max_query_len)

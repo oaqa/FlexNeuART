@@ -42,9 +42,11 @@ class BatchObject:
         self.features = self.move_features_to_device(self.features, device_name)
 
     def move_features_to_device(self, features, device_name):
+        #
         # Based on the function from
         # https://github.com/bmitra-msft/TREC-Deep-Learning-Quick-Start,
         # which has an Apache2 compatible MIT license
+        #
         if isinstance(features, torch.Tensor):
             return features.to(device_name)
         if isinstance(features, tuple):
@@ -53,5 +55,6 @@ class BatchObject:
             return [self.move_features_to_device(one_feat, device_name) for one_feat in features]
         if isinstance(features, dict):
             return {k : self.move_features_to_device(one_feat, device_name) for k, one_feat in features.items()}
-        raise Exception('Unsupported feature type: ' + type(features))
+
+        raise Exception(f'Unsupported feature type: {type(features)}')
 

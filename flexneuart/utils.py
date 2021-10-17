@@ -59,6 +59,11 @@ def sync_out_streams():
     sys.stdout.flush()
 
 
+def clear_line_console():
+    sys.stdout.write("\033[F")
+    sys.stdout.write("\033[K")
+
+
 class DictToObject(object):
     """Create an object from a dictionary, but not recursively"""
     def __init__(self, input_dict):

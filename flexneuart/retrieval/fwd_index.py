@@ -17,6 +17,7 @@
 """
 Access to FlexNeuART forward index.
 """
+from typing import Union
 from collections import namedtuple
 
 DocEntryParsed=namedtuple('DocEntryParsed',
@@ -101,8 +102,7 @@ class ForwardIndex:
         return DocEntryParsed(word_ids=entry.mWordIds, word_qtys=entry.mQtys,
                               word_id_seq=entry.mWordIdSeq, doc_len=entry.mDocLen)
 
-
-    def get_word_entry_by_id(self, word_id) -> WordEntry:
+    def get_word_entry_by_id(self, word_id) -> Union[WordEntry,None]:
         """Retrieve word entry/info by word ID
 
         :param word_id:  an integer word ID
