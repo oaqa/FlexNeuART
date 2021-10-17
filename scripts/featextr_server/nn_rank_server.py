@@ -153,8 +153,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--keep_case', action='store_true',
                         help='no lower-casing')
-    parser.add_argument('--keep_case', action='store_true',
-                        help='no lower-casing')
+ 
     parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
                         type=float, default=0.0,
                         help='a weight of the candidate generator score used to combine it with the model score.')
