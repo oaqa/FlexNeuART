@@ -20,11 +20,10 @@
 #
 
 """
-    A script to compute fast text embeddings for a given (parsed) field for
-    which we previously created a forward file with positions.
+    A script to compute and store IDFs of terms for a given (parsed) field for
+    which we previously created a parsed index (with or without positions).
 """
-import os
-import fasttext
+import math
 import argparse
 
 from tqdm import tqdm
@@ -33,7 +32,7 @@ from flexneuart import configure_classpath
 from flexneuart.retrieval import create_featextr_resource_manager
 from flexneuart.retrieval.fwd_index import get_forward_index
 
-parser = argparse.ArgumentParser(description='Generate field embeddings for NDRM models.')
+parser = argparse.ArgumentParser(description='Generate IDFs for NDRM models.')
 
 parser.add_argument('--collect_dir', metavar='collection dir',
                     help='a top-level collection directory',
@@ -46,13 +45,9 @@ parser.add_argument('--index_field', metavar='index field',
                     type=str,
                     default=None)
 parser.add_argument('--output',
-                    metavar='output embedding file',
+                    metavar='output IDF file',
                     type=str,
                     required=True)
-parser.add_argument('--num_hidden_nodes',
-                    metavar='NDRM hidden size',
-                    help='size of the NDRM hidden layer',
-                    type=int, required=True)
 
 
 args = parser.parse_args()
@@ -67,27 +62,25 @@ resource_manager = create_featextr_resource_manager(resource_root_dir=args.colle
                                                     fwd_index_dir=args.fwd_index_subdir)
 
 fwd_index = get_forward_index(resource_manager, args.index_field)
-fwd_index.check_is_parsed_text()
+fwd_index.check_is_parsed()
 
-out_dir = os.path.dirname(args.output)
-os.makedirs(out_dir, exist_ok=True)
+doc_qty = fwd_index.get_doc_qty()
 
-temp_fn = os.path.join(out_dir, 'temp_file')
+idfs = {}
+for word_id in tqdm(fwd_index.get_all_word_ids(), 'computing IDFs'):
+    we = fwd_index.get_word_entry_by_id(word_id)
+    word = fwd_index.get_word_by_id(word_id)
+    v = we.word_freq
+    idfs[word] = max(math.log((doc_qty - v + 0.5) / (v + 0.5)), 0)
 
-with open(temp_fn, 'w') as fout:
-    for doc_id in tqdm(fwd_index.get_all_doc_ids(), 'generating text from index'):
-        fout.write(fwd_index.get_doc_entry_parsed_text(doc_id) + '\n')
+idfs = {k: v for k, v in idfs.items() if v > 0}
+idfs = sorted(idfs.items(), key=lambda kv: kv[1])
+with open(args.output, 'w') as f:
+    for (k, v) in idfs:
+        f.write('{}\t{}\n'.format(k, v))
 
-# Defaults from NDRM code
-embeddings = fasttext.train_unsupervised(temp_fn,
-                                         model='skipgram',
-                                         dim=args.num_hidden_nodes // 2,
-                                         bucket=10000,
-                                         minCount=100,
-                                         minn=1,
-                                         maxn=0,
-                                         ws=10,
-                                         epoch=5)
-embeddings.save_model(args.output)
 
-os.remove(temp_fn)
+
+
+
+

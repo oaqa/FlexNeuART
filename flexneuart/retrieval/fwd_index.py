@@ -102,7 +102,7 @@ class ForwardIndex:
                               word_id_seq=entry.mWordIdSeq, doc_len=entry.mDocLen)
 
 
-    def get_word_entry_by_id(self, word_id):
+    def get_word_entry_by_id(self, word_id) -> WordEntry:
         """Retrieve word entry/info by word ID
 
         :param word_id:  an integer word ID
@@ -127,6 +127,10 @@ class ForwardIndex:
         assert type(word_id) == int, "word_id must be integer!"
 
         return self.indx.getWord(word_id)
+
+    def get_all_word_ids(self):
+        """Retrieve all word IDs."""
+        return self.indx.getAllWordIds()
 
     def get_all_doc_ids(self):
         """Retrieve all document IDs"""
