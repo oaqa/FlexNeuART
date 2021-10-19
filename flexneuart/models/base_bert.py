@@ -2,7 +2,8 @@
 #
 #  Copyright 2014+ Carnegie Mellon University
 #
-#  Using some bits from CEDR: https://github.com/Georgetown-IR-Lab/cedr
+#  Using some bits from CEDR (for padding and masking):
+#  https://github.com/Georgetown-IR-Lab/cedr
 #  which has MIT, i.e., Apache 2 compatible license.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");

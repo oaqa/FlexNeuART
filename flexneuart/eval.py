@@ -94,6 +94,18 @@ class MeanReciprocalRank:
         return 0
 
 
+class RecallAtK:
+    def __init__(self, k):
+        self.k = k
+    def __call__(self, rels_sorted_by_scores, qrel_dict):
+        for i, rel in enumerate(rels_sorted_by_scores):
+            if i >= self.k:
+                break
+            if rel > RELEVANCE_THRESHOLD:
+                return 1.0
+        return 0
+
+
 def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
     """
         Evaluate run stored in a file using QRELs stored in a file.

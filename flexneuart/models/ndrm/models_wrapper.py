@@ -230,7 +230,7 @@ class NDRMWrapperBase(BaseModel):
                 idfs[term] = float(idf)
         return idfs
 
-    def __get_features_lat(self, terms, max_terms):
+    def __get_features_lat(self, terms: List[str], max_terms : int):
         terms = terms[:max_terms]
         num_terms = len(terms)
         num_pad = max_terms - num_terms
@@ -238,7 +238,7 @@ class NDRMWrapperBase(BaseModel):
         masks = [1]*num_terms + [0]*num_pad
         return features, masks
 
-    def __get_features_exp(self, q, d, max_q_terms):
+    def __get_features_exp(self, q: List[str], d: List[str], max_q_terms: int):
         q = q[:max_q_terms]
         features = [d.count(term) for term in q]
         pad_len = max_q_terms - len(q)
@@ -249,7 +249,7 @@ class NDRMWrapperBase(BaseModel):
         features = [len(d) for d in ds]
         return features
 
-    def __get_features_idf(self, terms, max_terms):
+    def __get_features_idf(self, terms: List[str], max_terms: int):
         terms = terms[:max_terms]
         num_terms = len(terms)
         num_pad = max_terms - num_terms
