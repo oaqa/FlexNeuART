@@ -26,7 +26,6 @@ import argparse
 import torch.distributed as dist
 
 import flexneuart.config
-import flexneuart.io.train_data
 
 from flexneuart.models.utils import add_model_init_basic_args
 
