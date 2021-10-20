@@ -670,7 +670,7 @@ def main_cli():
                         metavar='distr backend', help='Pytorch backend for distributed processing')
 
     parser.add_argument('--loss_func', choices=LOSS_FUNC_LIST,
-                        default=PairwiseSoftmaxLoss.name(),
+                        default=PairwiseMarginRankingLossWrapper.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
     parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
