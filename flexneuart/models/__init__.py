@@ -7,5 +7,6 @@ VANILLA_BERT='vanilla_bert'
 from flexneuart.models import vanilla_bert, \
                             bert_aggreg_p, \
                             parade, \
+                            longformer, \
                             cedr, \
                             ndrm
