@@ -77,7 +77,7 @@ class LongformerRanker(BertBaseRanker):
                       global_attention_mask = ((1-segment_ids)*mask).long(),
                       output_hidden_states=False)
 
-        return outputs.last_hidden_state
+        return outputs.last_hidden_state[ :, 0]
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         cls_reps = self.encode_lf(query_tok, query_mask, doc_tok, doc_mask)
