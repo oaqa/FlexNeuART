@@ -5,24 +5,28 @@ from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
 
-from flexneuart.models import utils as modeling_util
 from flexneuart.models.base_bert import BertBaseRanker
+
 
 @register('longformer')
 class LongformerRanker(BertBaseRanker):
     """
-        This code I am going to try to base it off of the BERT one, but I am not sure if I can.
+        The ranking transformer code, which is specific to Longformer:
+
+        Beltagy, I., Peters, M.E. and Cohan, A., 2020. Longformer:
+        The long-document transformer. arXiv preprint arXiv:2004.05150.
     """
 
     def __init__(self, bert_flavor='allenai/longformer-base-4096', dropout=DEFAULT_BERT_DROPOUT):
         """Constructor.
 
-            :param bert_flavor:   the name of the underlying Transformer/BERT. Various
-                                  Transformer models are possible as long as they return
-                                  the object BaseModelOutputWithPoolingAndCrossAttentions.
+            :param bert_flavor:   the name of a specific longformer variant. As a sanity check we
+                                  ensure that it contains a substring 'longformer'
 
         """
         super().__init__(bert_flavor)
+        assert bert_flavor.lower().find('longformer') >= 0, \
+            'bert_flavor_parameter: you should use one of the Longformer models'
         self.dropout = torch.nn.Dropout(dropout)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
@@ -30,21 +34,14 @@ class LongformerRanker(BertBaseRanker):
     def encode_lf(self, query_tok, query_mask, doc_tok, doc_mask):
         """
             This function applies BERT to a query concatentated with a document.
-            If this concatenation is too long to fit into a specified window, the
-            document is split into (possibly overlapping) chunks,
-            and each chunks is encoded *SEPARATELY*.
-
-            Afterwards, individual CLS representations can be combined in several ways
-            as defined by self.cls_aggreg_type
+            If this concatenation is too long, the document is truncated.
 
         :param query_tok:       batched and encoded query tokens
         :param query_mask:      query token mask (0 for padding, 1 for actual tokens)
         :param doc_tok:         batched and encoded document tokens
         :param doc_mask:        document token mask (0 for padding, 1 for actual tokens)
 
-        :return: combined CLS representations of the chunks.
-
-        It is also worth noting that I am overriding this in order to avoid having to use the split slide window class.
+        :return: CLOS token representation.
 
         """
         batch_qty, max_qlen = query_tok.shape
