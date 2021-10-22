@@ -12,7 +12,7 @@ in the [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docr
 In fact, our best traditional (non-neural) run slightly outperformed a couple of neural submissions.
 Please, see our write-up for details: [Boytsov, Leonid. "Traditional IR rivals neural models on the MS MARCO Document Ranking Leaderboard." arXiv preprint arXiv:2012.08020 (2020)](https://arxiv.org/abs/2012.08020).
 
-Regretffully, for adminstrative and licensing/patenting issues (there is a patent submitted), neural Model 1 code can not be released. 
+Regretffully, for adminstrative and licensing/patenting issues (there is a patent submitted), neural Model 1 code cannot be released. 
 This model, however, is described in our ECIR 2021 paper:
 [Boytsov, Leonid, and Zico Kolter. "Exploring Classic and Neural Lexical Translation Models for Information Retrieval: Interpretability, Effectiveness, and Efficiency Benefits." ECIR 2021](https://arxiv.org/abs/2102.06815).
 
