@@ -39,3 +39,12 @@ def write_queries(query_list, file_name):
             f.write(json.dumps(e))
             f.write('\n')
 
+
+def write_queries_dict(query_dict : dict, file_name):
+    """Write queries stored in the form of a dictionary (query ids as keys).
+
+    :param query_dict: query dictionary: keys are query IDs.
+    :param file_name: an output file
+    """
+    write_queries(list(query_dict.values(), file_name))
+
