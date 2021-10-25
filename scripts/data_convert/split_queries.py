@@ -52,13 +52,23 @@ def write_qrels_files(qrels, query_id_to_partition, dst_dir, partitions_names):
     files = [FileWrapper(os.path.join(dst_dir, name, QREL_FILE), "w")
              for name in partitions_names]
 
+    miss_qty = 0
+    tot_qty = 0
     for qrel in qrels:
-        partition_id = query_id_to_partition[qrel.query_id]
+        qid = qrel.query_id
+        tot_qty += 1
+        if qid not in query_id_to_partition:
+            print(f'WARNING, encountered QREL with query ID: {qid}, but there is no such query')
+            miss_qty += 1
+            continue
+        partition_id = query_id_to_partition[qid]
         files[partition_id].write(qrel_entry2_str(qrel))
         files[partition_id].write('\n')
 
     for file in files:
         file.close()
+
+    print(f'Processed {tot_qty} entries, {miss_qty} QRELs are ignored, b/c they do not have respective queries')
 
 
 class QuerySplitArguments(QuerySplitArgumentsBase):

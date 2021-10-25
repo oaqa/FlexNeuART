@@ -56,13 +56,18 @@ full_query_id_set = set([data[DOCID_FIELD] for data in full_query_list])
 
 print('Read all the queries from the main dir')
 
-qrel_list = read_qrels(os.path.join(args.src_dir, QREL_FILE))
+orig_qrel_set = set()
+for e in read_qrels(os.path.join(args.src_dir, QREL_FILE)):
+    if e.query_id in full_query_id_set: # ignore QRELs without queries
+        orig_qrel_set.add((e.query_id, e.doc_id))
 
 print('Read all the QRELs from the main dir')
 
 query_id_set = set()
 
 part_sub_dirs = args.partitions_names.split(',')
+
+part_qrel_set = set()
 
 for part_id in range(len(part_sub_dirs)):
     out_dir = os.path.join(dst_dir, part_sub_dirs[part_id])
@@ -75,6 +80,7 @@ for part_id in range(len(part_sub_dirs)):
 
     # 1. Let's check if any QREL ids have query IDs beyond the current part
     for e in qrel_list:
+        part_qrel_set.add((e.query_id, e.doc_id))
         if e.query_id not in query_id_part_set:
             print('Qrel entry has query ID not included into %s: %s' %
                   (part_sub_dirs[part_id], qrel_entry2_str(e)))
@@ -84,12 +90,17 @@ for part_id in range(len(part_sub_dirs)):
     print('Part %s # of queries # %d of queries with at least one QREL: %d' %
           (part_sub_dirs[part_id], len(query_id_part_set), len(qrel_query_id_part_set)))
 
-diff = query_id_set.symmetric_difference(full_query_id_set)
+diff_qrel = orig_qrel_set.symmetric_difference(part_qrel_set)
+if len(diff_qrel):
+    print('QREL set mismatch!')
+    sys.exit(1)
+
+diff_q = query_id_set.symmetric_difference(full_query_id_set)
 
 print('# of queries in the original folder: %d # of queries in split folders: %d # of queries in the symmetric diff. %d'
-      % (len(full_query_id_set), len(query_id_set), len(diff)))
+      % (len(full_query_id_set), len(query_id_set), len(diff_q)))
 
-if len(query_id_set) != len(full_query_id_set) or len(diff) > 0:
+if len(query_id_set) != len(full_query_id_set) or len(diff_q) > 0:
     print('Query set mismatch!')
     sys.exit(1)
 
