@@ -16,7 +16,7 @@ Regretffully, for adminstrative and licensing/patenting issues (there is a paten
 This models (together with its non-contextualized variant) is described and evaluated in our ECIR 2021 paper:
 [Boytsov, Leonid, and Zico Kolter. "Exploring Classic and Neural Lexical Translation Models for Information Retrieval: Interpretability, Effectiveness, and Efficiency Benefits." ECIR 2021](https://arxiv.org/abs/2102.06815).
 
-In terms of pure effectiveness on long documents, other models (CEDR & PARADE) seem to be perform equally well (or somewhat better). They are available [in our codebase](flexneuart/models/README.md). The traditional (non-neural) Model 1 should be patent-free.
+In terms of pure effectiveness on long documents, other models (CEDR & PARADE) seem to be perform equally well (or somewhat better). They are available [in our codebase](flexneuart/models/README.md). We are not aware of the patents inhibiting the use of the traditional (non-neural) Model 1.
 
 ## Objectives
 
