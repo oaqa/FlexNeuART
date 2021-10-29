@@ -13,7 +13,7 @@ In fact, our best traditional (non-neural) run slightly outperformed a couple of
 Please, see our write-up for details: [Boytsov, Leonid. "Traditional IR rivals neural models on the MS MARCO Document Ranking Leaderboard." arXiv preprint arXiv:2012.08020 (2020)](https://arxiv.org/abs/2012.08020).
 
 Regretffully, for adminstrative and licensing/patenting issues (there is a patent submitted), neural Model 1 code cannot be released. 
-This models (together with its non-contextualized variant) is described and evaluated in our ECIR 2021 paper:
+This model (together with its non-contextualized variant) is described and evaluated in our ECIR 2021 paper:
 [Boytsov, Leonid, and Zico Kolter. "Exploring Classic and Neural Lexical Translation Models for Information Retrieval: Interpretability, Effectiveness, and Efficiency Benefits." ECIR 2021](https://arxiv.org/abs/2102.06815).
 
 In terms of pure effectiveness on long documents, other models (CEDR & PARADE) seem to be perform equally well (or somewhat better). They are available [in our codebase](flexneuart/models/README.md). We are not aware of the patents inhibiting the use of the traditional (non-neural) Model 1.
