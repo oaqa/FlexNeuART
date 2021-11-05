@@ -33,6 +33,7 @@ from flexneuart.models.train.batching import BatchingValidationGroupByQuery
 
 DEFAULT_BATCH_SIZE = 32
 
+# Candidate score weights cannot be used as of right now unfortunately
 class RankQueryHandler(BaseQueryHandler):
     # Exclusive==True means single-threaded processing, which seems to be necessary here (there were hang ups otherwise)
     def __init__(self,
@@ -40,7 +41,7 @@ class RankQueryHandler(BaseQueryHandler):
                     keep_case,
                     batch_size, device_name,
                     max_query_len, max_doc_len,
-                    cand_score_weight,
+                    #cand_score_weight,
                     exclusive,
                     amp,
                     debug_print=False):
@@ -52,7 +53,7 @@ class RankQueryHandler(BaseQueryHandler):
         self.amp = amp
         self.do_lower_case = not keep_case
 
-        self.cand_score_weight = cand_score_weight
+        #self.cand_score_weight = cand_score_weight
 
         self.max_query_len = max_query_len
         self.max_doc_len = max_doc_len
@@ -115,7 +116,8 @@ class RankQueryHandler(BaseQueryHandler):
                         batch.to(self.device_name)
                         model_scores = model(*batch.features)
                         assert len(model_scores) == len(batch)
-                        scores = model_scores + batch.cand_scores * self.cand_score_weight
+                        #scores = model_scores + batch.cand_scores * self.cand_score_weight
+                        scores = model_scores
                         # tolist() works much faster compared to extracting scores one by one using .item()
                         scores = scores.tolist()
 
@@ -155,9 +157,9 @@ if __name__ == '__main__':
     parser.add_argument('--keep_case', action='store_true',
                         help='no lower-casing')
 
-    parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
-                        type=float, default=0.0,
-                        help='a weight of the candidate generator score used to combine it with the model score.')
+    # parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
+    #                     type=float, default=0.0,
+    #                     help='a weight of the candidate generator score used to combine it with the model score.')
 
     parser.add_argument('--amp', action='store_true',
                         help="Use automatic mixed-precision")
@@ -215,5 +217,5 @@ if __name__ == '__main__':
                                                                               device_name=args.device_name,
                                                                               max_query_len=all_max_query_len,
                                                                               max_doc_len=all_max_doc_len,
-                                                                              cand_score_weight=args.cand_score_weight,
+                                                                              #cand_score_weight=args.cand_score_weight,
                                                                               exclusive=not multi_threaded))
