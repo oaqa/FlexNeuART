@@ -48,3 +48,4 @@ for qid, run_dict in inp_run.items():
 
 
 write_qrels(qrels, args.out_qrels)
+print('All is done!')
