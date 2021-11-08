@@ -85,7 +85,7 @@ def write_filtered_qrels(out_f, qrels, qid_filter_set):
     for qid, did_rel_dict in qrels.items():
         if qid in qid_filter_set:
             for did, grade in did_rel_dict.items():
-                e = QrelEntry(queryId=qid, docId=did, relGrade=grade)
+                e = QrelEntry(query_id=qid, doc_id=did, rel_grade=grade)
                 out_f.write(qrel_entry2_str(e) + '\n')
                 qty += 1
 
