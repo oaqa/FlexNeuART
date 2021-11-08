@@ -74,7 +74,7 @@ def write_filtered_train_pairs(out_f, train_pairs_full, qid_filter_set):
 
     write_pairs_dict(train_pairs_filtered, out_f)
 
-    print(f'E of queris in a full set: {len(train_pairs_full)} filtered set: {len(train_pairs_filtered)}')
+    print(f'# of queris in a full set: {len(train_pairs_full)} filtered set: {len(train_pairs_filtered)}')
     print(f'{qty} items written')
 
 
@@ -90,6 +90,19 @@ def write_filtered_qrels(out_f, qrels, qid_filter_set):
                 qty += 1
 
     print(f'{qty} items written')
+
+
+def merge_dict(dict1, dict2):
+    res_dict = {}
+
+    for k1, v1 in dict1.items():
+        res_dict[k1] = v1
+
+    for k2, v2 in dict1.items():
+        assert not k2 in res_dict, f'Repeating dictionary key: {k2}'
+        res_dict[k2] = v2
+
+    return res_dict
 
 
 parser = argparse.ArgumentParser('Mix two training sets in CEDR format')
@@ -190,8 +203,10 @@ with open(os.path.join(args.dir_out, DATA_QUERY), 'w') as out_query_f:
     write_filtered_datafiles(out_query_f, queries1, DATA_TYPE_QUERY, qids_all)
     write_filtered_datafiles(out_query_f, queries2, DATA_TYPE_QUERY, qids_all)
 
-with open(os.path.join(args.dir_out, TRAIN_PAIRS), 'w') as out_train_pairs_f:
-    write_filtered_train_pairs(out_train_pairs_f, train_pairs1, qids_all)
-    write_filtered_train_pairs(out_train_pairs_f, train_pairs2, qids_all)
+
+write_filtered_train_pairs(os.path.join(args.dir_out, TRAIN_PAIRS),
+                           merge_dict(train_pairs1, train_pairs2),
+                           qids_all)
+
 
 
