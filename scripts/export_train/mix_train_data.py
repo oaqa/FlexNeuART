@@ -74,7 +74,7 @@ def write_filtered_train_pairs(out_f, train_pairs_full, qid_filter_set):
 
     write_pairs_dict(train_pairs_filtered, out_f)
 
-    print(f'E of queris in a full set: {len(train_pairs_full}} filtered set: {len(train_pairs_filtered)}')
+    print(f'E of queris in a full set: {len(train_pairs_full)} filtered set: {len(train_pairs_filtered)}')
     print(f'{qty} items written')
 
 
