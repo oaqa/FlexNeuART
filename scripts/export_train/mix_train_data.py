@@ -62,9 +62,9 @@ def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
     print(f'{qty} items written')
 
 
-def write_filtered_train_pairs(out_f, train_pairs_full, qid_filter_set):
+def write_filtered_train_pairs(out_fn, train_pairs_full, qid_filter_set):
     # File must be open
-    print(f'Writing train pairs to {out_f.name}')
+    print(f'Writing train pairs to {out_fn}')
     qty = 0
     train_pairs_filtered = {}
     for qid, did_dict in train_pairs_full.items():
@@ -72,7 +72,7 @@ def write_filtered_train_pairs(out_f, train_pairs_full, qid_filter_set):
             train_pairs_filtered[qid] = did_dict
             qty += len(did_dict)
 
-    write_pairs_dict(train_pairs_filtered, out_f)
+    write_pairs_dict(train_pairs_filtered, out_fn)
 
     print(f'# of queris in a full set: {len(train_pairs_full)} filtered set: {len(train_pairs_filtered)}')
     print(f'{qty} items written')
