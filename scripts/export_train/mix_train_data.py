@@ -98,7 +98,7 @@ def merge_dict(dict1, dict2):
     for k1, v1 in dict1.items():
         res_dict[k1] = v1
 
-    for k2, v2 in dict1.items():
+    for k2, v2 in dict2.items():
         assert not k2 in res_dict, f'Repeating dictionary key: {k2}'
         res_dict[k2] = v2
 
