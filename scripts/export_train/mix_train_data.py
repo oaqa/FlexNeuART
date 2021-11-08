@@ -36,7 +36,7 @@ DATA_TYPE_DOC = 'doc'
 
 sys.path.append('.')
 
-from flexneuart.io.train_data import read_pairs_dict, read_datafiles
+from flexneuart.io.train_data import read_pairs_dict, write_pairs_dict, read_datafiles
 from flexneuart.io.runs import read_run_dict, write_run_dict
 from flexneuart.io.qrels import read_qrels_dict, qrel_entry2_str, QrelEntry
 from flexneuart.utils import set_all_seeds
@@ -45,8 +45,10 @@ from flexneuart.utils import set_all_seeds
 def prefix_key(d, pref):
     return {pref + k : v for k, v in d.items()}
 
+
 def prefix_key_val(d, pref):
     return {pref + k : prefix_key(v, pref) for k, v in d.items()}
+
 
 def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
     # File must be open
@@ -60,17 +62,21 @@ def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
     print(f'{qty} items written')
 
 
-def write_filtered_train_pairs(out_f, train_pairs, qid_filter_set):
+def write_filtered_train_pairs(out_f, train_pairs_full, qid_filter_set):
     # File must be open
     print(f'Writing train pairs to {out_f.name}')
     qty = 0
-    for qid, did_dict in train_pairs.items():
+    train_pairs_filtered = {}
+    for qid, did_dict in train_pairs_full.items():
         if qid in qid_filter_set:
-            for did in did_dict:
-                out_f.write(f'{qid}\t{did}\n')
-                qty += 1
+            train_pairs_filtered[qid] = did_dict
+            qty += len(did_dict)
 
+    write_pairs_dict(train_pairs_filtered, out_f)
+
+    print(f'E of queris in a full set: {len(train_pairs_full}} filtered set: {len(train_pairs_filtered)}')
     print(f'{qty} items written')
+
 
 def write_filtered_qrels(out_f, qrels, qid_filter_set):
     print(f'Writing qrels to {out_f.name}')
@@ -86,7 +92,7 @@ def write_filtered_qrels(out_f, qrels, qid_filter_set):
     print(f'{qty} items written')
 
 
-parser = argparse.ArgumentParser('Mix CEDR data fiels')
+parser = argparse.ArgumentParser('Mix two training sets in CEDR format')
 
 parser.add_argument('--dir1', type=str, required=True)
 parser.add_argument('--out_pref1', type=str, default='c1_')
