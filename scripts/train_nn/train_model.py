@@ -101,9 +101,9 @@ def avg_model_params(model, amp):
             prm.data /= qty
 
 def clean_memory(device_name):
-    sync_out_streams()
-    print('\n', 'Clearning memory device:', device_name)
-    sync_out_streams()
+    #sync_out_streams()
+    #print('\n', 'Clearning memory device:', device_name)
+    #sync_out_streams()
     gc.collect()
     if device_name != DEVICE_CPU:
         with torch.cuda.device(device_name):
