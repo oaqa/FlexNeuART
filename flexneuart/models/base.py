@@ -96,7 +96,7 @@ class BaseModel(torch.nn.Module):
         :param max_doc_len:   max doc length
         :param query_texts: an array of query texts
         :param doc_texts:   an array of documen texts
-        :return: a batch object.
+        :return: a tuple with batchified input.
         """
         raise NotImplementedError
 

@@ -20,7 +20,7 @@ class CedrDrmmRanker(BertSplitMaxChunkRanker):
         CEDR DRMM model.
 
         MacAvaney, Sean, et al. "CEDR: Contextualized embeddings for document ranking."
-        Proceedings of the 42nd International ACM SIGIR Conference on Research and Development in Information Retrieval. 2019.
+        Proceedings of the 42nd International ACM SIGIR Conference. 2019.
 
     """
     def __init__(self, bert_flavor=BERT_BASE_MODEL):

@@ -6,10 +6,11 @@
 # It's distributed under the MIT License
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
-import os
 import math
 import torch
 import argparse
+
+from transformers import PreTrainedTokenizerBase
 
 from flexneuart.config import DEFAULT_DEVICE_GPU
 from transformers import AutoTokenizer, AutoModel
@@ -33,7 +34,8 @@ def init_model(obj_ref, bert_flavor : str):
     setattr(obj_ref, BERT_ATTR, model)
     obj_ref.config = config
 
-    obj_ref.tokenizer = tokenizer = AutoTokenizer.from_pretrained(bert_flavor)
+    tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(bert_flavor)
+    obj_ref.tokenizer = tokenizer
     obj_ref.no_token_type_ids = not 'token_type_ids' in tokenizer.model_input_names
 
     obj_ref.CHANNELS = config.num_hidden_layers + 1

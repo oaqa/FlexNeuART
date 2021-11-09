@@ -19,7 +19,6 @@
 #  limitations under the License.
 #
 from typing import List
-from flexneuart.models.train.batching import BatchObject
 
 import torch
 
