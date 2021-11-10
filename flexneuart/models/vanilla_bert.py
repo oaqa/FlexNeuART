@@ -20,10 +20,11 @@ from flexneuart.models.base_bert import BertBaseRanker
 from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 
 
-@models.register(models.VANILLA_BERT)
-class VanillaBertRanker(BertBaseRanker):
+@models.register(models.VANILLA_BERT + 'no_pad')
+class VanillaBertNoPadRanker(BertBaseRanker):
     """
-        A vanilla BERT Ranker, which does not padd queries.
+        A vanilla BERT Ranker, which does not padd queries. Although much faster than
+        the CEDR-based vanilla ranker, it seems to be nearly always inferior.
 
         Nogueira, Rodrigo, and Kyunghyun Cho. "Passage Re-ranking with BERT."
         arXiv preprint arXiv:1901.04085 (2019).

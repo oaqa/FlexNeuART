@@ -15,10 +15,13 @@ from flexneuart.models.base_bert_split_max_chunk import BertSplitMaxChunkRanker
 from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 
 
-@models.register(models.VANILLA_BERT + '_cedr')
+@models.register(models.VANILLA_BERT)
 class VanillaBertCEDRRanker(BertSplitMaxChunkRanker):
     """
-        A CEDR variant of the vanilla BERT Ranker. It has several pecularities:
+        A CEDR variant of the vanilla BERT Ranker.
+
+        It has several pecularities (but it is better :
+
         1. queries are padded to a given length.
         2. long documents that cannot be processed in "one go"
            are split into chunks and each chunk is encoded separately (with query prepended).
