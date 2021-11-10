@@ -20,7 +20,7 @@ class VanillaBertCEDRRanker(BertSplitMaxChunkRanker):
     """
         A CEDR variant of the vanilla BERT Ranker.
 
-        It has several pecularities (but it is better :
+        It has several pecularities (but it is better than VanillaBertNoPadRanker):
 
         1. queries are padded to a given length.
         2. long documents that cannot be processed in "one go"
