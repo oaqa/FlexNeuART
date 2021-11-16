@@ -42,7 +42,7 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
  *
  */
 public class IdMapperCandidateProvider extends CandidateProvider {
-  public static final String IS_AGGREG_SUM = "is_aggreg_sum";
+  public static final String IS_AGGREG_SUM = "isAggregSum";
 	
   final Logger logger = LoggerFactory.getLogger(IdMapperCandidateProvider.class);
   
@@ -63,7 +63,7 @@ public class IdMapperCandidateProvider extends CandidateProvider {
     mIdMapFieldName = addConf.getParam(CommonParams.ID_MAP_FIELD_NAME, "");
     mIsAggregSum = addConf.getParam(IS_AGGREG_SUM, false);
     
-    logger.info("Is aggregation type sum?" + mIsAggregSum);
+    logger.info("Is aggregation type sum? " + mIsAggregSum);
 
     if (mIdMapFieldName.length() == 0) {
       mIdMapper = null;
