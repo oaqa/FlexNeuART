@@ -15,8 +15,9 @@
  */
 package edu.cmu.lti.oaqa.flexneuart.cand_providers;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,8 @@ import edu.cmu.lti.oaqa.flexneuart.utils.StringUtils;
  *
  */
 public class IdMapperCandidateProvider extends CandidateProvider {
+  public static final String IS_AGGREG_SUM = "is_aggreg_sum";
+	
   final Logger logger = LoggerFactory.getLogger(IdMapperCandidateProvider.class);
   
   private String mIdMapFieldName;
@@ -58,6 +61,9 @@ public class IdMapperCandidateProvider extends CandidateProvider {
     mIsThreadSafe = mBackendProv.isThreadSafe();
     
     mIdMapFieldName = addConf.getParam(CommonParams.ID_MAP_FIELD_NAME, "");
+    mIsAggregSum = addConf.getParam(IS_AGGREG_SUM, false);
+    
+    logger.info("Is aggregation type sum?" + mIsAggregSum);
 
     if (mIdMapFieldName.length() == 0) {
       mIdMapper = null;
@@ -85,7 +91,7 @@ public class IdMapperCandidateProvider extends CandidateProvider {
   public CandidateInfo getCandidates(int queryNum, DataEntryFields queryFields, int maxQty) throws Exception {
     CandidateInfo tmpInfo = mBackendProv.getCandidates(queryNum, queryFields, maxQty);
     
-    ArrayList<CandidateEntry>  mappedEntries = new ArrayList<CandidateEntry>();
+    HashMap<String, Float>  mappedEntries = new HashMap<String, Float> ();
     for (CandidateEntry e : tmpInfo.mEntries) {
       // The re-mapping index contains white-space separated IDs
       String mappedIdStr = mIdMapper.getDocEntryTextRaw(e.mDocId);
@@ -94,11 +100,27 @@ public class IdMapperCandidateProvider extends CandidateProvider {
         logger.warn("Cannot map id '" + e.mDocId + "' using the field: " + mIdMapFieldName);
       } else {
         for (String mappedId : StringUtils.splitOnWhiteSpace(mappedIdStr)) {
-          mappedEntries.add(new CandidateEntry(mappedId, e.mScore, e.mOrigScore));
+          Float currScore = mappedEntries.get(mappedId);
+          // candidate generators shouldn't use the mOrigScore field directly,
+          // so it's sufficient to use only mScore field here
+          if (currScore == null) {
+        	  currScore = e.mScore;
+          } else {
+        	  if (mIsAggregSum) {
+        		  currScore += e.mScore;
+        	  } else {
+        		  currScore = Math.max(currScore, e.mScore);
+        	  }
+          }
+          mappedEntries.put(mappedId, currScore);
         }
       }
     }
-    CandidateEntry tmpEntries[] = mappedEntries.toArray(new CandidateEntry[0]);
+    CandidateEntry tmpEntries[] = new CandidateEntry[mappedEntries.size()];
+    int pos = 0;
+    for (Entry<String, Float> e : mappedEntries.entrySet()) {
+    	tmpEntries[pos++] = new CandidateEntry(e.getKey(), e.getValue());
+    }
     Arrays.sort(tmpEntries);
     
     int qty = Math.min(maxQty, tmpEntries.length);
@@ -108,4 +130,5 @@ public class IdMapperCandidateProvider extends CandidateProvider {
 
   private final CandidateProvider mBackendProv;
   private final boolean           mIsThreadSafe;
+  private final boolean           mIsAggregSum;
 }
