@@ -20,7 +20,7 @@ from flexneuart.models.base_bert import BertBaseRanker
 from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 
 
-@models.register(models.VANILLA_BERT + 'no_qry_pad')
+@models.register(models.VANILLA_BERT + '_no_qry_pad')
 class VanillaBertNoPadRanker(BertBaseRanker):
     """
         A vanilla BERT Ranker, which does not pad queries. Although much faster than
