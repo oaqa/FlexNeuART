@@ -34,7 +34,7 @@ from flexneuart import configure_classpath
 from flexneuart.retrieval import create_featextr_resource_manager
 from flexneuart.retrieval.fwd_index import get_forward_index
 
-from flexneuart.eval import METRIC_LIST, get_eval_results
+from flexneuart.eval import FAKE_DOC_ID, METRIC_LIST, get_eval_results
 
 from time import time
 
@@ -119,13 +119,16 @@ max_query_val = args.max_num_query
 
 print(f'Device: {device_name}')
 print(f'max # of queries: {max_query_val} max query/document lengths: {max_query_len}/{max_doc_len}, keep case? {args.keep_case}')
-print(f'(Index field: {args.index_field} query field: {query_field}')
+print(f'Index field: {args.index_field} query field: {query_field}')
 
 do_lower_case = not args.keep_case
 
 query_dict = {}
 for qid, e in read_queries_dict(args.query_file).items():
     query_text = e[query_field]
+    if query_text is None:
+        tqdm.write(f'WARNING: no text for query ID: {qid}')
+        query_text = ''
 
     if do_lower_case:
         query_text = query_text.lower()
@@ -147,7 +150,12 @@ else:
 for qid, query_scores in tqdm(valid_run.items(), 'reading documents'):
     for did, _ in query_scores.items():
         if did not in data_dict:
+            if did == FAKE_DOC_ID:
+                continue
             doc_text = fwd_index.get_doc_text_raw(did)
+            if doc_text is None:
+                tqdm.write(f'WARNING: no text for document ID: {did}')
+                doc_text = ''
             if do_lower_case:
                 doc_text = doc_text.lower()
 
