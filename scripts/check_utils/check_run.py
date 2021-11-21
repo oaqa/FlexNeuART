@@ -15,7 +15,6 @@
 #  limitations under the License.
 
 """
-   
     A simple script to assess validity of (TREC) runs before submission.
 """
 

@@ -18,6 +18,8 @@ import sys
 import argparse
 import torch
 
+from flexneuart.config import DEFAULT_VAL_BATCH_SIZE
+
 from flexneuart.models.train.amp import get_amp_processors
 from flexneuart.models.utils import add_model_init_basic_args
 from flexneuart.models.base import ModelSerializer
@@ -30,8 +32,6 @@ from flexneuart.featextr_server.base import BaseQueryHandler, start_query_server
 
 from flexneuart.models.train.batch_obj import BatchObject
 from flexneuart.models.train.batching import BatchingValidationGroupByQuery
-
-DEFAULT_BATCH_SIZE = 32
 
 # Candidate score weights cannot be used as of right now unfortunately
 class RankQueryHandler(BaseQueryHandler):
@@ -143,7 +143,7 @@ if __name__ == '__main__':
                         help='Provide debug output')
 
     parser.add_argument('--batch_size', metavar='batch size',
-                        default=DEFAULT_BATCH_SIZE, type=int,
+                        default=DEFAULT_VAL_BATCH_SIZE, type=int,
                         help='batch size')
 
     parser.add_argument('--port', metavar='server port',
@@ -160,9 +160,6 @@ if __name__ == '__main__':
     # parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
     #                     type=float, default=0.0,
     #                     help='a weight of the candidate generator score used to combine it with the model score.')
-
-    parser.add_argument('--amp', action='store_true',
-                        help="Use automatic mixed-precision")
 
 
     args = parser.parse_args()
@@ -205,7 +202,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
 
-    print(f'Max query/document lengths: {all_max_query_len}/{all_max_doc_len}')
+    print(f'Max query/document lengths: {all_max_query_len}/{all_max_doc_len}, keep case? {args.keep_case}')
 
 
     multi_threaded = False  # if we set to True, we can often run out of CUDA memory.

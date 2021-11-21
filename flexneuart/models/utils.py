@@ -124,6 +124,9 @@ def sliding_window_subbatch(toks, window_size, stride):
 
 
 def add_model_init_basic_args(parser, add_device_name, add_init_model_weights, mult_model):
+    parser.add_argument('--amp', action='store_true',
+                        help="Use automatic mixed-precision")
+
     model_list = list(model_registry.registered.keys())
 
     if add_init_model_weights:

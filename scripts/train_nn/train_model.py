@@ -30,10 +30,10 @@ import flexneuart.io.train_data
 
 from flexneuart.models.utils import add_model_init_basic_args
 
+from flexneuart.models.train import run_model, clean_memory
 from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
 from flexneuart.models.train.batch_obj import BatchObject
-from flexneuart.models.train.batching import TrainSamplerFixedChunkSize, \
-                                             BatchingValidationGroupByQuery, \
+from flexneuart.models.train.batching import TrainSamplerFixedChunkSize,\
                                              BatchingTrainFixedChunkSize
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import *
@@ -99,16 +99,6 @@ def avg_model_params(model, amp):
         for prm in model.parameters():
             dist.all_reduce(prm.data, op=torch.distributed.ReduceOp.SUM)
             prm.data /= qty
-
-def clean_memory(device_name):
-    #sync_out_streams()
-    #print('\n', 'Clearning memory device:', device_name)
-    #sync_out_streams()
-    gc.collect()
-    if device_name != DEVICE_CPU:
-        with torch.cuda.device(device_name):
-            torch.cuda.empty_cache()
-
 
 def get_lr_desc(optimizer):
     lr_arr = ['LRs:']
@@ -327,7 +317,13 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
     """
     sync_out_streams()
 
-    rerank_run = run_model(model, train_params, dataset, orig_run)
+    rerank_run = run_model(model,
+                           batch_size=train_params.batch_size_val,
+                           cand_score_weight = train_params.cand_score_weight,
+                           device_name=train_params.device_name,
+                           amp=train_params.amp,
+                           max_query_len=train_params.max_query_len, max_doc_len=train_params.max_doc_len,
+                           dataset=dataset, orig_run=orig_run)
     eval_metric = train_params.eval_metric
 
     sync_out_streams()
@@ -342,38 +338,6 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
                           rerank_run=rerank_run,
                           qrel_file=qrelf,
                           run_file=run_filename)
-
-
-def run_model(model, train_params, dataset, orig_run, desc='valid'):
-    auto_cast_class, _ = get_amp_processors(train_params.amp)
-    rerank_run = {}
-    clean_memory(train_params.device_name)
-    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
-    with torch.no_grad(), \
-            tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False,  file=TQDM_FILE) as pbar:
-
-        model.eval()
-
-        iter_val = BatchingValidationGroupByQuery(batch_size=train_params.batch_size_val,
-                                                 dataset=dataset, model=model,
-                                                 max_query_len=train_params.max_query_len,
-                                                 max_doc_len=train_params.max_doc_len,
-                                                 run=orig_run)
-        for batch in iter_val():
-            with auto_cast_class():
-                batch: BatchObject = batch
-                batch.to(train_params.device_name)
-                model_scores = model(*batch.features)
-                assert len(model_scores) == len(batch)
-                scores = model_scores + batch.cand_scores * cand_score_weight
-                # tolist() works much faster compared to extracting scores one by one using .item()
-                scores = scores.tolist()
-
-            for qid, did, score in zip(batch.query_ids, batch.doc_ids, scores):
-                rerank_run.setdefault(qid, {})[did] = score
-            pbar.update(len(batch))
-
-    return rerank_run
 
 
 def do_train(sync_barrier,
@@ -654,8 +618,8 @@ def main_cli():
                         help='# of random batches per epoch: 0 tells to use all data')
 
     parser.add_argument('--max_query_val', metavar='max # of val queries',
-                        type=int, default=0,
-                        help='max # of validation queries: 0 tells to use all data')
+                        type=int, default=None,
+                        help='max # of validation queries')
 
     parser.add_argument('--no_shuffle_train', action='store_true',
                         help='disabling shuffling of training data')
@@ -673,8 +637,6 @@ def main_cli():
     parser.add_argument('--loss_func', choices=LOSS_FUNC_LIST,
                         default=PairwiseMarginRankingLossWrapper.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
-
-    parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
 
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
@@ -764,7 +726,7 @@ def main_cli():
     valid_run = read_run_dict(args.valid_run.name)
     max_query_val = args.max_query_val
     query_ids = list(valid_run.keys())
-    if max_query_val > 0:
+    if max_query_val is not None:
         query_ids = query_ids[0:max_query_val]
         valid_run = {k: valid_run[k] for k in query_ids}
 
