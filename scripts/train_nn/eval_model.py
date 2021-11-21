@@ -62,6 +62,10 @@ parser.add_argument('--index_field', metavar='index field',
                     help='the name of the field for which we previously created the forward index',
                     type=str,
                     required=True)
+parser.add_argument('--query_field', metavar='query field',
+                    help='the name of the query field: defaults to the index field name',
+                    type=str,
+                    default=None)
 parser.add_argument('--cand_score_weight', metavar='candidate provider score weight',
                     type=float, default=0.0,
                     help='a weight of the candidate generator score used to combine it with the model score.')
@@ -102,17 +106,24 @@ model_holder = ModelSerializer.load_all(fname)
 max_doc_len = model_holder.max_doc_len
 max_query_len = model_holder.max_query_len
 
+query_field = args.query_field
+if query_field is None:
+    query_field = args.index_field
+
 model = model_holder.model
 
 print(f'Max query/document lengths: {max_query_len}/{max_doc_len}, keep case? {args.keep_case}')
+print(f'(Index field: {args.index_field} query field: {query_field}')
 
 do_lower_case = not args.keep_case
 
-query_dict_orig = read_queries_dict(args.query_file)
-if do_lower_case:
-    query_dict = { qid : query_text.lower() for qid, query_text in query_dict_orig.items()}
-else:
-    query_dict = query_dict_orig
+query_dict = {}
+for qid, e in read_queries_dict(args.query_file):
+    query_text = e[query_field]
+
+    if do_lower_case:
+        query_text = query_text.lower()
+    query_dict[qid] = query_text
 
 data_dict = {}
 
@@ -145,7 +156,7 @@ rerank_run = run_model(model,
               desc='validating the run')
 end_val_time = time()
 
-valid_score = get_eval_results(use_external_eval=True, # use trec_eval here
+valid_score = get_eval_results(use_external_eval=True, # Must use trec_eval here, which is an official eval tool
                           eval_metric=args.eval_metric.lower(),
                           rerank_run=rerank_run,
                           qrel_file=args.qrels,
