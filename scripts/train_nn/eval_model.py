@@ -17,6 +17,7 @@
 """
     A script to evaluate a single model using a given RUN file.
 """
+import os
 import argparse
 from tqdm import tqdm
 
@@ -74,7 +75,7 @@ parser.add_argument('--keep_case', action='store_true',
 parser.add_argument('--batch_size', metavar='batch size',
                     default=DEFAULT_VAL_BATCH_SIZE, type=int,
                     help='batch size')
-parser.add_argument('--max_query', metavar='max # of val queries',
+parser.add_argument('--max_num_query', metavar='max # of val queries',
                     type=int, default=None,
                     help='max # of validation queries (for debug purposes only)')
 parser.add_argument('--eval_metric', choices=METRIC_LIST, default=METRIC_LIST[0],
@@ -110,15 +111,20 @@ query_field = args.query_field
 if query_field is None:
     query_field = args.index_field
 
+device_name=args.device_name
 model = model_holder.model
+model.to(device_name)
 
-print(f'Max query/document lengths: {max_query_len}/{max_doc_len}, keep case? {args.keep_case}')
+max_query_val = args.max_num_query
+
+print(f'Device: {device_name}')
+print(f'max # of queries: {max_query_val} max query/document lengths: {max_query_len}/{max_doc_len}, keep case? {args.keep_case}')
 print(f'(Index field: {args.index_field} query field: {query_field}')
 
 do_lower_case = not args.keep_case
 
 query_dict = {}
-for qid, e in read_queries_dict(args.query_file):
+for qid, e in read_queries_dict(args.query_file).items():
     query_text = e[query_field]
 
     if do_lower_case:
@@ -131,13 +137,14 @@ dataset = query_dict, data_dict
 
 orig_run = read_run_dict(args.run_orig)
 
-max_query_val = args.max_query
 query_ids = list(orig_run.keys())
 if max_query_val is not None:
     query_ids = query_ids[0:max_query_val]
     valid_run = {k: orig_run[k] for k in query_ids}
+else:
+    valid_run = orig_run
 
-for qid, query_scores in tqdm(orig_run, 'reading documents'):
+for qid, query_scores in tqdm(valid_run.items(), 'reading documents'):
     for did, _ in query_scores.items():
         if did not in data_dict:
             doc_text = fwd_index.get_doc_text_raw(did)
@@ -148,19 +155,27 @@ for qid, query_scores in tqdm(orig_run, 'reading documents'):
 
 start_val_time = time()
 rerank_run = run_model(model,
-              device_name=args.device_name,
+              device_name=device_name,
               batch_size=args.batch_size, amp=args.amp,
               max_query_len=max_query_len, max_doc_len=max_doc_len,
-              dataset=dataset, orig_run=orig_run,
+              dataset=dataset, orig_run=valid_run,
               cand_score_weight=args.cand_score_weight,
               desc='validating the run')
 end_val_time = time()
 
+# HF tokenizers do not "like" to be forked, but it doesn't matter at this point
+# So we just use this variable to disable the warning
+# see, e.g., https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+metric_name=args.eval_metric.lower()
+query_qty=len(rerank_run)
 valid_score = get_eval_results(use_external_eval=True, # Must use trec_eval here, which is an official eval tool
-                          eval_metric=args.eval_metric.lower(),
+                          eval_metric=metric_name,
                           rerank_run=rerank_run,
                           qrel_file=args.qrels,
                           run_file=args.run_rerank)
+
+print(f'Metric {metric_name} score: {valid_score} # of queries: {query_qty}')
 
 valid_stat= {
      'score': valid_score,
