@@ -25,6 +25,7 @@ import argparse
 
 from threading import BrokenBarrierError
 from multiprocessing import Barrier, Queue
+from queue import Empty
 
 import flexneuart.config
 import flexneuart.io.train_data
@@ -92,13 +93,13 @@ def get_lr_desc(optimizer):
 def train_iteration(model_holder, device_name,
                     sync_barrier, sync_qty_target,
                     lr, bert_lr,
-                    is_master_proc, device_qty,
+                    is_main_proc, device_qty,
                     loss_obj,
                     train_params,
                     dataset, train_pairs, qrels):
 
     bert_param_keys = model_holder.model.bert_param_names()
-    model = model_holder
+    model = model_holder.model
 
     all_params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
     # BERT parameters use a special learning weight
@@ -119,15 +120,15 @@ def train_iteration(model_holder, device_name,
     lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
     scheduler = None
     if train_params.warmup_pct:
-        if is_master_proc:
+        if is_main_proc:
             print('Using a scheduler with a warm-up for %f steps' % train_params.warmup_pct)
         scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
                                                         total_steps=lr_steps,
                                                         max_lr=[lr, bert_lr],
                                                         anneal_strategy='linear',
                                                         pct_start=train_params.warmup_pct)
-    if is_master_proc:
-        tqdm.write('Optimizer', optimizer)
+    if is_main_proc:
+        tqdm.write('Optimizer:' + str( optimizer))
 
     clean_memory(device_name)
     model.to(device_name)
@@ -145,14 +146,14 @@ def train_iteration(model_holder, device_name,
 
     batch_id = 0
 
-    if is_master_proc:
+    if is_main_proc:
 
         sync_out_streams()
 
         if train_params.print_grads:
             tqdm.write('Gradient sums before training')
             for k, v in model.named_parameters():
-                tqdm.write(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
+                tqdm.write(k + ' ' + str('None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2))))
 
         pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False, file=TQDM_FILE)
     else:
@@ -200,7 +201,7 @@ def train_iteration(model_holder, device_name,
         if train_params.print_grads:
             tqdm.write(f'Records processed {total_qty} Gradient sums:')
             for k, v in model.named_parameters():
-                tqdm.write(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
+                tqdm.write(k + ' ' + str('None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2))))
 
         total_loss += loss.item()
 
@@ -273,10 +274,10 @@ def do_train(device_qty,
     bert_param_keys = model_holder.model.bert_param_names()
 
     tqdm.write('Training parameters:')
-    tqdm.write(train_params)
+    tqdm.write(str(train_params))
     tqdm.write('BERT parameters:')
-    tqdm.write(bert_param_keys)
-    tqdm.write('Loss function:', loss_obj.name())
+    tqdm.write(str(bert_param_keys))
+    tqdm.write('Loss function:' + loss_obj.name())
 
     epoch_lr_decay = train_params.epoch_lr_decay
 
@@ -290,7 +291,8 @@ def do_train(device_qty,
     bpte = train_params.batches_per_train_epoch
     if bpte is not None and bpte >= 0:
         qty = int(bpte) * train_params.batch_size
-        train_pairs_short = {train_pairs_all[qid] for qid in train_pairs_all.keys()[0:qty]}
+        qids_all : List = list(train_pairs_all.keys())
+        train_pairs_short = {qid : train_pairs_all[qid] for qid in qids_all[0:qty]}
     else:
         train_pairs_short = train_pairs_all
 
@@ -298,8 +300,7 @@ def do_train(device_qty,
         start_train_time = time.time()
         qids = list(train_pairs_short.keys())
 
-        if qids > 0:
-
+        if qids:
             proc_specific_params = []
             device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
 
@@ -409,7 +410,7 @@ def do_train(device_qty,
         bert_lr *= epoch_lr_decay
 
 
-def run_model_wrapper(model,
+def run_model_wrapper(model, is_main_proc,
                       device_name, batch_size, amp,
                       max_query_len, max_doc_len,
                       dataset, orig_run,
@@ -486,10 +487,11 @@ def validate(model,
         'max_query_len': train_params.max_query_len,
         'max_doc_len': train_params.max_doc_len,
         'result_queue': result_queue,
-        'dataset': dataset
+        'dataset': dataset,
+        'desc': 'validation'
     }
 
-    run_distributed(run_model_wrapper(),
+    run_distributed(run_model_wrapper,
                     shared_params=shared_params,
                     proc_specific_params=proc_specific_params,
                     master_port=master_port,
@@ -498,19 +500,19 @@ def validate(model,
 
     rerank_run = {}
 
-    # After all processes have finished let's merge results
-    # At this point on the main process has access to the queue
-    while not result_queue.empty():
+    for qid in range(device_qty):
         sub_run = result_queue.get()
-        for k, v in sub_run:
-            assert k not in sub_run
+
+        for k, v in sub_run.items():
+            assert not k in rerank_run
             rerank_run[k] = v
 
     eval_metric = train_params.eval_metric
 
     sync_out_streams()
 
-    tqdm.write(f'\n', f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
+    tqdm.write('')
+    tqdm.write(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
     sync_out_streams()
 
