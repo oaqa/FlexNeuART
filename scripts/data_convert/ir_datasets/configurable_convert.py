@@ -33,7 +33,9 @@ import multiprocessing
 
 from tqdm import tqdm
 
-from flexneuart import configure_classpath, enable_spawn
+from flexneuart import configure_classpath
+from flexneuart.models.train.distr_utils import enable_spawn
+
 configure_classpath()
 
 from flexneuart.io import FileWrapper

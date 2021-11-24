@@ -19,11 +19,12 @@
 #
 import os
 import time
-import gc
 import sys
 import math
 import argparse
-import torch.distributed as dist
+
+from threading import BrokenBarrierError
+from multiprocessing import Barrier, Queue
 
 import flexneuart.config
 import flexneuart.io.train_data
@@ -35,34 +36,26 @@ from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
 from flexneuart.models.train.batch_obj import BatchObject
 from flexneuart.models.train.batching import TrainSamplerFixedChunkSize,\
                                              BatchingTrainFixedChunkSize
-from flexneuart.models.train.loss import *
-from flexneuart.models.train.amp import *
 
-from flexneuart import sync_out_streams, set_all_seeds, join_and_check_stat, enable_spawn
+from flexneuart.models.train.distr_utils import run_distributed, get_device_name_arr, \
+                                                enable_spawn, avg_model_params, \
+                                                BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT
+from flexneuart.models.train.loss import *
+from flexneuart.models.train.amp import get_amp_processors
+
+from flexneuart import sync_out_streams, set_all_seeds
 from flexneuart.io.json import read_json, save_json
 from flexneuart.io.runs import read_run_dict
 from flexneuart.io.qrels import read_qrels_dict
 from flexneuart.eval import METRIC_LIST, get_eval_results
 
-from flexneuart.config import DEVICE_CPU, TQDM_FILE
+from flexneuart.config import TQDM_FILE
 
 from tqdm import tqdm
 from collections import namedtuple
-from multiprocessing import Process
-from threading import BrokenBarrierError
-from multiprocessing import Barrier
 
-# 20 minutes should be more than enough while waiting
-# for other processes to reach the same training point
-BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*20
-# However (see comment below) we should wait more before validation completes.
-# Let's some optimisticially assume, it is not longer than 24 hours,
-# This needs to be fixed in the future:
-# A good fix should make validation use all GPUs.
-BARRIER_WAIT_VALIDATION_TIMEOUT=3600 * 24
-
-OPT_SGD='sgd'
-OPT_ADAMW='adamw'
+OPT_SGD = 'sgd'
+OPT_ADAMW = 'adamw'
 
 VALID_ALWAYS = 'always'
 VALID_LAST = 'last_epoch'
@@ -70,6 +63,7 @@ VALID_NONE = 'never'
 
 TrainParams = namedtuple('TrainParams',
                     ['optim',
+                     'device_name',
                      'init_lr', 'init_bert_lr', 'epoch_lr_decay', 'weight_decay',
                      'momentum',
                      'amp',
@@ -80,25 +74,12 @@ TrainParams = namedtuple('TrainParams',
                      'cand_score_weight', 'neg_qty_per_query',
                      'backprop_batch_size',
                      'epoch_qty',
-                     'save_epoch_snapshots', 'save_last_snapshot_every_k_batch',
-                     'device_name', 'print_grads',
+                     'save_epoch_snapshots',
+                     'print_grads',
                      'shuffle_train',
                      'valid_type',
                      'use_external_eval', 'eval_metric'])
 
-
-def avg_model_params(model, amp):
-    """
-       Average model parameters across all GPUs. 
-       Set amp to True, to enable automatic mixed-precision.
-    """
-    auto_cast_class, scaler = get_amp_processors(amp)
-
-    with auto_cast_class():
-        qty = float(dist.get_world_size())
-        for prm in model.parameters():
-            dist.all_reduce(prm.data, op=torch.distributed.ReduceOp.SUM)
-            prm.data /= qty
 
 def get_lr_desc(optimizer):
     lr_arr = ['LRs:']
@@ -108,39 +89,48 @@ def get_lr_desc(optimizer):
     return ' '.join(lr_arr)
 
 
-class ValidationTimer:
-    def __init__(self, validation_checkpoints):
-        self.validation_checkpoints = sorted(validation_checkpoints)
-        self.pointer = 0
-        self.total_steps = 0
-
-    def is_time(self):
-        if self.pointer >= len(self.validation_checkpoints):
-            return False
-        if self.total_steps >= self.validation_checkpoints[self.pointer]:
-            self.pointer += 1
-            return True
-        return False
-
-    def last_checkpoint(self):
-        return self.validation_checkpoints[self.pointer - 1]
-
-    def increment(self, steps_qty):
-        self.total_steps += steps_qty
-
-
-def train_iteration(model, sync_barrier,
+def train_iteration(model_holder, device_name,
+                    sync_barrier, sync_qty_target,
+                    lr, bert_lr,
                     is_master_proc, device_qty,
                     loss_obj,
-                    train_params, max_train_qty,
-                    valid_run, valid_qrel_filename,
-                    optimizer, scheduler,
-                    dataset, train_pairs, qrels,
-                    validation_timer, valid_run_dir, valid_scores_holder,
-                    save_last_snapshot_every_k_batch,
-                    model_out_dir):
+                    train_params,
+                    dataset, train_pairs, qrels):
 
-    clean_memory(train_params.device_name)
+    bert_param_keys = model_holder.model.bert_param_names()
+    model = model_holder
+
+    all_params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
+    # BERT parameters use a special learning weight
+    bert_params = {'params': [v for k, v in all_params if k in bert_param_keys], 'lr': bert_lr}
+    non_bert_params = {'params': [v for k, v in all_params if not k in bert_param_keys]}
+
+    if train_params.optim == OPT_ADAMW:
+        optimizer = torch.optim.AdamW([non_bert_params, bert_params],
+                                      lr=lr, weight_decay=train_params.weight_decay)
+    elif train_params.optim == OPT_SGD:
+        optimizer = torch.optim.SGD([non_bert_params, bert_params],
+                                    lr=lr, weight_decay=train_params.weight_decay,
+                                    momentum=train_params.momentum)
+    else:
+        raise Exception('Unsupported optimizer: ' + train_params.optim)
+
+    max_train_qty = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs)
+    lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
+    scheduler = None
+    if train_params.warmup_pct:
+        if is_master_proc:
+            print('Using a scheduler with a warm-up for %f steps' % train_params.warmup_pct)
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
+                                                        total_steps=lr_steps,
+                                                        max_lr=[lr, bert_lr],
+                                                        anneal_strategy='linear',
+                                                        pct_start=train_params.warmup_pct)
+    if is_master_proc:
+        tqdm.write('Optimizer', optimizer)
+
+    clean_memory(device_name)
+    model.to(device_name)
 
     model.train()
     total_loss = 0.
@@ -151,19 +141,18 @@ def train_iteration(model, sync_barrier,
 
     optimizer.zero_grad()
 
-    if train_params.print_grads:
-      print('Gradient sums before training')
-      for k, v in model.named_parameters():
-        print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
-
     lr_desc = get_lr_desc(optimizer)
 
     batch_id = 0
-    snap_id = 0
 
     if is_master_proc:
 
         sync_out_streams()
+
+        if train_params.print_grads:
+            tqdm.write('Gradient sums before training')
+            for k, v in model.named_parameters():
+                tqdm.write(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
 
         pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False, file=TQDM_FILE)
     else:
@@ -175,7 +164,7 @@ def train_iteration(model, sync_barrier,
     else:
         neg_qty_per_query = 1
 
-    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(train_params.device_name)
+    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(device_name)
 
     auto_cast_class, scaler = get_amp_processors(train_params.amp)
 
@@ -188,11 +177,13 @@ def train_iteration(model, sync_barrier,
                                                  max_doc_len=train_params.max_doc_len,
                                                  train_sampler=train_sampler)
 
+    sync_qty = 0
+
     for batch in train_iterator():
 
         with auto_cast_class():
             batch: BatchObject = batch
-            batch.to(train_params.device_name)
+            batch.to(device_name)
             model_scores = model(*batch.features)
             assert len(model_scores) == len(batch)
             scores = model_scores + batch.cand_scores * cand_score_weight
@@ -207,21 +198,15 @@ def train_iteration(model, sync_barrier,
         total_qty += count
 
         if train_params.print_grads:
-          print(f'Records processed {total_qty} Gradient sums:')
-          for k, v in model.named_parameters():
-            print(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
+            tqdm.write(f'Records processed {total_qty} Gradient sums:')
+            for k, v in model.named_parameters():
+                tqdm.write(k, 'None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2)))
 
         total_loss += loss.item()
 
-        if is_master_proc:
-            validation_timer.increment(1)
-
-        run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
-
         # If it's time to validate, we need to interrupt the batch
-        if total_qty - total_prev_qty >= batch_size or run_chkpt_val:
+        if total_qty - total_prev_qty >= batch_size:
 
-            #optimizer.step()
             scaler.step(optimizer)
             scaler.update()
 
@@ -236,58 +221,33 @@ def train_iteration(model, sync_barrier,
             # This must be done in every process, not only in the master process
             if device_qty > 1:
                 if batch_id % train_params.batch_sync_qty == 0:
-                    try:
-                        sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
-                    except BrokenBarrierError:
-                        raise Exception('A waiting-for-model-parameter-synchronization timeout!')
+                    if sync_qty <= sync_qty_target:
+                        try:
+                            sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
+                        except BrokenBarrierError:
+                            raise Exception('A waiting-for-model-parameter-synchronization timeout!')
+                        sync_qty += 1
 
                     avg_model_params(model, train_params.amp)
 
             batch_id += 1
 
-            # We will surely skip batch_id == 0
-            if save_last_snapshot_every_k_batch is not None and batch_id % save_last_snapshot_every_k_batch == 0:
-                if is_master_proc:
-                    os.makedirs(model_out_dir, exist_ok=True)
-                    out_tmp = os.path.join(model_out_dir, f'model.last.{snap_id}')
-                    model.save_all(out_tmp)
-                    snap_id += 1
-
         if pbar is not None:
             pbar.update(count)
             pbar.refresh()
             sync_out_streams()
-            pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)) )
-
-        while run_chkpt_val:
-            model.eval()
-            os.makedirs(valid_run_dir, exist_ok=True)
-            run_file_name = os.path.join(valid_run_dir, f'batch_{validation_timer.last_checkpoint()}.run')
-            pbar.refresh()
-            sync_out_streams()
-            score = validate(model, train_params, dataset,
-                             valid_run,
-                             qrelf=valid_qrel_filename, run_filename=run_file_name)
-
-            pbar.refresh()
-            sync_out_streams()
-            pbar.write(f'\n# of steps={validation_timer.total_steps} score={score:.4g}\n')
-            valid_scores_holder[f'batch_{validation_timer.last_checkpoint()}'] = score
-            save_json(os.path.join(valid_run_dir, "scores.json"), valid_scores_holder)
-            model.train()
-            # We may need to make more than one validation iteration
-            run_chkpt_val = is_master_proc and validation_timer.is_time() and valid_run_dir is not None
-
-        if total_qty >= max_train_qty:
-            break
+            pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)))
 
     # Final model averaging in the end.
 
     if device_qty > 1:
-        try:
-            sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
-        except BrokenBarrierError:
-            raise Exception('A waiting-for-model-parameter-synchronization (in the end of epoch) timeout!')
+        # This ensures we go through the barrier exactly the same number of time in each process
+        while sync_qty <= sync_qty_target:
+            try:
+                sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
+            except BrokenBarrierError:
+                raise Exception('A waiting-for-model-parameter-synchronization timeout!')
+            sync_qty += 1
 
         avg_model_params(model, train_params.amp)
 
@@ -298,7 +258,182 @@ def train_iteration(model, sync_barrier,
     return total_loss / float(total_qty)
 
 
-def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
+def do_train(device_qty,
+             master_port, distr_backend,
+             dataset,
+             qrels, qrel_file_name,
+             train_pairs_all, valid_run,
+             model_out_dir,
+             model_holder,
+             loss_obj,
+             train_params):
+
+    sync_barrier = Barrier(device_qty)
+
+    bert_param_keys = model_holder.model.bert_param_names()
+
+    tqdm.write('Training parameters:')
+    tqdm.write(train_params)
+    tqdm.write('BERT parameters:')
+    tqdm.write(bert_param_keys)
+    tqdm.write('Loss function:', loss_obj.name())
+
+    epoch_lr_decay = train_params.epoch_lr_decay
+
+    lr = train_params.init_lr
+    bert_lr = train_params.init_bert_lr
+
+    top_valid_score = None
+
+    train_stat = {}
+
+    bpte = train_params.batches_per_train_epoch
+    if bpte is not None and bpte >= 0:
+        qty = int(bpte) * train_params.batch_size
+        train_pairs_short = {train_pairs_all[qid] for qid in train_pairs_all.keys()[0:qty]}
+    else:
+        train_pairs_short = train_pairs_all
+
+    for epoch in range(train_params.epoch_qty):
+        start_train_time = time.time()
+        qids = list(train_pairs_short.keys())
+
+        if qids > 0:
+
+            proc_specific_params = []
+            device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
+
+            train_pair_qty = len(train_pairs_short)
+
+            for rank in range(device_qty):
+                if device_qty > 1:
+                    tpart_qty = int((train_pair_qty + device_qty - 1) / device_qty)
+                    train_start = rank * tpart_qty
+                    train_end = min(train_start + tpart_qty, len(qids))
+                    train_pairs = {k: train_pairs_short[k] for k in qids[train_start: train_end]}
+                else:
+                    train_pairs = train_pairs_short
+
+                proc_specific_params.append(
+                    {
+                        'device_name': device_name_arr[rank],
+                        'train_pairs': train_pairs
+                    }
+                )
+
+            # The number of synchronization points need to be adjusted by the number of devies processes,
+            # as well as by the batch size
+            sync_qty_target = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs_short) / \
+                              (device_qty * train_params.batch_sync_qty * train_params.batch_size)
+
+            shared_params = {
+                'lr': lr,
+                'bert_lr': bert_lr,
+                'model_holder': model_holder,
+                'sync_barrier': sync_barrier,
+                'sync_qty_target': sync_qty_target,
+                'device_qty': device_qty,
+                'loss_obj': loss_obj,
+                'train_params': train_params,
+                'dataset': dataset,
+                'qrels': qrels
+            }
+
+            loss = run_distributed(train_iteration,
+                                        shared_params=shared_params,
+                                        proc_specific_params=proc_specific_params,
+                                        master_port=master_port,
+                                        distr_backend=distr_backend,
+                                        proc_qty=device_qty)
+        else:
+            loss = 0
+
+        end_train_time = time.time()
+
+        if train_params.save_epoch_snapshots:
+            tqdm.write('Saving the model epoch snapshot')
+            model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
+
+        os.makedirs(model_out_dir, exist_ok=True)
+
+        tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
+
+        sync_out_streams()
+
+        start_val_time = time.time()
+
+        # Run validation if the validation type is
+        run_val = (train_params.valid_type == VALID_ALWAYS) or \
+                  ((train_params.valid_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
+
+        if run_val:
+            valid_score = validate(model=model_holder.model,
+                                   master_port=master_port,
+                                   distr_backend=distr_backend,
+                                   device_qty=device_qty,
+                                   train_params=train_params,
+                                   dataset=dataset,
+                                   orig_run=valid_run,
+                                   qrelf=qrel_file_name,
+                                   run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
+        else:
+            tqdm.write(f'No validation at epoch: {epoch}')
+            valid_score = None
+
+        end_val_time = time.time()
+
+        sync_out_streams()
+
+        if valid_score is not None:
+            tqdm.write(f'validation epoch={epoch} score={valid_score:.4g}')
+
+        train_stat[epoch] = {'loss': loss,
+                              'score': valid_score,
+                              'lr': lr,
+                              'bert_lr': bert_lr,
+                              'train_time': end_train_time - start_train_time,
+                              'validation_time': end_val_time - start_val_time}
+
+        save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
+
+        if run_val:
+            if top_valid_score is None or valid_score > top_valid_score:
+                top_valid_score = valid_score
+                tqdm.write('new top validation score, saving the whole model')
+                model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
+        else:
+            tqdm.write('Saving the whole model')
+            model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
+
+        lr *= epoch_lr_decay
+        bert_lr *= epoch_lr_decay
+
+
+def run_model_wrapper(model,
+                      device_name, batch_size, amp,
+                      max_query_len, max_doc_len,
+                      dataset, orig_run,
+                      cand_score_weight,
+                      desc,
+                      result_queue : Queue):
+
+    res = run_model(model,
+                      device_name, batch_size, amp,
+                      max_query_len, max_doc_len,
+                      dataset, orig_run,
+                      cand_score_weight,
+                      desc)
+    result_queue.put(res)
+
+
+def validate(model,
+             device_qty,
+             master_port, distr_backend,
+             train_params,
+             dataset,
+             orig_run,
+             qrelf,
+             run_filename):
     """
         Model validation step:
          1. Re-rank a given run
@@ -306,6 +441,9 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
          3. Evaluate results
 
         :param model:           a model reference.
+        :param device_qty:      a number of devices to use for validation
+        :param master_port:     optional master port (mandatory if proc_qty > 1)
+        :param distr_backend:   optional distributed backend type (mandatory if proc_qty > 1)
         :param train_params:    training parameters
         :param dataset:         validation dataset
         :param orig_run:        a run to re-rank
@@ -313,197 +451,75 @@ def validate(model, train_params, dataset, orig_run, qrelf, run_filename):
         :param run_filename:    a file name to store the *RE-RANKED* run
         :return: validation score
 
-
     """
     sync_out_streams()
 
-    rerank_run = run_model(model,
-                           batch_size=train_params.batch_size_val,
-                           cand_score_weight = train_params.cand_score_weight,
-                           device_name=train_params.device_name,
-                           amp=train_params.amp,
-                           max_query_len=train_params.max_query_len, max_doc_len=train_params.max_doc_len,
-                           dataset=dataset, orig_run=orig_run)
+    result_queue = Queue()
+
+    proc_specific_params = []
+    device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
+
+    qids = orig_run.keys()
+    valid_pair_qty = len(qids)
+
+    for rank in range(device_qty):
+        if device_qty > 1:
+            tpart_qty = int((valid_pair_qty + device_qty - 1) / device_qty)
+            train_start = rank * tpart_qty
+            train_end = min(train_start + tpart_qty, len(qids))
+            run = {k: orig_run[k] for k in qids[train_start: train_end]}
+        else:
+            run = orig_run
+
+        proc_specific_params.append(
+            {
+                'device_name': device_name_arr[rank],
+                'orig_run': run
+            }
+        )
+
+    shared_params = {
+        'model': model,
+        'batch_size': train_params.batch_size_val,
+        'cand_score_weight': train_params.cand_score_weight,
+        'amp': train_params.amp,
+        'max_query_len': train_params.max_query_len,
+        'max_doc_len': train_params.max_doc_len,
+        'result_queue': result_queue,
+        'dataset': dataset
+    }
+
+    run_distributed(run_model_wrapper(),
+                    shared_params=shared_params,
+                    proc_specific_params=proc_specific_params,
+                    master_port=master_port,
+                    distr_backend=distr_backend,
+                    proc_qty=device_qty)
+
+    rerank_run = {}
+
+    # After all processes have finished let's merge results
+    # At this point on the main process has access to the queue
+    while not result_queue.empty():
+        sub_run = result_queue.get()
+        for k, v in sub_run:
+            assert k not in sub_run
+            rerank_run[k] = v
+
     eval_metric = train_params.eval_metric
 
     sync_out_streams()
 
-    print(f'\n', f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
+    tqdm.write(f'\n', f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
     sync_out_streams()
 
     # Let us always save the run
     return get_eval_results(use_external_eval=train_params.use_external_eval,
-                          eval_metric=eval_metric,
-                          rerank_run=rerank_run,
-                          qrel_file=qrelf,
-                          run_file=run_filename)
-
-
-def do_train(sync_barrier,
-              device_qty, master_port, distr_backend,
-              rank, is_master_proc,
-              dataset,
-              qrels, qrel_file_name,
-              train_pairs, valid_run,
-              valid_run_dir, valid_checkpoints,
-              model_out_dir,
-              model_holder, loss_obj, train_params):
-    if device_qty > 1:
-        os.environ['MASTER_ADDR'] = '127.0.0.1'
-        os.environ['MASTER_PORT'] = str(master_port)
-        dist.init_process_group(distr_backend, rank=rank, world_size=device_qty)
-
-    device_name = train_params.device_name
-
-    bert_param_keys = model_holder.model.bert_param_names()
-
-    if is_master_proc:
-        print('Training parameters:')
-        print(train_params)
-        print('BERT parameters:')
-        print(bert_param_keys)
-        print('Loss function:', loss_obj.name())
-
-    print('Device name:', device_name)
-
-    model_holder.model.to(device_name)
-
-    lr = train_params.init_lr
-    bert_lr = train_params.init_bert_lr
-    epoch_lr_decay = train_params.epoch_lr_decay
-    weight_decay = train_params.weight_decay
-    momentum = train_params.momentum
-
-    top_valid_score = None
-
-    train_stat = {}
-
-    validation_timer = ValidationTimer(valid_checkpoints)
-    valid_scores_holder = dict()
-    for epoch in range(train_params.epoch_qty):
-
-        all_params = [(k, v) for k, v in model_holder.model.named_parameters() if v.requires_grad]
-        # BERT parameters use a special learning weight
-        bert_params =     {'params': [v for k, v in all_params if     k in bert_param_keys], 'lr': bert_lr}
-        non_bert_params = {'params': [v for k, v in all_params if not k in bert_param_keys]}
-
-        if train_params.optim == OPT_ADAMW:
-            optimizer = torch.optim.AdamW([non_bert_params, bert_params],
-                                       lr=lr, weight_decay=weight_decay)
-        elif train_params.optim == OPT_SGD:
-            optimizer = torch.optim.SGD([non_bert_params, bert_params],
-                                         lr=lr, weight_decay=weight_decay,
-                                         momentum=momentum)
-        else:
-            raise Exception('Unsupported optimizer: ' + train_params.optim)
-
-        bpte = train_params.batches_per_train_epoch
-        max_train_qty = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs)
-
-        if bpte is not None and bpte >= 0:
-            max_train_qty = min(max_train_qty, int(bpte) * train_params.batch_size)
-            print(f'Setting the number of train instances to {max_train_qty} b/c batches_per_train_epoch={bpte}')
-
-        start_train_time = time.time()
-
-        if max_train_qty > 0:
-
-            lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
-            scheduler = None
-            if train_params.warmup_pct:
-                if is_master_proc:
-                    print('Using a scheduler with a warm-up for %f steps' % train_params.warmup_pct)
-                scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
-                                                                total_steps=lr_steps,
-                                                                max_lr=[lr, bert_lr],
-                                                                anneal_strategy='linear',
-                                                                pct_start=train_params.warmup_pct)
-            if is_master_proc:
-                print('Optimizer', optimizer)
-
-            loss = train_iteration(model=model_holder.model, sync_barrier=sync_barrier,
-                               is_master_proc=is_master_proc,
-                               device_qty=device_qty, loss_obj=loss_obj,
-                               train_params=train_params, max_train_qty=max_train_qty,
-                               valid_run=valid_run, valid_qrel_filename=qrel_file_name,
-                               optimizer=optimizer, scheduler=scheduler,
-                               dataset=dataset, train_pairs=train_pairs, qrels=qrels,
-                               validation_timer=validation_timer, valid_run_dir=valid_run_dir,
-                               valid_scores_holder=valid_scores_holder,
-                               save_last_snapshot_every_k_batch=train_params.save_last_snapshot_every_k_batch,
-                               model_out_dir=model_out_dir)
-        else:
-            loss = 0
-
-        end_train_time = time.time()
-
-        if is_master_proc:
-
-            if train_params.save_epoch_snapshots:
-                print('Saving the model epoch snapshot')
-                model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
-
-            os.makedirs(model_out_dir, exist_ok=True)
-
-            print(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
-
-            sync_out_streams()
-
-            start_val_time = time.time()
-
-            # Run validation if the validation type is
-            run_val = (train_params.valid_type == VALID_ALWAYS) or \
-                      ((train_params.valid_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
-
-            if run_val:
-                valid_score = validate(model_holder.model,
-                                       train_params, dataset,
-                                       valid_run,
-                                       qrelf=qrel_file_name,
-                                       run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
-            else:
-                print(f'No validation at epoch: {epoch}')
-                valid_score = None
-
-            end_val_time = time.time()
-
-            sync_out_streams()
-
-            if valid_score is not None:
-                print(f'validation epoch={epoch} score={valid_score:.4g}')
-
-            train_stat[epoch] = {'loss' : loss,
-                                  'score' : valid_score,
-                                  'lr' : lr,
-                                  'bert_lr' : bert_lr,
-                                  'train_time' : end_train_time - start_train_time,
-                                  'validation_time' : end_val_time - start_val_time}
-
-            save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
-
-            if run_val:
-                if top_valid_score is None or valid_score > top_valid_score:
-                    top_valid_score = valid_score
-                    print('new top validation score, saving the whole model')
-                    model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
-            else:
-                print('Saving the whole model')
-                model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
-
-        # We must sync here or else non-master processes would start training and they
-        # would timeout on the model averaging barrier. However, the wait time here
-        # can be much longer. This is actually quite lame, because validation
-        # should instead be split accross GPUs, but validation is usually pretty quick
-        # and this should work as a (semi-)temporary fix
-        if device_qty > 1:
-            try:
-                sync_barrier.wait(BARRIER_WAIT_VALIDATION_TIMEOUT)
-            except BrokenBarrierError:
-                raise Exception('A model validation synchronization timeout!')
-
-        lr *= epoch_lr_decay
-        bert_lr *= epoch_lr_decay
+                              eval_metric=eval_metric,
+                              rerank_run=rerank_run,
+                              qrel_file=qrelf,
+                              run_file=run_filename)
 
 
 def main_cli():
@@ -538,9 +554,6 @@ def main_cli():
     parser.add_argument('--epoch_qty', metavar='# of epochs', help='# of epochs',
                         type=int, default=10)
 
-    parser.add_argument('--no_cuda', action='store_true',
-                        help='Use no CUDA')
-
     parser.add_argument('--valid_type',
                         default=VALID_ALWAYS,
                         choices=[VALID_ALWAYS, VALID_LAST, VALID_NONE],
@@ -564,11 +577,6 @@ def main_cli():
 
     parser.add_argument('--save_epoch_snapshots', action='store_true',
                         help='save model after each epoch')
-
-    parser.add_argument('--save_last_snapshot_every_k_batch',
-                        metavar='debug: save latest snapshot every k batch',
-                        type=int, default=None,
-                        help='debug option: save latest snapshot every k batch')
 
     parser.add_argument('--seed', metavar='random seed', help='random seed',
                         type=int, default=42)
@@ -642,9 +650,6 @@ def main_cli():
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
 
-    parser.add_argument('--valid_run_dir', metavar='', type=str, default=None, help='directory to store predictions on validation set')
-    parser.add_argument('--valid_checkpoints', metavar='', type=str, default=None, help='validation checkpoints (in # of batches)')
-
     args = parser.parse_args()
 
     all_arg_names = vars(args).keys()
@@ -665,11 +670,6 @@ def main_cli():
                 sys.exit(1)
             print(f'Using {arg_name} from the config')
             setattr(args, arg_name, arg_val)
-
-
-    if args.save_last_snapshot_every_k_batch is not None and args.save_last_snapshot_every_k_batch < 2:
-        print('--save_last_snapshot_every_k_batch should be > 1')
-        sys.exit(1)
 
     print(args)
     sync_out_streams()
@@ -740,93 +740,38 @@ def main_cli():
             print('Specify a master port for distributed training!')
             sys.exit(1)
 
-    processes = []
+    train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
+                               device_name=args.device_name,
+                               momentum=args.momentum, amp=args.amp,
+                               warmup_pct=args.warmup_pct, batch_sync_qty=args.batch_sync_qty,
+                               epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
+                               backprop_batch_size=args.backprop_batch_size,
+                               batches_per_train_epoch=args.batches_per_train_epoch,
+                               save_epoch_snapshots=args.save_epoch_snapshots,
+                               batch_size=args.batch_size, batch_size_val=args.batch_size_val,
+                               # These lengths must come from the model serializer object, not from the arguments,
+                               # because they can be overridden when the model is loaded.
+                               max_query_len=model_holder.max_query_len, max_doc_len=model_holder.max_doc_len,
+                               epoch_qty=args.epoch_qty,
+                               cand_score_weight=args.cand_score_weight,
+                               neg_qty_per_query=args.neg_qty_per_query,
+                               use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
+                               print_grads=args.print_grads,
+                               shuffle_train=not args.no_shuffle_train,
+                               valid_type=args.valid_type,
+                               optim=args.optim)
 
-    is_distr_train = device_qty > 1
-
-    qids = []
-
-    if is_distr_train:
-        qids = list(train_pairs_all.keys())
-
-    sync_barrier = Barrier(device_qty)
-
-    # We must go in the reverse direction, b/c
-    # rank == 0 trainer is in the same process and
-    # we call the function do_train in the same process,
-    # i.e., this call is blocking processing and
-    # prevents other processes from starting.
-    for rank in range(device_qty - 1, -1, -1):
-        if is_distr_train:
-            device_name = f'cuda:{rank}'
-        else:
-            device_name = args.device_name
-            if args.no_cuda:
-                device_name = DEVICE_CPU
-
-        # When we have only a single GPP, the main process is its own master
-        is_master_proc = rank == 0
-
-        train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
-                                   momentum=args.momentum, amp=args.amp,
-                                    warmup_pct=args.warmup_pct, batch_sync_qty=args.batch_sync_qty,
-                                    epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
-                                    backprop_batch_size=args.backprop_batch_size,
-                                    batches_per_train_epoch=args.batches_per_train_epoch,
-                                    save_epoch_snapshots=args.save_epoch_snapshots,
-                                    save_last_snapshot_every_k_batch=args.save_last_snapshot_every_k_batch,
-                                    batch_size=args.batch_size, batch_size_val=args.batch_size_val,
-                                    # These lengths must come from the model serializer object, not from the arguments,
-                                    # because they can be overridden when the model is loaded.
-                                    max_query_len=model_holder.max_query_len, max_doc_len=model_holder.max_doc_len,
-                                    epoch_qty=args.epoch_qty, device_name=device_name,
-                                    cand_score_weight=args.cand_score_weight,
-                                    neg_qty_per_query=args.neg_qty_per_query,
-                                    use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
-                                    print_grads=args.print_grads,
-                                    shuffle_train=not args.no_shuffle_train,
-                                    valid_type=args.valid_type,
-                                    optim=args.optim)
-
-        train_pair_qty = len(train_pairs_all)
-        if is_distr_train or train_pair_qty < device_qty:
-            tpart_qty = int((train_pair_qty + device_qty - 1) / device_qty)
-            train_start = rank * tpart_qty
-            train_end = min(train_start + tpart_qty, len(qids))
-            train_pairs = { k : train_pairs_all[k] for k in qids[train_start : train_end] }
-        else:
-            train_pairs = train_pairs_all
-        print('Process rank %d device %s using %d training pairs out of %d' %
-              (rank, device_name, len(train_pairs), train_pair_qty))
-
-        valid_checkpoints = [] if args.valid_checkpoints is None \
-                            else list(map(int, args.valid_checkpoints.split(',')))
-        param_dict = {
-            'sync_barrier': sync_barrier,
-            'device_qty' : device_qty, 'master_port' : master_port, 'distr_backend' : args.distr_backend,
-            'rank' : rank, 'is_master_proc' : is_master_proc,
-            'dataset' : dataset,
-            'qrels' : qrels, 'qrel_file_name' : qrelf,
-            'train_pairs' : train_pairs,
-            'valid_run' : valid_run,
-            'valid_run_dir' : args.valid_run_dir,
-            'valid_checkpoints' : valid_checkpoints,
-            'model_out_dir' : args.model_out_dir,
-            'model_holder' : model_holder, 'loss_obj' : loss_obj, 'train_params' : train_params
-        }
-
-        if is_distr_train and not is_master_proc:
-            p = Process(target=do_train, kwargs=param_dict)
-            p.start()
-            processes.append(p)
-        else:
-            do_train(**param_dict)
-
-    for p in processes:
-        join_and_check_stat(p)
-
-    if device_qty > 1:
-        dist.destroy_process_group()
+    do_train(
+        device_qty=device_qty,
+        master_port=master_port, distr_backend=args.distr_backend,
+        dataset=dataset,
+        qrels=qrels, qrel_file_name=qrelf,
+        train_pairs_all=train_pairs_all, valid_run=valid_run,
+        model_out_dir=args.model_out_dir,
+        model_holder=model_holder,
+        loss_obj=loss_obj,
+        train_params=train_params
+    )
 
 
 if __name__ == '__main__':

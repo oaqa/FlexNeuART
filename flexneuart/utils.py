@@ -15,12 +15,11 @@
 #
 
 """
-    This file contains a number of miscellaneous. helper functions.
+    This file contains a number of miscellaneous helper functions.
 """
 import torch
 import random
 import numpy
-import multiprocessing
 import sys
 
 
@@ -32,25 +31,6 @@ def set_all_seeds(seed):
         torch.cuda.manual_seed_all(seed)
     random.seed(seed)
     numpy.random.seed(seed)
-
-
-def enable_spawn():
-    """Enable light-weight children. Plus, it is
-       a must-use process createion mode for multi-GPU training.
-    """
-    try:
-        multiprocessing.set_start_method('spawn')
-    except RuntimeError:
-        pass
-
-
-def join_and_check_stat(proc):
-    """Join the process and check its status:
-       Raise an exception when a sub-process exits abnormally (exit status != 0).
-    """
-    proc.join()
-    if proc.exitcode != 0:
-        raise Exception('A process exited abnormally with code:' + str(proc.exitcode))
 
 
 def sync_out_streams():
