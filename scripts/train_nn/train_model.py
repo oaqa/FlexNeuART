@@ -462,6 +462,7 @@ def validate(model,
 
     """
     sync_out_streams()
+    os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
     proc_specific_params = []
     device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
@@ -532,6 +533,7 @@ def validate(model,
     tqdm.write(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
     sync_out_streams()
+    os.environ['TOKENIZERS_PARALLELISM'] = 'true'
 
     # Let us always save the run
     return get_eval_results(use_external_eval=train_params.use_external_eval,
@@ -794,7 +796,6 @@ def main_cli():
 
 
 if __name__ == '__main__':
-    os.environ['TOKENIZERS_PARALLELISM'] = 'false'
     # A light-weight subprocessing + this is a must for multi-processing with CUDA
     enable_spawn()
     main_cli()
