@@ -24,8 +24,7 @@ import math
 import argparse
 
 from threading import BrokenBarrierError
-from multiprocessing import Barrier, Queue
-from queue import Empty
+from multiprocessing import Barrier
 
 import flexneuart.config
 import flexneuart.io.train_data
@@ -46,7 +45,7 @@ from flexneuart.models.train.amp import get_amp_processors
 
 from flexneuart import sync_out_streams, set_all_seeds
 from flexneuart.io.json import read_json, save_json
-from flexneuart.io.runs import read_run_dict
+from flexneuart.io.runs import read_run_dict, write_run_dict
 from flexneuart.io.qrels import read_qrels_dict
 from flexneuart.eval import METRIC_LIST, get_eval_results
 
@@ -315,9 +314,14 @@ def do_train(device_qty,
                 else:
                     train_pairs = train_pairs_short
 
+                device_name = device_name_arr[rank]
+
+                tqdm.write('Process rank %d device %s using %d training pairs out of %d' %
+                           (rank, device_name, len(train_pairs), train_pair_qty))
+
                 proc_specific_params.append(
                     {
-                        'device_name': device_name_arr[rank],
+                        'device_name': device_name,
                         'train_pairs': train_pairs
                     }
                 )
@@ -410,21 +414,25 @@ def do_train(device_qty,
         bert_lr *= epoch_lr_decay
 
 
-def run_model_wrapper(model, is_main_proc,
+def run_model_wrapper(model, is_main_proc, rerank_run_file_name,
                       device_name, batch_size, amp,
                       max_query_len, max_doc_len,
                       dataset, orig_run,
                       cand_score_weight,
-                      desc,
-                      result_queue : Queue):
+                      desc):
+
+    model.eval()
+    model.to(device_name)
 
     res = run_model(model,
                       device_name, batch_size, amp,
                       max_query_len, max_doc_len,
                       dataset, orig_run,
-                      cand_score_weight,
-                      desc)
-    result_queue.put(res)
+                      cand_score_weight=cand_score_weight,
+                      desc=desc, 
+                      use_progress_bar=is_main_proc)
+    
+    write_run_dict(res, rerank_run_file_name)
 
 
 def validate(model,
@@ -455,27 +463,32 @@ def validate(model,
     """
     sync_out_streams()
 
-    result_queue = Queue()
-
     proc_specific_params = []
     device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
+    rerank_file_name_arr = [f'{run_filename}_{rank}' for rank in range(device_qty)]
 
-    qids = orig_run.keys()
+    qids = list(orig_run.keys())
     valid_pair_qty = len(qids)
 
     for rank in range(device_qty):
         if device_qty > 1:
-            tpart_qty = int((valid_pair_qty + device_qty - 1) / device_qty)
-            train_start = rank * tpart_qty
-            train_end = min(train_start + tpart_qty, len(qids))
-            run = {k: orig_run[k] for k in qids[train_start: train_end]}
+            vpart_qty = int((valid_pair_qty + device_qty - 1) / device_qty)
+            valid_start = rank * vpart_qty
+            valid_end = min(valid_start + vpart_qty, len(qids))
+            run = {k: orig_run[k] for k in qids[valid_start: valid_end]}
         else:
             run = orig_run
 
+        device_name = device_name_arr[rank]
+
+        tqdm.write('Process rank %d device %s using %d validation queries out of %d' %
+                    (rank, device_name, len(run), valid_pair_qty))
+
         proc_specific_params.append(
             {
-                'device_name': device_name_arr[rank],
-                'orig_run': run
+                'device_name': device_name, 
+                'orig_run': run,
+                'rerank_run_file_name': rerank_file_name_arr[rank]
             }
         )
 
@@ -486,7 +499,6 @@ def validate(model,
         'amp': train_params.amp,
         'max_query_len': train_params.max_query_len,
         'max_doc_len': train_params.max_doc_len,
-        'result_queue': result_queue,
         'dataset': dataset,
         'desc': 'validation'
     }
@@ -500,12 +512,17 @@ def validate(model,
 
     rerank_run = {}
 
-    for qid in range(device_qty):
-        sub_run = result_queue.get()
+    for k in range(device_qty):
+        sub_run = read_run_dict(rerank_file_name_arr[k])
 
         for k, v in sub_run.items():
             assert not k in rerank_run
             rerank_run[k] = v
+
+    qty0 = len(rerank_run) 
+    qty1 = len(orig_run)
+    assert qty0 == qty1,\
+           f'Something went wrong: # of queries of original and re-ranked runs re diff.: {qty0} vs {qty1}'
 
     eval_metric = train_params.eval_metric
 
@@ -777,6 +794,7 @@ def main_cli():
 
 
 if __name__ == '__main__':
+    os.environ['TOKENIZERS_PARALLELISM'] = 'false'
     # A light-weight subprocessing + this is a must for multi-processing with CUDA
     enable_spawn()
     main_cli()

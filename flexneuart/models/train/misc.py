@@ -21,7 +21,8 @@ def run_model(model,
               max_query_len, max_doc_len,
               dataset, orig_run,
               cand_score_weight=0,
-              desc='valid'
+              desc='valid',
+              use_progress_bar=True
               ):
     """Execute model on a given query set: produce document scores.
 
@@ -34,6 +35,7 @@ def run_model(model,
     :param dataset:         a tuple: query dictionary, document dictionary
     :param orig_run:        a run to re-run
     :param cand_score_weight: a weight of the candidate provider score
+    :param use_progress_bar: True to enable he progress bar
     :param desc:            an optional descriptor
 
     :return: a re-ranked run, where each query document pair is scored using the model (optionally
@@ -46,9 +48,11 @@ def run_model(model,
     clean_memory(device_name)
 
     cand_score_weight = torch.FloatTensor([cand_score_weight]).to(device_name)
-    with torch.no_grad(), \
-            tqdm(total=sum(len(r) for r in orig_run.values()),
-                 ncols=80, desc=desc, leave=False,  file=TQDM_FILE) as pbar:
+    if use_progress_bar:
+        pbar = tqdm(total=sum(len(r) for r in orig_run.values()), ncols=80, desc=desc, leave=False,  file=TQDM_FILE)
+    else:
+        pbar = None
+    with torch.no_grad():
 
         model.eval()
 
@@ -69,6 +73,12 @@ def run_model(model,
 
             for qid, did, score in zip(batch.query_ids, batch.doc_ids, scores):
                 rerank_run.setdefault(qid, {})[did] = score
-            pbar.update(len(batch))
+            if pbar is not None:
+                pbar.update(len(batch))
+                pbar.refresh()
+
+  
+    if pbar is not None:
+        pbar.close()
 
     return rerank_run

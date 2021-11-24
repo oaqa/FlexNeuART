@@ -77,11 +77,11 @@ def get_device_name_arr(device_qty, device_name=None):
     """
     res = []
 
+    if device_name is not None and device_qty == 1:
+        return [device_name]
+
     for rank in range(device_qty - 1, -1, -1):
-        if device_name is not None:
-            res.append(device_name)
-        else:
-            res.append(f'cuda:{rank}')
+        res.append(f'cuda:{rank}')
     return res
 
 
@@ -170,10 +170,10 @@ def run_distributed(work_func,
             main_proc_ret = wrapper_func(**wrapper_param_dict)
 
     if proc_qty > 1:
-        dist.destroy_process_group()
-
         for p in processes:
             join_and_check_stat(p)
+
+        dist.destroy_process_group()
 
     return main_proc_ret
 
