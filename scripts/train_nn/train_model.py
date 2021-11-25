@@ -221,14 +221,13 @@ def train_iteration(model_holder, device_name,
             # This must be done in every process, not only in the master process
             if device_qty > 1:
                 if batch_id % train_params.batch_sync_qty == 0:
-                    if sync_qty <= sync_qty_target:
+                    if sync_qty < sync_qty_target:
                         try:
                             sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
                         except BrokenBarrierError:
                             raise Exception('A waiting-for-model-parameter-synchronization timeout!')
                         sync_qty += 1
-
-                    avg_model_params(model, train_params.amp)
+                        avg_model_params(model, train_params.amp)
 
             batch_id += 1
 
@@ -241,15 +240,23 @@ def train_iteration(model_holder, device_name,
     # Final model averaging in the end.
 
     if device_qty > 1:
-        # This ensures we go through the barrier exactly the same number of time in each process
-        while sync_qty <= sync_qty_target:
+        # This ensures we go through the barrier and averaging parameters exactly the same number of time in each process
+        while sync_qty < sync_qty_target:
             try:
                 sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
             except BrokenBarrierError:
                 raise Exception('A waiting-for-model-parameter-synchronization timeout!')
             sync_qty += 1
+            avg_model_params(model, train_params.amp)
 
-        avg_model_params(model, train_params.amp)
+
+    #
+    # Might be a bit paranoid, but this ensures no process terminates before the last avg_model_params finishes
+    #
+    try:
+        sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
+    except BrokenBarrierError:
+        raise Exception('A waiting-for-model-parameter-synchronization timeout!')
 
     if pbar is not None:
         pbar.close()
