@@ -10,4 +10,3 @@ from flexneuart.models import vanilla_bert_no_qry_pad, \
                             longformer, \
                             cedr, \
                             ndrm
-from flexneuart.models import model1

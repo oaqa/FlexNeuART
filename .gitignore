@@ -21,6 +21,3 @@ build/
 dist/
 flexneuart.egg-info
 /bin/
-*model1*
-*double_vanilla_bert*
-flexneuart/models/__init__.py
