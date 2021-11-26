@@ -335,8 +335,8 @@ def do_train(device_qty,
 
             # The number of synchronization points need to be adjusted by the number of devies processes,
             # as well as by the batch size
-            sync_qty_target = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs_short) / \
-                              (device_qty * train_params.batch_sync_qty * train_params.batch_size)
+            sync_qty_target = int(flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs_short) / \
+                                  (device_qty * train_params.batch_sync_qty * train_params.batch_size))
 
             shared_params = {
                 'lr': lr,
