@@ -147,12 +147,25 @@ if max_query_val is not None:
 else:
     valid_run = orig_run
 
+#
+# The fake document ID will be generated for queries that don't return
+# a single document for some reason. The reason we have them
+# is b/c we still want to pass these queries to evaluation tools
+# and (correctly) assign a zero score to such queries rather than
+# just ignoring them (which would amount to incorrectly bumping overall score a bit).
+#
+# One quick & simple solution for scoring such documents is to assign them an
+# empty document text. After all such fake documents are the only one document
+# per query and it is totally irrelevant what their score is.
+#
+
 for qid, query_scores in tqdm(valid_run.items(), 'reading documents'):
     for did, _ in query_scores.items():
         if did not in data_dict:
-            if did == FAKE_DOC_ID:
-                continue
-            doc_text = fwd_index.get_doc_text_raw(did)
+            if did != FAKE_DOC_ID:
+                doc_text = fwd_index.get_doc_text_raw(did)
+            else:
+                doc_text = None # It will trigger a warning
             if doc_text is None:
                 tqdm.write(f'WARNING: no text for document ID: {did}')
                 doc_text = ''
