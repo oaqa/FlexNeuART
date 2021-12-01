@@ -241,7 +241,8 @@ def train_iteration(model_holder, device_name,
 
     if device_qty > 1:
         # This ensures we go through the barrier and averaging parameters exactly the same number of time in each process
-        while sync_qty < sync_qty_target:
+        # sync_qty_target + 1 is to ensure we make at least one more final sync after the end of the epoch
+        while sync_qty < sync_qty_target + 1:
             try:
                 sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
             except BrokenBarrierError:
