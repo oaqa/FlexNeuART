@@ -3,7 +3,7 @@
 Model parameters can be specified in a JSON configuration file, which is specified during training. 
 JSON parameter names should match constructor parameters of a respective models.
 
-1. [Vanilla BERT (FirstP) ranker](vanilla_bert.py), which truncates input. 
+1. [Vanilla BERT (FirstP) ranker](vanilla_bert.py), which truncates **long** inputs. 
 
     Nogueira, Rodrigo, and Kyunghyun Cho. "Passage Re-ranking with BERT." arXiv:1901.04085 (2019).
 
