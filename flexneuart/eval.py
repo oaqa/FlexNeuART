@@ -24,12 +24,11 @@ from flexneuart.io.qrels import read_qrels_dict
 FAKE_DOC_ID = "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES"
 
 METRIC_MAP = 'map'
-# We hardcode 20, b/c it's hardcoded in gdeval.pl
-NDCG_TOP_K = 20
+METRIC_NDCG10 = 'ndcg@10'
 METRIC_NDCG20 = 'ndcg@20'
 METRIC_MRR = "recip_rank"
 
-METRIC_LIST = [METRIC_MAP, METRIC_NDCG20, METRIC_MRR]
+METRIC_LIST = [METRIC_MAP, METRIC_NDCG10, METRIC_NDCG20, METRIC_MRR]
 
 RELEVANCE_THRESHOLD = 1e-5
 
@@ -173,6 +172,8 @@ def get_eval_results(use_external_eval,
         m = None
         if eval_metric == METRIC_MAP:
             m = 'map'
+        elif eval_metric == METRIC_NDCG10:
+            m = 'ndcg_cut_10'
         elif eval_metric == METRIC_NDCG20:
             m = 'ndcg_cut_20'
         elif eval_metric == METRIC_MRR:
@@ -189,7 +190,9 @@ def get_eval_results(use_external_eval,
         if eval_metric == METRIC_MAP:
             f = MeanAveragePrecision()
         elif eval_metric == METRIC_NDCG20:
-            f = NormalizedDiscountedCumulativeGain(NDCG_TOP_K)
+            f = NormalizedDiscountedCumulativeGain(20)
+        elif eval_metric == METRIC_NDCG10:
+            f = NormalizedDiscountedCumulativeGain(10)
         elif eval_metric == METRIC_MRR:
             f = MeanReciprocalRank()
         else:
