@@ -132,7 +132,7 @@ def train_iteration(model_holder, device_name,
         if not train_params.warmup_pct:
             raise Exception('LR schedule: ' + lr_schedule + ' requires a warm-up parameter!')
 
-        num_warmup_steps = int(train_params.warmup_pct (lr_steps))
+        num_warmup_steps = int(train_params.warmup_pct * lr_steps)
 
         if lr_schedule == LR_SCHEDULE_ONE_CYCLE_LR:
             if is_main_proc:
