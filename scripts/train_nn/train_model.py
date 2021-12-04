@@ -23,6 +23,7 @@ import sys
 import math
 import argparse
 
+from transformers.optimization import get_constant_schedule_with_warmup
 from threading import BrokenBarrierError
 from multiprocessing import Barrier
 
@@ -61,13 +62,18 @@ VALID_ALWAYS = 'always'
 VALID_LAST = 'last_epoch'
 VALID_NONE = 'never'
 
+LR_SCHEDULE_CONST = 'const'
+LR_SCHEDULE_CONST_WARMUP = 'const_with_warmup'
+LR_SCHEDULE_ONE_CYCLE_LR = 'one_cycle'
+
 TrainParams = namedtuple('TrainParams',
                     ['optim',
                      'device_name',
                      'init_lr', 'init_bert_lr', 'epoch_lr_decay', 'weight_decay',
                      'momentum',
                      'amp',
-                     'warmup_pct', 'batch_sync_qty',
+                     'warmup_pct', 'lr_schedule',
+                     'batch_sync_qty',
                      'batches_per_train_epoch',
                      'batch_size', 'batch_size_val',
                      'max_query_len', 'max_doc_len',
@@ -118,14 +124,34 @@ def train_iteration(model_holder, device_name,
     max_train_qty = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs)
     lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
     scheduler = None
-    if train_params.warmup_pct:
-        if is_main_proc:
-            print('Using a scheduler with a warm-up for %f steps' % train_params.warmup_pct)
-        scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
-                                                        total_steps=lr_steps,
-                                                        max_lr=[lr, bert_lr],
-                                                        anneal_strategy='linear',
-                                                        pct_start=train_params.warmup_pct)
+    lr_schedule= train_params.lr_schedule
+    if lr_schedule == LR_SCHEDULE_CONST:
+        if train_params.warmup_pct:
+            raise Exception('Warm-up cannot be used with LR schedule: ' + lr_schedule)
+    elif lr_schedule in [LR_SCHEDULE_CONST_WARMUP, LR_SCHEDULE_ONE_CYCLE_LR]:
+        if not train_params.warmup_pct:
+            raise Exception('LR schedule: ' + lr_schedule + ' requires a warm-up parameter!')
+
+        num_warmup_steps = int(train_params.warmup_pct (lr_steps))
+
+        if lr_schedule == LR_SCHEDULE_ONE_CYCLE_LR:
+            if is_main_proc:
+                print(f'Using a one-cycle scheduler with a warm-up for {num_warmup_steps} steps')
+            scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
+                                                            total_steps=lr_steps,
+                                                            max_lr=[lr, bert_lr],
+                                                            anneal_strategy='linear',
+                                                            pct_start=train_params.warmup_pct)
+        else:
+            assert lr_schedule == LR_SCHEDULE_CONST_WARMUP
+            if is_main_proc:
+                print(f'Using a const-learning rate scheduler with a warm-up for {num_warmup_steps} steps')
+
+            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps={num_warmup_steps})
+
+    else:
+        raise Exception('Unsupported LR schedule: ' + lr_schedule)
+
     if is_main_proc:
         tqdm.write('Optimizer:' + str( optimizer))
 
@@ -591,6 +617,9 @@ def main_cli():
     parser.add_argument('--warmup_pct', metavar='warm-up fraction',
                         default=None, type=float,
                         help='use a warm-up/cool-down learning-reate schedule')
+    parser.add_argument('--lr_schedule', metavar='LR schedule',
+                        default=LR_SCHEDULE_CONST,
+                        choices=[LR_SCHEDULE_CONST, LR_SCHEDULE_CONST_WARMUP, LR_SCHEDULE_ONE_CYCLE_LR])
 
     parser.add_argument('--device_qty', type=int, metavar='# of device for multi-GPU training',
                         default=1, help='# of GPUs for multi-GPU training')
@@ -772,7 +801,9 @@ def main_cli():
     train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
                                device_name=args.device_name,
                                momentum=args.momentum, amp=args.amp,
-                               warmup_pct=args.warmup_pct, batch_sync_qty=args.batch_sync_qty,
+                               warmup_pct=args.warmup_pct,
+                               lr_schedule=args.lr_schedule,
+                               batch_sync_qty=args.batch_sync_qty,
                                epoch_lr_decay=args.epoch_lr_decay, weight_decay=args.weight_decay,
                                backprop_batch_size=args.backprop_batch_size,
                                batches_per_train_epoch=args.batches_per_train_epoch,
