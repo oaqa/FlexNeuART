@@ -147,7 +147,7 @@ def train_iteration(model_holder, device_name,
             if is_main_proc:
                 print(f'Using a const-learning rate scheduler with a warm-up for {num_warmup_steps} steps')
 
-            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps={num_warmup_steps})
+            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=num_warmup_steps)
 
     else:
         raise Exception('Unsupported LR schedule: ' + lr_schedule)
