@@ -100,7 +100,7 @@ class BatchingValidationGroupByQuery(BatchingBase):
 
         for qid in self.run:
             query_text = ds_queries.get(qid)
-            assert query_text is not None, f'Missing query ID: {qid}'
+            assert query_text is not None, f'Missing query text: {qid}'
             for did, score in self.run[qid].items():
                 doc_text = ds_docs.get(did)
                 assert doc_text is not None, f'Missing document ID: {did}'
