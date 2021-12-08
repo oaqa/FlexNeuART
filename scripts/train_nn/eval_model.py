@@ -18,6 +18,7 @@
     A script to evaluate a single model using a given RUN file.
 """
 import os
+import sys
 import argparse
 from tqdm import tqdm
 
@@ -37,6 +38,8 @@ from flexneuart.retrieval.fwd_index import get_forward_index
 from flexneuart.eval import FAKE_DOC_ID, METRIC_LIST, get_eval_results
 
 from time import time
+
+IGNORE_MISS='ignore_miss'
 
 parser = argparse.ArgumentParser(description='Run basic run checks')
 parser.add_argument('--run_orig', metavar='original run file',
@@ -81,6 +84,9 @@ parser.add_argument('--max_num_query', metavar='max # of val queries',
 parser.add_argument('--eval_metric', choices=METRIC_LIST, default=METRIC_LIST[0],
                     help='Metric list: ' + ','.join(METRIC_LIST),
                     metavar='eval metric')
+parser.add_argument(f'--{IGNORE_MISS}', 
+                    help='ignore queries missing from the run file or vice versa',
+                    action='store_true')
 
 add_model_init_basic_args(parser,
                           add_device_name=True,
@@ -146,6 +152,14 @@ if max_query_val is not None:
     valid_run = {k: orig_run[k] for k in query_ids}
 else:
     valid_run = orig_run
+
+diff_keys = set(valid_run.keys()).symmetric_difference(set(query_dict.keys()))
+if diff_keys and not getattr(args, IGNORE_MISS):
+    print(f'There is a mismatch (symmetric diff size: {len(diff_keys)}) in the query IDs between the run file and the query file, if this is expected, specify --{IGNORE_MISS}') 
+    sys.exit(1)
+else:
+    valid_run_flt = {k : valid_run[k] for k in valid_run if k in query_dict}
+    valid_run = valid_run_flt
 
 #
 # The fake document ID will be generated for queries that don't return
