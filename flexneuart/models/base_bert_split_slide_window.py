@@ -20,6 +20,20 @@ DEFAULT_WINDOW_SIZE = 150
 DEFAULT_STRIDE = 100
 
 
+class BertSplitSlideWindowRankerEncResult:
+    def __init__(self, cls_results, query_results, block_masks):
+        """Constructor
+
+        :param cls_results:    CLS tokens of encoded document windows
+        :param query_results:  encoded queries
+        :param cls_pad_masks:  masks showing which CLS tokens correspond to
+                               non-empty windows (some Windows are going to be PAD-only)
+        """
+        self.cls_results = cls_results
+        self.query_results = query_results
+        self.block_masks = block_masks
+
+
 class BertSplitSlideWindowRanker(BertBaseRanker):
     """
         A BERT-based ranker that sub-batches long documents by splitting them into
@@ -49,7 +63,7 @@ class BertSplitSlideWindowRanker(BertBaseRanker):
     def forward(self, **inputs):
         raise NotImplementedError
 
-    def encode_bert(self, query_tok, query_mask, doc_tok, doc_mask):
+    def encode_bert(self, query_tok, query_mask, doc_tok, doc_mask) -> BertSplitSlideWindowRankerEncResult:
         """
             This function applies BERT to a query concatentated with a document.
             If this concatenation is too long to fit into a specified window, the
@@ -59,12 +73,12 @@ class BertSplitSlideWindowRanker(BertBaseRanker):
             Afterwards, individual CLS representations can be combined in several ways
             as defined by self.cls_aggreg_type
 
-        :param query_tok:       batched and encoded query tokens
-        :param query_mask:      query token mask (0 for padding, 1 for actual tokens)
-        :param doc_tok:         batched and encoded document tokens
-        :param doc_mask:        document token mask (0 for padding, 1 for actual tokens)
+        :param query_tok:           batched and encoded query tokens
+        :param query_mask:          query token mask (0 for padding, 1 for actual tokens)
+        :param doc_tok:             batched and encoded document tokens
+        :param doc_mask:            document token mask (0 for padding, 1 for actual tokens)
 
-        :return: combined CLS representations of the chunks.
+        :return: a object of the type BertSplitSlideWindowRankerEncResult
 
         """
         batch_qty, max_qlen = query_tok.shape
@@ -119,4 +133,13 @@ class BertSplitSlideWindowRanker(BertBaseRanker):
 
             cls_results.append(cls_result)
 
-        return cls_results
+        bms = []
+        dms = torch.sum(doc_masks, dim=-1)
+        for i in range(cls_output.shape[0] // batch_qty):
+            bms.append(dms[i*batch_qty:(i+1)*batch_qty])
+        block_masks = (torch.stack(bms, dim=1) > 0).long()
+        query_results = [r[:batch_qty, 1:max_qlen + 1] for r in result]
+
+        return BertSplitSlideWindowRankerEncResult(cls_results=cls_results,
+                                                   query_results=query_results,
+                                                   block_masks=block_masks)

@@ -46,7 +46,7 @@ class ParadeAttentionRanker(BertSplitSlideWindowRanker):
         torch.nn.init.xavier_uniform_(self.cls.weight)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
-        cls_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
+        cls_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask).cls_results
         last_layer_cls_rep = torch.transpose(cls_reps[-1], 1, 2)
         att_weights = self.att(last_layer_cls_rep)
         att_weights = F.softmax(att_weights, dim=1)

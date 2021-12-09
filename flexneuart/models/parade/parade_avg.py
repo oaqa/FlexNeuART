@@ -44,7 +44,7 @@ class ParadeAvgRanker(BertSplitSlideWindowRanker):
         torch.nn.init.xavier_uniform_(self.cls.weight)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
-        cls_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
+        cls_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask).cls_results
         out = self.cls(self.dropout(cls_reps[-1]))
         # the last dimension is singleton and needs to be removed
         return out.squeeze(dim=-1)

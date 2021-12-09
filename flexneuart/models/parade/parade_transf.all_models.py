@@ -196,3 +196,105 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         out = self.cls(self.dropout(parade_cls_reps))
         # the last dimension is singleton and needs to be removed
         return out.squeeze(dim=-1)
+
+
+@register('parade_transf_wquery_pretr')
+class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
+    """
+        PARADE Max ranker. Contributed by Tianyi Lin.
+
+        Here we use an pre-trained aggregating transformer.
+
+        Li, C., Yates, A., MacAvaney, S., He, B., & Sun, Y. (2020). PARADE:
+        Passage representation aggregation for document reranking.
+        arXiv preprint arXiv:2008.09093.
+    """
+
+    def __init__(self,
+                 bert_flavor=BERT_BASE_MODEL,
+                 bert_aggreg_flavor=MSMARCO_MINILM_L2,
+                 window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
+                 rand_special=False,
+                 dropout=DEFAULT_BERT_DROPOUT):
+        """Constructor.
+
+        :param bert_flavor:             name of the main BERT model.
+        :param bert_aggreg_flavor:      anem of the aggregating BERT model.
+        :param window_size:
+        :param stride:
+        :param rand_special:
+        :param dropout:
+        """
+        super().__init__(bert_flavor=bert_flavor, bert_aggreg_flavor=bert_aggreg_flavor,
+                         rand_special=rand_special,
+                         window_size=window_size, stride=stride,
+                         dropout=dropout)
+
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
+        enc_res = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
+        cls_reps = enc_res.cls_results
+        last_layer_cls_rep = torch.transpose(cls_reps[-1], 1, 2)  # [B, N, BERT_SIZE]
+
+        B, N, BERT_SIZE = last_layer_cls_rep.shape
+
+        query_reps = enc_res.query_results
+        last_layer_query_rep = query_reps[-1]
+        assert len(last_layer_query_rep.shape) == 3 # [B, Q, BERT_SIZE]
+        _, Q, _ = last_layer_query_rep.shape
+        assert last_layer_query_rep.size(0) == B
+        assert last_layer_query_rep.size(2) == BERT_SIZE
+
+        if self.proj_out is not None:
+            last_layer_cls_rep_proj = self.proj_out(last_layer_cls_rep)  # [B, N, BERT_AGGREG_SIZE]
+            last_layer_query_rep_proj = self.proj_out(last_layer_query_rep)
+        else:
+            last_layer_cls_rep_proj = last_layer_cls_rep
+            last_layer_query_rep_proj = last_layer_query_rep
+
+        # +two singletown dimensions before the CLS embedding
+        aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
+                                                                                                 self.BERT_AGGREG_SIZE)
+        aggreg_sep_tok_exp = self.bert_aggreg_sep_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
+                                                                                                 self.BERT_AGGREG_SIZE)
+
+        # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
+        aggreg_repr = torch.cat([aggreg_cls_tok_exp,
+                                 last_layer_query_rep_proj,
+                                 aggreg_sep_tok_exp,
+                                 last_layer_cls_rep_proj,
+                                 aggreg_sep_tok_exp],
+                                             dim=1)  # [B, N + 3 + Q, BERT_AGGREG_SIZE]
+        assert aggreg_repr.shape == (B, N + 3 + Q, self.BERT_AGGREG_SIZE)
+
+        ONES = torch.ones_like(query_mask[:, :1]) # Bx1
+        NILS = torch.zeros_like(query_mask[:, :1]) # Bx1
+
+        assert ONES.shape == (B, 1)
+        assert NILS.shape == (B, 1)
+
+        doc_mask_aggreg = torch.ones_like(last_layer_cls_rep[:,:,0])
+        assert doc_mask_aggreg.shape == (B, N), f'Internal error, expected shape ({B},{N}) actual shape: {doc_mask_aggreg.shape} last_layer_cls_rep.shape: {last_layer_cls_rep.shape}'
+
+        mask = torch.cat([ONES, query_mask, ONES, doc_mask_aggreg, ONES], dim=1)
+        assert mask.size(0) == B
+        assert mask.size(1) == 3 + Q + N
+
+        segment_ids = torch.cat([NILS] * (2 + Q) + [ONES] * (N + 1), dim=1)
+
+        assert segment_ids.size(0) == B
+        assert segment_ids.size(1) == 3 + Q + N
+
+        # run aggregating BERT and get the last layer output
+        # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
+        # it's pointless at this stage
+        outputs: BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(inputs_embeds=aggreg_repr,
+                                                                                 token_type_ids=segment_ids.long(),
+                                                                                 attention_mask=mask,)
+        result = outputs.last_hidden_state
+
+        # The cls vector of the last Transformer output layer
+        parade_cls_reps = result[:, 0, :]  #
+
+        out = self.cls(self.dropout(parade_cls_reps))
+        # the last dimension is singleton and needs to be removed
+        return out.squeeze(dim=-1)
