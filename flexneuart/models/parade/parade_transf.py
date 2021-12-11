@@ -29,6 +29,8 @@ from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 class Empty:
     pass
 
+RAND_SPECIAL_INIT_DEFAULT=True
+
 
 class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
     """
@@ -46,7 +48,7 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
                  bert_flavor=BERT_BASE_MODEL,
                  bert_aggreg_flavor=MSMARCO_MINILM_L2,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
-                 rand_special=False,
+                 rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
                  dropout=DEFAULT_BERT_DROPOUT):
         """Constructor.
 
@@ -72,7 +74,7 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
 
 
         # Sometimes SEP embeddings isn't used, but there's not much harm to always init
-        if not rand_special and hasattr(self.bert_aggreg, 'embeddings'):
+        if not rand_special_init and hasattr(self.bert_aggreg, 'embeddings'):
             print(f'Initializing special tokens using pre-trained embeddings of {bert_aggreg_flavor}')
 
             embeds = self.bert_aggreg.embeddings.word_embeddings.weight.data
@@ -102,11 +104,11 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
 @register('parade_transf_pretr')
 class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
     def __init__(self, bert_flavor=BERT_BASE_MODEL, bert_aggreg_flavor=MSMARCO_MINILM_L2,
-                 rand_special=False,
+                 rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  dropout=DEFAULT_BERT_DROPOUT):
         super().__init__(bert_flavor=bert_flavor, bert_aggreg_flavor=bert_aggreg_flavor,
-                         rand_special=rand_special,
+                         rand_special_init=rand_special_init,
                          window_size=window_size, stride=stride,
                          dropout=dropout)
 
@@ -196,3 +198,5 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         out = self.cls(self.dropout(parade_cls_reps))
         # the last dimension is singleton and needs to be removed
         return out.squeeze(dim=-1)
+
+
