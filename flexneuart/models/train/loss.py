@@ -54,7 +54,7 @@ class MultiMarginRankingLossWrapper:
         return True
 
     def __init__(self, margin):
-        self.loss = torch.nn.MultiMarginLoss(margin, reduction='sum')
+        self.loss = torch.nn.MultiMarginLoss(margin=margin, reduction='sum')
 
     def compute(self, scores):
         zeros = torch.zeros(scores.size(0), dtype=torch.long, device=scores.device)
@@ -70,7 +70,7 @@ class PairwiseMarginRankingLossWrapper:
         return False
 
     def __init__(self, margin):
-        self.loss = torch.nn.MarginRankingLoss(margin, reduction='sum')
+        self.loss = torch.nn.MarginRankingLoss(margin=margin, reduction='sum')
 
     def compute(self, scores):
         pos_doc_scores = scores[:, 0]
