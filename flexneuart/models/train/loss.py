@@ -90,8 +90,20 @@ class PairwiseSoftmaxLoss:
     def compute(self, scores):
         return torch.sum(1. - scores.softmax(dim=1)[:, 0])  # pairwise softmax
 
+class PairwiseLogSoftmaxLoss:
+    @staticmethod
+    def name():
+        return 'pairwise_logsoftmax'
+
+    def is_listwise(self):
+        return False
+
+    def compute(self, scores):
+        return torch.sum(torch.nn.LogSoftmax(scores, dim=1)[:, 0])  # pairwise log-softmax
+
 
 LOSS_FUNC_LIST = [MultiMarginRankingLossWrapper.name(),
                   CrossEntropyLossWrapper.name(),
                   PairwiseMarginRankingLossWrapper.name(),
-                  PairwiseSoftmaxLoss.name()]
+                  PairwiseSoftmaxLoss.name(),
+                  PairwiseLogSoftmaxLoss.name()]
