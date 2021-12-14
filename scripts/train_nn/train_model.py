@@ -22,10 +22,12 @@ import time
 import sys
 import math
 import argparse
+import numpy as np
 
 from transformers.optimization import get_constant_schedule_with_warmup
 from threading import BrokenBarrierError
 from multiprocessing import Barrier
+from typing import List
 
 import flexneuart.config
 import flexneuart.io.train_data
@@ -322,14 +324,16 @@ def do_train(device_qty,
     train_stat = {}
 
     bpte = train_params.batches_per_train_epoch
-    if bpte is not None and bpte >= 0:
-        qty = int(bpte) * train_params.batch_size
-        qids_all : List = list(train_pairs_all.keys())
-        train_pairs_short = {qid : train_pairs_all[qid] for qid in qids_all[0:qty]}
-    else:
-        train_pairs_short = train_pairs_all
 
     for epoch in range(train_params.epoch_qty):
+        if bpte is not None and bpte >= 0:
+            qty_short = int(bpte) * train_params.batch_size
+            qids_all: List = list(train_pairs_all.keys())
+            qids_short = np.random.choice(qids_all, qty_short, replace=False)
+            train_pairs_short = {qid: train_pairs_all[qid] for qid in qids_short}
+        else:
+            train_pairs_short = train_pairs_all
+
         start_train_time = time.time()
         qids = list(train_pairs_short.keys())
 
