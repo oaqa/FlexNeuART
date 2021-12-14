@@ -99,7 +99,7 @@ class PairwiseLogSoftmaxLoss:
         return False
 
     def compute(self, scores):
-        return torch.sum(torch.nn.LogSoftmax(scores, dim=1)[:, 0])  # pairwise log-softmax
+        return torch.sum(-torch.nn.LogSoftmax(scores, dim=1)[:, 0])  # pairwise log-softmax
 
 
 LOSS_FUNC_LIST = [MultiMarginRankingLossWrapper.name(),
