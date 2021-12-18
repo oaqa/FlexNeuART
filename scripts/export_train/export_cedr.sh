@@ -32,7 +32,14 @@ checkVarNonEmpty "hardNegQty"
 checkVarNonEmpty "sampleMedNegQty"
 checkVarNonEmpty "sampleEasyNegQty"
 
-cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"
+# Sometimes QREL files come without a trailing EOL
+# So we want to add it 
+outFile="$outDir/$QREL_FILE"
+echo -n "" > $outFile
+for partCurr in $partTrain $partTest ; do 
+  cat "$inputDataDir/$partCurr/$QREL_FILE" >> $outFile
+  echo "" >> $outFile
+done
 
 NO_MAX=1
 setJavaMem 1 8 $NO_MAX
