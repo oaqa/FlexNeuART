@@ -75,19 +75,16 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
 
         # Sometimes SEP embeddings isn't used, but there's not much harm to always init
         if not rand_special_init and hasattr(self.bert_aggreg, 'embeddings'):
-            print(f'Initializing special tokens using pre-trained embeddings of {bert_aggreg_flavor}')
+            print(f'Initializing special token CLS using pre-trained embeddings of {bert_aggreg_flavor}')
 
             embeds = self.bert_aggreg.embeddings.word_embeddings.weight.data
             self.bert_aggreg_cls_embed = torch.nn.Parameter(embeds[self.tokenizer.cls_token_id].clone())
-            self.bert_aggreg_sep_embed = torch.nn.Parameter(embeds[self.tokenizer.sep_token_id].clone())
         else:
-            print(f'Initializing special tokens randomly')
+            print(f'Initializing special token CLS randomly')
 
             norm = 1.0 / math.sqrt(self.BERT_AGGREG_SIZE)
             self.bert_aggreg_cls_embed = torch.nn.Parameter(norm * torch.randn(self.BERT_AGGREG_SIZE))
-            self.bert_aggreg_sep_embed = torch.nn.Parameter(norm * torch.randn(self.BERT_AGGREG_SIZE))
 
-        #print(self.bert_aggreg_cls_embed, self.bert_aggreg_sep_embed)
 
         # If there's a mismatch between the embedding size of the aggregating BERT and the
         # hidden size of the main BERT, a projection is required
