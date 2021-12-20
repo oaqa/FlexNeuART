@@ -79,10 +79,14 @@ class PairwiseMarginRankingLossWrapper:
         return self.loss.forward(pos_doc_scores, neg_doc_scores, target=ones)
 
 
-class PairwiseSoftmaxLoss:
+class OldPairwiseSoftmaxLoss:
+    """This is pairwise (positive-negative pairs) softmax version that
+       supports only a *SINGLE* negative per query.
+       This older version (non-listwise) is kept only for testing purposes.
+    """
     @staticmethod
     def name():
-        return 'pairwise_softmax'
+        return 'old_pairwise_softmax'
 
     def is_listwise(self):
         return False
@@ -90,20 +94,50 @@ class PairwiseSoftmaxLoss:
     def compute(self, scores):
         return torch.sum(1. - scores.softmax(dim=1)[:, 0])  # pairwise softmax
 
-class PairwiseLogSoftmaxLoss:
+
+class PairwiseSoftmaxLoss:
+    """This is pairwise (positive-negative pairs) softmax version that
+       supports multiple negatives per query.
+    """
     @staticmethod
     def name():
-        return 'pairwise_logsoftmax'
+        return 'pairwise_softmax'
 
     def is_listwise(self):
-        return False
+        return True
 
     def compute(self, scores):
-        return torch.sum(-scores.log_softmax(dim=1)[:, 0])  # pairwise log-softmax
+        assert len(scores.shape) == 2
+
+        batch_size, qty = scores.shape
+
+        x0 = scores.unsqueeze(dim=-1)
+        assert x0.shape == (batch_size, qty, 1)
+        x1 = scores.unsqueeze(dim=-2)
+        assert x1.shape == (batch_size, 1, qty)
+
+        x0 = x0.expand(batch_size, qty, qty)
+        x1 = x1.expand(batch_size, qty, qty)
+
+        assert len(x0.shape) == 3
+        assert len(x1.shape) == 3
+
+        x_merged = torch.stack([x0, x1], dim=3)
+
+        assert x_merged.shape == (batch_size, qty, qty, 2)
+
+        x_softmax = 1. - x_merged.softmax(dim=-1)[:, :, :, 0]
+
+        assert len(x_softmax.shape) == 3
+
+        x_softmax = x_softmax[:, 0, 1:]
+        assert len(x_softmax.shape) == 2
+
+        # We average over all negatives
+        return torch.sum(x_softmax) / float(x_softmax.shape[-1])
 
 
 LOSS_FUNC_LIST = [MultiMarginRankingLossWrapper.name(),
                   CrossEntropyLossWrapper.name(),
                   PairwiseMarginRankingLossWrapper.name(),
-                  PairwiseSoftmaxLoss.name(),
-                  PairwiseLogSoftmaxLoss.name()]
+                  PairwiseSoftmaxLoss.name()]
