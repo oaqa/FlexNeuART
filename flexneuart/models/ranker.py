@@ -17,7 +17,7 @@
 """
 Access to FlexNeuART re-ranking functionality.
 
-You need to call configure_classpath() before/data/BOL1PI/collections_ir/msmarco_pass_v1_ms_fall2021/derived_data/ir_models/vanilla_bert/0 using this functionality.
+You need to call configure_classpath() before using this functionality.
 """
 import os
 import torch
