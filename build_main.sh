@@ -9,6 +9,10 @@ if [ "$MAVEN_OFFILNE" = "1" ] ; then
   offlineBuildFlag=" --offline "
 fi
 
+# XmlIterator fails if the locale/encoding is not UTF8
+export LANG=en_US.UTF8
+export LC_ALL=$LANG
+
 # 1. build a fat jar and wrapper scripts
 JAVA_SRC_PREF=java
 pushd $JAVA_SRC_PREF
