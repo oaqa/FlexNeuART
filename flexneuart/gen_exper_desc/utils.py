@@ -17,6 +17,7 @@ import os
 import sys
 import argparse
 import json
+from flexneuart.io import open_with_default_enc
 
 # These parameter names must match parameter names in config.sh
 EXTR_TYPE_FINAL_PARAM = "extrTypeFinal"
@@ -91,8 +92,8 @@ def gen_rerank_descriptors(args, extr_json_gen_func, json_desc_name, json_sub_di
 
         desc_data_json.append(desc)
 
-        with open(os.path.join(out_json_sub_dir, json_file_name), 'w') as of:
+        with open_with_default_enc(os.path.join(out_json_sub_dir, json_file_name), 'w') as of:
             json.dump(json_desc, of, indent=2)
 
-    with open(os.path.join(args.outdir, json_desc_name), 'w') as of:
+    with open_with_default_enc(os.path.join(args.outdir, json_desc_name), 'w') as of:
         json.dump(desc_data_json, of, indent=2)

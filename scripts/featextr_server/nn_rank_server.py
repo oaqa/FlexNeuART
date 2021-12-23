@@ -176,8 +176,7 @@ if __name__ == '__main__':
     all_max_doc_len = None
 
     if args.init_model_list is not None:
-        for model_file in args.init_model_list:
-            fname = model_file.name
+        for fname in args.init_model_list:
 
             print('Loading model from:', fname)
 

@@ -595,16 +595,16 @@ def main_cli():
                         help='max. document length')
 
     parser.add_argument('--datafiles', metavar='data files', help='data files: docs & queries',
-                        type=argparse.FileType('rt'), nargs='+', required=True)
+                        type=str, nargs='+', required=True)
 
     parser.add_argument('--qrels', metavar='QREL file', help='QREL file',
-                        type=argparse.FileType('rt'), required=True)
+                        type=str, required=True)
 
     parser.add_argument('--train_pairs', metavar='paired train data', help='paired train data',
-                        type=argparse.FileType('rt'), required=True)
+                        type=str, required=True)
 
     parser.add_argument('--valid_run', metavar='validation file', help='validation file',
-                        type=argparse.FileType('rt'), required=True)
+                        type=str, required=True)
 
     parser.add_argument('--model_out_dir',
                         metavar='model out dir', help='an output directory for the trained model',
@@ -757,8 +757,8 @@ def main_cli():
     model_holder : ModelSerializer = None
 
     if args.init_model is not None:
-        print('Loading a complete model from:', args.init_model.name)
-        model_holder = ModelSerializer.load_all(args.init_model.name)
+        print('Loading a complete model from:', args.init_model)
+        model_holder = ModelSerializer.load_all(args.init_model)
     else:
         if args.model_name is None:
             print('--model_name argument must be provided unless --init_model points to a fully serialized model!')
@@ -766,8 +766,8 @@ def main_cli():
         if args.init_model_weights is not None:
             model_holder = ModelSerializer(args.model_name)
             model_holder.create_model_from_args(args)
-            print('Loading model weights from:', args.init_model_weights.name)
-            model_holder.load_weights(args.init_model_weights.name, strict=False)
+            print('Loading model weights from:', args.init_model_weights)
+            model_holder.load_weights(args.init_model_weights, strict=False)
         else:
             model_holder = ModelSerializer(args.model_name)
             print('Creating the model from scratch!')
@@ -782,17 +782,17 @@ def main_cli():
     sync_out_streams()
 
     dataset = flexneuart.io.train_data.read_datafiles(args.datafiles)
-    qrelf = args.qrels.name
+    qrelf = args.qrels
     qrels = read_qrels_dict(qrelf)
     train_pairs_all = flexneuart.io.train_data.read_pairs_dict(args.train_pairs)
-    valid_run = read_run_dict(args.valid_run.name)
+    valid_run = read_run_dict(args.valid_run)
     max_query_val = args.max_query_val
     query_ids = list(valid_run.keys())
     if max_query_val is not None:
         query_ids = query_ids[0:max_query_val]
         valid_run = {k: valid_run[k] for k in query_ids}
 
-    print('# of eval. queries:', len(query_ids), ' in the file', args.valid_run.name)
+    print('# of eval. queries:', len(query_ids), ' in the file', args.valid_run)
 
 
     device_qty = args.device_qty

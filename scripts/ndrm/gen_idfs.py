@@ -32,6 +32,7 @@ from tqdm import tqdm
 from flexneuart import configure_classpath
 from flexneuart.retrieval import create_featextr_resource_manager
 from flexneuart.retrieval.fwd_index import get_forward_index
+from flexneuart.io import open_with_default_enc
 
 parser = argparse.ArgumentParser(description='Generate IDFs for NDRM models.')
 
@@ -80,7 +81,7 @@ idfs = sorted(idfs.items(), key=lambda kv: kv[1])
 out_dir = os.path.dirname(args.output)
 os.makedirs(out_dir, exist_ok=True)
 
-with open(args.output, 'w') as f:
+with open_with_default_enc(args.output, 'w') as f:
     for (k, v) in idfs:
         f.write('{}\t{}\n'.format(k, v))
 

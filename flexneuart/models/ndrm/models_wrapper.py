@@ -12,7 +12,7 @@ import csv
 from typing import List, Sequence
 
 from flexneuart import models
-
+from flexneuart.io import open_with_default_enc
 from flexneuart.utils import DictToObject, clear_line_console
 from flexneuart.models.base import BaseModel
 from flexneuart.models.ndrm.models_main import NDRM1, NDRM2, NDRM3
@@ -224,7 +224,7 @@ class NDRMWrapperBase(BaseModel):
     @staticmethod
     def load_idfs(file_name):
         idfs = {}
-        with open(file_name) as f:
+        with open_with_default_enc(file_name) as f:
             reader = csv.reader(f, delimiter = '\t')
             for [term, idf] in reader:
                 idfs[term] = float(idf)

@@ -20,7 +20,7 @@ import re
 import os
 import tempfile
 
-from flexneuart.config import DOCID_FIELD
+from flexneuart.config import DOCID_FIELD, DEFAULT_ENCODING
 
 def create_temp_file():
     """"Create a temporary file
@@ -31,28 +31,50 @@ def create_temp_file():
     return file_name
 
 
+def open_with_default_enc(file, mode='r', buffering=-1, encoding=DEFAULT_ENCODING,
+                          errors=None, newline=None, closefd=True, opener=None):
+    """A simple wrapper that opens files using the default encoding.
+    :param file:   a file name
+    :param mode:   flags (r, w, b, etc .._
+    :param buffering: is an optional integer used to set the buffering policy.
+    :param newline: controls how universal newlines mode works (it only applies to text mode).
+                    It can be None, '', '\n', '\r', and '\r\n'
+    :param encoding: encoding
+    :return:
+    """
+    # In the binary mode encoding cannot be specify
+    if 'b' in mode:
+        encoding = None
+    return open(file=file, mode=mode, buffering=buffering, encoding=encoding,
+                errors=errors, newline=newline, closefd=closefd, opener=opener)
+
+
 class FileWrapper:
 
     def __enter__(self):
         return self
 
-    def __init__(self, file_name, flags='r'):
+    def __init__(self, file_name, flags='r', encoding=DEFAULT_ENCODING):
         """Constructor, which opens a regular or gzipped-file
 
           :param  file_name a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
           :param  flags    open flags such as 'r' or 'w'
+          :param  encoding file encoding: will be ignored for binary files!
         """
+        # In the binary mode encoding cannot be specify
         dir_name = os.path.dirname(file_name)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
         if file_name.endswith('.gz'):
-            self._file = gzip.open(file_name, flags)
+            self._file = gzip.open(file_name, flags, encoding=None)
             self._is_compr = True
         elif file_name.endswith('.bz2'):
-            self._file = bz2.open(file_name, flags)
+            self._file = bz2.open(file_name, flags, encoding=None)
             self._is_compr = True
         else:
-            self._file = open(file_name, flags)
+            if 'b' in flags:
+                encoding = None
+            self._file = open(file_name, flags, encoding=encoding)
             self._is_compr = False
 
     def write(self, s):
@@ -61,9 +83,9 @@ class FileWrapper:
         else:
             self._file.write(s)
 
-    def read(self, qty):
+    def read(self, qty=-1):
         if self._is_compr:
-            return self._file.read(qty).decode()
+            return self._file.read(qty).decode(encoding=DEFAULT_ENCODING)
         else:
             return self._file.read(qty)
 
@@ -75,7 +97,7 @@ class FileWrapper:
 
     def __iter__(self):
         for line in self._file:
-            yield line.decode() if self._is_compr else line
+            yield line.decode(encoding=DEFAULT_ENCODING) if self._is_compr else line
 
 
 def jsonl_gen(file_name):

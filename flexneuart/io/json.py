@@ -21,7 +21,7 @@ Some functions related to reading/writing & interpreting JSON files.
 """
 
 import json
-
+from flexneuart.io import open_with_default_enc
 
 
 def read_json(file_name):
@@ -29,7 +29,7 @@ def read_json(file_name):
 
     :param file_name: JSON file name
     """
-    with open(file_name) as f:
+    with open_with_default_enc(file_name) as f:
         data = f.read()
 
     return json.loads(data)
@@ -42,7 +42,7 @@ def save_json(file_name, data, indent=4):
     :param data:        JSON data
     :param indent:      JSON indentation
     """
-    with open(file_name, 'w') as f:
+    with open_with_default_enc(file_name, 'w') as f:
         json.dump(data, f, indent=indent)
 
 

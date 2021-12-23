@@ -32,6 +32,7 @@ from tqdm import tqdm
 from flexneuart import configure_classpath
 from flexneuart.retrieval import create_featextr_resource_manager
 from flexneuart.retrieval.fwd_index import get_forward_index
+from flexneuart.io import open_with_default_enc
 
 parser = argparse.ArgumentParser(description='Generate field embeddings for NDRM models.')
 
@@ -74,7 +75,7 @@ os.makedirs(out_dir, exist_ok=True)
 
 temp_fn = os.path.join(out_dir, 'temp_file')
 
-with open(temp_fn, 'w') as fout:
+with open_with_default_enc(temp_fn, 'w') as fout:
     for doc_id in tqdm(fwd_index.get_all_doc_ids(), 'generating text from index'):
         fout.write(fwd_index.get_doc_entry_parsed_text(doc_id) + '\n')
 

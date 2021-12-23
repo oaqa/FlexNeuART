@@ -1,5 +1,21 @@
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 import collections
 from tqdm import tqdm
+from flexneuart.io import open_with_default_enc
 
 QrelEntry = collections.namedtuple('QrelEntry',
                                    'query_id doc_id rel_grade')
@@ -51,7 +67,7 @@ def read_qrels(file_name):
     ln = 0
     res = []
 
-    with open(file_name) as f:
+    with open_with_default_enc(file_name) as f:
         for line in tqdm(f, desc='loading qrels (by line)', leave=False):
             ln += 1
             line = line.strip()
@@ -72,7 +88,7 @@ def write_qrels(qrel_list, file_name):
     :param qrel_list:  a list of parsed QRELs
     :param file_name:  an output file name
     """
-    with open(file_name, 'w') as f:
+    with open_with_default_enc(file_name, 'w') as f:
         for e in qrel_list:
             f.write(qrel_entry2_str(e))
             f.write('\n')

@@ -1,5 +1,21 @@
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 from tqdm import tqdm
 from flexneuart.io.utils import FileWrapper
+from flexneuart.io import open_with_default_enc
 
 FAKE_RUN_ID = "fake_run"
 
@@ -63,7 +79,7 @@ def write_run_dict(run_dict, file_name, run_id=FAKE_RUN_ID):
     :param file_name:  an output file name
     :param run_id:     a run ID to use
     """
-    with open(file_name, 'wt') as runfile:
+    with open_with_default_enc(file_name, 'wt') as runfile:
         for qid in run_dict:
             scores = get_sorted_scores_from_score_dict(run_dict[qid])
             for i, (did, score) in enumerate(scores):

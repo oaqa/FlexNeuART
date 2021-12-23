@@ -133,7 +133,7 @@ def add_model_init_basic_args(parser, add_device_name, add_init_model_weights, m
         parser.add_argument('--init_model_weights',
                             metavar='model weights',
                             help='initial model weights will be loaded in non-strict mode',
-                            type=argparse.FileType('rb'), default=None)
+                            type=str, default=None)
 
     if not mult_model:
         parser.add_argument('--model_name', metavar='model_name',
@@ -144,13 +144,13 @@ def add_model_init_basic_args(parser, add_device_name, add_init_model_weights, m
         parser.add_argument('--init_model',
                             metavar='initial model',
                             help='previously serialized model',
-                            type=argparse.FileType('rb'), default=None)
+                            type=str, default=None)
     else:
         parser.add_argument('--init_model_list',
                             metavar='serialized models',
                             required=True,
                             help='previously serialized models',
-                            type=argparse.FileType('rb'),
+                            type=str,
                             nargs='+',
                             default=None)
 
