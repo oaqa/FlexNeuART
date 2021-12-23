@@ -18,6 +18,7 @@ import re
 import json
 import argparse
 
+from flexneuart.io import open_with_default_enc
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -44,12 +45,12 @@ if __name__ == "__main__":
     args = get_args()
     print(args)
 
-    with open(args.output, "a") as output_file:
+    with open_with_default_enc(args.output, "a") as output_file:
         for datafile in os.listdir(args.input_datapath):
             print('Processing:', datafile)
             if datafile.endswith(".json"):
                 filename = os.path.join(args.input_datapath, datafile)
-                with open(filename, "r") as f:
+                with open_with_default_enc(filename, "r") as f:
                     dataset = json.load(f)
                 output = get_converted_data(dataset)
                 for datapoint in output:

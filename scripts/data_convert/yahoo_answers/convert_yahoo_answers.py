@@ -24,6 +24,7 @@ import os
 import json
 import argparse
 
+from flexneuart.io import open_with_default_enc
 
 from flexneuart.text_proc.formats import proc_yahoo_answers_record, SimpleXmlRecIterator
 from flexneuart.text_proc.parse import SpacyTextParser, get_retokenized
@@ -77,18 +78,18 @@ stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
 nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_case=True, enable_pos=False)
 
-data_quest_file = open(os.path.join(out_main_dir, QUESTION_FILE_JSON), 'w')
+data_quest_file = open_with_default_enc(os.path.join(out_main_dir, QUESTION_FILE_JSON), 'w')
 # File wrapper can handle output gz files
 data_answ_file = FileWrapper(os.path.join(out_main_dir, ANSWER_FILE_JSON), flags='w')
-qrel_file = open(os.path.join(out_main_dir, QREL_FILE), 'w')
+qrel_file = open_with_default_enc(os.path.join(out_main_dir, QREL_FILE), 'w')
 
 if out_bitext_dir:
     if not os.path.exists(out_bitext_dir):
         os.makedirs(out_bitext_dir)
 
     for fn in bitext_fields:
-        bi_quest_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_QUESTION_PREFIX + fn), 'w')
-        bi_answ_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_ANSWER_PREFIX + fn), 'w')
+        bi_quest_files[fn] = open_with_default_enc(os.path.join(out_bitext_dir, BITEXT_QUESTION_PREFIX + fn), 'w')
+        bi_answ_files[fn] = open_with_default_enc(os.path.join(out_bitext_dir, BITEXT_ANSWER_PREFIX + fn), 'w')
 
 ln = 0
 for rec_str in SimpleXmlRecIterator(inp_file_name, 'document'):

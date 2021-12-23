@@ -24,6 +24,8 @@ import sys
 import os
 import numpy as np
 
+from flexneuart.io import open_with_default_enc
+
 # This things are hard-coded and must match Java and shell scripts
 DATA_QUERY = 'data_query.tsv'
 DATA_DOCS = 'data_docs.tsv'
@@ -51,7 +53,7 @@ def prefix_key_val(d, pref):
 
 
 def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
-    # File must be open
+    # File must be opened
     print(f'Writing to {out_f.name} type: {data_type}')
     qty = 0
     for id, v in data.items():
@@ -63,7 +65,7 @@ def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
 
 
 def write_filtered_train_pairs(out_fn, train_pairs_full, qid_filter_set):
-    # File must be open
+    # File must be opened
     print(f'Writing train pairs to {out_fn}')
     qty = 0
     train_pairs_filtered = {}
@@ -80,7 +82,7 @@ def write_filtered_train_pairs(out_fn, train_pairs_full, qid_filter_set):
 
 def write_filtered_qrels(out_f, qrels, qid_filter_set):
     print(f'Writing qrels to {out_f.name}')
-    # File must be open
+    # File must be opened
     qty = 0
     for qid, did_rel_dict in qrels.items():
         if qid in qid_filter_set:
@@ -134,21 +136,21 @@ os.makedirs(args.dir_out, exist_ok=True)
 run1 = prefix_key_val(read_run_dict(os.path.join(args.dir1, TEST_RUN)), args.out_pref1)
 write_run_dict(run1, os.path.join(args.dir_out, TEST_RUN))
 
-queries1, data1 = read_datafiles([open(os.path.join(args.dir1, fn)) for fn in [DATA_DOCS, DATA_QUERY]])
+queries1, data1 = read_datafiles([os.path.join(args.dir1, fn) for fn in [DATA_DOCS, DATA_QUERY]])
 
-train_pairs1 = prefix_key_val(read_pairs_dict(open(os.path.join(args.dir1, TRAIN_PAIRS))), args.out_pref1)
+train_pairs1 = prefix_key_val(read_pairs_dict(os.path.join(args.dir1, TRAIN_PAIRS)), args.out_pref1)
 
 queries1 = prefix_key(queries1, args.out_pref1)
 qrels1 = prefix_key_val(read_qrels_dict(os.path.join(args.dir1, QRELS)), args.out_pref1)
 data1 = prefix_key(data1, args.out_pref1)
 
-queries2, data2 = read_datafiles([open(os.path.join(args.dir2, fn)) for fn in [DATA_DOCS, DATA_QUERY]])
+queries2, data2 = read_datafiles([os.path.join(args.dir2, fn) for fn in [DATA_DOCS, DATA_QUERY]])
 
 queries2 = prefix_key(queries2, args.out_pref2)
 qrels2 = prefix_key_val(read_qrels_dict(os.path.join(args.dir2, QRELS)), args.out_pref2)
 data2 = prefix_key(data2, args.out_pref2)
 
-train_pairs2 = prefix_key_val(read_pairs_dict(open(os.path.join(args.dir2, TRAIN_PAIRS))), args.out_pref2)
+train_pairs2 = prefix_key_val(read_pairs_dict(os.path.join(args.dir2, TRAIN_PAIRS)), args.out_pref2)
 
 qids1 = list(train_pairs1.keys())
 if args.prob1 < 1:
@@ -191,15 +193,15 @@ for qid, did_dict in run1.items():
     for did in did_dict.keys():
         dids_all.add(did)
 
-with open(os.path.join(args.dir_out, QRELS), 'w') as out_qrels_f:
+with open_with_default_enc(os.path.join(args.dir_out, QRELS), 'w') as out_qrels_f:
     write_filtered_qrels(out_qrels_f, qrels1, qids_all)
     write_filtered_qrels(out_qrels_f, qrels2, qids_all)
 
-with open(os.path.join(args.dir_out, DATA_DOCS), 'w') as out_data_f:
+with open_with_default_enc(os.path.join(args.dir_out, DATA_DOCS), 'w') as out_data_f:
     write_filtered_datafiles(out_data_f, data1, DATA_TYPE_DOC, dids_all)
     write_filtered_datafiles(out_data_f, data2, DATA_TYPE_DOC, dids_all)
 
-with open(os.path.join(args.dir_out, DATA_QUERY), 'w') as out_query_f:
+with open_with_default_enc(os.path.join(args.dir_out, DATA_QUERY), 'w') as out_query_f:
     write_filtered_datafiles(out_query_f, queries1, DATA_TYPE_QUERY, qids_all)
     write_filtered_datafiles(out_query_f, queries2, DATA_TYPE_QUERY, qids_all)
 

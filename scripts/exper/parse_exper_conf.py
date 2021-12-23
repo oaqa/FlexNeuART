@@ -33,6 +33,8 @@ import json
 import sys
 import re
 
+from flexneuart.io import open_with_default_enc
+
 ERROR_STR = '#ERR'
 END_STR = '#END'
 
@@ -51,7 +53,7 @@ if len(sys.argv) != 4:
 
 out_file = sys.argv[3]
 
-inp_data = json.load(open(sys.argv[1]))
+inp_data = json.load(open_with_default_enc(sys.argv[1]))
 if type(inp_data) != type([]):
     sys.stderr.write('Wrong root-level data type, expecting a list')
     print(ERROR_STR)
@@ -64,7 +66,7 @@ if entry_id < 0 or entry_id >= len(inp_data):
     sys.exit(0)
 else:
 
-    with open(out_file, 'w') as of:
+    with open_with_default_enc(out_file, 'w') as of:
         for key, value in inp_data[entry_id].items():
             key = replace_chars_nl(str(key))
             if type(value) == bool:

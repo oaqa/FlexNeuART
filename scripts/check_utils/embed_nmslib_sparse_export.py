@@ -37,6 +37,8 @@ from flexneuart.io.pack import ENDIANNES_TYPE, \
                                 pack_sparse_vect, write_json_to_bin, \
                                 read_and_unpack_int, read_ascii_str
 
+from flexneuart.io import open_with_default_enc
+
 parser = argparse.ArgumentParser(description='Store previously exported sparse vectors in "BSONL" format.')
 
 parser.add_argument('--input', metavar='input file',
@@ -49,7 +51,7 @@ parser.add_argument('--field_name', metavar='field name', help='the name of the 
 
 
 args = parser.parse_args()
-f = open(args.input, 'br')
+f = open_with_default_enc(args.input, 'br')
 
 
 with FileWrapper(args.output, 'wb') as out_file:

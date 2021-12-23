@@ -20,6 +20,7 @@
 import argparse
 
 from flexneuart.io.utils import jsonl_gen
+from flexneuart.io import open_with_default_enc
 
 parser = argparse.ArgumentParser('Extract question text')
 
@@ -31,7 +32,7 @@ args = parser.parse_args()
 
 fn = args.field_name
 
-with open(args.output, 'w') as out_f:
+with open_with_default_enc(args.output, 'w') as out_f:
     for e in jsonl_gen(args.input):
         if fn in e:
             text = e[fn]

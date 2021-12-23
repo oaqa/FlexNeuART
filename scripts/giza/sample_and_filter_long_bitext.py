@@ -25,14 +25,16 @@
 import sys
 import random
 
+from flexneuart.io import open_with_default_enc
+
 if len(sys.argv) != 8:
     print("Usage: <questions> <answers> <maximum fertility> <output questions> <output answers> <symmetrize? 1 or 0> <sample prob>")
 
-quest_file = open(sys.argv[1], 'r')
-answ_file = open(sys.argv[2], 'r')
+quest_file = open_with_default_enc(sys.argv[1], 'r')
+answ_file = open_with_default_enc(sys.argv[2], 'r')
 max_fert = int(sys.argv[3])
-out_file_quest = open(sys.argv[4], "w")
-out_file_answ = open(sys.argv[5], "w")
+out_file_quest = open_with_default_enc(sys.argv[4], "w")
+out_file_answ = open_with_default_enc(sys.argv[5], "w")
 symmetr = int(sys.argv[6]) != 0
 sample_prob = float(sys.argv[7])
 assert sample_prob > 0

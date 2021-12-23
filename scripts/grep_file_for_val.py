@@ -20,6 +20,9 @@
 # key:value
 #
 import sys
+
+from flexneuart.io import open_with_default_enc
+
 file_name=sys.argv[1]
 metr_name=sys.argv[2]
 ignore_case=False
@@ -29,7 +32,7 @@ if len(sys.argv) >= 4:
 if ignore_case:
     metr_name = metr_name.lower()
 
-with open(file_name) as f:
+with open_with_default_enc(file_name) as f:
     for line in f:
         line = line.strip()
         sepi = line.find(':')

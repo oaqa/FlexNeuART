@@ -17,6 +17,8 @@
 import sys
 import subprocess as sp
 
+from flexneuart.io import open_with_default_enc
+
 # This was just to check compatibiity with some old runs
 RUN_GDEVAL=False
 
@@ -173,10 +175,10 @@ for k in FINAL_METR_ORDERED_LIST:
 
 sys.stdout.write(report_text)
 if out_prefix != '':
-    f_rep = open(out_prefix + '.rep', 'w')
+    f_rep = open_with_default_enc(out_prefix + '.rep', 'w')
     f_rep.write(report_text)
     f_rep.close()
-    f_tsv = open(out_prefix + '.tsv', 'a')
+    f_tsv = open_with_default_enc(out_prefix + '.tsv', 'a')
 
     header = ["Label", "queryQty"]
     data = [label, str(query_qty)]
@@ -190,13 +192,13 @@ if out_prefix != '':
 
     f_tsv.close()
 
-    f_trec_eval = open(out_prefix + '.trec_eval', 'w')
+    f_trec_eval = open_with_default_enc(out_prefix + '.trec_eval', 'w')
     for line in output_trec_eval:
         f_trec_eval.write(line.rstrip() + '\n')
     f_trec_eval.close()
 
     if RUN_GDEVAL:
-        f_gdeval = open(out_prefix + '.gdeval', 'w')
+        f_gdeval = open_with_default_enc(out_prefix + '.gdeval', 'w')
         for line in output_gdeval:
             f_gdeval.write(line.rstrip() + '\n')
         f_gdeval.close()

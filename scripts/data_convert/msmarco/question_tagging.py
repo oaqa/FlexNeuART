@@ -21,7 +21,7 @@ import sys
 import json
 
 from flexneuart.data_convert.msmarco import is_equal
-
+from flexneuart.io import open_with_default_enc
 
 def annotate_questions_using_msmarco_dataset(passage_dataset, qa_dataset, similarity_func):
     """Uses the MSMarco QA dataset to annontate the passage ranking
@@ -54,7 +54,7 @@ def find_question_type_from_dataset(question, qa_dataset, similarity_func):
 
 def load_jsonl(filepath):
     datapoints = []
-    with open(filepath) as f:
+    with open_with_default_enc(filepath) as f:
         for line in f:
             datapoints.append(json.loads(line))
     return datapoints
@@ -71,5 +71,5 @@ if __name__ == "__main__":
 
     question_type_annotation = annotate_questions_using_msmarco_dataset(passage_dataset, qa_dataset, is_equal)
 
-    with open(outfilename, "w") as f:
+    with open_with_default_enc(outfilename, "w") as f:
         json.dump(question_type_annotation, f)

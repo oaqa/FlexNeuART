@@ -26,6 +26,8 @@ import json
 import argparse
 import tqdm
 
+from flexneuart.io import open_with_default_enc
+
 from flexneuart.io import FileWrapper
 from flexneuart.io.qrels import write_qrels, add_qrel_entry
 from flexneuart.io.stopwords import read_stop_words, STOPWORD_FILE
@@ -96,8 +98,8 @@ if out_bitext_dir:
         os.makedirs(out_bitext_dir)
 
     for fn in bitext_fields:
-        bi_quest_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_QUESTION_PREFIX + fn), 'w')
-        bi_answ_files[fn] = open(os.path.join(out_bitext_dir, BITEXT_ANSWER_PREFIX + fn), 'w')
+        bi_quest_files[fn] = open_with_default_enc(os.path.join(out_bitext_dir, BITEXT_QUESTION_PREFIX + fn), 'w')
+        bi_answ_files[fn] = open_with_default_enc(os.path.join(out_bitext_dir, BITEXT_ANSWER_PREFIX + fn), 'w')
 
 
 seen_qrels = set()
