@@ -26,6 +26,9 @@
 
 import sys
 
+# This must be a tuple of ints
+MIN_PYTHON_VERSION=(3, 8)
+
 SPACY_MODEL = 'en_core_web_sm'
 
 # Constants defined here mostly can't be modified as they should be in sync with Java and bash code

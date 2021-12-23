@@ -99,10 +99,10 @@ public class LuceneIndexer {
       
       if (null == outputDirName) Usage("Specify: " + CommonParams.OUT_INDEX_PARAM, options);
       
-      String subDirTypeList = cmd.getOptionValue(CommonParams.INPDATA_SUB_DIR_TYPE_PARAM);
+      String subDirList = cmd.getOptionValue(CommonParams.INPDATA_SUB_DIR_TYPE_PARAM);
       
-      if (null == subDirTypeList ||
-          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.INPDATA_SUB_DIR_TYPE_PARAM, options);
+      if (null == subDirList ||
+          subDirList.isEmpty()) Usage("Specify: " + CommonParams.INPDATA_SUB_DIR_TYPE_PARAM, options);
       
       String dataFileName = cmd.getOptionValue(CommonParams.DATA_FILE_PARAM);
       
@@ -125,90 +125,7 @@ public class LuceneIndexer {
         }
       }
 
-      File outputDir = new File(outputDirName);
-      if (!outputDir.exists()) {
-        if (!outputDir.mkdirs()) {
-          System.err.println("couldn't create " + outputDir.getAbsolutePath());
-          System.exit(1);
-        }
-      }
-      if (!outputDir.isDirectory()) {
-        System.err.println(outputDir.getAbsolutePath() + " is not a directory!");
-        System.exit(1);
-      }
-      if (!outputDir.canWrite()) {
-        System.err.println("Can't write to " + outputDir.getAbsolutePath());
-        System.exit(1);
-      }
-      
-      String subDirs[] = subDirTypeList.split(",");
-
-      int docNum = 0;
-
-      // No English analyzer here, all language-related processing is done already,
-      // here we simply white-space tokenize and index tokens verbatim.
-      Analyzer analyzer = new WhitespaceAnalyzer();
-      FSDirectory       indexDir    = FSDirectory.open(Paths.get(outputDirName));
-      IndexWriterConfig indexConf   = new IndexWriterConfig(analyzer);
-      
-      /*
-          OpenMode.CREATE creates a new index or overwrites an existing one.
-          https://lucene.apache.org/core/6_0_0/core/org/apache/lucene/index/IndexWriterConfig.OpenMode.html#CREATE
-      */
-      indexConf.setOpenMode(OpenMode.CREATE); 
-      indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.DEFAULT_RAM_BUFFER_SIZE);
-      logger.info("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec + 
-                  " index field name: " + indexFieldName + 
-                  " exact match? " + exactMatch);
-      indexConf.setOpenMode(OpenMode.CREATE);
-      IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      
-      
-      for (int subDirId = 0; subDirId < subDirs.length && docNum < maxNumRec; ++subDirId) {
-        String inputFileName = inputDataDir + File.separator + subDirs[subDirId] + File.separator + dataFileName;
-        
-        logger.info("Input file name: " + inputFileName);   
-        try (DataEntryReader inp = new DataEntryReader(inputFileName)) {
-          DataEntryFields docFields = null;
-          
-          for (; ((docFields = inp.readNext()) != null) && docNum < maxNumRec; ) {
-            ++docNum;
-            
-            String id = docFields.mEntryId;
-
-            if (id == null) {
-              logger.warn("Ignoring document #" + docNum + " b/c it has no document ID.");
-              continue;
-            }
-            
-            String textFieldValue = docFields.getString(indexFieldName);
-            
-            if (textFieldValue == null) {
-              logger.warn(String.format("Warning: No field '%s', offending DOC #%d", 
-                                               indexFieldName, docNum));
-              continue;
-            }
-
-            Document luceneDoc = new Document();
-            luceneDoc.add(new StringField(Const.DOC_ID_FIELD_NAME, id, Field.Store.YES));
-         
-            if (exactMatch) {
-              luceneDoc.add(new StringField(indexFieldName, textFieldValue, Field.Store.NO));
-            } else { 
-              luceneDoc.add(new Field(indexFieldName, textFieldValue, FULL_TEXT_FIELD_TYPE));
-            }
-            
-            indexWriter.addDocument(luceneDoc);
-            if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
-              logger.info("Indexed " + docNum + " docs");
-            }
-            
-          }
-          logger.info("Indexed " + docNum + " docs");
-        }
-      }
-      
-      indexWriter.commit();
-      indexWriter.close();
+      createLuceneIndex(inputDataDir, subDirList, dataFileName, outputDirName, indexFieldName, exactMatch, maxNumRec);
       
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
@@ -219,4 +136,95 @@ public class LuceneIndexer {
     } 
     
   }
+
+  public static void createLuceneIndex(String inputDataDir, 
+		  								String subDirList, String dataFileName,
+		  								String outputDirName, 
+		  								String indexFieldName, boolean exactMatch, 
+		  								int maxNumRec) throws IOException, Exception {
+	  File outputDir = new File(outputDirName);
+	  if (!outputDir.exists()) {
+		  if (!outputDir.mkdirs()) {
+			  System.err.println("couldn't create " + outputDir.getAbsolutePath());
+			  System.exit(1);
+		  }
+	  }
+	  if (!outputDir.isDirectory()) {
+		  System.err.println(outputDir.getAbsolutePath() + " is not a directory!");
+		  System.exit(1);
+	  }
+	  if (!outputDir.canWrite()) {
+		  System.err.println("Can't write to " + outputDir.getAbsolutePath());
+		  System.exit(1);
+	  }
+
+	  String subDirs[] = subDirList.split(",");
+
+	  int docNum = 0;
+
+	  // No English analyzer here, all language-related processing is done already,
+	  // here we simply white-space tokenize and index tokens verbatim.
+	  Analyzer analyzer = new WhitespaceAnalyzer();
+	  FSDirectory       indexDir    = FSDirectory.open(Paths.get(outputDirName));
+	  IndexWriterConfig indexConf   = new IndexWriterConfig(analyzer);
+
+	  /*
+          OpenMode.CREATE creates a new index or overwrites an existing one.
+          https://lucene.apache.org/core/6_0_0/core/org/apache/lucene/index/IndexWriterConfig.OpenMode.html#CREATE
+	   */
+	  indexConf.setOpenMode(OpenMode.CREATE); 
+	  indexConf.setRAMBufferSizeMB(LuceneCandidateProvider.DEFAULT_RAM_BUFFER_SIZE);
+	  logger.info("Creating a new Lucene index, maximum # of docs to process: " + maxNumRec + 
+			  " index field name: " + indexFieldName + 
+			  " exact match? " + exactMatch);
+	  indexConf.setOpenMode(OpenMode.CREATE);
+	  IndexWriter indexWriter = new IndexWriter(indexDir, indexConf);      
+
+	  for (int subDirId = 0; subDirId < subDirs.length && docNum < maxNumRec; ++subDirId) {
+		  String inputFileName = inputDataDir + File.separator + subDirs[subDirId] + File.separator + dataFileName;
+
+		  logger.info("Input file name: " + inputFileName);   
+		  try (DataEntryReader inp = new DataEntryReader(inputFileName)) {
+			  DataEntryFields docFields = null;
+
+			  for (; ((docFields = inp.readNext()) != null) && docNum < maxNumRec; ) {
+				  ++docNum;
+
+				  String id = docFields.mEntryId;
+
+				  if (id == null) {
+					  logger.warn("Ignoring document #" + docNum + " b/c it has no document ID.");
+					  continue;
+				  }
+
+				  String textFieldValue = docFields.getString(indexFieldName);
+
+				  if (textFieldValue == null) {
+					  logger.warn(String.format("Warning: No field '%s', offending DOC #%d", 
+							  indexFieldName, docNum));
+					  continue;
+				  }
+
+				  Document luceneDoc = new Document();
+				  luceneDoc.add(new StringField(Const.DOC_ID_FIELD_NAME, id, Field.Store.YES));
+
+				  if (exactMatch) {
+					  luceneDoc.add(new StringField(indexFieldName, textFieldValue, Field.Store.NO));
+				  } else { 
+					  luceneDoc.add(new Field(indexFieldName, textFieldValue, FULL_TEXT_FIELD_TYPE));
+				  }
+
+				  indexWriter.addDocument(luceneDoc);
+				  if (docNum % Const.PROGRESS_REPORT_QTY == 0) {
+					  logger.info("Indexed " + docNum + " docs");
+				  }
+
+			  }
+			  logger.info("Indexed " + docNum + " docs");
+		  }
+	  }
+
+	  indexWriter.commit();
+	  indexWriter.close();
+	}
 }

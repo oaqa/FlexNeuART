@@ -5,6 +5,25 @@ from setuptools import setup, find_packages
 import unittest
 import subprocess
 import sys
+import platform
+
+PY_CACHE = '__pycache__'
+ROOT_DIR_NAME = 'flexneuart'
+
+# Version *MUST* be in Sync with pom.xml
+sys.path.append(ROOT_DIR_NAME)
+from version import __version__
+from config import DEFAULT_ENCODING, MIN_PYTHON_VERSION
+
+print('Building version:', __version__)
+
+curr_python_ver = tuple([int(s) for s in platform.python_version().split('.')])
+
+print('Current python version:', curr_python_ver)
+print('Minimum required python version:', MIN_PYTHON_VERSION)
+
+assert tuple(curr_python_ver) >= tuple(MIN_PYTHON_VERSION), \
+                                        "Python version is insufficient, we require at least: " + str(MIN_PYTHON_VERSION)
 
 # We need to build java binaries (and pack scripts) before packing everything
 # This script also cleans up vestiges of the previous build
@@ -18,17 +37,9 @@ except:
     print(f'The build script {BUILD_SCRIPT} failed, please, check out the log: build.log')
     sys.exit(1)
 
-PY_CACHE = '__pycache__'
-ROOT_DIR_NAME = 'flexneuart'
-
-# Version *MUST* be in Sync with pom.xml
-sys.path.append(ROOT_DIR_NAME)
-from version import __version__
-
-print('Building version:', __version__)
 
 curr_dir = path.abspath(path.dirname(__file__))
-with open(path.join(curr_dir, 'README.md'), encoding='utf-8') as f:
+with open(path.join(curr_dir, 'README.md'), encoding=DEFAULT_ENCODING) as f:
     long_description = f.read()
 
 jar_file=f'resources/jars/FlexNeuART-{__version__}-fatjar.jar'

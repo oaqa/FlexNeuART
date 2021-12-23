@@ -128,5 +128,5 @@ BuildFwdIndexApp  \
   -index_dir "$indexDir" \
   -data_sub_dirs "$dirList" \
   -data_file "$dataFileNameCurr" \
-  -field_name "$field"
+  -index_field "$field"
 

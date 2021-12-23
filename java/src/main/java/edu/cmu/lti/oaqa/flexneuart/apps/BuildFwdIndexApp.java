@@ -16,6 +16,7 @@
 package edu.cmu.lti.oaqa.flexneuart.apps;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -52,7 +53,7 @@ public class BuildFwdIndexApp {
     options.addOption(CommonParams.EXPECTED_DOC_QTY_PARAM,        null, true, CommonParams.EXPECTED_DOC_QTY_DESC); 
     options.addOption(CommonParams.DATA_FILE_PARAM,               null, true, CommonParams.DATA_FILE_DESC);   
     options.addOption(CommonParams.OUT_INDEX_PARAM,               null, true, CommonParams.OUT_INDEX_DESC);
-    options.addOption(CommonParams.FIELD_NAME_PARAM,              null, true, CommonParams.FIELD_NAME_DESC);
+    options.addOption(CommonParams.INDEX_FIELD_NAME_PARAM,        null, true, CommonParams.INDEX_FIELD_NAME_DESC);
     options.addOption(CommonParams.FOWARD_INDEX_TYPE_PARAM,       null, true, CommonParams.FOWARD_INDEX_TYPE_DESC);
     options.addOption(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM, null, true, CommonParams.FOWARD_INDEX_STORE_TYPE_DESC);
     options.addOption(CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM, null, true, CommonParams.FOWARD_INDEX_FIELD_TYPE_DESC);
@@ -68,14 +69,14 @@ public class BuildFwdIndexApp {
       
       if (null == inputDataDir) Usage("Specify: " + CommonParams.INPUT_DATA_DIR_PARAM, options);
       
-      String outPrefix = cmd.getOptionValue(CommonParams.OUT_INDEX_PARAM);
+      String outputDirName = cmd.getOptionValue(CommonParams.OUT_INDEX_PARAM);
       
-      if (null == outPrefix) Usage("Specify: " + CommonParams.OUT_INDEX_PARAM, options);
+      if (null == outputDirName) Usage("Specify: " + CommonParams.OUT_INDEX_PARAM, options);
       
-      String subDirTypeList = cmd.getOptionValue(CommonParams.INPDATA_SUB_DIR_TYPE_PARAM);
+      String subDirList = cmd.getOptionValue(CommonParams.INPDATA_SUB_DIR_TYPE_PARAM);
       
-      if (null == subDirTypeList ||
-          subDirTypeList.isEmpty()) Usage("Specify: " + CommonParams.INPDATA_SUB_DIR_TYPE_PARAM, options);
+      if (null == subDirList ||
+          subDirList.isEmpty()) Usage("Specify: " + CommonParams.INPDATA_SUB_DIR_TYPE_PARAM, options);
       
       String dataFileName = cmd.getOptionValue(CommonParams.DATA_FILE_PARAM);
 
@@ -113,22 +114,12 @@ public class BuildFwdIndexApp {
           Usage(CommonParams.EXPECTED_DOC_QTY_PARAM + " should be a positive integer", options);
         }
       }
-      
             
-      String fieldName = cmd.getOptionValue(CommonParams.FIELD_NAME_PARAM);
-      if (fieldName == null) {
-        Usage("Specify: '" + CommonParams.FIELD_NAME_PARAM, options);
+      String indexFieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
+      if (indexFieldName == null) {
+        Usage("Specify: '" + CommonParams.INDEX_FIELD_NAME_PARAM, options);
       }
-      
-      String [] subDirs = subDirTypeList.split(",");
 
-      logger.info("Processing field: '" + fieldName + "'");
-        
-      String [] fileNames = new String[subDirs.length];
-      for (int i = 0; i < fileNames.length; ++i)
-        fileNames[i] = inputDataDir + File.separator + subDirs[i] + File.separator + dataFileName;
-      
-      
       ForwardIndexType iIndexType = ForwardIndexType.dataDict;
       String fwdIndexType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_TYPE_PARAM);
       
@@ -138,8 +129,6 @@ public class BuildFwdIndexApp {
           Usage("Wrong value '" + fwdIndexType + "' for " + CommonParams.FOWARD_INDEX_TYPE_PARAM, options);
         }
       }
-      
-      logger.info("Forward index type: " + iIndexType);
       
       String fwdIndexStoreType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_STORE_TYPE_PARAM);
       ForwardIndexStoreType iStoreType = ForwardIndexStoreType.mapdb;
@@ -153,8 +142,6 @@ public class BuildFwdIndexApp {
         }
       }
       
-      logger.info("Forward index storage type: " + iStoreType);
-      
       String fwdIndexFieldType = cmd.getOptionValue(CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM);
       
       if (fwdIndexFieldType == null) {
@@ -167,13 +154,12 @@ public class BuildFwdIndexApp {
       	Usage("Wrong value '" + fwdIndexFieldType + "' for " + CommonParams.FOWARD_INDEX_FIELD_TYPE_PARAM, options);
       }
       
-      logger.info("Forward index field type: " + iFieldType);
-        
-      ForwardIndex indx = ForwardIndex.createWriteInstance(outPrefix + File.separator + fieldName, 
-                                                          iIndexType, iStoreType, iFieldType);
-      
-      indx.createIndex(fieldName, fileNames, maxNumRec, expectedQty);
-      indx.saveIndex();
+
+      createForwardIndex(inputDataDir, subDirList, dataFileName, 
+    		  			outputDirName, 
+    		  			indexFieldName, 
+    		  			iIndexType, iStoreType, iFieldType, 
+    		  			maxNumRec, expectedQty);
       
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
@@ -182,6 +168,30 @@ public class BuildFwdIndexApp {
       logger.error("Terminating due to an exception: " + e);
       System.exit(1);
     }
+  }
+
+  public static void createForwardIndex(String inputDataDir, String subDirList, String dataFileName, 
+									 String outputDirName,
+									 String indexFieldName, 
+									 ForwardIndexType iIndexType, ForwardIndexStoreType iStoreType, ForwardIndexFieldType iFieldType, 
+									 int maxNumRec, int expectedQty) throws IOException, Exception {
+	  logger.info("Processing field: '" + indexFieldName + "'");
+      logger.info("Forward index type: " + iIndexType);
+      logger.info("Forward index storage type: " + iStoreType);
+      logger.info("Forward index field type: " + iFieldType);
+      
+      
+      String [] subDirs = subDirList.split(",");
+        
+      String [] fileNames = new String[subDirs.length];
+      for (int i = 0; i < fileNames.length; ++i)
+        fileNames[i] = inputDataDir + File.separator + subDirs[i] + File.separator + dataFileName;
+        
+      ForwardIndex indx = ForwardIndex.createWriteInstance(outputDirName + File.separator + indexFieldName, 
+                                                          iIndexType, iStoreType, iFieldType);
+      
+      indx.createIndex(indexFieldName, fileNames, maxNumRec, expectedQty);
+      indx.saveIndex();
   }
 
 }
