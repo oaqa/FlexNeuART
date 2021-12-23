@@ -8,5 +8,4 @@ from flexneuart.models import vanilla_bert_no_qry_pad, \
                             bert_aggreg_p, \
                             parade, \
                             longformer, \
-                            cedr, \
-                            ndrm
+                            cedr
