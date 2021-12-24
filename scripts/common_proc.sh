@@ -293,6 +293,12 @@ function getIndexQueryDataDirs {
           indexDirs="$indexDirs,"
         fi
         indexDirs="${indexDirs}$subDir"
+      else
+        fn_bin="$subDir/${ANSWER_FILE_BIN}"
+        if [ -f "$fn_bin" ] ; then
+          echo "Inconsistent data setup in sub-directory $subDir: the binary data file is present, but no (un)compressed JSONL file"
+          exit 1
+        fi
       fi
     else
       echo "Not a directory: $subdir"
@@ -308,6 +314,12 @@ function getIndexQueryDataDirs {
           queryDirs="$queryDirs,"
         fi
         queryDirs="${queryDirs}$subDir"
+      else
+        fn_bin="$subDir/${QUESTION_FILE_BIN}"
+        if [ -f "$fn_bin" ] ; then
+          echo "Inconsistent query setup in sub-directory $subDir: the binary query file is present, but no (un)compressed JSONL file"
+          exit 1
+        fi
       fi
     fi
   done

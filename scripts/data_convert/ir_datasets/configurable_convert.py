@@ -39,7 +39,7 @@ from flexneuart.models.train.distr_utils import enable_spawn
 configure_classpath()
 
 from flexneuart.io import FileWrapper
-from flexneuart.config import QUESTION_FILE_JSON, ANSWER_FILE_JSON, QREL_FILE
+from flexneuart.config import QUESTION_FILE_JSON, ANSWER_FILE_JSONL_GZ, QREL_FILE
 
 from flexneuart.ir_datasets.pipeline import Pipeline
 from flexneuart.io.json import read_json
@@ -91,7 +91,7 @@ def main():
         if part_processor.is_query:
             out_data_file = QUESTION_FILE_JSON
         else:
-            out_data_file = ANSWER_FILE_JSON
+            out_data_file = ANSWER_FILE_JSONL_GZ
 
         # Process document or QUERIES, here it makes sense to juse multiple processes
         with FileWrapper(os.path.join(out_dir, out_data_file), 'w') as f_out_data:

@@ -76,7 +76,7 @@ public class DataEntryFields {
     Object value = mObjDict.get(fieldName);
     if (value == null) return null;
     if (!(value instanceof byte[])) {
-      throw new RuntimeException("Field '" + fieldName + "' is not binary arry!");
+      throw new RuntimeException("Field '" + fieldName + "' is not binary array!");
     }
     return (byte[]) value;
   }
@@ -85,7 +85,7 @@ public class DataEntryFields {
     Object value = mObjDict.get(fieldName);
     if (value == null) return null;
     if (!(value instanceof String[])) {
-      throw new RuntimeException("Field '" + fieldName + "' is not string arry!");
+      throw new RuntimeException("Field '" + fieldName + "' is not string array!");
     }
     return (String[]) value;
   }

@@ -34,7 +34,7 @@ from flexneuart.io.stopwords import read_stop_words
 
 from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_needed, \
                             OUT_BITEXT_PATH_OPT, OUT_BITEXT_PATH_OPT_META, OUT_BITEXT_PATH_OPT_HELP
-from flexneuart.config import SPACY_MODEL, ANSWER_FILE_JSON, BITEXT_QUESTION_PREFIX,\
+from flexneuart.config import SPACY_MODEL, ANSWER_FILE_JSONL_GZ, BITEXT_QUESTION_PREFIX,\
                             QREL_FILE, BITEXT_ANSWER_PREFIX, REPORT_QTY
 from flexneuart.config import DOCID_FIELD, QUESTION_FILE_JSON, TEXT_FIELD_NAME, \
                             TEXT_UNLEMM_FIELD_NAME, TEXT_RAW_FIELD_NAME, \
@@ -80,7 +80,7 @@ nlp = SpacyTextParser(SPACY_MODEL, stop_words, keep_only_alpha_num=True, lower_c
 
 data_quest_file = open_with_default_enc(os.path.join(out_main_dir, QUESTION_FILE_JSON), 'w')
 # File wrapper can handle output gz files
-data_answ_file = FileWrapper(os.path.join(out_main_dir, ANSWER_FILE_JSON), flags='w')
+data_answ_file = FileWrapper(os.path.join(out_main_dir, ANSWER_FILE_JSONL_GZ), flags='w')
 qrel_file = open_with_default_enc(os.path.join(out_main_dir, QREL_FILE), 'w')
 
 if out_bitext_dir:

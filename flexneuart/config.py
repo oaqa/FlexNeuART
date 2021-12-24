@@ -49,7 +49,8 @@ MSMARCO_MINILM_L2='cross-encoder/ms-marco-MiniLM-L-2-v2'
 
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_JSON = 'QuestionFields.jsonl'
-ANSWER_FILE_JSON = 'AnswerFields.jsonl.gz' # We'd like to keep it compressed
+ANSWER_FILE_JSON = 'AnswerFields.jsonl'
+ANSWER_FILE_JSONL_GZ = f'{ANSWER_FILE_JSON}.gz' # We'd like to keep it compressed
 
 DOCID_FIELD = 'DOCNO'
 
@@ -84,3 +85,5 @@ DEFAULT_MAX_QUERY_LEN=32
 DEFAULT_MAX_DOC_LEN=512 - DEFAULT_MAX_QUERY_LEN - 4
 
 DEFAULT_VAL_BATCH_SIZE=32
+
+MAX_INT32=2147483647

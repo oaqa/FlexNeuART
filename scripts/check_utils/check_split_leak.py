@@ -50,7 +50,7 @@ from flexneuart.check_utils import get_token_ids, QUERY_BATCH_SIZE, jaccard, \
 from flexneuart.text_proc.parse import get_bert_tokenizer
 from flexneuart.io import jsonl_gen
 from flexneuart.data_convert import unique
-from flexneuart.config import ANSWER_FILE_JSON, QREL_FILE, DOCID_FIELD, TEXT_RAW_FIELD_NAME
+from flexneuart.config import ANSWER_FILE_JSONL_GZ, QREL_FILE, DOCID_FIELD, TEXT_RAW_FIELD_NAME
 
 from flexneuart.eval import read_qrels_dict
 
@@ -98,8 +98,8 @@ sample_query_list1, sample_query_list2 = read_sample_queries(data_dir,
                                                        args.input_subdir1, args.sample_prob1,
                                                        args.input_subdir2, args.sample_prob2)
 
-apath1=os.path.join(data_dir, args.input_subdir1, ANSWER_FILE_JSON)
-apath2=os.path.join(data_dir, args.input_subdir2, ANSWER_FILE_JSON)
+apath1=os.path.join(data_dir, args.input_subdir1, ANSWER_FILE_JSONL_GZ)
+apath2=os.path.join(data_dir, args.input_subdir2, ANSWER_FILE_JSONL_GZ)
 
 rpath1 = os.path.join(data_dir, args.input_subdir1, QREL_FILE)
 qrel_dict1 = read_qrels_dict(rpath1)

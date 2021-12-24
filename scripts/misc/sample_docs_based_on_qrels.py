@@ -30,7 +30,7 @@ import json
 
 import argparse
 from flexneuart.eval import read_qrels_dict
-from flexneuart.config import ANSWER_FILE_JSON, QREL_FILE, DOCID_FIELD
+from flexneuart.config import ANSWER_FILE_JSONL_GZ, QREL_FILE, DOCID_FIELD
 from flexneuart.io import jsonl_gen, FileWrapper
 
 random.seed(0)
@@ -46,7 +46,7 @@ parser.add_argument('--qrel_dir',
 parser.add_argument('--inp_doc_file',
                     metavar='input doc file',
                     type=str,
-                    help=f'a file containing indexable document entries, e.g., {ANSWER_FILE_JSON}',
+                    help=f'a file containing indexable document entries, e.g., {ANSWER_FILE_JSONL_GZ}',
                     required=True)
 
 parser.add_argument('--min_rel_grade',
@@ -58,7 +58,7 @@ parser.add_argument('--min_rel_grade',
 parser.add_argument('--out_doc_file',
                     metavar='out doc file',
                     type=str,
-                    help=f'an output file with indexable document entries, e.g., {ANSWER_FILE_JSON}',
+                    help=f'an output file with indexable document entries, e.g., {ANSWER_FILE_JSONL_GZ}',
                     required=True)
 
 parser.add_argument('--nonrel_sample_prob',
