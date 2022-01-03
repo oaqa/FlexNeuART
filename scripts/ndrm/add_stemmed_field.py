@@ -17,6 +17,8 @@
 """
     Adding a field stemmed using a Krovetz stemmer.
     Based on https://github.com/bmitra-msft/TREC-Deep-Learning-Quick-Start/blob/master/model_utils.py
+
+    It requires installing an extra package: krovetzstemmer
 """
 import argparse
 import json
@@ -24,11 +26,10 @@ import re
 
 from tqdm import tqdm
 
-from flexneuart.text_proc.parse import SpacyTextParser
 from flexneuart.io import jsonl_gen, FileWrapper
 import krovetzstemmer
 
-from flexneuart.config import DOCID_FIELD, TEXT_RAW_FIELD_NAME
+from flexneuart.config import TEXT_RAW_FIELD_NAME
 
 STEMMED_FIELD_NAME='text_krovetz'
 
