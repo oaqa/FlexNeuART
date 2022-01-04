@@ -53,11 +53,11 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
         """Constructor.
 
         :param bert_flavor:             name of the main BERT model.
-        :param bert_aggreg_flavor:      anem of the aggregating BERT model.
-        :param window_size:
-        :param stride:
-        :param rand_special:
-        :param dropout:
+        :param bert_aggreg_flavor:      name of the aggregating BERT model.
+        :param window_size:             the size of the aggregating window (a number of document tokens)
+        :param stride:                  aggregating window stride
+        :param rand_special_init:       true to initialize aggregator CLS token randomly
+        :param dropout:                 dropout before CLS
         """
         super().__init__(bert_flavor, cls_aggreg_type=CLS_AGGREG_STACK,
                          window_size=window_size, stride=stride)
@@ -89,6 +89,7 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
         # If there's a mismatch between the embedding size of the aggregating BERT and the
         # hidden size of the main BERT, a projection is required
         if self.BERT_SIZE != self.BERT_AGGREG_SIZE:
+            print('Projecting embeddings before aggregation')
             self.proj_out = torch.nn.Linear(self.BERT_SIZE, self.BERT_AGGREG_SIZE)
             torch.nn.init.xavier_uniform_(self.proj_out.weight)
         else:
@@ -213,21 +214,32 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
                  bert_flavor=BERT_BASE_MODEL,
                  bert_aggreg_flavor=MSMARCO_MINILM_L2,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
+                 separate_query_proj=False,
                  rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
                  dropout=DEFAULT_BERT_DROPOUT):
         """Constructor.
 
         :param bert_flavor:             name of the main BERT model.
-        :param bert_aggreg_flavor:      anem of the aggregating BERT model.
-        :param window_size:
-        :param stride:
-        :param rand_special:
-        :param dropout:
+        :param bert_aggreg_flavor:      name of the aggregating BERT model.
+        :param window_size:             the size of the aggregating window (a number of document tokens)
+        :param stride:                  aggregating window stride
+        :param rand_special_init:       true to initialize aggregator CLS token randomly
+        :param dropout:                 dropout before CLS
+        :param separate_query_proj:     true to enable a separate projection matrix for query embeddings (passed to the
+                                        aggregator Transformer).
         """
         super().__init__(bert_flavor=bert_flavor, bert_aggreg_flavor=bert_aggreg_flavor,
                          rand_special_init=rand_special_init,
                          window_size=window_size, stride=stride,
                          dropout=dropout)
+        if separate_query_proj:
+            print('Using a separate projection matrix for query embeddings')
+            self.proj_query = torch.nn.Linear(self.BERT_SIZE, self.BERT_AGGREG_SIZE)
+            torch.nn.init.xavier_uniform_(self.proj_out.weight)
+        else:
+            self.proj_query = self.proj_out
+            if self.proj_query is not None:
+                print('Sharing query projection matrix with window CLS token embeddings')
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         enc_res = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
@@ -245,9 +257,12 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
 
         if self.proj_out is not None:
             last_layer_cls_rep_proj = self.proj_out(last_layer_cls_rep)  # [B, N, BERT_AGGREG_SIZE]
-            last_layer_query_rep_proj = self.proj_out(last_layer_query_rep)
         else:
             last_layer_cls_rep_proj = last_layer_cls_rep
+
+        if self.proj_query is not None:
+            last_layer_query_rep_proj = self.proj_query(last_layer_query_rep)
+        else:
             last_layer_query_rep_proj = last_layer_query_rep
 
         # +two singletown dimensions before the CLS embedding
