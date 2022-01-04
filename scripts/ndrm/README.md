@@ -5,3 +5,5 @@ the NDRM models:
 
 [Mitra, B., Hofstatter, S., Zamani, H., & Craswell, N. (2020). Conformer-kernel with query term independence for document retrieval. 
 arXiv preprint arXiv:2007.10434.](https://github.com/bmitra-msft/TREC-Deep-Learning-Quick-Start).
+
+They require additional components, see [requirements_add.txt](requirements_add.txt).
