@@ -237,7 +237,7 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
             self.proj_query = torch.nn.Linear(self.BERT_SIZE, self.BERT_AGGREG_SIZE)
             torch.nn.init.xavier_uniform_(self.proj_out.weight)
         else:
-            self.proj_query = self.proj_out
+            self.proj_query = None
             if self.proj_query is not None:
                 print('Sharing query projection matrix with window CLS token embeddings')
 
@@ -255,13 +255,23 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
         assert last_layer_query_rep.size(0) == B
         assert last_layer_query_rep.size(2) == BERT_SIZE
 
+        # Trying to nitialize query projection matrix using the query-specific matrix
+        proj_query = self.proj_query
+        # However if it's None try to use the general projection matrix
+        if proj_query is None:
+            assert self.proj_query is None
+            proj_query = self.proj_out
+
         if self.proj_out is not None:
             last_layer_cls_rep_proj = self.proj_out(last_layer_cls_rep)  # [B, N, BERT_AGGREG_SIZE]
         else:
             last_layer_cls_rep_proj = last_layer_cls_rep
 
-        if self.proj_query is not None:
-            last_layer_query_rep_proj = self.proj_query(last_layer_query_rep)
+        if proj_query is not None:
+            assert (self.proj_query is not None and proj_query == self.proj_query) or \
+                   (self.proj_query is     None and proj_query == self.proj_out)
+
+            last_layer_query_rep_proj = proj_query(last_layer_query_rep)
         else:
             last_layer_query_rep_proj = last_layer_query_rep
 
