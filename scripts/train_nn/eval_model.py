@@ -107,7 +107,7 @@ fwd_index = get_forward_index(resource_manager, args.index_field)
 
 fwd_index.check_is_text_raw()
 
-fname = args.init_model.name
+fname = args.init_model
 print('Loading model from:', fname)
 model_holder = ModelSerializer.load_all(fname)
 max_doc_len = model_holder.max_doc_len
