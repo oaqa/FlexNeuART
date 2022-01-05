@@ -15,6 +15,13 @@
                           }
                       },
                       {
+                          "name" : "krovetz_stemmer",
+                          "args" : {
+                              "stop_word_file" : "data/stopwords.txt",
+                              "input_fields" : ["text"]
+                          }
+                      },
+                      {
                           "name" : "bert_tokenizer",
                           "args" : {
                               "input_fields" : ["text"]
@@ -36,6 +43,7 @@
                           "args": {
                               "rename_dict": {
                                   "text.lemmas": "text",
+                                  "text.stems" : "text_stems",
                                   "text.bert_tokens" : "text_bert_tok",
                                   "text_raw": "text_raw"
                               }
@@ -60,7 +68,14 @@
                               "stop_word_file" : "data/stopwords.txt",
                               "input_fields" : ["title", "text", "author", "bib"]
                           }
-                       },
+                      },
+                      {
+                          "name" : "krovetz_stemmer",
+                          "args" : {
+                              "stop_word_file" : "data/stopwords.txt",
+                              "input_fields" : ["text"]
+                          }
+                      },
                       {
                           "name" : "bert_tokenizer",
                           "args" : {
@@ -84,6 +99,7 @@
                                "rename_dict" : {
                                    "title.lemmas" :     "title",
                                    "text.lemmas" :      "text",
+                                   "text.stems" :       "text_stems",
                                    "author.lemmas" :    "author",
                                    "bib.lemmas" :       "bib",
                                    "text.bert_tokens" : "text_bert_tok"

@@ -27,6 +27,7 @@ transformers==4.15.0
 spacy==2.2.3
 sentence-transformers
 sentencepiece
+krovetzstemmer
 
 thrift==0.13.0
 typing-extensions

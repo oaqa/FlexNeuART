@@ -18,5 +18,6 @@ from flexneuart import Registry
 proc_pipeline_registry = Registry(default='proc_pipeline')
 register = proc_pipeline_registry.register
 
-from flexneuart.ir_datasets import bert_tokenizer, html_parser, spacy, rename, concat, copy
+from flexneuart.ir_datasets import bert_tokenizer, html_parser, spacy, krovetz_stem_parser, \
+                                   rename, concat, copy
 

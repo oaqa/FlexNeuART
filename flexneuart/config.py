@@ -55,6 +55,7 @@ ANSWER_FILE_JSONL_GZ = f'{ANSWER_FILE_JSON}.gz' # We'd like to keep it compresse
 DOCID_FIELD = 'DOCNO'
 
 TEXT_FIELD_NAME = 'text'
+TEXT_STEMMED_FIELD_NAME = 'text_stems'
 TEXT_UNLEMM_FIELD_NAME = 'text_unlemm'
 TEXT_BERT_TOKENIZED_NAME = 'text_bert_tok'
 TITLE_FIELD_NAME = 'title'

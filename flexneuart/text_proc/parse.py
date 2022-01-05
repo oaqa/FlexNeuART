@@ -15,7 +15,7 @@
 #
 import spacy
 import re
-import transformers
+import krovetzstemmer
 import urllib
 
 from flexneuart.config import BERT_BASE_MODEL
@@ -53,6 +53,31 @@ class Sentencizer:
         return self._nlp(text).sents
 
 
+class KrovetzStemParser:
+    """
+        A simple tokenizer that truncates words using a Krovetz stemmer.
+        It works well only for a pretty clean text.
+        It lower-cases text (seems to be necessary for the stemmer).
+    """
+    def __init__(self, stop_words):
+        """Constructor.
+
+        :param stop_words: a list of stop words to be excluded (case insensitive),
+                           which is applied *BEFORE* stemming.
+        :param lower_case: lower-case input if True
+        """
+        self.regex_drop_char = re.compile('[^a-z0-9\s]+')
+        self.regex_multi_space = re.compile('\s+')
+        self.stemmer = krovetzstemmer.Stemmer()
+        self.stop_words = frozenset([w.lower() for w in stop_words])
+
+    def __call__(self, text):
+        text = text.lower()
+        s = self.regex_multi_space.sub(' ', self.regex_drop_char.sub(' ', text)).strip()
+        s = ' '.join([self.stemmer(t) for t in s.split() if t not in self.stop_words])
+        return s
+
+
 class SpacyTextParser:
     """
         A wrapper class to handle basic Spacy-based text processing.
@@ -74,6 +99,7 @@ class SpacyTextParser:
         :param  remove_punct  a bool flag indicating if the punctuation tokens need to be removed
         :param  sent_split    a bool flag indicating if sentence splitting is necessary
         :param  keep_only_alpha_num a bool flag indicating if we need to keep only alpha-numeric characters
+        :param  lower_case    lower-case input if True
         :param  enable_pos    a bool flag that enables POS tagging (which, e.g., can improve lemmatization)
         """
 
