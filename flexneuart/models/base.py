@@ -167,7 +167,7 @@ class ModelSerializer:
         self.max_doc_len = max_doc_len
 
     def save_all(self, file_name):
-        os.makedirs(exist_ok=True)
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         torch.save({MODEL_NAME : self.model_name,
                     MODEL_ARGS : self.model_args_processed,
                     MODEL_STATE_DICT : self.model.state_dict(),
