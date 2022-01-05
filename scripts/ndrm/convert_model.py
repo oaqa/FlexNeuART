@@ -74,3 +74,5 @@ state_dict_new = {f'model.{k}':v for k,v in orig_model['model_state_dict'].items
 
 model : torch.nn.Module = model_holder.model
 print(model.load_state_dict(state_dict_new, strict=True))
+
+model_holder.save_all(args.output)
