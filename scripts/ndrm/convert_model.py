@@ -20,8 +20,7 @@
 import argparse
 import torch
 import os
-import flexneuart
-from flexneuart.models.base import ModelSerializer
+from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
 from flexneuart.utils import DictToObject
 
 parser = argparse.ArgumentParser(description='Add doc2query fields to the existing JSONL data entries')
@@ -53,18 +52,18 @@ model_type = args.model_type
 
 print('Model type:', model_type, 'input directory:', input_dir)
 
-model_args = DictToObject({
+model_args = {
     'max_query_len' : args.max_query_len,
     'max_doc_len' : args.max_doc_len,
-    'embeddings' : os.path.join(input_dir, 'ndrm-embeddings.bin'),
-    'idfs' : os.path.join(input_dir, 'ndrm-idfs.tsv'),
-    'model_type' : model_type,
-    'dropout' : args.dropout
-})
+    f'{MODEL_PARAM_PREF}embeddings' : os.path.join(input_dir, 'ndrm-embeddings.bin'),
+    f'{MODEL_PARAM_PREF}idfs' : os.path.join(input_dir, 'ndrm-idfs.tsv'),
+    f'{MODEL_PARAM_PREF}model_type' : model_type,
+    f'{MODEL_PARAM_PREF}dropout' : args.dropout
+}
 
 print(model_args)
 
-model_holder.create_model_from_args(model_args)
+model_holder.create_model_from_args(DictToObject(model_args))
 
 orig_model_fn = os.path.join(input_dir, args.model_file)
 print('Loading model weights from:', orig_model_fn)
