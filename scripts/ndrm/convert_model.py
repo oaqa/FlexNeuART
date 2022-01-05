@@ -37,11 +37,11 @@ parser.add_argument('--output', metavar='output model',
                     help='output model readable by FlexNeuART code',
                     type=str, required=True)
 parser.add_argument('--max_query_len', metavar='max. query length',
-                    type=int, default=flexneuart.config.DEFAULT_MAX_QUERY_LEN,
+                    type=int, required=True,
                     help='max. query length')
 parser.add_argument('--dropout', metavar='droput', type=float, default=0.2)
 parser.add_argument('--max_doc_len', metavar='max. document length',
-                    type=int, default=flexneuart.config.DEFAULT_MAX_DOC_LEN,
+                    type=int, required=True,
                     help='max. document length')
 
 args = parser.parse_args()
@@ -53,16 +53,18 @@ model_type = args.model_type
 
 print('Model type:', model_type, 'input directory:', input_dir)
 
-model_args = {
+model_args = DictToObject({
     'max_query_len' : args.max_query_len,
     'max_doc_len' : args.max_doc_len,
     'embeddings' : os.path.join(input_dir, 'ndrm-embeddings.bin'),
     'idfs' : os.path.join(input_dir, 'ndrm-idfs.tsv'),
     'model_type' : model_type,
     'dropout' : args.dropout
-}
+})
 
-model_holder.create_model_from_args(DictToObject(model_args))
+print(model_args)
+
+model_holder.create_model_from_args(model_args)
 
 orig_model_fn = os.path.join(input_dir, args.model_file)
 print('Loading model weights from:', orig_model_fn)
