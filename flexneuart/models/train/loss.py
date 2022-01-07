@@ -142,7 +142,7 @@ class RankNetLoss:
     """
     @staticmethod
     def name():
-        return 'rank_net'
+        return 'ranknet'
 
     def has_mult_negatives(self):
         return True
