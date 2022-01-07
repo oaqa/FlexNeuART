@@ -186,7 +186,7 @@ def train_iteration(model_holder, device_name,
     else:
         pbar = None
 
-    if loss_obj.is_listwise():
+    if loss_obj.has_mult_negatives():
         neg_qty_per_query = train_params.neg_qty_per_query
         assert neg_qty_per_query >= 1
     else:

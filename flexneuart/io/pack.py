@@ -52,7 +52,7 @@ def pack_dense_batch(data):
 def pack_sparse_vect(vect):
     """Pack the sparse vector that comes in as a
 
-    :param vect: tuple or list containing alteranting integer ids and float values.
+    :param vect: tuple or list containing alternating integer ids and float values.
     :return:  a packed byte sequence
     """
     dim = len(vect) // 2

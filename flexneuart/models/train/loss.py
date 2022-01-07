@@ -34,7 +34,7 @@ class CrossEntropyLossWrapper:
     def name():
         return 'cross_entropy'
 
-    def is_listwise(self):
+    def has_mult_negatives(self):
         return True
 
     def __init__(self):
@@ -50,7 +50,7 @@ class MultiMarginRankingLossWrapper:
     def name():
         return 'multi_margin'
 
-    def is_listwise(self):
+    def has_mult_negatives(self):
         return True
 
     def __init__(self, margin):
@@ -66,7 +66,7 @@ class PairwiseMarginRankingLossWrapper:
     def name():
         return 'pairwise_margin'
 
-    def is_listwise(self):
+    def has_mult_negatives(self):
         return False
 
     def __init__(self, margin):
@@ -88,7 +88,7 @@ class OldPairwiseSoftmaxLoss:
     def name():
         return 'old_pairwise_softmax'
 
-    def is_listwise(self):
+    def has_mult_negatives(self):
         return False
 
     def compute(self, scores):
@@ -103,7 +103,7 @@ class PairwiseSoftmaxLoss:
     def name():
         return 'pairwise_softmax'
 
-    def is_listwise(self):
+    def has_mult_negatives(self):
         return True
 
     def compute(self, scores):
@@ -136,8 +136,50 @@ class PairwiseSoftmaxLoss:
         # We average over all negatives
         return torch.sum(x_softmax) / float(x_softmax.shape[-1])
 
+class RankNetLoss:
+    """Burges, Chris, et al. "Learning to rank using gradient descent."
+       Proceedings of the 22nd international conference on Machine learning. 2005.
+    """
+    @staticmethod
+    def name():
+        return 'rank_net'
+
+    def has_mult_negatives(self):
+        return True
+
+    def compute(self, scores):
+        assert len(scores.shape) == 2
+
+        batch_size, qty = scores.shape
+
+        x0 = scores.unsqueeze(dim=-1)
+        assert x0.shape == (batch_size, qty, 1)
+        x1 = scores.unsqueeze(dim=-2)
+        assert x1.shape == (batch_size, 1, qty)
+
+        x0 = x0.expand(batch_size, qty, qty)
+        x1 = x1.expand(batch_size, qty, qty)
+
+        assert len(x0.shape) == 3
+        assert len(x1.shape) == 3
+
+        x_merged = torch.stack([x0, x1], dim=3)
+
+        assert x_merged.shape == (batch_size, qty, qty, 2)
+
+        loss = -torch.nn.functional.log_softmax(x_merged, dim=-1)[:, :, :, 0]
+
+        assert len(loss.shape) == 3
+
+        loss = loss[:, 0, 1:]
+        assert len(loss.shape) == 2
+
+        # We average over all negatives
+        return torch.sum(loss) / float(loss.shape[-1])
+
 
 LOSS_FUNC_LIST = [MultiMarginRankingLossWrapper.name(),
                   CrossEntropyLossWrapper.name(),
                   PairwiseMarginRankingLossWrapper.name(),
-                  PairwiseSoftmaxLoss.name()]
+                  PairwiseSoftmaxLoss.name(),
+                  RankNetLoss.name()]

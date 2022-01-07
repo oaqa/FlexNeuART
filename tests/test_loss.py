@@ -18,7 +18,7 @@ class TestLoss(unittest.TestCase):
         loss_old = OldPairwiseSoftmaxLoss()
         loss_new = PairwiseSoftmaxLoss()
 
-        self.assertTrue(loss_new.is_listwise())
+        self.assertTrue(loss_new.has_mult_negatives())
 
         test_qty = len(TEST_CASES)
 
