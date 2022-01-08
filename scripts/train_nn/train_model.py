@@ -741,7 +741,7 @@ def main_cli():
     loss_name = args.loss_func
     if loss_name == PairwiseSoftmaxLoss.name():
         loss_obj = PairwiseSoftmaxLoss()
-    if loss_name == RankNetLoss.name():
+    elif loss_name == RankNetLoss.name():
         loss_obj = RankNetLoss()
     elif loss_name == CrossEntropyLossWrapper.name():
         loss_obj = CrossEntropyLossWrapper()
