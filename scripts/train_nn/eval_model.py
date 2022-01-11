@@ -105,7 +105,7 @@ resource_manager=create_featextr_resource_manager(resource_root_dir=args.collect
 
 fwd_index = get_forward_index(resource_manager, args.index_field)
 
-fwd_index.check_is_text_raw()
+fwd_index.check_is_text_raw() or fwd_index.check_is_parsed_text()
 
 fname = args.init_model
 if fname is None:
@@ -180,7 +180,7 @@ for qid, query_scores in tqdm(valid_run.items(), 'reading documents'):
     for did, _ in query_scores.items():
         if did not in data_dict:
             if did != FAKE_DOC_ID:
-                doc_text = fwd_index.get_doc_text_raw(did)
+                doc_text = fwd_index.get_doc_text(did)
             else:
                 doc_text = None # It will trigger a warning
             if doc_text is None:
