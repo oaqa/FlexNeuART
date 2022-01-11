@@ -105,8 +105,6 @@ resource_manager=create_featextr_resource_manager(resource_root_dir=args.collect
 
 fwd_index = get_forward_index(resource_manager, args.index_field)
 
-fwd_index.check_is_text_raw() or fwd_index.check_is_parsed_text()
-
 fname = args.init_model
 if fname is None:
     print('Specify the input model!')
