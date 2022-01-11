@@ -108,6 +108,9 @@ fwd_index = get_forward_index(resource_manager, args.index_field)
 fwd_index.check_is_text_raw()
 
 fname = args.init_model
+if fname is None:
+    print('Specify the input model!')
+    sys.exit(1)
 print('Loading model from:', fname)
 model_holder = ModelSerializer.load_all(fname)
 max_doc_len = model_holder.max_doc_len
