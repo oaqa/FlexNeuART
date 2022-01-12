@@ -157,7 +157,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
                        keep_case,
                        device_name, batch_size,
                        model_path_rel,
-                       cand_score_weight,
+                       cand_score_weight=0,
                        amp=False):
         """Reranker constructor.
 
@@ -199,7 +199,6 @@ class PythonNNQueryRanker(BaseQueryRanker):
         self.query_field_name = query_field_name
 
         self.fwd_indx = get_forward_index(resource_manager, index_field_name)
-        self.fwd_indx.check_is_text_raw()
 
     def handle_case(self, text: str):
         return handle_case(self.do_lower_case, text)
@@ -235,7 +234,7 @@ class PythonNNQueryRanker(BaseQueryRanker):
         retr_score = {}
 
         for doc_id, score in cand_list:
-            doc_text = self.handle_case(self.fwd_indx.get_doc_raw(doc_id))
+            doc_text = self.handle_case(self.fwd_indx.get_doc_text(doc_id))
             doc_data[doc_id] = doc_text
             retr_score[doc_id] = score
 
