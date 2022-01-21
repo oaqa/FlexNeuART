@@ -1,1 +1,1 @@
-import .sbert
+from .sbert import BiEncoderSBERT
