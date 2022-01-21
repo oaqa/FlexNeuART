@@ -23,6 +23,6 @@ JSON parameter names should match constructor parameters of a respective models.
 
     Dai, Zhuyun, and Jamie Callan. "Deeper text understanding for IR with contextual neural language modeling." SIGIR. 2019.
     
-5. [dot-product models from the Sentence Transformers library](biencoder/sbert.py)
+5. [Dot-product models from the Sentence Transformers library](biencoder/sbert.py)
 
    One can use any "dot-product" model from the [Sentence Transformers library](https://www.sbert.net/) out of the box and fine-tune it on their  data. The main ciation for this library is provided shortly, but make sure you also cite the model-specific citation if there is one: Reimers, Nils, et al. "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks." 
