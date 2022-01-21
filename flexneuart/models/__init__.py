@@ -9,4 +9,5 @@ from flexneuart.models import vanilla_bert_no_qry_pad, \
                             parade, \
                             longformer, \
                             cedr, \
-                            ndrm
+                            ndrm, \
+                            biencoder
