@@ -27,7 +27,7 @@
 import sys
 
 # This must be a tuple of ints
-MIN_PYTHON_VERSION=(3, 8)
+MIN_PYTHON_VERSION=(3, 6)
 
 SPACY_MODEL = 'en_core_web_sm'
 
