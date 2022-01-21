@@ -29,6 +29,7 @@ from sentence_transformers import SentenceTransformer
 class BiEncoderSBERT(BaseModel):
     """A sentence-bert bi-encoder wrapper class"""
     def __init__(self, model_name):
+        super().__init__()
         self.model = SentenceTransformer(model_name)
 
     def bert_param_names(self):
