@@ -55,7 +55,7 @@ class BiEncoderSBERT(BaseModel):
 
         query_qty = len(query_texts)
         assert query_qty == len(doc_texts)
-        
+
         query_texts_trunc = [s[0:max_query_len] for s in query_texts]
         doc_texts_trunc = [s[0:max_doc_len] for s in doc_texts]
 
