@@ -17,7 +17,11 @@
 """
     This file defines a number of constants/settings.
 
-    *IMPORTANT NOTE*: When a constant is used in the shell script, it must have have the same values.
+    *IMPORTANT NOTEs*:
+
+    1. When a constant is used in the shell script, it must have the same value.
+    2. The same applies to a function that re-implements a shell-script functionality.
+
     See the following files for the reference:
 
     1. config.sh
