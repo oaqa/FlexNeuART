@@ -19,8 +19,8 @@
 
     *IMPORTANT NOTEs*:
 
-    1. Some of the constants in this config "mirror" respective shell constants.
-    2. Mirroring constants it must have the same values in both shell and Python.
+    1. Some constants in this config "mirror" respective shell constants.
+    2. Mirroring constants should have the same values in both shell and Python.
     3. The same applies to a function that re-implements/mirrors a shell-script functionality.
 
     See the following files for the reference:
