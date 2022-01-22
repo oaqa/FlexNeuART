@@ -254,7 +254,9 @@ function getNumCpuCores {
 # 1. Finds all sub-directories containing indexable data and returns them as
 #    a list of comma-separated strings.
 # 2. Identifies the compression type of the data JSONL file.
-# Attention: it "returns" an array by setting a variable retVal (ugly but works reliably)
+# Attention: it "returns" an array by setting a variable retVal:
+# this is an ugly hack, but seems to be the best/most reliable
+# way to return a list from the shell script function
 
 function getIndexQueryDataDirs {
   topDir="$1"
