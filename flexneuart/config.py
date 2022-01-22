@@ -19,8 +19,9 @@
 
     *IMPORTANT NOTEs*:
 
-    1. When a constant is used in the shell script, it must have the same value.
-    2. The same applies to a function that re-implements a shell-script functionality.
+    1. Some of the constants in this config "mirror" respective shell constants.
+    2. Mirroring constants it must have the same values in both shell and Python.
+    3. The same applies to a function that re-implements/mirrors a shell-script functionality.
 
     See the following files for the reference:
 
