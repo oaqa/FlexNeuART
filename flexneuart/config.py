@@ -17,7 +17,7 @@
 """
     This file defines a number of constants/settings.
 
-    *IMPORTANT NOTE*: When a constant is used in the shell script, it must have have the same value.
+    *IMPORTANT NOTE*: When a constant is used in the shell script, it must have have the same values.
     See the following files for the reference:
 
     1. config.sh

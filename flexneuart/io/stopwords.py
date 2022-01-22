@@ -16,12 +16,13 @@
 from flexneuart.config import STOPWORD_FILE
 from flexneuart.io import open_with_default_enc
 
+
 def read_stop_words(file_name=STOPWORD_FILE, lower_case=True):
     """Reads a list of stopwords from a file. By default the words
        are read from a standard repo location and are lowercased.
 
-      :param file_name a stopword file name
-      :param lower_case  a boolean flag indicating if lowercasing is needed.
+      :param file_name: a stopword file name
+      :param lower_case:  a boolean flag indicating if lowercasing is needed.
 
       :return a list of stopwords
     """
