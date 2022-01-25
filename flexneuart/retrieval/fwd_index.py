@@ -86,6 +86,19 @@ class ForwardIndex:
 
         return self.indx.getDocEntryParsedText(doc_id)
 
+    def get_doc_text(self, doc_id):
+        """Retrieves a document text. For raw text, it just retrieves the original text, for parsed texxt
+           fields, the text is reconstructed.
+
+           :param doc_id: a document ID (e.g., returned by a candidate provider)
+           :return:   document text or None if no such document exists
+        """
+        if self.indx.isTextRaw():
+            return self.indx.getDocEntryTextRaw(doc_id)
+        elif self.indx.isParsedText():
+            return self.indx.getDocEntryParsedText(doc_id)
+        else:
+            raise Exception(f'Unsupported field type: {self.indx_fld_type}')
 
     def get_doc_parsed(self, doc_id):
         """Get a parsed document entry.

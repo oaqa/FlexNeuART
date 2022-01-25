@@ -15,7 +15,7 @@
 #
 import collections
 from tqdm import tqdm
-from flexneuart.io import open_with_default_enc
+from flexneuart.io import FileWrapper
 
 QrelEntry = collections.namedtuple('QrelEntry',
                                    'query_id doc_id rel_grade')
@@ -67,7 +67,7 @@ def read_qrels(file_name):
     ln = 0
     res = []
 
-    with open_with_default_enc(file_name) as f:
+    with FileWrapper(file_name) as f:
         for line in tqdm(f, desc='loading qrels (by line)', leave=False):
             ln += 1
             line = line.strip()
@@ -88,7 +88,7 @@ def write_qrels(qrel_list, file_name):
     :param qrel_list:  a list of parsed QRELs
     :param file_name:  an output file name
     """
-    with open_with_default_enc(file_name, 'w') as f:
+    with FileWrapper(file_name, 'w') as f:
         for e in qrel_list:
             f.write(qrel_entry2_str(e))
             f.write('\n')

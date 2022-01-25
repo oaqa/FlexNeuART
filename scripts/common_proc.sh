@@ -168,7 +168,7 @@ function startRankServer {
 
   checkVarNonEmpty "initModel"
 
-  initModelArg=" --init_model  $initModel"
+  initModelArg=" --init_model_list  $initModel"
   initFile="$initModel"
 
   logFileName=`echo $initFile|sed s'|/|_|g'`
@@ -179,7 +179,7 @@ function startRankServer {
   checkVarNonEmpty "serverPidFile"
 
   # Note -u
-  python -u ./featextr_server/rank_server.py \
+  python -u ./featextr_server/nn_rank_server.py \
     --device_name $deviceName \
     --port $port \
     $initModelArg \
@@ -193,7 +193,6 @@ function startRankServer {
   fi
 
   echo $PID > "$serverPidFile"
-
 
   started=0
   while [ "$started" = "0" ]
@@ -254,7 +253,9 @@ function getNumCpuCores {
 # 1. Finds all sub-directories containing indexable data and returns them as
 #    a list of comma-separated strings.
 # 2. Identifies the compression type of the data JSONL file.
-# Attention: it "returns" an array by setting a variable retVal (ugly but works reliably)
+# Attention: it "returns" an array by setting a variable retVal:
+# this is an ugly hack, but seems to be the best/most reliable
+# way to return a list from the shell script function
 
 function getIndexQueryDataDirs {
   topDir="$1"

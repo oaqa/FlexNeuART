@@ -17,7 +17,12 @@
 """
     This file defines a number of constants/settings.
 
-    *IMPORTANT NOTE*: When a constant is used in the shell script, it must have have the same value.
+    *IMPORTANT NOTEs*:
+
+    1. Some constants in this config "mirror" respective shell constants.
+    2. Mirroring constants should have the same values in both shell and Python.
+    3. The same applies to a function that re-implements/mirrors a shell-script functionality.
+
     See the following files for the reference:
 
     1. config.sh
@@ -27,7 +32,7 @@
 import sys
 
 # This must be a tuple of ints
-MIN_PYTHON_VERSION=(3, 8)
+MIN_PYTHON_VERSION=(3, 6)
 
 SPACY_MODEL = 'en_core_web_sm'
 
