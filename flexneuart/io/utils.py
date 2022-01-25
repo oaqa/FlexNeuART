@@ -54,13 +54,15 @@ class FileWrapper:
     def __enter__(self):
         return self
 
-    def __init__(self, file_name, flags='r', encoding=DEFAULT_ENCODING):
+    def __init__(self, file_name, flags='r', encoding=DEFAULT_ENCODING, decode_errors='strict'):
         """Constructor, which opens a regular or gzipped-file
 
           :param  file_name a name of the file, it has a '.gz' or '.bz2' extension, we open a compressed stream.
           :param  flags    open flags such as 'r' or 'w'
           :param  encoding file encoding: will be ignored for binary files!
+          :param  how to treat the decoding errors, this value is passed as the parameter 'errors' to the function decode
         """
+        self.decode_errors=decode_errors
         # In the binary mode encoding cannot be specify
         dir_name = os.path.dirname(file_name)
         if dir_name:
@@ -85,7 +87,7 @@ class FileWrapper:
 
     def read(self, qty=-1):
         if self._is_compr:
-            return self._file.read(qty).decode(encoding=DEFAULT_ENCODING)
+            return self._file.read(qty).decode(encoding=DEFAULT_ENCODING, errors=self.decode_errors)
         else:
             return self._file.read(qty)
 
@@ -97,7 +99,7 @@ class FileWrapper:
 
     def __iter__(self):
         for line in self._file:
-            yield line.decode(encoding=DEFAULT_ENCODING) if self._is_compr else line
+            yield line.decode(encoding=DEFAULT_ENCODING, errors=self.decode_errors) if self._is_compr else line
 
 
 def jsonl_gen(file_name):
