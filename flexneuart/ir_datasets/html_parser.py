@@ -47,7 +47,10 @@ class HtmlParserProcessor(BaseTextProcessor):
 
         body = get_val_err_msg_miss(input_dict, 'body', [bytes])
         body_content_type = get_val_err_msg_miss(input_dict, 'body_content_type', [str])
-        http_headers = get_val_err_msg_miss(input_dict, 'http_headers', [bytes])
+        http_headers = get_val_err_msg_miss(input_dict, 'http_headers', [bytes, str])
+        # A bit hacky b/c IR datasets is not very consistent regarding the type of HTTP headers produced
+        if type(http_headers) == bytes:
+            http_headers = http_headers.decode(errors=DECODE_ERROR_HANDLING)
 
         # TODO how this decoding would work for non-English data?
         body_to_proc = body.decode(errors=DECODE_ERROR_HANDLING)
@@ -58,7 +61,7 @@ class HtmlParserProcessor(BaseTextProcessor):
 
             # TODO use something off-the shelf to do encoding extraction
             # Yet, so far Leo couldn't find an easy-to-use library to parse content response
-            for resp1 in http_headers.decode(errors=DECODE_ERROR_HANDLING).split('\r\n'):
+            for resp1 in http_headers.split('\r\n'):
                 if encoding is not None:
                     break
                 for resp2 in resp1.split('; '):
