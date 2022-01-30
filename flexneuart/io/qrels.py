@@ -20,6 +20,9 @@ from flexneuart.io import FileWrapper
 
 QrelEntry = collections.namedtuple('QrelEntry',
                                    'query_id doc_id rel_grade')
+#
+# Important note: currently we have multiple ways to represent QREL dictionaries.
+#
 
 
 def gen_qrel_str(query_id : str, doc_id: str, rel_grade : int) -> str:
@@ -95,7 +98,7 @@ def write_qrels(qrel_list : List[QrelEntry], file_name : str):
             f.write('\n')
 
 
-def write_qrel_dict(qrel_dict : Dict[QrelEntry], file_name : str):
+def write_qrel_dict(qrel_dict, file_name : str):
     """Write a QREL dictionary where entries are added using, e.g., add_qrel_entry
 
     :param qrel_dict:  dictionary of QRELs.
@@ -105,7 +108,7 @@ def write_qrel_dict(qrel_dict : Dict[QrelEntry], file_name : str):
     write_qrels(qrel_list, file_name)
 
 
-def read_qrels_dict(file_name : str) -> Dict[QrelEntry]:
+def read_qrels_dict(file_name : str) -> Dict[str, Dict[str, int]]:
     """Read QRELs in the form of a dictionary where keys are query IDs.
 
     :param file_name: QREL file name
@@ -118,8 +121,8 @@ def read_qrels_dict(file_name : str) -> Dict[QrelEntry]:
 
 
 def add_qrel_entry(qrel_dict, qid, did, grade):
-    """Add a QREL entry to the QREL dictionary. Repeated entries are ignored. However if they
-       have a different grade, an exception is throw.
+    """Add a QREL entry to a QREL dictionary. Repeated entries are ignored. However if they
+       have a different grade, an exception is thrown.
 
     :param qrel_dict:  a QREL dictionary
     :param qid:        query id
