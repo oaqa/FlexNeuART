@@ -14,6 +14,7 @@
 #  limitations under the License.
 #
 import collections
+from typing import Dict, List
 from tqdm import tqdm
 from flexneuart.io import FileWrapper
 
@@ -21,7 +22,7 @@ QrelEntry = collections.namedtuple('QrelEntry',
                                    'query_id doc_id rel_grade')
 
 
-def gen_qrel_str(query_id, doc_id, rel_grade):
+def gen_qrel_str(query_id : str, doc_id: str, rel_grade : int) -> str:
     """Produces a string representing one QREL entry
 
     :param query_id:   question/query ID
@@ -33,7 +34,7 @@ def gen_qrel_str(query_id, doc_id, rel_grade):
     return f'{query_id} 0 {doc_id} {rel_grade}'
 
 
-def qrel_entry2_str(qrel_entry):
+def qrel_entry2_str(qrel_entry : QrelEntry) -> str:
     """Convert a parsed QREL entry to string.
 
     :param qrel_entry: input of the type QrelEntry
@@ -42,7 +43,7 @@ def qrel_entry2_str(qrel_entry):
     return gen_qrel_str(qrel_entry.query_id, qrel_entry.doc_id, qrel_entry.rel_grade)
 
 
-def parse_qrel_entry(line):
+def parse_qrel_entry(line) -> QrelEntry:
     """Parse one QREL entry
     :param line  a single line with a QREL entry.
             Relevance graded is expected to be integer.
@@ -58,7 +59,7 @@ def parse_qrel_entry(line):
     return QrelEntry(query_id=parts[0], doc_id=parts[2], rel_grade=int(parts[3]))
 
 
-def read_qrels(file_name):
+def read_qrels(file_name : str) -> List[QrelEntry]:
     """Read and parse QRELs.
 
     :param file_name: input file name
@@ -82,7 +83,7 @@ def read_qrels(file_name):
     return res
 
 
-def write_qrels(qrel_list, file_name):
+def write_qrels(qrel_list : List[QrelEntry], file_name : str):
     """Write a list of QRELs to a file.
 
     :param qrel_list:  a list of parsed QRELs
@@ -94,7 +95,7 @@ def write_qrels(qrel_list, file_name):
             f.write('\n')
 
 
-def write_qrel_dict(qrel_dict, file_name):
+def write_qrel_dict(qrel_dict : Dict[QrelEntry], file_name : str):
     """Write a QREL dictionary where entries are added using, e.g., add_qrel_entry
 
     :param qrel_dict:  dictionary of QRELs.
@@ -104,7 +105,7 @@ def write_qrel_dict(qrel_dict, file_name):
     write_qrels(qrel_list, file_name)
 
 
-def read_qrels_dict(file_name):
+def read_qrels_dict(file_name : str) -> Dict[QrelEntry]:
     """Read QRELs in the form of a dictionary where keys are query IDs.
 
     :param file_name: QREL file name
