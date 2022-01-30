@@ -162,6 +162,8 @@ def create_lucene_index(input_data_dir,
         :param max_num_rec: an optional number for the maximum number of records to index.
     """
     data_info: InputDataInfo = get_index_query_data_dirs(input_data_dir)
+    if not data_info.index_subdirs or data_info.data_file_name is None:
+        raise Exception(f'No indexable data is found in {input_data_dir}')
     create_lucene_index_explicit_subdirs(input_data_dir=input_data_dir,
                                           subdir_list=data_info.index_subdirs,
                                           output_dir_name=output_dir_name,
@@ -200,6 +202,8 @@ def create_forward_index(input_data_dir,
                              the default hint value seems to work just fine.
     """
     data_info: InputDataInfo = get_index_query_data_dirs(input_data_dir)
+    if not data_info.index_subdirs or data_info.data_file_name is None:
+        raise Exception(f'No indexable data is found in {input_data_dir}')
     create_forward_index_explicit_subdirs(input_data_dir=input_data_dir,
                                           subdir_list=data_info.index_subdirs,
                                           output_dir_name=output_dir_name,
@@ -230,6 +234,8 @@ def create_lucene_index_explicit_subdirs(input_data_dir,
         :param datafile_name: the name of the input data file.
         :param max_num_rec: an optional number for the maximum number of records to index.
     """
+    assert subdir_list, 'No input directories are given!'
+    assert datafile_name is not None, 'Indexable file name should not be None'
     for dn in subdir_list:
         assert not ',' in dn, 'sub-directory names must not have commas!'
     JLuceneIndexer.createLuceneIndex(input_data_dir,
@@ -269,6 +275,8 @@ def create_forward_index_explicit_subdirs(input_data_dir,
         :param expected_qty: an expected number of entries in the index, this is just a hint and
                              the default hint value seems to work just fine.
     """
+    assert subdir_list, 'No input directories are given!'
+    assert datafile_name is not None, 'Indexable file name should not be None'
     for dn in subdir_list:
         assert not ',' in dn, 'sub-directory names must not have commas!'
 
