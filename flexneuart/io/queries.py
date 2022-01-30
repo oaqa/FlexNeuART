@@ -46,5 +46,5 @@ def write_queries_dict(query_dict : dict, file_name):
     :param query_dict: query dictionary: keys are query IDs.
     :param file_name: an output file
     """
-    write_queries(list(query_dict.values(), file_name))
+    write_queries(list(query_dict.values()), file_name)
 
