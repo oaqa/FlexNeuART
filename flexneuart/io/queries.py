@@ -3,7 +3,7 @@ import os
 
 from flexneuart.io.utils import jsonl_gen
 from flexneuart.config import QUESTION_FILE_JSON, DOCID_FIELD
-from flexneuart.io import open_with_default_enc
+from flexneuart.io import FileWrapper
 
 def is_json_query_file(file_name):
     """Checks if the input is a JSONL query file (using name only)."""
@@ -34,7 +34,7 @@ def write_queries(query_list, file_name):
     :param query_list: an array of parsed JSON query entries
     :param file_name: an output file
     """
-    with open_with_default_enc(file_name, 'w') as f:
+    with FileWrapper(file_name, 'w') as f:
         for e in query_list:
             f.write(json.dumps(e))
             f.write('\n')
