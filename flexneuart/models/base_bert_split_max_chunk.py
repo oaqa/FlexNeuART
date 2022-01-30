@@ -16,10 +16,10 @@ from flexneuart.models.base_bert import BertBaseRanker, USE_BATCH_COEFF
 class BertSplitMaxChunkRanker(BertBaseRanker):
     """
         A BERT-based ranker that sub-batches long documents by splitting them into
-        chunks that as large as possible (except the large chunk). For example,
+        chunks that are as large as possible (except the last chunk). For example,
         if the query size is 32, and the BERT input window size is 512 tokens,
-        the first chunk size will be 512 - 32 - 3. Three is because we have three
-        special tokens to accommodate: CLS and two SEP tokens.
+        the first chunk size will be 512 - 32 - 3. Three is subtracted because
+        we have three special tokens to accommodate: CLS and two SEP tokens.
     """
 
     def __init__(self, bert_flavor):

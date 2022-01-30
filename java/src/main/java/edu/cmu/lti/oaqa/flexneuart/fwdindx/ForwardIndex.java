@@ -85,6 +85,7 @@ public abstract class ForwardIndex {
 
   private static final Logger logger = LoggerFactory.getLogger(ForwardIndex.class);
   
+  // These enum values must be in sync with Python API (see flexneuart.indexing.utils)
   public enum ForwardIndexType {
     inmem,
     dataDict,

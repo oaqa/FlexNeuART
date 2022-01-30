@@ -17,7 +17,8 @@ export PATH=./bin/:$PATH
 # The structure of sub-directories is outlined below
 
 #
-# Each collection is supposed to be stored in respective sub-directories.
+# We organize collections/datasets into sub-directories with a common root.
+#
 # See a description/location of sub-directories below, which are assumed
 # to exist (by many scripts).
 #
@@ -25,7 +26,7 @@ export PATH=./bin/:$PATH
 #     <Collection sub-directory>
 #         $INPUT_RAW_SUBDIR (optional)
 #         $INPUT_DATA_SUBDIR
-#             $DEFAULT_TRAIN_SUBDIR (can be overriden)
+#             $DEFAULT_TRAIN_SUBDIR (can be overridden)
 #             $DEV_SUBDIR (optional)
 #             $DEV1_SUBDIR (optional)
 #             $DEV2_SUBDIR (optional)

@@ -282,7 +282,7 @@ function getIndexQueryDataDirs {
             dataFileName="$dataFileNameCurr"
           else
             if [ "$dataFileName" != "$dataFileNameCurr" ] ; then
-              echo "Inconsistent naming of data files: $dataFileName and $dataFileNameCurr"
+              echo "Inconsistent compression of data files: $dataFileName and $dataFileNameCurr"
               exit 1
             fi
           fi
