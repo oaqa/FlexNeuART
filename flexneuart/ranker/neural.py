@@ -133,6 +133,8 @@ class NeuralRanker(BaseRanker):
         auto_cast_class, _ = get_amp_processors(self.amp)
 
         with torch.no_grad():
+            self.model.eval()
+
             iter_val = BatchingValidationGroupByQuery(batch_size=self.batch_size,
                                                       dataset=data_set, model=self.model,
                                                       max_query_len=self.max_query_len,
