@@ -25,7 +25,6 @@
 
      In proceedings of SIGIR 2021
 """
-
 import gc
 from copy import copy
 
@@ -64,6 +63,22 @@ DEBUG=False
 if DEBUG:
     import json
 
+class PipelineAttrGenerator:
+    def __init__(self, pipeline, data_iter_obj):
+        self.pipeline = pipeline
+        self.iter_obj = data_iter_obj
+
+    def __iter__(self):
+        return self
+
+    # Python 3 compatibility
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        return self.pipeline.extract_src_attributes(next(self.iter_obj))
+
+
 class Pipeline:
 
     def __init__(self, dataset_name : str, part_name : str,
@@ -92,8 +107,8 @@ class Pipeline:
         else:
             iter_obj = dataset.docs_iter()
 
-        for orig_obj in iter_obj:
-            yield self.extract_src_attributes(orig_obj)
+        return PipelineAttrGenerator(self, iter_obj)
+            
 
     def finish_processing(self):
         """This function must be called to free memory."""
