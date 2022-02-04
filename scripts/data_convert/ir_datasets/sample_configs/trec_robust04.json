@@ -1,0 +1,42 @@
+[
+     {
+          "part_name" : "docs",
+          "dataset_name" : "trec-robust04",
+          "is_query" : false,
+          "src_attributes" : ["text"],
+          "pipeline" :
+              [
+                  [
+                      {
+                          "name" : "spacy",
+                          "args" : {
+                              "model_name" : "en_core_web_sm",
+                              "stop_word_file" : "data/stopwords.txt",
+                              "keep_only_alpha_num" : true,
+                              "enable_pos" : false,
+                              "input_fields" : ["text"]
+                          }
+                      },
+                      {
+                          "name" : "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "text": "text_raw"
+                              }
+                          }
+                      }
+                  ],
+                  [
+                       {
+                          "name" : "rename",
+                          "args": {
+                              "rename_dict": {
+                                  "text.lemmas" : "text",
+                                  "text_raw": "text_raw"
+                              }
+                          }
+                      }
+                  ]
+              ]
+      }
+]
