@@ -263,7 +263,7 @@ function getIndexQueryDataDirs {
   dataFileName=""
 
   currDir="$PWD"
-  cd "$topDir"
+  cd "$topDir" || { echo "Cannot change dir to: $topDir" ; exit 1 ; }
   for subDir in * ; do
     echo "Checking input sub-directory: $subDir"
     if [ -d "$subDir" ] ; then
