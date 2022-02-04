@@ -98,10 +98,15 @@ def main():
             obj_id = 0
     
             worker = ParseWorker(pipeline=part_processor)
-    
-            # The size of the buffer is a bit adhoc, but it usually works well for documents with HTML,
-            # where processing is the slowest operation
-            for res in tqdm(pool.imap(worker, part_processor.dataset_iterator(), proc_qty * 16),
+
+            if proc_qty == 1:
+                map_obj = map(worker, part_processor.dataset_iterator())
+            else:
+                # The size of the buffer is a bit adhoc, but it usually works well for documents with HTML,
+                # where processing is the slowest operation
+                map_obj = pool.imap(worker, part_processor.dataset_iterator(), proc_qty * 16)
+
+            for res in tqdm(map_obj,
                     f'converting part {part_processor.part_name} query? {part_processor.is_query}, errors: {error_qty}'):
                 obj_id = obj_id + 1
 
