@@ -19,11 +19,16 @@ import argparse
 import json
 from flexneuart.io import open_with_default_enc
 
-# These parameter names must match parameter names in config.sh
+# These parameter names must match parameter names in config.sh and/or run_experiments.sh
 EXTR_TYPE_FINAL_PARAM = "extrTypeFinal"
 EXPER_SUBDIR_PARAM = "experSubdir"
 TEST_ONLY_PARAM = "testOnly"
 MODEL_FINAL_PARAM = "modelFinal"
+
+CAND_PROV_TYPE_PARAM = "candProv"
+CAND_PROV_ADD_CONF_PARAM = "cand_prov_add_conf"
+CAND_PROV_URI_PARAM = "candProvURI"
+CAND_PROV_QTY_PARAM = "candProvQty"
 
 FEAT_EXPER_SUBDIR = "feat_exper"
 
@@ -87,6 +92,17 @@ def gen_rerank_descriptors(args, extr_json_gen_func, json_desc_name, json_sub_di
         desc = {EXPER_SUBDIR_PARAM: os.path.join(args.exper_subdir, json_sub_dir, file_id),
                 EXTR_TYPE_FINAL_PARAM: os.path.join(args_var[REL_DESC_PATH_PARAM], json_sub_dir, json_file_name),
                 TEST_ONLY_PARAM: int(test_only)}
+
+        copy_add_arg_dict = {
+            'cand_prov_uri' : CAND_PROV_URI_PARAM,
+            'cand_prov_qty' : CAND_PROV_QTY_PARAM,
+            'cand_prov_add_conf' : CAND_PROV_ADD_CONF_PARAM
+        }
+
+        for arg_name, conf_name in copy_add_arg_dict.items():
+            if args_var[arg_name] is not None:
+                desc[conf_name] = args_var[arg_name]
+
         if model_final is not None:
             desc[MODEL_FINAL_PARAM] = model_final
 

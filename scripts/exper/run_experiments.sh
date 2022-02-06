@@ -251,7 +251,7 @@ jsonParamMap=(
   cand_prov           candProv          # candidate provider type
   cand_prov_add_conf  candProvAddConf   # optional additional config
   cand_prov_uri       candProvURI       # candidate provider file location or IP address
-  cand_prov_qty       candProvQty       # number of candidates (can be overriden by -test_cand_qty_list)
+  cand_prov_qty       candProvQty       # number of candidates
   # TREC run id
   run_id runId
 

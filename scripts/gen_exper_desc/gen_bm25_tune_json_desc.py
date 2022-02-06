@@ -32,6 +32,12 @@ class ParserBM25Coeff(BaseParser):
         self.parser.add_argument('--query_field_name',
                                  metavar='BM25 query field name',
                                  help='an query field for BM25 score', default=None)
+        self.parser.add_argument('--cand_prov_uri',
+                                 metavar='candidate provider URI', default=None)
+        self.parser.add_argument('--cand_prov_add_conf',
+                                 metavar='candidate provider add. config', default=None)
+        self.parser.add_argument('--cand_prov_qty',
+                                 metavar='# of entries to retrieve', default=None)
 
 
 parser = ParserBM25Coeff('BM25 tuning param generator')

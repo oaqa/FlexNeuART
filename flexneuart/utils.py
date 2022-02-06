@@ -52,3 +52,13 @@ class DictToObject(object):
             :param input_dict: input dictionary.
         """
         self.__dict__ = input_dict
+
+
+def if_none(input_value, default_value):
+    """Return the original value if not None and the default value otherwise.
+
+    :param input_value: input value
+    :param default_value: default value
+    :return: the input value or default (if the input value is None)
+    """
+    return input_value if input_value is not None else default_value
