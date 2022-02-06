@@ -9,9 +9,8 @@
         "pipeline": [
             [
                 {
-                    "name": "spacy",
+                    "name": "krovetz_stemmer",
                     "args": {
-                        "model_name": "en_core_web_sm",
                         "stop_word_file": "data/stopwords.txt",
                         "keep_only_alpha_num": true,
                         "enable_pos": false,
@@ -34,7 +33,7 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "text.lemmas": "text",
+                            "text.stems": "text",
                             "text_raw": "text_raw"
                         }
                     }
@@ -53,9 +52,8 @@
         "pipeline": [
             [
                 {
-                    "name": "spacy",
+                    "name": "krovetz_stemmer",
                     "args": {
-                        "model_name": "en_core_web_sm",
                         "stop_word_file": "data/stopwords.txt",
                         "input_fields": [
                             "title",
@@ -91,8 +89,8 @@
                             "title_raw": "title_raw",
                             "description_raw": "description_raw",
                             "title_description_raw": "title_description_raw",
-                            "title.lemmas": "title_text",
-                            "description.lemmas": "description_text"
+                            "title.stems": "title_text",
+                            "description.stems": "description_text"
                         }
                     }
                 },
@@ -100,8 +98,8 @@
                     "name": "concat",
                     "args": {
                         "input_fields": [
-                            "title.lemmas",
-                            "description.lemmas"
+                            "title.stems",
+                            "description.stems"
                         ],
                         "output_field": "title_description_text"
                     }
