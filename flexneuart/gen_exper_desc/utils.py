@@ -26,7 +26,7 @@ TEST_ONLY_PARAM = "testOnly"
 MODEL_FINAL_PARAM = "modelFinal"
 
 CAND_PROV_TYPE_PARAM = "candProv"
-CAND_PROV_ADD_CONF_PARAM = "cand_prov_add_conf"
+CAND_PROV_ADD_CONF_PARAM = "candProvAddConf"
 CAND_PROV_URI_PARAM = "candProvURI"
 CAND_PROV_QTY_PARAM = "candProvQty"
 
