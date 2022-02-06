@@ -12,7 +12,6 @@
                     "name": "krovetz_stemmer",
                     "args": {
                         "stop_word_file": "data/stopwords.txt",
-                        "enable_pos": false,
                         "input_fields": [
                             "text"
                         ]
