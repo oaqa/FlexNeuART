@@ -1,42 +1,291 @@
 [
-     {
-          "part_name" : "docs",
-          "dataset_name" : "trec-robust04",
-          "is_query" : false,
-          "src_attributes" : ["text"],
-          "pipeline" :
-              [
-                  [
-                      {
-                          "name" : "spacy",
-                          "args" : {
-                              "model_name" : "en_core_web_sm",
-                              "stop_word_file" : "data/stopwords.txt",
-                              "keep_only_alpha_num" : true,
-                              "enable_pos" : false,
-                              "input_fields" : ["text"]
-                          }
-                      },
-                      {
-                          "name" : "rename",
-                          "args": {
-                              "rename_dict": {
-                                  "text": "text_raw"
-                              }
-                          }
-                      }
-                  ],
-                  [
-                       {
-                          "name" : "rename",
-                          "args": {
-                              "rename_dict": {
-                                  "text.lemmas" : "text",
-                                  "text_raw": "text_raw"
-                              }
-                          }
-                      }
-                  ]
-              ]
-      }
+    {
+        "part_name": "docs",
+        "dataset_name": "trec-robust04",
+        "is_query": false,
+        "src_attributes": [
+            "text"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "spacy",
+                    "args": {
+                        "model_name": "en_core_web_sm",
+                        "stop_word_file": "data/stopwords.txt",
+                        "keep_only_alpha_num": true,
+                        "enable_pos": false,
+                        "input_fields": [
+                            "text"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "text": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "text.lemmas": "text",
+                            "text_raw": "text_raw"
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "part_name": "all",
+        "dataset_name": "trec-robust04",
+        "is_query": true,
+        "src_attributes": [
+            "query"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "spacy",
+                    "args": {
+                        "model_name": "en_core_web_sm",
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "query"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query.lemmas": "text",
+                            "text_raw": "text_raw"
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "part_name": "fold1",
+        "dataset_name": "trec-robust04/fold1",
+        "is_query": true,
+        "src_attributes": [
+            "query"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "spacy",
+                    "args": {
+                        "model_name": "en_core_web_sm",
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "query"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query.lemmas": "text",
+                            "text_raw": "text_raw"
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "part_name": "fold2",
+        "dataset_name": "trec-robust04/fold2",
+        "is_query": true,
+        "src_attributes": [
+            "query"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "spacy",
+                    "args": {
+                        "model_name": "en_core_web_sm",
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "query"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query.lemmas": "text",
+                            "text_raw": "text_raw"
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "part_name": "fold3",
+        "dataset_name": "trec-robust04/fold3",
+        "is_query": true,
+        "src_attributes": [
+            "query"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "spacy",
+                    "args": {
+                        "model_name": "en_core_web_sm",
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "query"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query.lemmas": "text",
+                            "text_raw": "text_raw"
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "part_name": "fold4",
+        "dataset_name": "trec-robust04/fold4",
+        "is_query": true,
+        "src_attributes": [
+            "query"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "spacy",
+                    "args": {
+                        "model_name": "en_core_web_sm",
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "query"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query.lemmas": "text",
+                            "text_raw": "text_raw"
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "part_name": "fold5",
+        "dataset_name": "trec-robust04/fold5",
+        "is_query": true,
+        "src_attributes": [
+            "query"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "spacy",
+                    "args": {
+                        "model_name": "en_core_web_sm",
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "query"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "query.lemmas": "text",
+                            "text_raw": "text_raw"
+                        }
+                    }
+                }
+            ]
+        ]
+    } 
 ]
