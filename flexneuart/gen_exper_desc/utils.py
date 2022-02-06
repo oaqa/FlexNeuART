@@ -51,6 +51,20 @@ class BaseParser:
         self.parser.add_argument('--exper_subdir', metavar='exper. results subdir.',
                                  help='top-level sub-directory to store experimental results',
                                  type=str, default=FEAT_EXPER_SUBDIR)
+
+        self.parser.add_argument('--index_field_name',
+                                 metavar='BM25 index field name',
+                                 help='an index field for BM25 score', required=True)
+        self.parser.add_argument('--query_field_name',
+                                 metavar='BM25 query field name',
+                                 help='an query field for BM25 score', default=None)
+        self.parser.add_argument('--cand_prov_uri',
+                                 metavar='candidate provider URI', default=None)
+        self.parser.add_argument('--cand_prov_add_conf',
+                                 metavar='candidate provider add. config', default=None)
+        self.parser.add_argument('--cand_prov_qty',
+                                 metavar='# of entries to retrieve', default=None)
+
         self.init_add_args()
 
     def get_args(self):

@@ -86,6 +86,8 @@ class LongformerRanker(BertBaseRanker):
             self.bert(input_ids=toks,
                       token_type_ids=None,
                       attention_mask=mask.long(),
+                      # The global attention mask is set to 1 only for query tokens,
+                      # which is how it is done for the QA task (which should be similar to IR in this respect)
                       global_attention_mask = ((1-segment_ids)*mask).long(),
                       output_hidden_states=False)
 

@@ -122,12 +122,6 @@ class ParserWithModel1Coeff(BaseParser):
         self.parser.add_argument('-k1', metavar='BM25 k1',
                                  help='BM25 parameter b',
                                  type=float, required=True)
-        self.parser.add_argument('--index_field_name',
-                                 metavar='BITEXT index field name',
-                                 help='an index field for BM25 score', required=True)
-        self.parser.add_argument('--query_field_name',
-                                 metavar='BITEXT query field name',
-                                 help='an query field for BM25 score', default=None)
 
     def __init__(self, prog_name):
         super().__init__(prog_name)
