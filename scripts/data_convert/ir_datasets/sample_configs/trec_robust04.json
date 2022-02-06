@@ -90,8 +90,9 @@
                         "rename_dict": {
                             "title_raw": "title_raw",
                             "description_raw": "description_raw",
+                            "title_description_raw": "title_description_raw",
                             "title.lemmas": "title_text",
-                            "description.lemmas": "description.text"
+                            "description.lemmas": "description_text"
                         }
                     }
                 },
