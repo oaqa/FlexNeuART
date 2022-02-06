@@ -64,9 +64,9 @@ class ExtrRM3GEN:
 
         param_arr = []
 
-        for orig_weight in [0.5, 0.6, 0.7, 0.8, 0.9]:
-            for top_doc_qty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
-                for top_term_qty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
+        for orig_weight in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+            for top_doc_qty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 24]:
+                for top_term_qty in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 24]:
                     param_arr.append((orig_weight, top_doc_qty, top_term_qty))
 
         for orig_weight, top_doc_qty, top_term_qty in param_arr:
