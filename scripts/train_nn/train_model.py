@@ -198,7 +198,9 @@ def train_iteration(model_holder, device_name,
 
     train_sampler = TrainSamplerFixedChunkSize(train_pairs=train_pairs,
                                                neg_qty_per_query=neg_qty_per_query,
-                                               qrels=qrels, do_shuffle=train_params.shuffle_train)
+                                               qrels=qrels,
+                                               epoch_repeat_qty=train_params.epoch_repeat_qty,
+                                               do_shuffle=train_params.shuffle_train)
     train_iterator = BatchingTrainFixedChunkSize(batch_size=train_params.backprop_batch_size,
                                                  dataset=dataset, model=model,
                                                  max_query_len=train_params.max_query_len,
@@ -505,7 +507,6 @@ def validate(model,
 
     """
     sync_out_streams()
-    os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
     proc_specific_params = []
     device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
@@ -576,7 +577,6 @@ def validate(model,
     tqdm.write(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
     sync_out_streams()
-    os.environ['TOKENIZERS_PARALLELISM'] = 'true'
 
     # Let us always save the run
     return get_eval_results(use_external_eval=train_params.use_external_eval,
@@ -808,8 +808,11 @@ def main_cli():
 
 
     device_qty = args.device_qty
+
     master_port = args.master_port
     if device_qty > 1:
+        # Tokenizer parallelism creates problems with multiple processes
+        os.environ['TOKENIZERS_PARALLELISM'] = 'false'
         if master_port is None:
             print('Specify a master port for distributed training!')
             sys.exit(1)
