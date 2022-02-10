@@ -28,6 +28,7 @@ boolOpts=("h" "help" "print help"
 
 seed=0
 epochQty=1
+epochRepeatQty=1
 batchesPerEpoch=0
 masterPort=10001
 deviceQty=1
@@ -50,6 +51,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
       "momentum"           "momentum"         "SGD momentum (default $momentum)"
       "epoch_qty"          "epochQty"         "# of epochs (default $epochQty)"
+      "epoch_repeat_qty"   "epochRepeatQty"   "# of epoch epoch repetition (default $epochRepeatQty)"
       "batches_per_train_epoch"  "batchesPerEpoch"  "# of batches per train epoch (default $batchesPerEpoch)"
       "max_query_val"      "maxQueryVal"      "max # of val queries"
       "valid_checkpoints"  "validCheckPoints" "validation checkpoints (in # of batches)"
@@ -174,6 +176,7 @@ echo "==========================================================================
 echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
 echo "# of epochs:                                    $epochQty"
+echo "# of each epoch repetition:                     $epochRepeatQty"
 echo "Save snapshots arg:                             $saveEpochSnapshotsArg"
 echo "Validation type arg:                            $valTypeArg"
 echo "seed:                                           $seed"
@@ -222,6 +225,7 @@ python -u ./train_nn/train_model.py \
   --distr_backend $distrBackend \
   --batch_sync_qty $batchSyncQty \
   --epoch_qty $epochQty \
+  --epoch_repeat_qty $epochRepeatQty \
   $saveEpochSnapshotsArg \
   --master_port $masterPort \
   --datafiles "$trainDir/data_query.tsv"  \

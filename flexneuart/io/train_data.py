@@ -80,6 +80,7 @@ def train_item_qty_upper_bound(train_pairs, epoch_repeat_qty):
        has a positive example, this estimate should be accurate. Otherwise,
        it is only an upper bound.
        This function (together with our approach to iterate over training data)
-       is quite hacky and we should do better in some distant future.
+       is quite hacky and possibly a better solution would be a possibility
+       to define a number of training steps per epoch explicitly.
     """
     return epoch_repeat_qty * len(list(train_pairs.keys()))
