@@ -176,17 +176,18 @@
         "dataset_name": "trec-robust04/fold2",
         "is_query": true,
         "src_attributes": [
-            "query"
+            "title",
+            "description"
         ],
         "pipeline": [
             [
                 {
-                    "name": "spacy",
+                    "name": "krovetz_stemmer",
                     "args": {
-                        "model_name": "en_core_web_sm",
                         "stop_word_file": "data/stopwords.txt",
                         "input_fields": [
-                            "query"
+                            "title",
+                            "description"
                         ]
                     }
                 },
@@ -194,8 +195,19 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query": "text_raw"
+                            "title": "title_raw",
+                            "description": "description_raw"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title",
+                            "description"
+                        ],
+                        "output_field": "title_description_raw"
                     }
                 }
             ],
@@ -204,9 +216,22 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query.lemmas": "text",
-                            "text_raw": "text_raw"
+                            "title_raw": "title_raw",
+                            "description_raw": "description_raw",
+                            "title_description_raw": "title_description_raw",
+                            "title.stems": "title_text",
+                            "description.stems": "description_text"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title.stems",
+                            "description.stems"
+                        ],
+                        "output_field": "title_description_text"
                     }
                 }
             ]
@@ -217,17 +242,18 @@
         "dataset_name": "trec-robust04/fold3",
         "is_query": true,
         "src_attributes": [
-            "query"
+            "title",
+            "description"
         ],
         "pipeline": [
             [
                 {
-                    "name": "spacy",
+                    "name": "krovetz_stemmer",
                     "args": {
-                        "model_name": "en_core_web_sm",
                         "stop_word_file": "data/stopwords.txt",
                         "input_fields": [
-                            "query"
+                            "title",
+                            "description"
                         ]
                     }
                 },
@@ -235,8 +261,19 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query": "text_raw"
+                            "title": "title_raw",
+                            "description": "description_raw"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title",
+                            "description"
+                        ],
+                        "output_field": "title_description_raw"
                     }
                 }
             ],
@@ -245,9 +282,22 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query.lemmas": "text",
-                            "text_raw": "text_raw"
+                            "title_raw": "title_raw",
+                            "description_raw": "description_raw",
+                            "title_description_raw": "title_description_raw",
+                            "title.stems": "title_text",
+                            "description.stems": "description_text"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title.stems",
+                            "description.stems"
+                        ],
+                        "output_field": "title_description_text"
                     }
                 }
             ]
@@ -258,17 +308,18 @@
         "dataset_name": "trec-robust04/fold4",
         "is_query": true,
         "src_attributes": [
-            "query"
+            "title",
+            "description"
         ],
         "pipeline": [
             [
                 {
-                    "name": "spacy",
+                    "name": "krovetz_stemmer",
                     "args": {
-                        "model_name": "en_core_web_sm",
                         "stop_word_file": "data/stopwords.txt",
                         "input_fields": [
-                            "query"
+                            "title",
+                            "description"
                         ]
                     }
                 },
@@ -276,8 +327,19 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query": "text_raw"
+                            "title": "title_raw",
+                            "description": "description_raw"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title",
+                            "description"
+                        ],
+                        "output_field": "title_description_raw"
                     }
                 }
             ],
@@ -286,9 +348,22 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query.lemmas": "text",
-                            "text_raw": "text_raw"
+                            "title_raw": "title_raw",
+                            "description_raw": "description_raw",
+                            "title_description_raw": "title_description_raw",
+                            "title.stems": "title_text",
+                            "description.stems": "description_text"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title.stems",
+                            "description.stems"
+                        ],
+                        "output_field": "title_description_text"
                     }
                 }
             ]
@@ -299,17 +374,18 @@
         "dataset_name": "trec-robust04/fold5",
         "is_query": true,
         "src_attributes": [
-            "query"
+            "title",
+            "description"
         ],
         "pipeline": [
             [
                 {
-                    "name": "spacy",
+                    "name": "krovetz_stemmer",
                     "args": {
-                        "model_name": "en_core_web_sm",
                         "stop_word_file": "data/stopwords.txt",
                         "input_fields": [
-                            "query"
+                            "title",
+                            "description"
                         ]
                     }
                 },
@@ -317,8 +393,19 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query": "text_raw"
+                            "title": "title_raw",
+                            "description": "description_raw"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title",
+                            "description"
+                        ],
+                        "output_field": "title_description_raw"
                     }
                 }
             ],
@@ -327,9 +414,22 @@
                     "name": "rename",
                     "args": {
                         "rename_dict": {
-                            "query.lemmas": "text",
-                            "text_raw": "text_raw"
+                            "title_raw": "title_raw",
+                            "description_raw": "description_raw",
+                            "title_description_raw": "title_description_raw",
+                            "title.stems": "title_text",
+                            "description.stems": "description_text"
                         }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title.stems",
+                            "description.stems"
+                        ],
+                        "output_field": "title_description_text"
                     }
                 }
             ]
