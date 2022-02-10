@@ -88,6 +88,7 @@ class TrainSamplerFixedChunkSize:
 
     def __iter__(self):
         self.qnum = -1
+        self.step = 0
         return self
 
     def __next__(self) -> TrainSample:
