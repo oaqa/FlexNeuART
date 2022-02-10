@@ -396,7 +396,7 @@ def do_train(device_qty,
         snapshot_saved = False
 
         if train_params.save_epoch_snapshots:
-            tqdm.write('Saving the model epoch snapshot')
+            tqdm.write('Saving the last epoch model snapshot')
             model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
             snapshot_saved = True
 
