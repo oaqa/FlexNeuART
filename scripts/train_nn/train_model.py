@@ -393,9 +393,12 @@ def do_train(device_qty,
 
         end_train_time = time.time()
 
+        snapshot_saved = False
+
         if train_params.save_epoch_snapshots:
             tqdm.write('Saving the model epoch snapshot')
             model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
+            snapshot_saved = True
 
         os.makedirs(model_out_dir, exist_ok=True)
 
@@ -445,8 +448,9 @@ def do_train(device_qty,
                 tqdm.write('new top validation score, saving the whole model')
                 model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
         else:
-            tqdm.write('Saving the whole model')
-            model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
+            if epoch + 1 == train_params.epoch_qty and not snapshot_saved:
+                tqdm.write('Saving the last epoch snapshot')
+                model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
