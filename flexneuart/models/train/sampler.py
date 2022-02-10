@@ -76,8 +76,8 @@ class TrainSamplerFixedChunkSize:
         self.step = 0
         self.qrels = qrels
         self.train_pairs = train_pairs
-
-        if do_shuffle:
+        self.do_shuffle = do_shuffle
+        if self.do_shuffle:
             np.random.shuffle(self.qids)
 
         self.qnum = -1
@@ -94,7 +94,12 @@ class TrainSamplerFixedChunkSize:
     def __next__(self) -> TrainSample:
 
         while self.step + 1 < self.step_qty:
-            self.qnum += (self.qnum + 1) % self.query_qty
+            self.qnum += 1
+            if self.qnum >= self.query_qty:
+                self.qnum = 0
+                if self.do_shuffle:
+                    np.random.shuffle(self.qids)
+
             self.step += 1
             qid = self.qids[self.qnum]
             query_train_pairs = self.train_pairs[qid]
