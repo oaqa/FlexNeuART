@@ -74,5 +74,12 @@ def write_pairs_dict(train_pairs, file_name):
                 outf.write(f'{qid}\t{did}\t{score}\n')
 
 
-def train_item_qty_upper_bound(train_pairs):
-    return len(list(train_pairs.keys()))
+def train_item_qty_upper_bound(train_pairs, epoch_repeat_qty):
+    """
+       This function estimates the number of training steps. If a query always
+       has a positive example, this estimate should be accurate. Otherwise,
+       it is only an upper bound.
+       This function (together with our approach to iterate over training data)
+       is quite hacky and we should do better in some distant future.
+    """
+    return epoch_repeat_qty * len(list(train_pairs.keys()))

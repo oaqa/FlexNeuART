@@ -81,7 +81,7 @@ TrainParams = namedtuple('TrainParams',
                      'max_query_len', 'max_doc_len',
                      'cand_score_weight', 'neg_qty_per_query',
                      'backprop_batch_size',
-                     'epoch_qty',
+                     'epoch_qty', 'epoch_repeat_qty',
                      'save_epoch_snapshots',
                      'print_grads',
                      'shuffle_train',
@@ -123,7 +123,7 @@ def train_iteration(model_holder, device_name,
     else:
         raise Exception('Unsupported optimizer: ' + train_params.optim)
 
-    max_train_qty = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs)
+    max_train_qty = flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs, train_params.epoch_repeat_qty)
     lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
     scheduler = None
     lr_schedule= train_params.lr_schedule
@@ -366,7 +366,8 @@ def do_train(device_qty,
 
             # The number of synchronization points need to be adjusted by the number of devies processes,
             # as well as by the batch size
-            sync_qty_target = int(flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs_short) / \
+            sync_qty_target = int(flexneuart.io.train_data.train_item_qty_upper_bound(train_pairs_short,
+                                                                                      train_params.epoch_repeat_qty) / \
                                   (device_qty * train_params.batch_sync_qty * train_params.batch_size))
 
             shared_params = {
@@ -617,6 +618,11 @@ def main_cli():
     parser.add_argument('--epoch_qty', metavar='# of epochs', help='# of epochs',
                         type=int, default=10)
 
+    parser.add_argument('--epoch_repeat_qty',
+                        metavar='# of each epoch repetition',
+                        help='# of times each epoch is "repeated"',
+                        type=int, default=1)
+
     parser.add_argument('--valid_type',
                         default=VALID_ALWAYS,
                         choices=[VALID_ALWAYS, VALID_LAST, VALID_NONE],
@@ -822,7 +828,7 @@ def main_cli():
                                # These lengths must come from the model serializer object, not from the arguments,
                                # because they can be overridden when the model is loaded.
                                max_query_len=model_holder.max_query_len, max_doc_len=model_holder.max_doc_len,
-                               epoch_qty=args.epoch_qty,
+                               epoch_qty=args.epoch_qty, epoch_repeat_qty=args.epoch_repeat_qty,
                                cand_score_weight=args.cand_score_weight,
                                neg_qty_per_query=args.neg_qty_per_query,
                                use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),

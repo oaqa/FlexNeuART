@@ -55,6 +55,7 @@ class TrainSamplerFixedChunkSize:
                      train_pairs:dict,
                      neg_qty_per_query:int,
                      qrels:dict,
+                     epoch_repeat_qty:int = 1,
                      do_shuffle: bool = True
                  ):
         """Constructor.
@@ -64,11 +65,15 @@ class TrainSamplerFixedChunkSize:
         :param neg_qty_per_query:   a number of negative samples per query
         :param qrels:               q QREL (relevance information) dictionary: if a query
                                     has fewer documents available, it is ignored.
-        :param do_shuffle:          true to shuffle training data
+        :param epoch_repeat_qty:    a number of times we should repeat/replicate each epoch
+        :param do_shuffle:          true to shuffle training queries
         """
         self.neg_qty_per_query = neg_qty_per_query
 
         self.qids = list(train_pairs.keys())
+        self.query_qty = len(self.qids)
+        self.step_qty = epoch_repeat_qty * self.query_qty
+        self.step = 0
         self.qrels = qrels
         self.train_pairs = train_pairs
 
@@ -87,8 +92,9 @@ class TrainSamplerFixedChunkSize:
 
     def __next__(self) -> TrainSample:
 
-        while self.qnum + 1 < len(self.qids):
-            self.qnum += 1
+        while self.step + 1 < self.step_qty:
+            self.qnum += (self.qnum + 1) % self.query_qty
+            self.step += 1
             qid = self.qids[self.qnum]
             query_train_pairs = self.train_pairs[qid]
 
