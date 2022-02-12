@@ -93,7 +93,7 @@ class TrainSamplerFixedChunkSize:
 
     def __next__(self) -> TrainSample:
 
-        while self.step + 1 < self.step_qty:
+        while self.step < self.step_qty:
             self.qnum += 1
             if self.qnum >= self.query_qty:
                 self.qnum = 0
