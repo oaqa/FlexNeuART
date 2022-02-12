@@ -143,6 +143,11 @@ public class ForwardIndexBinaryOffsetDict extends ForwardIndexBinaryBase {
     
   private byte [] getDocEntryPacked(String docId) throws Exception {
     byte[] bdata = mBackend.get(docId);
+
+    // not found
+    if (bdata == null) {
+      return null;
+    }
   	
   	QtyOffsetPair qtyOff = bytesToIntLongPair(bdata);
   	
