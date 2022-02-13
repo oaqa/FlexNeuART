@@ -175,6 +175,10 @@ class ModelSerializer:
                     MAX_DOC_LEN : self.max_doc_len},
                    file_name)
 
+    def save_only_weights(self, file_name):
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
+        torch.save(self.model.state_dict(), file_name)
+
     @staticmethod
     def load_all(file_name):
         """Load the previous version saved using the save_all function.
