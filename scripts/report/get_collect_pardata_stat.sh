@@ -17,6 +17,8 @@ if [ "$field_name" = "" ] ; then
   exit 1
 fi
 
+set -eo pipefail
+
 inputDataDir="$COLLECT_ROOT/$collect/"
 
 questFile="$inputDataDir/$DERIVED_DATA_SUBDIR/$BITEXT_SUBDIR/question_$field_name"
