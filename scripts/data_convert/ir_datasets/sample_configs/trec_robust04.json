@@ -18,6 +18,13 @@
                     }
                 },
                 {
+                      "name" : "bert_tokenizer",
+                      "args" : {
+                          "input_fields" : ["text"]
+                      }
+
+                },
+                {
                     "name": "rename",
                     "args": {
                         "rename_dict": {
@@ -32,6 +39,7 @@
                     "args": {
                         "rename_dict": {
                             "text.stems": "text",
+                            "text.bert_tokens" : "text_bert_tok",
                             "text_raw": "text_raw"
                         }
                     }
