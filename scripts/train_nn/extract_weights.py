@@ -39,7 +39,5 @@ parser.add_argument('--output', metavar='output file with weights',
 
 args = parser.parse_args()
 
-model_holder : ModelSerializer
-
-model_holder.load_all(args.input)
+model_holder : ModelSerializer = ModelSerializer.load_all(args.input)
 model_holder.save_only_weights(args.output)
