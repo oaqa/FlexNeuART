@@ -11,7 +11,7 @@ which can be processed using standard FlexNeuART scripts.
 We have (sample) configuration files for the following collections:
 
 1. [Cranfield](sample_configs/cranfield.json)
-2. [Robust04](sample_config/trec_robust04.json)
+2. [Robust04](sample_configs/trec_robust04.json)
 3. [Gov2](sample_configs/gov2.json)
 4. [ClueWeb12B](sample_configs/clueweb12-b13.json)
  
