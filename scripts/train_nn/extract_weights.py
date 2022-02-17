@@ -27,7 +27,7 @@
 
 import argparse
 
-from flexneuart.models.base import ModelSerializer, MODEL_STATE_DICT
+from flexneuart.models.base import ModelSerializer
 
 parser = argparse.ArgumentParser('model training and validation')
 
