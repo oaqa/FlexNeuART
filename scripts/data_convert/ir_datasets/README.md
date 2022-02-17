@@ -6,8 +6,15 @@ which is guided by a JSON configuration file.
 The output of this file is one or more JSONL files, 
 which can be processed using standard FlexNeuART scripts.
 
-There are examples
-for [Cranfield](sample_configs/cranfield.json) and [ClueWeb12B](sample_configs/clueweb12-b13.json).
+**Note**: A small number of documents in Gov2 and ClueWeb12B are currently being lost, but the exact reason is not known (it is possible that there are parsing errors). The issue might be related to multiprocessing. So, for small collections like `Robust04` and `Cranfield` we recommend to do conversion using a single process.
+
+We have (sample) configuration files for the following collections:
+
+1. [Cranfield](sample_configs/cranfield.json)
+2. [Robust04](sample_config/trec_robust04.json)
+3. [Gov2](sample_configs/gov2.json)
+4. [ClueWeb12B](sample_configs/clueweb12-b13.json)
+ 
 Although some datasets will be automatically downloaded by `ir-datasets`, 
 many datasets are licensed and need to be `installed` manually.
 
