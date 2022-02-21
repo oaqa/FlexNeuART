@@ -20,9 +20,13 @@
     You need to call configure_classpath() before using this functionality.
 """
 import os
+
 from jnius import autoclass
-from flexneuart.retrieval.cand_provider import JCandidateEntry
+from flexneuart.retrieval.cand_provider import JCandidateEntry, CandidateEntry
 from .base import BaseRanker
+
+from flexneuart.retrieval.utils import DataEntryFields
+from typing import List, Union, Tuple, Dict
 
 JDataPointWrapper = autoclass('edu.cmu.lti.oaqa.flexneuart.letor.DataPointWrapper')
 
@@ -49,16 +53,14 @@ class ClassicRanker(BaseRanker):
         self.feat_extr = resource_manager.getFeatureExtractor(feat_extr_file_name)
         self.dp_wrapper = JDataPointWrapper()
 
-    def score_candidates(self, cand_list, query_info_obj_or_dict):
-        """Rank a candidate list obtained from the candidate provider.
-           Note that this function needs all relevant query fields, not
-           just a field that was used to retrieve the list of candidate entries!
+    def score_candidates(self, cand_list : List[Union[CandidateEntry, Tuple[str, float]]],
+                               query_info_obj_or_dict : Union[DataEntryFields, dict]) -> Dict[str, float]:
+        """Score, but does not rank, a candidate list obtained from the candidate provider.
+           Note that this function may (though this is ranker-dependent) use all query field fields,
+           not just a field that was used to retrieve the list of candidate entries!
 
-        :param cand_list:           a list of the objects of the type CandidateEntry
-        :param query_info_obj:      an instance of
-                                        i) a DataEntryFields object
-                                        ii) a dictionary object, which will the function
-                                            try to convert to DataEntryFields
+        :param cand_list:           a list of the candidate records
+        :param query_info_obj:      a query information object
 
         :return:  a dictionary where keys are document IDs and values are document scores
         """
@@ -72,11 +74,11 @@ class ClassicRanker(BaseRanker):
         # Compute a dictionary of features using Java api
         all_doc_feats = self.feat_extr.getFeatures(cands_java, query_info_obj)
 
-        for cand in cand_list:
-            feat = all_doc_feats.get(cand.doc_id)
+        for doc_id, _ in cand_list:
+            feat = all_doc_feats.get(doc_id)
             assert feat is not None
             self.dp_wrapper.assign(feat)
-            res[cand.doc_id] = self.model.eval(self.dp_wrapper)
+            res[doc_id] = self.model.eval(self.dp_wrapper)
 
         return res
 

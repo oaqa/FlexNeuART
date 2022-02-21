@@ -30,6 +30,9 @@ from flexneuart.models.train.batching import BatchingValidationGroupByQuery
 from flexneuart.retrieval.utils import DataEntryFields
 from flexneuart.retrieval.fwd_index import get_forward_index
 
+from flexneuart.retrieval.cand_provider import CandidateEntry
+from typing import List, Union, Tuple, Dict
+
 from .base import BaseRanker
 
 
@@ -97,16 +100,14 @@ class NeuralRanker(BaseRanker):
     def handle_case(self, text: str):
         return handle_case(self.do_lower_case, text)
 
-    def score_candidates(self, cand_list, query_info_obj_or_dict):
-        """Rank a candidate list obtained from the candidate provider.
-           Note that this function needs all relevant query fields, not
-           just a field that was used to retrieve the list of candidate entries!
+    def score_candidates(self, cand_list : List[Union[CandidateEntry, Tuple[str, float]]],
+                               query_info_obj_or_dict : Union[DataEntryFields, dict]) -> Dict[str, float]:
+        """Score, but does not rank, a candidate list obtained from the candidate provider.
+           Note that this function may (though this is ranker-dependent) use all query field fields,
+           not just a field that was used to retrieve the list of candidate entries!
 
-        :param cand_list:           a list of the objects of the type CandidateEntry
-        :param query_info_obj:      an instance of
-                                        i) a DataEntryFields object
-                                        ii) a dictionary object, which will the function
-                                            try to convert to DataEntryFields
+        :param cand_list:           a list of the candidate records
+        :param query_info_obj:      a query information object
 
         :return:  a dictionary where keys are document IDs and values are document scores
         """

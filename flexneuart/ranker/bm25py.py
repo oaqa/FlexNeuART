@@ -25,17 +25,17 @@ from math import log
 
 from flexneuart.text_proc import handle_case
 from flexneuart.ranker.base import BaseRanker
-from flexneuart.retrieval.utils import DataEntryFields
 from flexneuart.retrieval.fwd_index import get_forward_index
 
+from flexneuart.retrieval.utils import DataEntryFields
+from flexneuart.retrieval.cand_provider import CandidateEntry
+from typing import List, Union, Tuple, Dict
 
 class BM25Ranker(BaseRanker):
     """
-        A somewhat *EXPERIMENTAL*/undertest Python version the BM25 ranker,
-        which can be used in various experiments where document text is being modified on the fly
-        without updating the document index.
+        A Python version the BM25 ranker, which can be used in various experiments where
+        document text is being modified on the fly without updating the document index.
     """
-
     def __init__(self, resource_manager,
                  query_field_name,
                  index_field_name,
@@ -87,16 +87,15 @@ class BM25Ranker(BaseRanker):
     def handle_case(self, text: str):
         return handle_case(self.do_lower_case, text)
 
-    def score_candidates(self, cand_list, query_info_obj_or_dict):
-        """Rank a candidate list obtained from the candidate provider.
-           Note that this function needs all relevant query fields, not
-           just a field that was used to retrieve the list of candidate entries!
+    def score_candidates(self,
+                         cand_list: List[Union[CandidateEntry, Tuple[str, float]]],
+                         query_info_obj_or_dict: Union[DataEntryFields, dict]) -> Dict[str, float]:
+        """Score, but does not rank, a candidate list obtained from the candidate provider.
+           Note that this function may (though this is ranker-dependent) use all query field fields,
+           not just a field that was used to retrieve the list of candidate entries!
 
-        :param cand_list:           a list of the objects of the type CandidateEntry
-        :param query_info_obj:      an instance of
-                                        i) a DataEntryFields object
-                                        ii) a dictionary object, which will the function
-                                            try to convert to DataEntryFields
+        :param cand_list:           a list of the candidate records
+        :param query_info_obj:      a query information object
 
         :return:  a dictionary where keys are document IDs and values are document scores
         """
@@ -111,7 +110,7 @@ class BM25Ranker(BaseRanker):
 
         res = {}
 
-        for doc_id, _ in cand_list.items():
+        for doc_id, score in cand_list:
             doc_text = self.fwd_indx.get_doc_text(doc_id)
             if self.text_proc_obj_doc is not None:
                 doc_text = self.text_proc_obj_doc(doc_text)
