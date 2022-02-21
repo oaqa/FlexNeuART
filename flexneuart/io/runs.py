@@ -79,7 +79,7 @@ def write_run_dict(run_dict, file_name, run_id=FAKE_RUN_ID):
     :param file_name:  an output file name
     :param run_id:     a run ID to use
     """
-    with open_with_default_enc(file_name, 'wt') as runfile:
+    with FileWrapper(file_name, 'wt') as runfile:
         for qid in run_dict:
             scores = get_sorted_scores_from_score_dict(run_dict[qid])
             for i, (did, score) in enumerate(scores):
