@@ -62,7 +62,7 @@ def query_dict_to_dataentry_fields(query_dict, default_query_id=None):
             if type(v) == str:
                 res.setString(str(k), v)
             elif type(v) == int:
-                res.setInt(str(k), v)
+                res.setInteger(str(k), v)
             elif type(v) == float:
                 res.setFloat(str(k), v)
             else:
