@@ -39,6 +39,17 @@ class BaseRanker:
             query_info_obj = query_info_obj_or_dict
         return query_info_obj
 
+    def get_query_text(self, query_info_obj_or_dict):
+        """Exctract query text either from the dictionary object or from DataEntryFields."""
+        if type(query_info_obj_or_dict) == dict:
+            query_text = query_info_obj_or_dict[self.query_field_name]
+        else:
+            if type(query_info_obj_or_dict) != DataEntryFields:
+                raise Exception('A query object info type should be DataEntryFields or a dictionary!')
+            query_text = query_info_obj_or_dict.getString(self.query_field_name)
+
+        return  query_text
+
     def rank_candidates(self, cand_list, query_info_obj_or_dict):
         """Score and rank a list of candidates obtained from the candidate provider.
            Note that this function may (though this is ranker-dependent) use all query field fields,

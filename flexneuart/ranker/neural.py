@@ -44,6 +44,8 @@ class NeuralRanker(BaseRanker):
                        keep_case,
                        device_name, batch_size,
                        model_path_rel,
+                       text_proc_obj_query=None,
+                       text_proc_obj_doc=None,
                        cand_score_weight=0,
                        amp=False):
         """Reranker constructor.
@@ -55,6 +57,8 @@ class NeuralRanker(BaseRanker):
         :param device_name:           a device name
         :param batch_size:            the size of the batch
         :param model_path_rel:        a path to a (previously trained) and serialized model relative to the resource root
+        :param text_proc_obj_doc:     a text processing object for the document
+        :param query_field_name:      the name of the query field
         :param cand_score_weight      a weight for the candidate generation scores
         :param amp                    if True, use automatic mixed precision
 
@@ -75,6 +79,9 @@ class NeuralRanker(BaseRanker):
         self.model.to(device_name)
 
         self.amp = amp
+
+        self.text_proc_obj_query = text_proc_obj_query
+        self.text_proc_obj_doc = text_proc_obj_doc
 
         self.do_lower_case = not keep_case
 
@@ -121,7 +128,12 @@ class NeuralRanker(BaseRanker):
         retr_score = {}
 
         for doc_id, score in cand_list:
-            doc_text = self.handle_case(self.fwd_indx.get_doc_text(doc_id))
+            doc_text = self.fwd_indx.get_doc_text(doc_id)
+
+            if self.text_proc_obj_doc is not None:
+                doc_text = self.text_proc_obj_doc(doc_text)
+
+            doc_text = self.handle_case(doc_text)
             doc_data[doc_id] = doc_text
             retr_score[doc_id] = score
 
