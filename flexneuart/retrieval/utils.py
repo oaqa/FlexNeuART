@@ -59,8 +59,14 @@ def query_dict_to_dataentry_fields(query_dict, default_query_id=None):
 
     for k, v in query_dict.items():
         if k != DOCID_FIELD:
-            if type(v) != str:
-                raise Exception('Only string values and keys are currently supported')
-            res.setString(str(k), v)
+            if type(v) == str:
+                res.setString(str(k), v)
+            elif type(v) == int:
+                res.setInt(str(k), v)
+            elif type(v) == float:
+                res.setFloat(str(k), v)
+            else:
+                raise Exception('Unsupported type %s, supported types are str, int, float' % str(type(v)))
+
 
     return res

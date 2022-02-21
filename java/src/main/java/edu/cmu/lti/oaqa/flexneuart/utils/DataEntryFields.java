@@ -47,6 +47,12 @@ public class DataEntryFields {
   void setString(String fieldName, String value) {
     mObjDict.put(fieldName, value);
   }
+  void setInteger(String fieldName, Integer value) {
+    mObjDict.put(fieldName, value);
+  }
+  void setFloat(String fieldName, Float value) {
+    mObjDict.put(fieldName, value);
+  }
   void setBinary(String fieldName, byte [] value) {
     mObjDict.put(fieldName, value);
   }
@@ -62,6 +68,22 @@ public class DataEntryFields {
       throw new RuntimeException("Field '" + fieldName + "' is not string!");
     }
     return (String) value;
+  }
+  public Integer getInteger(String fieldName) {
+    Object value = mObjDict.get(fieldName);
+    if (value == null) return null;
+    if (!(value instanceof Integer)) {
+      throw new RuntimeException("Field '" + fieldName + "' is not integer!");
+    }
+    return (Integer) value;
+  }
+  public Float getFloat(String fieldName) {
+    Object value = mObjDict.get(fieldName);
+    if (value == null) return null;
+    if (!(value instanceof Float)) {
+      throw new RuntimeException("Field '" + fieldName + "' is not float!");
+    }
+    return (Float) value;
   }
   
   public String getStringDefault(String fieldName, String defaultValue) {
