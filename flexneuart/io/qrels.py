@@ -98,14 +98,19 @@ def write_qrels(qrel_list : List[QrelEntry], file_name : str):
             f.write('\n')
 
 
-def write_qrels_dict(qrel_dict, file_name : str):
-    """Write a QREL dictionary where entries are added using, e.g., add_qrel_entry
+def write_qrels_dict(qrel_dict : Dict[str, Dict[str, int]],
+                     file_name : str):
+    """Write a QREL dictionary stored in the format produced by the
+       function read_qrels_dict.
 
-    :param qrel_dict:  dictionary of QRELs.
+    :param qrel_dict:  dictionary of dictionaries (see read_qrels_dict).
     :param file_name:  output file name
     """
-    qrel_list = [qrel_entry for qrel_key, qrel_entry in qrel_dict.items()]
-    write_qrels(qrel_list, file_name)
+    with FileWrapper(file_name, 'w') as f:
+        for qid, doc_rel_dict in qrel_dict.items():
+            for did, grade in doc_rel_dict.items():
+                f.write(gen_qrel_str(query_id=qid, doc_id=did, rel_grade=grade))
+                f.write('\n')
 
 
 def read_qrels_dict(file_name : str) -> Dict[str, Dict[str, int]]:
