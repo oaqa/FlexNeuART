@@ -121,6 +121,7 @@ class SpacyTextParser:
 
     @staticmethod
     def _basic_clean(text):
+        # TODO see a comment to the function __call__
         return text.replace("’", "'")
 
     def __call__(self, text):
@@ -129,7 +130,10 @@ class SpacyTextParser:
         :param text     input text string
         :return         a spacy Doc object
         """
-
+        # TODO / important note. Currently, this function
+        # does not change offsets, but we should probably overall
+        # avoid using it and support some generic basic cleanup
+        # function in a different way
         return self._nlp(SpacyTextParser._basic_clean(text))
 
     def proc_text(self, text):

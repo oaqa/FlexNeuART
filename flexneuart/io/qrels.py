@@ -98,7 +98,7 @@ def write_qrels(qrel_list : List[QrelEntry], file_name : str):
             f.write('\n')
 
 
-def write_qrel_dict(qrel_dict, file_name : str):
+def write_qrels_dict(qrel_dict, file_name : str):
     """Write a QREL dictionary where entries are added using, e.g., add_qrel_entry
 
     :param qrel_dict:  dictionary of QRELs.
