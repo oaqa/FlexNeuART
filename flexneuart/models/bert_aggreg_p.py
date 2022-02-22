@@ -78,5 +78,5 @@ class BertSumPRanker(BertAggregPRanker):
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  dropout=DEFAULT_BERT_DROPOUT):
         super().__init__(bert_flavor=bert_flavor,
-                         aggreg_type=BERT_MAXP,
+                         aggreg_type=BERT_SUMP,
                          window_size=window_size, stride=stride, dropout=dropout)

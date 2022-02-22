@@ -47,11 +47,11 @@ class BM25Ranker(BaseRanker):
         """Reranker constructor.
 
         :param resource_manager:      a resource manager object
-        :param text_proc_obj_query:   a text processing object for the query that would typically
-                                      lemmatize/stem text and optionally remove stop words
         :param index_field_name:      the name of the text field
         :param idf_index_field_name   the name of the field to extract IDF values
         :param keep_case:             do not lower case
+        :param text_proc_obj_query:   a text processing object for the query that would typically
+                                      lemmatize/stem text and optionally remove stop words
         :param text_proc_obj_doc:     a text processing object for the document
         :param query_field_name:      the name of the query field
         :param k1                     BM25 k1 parameter

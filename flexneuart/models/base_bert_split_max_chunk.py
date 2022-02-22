@@ -117,11 +117,6 @@ class BertSplitMaxChunkRanker(BertBaseRanker):
             # In practice, however, there seems to be little-to-no improvement compared
             # to the original CEDR code on MS MARCO document data.
             #
-            # Furthermore, on 11 GB gpus, which are still pretty common,
-            # one cannot have a mini-batch of the size > 1
-            # (larger batches are simulated via gradient accumulation),
-            # so no actual sub-batch averaging is happening.
-            #
             if USE_BATCH_COEFF:
                 cls_result = torch.stack(cls_result, dim=2).sum(dim=2)
                 assert(cls_result.size()[0] == batch_qty)
