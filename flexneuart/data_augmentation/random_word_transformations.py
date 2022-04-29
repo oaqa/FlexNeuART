@@ -1,6 +1,7 @@
 from base_class import DataAugment
 import re
 import random
+from nltk.corpus import wordnet 
 class RandomInsertion(DataAugment):
     def __init__(self, alpha_ri=0.1, random_seed=42):
         super().__init__(random_seed)
@@ -31,6 +32,17 @@ class RandomInsertion(DataAugment):
         random_synonym = synonyms[0]
         random_idx = random.randint(0, len(new_words)-1)
         new_words.insert(random_idx, random_synonym)
+
+    def get_synonyms(self, word):
+        synonyms = set()
+        for syn in wordnet.synsets(word): 
+            for l in syn.lemmas(): 
+                synonym = l.name().replace("_", " ").replace("-", " ").lower()
+                synonym = "".join([char for char in synonym if char in ' qwertyuiopasdfghjklzxcvbnm'])
+                synonyms.add(synonym) 
+        if word in synonyms:
+            synonyms.remove(word)
+        return list(synonyms)
 
 
 class RandomDeletion(DataAugment):
