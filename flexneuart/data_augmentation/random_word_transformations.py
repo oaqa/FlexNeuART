@@ -11,9 +11,9 @@ class RandomInsertion(DataAugment):
 
 
 class RandomDeletion(DataAugment):
-    def augment(text, p):
+    def augment(text, **kwargs):
         pass
 
 class RandomSwap(DataAugment):
-    def augment(text, p):
+    def augment(text, **kwargs):
         pass
