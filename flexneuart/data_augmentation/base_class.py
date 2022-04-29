@@ -1,6 +1,4 @@
-import spacy
 import random
-
 
 class DataAugment:
     def __init__(self, random_seed=42):
@@ -9,5 +7,5 @@ class DataAugment:
         return
 
     @abstractmethod
-    def augment(text, **kwargs):
+    def augment(self, text):
         pass       
