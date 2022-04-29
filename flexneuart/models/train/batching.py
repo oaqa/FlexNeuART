@@ -20,6 +20,8 @@ from flexneuart.models.train.sampler import TrainSamplerFixedChunkSize, TrainSam
 from flexneuart.models.base import BaseModel
 from flexneuart.models.train.batch_obj import BatchObject
 
+from flexneuart.data_augmentation.augmentation_module import *
+
 PAD_CODE=1 # your typical padding symbol
 
 
@@ -158,7 +160,7 @@ class BatchingTrainFixedChunkSize(BatchingBase):
             assert pos_doc_text is not None, f'Missing document ID: {qobj.pos_id}'
 
             if self.data_augment_module is not None:
-                query_text, pos_doc_text = self.data_augment_module(query_text, pos_doc_text)
+                query_text, pos_doc_text = self.data_augment_module.augment(query_text, pos_doc_text)
                 
             self._add_to_batch(qid=qobj.qid, query_text=query_text,
                                did=qobj.pos_id, doc_text=pos_doc_text,
@@ -169,7 +171,7 @@ class BatchingTrainFixedChunkSize(BatchingBase):
                 assert neg_doc_text is not None, f'Missing document ID: {neg_id}'
 
                 if self.data_augment_module is not None:
-                    query_text, pos_doc_text = self.data_augment_module(query_text, neg_doc_text)
+                    query_text, pos_doc_text = self.data_augment_module.augment(query_text, neg_doc_text)
                 
                 self._add_to_batch(qid=qobj.qid, query_text=query_text,
                                    did=neg_id, doc_text=neg_doc_text,

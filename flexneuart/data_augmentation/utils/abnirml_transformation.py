@@ -1,7 +1,7 @@
 import string
 import random
 import itertools
-from base_class import DataAugment
+from flexneuart.data_augmentation.utils.base_class import DataAugment
 import spacy
 
 '''
