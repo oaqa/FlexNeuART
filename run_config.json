@@ -1,0 +1,5 @@
+{
+    "batches_per_train_epoch": 16,
+    "max_query_val": 100,
+    "amp": true
+}
