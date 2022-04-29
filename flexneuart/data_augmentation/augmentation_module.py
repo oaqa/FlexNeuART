@@ -1,4 +1,6 @@
 import random
+from abc import abstractmethod
+
 
 class DataAugmentModule:
     def __init__(self, random_seed=42):
