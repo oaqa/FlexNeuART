@@ -46,6 +46,8 @@ from flexneuart.models.train.distr_utils import run_distributed, get_device_name
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import get_amp_processors
 
+from flexneuart.data_augmentation.augmentation_module import *
+
 from flexneuart import sync_out_streams, set_all_seeds
 from flexneuart.io.json import read_json, save_json
 from flexneuart.io.runs import read_run_dict, write_run_dict
@@ -205,7 +207,8 @@ def train_iteration(model_holder, device_name,
                                                  dataset=dataset, model=model,
                                                  max_query_len=train_params.max_query_len,
                                                  max_doc_len=train_params.max_doc_len,
-                                                 train_sampler=train_sampler)
+                                                 train_sampler=train_sampler,
+                                                 data_augment_module=RandomDataAugmentModule())
 
     sync_qty = 0
 
