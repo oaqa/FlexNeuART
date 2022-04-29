@@ -3,9 +3,8 @@ import random
 
 
 class DataAugment:
-    def __init__(self, spacy_model='en_core_web_sm', random_seed=42):
-        self.nlp = spacy.load(spacy_model)
-        self.random = random.Random(random_seed)
+    def __init__(self, random_seed=42):
+        self.random_seed = random.Random(random_seed)
 
         return
 
