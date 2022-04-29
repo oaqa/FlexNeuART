@@ -203,12 +203,20 @@ def train_iteration(model_holder, device_name,
                                                qrels=qrels,
                                                epoch_repeat_qty=train_params.epoch_repeat_qty,
                                                do_shuffle=train_params.shuffle_train)
+
+    data_augment_method = None
+    if train_params.data_augment == shuf_sent:
+        print('Data Augmentation Method: Shuffle Sentences')
+        data_augment_method = RandomDataAugmentModule()
+    else:
+        print('No Data Augmentation')
+        
     train_iterator = BatchingTrainFixedChunkSize(batch_size=train_params.backprop_batch_size,
                                                  dataset=dataset, model=model,
                                                  max_query_len=train_params.max_query_len,
                                                  max_doc_len=train_params.max_doc_len,
                                                  train_sampler=train_sampler,
-                                                 data_augment_module=RandomDataAugmentModule())
+                                                 data_augment_module=data_augment_method)
 
     sync_qty = 0
 
@@ -721,6 +729,10 @@ def main_cli():
                         default=PairwiseMarginRankingLossWrapper.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
+    parser.add_argument('--data_augment', metavar='Data Augmentation Method',
+                        type=str, default=None,
+                        help='select data augmentation method: shuf_sent')
+
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
@@ -841,7 +853,8 @@ def main_cli():
                                print_grads=args.print_grads,
                                shuffle_train=not args.no_shuffle_train,
                                valid_type=args.valid_type,
-                               optim=args.optim)
+                               optim=args.optim,
+                               data_augment=args.data_augment)
 
     do_train(
         device_qty=device_qty,
