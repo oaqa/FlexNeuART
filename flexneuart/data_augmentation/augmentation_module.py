@@ -11,7 +11,7 @@ class DataAugmentModule:
         pass
 
 
-class RandomDataAugmentModule(DataAugmentionModule):
+class RandomDataAugmentModule(DataAugmentModule):
     def __init__(self, random_seed=42):
         super().__init__(random_seed)
         self.doc_augment = ShufSents()
