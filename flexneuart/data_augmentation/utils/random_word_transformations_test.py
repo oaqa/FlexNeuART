@@ -1,9 +1,9 @@
 # from utils import *
-import unittest
+# import unittest
 # from transforms import *
 from random_word_transformations import RandomDeletion, RandomInsertion
 
-class TestRandomWordTransformations(unittest.TestCase):
+class TestRandomWordTransformations():
     def test_random_insertions(self):
         # answer = True
         # self.assertEqual(answer, True)
