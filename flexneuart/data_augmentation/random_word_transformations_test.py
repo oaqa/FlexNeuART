@@ -1,18 +1,15 @@
-from utils import *
-import unittest
-from transforms import *
 from random_word_transformations import RandomDeletion
 
-class TestRandomWordTransformations(unittest.TestCase):
-    # def test_random_insertions(self):
-    #     answer = True
-    #     self.assertEqual(answer, True)
-    def test_random_deletions(self):
-        random_deletion = RandomDeletion(p = 0.1)
-        print(random_deletion.augment())
+class TestRandomWordTransformations():
+    def __init__(self):
         pass
-    # def test_random_swap(self):
-    #     pass
+
+    def test_random_deletions(self):
+        text = "Testing random deletions in this sentence. Do you think words are correctly deleted"
+        random_deletion = RandomDeletion(p = 0.5)
+        text_words_deleted = random_deletion.augment(text)
+        assert(len(text_words_deleted) < len(text))
 
 if __name__ == "__main__":
-    unittest.main()
+    tester = TestRandomWordTransformations()
+    tester.test_random_deletions()

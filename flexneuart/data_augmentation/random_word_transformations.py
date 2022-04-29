@@ -1,5 +1,6 @@
 from base_class import DataAugment
 import re
+import random
 class RandomInsertion(DataAugment):
     def augment(self, text, **kwargs):
         alpha_ri = 0.1 # percentage of random insertion
@@ -11,9 +12,10 @@ class RandomInsertion(DataAugment):
 
 
 class RandomDeletion(DataAugment):
-    def __init__(p = 0.2):
+    def __init__(self, p = 0.2, random_seed=42):
+        super().__init__(random_seed)
         self.p = p
-        super().__init__()
+
 
     def augment(self, text):
         # Code referenced from: https://github.com/jasonwei20/eda_nlp/blob/master/code/eda.py
