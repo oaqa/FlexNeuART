@@ -17,4 +17,4 @@ class RandomDataAugmentModule(DataAugmentModule):
         self.doc_augment = ShufSents()
 
     def augment(self, query_text, doc_text):
-        return query_text, self.doc_augment(doc_text)
+        return query_text, self.doc_augment.augment(doc_text)
