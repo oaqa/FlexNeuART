@@ -6,5 +6,5 @@ class DataAugment:
         return
 
     @abstractmethod
-    def augment(self, text, **kwargs):
+    def augment(self, text):
         pass       
