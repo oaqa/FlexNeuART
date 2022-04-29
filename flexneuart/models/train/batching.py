@@ -20,6 +20,8 @@ from flexneuart.models.train.sampler import TrainSamplerFixedChunkSize, TrainSam
 from flexneuart.models.base import BaseModel
 from flexneuart.models.train.batch_obj import BatchObject
 
+from flexneuart.data_augmentation.augmentation_module import *
+
 PAD_CODE=1 # your typical padding symbol
 
 
