@@ -759,6 +759,7 @@ def main_cli():
             setattr(args, arg_name, arg_val)
 
     print(args)
+    print(args.data_augment)
     sync_out_streams()
 
     set_all_seeds(args.seed)
