@@ -2,7 +2,6 @@
 from base_class import DataAugment 
 import re
 import random
-from nltk.corpus import wordnet 
 
 class RandomWordInsertion(DataAugment):
     def __init__(self, alpha_ri=0.1, random_seed=42):

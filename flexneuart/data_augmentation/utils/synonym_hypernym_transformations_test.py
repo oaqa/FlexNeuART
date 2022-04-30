@@ -1,13 +1,16 @@
-from utils import *
-import unittest
-from transforms import *
+from synonym_hypernym_transformations import SynonymWordReplacement, HypernymWordReplacement
 
-class TestSynonymTransformations(unittest.TestCase):
+class TestSynonymTransformations():
     def test_synonym_transformation(self):
-        answer = True
-        self.assertEqual(answer, True)
+        text = "Testing random deletions in this sentence. Do you think words are correctly deleted"
+        random_insertion = SynonymWordReplacement(alpha_sr=0.2)
+        print(random_insertion.augment(text))
     def test_hypernym_transformation(self):
-        pass
+        text = "Testing random deletions in this sentence. Do you think words are correctly deleted"
+        random_insertion = HypernymWordReplacement(alpha_hr=0.2)
+        print(random_insertion.augment(text))
 
 if __name__ == "__main__":
-    unittest.main()
+    tester = TestSynonymTransformations()
+    tester.test_synonym_transformation()
+    tester.test_hypernym_transformation()

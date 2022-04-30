@@ -1,15 +1,18 @@
 from flexneuart.data_augmentation.utils.base_class import DataAugment
-from nltk.corpus import wordnet
+# from base_class import DataAugment
 import re
-import spacy
+# import spacy
 import random
+from nltk.corpus import wordnet, stopwords
+import nltk
+nltk.download('wordnet') 
+nltk.download('stopwords')
 class SynonymWordReplacement(DataAugment):
 
     def __init__(self, alpha_sr=0.1, random_seed=42):
         super().__init__(random_seed)
         self.alpha_sr = alpha_sr # percentage of synonym replacement
-        self.en = spacy.load('en_core_web_sm')
-        self.stopwords = self.en.Defaults.stop_words
+        self.stopwords = stopwords.words('english')
 
     def augment(self, text):
         words = re.split('\s+', text)
@@ -53,6 +56,7 @@ class HypernymWordReplacement(DataAugment):
     def __init__(self, alpha_hr=0.1, random_seed=42):
         super().__init__(random_seed)
         self.alpha_hr = alpha_hr # percentage of synonym replacement
+        self.stopwords = stopwords.words('english')
     def augment(self, text, **kwargs):
         words = re.split('\s+', text)
         num_words = len(words)
@@ -79,7 +83,7 @@ class HypernymWordReplacement(DataAugment):
         new_words = sentence.split(' ')
         return new_words
 
-    def get_hypernyms(word):
+    def get_hypernyms(self, word):
         hypers_lst = []
         try:
             s = wordnet.synsets(word)[0]
