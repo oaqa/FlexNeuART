@@ -54,7 +54,6 @@ class HypernymWordReplacement(DataAugment):
         super().__init__(random_seed)
         self.alpha_hr = alpha_hr # percentage of synonym replacement
     def augment(self, text, **kwargs):
-<<<<<<< HEAD
         words = re.split('\s+', text)
         num_words = len(words)
         number_hr = max(1, int(self.alpha_hr*num_words))
@@ -96,6 +95,3 @@ class HypernymWordReplacement(DataAugment):
                 if l.name().lower() != word:
                     hypers_lst.append(l.name().lower())
         return list(dict.fromkeys(hypers_lst))
-=======
-        pass
->>>>>>> b9b8ea161560b8b303bb4a83bbdbc5a3cad18744

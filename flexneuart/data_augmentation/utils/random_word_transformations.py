@@ -104,4 +104,4 @@ class RandomWordSwap(DataAugment):
             if counter > 3:
                 return new_words
         new_words[random_idx_1], new_words[random_idx_2] = new_words[random_idx_2], new_words[random_idx_1] 
-        return new_wordsOB
+        return new_words
