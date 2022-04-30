@@ -30,7 +30,7 @@ class DataAugmentModule:
         elif augment_type == 'random_character_swap':
             self.doc_augment = SwapCharacterTransformation(word_swap_probability=0.05, character_swap_probability=0.1)
         elif augment_type == 'random_character_replace':
-            self.doc_augment = RandomWordInsertion(word_replace_probability=0.05, character_replace_probability=0.1)
+            self.doc_augment = ReplaceCharacterTransformation(word_replace_probability=0.05, character_replace_probability=0.1)
         elif augment_type == 'keyboard_character_insertion': 
             self.doc_augment = AddCharacterKeyboardAdjacentTransformation(word_add_probability=0.05, character_add_probability=0.1)  
         elif augment_type == 'keyboard_character_replace':    
