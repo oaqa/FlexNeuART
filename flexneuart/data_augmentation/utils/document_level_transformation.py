@@ -1,4 +1,4 @@
-from base_class import DataAugment
+from flexneuart.data_augmentation.utils.base_class import DataAugment
 import re
 import random
 from nltk.corpus import wordnet 
