@@ -6,7 +6,8 @@ from flexneuart.data_augmentation.utils.synonym_hypernym_transformations import 
 from flexneuart.data_augmentation.utils.document_level_transformation import *
 from flexneuart.data_augmentation.utils.character_transformation import *
 class DataAugmentModule:
-    def __init__(self, augment_type, random_seed=42):
+    def __init__(self, augment_type, random_seed=42, augment_p=0.25):
+        self.p = augment_p
         random.seed(random_seed)
         self.doc_augment = None
         if augment_type == 'random_word_deletion':
@@ -35,6 +36,6 @@ class DataAugmentModule:
             self.doc_augment = ReplaceCharacterKeyboardTransformation(word_replace_probability=0.1, character_replace_probability=0.1) 
 
     def augment(self, query_text, doc_text):
-        if self.doc_augment is not None and :
+        if self.doc_augment is not None and random.random() < self.p:
             doc_text = self.doc_augment.augment(doc_text)
         return query_text, doc_text
