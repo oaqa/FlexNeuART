@@ -730,13 +730,13 @@ def main_cli():
                         default=PairwiseMarginRankingLossWrapper.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
-    parser.add_argument('--data_augment', metavar='Data Augmentation Method',
-                        type=str, default=None,
-                        help='select data augmentation method: shuf_sent')
-
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
+    
+    parser.add_argument('--data_augment', metavar='Data Augmentation Method',
+                        type=str, default="shuf_sent",
+                        help='select data augmentation method: shuf_sent')
 
     args = parser.parse_args()
 
