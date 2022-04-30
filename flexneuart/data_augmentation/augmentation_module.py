@@ -2,7 +2,7 @@ import random
 from abc import abstractmethod
 from flexneuart.data_augmentation.utils.abnirml_transformation import *
 from flexneuart.data_augmentation.utils.random_word_transformations import *
-from flexneuart.data_augmentation.utils.synonym_hypernym_transformations import *
+# from flexneuart.data_augmentation.utils.synonym_hypernym_transformations import *
 from flexneuart.data_augmentation.utils.document_level_transformation import *
 from flexneuart.data_augmentation.utils.character_transformation import *
 
