@@ -33,7 +33,7 @@ class DataAugmentModule:
         elif augment_type == 'keyboard_character_insertion': 
             self.doc_augment = AddCharacterKeyboardAdjacentTransformation(word_add_probability=0.3, character_add_probability=0.1)  
         elif augment_type == 'keyboard_character_replace':    
-            self.doc_augment = ReplaceCharacterKeyboardTransformation(word_replace_probability=0.1, character_replace_probability=0.1) 
+            self.doc_augment = ReplaceCharacterKeyboardTransformation(word_replace_probability=0.05, character_replace_probability=0.1) 
 
     def augment(self, query_text, doc_text):
         if self.doc_augment is not None and random.random() < self.p:
