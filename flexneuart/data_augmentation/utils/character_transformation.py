@@ -38,9 +38,9 @@ class AddCharacterTransformation(DataAugment):
         return word
 
 class RemoveCharacterTransformation(DataAugment):
-    def __init__(self, word_remove_character_probability=0.1, character_remove_probability=0.1, random_seed=42):
+    def __init__(self, word_remove_probability=0.1, character_remove_probability=0.1, random_seed=42):
         super().__init__(random_seed)
-        self.word_remove_character_probability = word_remove_character_probability
+        self.word_remove_probability = word_remove_probability
         self.character_remove_probability = character_remove_probability
 
     def augment(self, text):
@@ -48,7 +48,7 @@ class RemoveCharacterTransformation(DataAugment):
         num_words = len(words)
         for i in range(num_words):
             r = random.uniform(0, 1)
-            if r > self.word_remove_character_probability:
+            if r > self.word_remove_probability:
                 words[i] = self.remove_letters_with_probability(words[i])
         return ' '.join(words)
 
@@ -74,9 +74,9 @@ class RemoveCharacterTransformation(DataAugment):
         return word
 
 class SwapCharacterTransformation(DataAugment):
-    def __init__(self, word_level_probability=0.1, character_swap_probability=0.1, random_seed=42):
+    def __init__(self, word_swap_probability=0.1, character_swap_probability=0.1, random_seed=42):
         super().__init__(random_seed)
-        self.word_level_probability = word_level_probability
+        self.word_swap_probability = word_swap_probability
         self.character_swap_probability = character_swap_probability
 
     def augment(self, text):
@@ -84,7 +84,7 @@ class SwapCharacterTransformation(DataAugment):
         num_words = len(words)
         for i in range(num_words):
             r = random.uniform(0, 1)
-            if r > self.word_level_probability:
+            if r > self.word_swap_probability:
                 words[i] = self.swap_letters_with_probability(words[i])
         return ' '.join(words)
     
@@ -149,10 +149,60 @@ class ReplaceCharacterTransformation(DataAugment):
         i = 1
         while i < k - 1:
             if random.random() < self.character_replace_probability:
+                word = word[:i] + random.choice(string.ascii_lowercase) + word[i+1:]
+            i += 1
+        word = re.sub(" ", "", word)
+        return word
+
+
+class ReplaceCharacterKeyboardTransformation(DataAugment):
+    def __init__(self, word_replace_probability=0.1, character_replace_probability=0.1, random_seed=42):
+        super().__init__(random_seed)
+        self.word_replace_probability = word_replace_probability
+        self.character_replace_probability = character_replace_probability
+        self.keyboard_positions = [['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'], ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'], ['z', 'x', 'c', 'v', 'b', 'n', 'm']]
+
+    def augment(self, text):
+        words = re.split('\s+', text)
+        num_words = len(words)
+        for i in range(num_words):
+            r = random.uniform(0, 1)
+            if r > self.word_replace_probability:
+                words[i] = self.replace_letters_with_probability(words[i])
+        return ' '.join(words)
+
+    def get_closest_from_keyboard(self, character):
+        pos = (0, 0)
+        return_pos = (0, 0)
+        for i, x in enumerate(self.keyboard_positions):
+            if character in x:
+                pos = (i, x.index(character))
+        i = pos[0]
+        j = pos[1]
+        if j == 0:
+            return_pos = (i, j + 1)
+        elif j == len(self.keyboard_positions[i])-1:
+            return_pos = (i, j - 1)
+        else:
+            r = random.uniform(0, 1)
+            if r > 0.5:
+                return_pos = (i, j + 1)
+            else:
+                return_pos = (i, j - 1)
+        return self.keyboard_positions[return_pos[0]][return_pos[1]]
+
+    def replace_letters_with_probability(self, word):
+        k = len(word)
+        if k<=1:
+            return word
+        i = 1
+        while i < k - 1:
+            if random.random() < self.character_replace_probability:
                 word = word[:i] + self.get_closest_from_keyboard(word[i]) + word[i+1:]
             i += 1
         word = re.sub(" ", "", word)
         return word
+
 
 
 class AddCharacterKeyboardAdjacentTransformation(DataAugment):
