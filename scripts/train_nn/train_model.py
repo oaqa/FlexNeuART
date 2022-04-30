@@ -206,9 +206,8 @@ def train_iteration(model_holder, device_name,
                                                do_shuffle=train_params.shuffle_train)
 
     data_augment_method = None
-    if train_params.data_augment == "shuf_sent":
-        print('Data Augmentation Method: Shuffle Sentences')
-        data_augment_method = RandomDataAugmentModule()
+    if train_params.data_augment is not None:
+        data_augment_method = DataAugmentModule(train_params.data_augment)
     else:
         print('No Data Augmentation')
         
