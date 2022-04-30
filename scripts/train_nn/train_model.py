@@ -88,7 +88,8 @@ TrainParams = namedtuple('TrainParams',
                      'print_grads',
                      'shuffle_train',
                      'valid_type',
-                     'use_external_eval', 'eval_metric'])
+                     'use_external_eval', 'eval_metric',
+                     'data_augment'])
 
 
 def get_lr_desc(optimizer):
