@@ -1,4 +1,4 @@
-from base_class import DataAugment
+from flexneuart.data_augmentation.utils.base_class import DataAugment
 import re
 import random
 from nltk.corpus import wordnet 
@@ -21,3 +21,12 @@ class ConstantDocLength(DataAugment):
                     constant_length_text.append(word)           
         
         return " ".join(constant_length_text)
+
+class AddIrrelevantContent(DataAugment):
+    def __init__(self, random_seed=42):
+        super().__init__(random_seed)
+
+    def augment(self, text):
+        # TODO: Need a sentence generator
+        return
+               

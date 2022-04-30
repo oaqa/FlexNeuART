@@ -1,8 +1,9 @@
-from base_class import DataAugment
+from flexneuart.data_augmentation.utils.base_class import DataAugment 
 import re
 import random
 from nltk.corpus import wordnet 
-class RandomInsertion(DataAugment):
+
+class RandomWordInsertion(DataAugment):
     def __init__(self, alpha_ri=0.1, random_seed=42):
         super().__init__(random_seed)
         self.alpha_ri = alpha_ri # percentage of random insertion
@@ -45,7 +46,7 @@ class RandomInsertion(DataAugment):
         return list(synonyms)
 
 
-class RandomDeletion(DataAugment):
+class RandomWordDeletion(DataAugment):
     def __init__(self, p = 0.2, random_seed=42):
         super().__init__(random_seed)
         self.p = p
@@ -75,7 +76,7 @@ class RandomDeletion(DataAugment):
         return " ".join(new_words)
 
 
-class RandomSwap(DataAugment):
+class RandomWordSwap(DataAugment):
     def __init__(self, alpha_rs=0.1, random_seed=42):
         super().__init__(random_seed)
         self.alpha_rs = alpha_rs # percentage of random swap
@@ -103,4 +104,4 @@ class RandomSwap(DataAugment):
             if counter > 3:
                 return new_words
         new_words[random_idx_1], new_words[random_idx_2] = new_words[random_idx_2], new_words[random_idx_1] 
-        return new_words
+        return new_wordsOB

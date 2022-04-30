@@ -88,7 +88,8 @@ TrainParams = namedtuple('TrainParams',
                      'print_grads',
                      'shuffle_train',
                      'valid_type',
-                     'use_external_eval', 'eval_metric'])
+                     'use_external_eval', 'eval_metric',
+                     'data_augment'])
 
 
 def get_lr_desc(optimizer):
@@ -205,9 +206,8 @@ def train_iteration(model_holder, device_name,
                                                do_shuffle=train_params.shuffle_train)
 
     data_augment_method = None
-    if train_params.data_augment == "shuf_sent":
-        print('Data Augmentation Method: Shuffle Sentences')
-        data_augment_method = RandomDataAugmentModule()
+    if train_params.data_augment is not None:
+        data_augment_method = DataAugmentModule(train_params.data_augment)
     else:
         print('No Data Augmentation')
         
@@ -729,13 +729,13 @@ def main_cli():
                         default=PairwiseMarginRankingLossWrapper.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
 
-    parser.add_argument('--data_augment', metavar='Data Augmentation Method',
-                        type=str, default=None,
-                        help='select data augmentation method: shuf_sent')
-
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
+    
+    parser.add_argument('--data_augment', metavar='Data Augmentation Method',
+                        type=str, default="shuf_sent",
+                        help='select data augmentation method: shuf_sent')
 
     args = parser.parse_args()
 
@@ -759,6 +759,7 @@ def main_cli():
             setattr(args, arg_name, arg_val)
 
     print(args)
+    print(args.data_augment)
     sync_out_streams()
 
     set_all_seeds(args.seed)
