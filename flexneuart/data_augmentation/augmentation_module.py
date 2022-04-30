@@ -17,8 +17,8 @@ class DataAugmentModule:
             self.doc_augment = RandomWordInsertion(alpha_ri = 0.05)
         elif augment_type == 'random_word_swap':
             self.doc_augment = RandomWordSwap(alpha_rs = 0.05)
-        # elif augment_type == 'synonym_word_replacement':
-        #     self.doc_augment = SynonymWordReplacement(alpha_sr = 0.05)
+        elif augment_type == 'synonym_word_replacement':
+            self.doc_augment = SynonymWordReplacement(alpha_sr = 0.05)
         # elif augment_type == 'hypernym_word_replacement':
         #    self.doc_augment = HypernymWordReplacement(alpha_hr = 0.05)
         # elif augment_type == 'constant_document_length':
