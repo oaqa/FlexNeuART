@@ -39,8 +39,9 @@ parser.add_argument('--run', metavar='a run file', help='a run file',
 parser.add_argument('--eps', metavar='max relative ratio',
                     help='a threshold to report query-specific differences',
                     type=float, required=True)
-parser.add_argument('--eval_metric', choices=METRIC_LIST, default=METRIC_LIST[0],
-                    help='Metric list: ' + ','.join(METRIC_LIST),
+default_metric=METRIC_LIST[0]
+parser.add_argument('--eval_metric', choices=METRIC_LIST, default=default_metric,
+                    help='Metric list: ' + ', '.join(METRIC_LIST) + ' default: ' + default_metric,
                     metavar='eval metric')
 
 args = parser.parse_args()
@@ -49,7 +50,6 @@ print(args)
 qrels = read_qrels_dict(args.qrels)
 run = read_run_dict(args.run)
 query_ids = list(run.keys())
-
 
 tmp_file_name_run = create_temp_file()
 tmp_file_name_qrels = create_temp_file()

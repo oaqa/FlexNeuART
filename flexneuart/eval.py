@@ -184,7 +184,7 @@ def get_eval_results(use_external_eval,
         assert run_file is not None, "Run file name should not be None"
         write_run_dict(rerank_run, run_file)
 
-        return trec_eval(run_file, qrel_file, m)
+        return trec_eval(run_file, qrel_file, m)[0]
     else:
         f = None
         if eval_metric == METRIC_MAP:
@@ -213,26 +213,39 @@ def get_eval_results(use_external_eval,
                        metric_func=f)
 
 
-def trec_eval(runf, qrelf, metric):
+def trec_eval(runf, qrelf, metric,
+              trec_eval_path='trec_eval/trec_eval'
+              ):
     """
         Run an external tool: trec_eval and retrieve results.
 
         :param runf:    a run file name
         :param qrelf:   a QREL file name
         :param metric:  a metric code (should match what trec_eval prints)
-        :return:
+        :param trec_eval_bin: a path to a trec_eval binary
+
+        :return: a tuple (the average metric value, an np array of query-specific values)
     """
-    trec_eval_f = 'trec_eval/trec_eval'
-    trec_eval_params = [trec_eval_f,
+    trec_eval_params = [trec_eval_path,
+                        '-q',  # all query results
                         '-m', 'official',
                         '-m', 'ndcg_cut',
                         qrelf, runf]
-    # print(' '.join(trec_eval_params))
+    results = []
+    avg_res = None
     for line in subprocess.check_output(trec_eval_params).decode().split('\n'):
+        if not line:
+            continue
         fields = line.rstrip().split()
-        if len(fields) == 3 and fields[0] == metric:
-            return float(fields[2])
 
-    raise Exception(
-        f'Cannot get the value of the metric {metric} by evaluating file {runf} with qrels {qrelf}')
+        if len(fields) >= 3 and fields[0] == metric:
+            val = float(fields[2])
+            if fields[1] != 'all':
+                results.append(val)
+            else:
+                avg_res = val
+
+    assert avg_res is not None, 'Some inconsistency detected: no aggregate/average value is produced by trec_eval!'
+
+    return avg_res, np.array(results)
 
