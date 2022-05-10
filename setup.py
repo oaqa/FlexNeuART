@@ -10,10 +10,19 @@ import platform
 PY_CACHE = '__pycache__'
 ROOT_DIR_NAME = 'flexneuart'
 
+REC_FILE='requirements.txt'
+
+try:
+    print(subprocess.check_output(f'pip install -r {REC_FILE}'.split()).decode())
+except:
+    print(f'Failed to install requirements from the file {REC_FILE}')
+    sys.exit(1)
+
 # Version *MUST* be in Sync with pom.xml
 sys.path.append(ROOT_DIR_NAME)
 from version import __version__
 from config import DEFAULT_ENCODING, MIN_PYTHON_VERSION
+
 
 print('Building version:', __version__)
 
@@ -60,9 +69,7 @@ setup(
     zip_safe=False,
     scripts=['flexneuart_install_extra.sh', 'install_extra_flexneuart_main.sh'],
     packages=find_packages(exclude=EXCLUDE_DIRS),
-    package_data={ROOT_DIR_NAME: [jar_file, 'resources/extra/scripts.tar.gz']},
-    install_requires=[l for l in open('requirements.txt') if not l.startswith('#') and not l.startswith('git+') and l.strip() != '']
-    #cmdclass={'build_py': BuildWrapper}
+    package_data={ROOT_DIR_NAME: [jar_file, 'resources/extra/scripts.tar.gz']}
 )
 
 # setup tools fail to find these tests (when one specifies test_suit arg) and it's not clear why
