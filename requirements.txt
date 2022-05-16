@@ -7,7 +7,7 @@ urllib3
 pytools
 
 # higher versions require Python 3.7
-numpy==1.19.0
+numpy==1.21.0
 
 beautifulsoup4
 
