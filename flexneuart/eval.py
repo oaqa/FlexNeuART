@@ -233,19 +233,24 @@ def trec_eval(runf, qrelf, metric,
                         qrelf, runf]
     results = []
     avg_res = None
+    seen_metric = False
+    metric_set = set()
     for line in subprocess.check_output(trec_eval_params).decode().split('\n'):
         if not line:
             continue
         fields = line.rstrip().split()
-
+        metric_set.add(fields[0])
         if len(fields) >= 3 and fields[0] == metric:
+            seen_metric = True
             val = float(fields[2])
             if fields[1] != 'all':
                 results.append(val)
             else:
                 avg_res = val
 
+    assert seen_metric, f'Wrong metric: {metric}, supported metrics: ' + ', '.join(list(metric_set))
     assert avg_res is not None, 'Some inconsistency detected: no aggregate/average value is produced by trec_eval!'
 
     return avg_res, np.array(results)
+
 
