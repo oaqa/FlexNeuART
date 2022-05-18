@@ -13,12 +13,17 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import os
+
 import numpy as np
 import subprocess
 import math
 
+from typing import Union, Dict
+
+from flexneuart.io import create_temp_file
 from flexneuart.io.runs import get_sorted_scores_from_score_dict, write_run_dict
-from flexneuart.io.qrels import read_qrels_dict
+from flexneuart.io.qrels import read_qrels_dict, write_qrels_dict
 
 
 FAKE_DOC_ID = "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES"
@@ -213,24 +218,41 @@ def get_eval_results(use_external_eval,
                        metric_func=f)
 
 
-def trec_eval(runf, qrelf, metric,
-              trec_eval_path='trec_eval/trec_eval'
+def trec_eval(run : Union[str, Dict[str, Dict[str, int]]],
+              qrels : Union[str, Dict[str, Dict[str, int]]],
+              metric : str,
+              trec_eval_path : str = 'trec_eval/trec_eval'
               ):
     """
         Run an external tool: trec_eval and retrieve results.
 
-        :param runf:    a run file name
-        :param qrelf:   a QREL file name
+        :param run:    a run file name or a run file dictionary
+        :param qrel:   a QREL file name or a QREL dictionary
         :param metric:  a metric code (should match what trec_eval prints)
         :param trec_eval_bin: a path to a trec_eval binary
 
         :return: a tuple (the average metric value, an np array of query-specific values)
     """
+    unlink_files = []
+    if type(run) != str:
+        run_f = create_temp_file()
+        unlink_files.append(run_f)
+        write_run_dict(run, run_f)
+    else:
+        run_f = run
+
+    if type(qrels) != str:
+        qrel_f = create_temp_file()
+        unlink_files.append(qrel_f)
+        write_qrels_dict(qrels, qrel_f)
+    else:
+        qrel_f = qrels
+
     trec_eval_params = [trec_eval_path,
                         '-q',  # all query results
                         '-m', 'official',
                         '-m', 'ndcg_cut',
-                        qrelf, runf]
+                        qrel_f, run_f]
     results = []
     avg_res = None
     seen_metric = False
@@ -247,6 +269,9 @@ def trec_eval(runf, qrelf, metric,
                 results.append(val)
             else:
                 avg_res = val
+
+    for fn in unlink_files:
+        os.unlink(fn)
 
     assert seen_metric, f'Wrong metric: {metric}, supported metrics: ' + ', '.join(list(metric_set))
     assert avg_res is not None, 'Some inconsistency detected: no aggregate/average value is produced by trec_eval!'
