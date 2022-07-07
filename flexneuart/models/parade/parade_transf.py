@@ -36,12 +36,25 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
     """
         PARADE Transformer base ranker. Contributed by Tianyi Lin, reworked by Leonid Boytsov.
 
-        Here we use an pre-trained aggregating transformer.
-        Whenever possible we use pre-trained representations of CLS and SEP tokens.
+        Child classes can use either randomly initialized or pre-trained aggregating Transformer.
+        When the transformer is pre-trained, as an option we can use pre-trained representations of CLS and SEP tokens,
+        but it does not seem to work better, though.
+
+        We also implemented a modification, which feeds query representations into an aggregating transformer.
+
+        Main Transformer paper:
 
         Li, C., Yates, A., MacAvaney, S., He, B., & Sun, Y. (2020). PARADE:
         Passage representation aggregation for document reranking.
         arXiv preprint arXiv:2008.09093.
+
+        Modification with integrated query embeddings:
+
+        Understanding Performance of Long-Document Ranking Models through Comprehensive Evaluation and Leaderboarding (2022).
+        Leonid Boytsov, Tianyi Lin, Fangwei Gao, Yutian Zhao, Jeffrey Huang, Eric Nyberg.
+
+        https://arxiv.org/abs/2207.01262
+
     """
 
     def __init__(self,
@@ -101,6 +114,10 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
 
 @register('parade_transf_pretr')
 class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
+    """
+        Pre-trained aggregator Transformer (PARADE paper).
+    """
+
     def __init__(self, bert_flavor=BERT_BASE_MODEL, bert_aggreg_flavor=MSMARCO_MINILM_L2,
                  rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
@@ -144,13 +161,7 @@ class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
 @register('parade_transf_rand')
 class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
     """
-        PARADE Transformer ranker. Contributed by Tianyi Lin (with Leo's modifications).
-
-        Here we use a randomly initialized transformer encoder.
-
-        Li, C., Yates, A., MacAvaney, S., He, B., & Sun, Y. (2020). PARADE:
-        Passage representation aggregation for document reranking.
-        arXiv preprint arXiv:2008.09093.
+        Randomly intialized aggregator Transformer (PARADE paper).
     """
 
     def __init__(self, bert_flavor=BERT_BASE_MODEL,
@@ -201,13 +212,7 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
 @register('parade_transf_wquery_pretr')
 class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
     """
-        PARADE Max ranker. Contributed by Tianyi Lin.
-
-        Here we use an pre-trained aggregating transformer.
-
-        Li, C., Yates, A., MacAvaney, S., He, B., & Sun, Y. (2020). PARADE:
-        Passage representation aggregation for document reranking.
-        arXiv preprint arXiv:2008.09093.
+        Pre-trained aggregator Transformer with integrated query embeddings (our modification of PARADE).
     """
 
     def __init__(self,
