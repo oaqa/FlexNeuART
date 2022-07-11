@@ -10,4 +10,5 @@ from flexneuart.models import vanilla_bert_no_qry_pad, \
                             longformer, \
                             cedr, \
                             ndrm, \
-                            biencoder
+                            biencoder, \
+                            colbert
