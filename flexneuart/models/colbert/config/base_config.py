@@ -4,6 +4,8 @@
 
     https://github.com/stanford-futuredata/ColBERT/tree/new_api/colbert
 """
+import os
+import ujson
 from dataclasses import dataclass
 from .core_config import *
 
@@ -35,3 +37,20 @@ class BaseConfig(CoreConfig):
             return loaded_config
 
         return None  # can happen if checkpoint_path is something like 'bert-base-uncased'
+
+    @classmethod
+    def from_deprecated_args(cls, args):
+        obj = cls()
+        ignored = obj.configure(ignore_unrecognized=True, **args)
+
+        return obj, ignored
+
+    @classmethod
+    def from_path(cls, name):
+        with open(name) as f:
+            args = ujson.load(f)
+
+            if 'config' in args:
+                args = args['config']
+
+        return cls.from_deprecated_args(args)  # the new, non-deprecated version functions the same at this level.
