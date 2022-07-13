@@ -22,7 +22,7 @@
 
 import argparse
 import torch
-import os
+
 from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
 from flexneuart.config import BERT_BASE_MODEL
 from flexneuart.utils import DictToObject
