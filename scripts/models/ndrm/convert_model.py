@@ -23,7 +23,7 @@ import os
 from flexneuart.models.base import ModelSerializer, MODEL_PARAM_PREF
 from flexneuart.utils import DictToObject
 
-parser = argparse.ArgumentParser(description='Add doc2query fields to the existing JSONL data entries')
+parser = argparse.ArgumentParser(description='Convert NDRM model to FlexNeuART format')
 
 parser.add_argument('--input_dir', metavar='input directory',
                     help='input directory with IDFs, embeddings, and the model',

@@ -1,5 +1,8 @@
 """
     Code taken from ColBERT (new_api branch), which is distributed under Apache-compatible MIT license.
+    Changes:
+    1. tokenizer is now being initialized by model name (bert_flavor) rather than from a checkpoint.
+    2. maximum document length is provided via parameter.
 
     https://github.com/stanford-futuredata/ColBERT/tree/new_api/colbert
 """
@@ -10,11 +13,10 @@ from .utils import _split_into_batches, _sort_by_length
 
 
 class DocTokenizer():
-    def __init__(self, config: ColBERTConfig):
-        self.tok = HF_ColBERT.raw_tokenizer_from_pretrained(config.checkpoint)
+    def __init__(self, bert_flavor: str, config: ColBERTConfig):
+        self.tok = HF_ColBERT.raw_tokenizer_from_pretrained(bert_flavor)
 
         self.config = config
-        self.doc_maxlen = config.doc_maxlen
 
         self.D_marker_token, self.D_marker_token_id = '[D]', self.tok.convert_tokens_to_ids('[unused1]')
         self.cls_token, self.cls_token_id = self.tok.cls_token, self.tok.cls_token_id
@@ -48,14 +50,14 @@ class DocTokenizer():
 
         return ids
 
-    def tensorize(self, batch_text, bsize=None):
+    def tensorize(self, batch_text, max_doc_len, bsize=None):
         assert type(batch_text) in [list, tuple], (type(batch_text))
 
         # add placehold for the [D] marker
         batch_text = ['. ' + x for x in batch_text]
 
         obj = self.tok(batch_text, padding='longest', truncation='longest_first',
-                       return_tensors='pt', max_length=self.doc_maxlen)
+                       return_tensors='pt', max_length=max_doc_len)
 
         ids, mask = obj['input_ids'], obj['attention_mask']
 

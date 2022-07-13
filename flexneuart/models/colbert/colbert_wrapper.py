@@ -18,28 +18,44 @@
 
     https://github.com/stanford-futuredata/ColBERT/tree/new_api/colbert
 """
-from flexneuart import models
-from flexneuart.models.base import BaseModel
-from typing import List, Dict
+import os
+
+from typing import List
 from .colbert import ColBERT
 from .tokenization import DocTokenizer, QueryTokenizer
 
+from flexneuart import models
+from flexneuart.models.base import BaseModel
+
 INNER_MODEL_ATTR = 'model'
 
+
 @models.register('colbert')
-class ColbertWrapper(BaseModel):
-    """A wrapper class for COLBERT"""
-    def __init__(self, bert_flavor):
+class ColbertLoader(BaseModel):
+    """
+        A wrapper class to load externally trained COLBERT.
+        It will load only a previously saved model, or a
+        model created by converting a COLBERT model using our
+        script: scripts/models/colbert/convert_model.py
+
+        This model should be trained using original COLBERT software:
+        https://github.com/stanford-futuredata/ColBERT/tree/new_api/colbert
+    """
+    def __init__(self, bert_flavor, colbert_config):
         """
-        :param bert_flavor: The name of the underlying Transformer/BERT or a path
-                            to a previously stored COLBERT model.
+        :param bert_flavor: The name of the underlying Transformer/BERT.
+                            It should *NOT* be a path to save Transformer model!
         """
         super().__init__()
-        model = ColBERT(bert_flavor)
+        assert bert_flavor is not None
+        if os.path.exists(bert_flavor):
+            raise Exception('bert_flavor cannot point a previously saved model, use colbert_checkpoint instead')
+
+        model = ColBERT(bert_flavor=bert_flavor, colbert_config=colbert_config)
         setattr(self, INNER_MODEL_ATTR, model)
 
-        self.query_tok = QueryTokenizer(model.colbert_config)
-        self.doc_tok = DocTokenizer(model.colbert_config)
+        self.query_tok = QueryTokenizer(bert_flavor, model.colbert_config)
+        self.doc_tok = DocTokenizer(bert_flavor, model.colbert_config)
 
     def bert_param_names(self):
         # This returns more parameters than necessary, which means that the linear projection
@@ -70,11 +86,8 @@ class ColbertWrapper(BaseModel):
         query_qty = len(query_texts)
         assert query_qty == len(doc_texts)
 
-        query_texts_trunc = [s[0:max_query_len] for s in query_texts]
-        doc_texts_trunc = [s[0:max_doc_len] for s in doc_texts]
-
-        q_inp_ids, q_attn_mask = self.query_tok.tensorize(query_texts_trunc)
-        d_inp_ids, d_attn_mask = self.doc_tok.tensorize(doc_texts_trunc)
+        q_inp_ids, q_attn_mask = self.query_tok.tensorize(query_texts, max_query_len=max_query_len)
+        d_inp_ids, d_attn_mask = self.doc_tok.tensorize(doc_texts, max_doc_len=max_doc_len)
 
         return q_inp_ids, q_attn_mask, d_inp_ids, d_attn_mask
 

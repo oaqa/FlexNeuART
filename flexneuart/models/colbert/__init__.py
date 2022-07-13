@@ -1,1 +1,1 @@
-from .colbert_wrapper import ColbertWrapper
+from .colbert_wrapper import ColbertLoader
