@@ -37,9 +37,9 @@ class BaseColBERT(torch.nn.Module):
             self.colbert_config = colbert_config
             self.model: torch.nn.Module = HF_ColBERT.from_pretrained(bert_flavor, colbert_config=self.colbert_config)
         else:
-            assert colbert_config is not None, "config should NOT be specified when checkpoint is"
+            assert colbert_config is None, "config should NOT be specified when checkpoint is"
 
-            self.colbert_config = ColBERTConfig.from_existing(ColBERTConfig.load_from_checkpoint(colbert_checkpoint()))
+            self.colbert_config = ColBERTConfig.from_existing(ColBERTConfig.load_from_checkpoint(colbert_checkpoint))
             self.model = HF_ColBERT.from_pretrained(colbert_checkpoint, colbert_config=self.colbert_config)
 
         self.eval()

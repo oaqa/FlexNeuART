@@ -48,7 +48,7 @@ bert_flavor = BERT_BASE_MODEL
 
 print('BERT flavor:', bert_flavor, 'input directory:', input_dir)
 
-orig_colbert = ColBERT(bert_flavor=bert_flavor, colbert_config=args.input_dir)
+orig_colbert = ColBERT(bert_flavor=bert_flavor, colbert_checkpoint=args.input_dir)
 colbert_config = orig_colbert.colbert_config
 
 # note that we need to memorize original colbert lengths for the query and document
@@ -65,7 +65,7 @@ print(model_args)
 model_holder.create_model_from_args(DictToObject(model_args))
 # transfer model weights
 inner_model : torch.nn.Module = getattr(model_holder.model, INNER_MODEL_ATTR)
-print(inner_model.load_state_dict(orig_colbert.state_dict()), strict=True)
+print(inner_model.load_state_dict(orig_colbert.state_dict(), strict=True))
 
 model_holder.save_all(args.output)
 

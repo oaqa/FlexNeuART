@@ -91,8 +91,13 @@ class MeanAveragePrecision:
 
 
 class MeanReciprocalRank:
+    def __init__(self, cut_off=float('inf')):
+        self.cut_off = cut_off
+        
     def __call__(self, rels_sorted_by_scores, qrel_dict):
         for i, rel in enumerate(rels_sorted_by_scores):
+            if i >= self.cut_off:
+                break
             if rel > RELEVANCE_THRESHOLD:
                 return 1 / (i + 1.)
         return 0
