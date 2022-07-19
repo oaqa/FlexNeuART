@@ -44,10 +44,11 @@ for inp_f in args.input:
     run = read_run_dict(inp_f)
     for qid, run_dict_1q in run.items():
         for did, score in get_sorted_scores_from_score_dict(run_dict_1q):
-            odict = output_run.get(qid, {})
+            if not qid in output_run:
+                output_run[qid] = {}
+            odict = output_run[qid]
             if did in odict:
                 continue
             odict[did] = score
-            output_run[qid] = odict
 
 write_run_dict(output_run, args.output)
