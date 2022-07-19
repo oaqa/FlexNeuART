@@ -48,5 +48,6 @@ for inp_f in args.input:
             if did in odict:
                 continue
             odict[did] = score
+            output_run[qid] = odict
 
 write_run_dict(output_run, args.output)
