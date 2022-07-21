@@ -168,7 +168,7 @@ public class ResourceManager {
       }
             
     } else {
-      return null;
+      throw new Exception("Invalid provider type: " + provType);
     }
     
     return res;
