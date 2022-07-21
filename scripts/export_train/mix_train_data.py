@@ -16,7 +16,7 @@
 #
 
 """
-This scripts mixes two training sets
+This scripts mixes two training sets: The validation set is taken from the 1st one.
 """
 
 import argparse
