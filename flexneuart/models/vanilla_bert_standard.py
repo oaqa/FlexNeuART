@@ -1,11 +1,18 @@
+#!/usr/bin/env python
 #
-# This code is a modified version of CEDR:
-# https://github.com/Georgetown-IR-Lab/cedr
+#  Copyright 2014+ Carnegie Mellon University
 #
-# (c) Georgetown IR lab & Carnegie Mellon University
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-# It's distributed under the MIT License
-# MIT License is compatible with Apache 2 license for the code in this repo.
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 #
 import torch
 
@@ -20,11 +27,10 @@ from flexneuart.models.base_bert import BertBaseRanker
 from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 
 
-@models.register(models.VANILLA_BERT + '_no_qry_pad')
-class VanillaBertNoPadRanker(BertBaseRanker):
+@models.register(models.VANILLA_BERT + '_stand')
+class VanillaBertStandard(BertBaseRanker):
     """
-        A vanilla BERT Ranker, which does not pad queries. Although much faster than
-        the CEDR-based vanilla ranker, it seems to be nearly always inferior.
+        A standard vanilla BERT Ranker, which does not pad queries (unlike CEDR version of FirstP).
 
         Nogueira, Rodrigo, and Kyunghyun Cho. "Passage Re-ranking with BERT."
         arXiv preprint arXiv:1901.04085 (2019).
@@ -45,13 +51,13 @@ class VanillaBertNoPadRanker(BertBaseRanker):
             b/c training code does not use a standard PyTorch loader!
         """
         tok : PreTrainedTokenizerBase = self.tokenizer
-        input_list = [ (q[0 : max_query_len], d[0 : max_doc_len]) for (q, d) in zip(query_texts, doc_texts)]
+        assert len(query_texts) == max_doc_len(doc_texts), \
+            "Document array length must be the same as query array length!"
+        input_list = list(zip(query_texts, doc_texts))
 
         res : BatchEncoding = tok.batch_encode_plus(batch_text_or_text_pairs=input_list,
                                    padding='longest',
-                                   truncation=True,
-                                   # Specifying max_length is a bit paranoid since we truncate
-                                   # queries & docs in the above code
+                                   truncation='only_second',
                                    max_length=3 + max_query_len + max_doc_len,
                                    return_tensors='pt')
 
