@@ -51,7 +51,7 @@ class VanillaBertStandard(BertBaseRanker):
             b/c training code does not use a standard PyTorch loader!
         """
         tok : PreTrainedTokenizerBase = self.tokenizer
-        assert len(query_texts) == max_doc_len(doc_texts), \
+        assert len(query_texts) == len(doc_texts), \
             "Document array length must be the same as query array length!"
         input_list = list(zip(query_texts, doc_texts))
 
