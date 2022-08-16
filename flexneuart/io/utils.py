@@ -65,7 +65,8 @@ class FileWrapper:
         self.decode_errors=decode_errors
         # In the binary mode encoding cannot be specify
         dir_name = os.path.dirname(file_name)
-        if dir_name:
+        # create a directory only if the file is in the write mode
+        if dir_name and 'w' in list(flags):
             os.makedirs(dir_name, exist_ok=True)
         if file_name.endswith('.gz'):
             self._file = gzip.open(file_name, flags, encoding=None)
