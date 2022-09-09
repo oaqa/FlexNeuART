@@ -2,35 +2,83 @@ from flexneuart.data_augmentation.utils.base_class import DataAugment
 import re
 import random
 
+
+# This file contains functions that would do augmentatation on random words in the document
+
 class RandomWordInsertion(DataAugment):
-    def __init__(self, alpha_ri=0.1, random_seed=42):
-        super().__init__(random_seed)
-        self.alpha_ri = alpha_ri # percentage of random insertion
+    """
+    A class used for Inserting Random words in the Document
+    ...
+
+    Attributes
+    ----------
+    alpha_ri : float
+        Percentage of random words to insert
+
+    Methods
+    -------
+    augment(text)
+        returns the augmented text
+    """
+    def __init__(self, alpha_ri=0.1):
+        super().__init__()
+        self.alpha_ri = alpha_ri
 
     def augment(self, text):
         words = re.split('\s+', text)
         num_words = len(words)
         number_ri = max(1, int(self.alpha_ri*num_words))
-        augmented_words = self.random_insertion(words, number_ri)
+        augmented_words = self.__random_insertion(words, number_ri)
         return ' '.join(augmented_words)
-        
-    def random_insertion(self, words, n):
+    
+    def __random_insertion(self, words, n):
+        """
+        This method calls the add_word method every time we want of add a word
+
+        Parameters:
+        ----------
+        words : List[str]
+            The list of all words from the document
+        n : int
+            The number of words to be inserted in the document
+        """
         new_words = words.copy()
         for _ in range(n):
-            self.add_word(new_words)
+            self.__add_word(new_words)
         return new_words
         
-    def add_word(self, new_words):
+    def __add_word(self, new_words):
+        """
+        Sample a word from a list of words and add it to a random place
+
+        Parameters:
+        ----------
+        new_words : List[str]
+            A list of words to sample a single word from
+        """
         repeat_word = new_words[random.randint(0, len(new_words)-1)]
         random_idx = random.randint(0, len(new_words)-1)
         new_words.insert(random_idx, repeat_word)
 
 
 class RandomWordDeletion(DataAugment):
-    def __init__(self, p = 0.2, random_seed=42):
-        super().__init__(random_seed)
-        self.p = p
+    """
+    A class used for Inserting Random words in the Document
+    ...
 
+    Attributes
+    ----------
+    p : float
+        The probability of deleting every word in the document
+
+    Methods
+    -------
+    augment(text)
+        returns the augmented text
+    """
+    def __init__(self, p = 0.2):
+        super().__init__()
+        self.p = p
 
     def augment(self, text):
         # Code referenced from: https://github.com/jasonwei20/eda_nlp/blob/master/code/eda.py
@@ -57,24 +105,56 @@ class RandomWordDeletion(DataAugment):
 
 
 class RandomWordSwap(DataAugment):
-    def __init__(self, alpha_rs=0.1, random_seed=42):
-        super().__init__(random_seed)
+    """
+    A class used for Inserting Random words in the Document
+    ...
+
+    Attributes
+    ----------
+    alpha_rs : float
+        Percentage of the document that would be swapped
+
+    Methods
+    -------
+    augment(text)
+        returns the augmented text
+    """
+    def __init__(self, alpha_rs=0.1):
+        super().__init__()
         self.alpha_rs = alpha_rs # percentage of random swap
 
     def augment(self, text):
         words = re.split('\s+', text)
         num_words = len(words)
         number_rs = max(1, int(self.alpha_rs*num_words))
-        augmented_words = self.random_swap(words, number_rs)
+        augmented_words = self.__random_swap(words, number_rs)
         return ' '.join(augmented_words)
 
-    def random_swap(self, words, n):
+    def __random_swap(self, words, n):
+        """
+        Wrapper method to call swap_words function
+
+        Parameters:
+        ----------
+        words : List[str]
+            A list of all words from the document
+        n : int
+            The number of words to swap
+        """
         new_words = words.copy()
         for _ in range(n):
-            new_words = self.swap_word(new_words)
+            new_words = self.__swap_word(new_words)
         return new_words
 
-    def swap_word(self, new_words):
+    def __swap_word(self, new_words):
+        """
+        Swap a word
+
+        Parameters:
+        ----------
+        new_words : List[str]
+            A list of words where 2 indexes will be chosen to swap the words
+        """
         random_idx_1 = random.randint(0, len(new_words)-1)
         random_idx_2 = random_idx_1
         counter = 0
