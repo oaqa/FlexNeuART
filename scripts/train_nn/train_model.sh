@@ -64,7 +64,7 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "json_conf"          "jsonConf"         "collection relative JSON configuration file (optional)"
       "init_model_weights" "initModelWeights" "initial model weights"
       "init_model"         "initModel"        "init model"
-      "valid_type"         "valType"          "validation type: always (every epoch), last (last epoch), never"
+      "valid_type"         "valType"          "validation type: always (every epoch), last_epoch (last epoch), never"
       "distr_backend"      "distrBackend"     "Pytorch backend for distributed processing"
       "data_augment"       "dataAugment"      "data augmentation method"
 )

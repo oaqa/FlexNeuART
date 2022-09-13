@@ -138,6 +138,7 @@ class BertSplitSlideWindowRanker(BertBaseRanker):
         for i in range(cls_output.shape[0] // batch_qty):
             bms.append(dms[i*batch_qty:(i+1)*batch_qty])
         block_masks = (torch.stack(bms, dim=1) > 0).long()
+        # We use query representation from the first document part only
         query_results = [r[:batch_qty, 1:max_qlen + 1] for r in result]
 
         return BertSplitSlideWindowRankerEncResult(cls_results=cls_results,
