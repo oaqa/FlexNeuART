@@ -25,13 +25,15 @@ class ConstantDocLength(DataAugment):
         old_length = len(tokens)
         constant_length_text = []
 
-        # check if current length of the document is greater than max specified length
-        if old_length>self.doc_length:
-            #sample indices that will be deleted from the document
-            indices_to_delete = random.sample(range(old_length),old_length-self.doc_length)
+        # check if current length of the document is less than equal max specified length
+        if old_length<=self.doc_length:
+            return text
+        
+        #sample indices that will be deleted from the document
+        indices_to_delete = random.sample(range(old_length),old_length-self.doc_length)
 
-            for ind,word in enumerate(tokens):
-                if ind not in indices_to_delete:
-                    constant_length_text.append(word)          
+        for ind,word in enumerate(tokens):
+            if ind not in indices_to_delete:
+                constant_length_text.append(word)        
         
         return " ".join(constant_length_text)
