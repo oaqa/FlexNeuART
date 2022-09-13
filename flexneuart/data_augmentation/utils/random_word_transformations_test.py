@@ -2,17 +2,15 @@ from random_word_transformations import RandomWordDeletion, RandomWordInsertion,
 
 class TestRandomWordTransformations():
     def test_random_swap(self):
-        # answer = True
-        # self.assertEqual(answer, True)
         sentence = "This is a test sentence"
         random_swap_sentence = RandomWordSwap(alpha_rs = 0.2)
         print(random_swap_sentence.augment(sentence))
+    
     def test_random_insertions(self):
-        # answer = True
-        # self.assertEqual(answer, True)
         sentence = "This is a test sentence"
         random_inserted_sentence = RandomWordInsertion(alpha_ri = 0.2)
         print(random_inserted_sentence.augment(sentence))
+    
     def test_random_deletions(self):
         sentence = "This is a test sentence"
         random_deletion = RandomWordDeletion(p = 0.1)
