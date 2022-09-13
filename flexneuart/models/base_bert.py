@@ -40,10 +40,12 @@ class BertBaseRanker(BaseModel):
     def __init__(self, bert_flavor):
         """Bert ranker constructor.
 
-            :param bert_flavor:   the name of the underlying Transformer/BERT. Various
-                                  Transformer models are possible as long as they return
-                                  the object BaseModelOutputWithPoolingAndCrossAttentions.
-
+            :param bert_flavor:   The name of the underlying Transformer/BERT or a path
+                                  to a previously stored model. This will will be passed
+                                  to AutoModel.from_pretrained().
+                                  One can use quite a few Transformer models as long as
+                                  they return an object of the type:
+                                  BaseModelOutputWithPoolingAndCrossAttentions.
         """
         super().__init__()
         init_model(self, bert_flavor)

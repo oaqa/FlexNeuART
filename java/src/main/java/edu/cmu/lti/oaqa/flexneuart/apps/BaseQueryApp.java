@@ -111,11 +111,6 @@ class BaseProcessingUnit {
       // Re-sorting after updating scores
       int intermRerankQty = cands.length;
       Arrays.sort(cands);
-      // We may now need to update allDocIds and resultsAll to include only top-maxNumRet entries!
-      if (cands.length > maxNumRet) {
-        CandidateEntry resultsAllTrunc[] = Arrays.copyOf(cands, maxNumRet);
-        cands = resultsAllTrunc;          
-      }
       end = System.currentTimeMillis();
       long rerankIntermTimeMS = end - start;
       mAppRef.logger.info(

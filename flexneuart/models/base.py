@@ -93,8 +93,8 @@ class BaseModel(torch.nn.Module):
         **ATTENTION!!!** This function *MUST* itself create a batch
         b/c training code does not use a standard PyTorch loader!
 
-        :param max_query_len: max query length
-        :param max_doc_len:   max doc length
+        :param max_query_len: max query length (in characters)
+        :param max_doc_len:   max doc length (in characters)
         :param query_texts: an array of query texts
         :param doc_texts:   an array of documen texts
         :return: a tuple with batchified input.

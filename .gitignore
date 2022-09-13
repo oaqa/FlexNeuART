@@ -22,4 +22,4 @@ build/
 dist/
 flexneuart.egg-info
 /bin/
-*/target/*
+model1

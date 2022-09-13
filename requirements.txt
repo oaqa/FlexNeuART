@@ -31,3 +31,6 @@ krovetzstemmer
 
 thrift==0.13.0
 typing-extensions
+
+# Colbert specific
+ujson
