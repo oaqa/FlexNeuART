@@ -1,32 +1,39 @@
 from flexneuart.data_augmentation.utils.base_class import DataAugment
-import re
 import random
-from nltk.corpus import wordnet 
 
 class ConstantDocLength(DataAugment):
-    def __init__(self, doc_length, random_seed=42):
-        super().__init__(random_seed)
-        self.doc_length = doc_length # maximum tokens needed of a doc
+    """
+    Randomly delete words reduce the document length
+    ...
+
+    Attributes
+    ----------
+    doc_length : int 
+        The maximum number of words in document
+
+    Methods
+    -------
+    augment(text)
+        returns the augmented text
+    """
+    def __init__(self, doc_length):
+        super().__init__()
+        self.doc_length = doc_length
 
     def augment(self, text):
         tokens = text.split()
         old_length = len(tokens)
         constant_length_text = []
 
-        if old_length>self.doc_length:
-            indices_to_delete = random.sample(range(old_length),old_length-self.doc_length)
+        # check if current length of the document is less than equal max specified length
+        if old_length<=self.doc_length:
+            return text
+        
+        #sample indices that will be deleted from the document
+        indices_to_delete = random.sample(range(old_length),old_length-self.doc_length)
 
-            for ind,word in enumerate(tokens):
-                if ind not in indices_to_delete:
-                    constant_length_text.append(word)           
+        for ind,word in enumerate(tokens):
+            if ind not in indices_to_delete:
+                constant_length_text.append(word)        
         
         return " ".join(constant_length_text)
-
-class AddIrrelevantContent(DataAugment):
-    def __init__(self, random_seed=42):
-        super().__init__(random_seed)
-
-    def augment(self, text):
-        # TODO: Need a sentence generator
-        return
-               
