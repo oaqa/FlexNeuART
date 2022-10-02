@@ -115,10 +115,9 @@ def gather_2d_on_last_dim(tensor, index, shape):
         flattened_index]
     return flattened_gathered_tensor.view(shape)
 
-def postprocess_queries(generated_texts, prompt_lengths, model_outputs, question_mark_ind):
+def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
 
     #suppose we have the model_output
-
     
     questions = [text[ text.find('Example 1:') + prompt_length:] for text, prompt_length in zip(generated_texts,prompt_lengths)]
     q_inds = [q.find("?") for q in questions]
@@ -131,28 +130,40 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, question
             valid_query_indices.append(i) 
 
     #probs
-
     probs = torch.stack(model_outputs.scores, dim=1).log_softmax(-1) # batchsize*tokensize*vocabsize
 
-    length_input = input_ids.shape[1]
+    # model_output["sequences"].shape = [batch_size x output_size]
+    # probs.shape = [batch_size x max_new_tokens x vocab_size]
+    length_input = model_outputs["sequences"].shape[1] - probs.shape[1]
     output_ids = model_outputs["sequences"][valid_query_indices,length_input:]
 
     probs = gather_2d_on_last_dim(probs[valid_query_indices,:,:], output_ids, output_ids.shape)
 
-    clip_extra_output_ids = [(t == question_mark_ind).nonzero(as_tuple=True)[0][0] for t in output_ids] 
+    clip_extra_output_ids = []
+    for t in output_ids:
+      for qid in qindex:
+        try:
+          clip_id = (t == qid).nonzero(as_tuple=True)[0][0]
+          clip_extra_output_ids.append(clip_id)
+          break
+        except:
+          continue
 
-    masks = torch.arange(probs.shape[1]).expand(len(clip_extra_output_ids), probs.shape[1]) < clip_extra_output_ids.unsqueeze(1)
-
+    clip_extra_output_ids = torch.tensor(clip_extra_output_ids).to(device=probs.device)
+    
+    index_matrix = torch.arange(probs.shape[1]).expand(len(clip_extra_output_ids), probs.shape[1])
+    index_matrix = index_matrix.to(device=probs.device)
+    masks = index_matrix < clip_extra_output_ids.unsqueeze(1)
+    
     probs = probs * masks
 
-    probs = torch.sum(axis=1)/torch.stack(clip_extra_output_ids)
+    probs = torch.sum(probs, axis=1)/clip_extra_output_ids
 
-
-
-    final_probs = [0] * len(final_queries)
+    # initializing -1e9 will ensure very small probs for empty sentences
+    final_probs = [-1e9 for _ in range(len(final_queries))]
 
     for idx,prob in zip(valid_query_indices,probs):
-        final_probs[idx] = prob
+        final_probs[idx] = prob.cpu().item()
 
     return final_queries, final_probs
 
@@ -195,7 +206,12 @@ if __name__ == '__main__':
     tokenizer.padding_side = "left" 
     tokenizer.pad_token = tokenizer.eos_token
 
-    question_mark_id = tokenizer("?")["input_ids"][0]
+    question_index = []
+    vocab_size = len(tokenizer.get_vocab())
+    for tid in range(vocab_size):
+        token_text = tokenizer.decode([tid])
+        if '?' in token_text:
+            question_index.append(tid)
 
     model = model_class.from_pretrained(args.engine, return_dict_in_generate=True)
     model = model.to(device)
@@ -209,17 +225,22 @@ if __name__ == '__main__':
     start_time = time.time()
     output_text = []
     for i, batch in enumerate(inpars_loader):
-        
+        torch.cuda.empty_cache()
         input_data = batch[1]['input_ids'].to(device=next(model.parameters()).device)
-        model_out = model.generate(input_data, do_sample=True, max_new_tokens=args.max_tokens,output_scores=True)
+        with torch.no_grad():
+            model_out = model.generate(input_data,
+                do_sample=True,
+                max_new_tokens=args.max_tokens,
+                output_scores=True,
+                pad_token_id=tokenizer.eos_token_id)
         gen_text = tokenizer.batch_decode(model_out["sequences"])
         gen_text_out.extend(gen_text)
         tensor_out.append(model_out)
 
-        # final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_mark_id,)
-        # query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
+        final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_index)
+        query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
     print("Total Time = {0}".format(time.time()-start_time))
-    
+
     with open("gen_text_out.out", "wb") as f:
         pickle.dump(gen_text_out, f)
     with open("model_out.out", "wb") as f:
