@@ -85,6 +85,9 @@ def arg_check(args):
     for temp_file_path in [args.aug_query, args.aug_query_qrels, args.neg_doc, args.neg_doc_qrels]:
         if not args.overwrite and os.path.exists(temp_file_path):
             raise Exception("Temporary file exists and can be overwritten. If this is expected, please pass --overwrite")
+        dir_path = os.path.dirname(temp_file_path)
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
 
     return
 
