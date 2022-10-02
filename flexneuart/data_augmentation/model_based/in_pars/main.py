@@ -1,6 +1,7 @@
 import os
 import argparse
 from generate_files import generate_files
+from generate_negative_docs import generate_negative
 
 def main():
     args = parse_arguments()
@@ -8,6 +9,7 @@ def main():
     # positive query generation arguments
 
     # negative document generation arguments
+    generate_negative(args)
 
     # generate files
     generate_files(args)
