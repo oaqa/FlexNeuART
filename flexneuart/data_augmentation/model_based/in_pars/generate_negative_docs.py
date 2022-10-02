@@ -3,7 +3,7 @@ import os
 import csv
 import sys
 import time
-
+import argparse
 from flexneuart import configure_classpath
 from flexneuart.retrieval import create_featextr_resource_manager
 from flexneuart.retrieval.fwd_index import get_forward_index
@@ -32,7 +32,7 @@ class BM25Retriever():
         no_of_responses =  query_response[0]
 
         if no_of_responses == 0:
-            return None, None
+            return None, None, None
 
         random_number = random.randint(0, min(no_of_responses, self.args.max_docs_retrieved))
 
@@ -52,7 +52,7 @@ class BM25Retriever():
         self.counter += 1
         return qid 
 
-    def __sanity_check(self, collection, collection_root):
+    def __sanity_check(self):
 
         collection = os.getenv("COLLECTION")
         collection_root = os.getenv("COLLECTION_ROOT")
@@ -75,7 +75,7 @@ def generate_negative(args):
     output_qrels = open(args.neg_doc_qrels, 'w')
 
     tsv_writer = csv.writer(output_data, delimiter='\t')
-    tsv_writer_qrels = csv.writer(output_qrels, delimiter='\t')
+    tsv_writer_qrels = csv.writer(output_qrels, delimiter=' ')
 
     bm25_retriever = BM25Retriever(args)
 
@@ -83,7 +83,8 @@ def generate_negative(args):
         query = line[:-1].split("\t", 2)[2]
 
         query_id, negative_doc_id, negative_doc_text = bm25_retriever(query)
-        
+        if negative_doc_text==None:
+            continue
         query_row = ['query', query_id, query]
         tsv_writer.writerow(query_row)
 
@@ -95,3 +96,12 @@ def generate_negative(args):
     new_queries_file.close()
     output_data.close()
     output_qrels.close()
+
+if __name__ == '__main__':
+    args = argparse.ArgumentParser()
+    args.aug_query = '/home/ubuntu/efs/capstone/data_aug/FlexNeuART/flexneuart/data_augmentation/generate_negative_docs/neg_qfile.tsv'
+    args.neg_doc = './output/neg_doc.tsv'
+    args.neg_doc_qrels = './output/neg_doc_qrels.txt'
+    args.index = 'lucene_index'
+    args.max_docs_retrieved = 100
+    generate_negative(args)
