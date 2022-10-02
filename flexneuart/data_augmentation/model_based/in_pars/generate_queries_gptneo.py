@@ -219,11 +219,7 @@ if __name__ == '__main__':
     inpars_collater = InParsCollater(tokenizer)
     inpars_loader = DataLoader(inpars_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=inpars_collater)
 
-    tensor_out = []
-    gen_text_out = []
-
     start_time = time.time()
-    output_text = []
     for i, batch in enumerate(inpars_loader):
         torch.cuda.empty_cache()
         input_data = batch[1]['input_ids'].to(device=next(model.parameters()).device)
@@ -234,16 +230,9 @@ if __name__ == '__main__':
                 output_scores=True,
                 pad_token_id=tokenizer.eos_token_id)
         gen_text = tokenizer.batch_decode(model_out["sequences"])
-        gen_text_out.extend(gen_text)
-        tensor_out.append(model_out)
 
         final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_index)
         query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
     print("Total Time = {0}".format(time.time()-start_time))
-
-    with open("gen_text_out.out", "wb") as f:
-        pickle.dump(gen_text_out, f)
-    with open("model_out.out", "wb") as f:
-        pickle.dump(tensor_out, f)
 
     print('Done!')
