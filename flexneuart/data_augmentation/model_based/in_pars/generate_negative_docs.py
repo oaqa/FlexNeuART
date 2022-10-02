@@ -1,7 +1,5 @@
 import random
-import argparse
 import os
-import json
 import csv
 import sys
 import time
