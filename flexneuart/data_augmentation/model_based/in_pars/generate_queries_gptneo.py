@@ -22,7 +22,6 @@ class InParsDataset(Dataset):
         self.prompt = prompt_file.read()
         prompt_file.close()
 
-
     # Getting max examples
     def get_docs(self):
         
@@ -106,11 +105,7 @@ def write_to_output(syn_query_list,syn_query_probs, did_list , aug_query_tsv_op,
     except IOError as e:
         print(e)
 
-def gather_2d_on_last_dim(
-        tensor: FloatTensor,
-        index: LongTensor,
-        shape: torch.Size
-):
+def gather_2d_on_last_dim(tensor, index, shape):
     
     flattened_tensor = tensor.view(-1, tensor.shape[-1])
     flattened_index = index.view(-1)
@@ -128,16 +123,18 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, question
     q_inds = [q.find("?") for q in questions]
     final_queries = [q[:q_ind+1] for q,q_ind in zip(questions,q_inds)]
 
-    valid_query_indices = [i if q!="" for i,q in enumerate(final_queries)]
+    # valid_query_indices = [i if q!="" for i,q in enumerate(final_queries)]
+    valid_query_indices = []
+    for i, q in enumerate(final_queries):
+        if q!="":
+            valid_query_indices.append(i) 
 
     #probs
 
-    probs = torch.stack(outputs.scores, dim=1).log_softmax(-1) # batchsize*tokensize*vocabsize
-
-    
+    probs = torch.stack(model_outputs.scores, dim=1).log_softmax(-1) # batchsize*tokensize*vocabsize
 
     length_input = input_ids.shape[1]
-    output_ids = model_output["sequences"][valid_query_indices,length_input:]
+    output_ids = model_outputs["sequences"][valid_query_indices,length_input:]
 
     probs = gather_2d_on_last_dim(probs[valid_query_indices,:,:], output_ids, output_ids.shape)
 
@@ -213,9 +210,8 @@ if __name__ == '__main__':
         model_out = model.generate(input_data, do_sample=True, max_new_tokens=args.max_tokens,output_scores=True)
         gen_text = tokenizer.batch_decode(model_out["sequences"])
 
-        final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_mark_id,)
-        query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
+        # final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_mark_id,)
+        # query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
     print("Total Time = {0}".format(time.time()-start_time))
-
 
     print('Done!')
