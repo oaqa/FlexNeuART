@@ -1,7 +1,4 @@
 import argparse
-import json
-import os
-import re
 # import openai
 import time
 # from tqdm import tqdm
@@ -10,9 +7,12 @@ import torch
 from transformers import GPT2Tokenizer, GPTNeoForCausalLM
 from torch.utils.data import Dataset, DataLoader
 import csv
-import pickle
+import logging
+import datetime
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
+logging.basicConfig(filename='in_pars.log', filemode='a', level=logging.DEBUG)
+logging.info("Start Logging at - {0}".format(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
 
 class InParsDataset(Dataset):
     def __init__(self, doc_file, prompt_path, max_examples):
@@ -231,8 +231,14 @@ if __name__ == '__main__':
                 pad_token_id=tokenizer.eos_token_id)
         gen_text = tokenizer.batch_decode(model_out["sequences"])
 
-        final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_index)
-        query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
+        try:
+            final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_index)
+            query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
+        except Exception as e:
+            curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            logging.debug("{0} {1}".format(curr_time, str(e)))
+            logging.debug("Batch {1} Doc ID's {2}".format(curr_time, i, str(batch[2])))
+            continue
     print("Total Time = {0}".format(time.time()-start_time))
 
     print('Done!')
