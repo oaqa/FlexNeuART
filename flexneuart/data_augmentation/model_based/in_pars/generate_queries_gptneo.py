@@ -9,6 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 import csv
 import logging
 import datetime
+from tqdm import tqdm
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 logging.basicConfig(filename='in_pars.log', filemode='a', level=logging.DEBUG)
@@ -220,7 +221,7 @@ if __name__ == '__main__':
     inpars_loader = DataLoader(inpars_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=inpars_collater)
 
     start_time = time.time()
-    for i, batch in enumerate(inpars_loader):
+    for i, batch in enumerate(tqdm(inpars_loader)):
         torch.cuda.empty_cache()
         input_data = batch[1]['input_ids'].to(device=next(model.parameters()).device)
         with torch.no_grad():
