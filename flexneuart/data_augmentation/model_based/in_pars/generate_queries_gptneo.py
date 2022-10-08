@@ -1,9 +1,5 @@
 import argparse
-from email.policy import default
-# import openai
 import time
-# from tqdm import tqdm
-from transformers import pipeline
 import torch
 from transformers import GPT2Tokenizer, GPTNeoForCausalLM
 from torch.utils.data import Dataset, DataLoader
@@ -13,9 +9,14 @@ import datetime
 from tqdm import tqdm
 import multiprocessing as mp
 import random
+import os
 
-logging.basicConfig(filename='in_pars.log', filemode='a', level=logging.DEBUG)
-logging.info("Start Logging at - {0}".format(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+USE_LOGGING = False
+
+def setup_logging():
+    USE_LOGGING = True
+    logging.basicConfig(filename='in_pars.log', filemode='a', level=logging.DEBUG)
+    logging.info("Start Logging at - {0}".format(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
 
 class InParsDataset(Dataset):
     def __init__(self, doc_file, prompt_path, max_examples):
@@ -61,28 +62,33 @@ class InParsDataset(Dataset):
 class InParsCollater(object):
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
+
     def __call__(self, batch):
-        
         batch_texts = [i[1] for i in batch]
-        
         batch_ids = [i[0] for i in batch]
         batch_lengths = [len(i) for i in batch_texts]
-        return batch_ids, self.tokenizer.batch_encode_plus(batch_texts, return_tensors='pt',padding=True), batch_lengths
+        batch_data = self.tokenizer.batch_encode_plus(batch_texts, return_tensors='pt',padding=True)
+
+        return batch_ids, batch_data, batch_lengths
 
 
 class GPTNeoInitialization:
     def __init__(self):
         pass
+
     def tokenizer(self):
         return GPT2Tokenizer
+
     def base_model(self):
         return GPTNeoForCausalLM
 
 class BloomInitialization:
     def __init__(self):
            pass
+    
     def tokenizer(self):
         return BloomTokenizerFast
+    
     def base_model(self):
         return BloomForCausalLM
 
@@ -99,7 +105,6 @@ class ModelInitialization:
     def initialize_model(self):
         initilizer_class = self.model_map[self.model_name]()
         return initilizer_class.tokenizer(), initilizer_class.base_model()
-
 
 def write_to_output(syn_query_list,syn_query_probs, did_list , aug_query_tsv_op, aug_query_qrels_op, timestamp, counter):
     try:
@@ -179,13 +184,10 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
 
     return final_queries, final_probs
 
-
-def main(args):
+def generate_queries(args, inpars_dataset, device, split_num):
     query_id_timestamp = time.time()
     query_id_counter = 0
 
-    inpars_dataset = InParsDataset(args.original_doc, args.prompt_template, args.max_examples)          
-            
     tokenizer_class, model_class = ModelInitialization(args.engine).initialize_model()
     tokenizer = tokenizer_class.from_pretrained(args.engine)
     tokenizer.padding_side = "left" 
@@ -197,12 +199,12 @@ def main(args):
         token_text = tokenizer.decode([tid])
         if '?' in token_text:
             question_index.append(tid)
-
+    
     model = model_class.from_pretrained(args.engine, return_dict_in_generate=True)
-    if torch.cuda.is_available():
-        model = model.cuda()
+    model = model.to(device)
 
     inpars_collater = InParsCollater(tokenizer)
+
     inpars_loader = DataLoader(inpars_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=inpars_collater)
 
     start_time = time.time()
@@ -219,16 +221,83 @@ def main(args):
 
         try:
             final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_index)
-            query_id_counter = write_to_output(final_queries,final_probs,batch[0], args.aug_query,args.aug_query_qrels, query_id_timestamp, query_id_counter)
+            query_id_counter = write_to_output(final_queries,
+                                final_probs,
+                                batch[0], 
+                                args.aug_query+split_num,
+                                args.aug_query_qrels+split_num,
+                                query_id_timestamp,
+                                query_id_counter)
         except Exception as e:
             curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            logging.debug("{0} {1}".format(curr_time, str(e)))
-            logging.debug("Batch {1} Doc ID's {2}".format(curr_time, i, str(batch[2])))
+            if USE_LOGGING==True:
+                logging.debug("{0} {1}".format(curr_time, str(e)))
+                logging.debug("Batch {1} Doc ID's {2}".format(curr_time, i, str(batch[2])))
+            else:
+                print("{0} {1}".format(curr_time, str(e)))
+                print("Batch {1} Doc ID's {2}".format(curr_time, i, str(batch[2])))
             continue
     print("Total Time = {0}".format(time.time()-start_time))
 
     print('Done!')
 
+def collate_output_files(args, num_splits):
+    qrels = ""
+    queries = ""
+
+    for i in range(num_splits):
+        with open(args.aug_query+str(i)) as q:
+            queries += q.read()
+        with open(args.aug_query_qrels+str(i)) as q:
+            qrels += q.read()
+    
+    with open(args.aug_query, "a") as op:
+        op.write(queries)
+    
+    with open(args.aug_query_qrels, "a") as op:
+        op.write(qrels)
+
+def remove_splits(args, num_splits):
+
+    for i in range(num_splits):
+        os.remove(args.aug_query+str(i))
+        os.remove(args.aug_query_qrels+str(i))
+        
+
+def main(args):
+
+    inpars_dataset = InParsDataset(args.original_doc, args.prompt_template, args.max_examples)
+
+    num_gpus_available = torch.cuda.device_count()
+
+    if args.num_gpu==1 or args.num_gpu==0:
+        setup_logging()
+        device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        generate_queries(args, inpars_dataset, device, "0")
+    
+    else:
+        gpus_to_use = args.num_gpu
+        if num_gpus_available < gpus_to_use:
+            print("{0} GPU's not available, running using {1} GPU's".format(gpus_to_use, num_gpus_available))
+            gpus_to_use = num_gpus_available
+        
+        # split data into gpus_to_use parts 
+        dataset_split_size = len(inpars_dataset) // gpus_to_use
+        splits = [dataset_split_size for _ in range(gpus_to_use)]
+        splits[-1] += (len(inpars_dataset)%gpus_to_use)
+
+        data_splits = torch.utils.data.random_split(inpars_dataset, splits)
+        generation_args = [(args, data_splits[i], "cuda:{0}".format(i), str(i)) for i in range(gpus_to_use)]
+
+        with mp.Pool(gpus_to_use) as p:
+            p.starmap(generate_queries, generation_args)
+            p.close()
+            p.join()
+        
+        collate_output_files(args, gpus_to_use)
+        remove_splits(args, gpus_to_use)
+    
+    print("Generation Done")
 
 
 if __name__ == '__main__':
@@ -254,10 +323,9 @@ if __name__ == '__main__':
                         help='Time to wait between API calls, in seconds.')        
     parser.add_argument('--include_doc_probs', action='store_true',
                         help='Wheter or not to save the tokens probabilities produeced by the model.')
-    parser.add_argument('--num_gpus', type=int, default=1,
+    parser.add_argument('--num_gpu', type=int, default=1,
                         help="Number of GPU's to run inference on. Dataset will be divided")
 
     args = parser.parse_args()
 
-    print(args.prompt_template)
-    # main(args)
+    main(args)
