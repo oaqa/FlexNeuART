@@ -1,4 +1,5 @@
 import argparse
+from email.policy import default
 # import openai
 import time
 # from tqdm import tqdm
@@ -10,8 +11,9 @@ import csv
 import logging
 import datetime
 from tqdm import tqdm
+import multiprocessing as mp
+import random
 
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
 logging.basicConfig(filename='in_pars.log', filemode='a', level=logging.DEBUG)
 logging.info("Start Logging at - {0}".format(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
 
@@ -20,9 +22,8 @@ class InParsDataset(Dataset):
         self.doc_file = doc_file
         self.max_examples = max_examples
         self.get_docs()
-        prompt_file = open(prompt_path)
-        self.prompt = prompt_file.read()
-        prompt_file.close()
+        self.prompts = self.__read_prompts(prompt_path)
+        self.num_prompts = len(self.prompts)
 
     # Getting max examples
     def get_docs(self):
@@ -45,7 +46,17 @@ class InParsDataset(Dataset):
         return len(self.sents)
     
     def __getitem__(self, index):
-        return self.sents[index][0], self.prompt.format(document_text=self.sents[index][1])
+        prompt_index = random.randint(0, self.num_prompts-1)
+        return self.sents[index][0], self.prompts[prompt_index].format(document_text=self.sents[index][1])
+
+    def __read_prompts(self, prompt_paths):
+        prompts = []
+        for pp in prompt_paths:
+            prompt_file = open(pp)
+            prompts.append(prompt_file.read())
+            prompt_file.close()
+
+        return prompts
 
 class InParsCollater(object):
     def __init__(self, tokenizer):
@@ -56,7 +67,7 @@ class InParsCollater(object):
         
         batch_ids = [i[0] for i in batch]
         batch_lengths = [len(i) for i in batch_texts]
-        return batch_ids, tokenizer.batch_encode_plus(batch_texts, return_tensors='pt',padding=True), batch_lengths
+        return batch_ids, self.tokenizer.batch_encode_plus(batch_texts, return_tensors='pt',padding=True), batch_lengths
 
 
 class GPTNeoInitialization:
@@ -169,34 +180,7 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
     return final_queries, final_probs
 
 
-
-if __name__ == '__main__':
-    # use :
-    # python3 generate_queries_gptneo.py --original_doc /home/ubuntu/output.csv --aug_query aug_query.tsv --aug_query_qrels aug_query_qrels.txt
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--original_doc', type=str, required=True,
-                        help='Full Path to TSV file containing document IDs and texts')
-    parser.add_argument('--aug_query', type=str, required=True,
-                        help='Full Path of TSV file where generated query and their new IDs will be written')
-    parser.add_argument('--aug_query_qrels', type=str, required=True,
-                        help='Full Path of .txt file to store the query aand document ID relation pairs')
-    parser.add_argument('--engine', type=str, default="EleutherAI/gpt-neo-1.3B")
-    parser.add_argument('--prompt_template', type=str, default='prompts/vanilla_prompt.txt')
-    parser.add_argument('--max_examples', type=int, default=10,
-                        help='Maximum number of documents to read from the collection.')
-    parser.add_argument('--max_tokens', type=int, default=32, help='Max tokens to be generated.')
-    parser.add_argument('--batch_size', type=int, default=12, help="dataloader batch size")
-    parser.add_argument('--temperature', type=float, default=0.0,
-                        help='Sampling temperature. Zero means greedy decoding.')
-    parser.add_argument('--top_p', type=float, default=1.0)
-    parser.add_argument('--sleep_time', type=float, default=1.5, 
-                        help='Time to wait between API calls, in seconds.')        
-    parser.add_argument('--include_doc_probs', action='store_true',
-                        help='Wheter or not to save the tokens probabilities produeced by the model.')  
-
-    args = parser.parse_args()
-
-
+def main(args):
     query_id_timestamp = time.time()
     query_id_counter = 0
 
@@ -215,7 +199,8 @@ if __name__ == '__main__':
             question_index.append(tid)
 
     model = model_class.from_pretrained(args.engine, return_dict_in_generate=True)
-    model = model.to(device)
+    if torch.cuda.is_available():
+        model = model.cuda()
 
     inpars_collater = InParsCollater(tokenizer)
     inpars_loader = DataLoader(inpars_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=inpars_collater)
@@ -243,3 +228,36 @@ if __name__ == '__main__':
     print("Total Time = {0}".format(time.time()-start_time))
 
     print('Done!')
+
+
+
+if __name__ == '__main__':
+    # use :
+    # python3 generate_queries_gptneo.py --original_doc /home/ubuntu/output.csv --aug_query aug_query.tsv --aug_query_qrels aug_query_qrels.txt
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--original_doc', type=str, required=True,
+                        help='Full Path to TSV file containing document IDs and texts')
+    parser.add_argument('--aug_query', type=str, required=True,
+                        help='Full Path of TSV file where generated query and their new IDs will be written')
+    parser.add_argument('--aug_query_qrels', type=str, required=True,
+                        help='Full Path of .txt file to store the query and document ID relation pairs')
+    parser.add_argument('--engine', type=str, default="EleutherAI/gpt-neo-1.3B")
+    parser.add_argument('--prompt_template', nargs="*", default=['prompts/vanilla_prompt.txt'])
+    parser.add_argument('--max_examples', type=int, default=10,
+                        help='Maximum number of documents to read from the collection.')
+    parser.add_argument('--max_tokens', type=int, default=32, help='Max tokens to be generated.')
+    parser.add_argument('--batch_size', type=int, default=12, help="dataloader batch size")
+    parser.add_argument('--temperature', type=float, default=0.0,
+                        help='Sampling temperature. Zero means greedy decoding.')
+    parser.add_argument('--top_p', type=float, default=1.0)
+    parser.add_argument('--sleep_time', type=float, default=1.5, 
+                        help='Time to wait between API calls, in seconds.')        
+    parser.add_argument('--include_doc_probs', action='store_true',
+                        help='Wheter or not to save the tokens probabilities produeced by the model.')
+    parser.add_argument('--num_gpus', type=int, default=1,
+                        help="Number of GPU's to run inference on. Dataset will be divided")
+
+    args = parser.parse_args()
+
+    print(args.prompt_template)
+    # main(args)
