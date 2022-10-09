@@ -81,9 +81,11 @@ def generate_negative(args):
     bm25_retriever = BM25Retriever(args)
 
     for line in new_queries_file:
-        query = line[:-1].split("\t", 2)[2]
+        splits = line[:-1].split("\t", 2)
+        query_id = splits[0]
+        query = splits[2].rsplit("\t", 1)[0]
 
-        query_id, negative_doc_id, negative_doc_text = bm25_retriever(query)
+        _, negative_doc_id, negative_doc_text = bm25_retriever(query)
         if negative_doc_text==None:
             continue
         query_row = ['query', query_id, query]
