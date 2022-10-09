@@ -112,7 +112,7 @@ def write_to_output(syn_query_list,syn_query_probs, did_list , aug_query_tsv_op,
             tsv_writer = csv.writer(aug_query_tsv_op, delimiter='\t')
             for query_text, query_prob, doc_id in zip(syn_query_list, syn_query_probs, did_list):
                 new_qid = "QP" + str(timestamp) + '_' + str(counter)
-
+                query_text = query_text.replace('\n', '')
                 tsv_writer.writerow(["query", new_qid, query_text, query_prob])
 
                 line = new_qid + " 0 " + str(doc_id) + " 1\n"
