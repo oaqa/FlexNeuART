@@ -2,6 +2,7 @@ import argparse
 import time
 import torch
 from transformers import GPT2Tokenizer, GPTNeoForCausalLM
+from transformers import BloomTokenizerFast, BloomForCausalLM
 from torch.utils.data import Dataset, DataLoader
 import csv
 import logging
