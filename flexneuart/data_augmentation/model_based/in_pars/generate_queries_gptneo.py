@@ -315,7 +315,7 @@ if __name__ == '__main__':
                         help='Full Path of .txt file to store the query and document ID relation pairs')
     parser.add_argument('--engine', type=str, default="EleutherAI/gpt-neo-1.3B")
     parser.add_argument('--prompt_template', nargs="*", default=['prompts/vanilla_prompt.txt'])
-    parser.add_argument('--max_examples', type=int, default=10,
+    parser.add_argument('--max_examples', type=int, default=1000000000,
                         help='Maximum number of documents to read from the collection.')
     parser.add_argument('--max_tokens', type=int, default=32, help='Max tokens to be generated.')
     parser.add_argument('--batch_size', type=int, default=12, help="dataloader batch size")
