@@ -270,17 +270,17 @@ def main(args):
 
     num_gpus_available = torch.cuda.device_count()
 
+    gpus_to_use = args.num_gpu
+    if num_gpus_available < gpus_to_use:
+        print("{0} GPU's not available, running using {1} GPU's".format(gpus_to_use, num_gpus_available))
+        gpus_to_use = num_gpus_available
+
     if args.num_gpu==1 or args.num_gpu==0:
         setup_logging()
         device = "cuda:0" if torch.cuda.is_available() else "cpu"
         generate_queries(args, inpars_dataset, device, "0")
     
     else:
-        gpus_to_use = args.num_gpu
-        if num_gpus_available < gpus_to_use:
-            print("{0} GPU's not available, running using {1} GPU's".format(gpus_to_use, num_gpus_available))
-            gpus_to_use = num_gpus_available
-        
         # split data into gpus_to_use parts 
         dataset_split_size = len(inpars_dataset) // gpus_to_use
         splits = [dataset_split_size for _ in range(gpus_to_use)]
