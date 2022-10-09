@@ -294,8 +294,8 @@ def main(args):
             p.close()
             p.join()
         
-        collate_output_files(args, gpus_to_use)
-        remove_splits(args, gpus_to_use)
+    collate_output_files(args, gpus_to_use)
+    remove_splits(args, gpus_to_use)
     
     print("Generation Done")
 
