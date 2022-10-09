@@ -210,7 +210,7 @@ def generate_queries(args, inpars_dataset, device, split_num):
 
     start_time = time.time()
     for i, batch in enumerate(tqdm(inpars_loader)):
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
         input_data = batch[1]['input_ids'].to(device=next(model.parameters()).device)
         with torch.no_grad():
             model_out = model.generate(input_data,
