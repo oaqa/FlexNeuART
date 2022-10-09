@@ -281,6 +281,8 @@ def main(args):
         generate_queries(args, inpars_dataset, device, "0")
     
     else:
+        torch.multiprocessing.set_start_method('spawn')
+        
         # split data into gpus_to_use parts 
         dataset_split_size = len(inpars_dataset) // gpus_to_use
         splits = [dataset_split_size for _ in range(gpus_to_use)]
