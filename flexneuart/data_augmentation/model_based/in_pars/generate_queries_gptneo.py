@@ -285,12 +285,13 @@ def main(args):
         dataset_split_size = len(inpars_dataset) // gpus_to_use
         splits = [dataset_split_size for _ in range(gpus_to_use)]
         splits[-1] += (len(inpars_dataset)%gpus_to_use)
+        
 
         data_splits = torch.utils.data.random_split(inpars_dataset, splits)
         generation_args = [(args, data_splits[i], "cuda:{0}".format(i), str(i)) for i in range(gpus_to_use)]
 
         with mp.Pool(gpus_to_use) as p:
-            p.starmap(generate_queries, generation_args)
+            p.starmap_async(generate_queries, generation_args)
             p.close()
             p.join()
         
