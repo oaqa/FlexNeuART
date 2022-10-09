@@ -282,7 +282,7 @@ def main(args):
     
     else:
         torch.multiprocessing.set_start_method('spawn')
-        
+
         # split data into gpus_to_use parts 
         dataset_split_size = len(inpars_dataset) // gpus_to_use
         splits = [dataset_split_size for _ in range(gpus_to_use)]
@@ -293,7 +293,7 @@ def main(args):
         generation_args = [(args, data_splits[i], "cuda:{0}".format(i), str(i)) for i in range(gpus_to_use)]
 
         with mp.Pool(gpus_to_use) as p:
-            p.starmap(generate_queries, generation_args)
+            p.starmap_async(generate_queries, generation_args)
             p.close()
             p.join()
         
