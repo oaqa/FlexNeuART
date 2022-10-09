@@ -101,7 +101,7 @@ class ModelInitialization:
         self.model_map = { "EleutherAI/gpt-neo-125M": GPTNeoInitialization,
                            "EleutherAI/gpt-neo-1.3B": GPTNeoInitialization,
                            "EleutherAI/gpt-neo-2.7B": GPTNeoInitialization,
-                           "bloom" : BloomInitialization }
+                           "bigscience/bloom-560m" : BloomInitialization }
 
     def initialize_model(self):
         initilizer_class = self.model_map[self.model_name]()
