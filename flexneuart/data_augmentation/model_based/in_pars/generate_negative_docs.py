@@ -22,7 +22,8 @@ class BM25Retriever():
             fwd_index_dir='forward_index', model1_root_dir=f'derived_data/giza',
             embed_root_dir=f'derived_data/embeddings')
 
-        self.cand_prov = create_cand_provider(self.resource_manager, PROVIDER_TYPE_LUCENE, args.index)
+        self.cand_prov = create_cand_provider(self.resource_manager, PROVIDER_TYPE_LUCENE, args.index,
+                                                add_config_file=args.bm25_config)
         self.counter = 0
         self.timestamp = time.time()
 

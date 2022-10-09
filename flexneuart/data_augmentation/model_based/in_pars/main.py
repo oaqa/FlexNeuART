@@ -62,6 +62,9 @@ def parse_arguments():
                         help='Type of the index (eg. lucene_index)')
     parser.add_argument('--max_docs_retrieved', type=int, default=100,
                         help='The maximum number of documents to be retrieved')
+    parser.add_argument('--bm25_config', type=str, default="configs/bm25_conf.json",
+                        help="Path to the config file to be used by BM25 for retrieval." +
+                            "Relative path starts from COLLECTION_DIR.")
 
     # generate data files
     parser.add_argument('--original_weight', type=float, default=1.0)
