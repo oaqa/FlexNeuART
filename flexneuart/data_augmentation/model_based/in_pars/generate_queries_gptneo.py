@@ -291,7 +291,7 @@ def main(args):
         generation_args = [(args, data_splits[i], "cuda:{0}".format(i), str(i)) for i in range(gpus_to_use)]
 
         with mp.Pool(gpus_to_use) as p:
-            p.starmap_async(generate_queries, generation_args)
+            p.starmap(generate_queries, generation_args)
             p.close()
             p.join()
         
