@@ -281,7 +281,7 @@ def main(args):
 
     if args.num_gpu==1 or args.num_gpu==0:
         setup_logging()
-        device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        device = args.device if torch.cuda.is_available() else "cpu"
         generate_queries(args, inpars_dataset, device, "0")
     
     else:
@@ -332,6 +332,8 @@ if __name__ == '__main__':
                         help='Wheter or not to save the tokens probabilities produeced by the model.')
     parser.add_argument('--num_gpu', type=int, default=1,
                         help="Number of GPU's to run inference on. Dataset will be divided")
+    parser.add_argument('--device', type=str, default='cpu',
+                        help='Device to use when running the model. cuda:0, cuda:1 and so on')
 
     args = parser.parse_args()
 
