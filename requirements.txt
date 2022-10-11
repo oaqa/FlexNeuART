@@ -6,9 +6,6 @@ tqdm
 urllib3
 pytools
 
-# higher versions require Python 3.7
-numpy==1.19.0
-
 beautifulsoup4
 
 ir_datasets
@@ -18,17 +15,18 @@ pyjnius
 torch
 torchtext
 
-# transformers can't tolerate tokenizer version that it's too high
-tokenizers<0.11
 # let's fix transformers versions, this is the key library and 
 # each upgrade can be a surprise
-transformers==4.15.0
+transformers==4.22.2
 # same applies to spacy
 spacy==2.2.3
 sentence-transformers
 sentencepiece
 krovetzstemmer
 
+numpy
+
+# we don't support more recent versions.
 thrift==0.13.0
 typing-extensions
 
