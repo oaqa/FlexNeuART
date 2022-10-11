@@ -1,8 +1,7 @@
 import argparse
-from asyncio.log import logger
-from cgitb import handler
 import time
 import torch
+from logging.handlers import QueueHandler, RotatingFileHandler
 
 from flexneuart.models.train.amp import get_amp_processors
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -10,38 +9,42 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from torch.utils.data import Dataset, DataLoader
 import csv
 import logging
-from logging.handlers import QueueHandler, QueueListener
 import datetime
 from tqdm import tqdm
 import multiprocessing as mp
 import random
 import os
 import pandas as pd
+import sys
 
-USE_LOGGING = False
+def worker_configurer(queue):
+    h = QueueHandler(queue)  # Just the one handler needed
+    root = logging.getLogger()
+    root.addHandler(h)
+    # send all messages, for demo; no other level or filter logic applied.
+    root.setLevel(logging.DEBUG)
 
-def setup_logging():
-    USE_LOGGING = True
-    logging.basicConfig(filename='in_pars.log', filemode='a', level=logging.DEBUG)
-    logging.info("Start Logging at - {0}".format(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+def listener_configurer():
+    root = logging.getLogger()
+    h = RotatingFileHandler('in_pars.log', 'a')
+    f = logging.Formatter('%(asctime)s %(processName)-10s %(name)s %(levelname)-8s %(message)s')
+    h.setFormatter(f)
+    root.addHandler(h)
 
-def init_worker(q):
-    qh = QueueHandler(q)
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(qh)
+def listener_process(queue, configurer):
+    configurer()
+    while True:
+        try:
+            record = queue.get()
+            if record is None:  # We send this as a sentinel to tell the listener to quit.
+                break
+            logger = logging.getLogger(record.name)
+            logger.handle(record)  # No level or filter logic applied - just do it!
+        except Exception:
+            import sys, traceback
+            print('Whoops! Problem:', file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
 
-def init_logger():
-    q = mp.Queue()
-    handler = logging.StreamHandler()
-    handler.setFormatter("%(levelname)s: %(asctime)s - %(porcess)s - %(message)s")
-
-    ql = QueueListener(q, handler)
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-
-    return ql, q
 
 class InParsDataset(Dataset):
     def __init__(self, doc_file, prompt_path, max_examples):
@@ -172,71 +175,74 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
 
     return final_queries, final_probs
 
-def generate_queries(args, inpars_dataset, device, split_num):
+def generate_queries(args, inpars_dataset, device, split_num, queue, configurer):
+
+    configurer(queue)
+    logger = logging.getLogger()
+
     query_id_timestamp = time.time()
     query_id_counter = 0
 
-    tokenizer = AutoTokenizer.from_pretrained(args.engine)
-    tokenizer.padding_side = "left" 
-    tokenizer.pad_token = tokenizer.eos_token
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(args.engine)
+        tokenizer.padding_side = "left" 
+        tokenizer.pad_token = tokenizer.eos_token
 
-    question_index = []
-    vocab_size = len(tokenizer.get_vocab())
-    for tid in range(vocab_size):
-        token_text = tokenizer.decode([tid])
-        if '?' in token_text:
-            question_index.append(tid)
+        question_index = []
+        vocab_size = len(tokenizer.get_vocab())
+        for tid in range(vocab_size):
+            token_text = tokenizer.decode([tid])
+            if '?' in token_text:
+                question_index.append(tid)
 
-    # It can be much faster to load a model once rather do it again in every process.
-    # Unfortunately, this often results in 'too many open files' error :-(
-    model = AutoModelForCausalLM.from_pretrained(args.engine, return_dict_in_generate=True)
-    if args.amp and device != 'cpu':
-        model = model.half()
-    model = model.to(device)
+        # It can be much faster to load a model once rather do it again in every process.
+        # Unfortunately, this often results in 'too many open files' error :-(
+        model = AutoModelForCausalLM.from_pretrained(args.engine, return_dict_in_generate=True)
+        if args.amp and device != 'cpu':
+            model = model.half()
+        model = model.to(device)
 
-    auto_cast_class, _ = get_amp_processors(args.amp)
+        auto_cast_class, _ = get_amp_processors(args.amp)
 
-    inpars_collater = InParsCollater(tokenizer)
+        inpars_collater = InParsCollater(tokenizer)
 
-    inpars_loader = DataLoader(inpars_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=inpars_collater)
+        inpars_loader = DataLoader(inpars_dataset, batch_size=args.batch_size, shuffle=False, collate_fn=inpars_collater)
 
-    start_time = time.time()
-    loader = inpars_loader
-    # Let us TQDM only in a single process
-    if split_num == "0":
-        loader = tqdm(loader)
-    for i, batch in enumerate(loader):
-        # torch.cuda.empty_cache()
-        input_data = batch[1]['input_ids'].to(device=next(model.parameters()).device)
-        with torch.no_grad():
-            with auto_cast_class():
-                model_out = model.generate(input_data,
-                    do_sample=True,
-                    max_new_tokens=args.max_tokens,
-                    output_scores=True,
-                    pad_token_id=tokenizer.eos_token_id)
-        gen_text = tokenizer.batch_decode(model_out["sequences"])
+        start_time = time.time()
+        loader = inpars_loader
+        # Let us TQDM only in a single process
+        if split_num == "0":
+            loader = tqdm(loader)
+        for i, batch in enumerate(loader):
+            # torch.cuda.empty_cache()
+            input_data = batch[1]['input_ids'].to(device=next(model.parameters()).device)
+            with torch.no_grad():
+                with auto_cast_class():
+                    model_out = model.generate(input_data,
+                        do_sample=True,
+                        max_new_tokens=args.max_tokens,
+                        output_scores=True,
+                        pad_token_id=tokenizer.eos_token_id)
+            gen_text = tokenizer.batch_decode(model_out["sequences"])
 
-        try:
-            final_queries, final_probs = postprocess_queries(gen_text, batch[2], model_out, question_index)
-            query_id_counter = write_to_output(final_queries,
-                                final_probs,
-                                batch[0], 
-                                args.aug_query+split_num,
-                                query_id_timestamp,
-                                query_id_counter)
-        except Exception as e:
-            curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            if USE_LOGGING==True:
-                logging.debug("{0} {1}".format(curr_time, str(e)))
-                logging.debug("Batch {1} Doc ID's {2}".format(curr_time, i, str(batch[2])))
-            else:
-                print("{0} {1}".format(curr_time, str(e)))
-                print("Batch {1} Doc ID's {2}".format(curr_time, i, str(batch[2])))
-            continue
-    print("Total Time = {0}".format(time.time()-start_time))
+            try:
+                final_queries, final_probs = postprocess_queries(gen_text, batch[2], model_out, question_index)
+                query_id_counter = write_to_output(final_queries,
+                                    final_probs,
+                                    batch[0], 
+                                    args.aug_query+split_num,
+                                    query_id_timestamp,
+                                    query_id_counter)
+            except Exception as e:
+                curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                logger.log(logging.DEBUG, "{0} {1}".format(curr_time, str(e)))
+                logger.log(logging.DEBUG, "Batch {1} Doc ID's {2}".format(curr_time, i, str(batch[2])))
+                continue
 
-    print('Done!')
+        print("Total Time = {0}".format(time.time()-start_time))
+        print('Done!')
+    except Exception as e:
+        logger.log(logging.ERROR, str(e))
 
 def collate_output_files(args, num_splits):    
     df_list = []
@@ -265,51 +271,61 @@ def collate_output_files(args, num_splits):
     top_df.to_csv(args.aug_query_qrels, header=None, index=None, sep=' ')
 
 def remove_splits(args, num_splits):
-
     for i in range(num_splits):
         os.remove(args.aug_query+str(i))
         
 
 def main(args):
+    queue = mp.Manager().Queue(-1)
+    listener = mp.Process(target=listener_process,
+                        args=(queue, listener_configurer))
+    listener.start()
 
     inpars_dataset = InParsDataset(args.original_doc, args.prompt_template, args.max_examples)
 
     num_gpus_available = torch.cuda.device_count()
+
+    worker_configurer(queue)
+    logger = logging.getLogger()
+    curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    logger.log(logging.INFO, "Generation Starting at {0}".format(curr_time))
 
     gpus_to_use = args.num_gpu
     if num_gpus_available < gpus_to_use:
         print("{0} GPU's not available, running using {1} GPU's".format(gpus_to_use, num_gpus_available))
         gpus_to_use = num_gpus_available
 
-    
-
     if args.num_gpu==1 or args.num_gpu==0:
         # setup_logging()
         device = args.device if torch.cuda.is_available() else "cpu"
-        generate_queries(args, inpars_dataset, device, "0")
+        generation_args = [(args, inpars_dataset, device, "0", queue, worker_configurer)]
     
     else:
-        torch.multiprocessing.set_start_method('spawn')
-
         # split data into gpus_to_use parts 
         dataset_split_size = len(inpars_dataset) // gpus_to_use
         splits = [dataset_split_size for _ in range(gpus_to_use)]
         splits[-1] += (len(inpars_dataset)%gpus_to_use)
         
-
         data_splits = torch.utils.data.random_split(inpars_dataset, splits)
-        generation_args = [(args, data_splits[i], "cuda:{0}".format(i), str(i)) for i in range(gpus_to_use)]
+        generation_args = [(args, data_splits[i], "cuda:{0}".format(i), str(i), queue, worker_configurer) 
+                                for i in range(gpus_to_use)]
 
-        q_listener, q = init_logger()
+    # Launch Tasks with Porcess Pool
+    with mp.Pool(gpus_to_use) as p:
+        p.starmap_async(generate_queries, generation_args)
+        p.close()
+        p.join()
 
-        with mp.Pool(gpus_to_use, init_worker, [q]) as p:
-            p.starmap_async(generate_queries, generation_args)
-            p.close()
-            p.join()
-            q_listener.stop()
-        
-    collate_output_files(args, gpus_to_use)
-    remove_splits(args, gpus_to_use)
+    queue.put_nowait(None)
+    listener.join()
+
+    try:
+        collate_output_files(args, gpus_to_use)
+        remove_splits(args, gpus_to_use)
+    except Exception as e:
+        logger.log(logging.ERROR, str(e))
+        print("Generation Failed. Check in_pars.log for more details")
+        sys.exit(1)
     
     print("Generation Done")
 
@@ -356,5 +372,7 @@ if __name__ == '__main__':
                                     help="selects the top p% of queries with highest log prob score")
 
     args = parser.parse_args()
+
+    torch.multiprocessing.set_start_method('spawn')
 
     main(args)
