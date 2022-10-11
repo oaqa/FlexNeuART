@@ -1,4 +1,5 @@
 import argparse
+from audioop import reverse
 import time
 import torch
 
@@ -13,6 +14,7 @@ from tqdm import tqdm
 import multiprocessing as mp
 import random
 import os
+import pandas as pd
 
 USE_LOGGING = False
 
@@ -75,17 +77,14 @@ class InParsCollater(object):
         return batch_ids, batch_data, batch_lengths
 
 
-def write_to_output(syn_query_list,syn_query_probs, did_list , aug_query_tsv_op, aug_query_qrels_op, timestamp, counter):
+def write_to_output(syn_query_list, syn_query_probs, did_list, aug_query_tsv_op, timestamp, counter):
     try:
-        with open(aug_query_tsv_op, 'a') as aug_query_tsv_op, open(aug_query_qrels_op, 'a') as aug_query_qrels_op:
+        with open(aug_query_tsv_op, 'a') as aug_query_tsv_op:
             tsv_writer = csv.writer(aug_query_tsv_op, delimiter='\t')
             for query_text, query_prob, doc_id in zip(syn_query_list, syn_query_probs, did_list):
                 new_qid = 'QP' + str(timestamp) + f'_{doc_id}_{counter}'
                 query_text = query_text.replace('\n', '')
                 tsv_writer.writerow(["query", new_qid, query_text, query_prob])
-
-                line = new_qid + " 0 " + str(doc_id) + " 1\n"
-                aug_query_qrels_op.write(line)
 
                 counter += 1
         return counter
@@ -199,12 +198,11 @@ def generate_queries(args, inpars_dataset, device, split_num):
         gen_text = tokenizer.batch_decode(model_out["sequences"])
 
         try:
-            final_queries, final_probs = postprocess_queries(gen_text, batch[2],model_out, question_index)
+            final_queries, final_probs = postprocess_queries(gen_text, batch[2], model_out, question_index)
             query_id_counter = write_to_output(final_queries,
                                 final_probs,
                                 batch[0], 
                                 args.aug_query+split_num,
-                                args.aug_query_qrels+split_num,
                                 query_id_timestamp,
                                 query_id_counter)
         except Exception as e:
@@ -220,27 +218,36 @@ def generate_queries(args, inpars_dataset, device, split_num):
 
     print('Done!')
 
-def collate_output_files(args, num_splits):
-    qrels = ""
-    queries = ""
-
+def collate_output_files(args, num_splits):    
+    df_list = []
+    col_names = ['name', 'query_id', 'query_text', 'score']
     for i in range(num_splits):
-        with open(args.aug_query+str(i)) as q:
-            queries += q.read()
-        with open(args.aug_query_qrels+str(i)) as q:
-            qrels += q.read()
+        df_list.append(pd.read_csv(args.aug_query+str(i), delimiter='\t',
+                                    names=col_names, header=None))
     
-    with open(args.aug_query, "a") as op:
-        op.write(queries)
+    df = pd.concat(df_list)
+
+    if args.topk:
+        num_to_select = args.topk
+    else:
+        num_to_select = int(args.topp * len(df))
     
-    with open(args.aug_query_qrels, "a") as op:
-        op.write(qrels)
+    df.sort_values(by=['score'], ascending=False, inplace=True)
+
+    df.to_csv(args.aug_query, header=False, index=False, sep='\t')
+
+    top_df = df.head(num_to_select)
+    top_df['doc_id'] = top_df.apply(lambda row: row['query_id'].split('_')[-2], axis=1)
+    top_df['temp_col'] = 0
+    top_df['value'] = 1
+    top_df = top_df[['query_id', 'temp_col', 'doc_id', 'value']]
+
+    top_df.to_csv(args.aug_query_qrels, header=None, index=None, sep=' ')
 
 def remove_splits(args, num_splits):
 
     for i in range(num_splits):
         os.remove(args.aug_query+str(i))
-        os.remove(args.aug_query_qrels+str(i))
         
 
 def main(args):
@@ -316,6 +323,12 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, default='cpu',
                         help='Device to use when running the model. cuda:0, cuda:1 and so on')
     parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
+
+    top_selection_group = parser.add_mutually_exclusive_group(required=True)
+    top_selection_group.add_argument('--topk', type=int,
+                                    help="selects the K queries with the highest log prob. score")
+    top_selection_group.add_argument('--topp', type=float,
+                                    help="selects the top p% of queries with highest log prob score")
 
     args = parser.parse_args()
 
