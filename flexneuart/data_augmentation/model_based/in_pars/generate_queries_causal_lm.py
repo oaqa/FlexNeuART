@@ -1,5 +1,6 @@
 import argparse
-from audioop import reverse
+from asyncio.log import logger
+from cgitb import handler
 import time
 import torch
 
@@ -9,6 +10,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from torch.utils.data import Dataset, DataLoader
 import csv
 import logging
+from logging.handlers import QueueHandler, QueueListener
 import datetime
 from tqdm import tqdm
 import multiprocessing as mp
@@ -22,6 +24,24 @@ def setup_logging():
     USE_LOGGING = True
     logging.basicConfig(filename='in_pars.log', filemode='a', level=logging.DEBUG)
     logging.info("Start Logging at - {0}".format(datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+
+def init_worker(q):
+    qh = QueueHandler(q)
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(qh)
+
+def init_logger():
+    q = mp.Queue()
+    handler = logging.StreamHandler()
+    handler.setFormatter("%(levelname)s: %(asctime)s - %(porcess)s - %(message)s")
+
+    ql = QueueListener(q, handler)
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+
+    return ql, q
 
 class InParsDataset(Dataset):
     def __init__(self, doc_file, prompt_path, max_examples):
@@ -261,8 +281,10 @@ def main(args):
         print("{0} GPU's not available, running using {1} GPU's".format(gpus_to_use, num_gpus_available))
         gpus_to_use = num_gpus_available
 
+    
+
     if args.num_gpu==1 or args.num_gpu==0:
-        setup_logging()
+        # setup_logging()
         device = args.device if torch.cuda.is_available() else "cpu"
         generate_queries(args, inpars_dataset, device, "0")
     
@@ -278,10 +300,13 @@ def main(args):
         data_splits = torch.utils.data.random_split(inpars_dataset, splits)
         generation_args = [(args, data_splits[i], "cuda:{0}".format(i), str(i)) for i in range(gpus_to_use)]
 
-        with mp.Pool(gpus_to_use) as p:
+        q_listener, q = init_logger()
+
+        with mp.Pool(gpus_to_use, init_worker, [q]) as p:
             p.starmap_async(generate_queries, generation_args)
             p.close()
             p.join()
+            q_listener.stop()
         
     collate_output_files(args, gpus_to_use)
     remove_splits(args, gpus_to_use)
