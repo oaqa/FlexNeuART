@@ -236,7 +236,7 @@ def collate_output_files(args, num_splits):
 
     df.to_csv(args.aug_query, header=False, index=False, sep='\t')
 
-    top_df = df.head(num_to_select)
+    top_df = df.head(num_to_select).copy()
     top_df['doc_id'] = top_df.apply(lambda row: row['query_id'].split('_')[-2], axis=1)
     top_df['temp_col'] = 0
     top_df['value'] = 1
