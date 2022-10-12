@@ -1,6 +1,7 @@
 import argparse
 import time
 import torch
+import json
 from logging.handlers import QueueHandler, RotatingFileHandler
 
 from flexneuart.models.train.amp import get_amp_processors
@@ -17,6 +18,7 @@ import os
 import pandas as pd
 import sys
 
+# function to setup logger in every worker
 def worker_configurer(queue):
     h = QueueHandler(queue)  # Just the one handler needed
     root = logging.getLogger()
@@ -24,6 +26,7 @@ def worker_configurer(queue):
     # send all messages, for demo; no other level or filter logic applied.
     root.setLevel(logging.DEBUG)
 
+# Every worker communicates with listenser for logging
 def listener_configurer():
     root = logging.getLogger()
     h = RotatingFileHandler('in_pars.log', 'a')
@@ -31,6 +34,7 @@ def listener_configurer():
     h.setFormatter(f)
     root.addHandler(h)
 
+# Instantiate the listener
 def listener_process(queue, configurer):
     configurer()
     while True:
@@ -45,7 +49,8 @@ def listener_process(queue, configurer):
             print('Whoops! Problem:', file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
 
-
+# Dataset class for loading the dataset to generate queries
+# Format expected "doc" \t doc_id \t text
 class InParsDataset(Dataset):
     def __init__(self, doc_file, prompt_path, max_examples):
         self.doc_file = doc_file
@@ -61,7 +66,7 @@ class InParsDataset(Dataset):
         with open(self.doc_file,"r") as file:
             tsv_file = csv.reader(file, delimiter="\t")
             counter = 0
-            for i,line in enumerate(tsv_file):
+            for i, line in enumerate(tsv_file):
                 if self.max_examples is not None and counter >= self.max_examples:
                     break
                 if line[0]=="query":
@@ -76,7 +81,7 @@ class InParsDataset(Dataset):
     
     def __getitem__(self, index):
         prompt_index = random.randint(0, self.num_prompts-1)
-        return self.sents[index][0], self.prompts[prompt_index].format(document_text=self.sents[index][1])
+        return self.sents[index][0], self.prompts[prompt_index].format(document_text=self.sents[index][1]), self.sents[index][1]
 
     def __read_prompts(self, prompt_paths):
         prompts = []
@@ -87,6 +92,7 @@ class InParsDataset(Dataset):
 
         return prompts
 
+# implements the collate function to create the input batch
 class InParsCollater(object):
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
@@ -95,25 +101,43 @@ class InParsCollater(object):
         batch_texts = [i[1] for i in batch]
         batch_ids = [i[0] for i in batch]
         batch_lengths = [len(i) for i in batch_texts]
+        orig_data = [i[2] for i in batch]
         batch_data = self.tokenizer.batch_encode_plus(batch_texts, return_tensors='pt',padding=True)
 
-        return batch_ids, batch_data, batch_lengths
+        return batch_ids, batch_data, batch_lengths, orig_data
 
-
-def write_to_output(syn_query_list, syn_query_probs, did_list, aug_query_tsv_op, timestamp, counter):
+# dump the generated queries to file
+# output format - query_id \t query \t query_score
+def write_to_output(syn_query_list, 
+                    syn_query_probs, did_list, aug_query_tsv_op,
+                    timestamp, counter, store_json, doc_data):
     try:
         with open(aug_query_tsv_op, 'a') as aug_query_tsv_op:
-            tsv_writer = csv.writer(aug_query_tsv_op, delimiter='\t')
-            for query_text, query_prob, doc_id in zip(syn_query_list, syn_query_probs, did_list):
+            if store_json==True:
+                file_writer = aug_query_tsv_op
+            else:
+                file_writer = csv.writer(aug_query_tsv_op, delimiter='\t')
+            
+            iter_data = zip(syn_query_list, syn_query_probs, did_list, doc_data)
+            for query_text, query_prob, doc_id, doc_text in iter_data:
                 new_qid = 'QP' + str(timestamp) + f'_{doc_id}_{counter}'
-                query_text = query_text.replace('\n', '')
-                tsv_writer.writerow(["query", new_qid, query_text, query_prob])
-
+                query_text = query_text.replace('\n', '').strip()
+                if store_json==True:
+                    #store json
+                    json_dict = {'doc_id':doc_id,
+                                'doc_text':doc_text,
+                                'question':query_text,
+                                'log_probs':[query_prob]}
+                    file_writer.write(json.dumps(json_dict, ensure_ascii=False) + '\n')
+                else:
+                    file_writer.writerow(["query", new_qid, query_text, query_prob])
                 counter += 1
         return counter
     except IOError as e:
         print(e)
 
+# utility function that gets the probaility of generated scores
+# from the logit matrix
 def gather_2d_on_last_dim(tensor, index, shape):
     
     flattened_tensor = tensor.view(-1, tensor.shape[-1])
@@ -123,15 +147,14 @@ def gather_2d_on_last_dim(tensor, index, shape):
         flattened_index]
     return flattened_gathered_tensor.view(shape)
 
+# parse generated logits and text to get scores
 def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
 
-    #suppose we have the model_output
-    
+    # suppose we have the model_output
     questions = [text[ text.find('Example 1:') + prompt_length:] for text, prompt_length in zip(generated_texts,prompt_lengths)]
     q_inds = [q.find("?") for q in questions]
     final_queries = [q[:q_ind+1] for q,q_ind in zip(questions,q_inds)]
 
-    # valid_query_indices = [i if q!="" for i,q in enumerate(final_queries)]
     valid_query_indices = []
     for i, q in enumerate(final_queries):
         if q!="":
@@ -232,7 +255,9 @@ def generate_queries(args, inpars_dataset, device, split_num, queue, configurer)
                                     batch[0], 
                                     args.aug_query+split_num,
                                     query_id_timestamp,
-                                    query_id_counter)
+                                    query_id_counter,
+                                    args.jsonl,
+                                    batch[3])
             except Exception as e:
                 curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 logger.log(logging.DEBUG, "{0} {1}".format(curr_time, str(e)))
@@ -244,7 +269,21 @@ def generate_queries(args, inpars_dataset, device, split_num, queue, configurer)
     except Exception as e:
         logger.log(logging.ERROR, str(e))
 
-def collate_output_files(args, num_splits):    
+def collate_jsonl(aug_query, num_splits):
+    queries = ""
+    for i in range(num_splits):
+        with open(aug_query+str(i)) as q:
+            queries += q.read()
+
+    with open(aug_query, "a") as op:
+        op.write(queries)
+
+
+def collate_output_files(args, num_splits):  
+    if args.jsonl == True:
+        collate_jsonl(args.aug_query, num_splits)
+        return
+  
     df_list = []
     col_names = ['name', 'query_id', 'query_text', 'score']
     for i in range(num_splits):
@@ -256,7 +295,7 @@ def collate_output_files(args, num_splits):
     if args.topk:
         num_to_select = args.topk
     else:
-        num_to_select = int(args.topp * len(df))
+        num_to_select = int(args.topf * len(df))
     
     df.sort_values(by=['score'], ascending=False, inplace=True)
 
@@ -323,7 +362,7 @@ def main(args):
         collate_output_files(args, gpus_to_use)
         remove_splits(args, gpus_to_use)
     except Exception as e:
-        logger.log(logging.ERROR, str(e))
+        print(e)
         print("Generation Failed. Check in_pars.log for more details")
         sys.exit(1)
     
@@ -365,11 +404,12 @@ if __name__ == '__main__':
                         help='Device to use when running the model. cuda:0, cuda:1 and so on')
     parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
 
-    top_selection_group = parser.add_mutually_exclusive_group(required=True)
-    top_selection_group.add_argument('--topk', type=int,
+    output_format_group = parser.add_mutually_exclusive_group(required=True)
+    output_format_group.add_argument('--topk', type=int,
                                     help="selects the K queries with the highest log prob. score")
-    top_selection_group.add_argument('--topp', type=float,
+    output_format_group.add_argument('--topf', type=float,
                                     help="selects the top p% of queries with highest log prob score")
+    output_format_group.add_argument('--jsonl', action='store_true', help="Store output is jsonl format")
 
     args = parser.parse_args()
 
