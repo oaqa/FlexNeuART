@@ -28,14 +28,15 @@ class BM25Retriever():
         self.timestamp = time.time()
 
     def __call__(self, query):
-
+        if len(query) == 0:
+            return None, None, None
         query_response = run_text_query(self.cand_prov, self.args.max_docs_retrieved, query)
         no_of_responses =  query_response[0]
 
         if no_of_responses == 0:
             return None, None, None
 
-        random_number = random.randint(0, min(no_of_responses, self.args.max_docs_retrieved))
+        random_number = random.randint(0, min(no_of_responses, self.args.max_docs_retrieved)-1)
 
         negative_doc = query_response[1][random_number]
         negative_doc_id = negative_doc.doc_id
