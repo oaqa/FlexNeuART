@@ -136,7 +136,7 @@ def write_to_output(syn_query_list,
     except IOError as e:
         print(e)
 
-# utility function that gets the probaility of generated scores
+# utility function that gets the probaility of generated tokens
 # from the logit matrix
 def gather_2d_on_last_dim(tensor, index, shape):
     
@@ -150,11 +150,13 @@ def gather_2d_on_last_dim(tensor, index, shape):
 # parse generated logits and text to get scores
 def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
 
-    # suppose we have the model_output
+    # extract the first question that appears after the orignial prompt
     questions = [text[ text.find('Example 1:') + prompt_length:] for text, prompt_length in zip(generated_texts,prompt_lengths)]
     q_inds = [q.find("?") for q in questions]
     final_queries = [q[:q_ind+1] for q,q_ind in zip(questions,q_inds)]
 
+    # as mutiple tokens can have '?'
+    # find all such tokens
     valid_query_indices = []
     for i, q in enumerate(final_queries):
         if q!="":
@@ -168,8 +170,10 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
     length_input = model_outputs["sequences"].shape[1] - probs.shape[1]
     output_ids = model_outputs["sequences"][valid_query_indices,length_input:]
 
+    # get the scores of the tokens that were observed in the output
     probs = gather_2d_on_last_dim(probs[valid_query_indices,:,:], output_ids, output_ids.shape)
 
+    # remove all the extra tokens that appear after the '?'
     clip_extra_output_ids = []
     for t in output_ids:
       for qid in qindex:
@@ -182,6 +186,7 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
 
     clip_extra_output_ids = torch.tensor(clip_extra_output_ids).to(device=probs.device)
     
+    # mask out the extra tokens
     index_matrix = torch.arange(probs.shape[1]).expand(len(clip_extra_output_ids), probs.shape[1])
     index_matrix = index_matrix.to(device=probs.device)
     masks = index_matrix < clip_extra_output_ids.unsqueeze(1)
@@ -198,6 +203,7 @@ def postprocess_queries(generated_texts, prompt_lengths, model_outputs, qindex):
 
     return final_queries, final_probs
 
+# the main function that would generate the queries using the specified model
 def generate_queries(args, inpars_dataset, device, split_num, queue, configurer):
 
     configurer(queue)
@@ -269,6 +275,7 @@ def generate_queries(args, inpars_dataset, device, split_num, queue, configurer)
     except Exception as e:
         logger.log(logging.ERROR, str(e))
 
+# for collating jsonl files simply concat them
 def collate_jsonl(aug_query, num_splits):
     queries = ""
     for i in range(num_splits):
@@ -283,7 +290,8 @@ def collate_output_files(args, num_splits):
     if args.jsonl == True:
         collate_jsonl(args.aug_query, num_splits)
         return
-  
+    
+    # read the tsv output in a pandas dataframe
     df_list = []
     col_names = ['name', 'query_id', 'query_text', 'score']
     for i in range(num_splits):
@@ -297,6 +305,7 @@ def collate_output_files(args, num_splits):
     else:
         num_to_select = int(args.topf * len(df))
     
+    # sort by score and select top queries
     df.sort_values(by=['score'], ascending=False, inplace=True)
 
     df.to_csv(args.aug_query, header=False, index=False, sep='\t')
@@ -307,8 +316,10 @@ def collate_output_files(args, num_splits):
     top_df['value'] = 1
     top_df = top_df[['query_id', 'temp_col', 'doc_id', 'value']]
 
+    # save the top queries and corresponding docs in the qrels format
     top_df.to_csv(args.aug_query_qrels, header=None, index=None, sep=' ')
 
+# remove the segmented files
 def remove_splits(args, num_splits):
     for i in range(num_splits):
         os.remove(args.aug_query+str(i))
