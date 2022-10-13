@@ -32,3 +32,6 @@ typing-extensions
 
 # Colbert specific
 ujson
+# Deeberta specific, might fail with older
+# protobuf versions.
+protobuf==3.20
