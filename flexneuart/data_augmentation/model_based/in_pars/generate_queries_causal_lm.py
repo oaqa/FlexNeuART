@@ -291,7 +291,8 @@ def collate_jsonl(args, num_splits):
 # remove the segmented files
 def remove_splits(args, num_splits):
     for i in range(num_splits):
-        os.remove(args.output+str(i))
+        if os.path.exists(args.output+str(i)):
+            os.remove(args.output+str(i))
         
 
 def main(args):
