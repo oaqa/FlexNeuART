@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import time
 import torch
@@ -102,35 +103,30 @@ class InParsCollater(object):
         batch_ids = [i[0] for i in batch]
         batch_lengths = [len(i) for i in batch_texts]
         orig_data = [i[2] for i in batch]
-        batch_data = self.tokenizer.batch_encode_plus(batch_texts, return_tensors='pt',padding=True)
+        batch_data = self.tokenizer.batch_encode_plus(batch_texts, return_tensors='pt', padding=True)
 
         return batch_ids, batch_data, batch_lengths, orig_data
 
 # dump the generated queries to file
 # output format - query_id \t query \t query_score
-def write_to_output(syn_query_list, 
-                    syn_query_probs, did_list, aug_query_tsv_op,
-                    timestamp, counter, store_json, doc_data):
+def write_to_output(add_query_pref,
+                    syn_query_list, 
+                    syn_query_probs, did_list, 
+                    output,
+                    timestamp, counter, doc_data):
     try:
-        with open(aug_query_tsv_op, 'a') as aug_query_tsv_op:
-            if store_json==True:
-                file_writer = aug_query_tsv_op
-            else:
-                file_writer = csv.writer(aug_query_tsv_op, delimiter='\t')
+        with open(output, 'a') as outf:
             
             iter_data = zip(syn_query_list, syn_query_probs, did_list, doc_data)
             for query_text, query_prob, doc_id, doc_text in iter_data:
-                new_qid = 'QP' + str(timestamp) + f'_{doc_id}_{counter}'
+                qid = f'QP{add_query_pref}_{timestamp}_{doc_id}_{counter}'
                 query_text = query_text.replace('\n', '').strip()
-                if store_json==True:
-                    #store json
-                    json_dict = {'doc_id':doc_id,
-                                'doc_text':doc_text,
-                                'question':query_text,
-                                'log_probs':[query_prob]}
-                    file_writer.write(json.dumps(json_dict, ensure_ascii=False) + '\n')
-                else:
-                    file_writer.writerow(["query", new_qid, query_text, query_prob])
+                json_dict = {'doc_id':  doc_id,
+                            'query_id': qid,
+                            'doc_text': doc_text,
+                            'question': query_text,
+                            'log_probs':  [query_prob]}
+                outf.write(json.dumps(json_dict, ensure_ascii=False) + '\n')
                 counter += 1
         return counter
     except IOError as e:
@@ -256,13 +252,13 @@ def generate_queries(args, inpars_dataset, device, split_num, queue, configurer)
 
             try:
                 final_queries, final_probs = postprocess_queries(gen_text, batch[2], model_out, question_index)
-                query_id_counter = write_to_output(final_queries,
+                query_id_counter = write_to_output(args.add_query_pref,
+                                    final_queries,
                                     final_probs,
                                     batch[0], 
-                                    args.aug_query+split_num,
+                                    args.output+split_num,
                                     query_id_timestamp,
                                     query_id_counter,
-                                    args.jsonl,
                                     batch[3])
             except Exception as e:
                 curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -276,53 +272,20 @@ def generate_queries(args, inpars_dataset, device, split_num, queue, configurer)
         logger.log(logging.ERROR, str(e))
 
 # for collating jsonl files simply concat them
-def collate_jsonl(aug_query, num_splits):
+def collate_jsonl(args, num_splits):
     queries = ""
     for i in range(num_splits):
-        with open(aug_query+str(i)) as q:
+        with open(args.output+str(i)) as q:
             queries += q.read()
 
-    with open(aug_query, "a") as op:
+    with open(args.output, "a") as op:
         op.write(queries)
 
-
-def collate_output_files(args, num_splits):  
-    if args.jsonl == True:
-        collate_jsonl(args.aug_query, num_splits)
-        return
-    
-    # read the tsv output in a pandas dataframe
-    df_list = []
-    col_names = ['name', 'query_id', 'query_text', 'score']
-    for i in range(num_splits):
-        df_list.append(pd.read_csv(args.aug_query+str(i), delimiter='\t',
-                                    names=col_names, header=None))
-    
-    df = pd.concat(df_list)
-
-    if args.topk:
-        num_to_select = args.topk
-    else:
-        num_to_select = int(args.topf * len(df))
-    
-    # sort by score and select top queries
-    df.sort_values(by=['score'], ascending=False, inplace=True)
-
-    df.to_csv(args.aug_query, header=False, index=False, sep='\t')
-
-    top_df = df.head(num_to_select).copy()
-    top_df['doc_id'] = top_df.apply(lambda row: row['query_id'].split('_')[-2], axis=1)
-    top_df['temp_col'] = 0
-    top_df['value'] = 1
-    top_df = top_df[['query_id', 'temp_col', 'doc_id', 'value']]
-
-    # save the top queries and corresponding docs in the qrels format
-    top_df.to_csv(args.aug_query_qrels, header=None, index=None, sep=' ')
 
 # remove the segmented files
 def remove_splits(args, num_splits):
     for i in range(num_splits):
-        os.remove(args.aug_query+str(i))
+        os.remove(args.output+str(i))
         
 
 def main(args):
@@ -370,7 +333,7 @@ def main(args):
     listener.join()
 
     try:
-        collate_output_files(args, gpus_to_use)
+        collate_jsonl(args, gpus_to_use)
         remove_splits(args, gpus_to_use)
     except Exception as e:
         print(e)
@@ -386,18 +349,18 @@ if __name__ == '__main__':
     #
     # python3 generate_queries_causal_lm.py \
     #             --original_doc /home/ubuntu/output.csv \
-    #             --aug_query aug_query.tsv \
-    #             --aug_query_qrels aug_query_qrels.txt
+    #             --prompt_template prompts/vanilla_prompt.txt
+    #             --output output.jsonl \
     #
     parser = argparse.ArgumentParser()
     parser.add_argument('--original_doc', type=str, required=True,
                         help='Full Path to TSV file containing document IDs and texts')
-    parser.add_argument('--aug_query', type=str, required=True,
-                        help='Full Path of TSV file where generated query and their new IDs will be written')
-    parser.add_argument('--aug_query_qrels', type=str, required=True,
-                        help='Full Path of .txt file to store the query and document ID relation pairs')
+    parser.add_argument('--add_query_pref', type=str, default='', 
+                        help='Additional query prefix')
+    parser.add_argument('--output', type=str, required=True, 
+                        help='An output file (in JSONL format)')
     parser.add_argument('--engine', type=str, default="EleutherAI/gpt-neo-1.3B")
-    parser.add_argument('--prompt_template', nargs="*", default=['prompts/vanilla_prompt.txt'])
+    parser.add_argument('--prompt_template', nargs="*", required=True)
     parser.add_argument('--max_examples', type=int, default=None,
                         help='Maximum number of documents to read from the collection.')
     parser.add_argument('--max_tokens', type=int, default=32, help='Max tokens to be generated.')
@@ -405,24 +368,20 @@ if __name__ == '__main__':
     parser.add_argument('--temperature', type=float, default=0.0,
                         help='Sampling temperature. Zero means greedy decoding.')
     parser.add_argument('--top_p', type=float, default=1.0)
-    parser.add_argument('--sleep_time', type=float, default=1.5, 
-                        help='Time to wait between API calls, in seconds.')        
-    parser.add_argument('--include_doc_probs', action='store_true',
-                        help='Wheter or not to save the tokens probabilities produeced by the model.')
     parser.add_argument('--num_gpu', type=int, default=1,
                         help="Number of GPU's to run inference on. Dataset will be divided")
     parser.add_argument('--device', type=str, default='cpu',
                         help='Device to use when running the model. cuda:0, cuda:1 and so on')
     parser.add_argument('--amp', action='store_true', help="Use automatic mixed-precision")
 
-    output_format_group = parser.add_mutually_exclusive_group(required=True)
-    output_format_group.add_argument('--topk', type=int,
-                                    help="selects the K queries with the highest log prob. score")
-    output_format_group.add_argument('--topf', type=float,
-                                    help="selects the top p% of queries with highest log prob score")
-    output_format_group.add_argument('--jsonl', action='store_true', help="Store output is jsonl format")
-
     args = parser.parse_args()
+
+    if os.path.exists(args.output):
+        print('Output file', args.output, 'already exists!')
+        sys.exit(1)
+    out_dir = os.path.dirname(args.output)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
     torch.multiprocessing.set_start_method('spawn')
 
