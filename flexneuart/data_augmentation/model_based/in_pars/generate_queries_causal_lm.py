@@ -275,8 +275,14 @@ def generate_queries(args, inpars_dataset, device, split_num, queue, configurer)
 def collate_jsonl(args, num_splits):
     queries = ""
     for i in range(num_splits):
-        with open(args.output+str(i)) as q:
-            queries += q.read()
+        try:
+            with open(args.output+str(i)) as q:
+                queries += q.read()
+        except:
+            print("Output corresponding to split number - {0} not found".format(i))
+            print("This is probably because a process failed. Check in_pars.log for more details.")
+            print("Skipping this split number")
+            continue
 
     with open(args.output, "a") as op:
         op.write(queries)
