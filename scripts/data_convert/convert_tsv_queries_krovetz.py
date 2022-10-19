@@ -71,7 +71,7 @@ for line in inp_file:
            TEXT_FIELD_NAME: query_stemmed,
            TEXT_RAW_FIELD_NAME: query_orig}
     add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
-    
+
     doc_str = json.dumps(doc) + '\n'
     out_file.write(doc_str)
 
