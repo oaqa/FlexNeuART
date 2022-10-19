@@ -27,13 +27,17 @@ from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_
 
 from flexneuart.config import TEXT_BERT_TOKENIZED_NAME, \
     TEXT_FIELD_NAME, DOCID_FIELD, \
-    TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
+    TEXT_RAW_FIELD_NAME, \
     REPORT_QTY
 
 parser = argparse.ArgumentParser(description='Convert TSV-format queries with Krovetz stemming.')
 parser.add_argument('--input', metavar='input file', help='input file',
                     type=str, required=True)
 parser.add_argument('--output', metavar='output file', help='output file',
+                    type=str, required=True)
+parser.add_argument('--stem_field_name', metavar='name for the stemmed field',
+                    default=TEXT_FIELD_NAME,
+                    help='the name of the field to store the value of the stemmed (and stoppped) input',
                     type=str, required=True)
 add_bert_tok_args(parser)
 
@@ -43,6 +47,7 @@ arg_vars = vars(args)
 
 inp_file = FileWrapper(args.input)
 out_file = FileWrapper(args.output, 'w')
+stem_field_name = args.stem_field_name
 
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
@@ -68,7 +73,7 @@ for line in inp_file:
     query_stemmed = nlp(query_orig.lower())
 
     doc = {DOCID_FIELD: did,
-           TEXT_FIELD_NAME: query_stemmed,
+           stem_field_name: query_stemmed,
            TEXT_RAW_FIELD_NAME: query_orig}
     add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
