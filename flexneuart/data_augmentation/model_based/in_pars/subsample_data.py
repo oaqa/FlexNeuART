@@ -134,15 +134,30 @@ data2 = prefix_key(data2, args.out_pref2)
 
 train_pairs2 = prefix_key_val(read_pairs_dict(os.path.join(args.dir2, TRAIN_PAIRS)), args.out_pref2)
 
-doc_ids_orig = list(train_pairs1.values())
-qid_orig = list(train_pairs1.keys())
-doc_ids_inp = set(train_pairs2.values())
+
+
+qid_orig = []
+doc_ids_orig = []
+
+for query_id, doc_dict in train_pairs1.items():
+    doc_ids_orig.extend(list(doc_dict.keys()))
+    qid_orig.extend([query_id for _ in range(len(doc_dict))])
+
+doc_ids_inp = []
+#doc_ids_inp = set(train_pairs2.values())
+
+for query_id, doc_dict in train_pairs2.items():
+    doc_ids_inp.extend(list(doc_dict.keys()))
+
+doc_ids_inp = set(doc_ids_inp)
 
 qid_to_write = []
 
 num_pairs = len(doc_ids_orig)
 
-for i in range(num_pairs):
+from tqdm import tqdm
+
+for i in tqdm(range(num_pairs)):
     if doc_ids_orig[i] in doc_ids_inp:
         qid_to_write.append(qid_orig[i])
 
