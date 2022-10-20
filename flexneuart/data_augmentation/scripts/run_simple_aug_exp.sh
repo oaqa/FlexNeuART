@@ -29,5 +29,6 @@ do
 	    -batches_per_train_epoch 1 \
 	    -epoch_qty 1 \
 	    -amp \
+		-add_exper_subdir $exp_name \
 	    -data_augment $aug_method | tee $output_dir/$aug_method.txt
 done
