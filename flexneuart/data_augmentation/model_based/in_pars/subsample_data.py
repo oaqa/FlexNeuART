@@ -205,17 +205,17 @@ for qid, did_dict in run1.items():
 
 with open_with_default_enc(os.path.join(args.dir_out, QRELS), 'w') as out_qrels_f:
     write_filtered_qrels(out_qrels_f, qrels1, qids_all)
-    write_filtered_qrels(out_qrels_f, qrels2, qids_all)
+    # write_filtered_qrels(out_qrels_f, qrels2, qids_all)
 
 with open_with_default_enc(os.path.join(args.dir_out, DATA_DOCS), 'w') as out_data_f:
     write_filtered_datafiles(out_data_f, data1, DATA_TYPE_DOC, dids_all)
-    write_filtered_datafiles(out_data_f, data2, DATA_TYPE_DOC, dids_all)
+    # write_filtered_datafiles(out_data_f, data2, DATA_TYPE_DOC, dids_all)
 
 with open_with_default_enc(os.path.join(args.dir_out, DATA_QUERY), 'w') as out_query_f:
     write_filtered_datafiles(out_query_f, queries1, DATA_TYPE_QUERY, qids_all)
-    write_filtered_datafiles(out_query_f, queries2, DATA_TYPE_QUERY, qids_all)
+    # write_filtered_datafiles(out_query_f, queries2, DATA_TYPE_QUERY, qids_all)
 
 
 write_filtered_train_pairs(os.path.join(args.dir_out, TRAIN_PAIRS),
-                           merge_dict(train_pairs1, train_pairs2),
+                           train_pairs1,
                            qids_all)
