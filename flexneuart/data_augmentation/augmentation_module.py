@@ -36,8 +36,12 @@ class DataAugmentModule:
             self.doc_augment = AddCharacterKeyboardAdjacentTransformation(word_add_probability=0.05, character_add_probability=0.1)  
         elif augment_type == 'keyboard_character_replace':    
             self.doc_augment = ReplaceCharacterKeyboardTransformation(word_replace_probability=0.05, character_replace_probability=0.1) 
+        elif augment_type == 'document_cut_out':
+            self.doc_augment = DocuemntCutOut(p=0.1, span_p=0.2)
+        elif augment_type == 'query_cut_out':
+            self.doc_augment = QueryTextDrop(p=0.5)
 
     def augment(self, query_text, doc_text):
         if self.doc_augment is not None and random.random() < self.p:
-            doc_text = self.doc_augment.augment(doc_text)
+            doc_text = self.doc_augment.augment(doc_text, query=query_text)
         return query_text, doc_text

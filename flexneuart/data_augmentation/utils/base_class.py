@@ -5,5 +5,5 @@ class DataAugment:
         return
         
     @abstractmethod
-    def augment(self, text):
+    def augment(self, text, query=None):
         pass       
