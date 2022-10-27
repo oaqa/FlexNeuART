@@ -38,7 +38,11 @@ parser.add_argument('--output', metavar='output file', help='output file',
 parser.add_argument('--stem_field_name', metavar='name for the stemmed field',
                     default=TEXT_FIELD_NAME,
                     help='the name of the field to store the value of the stemmed (and stoppped) input',
-                    type=str, required=True)
+                    type=str)
+parser.add_argument('--text_raw_field_name', metavar='name for the raw text field',
+                    default=TEXT_RAW_FIELD_NAME,
+                    help='the name of the field to store the unmodified, i.e., raw, value of input',
+                    type=str)
 add_bert_tok_args(parser)
 
 args = parser.parse_args()
@@ -48,6 +52,7 @@ arg_vars = vars(args)
 inp_file = FileWrapper(args.input)
 out_file = FileWrapper(args.output, 'w')
 stem_field_name = args.stem_field_name
+text_raw_field_name = args.text_raw_field_name
 
 stop_words = read_stop_words(STOPWORD_FILE, lower_case=True)
 print(stop_words)
@@ -74,8 +79,8 @@ for line in inp_file:
 
     doc = {DOCID_FIELD: did,
            stem_field_name: query_stemmed,
-           TEXT_RAW_FIELD_NAME: query_orig}
-    add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
+           text_raw_field_name: query_orig}
+    add_retokenized_field(doc, text_raw_field_name, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
 
     doc_str = json.dumps(doc) + '\n'
     out_file.write(doc_str)
