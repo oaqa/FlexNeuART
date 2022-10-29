@@ -7,10 +7,14 @@ Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intend
 is a substantially reworked [`knn4qa` package](legacy_docs/knn4qa.md).  The overview can be found in our EMNLP OSS workshop paper: 
 [Flexible retrieval with NMSLIB and FlexNeuART, 2020. Leonid Boytsov, Eric Nyberg](https://arxiv.org/abs/2010.14848).
 
+Please, note that this version is quite behind a rather stable branch `pypi2021` (unfortunately it is not fully documented and not merged into main), which has [a lot of extra goodies and models](https://github.com/oaqa/FlexNeuART/blob/pypi2021/flexneuart/models/README.md). Documentation is in progress, please, let us know if you would like to use our library to produce strong dense-sparse runs, achieve strong results in TREC or on leaderboards. We can guide you around some missing documentation.
+
 In Aug-Dec 2020, we used this framework to generate best traditional and/or neural runs 
 in the [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking).
 In fact, our best traditional (non-neural) run slightly outperformed a couple of neural submissions.
 Please, see our write-up for details: [Boytsov, Leonid. "Traditional IR rivals neural models on the MS MARCO Document Ranking Leaderboard." arXiv preprint arXiv:2012.08020 (2020)](https://arxiv.org/abs/2012.08020).
+
+In 2021, after being outsripped by a number of participants, we again advanced to a good position with a help of newly implemented models for ranking long documents. Please, see our write-up for details: Boytsov, L., Lin, T., Gao, F., Zhao, Y., Huang, J., & Nyberg, E. (2022). [Understanding Performance of Long-Document Ranking Models through Comprehensive Evaluation and Leaderboarding](https://arxiv.org/abs/2207.01262). At the moment of writing (October 2022), we have competitive submissions on **both** MS MARCO leaderboards.
 
 Regretffully, for adminstrative and licensing/patenting issues (there is a patent submitted), neural Model 1 code cannot be released. 
 This model (together with its non-contextualized variant) is described and evaluated in our ECIR 2021 paper:
