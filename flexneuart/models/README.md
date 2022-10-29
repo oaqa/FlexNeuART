@@ -24,7 +24,7 @@ Various chunk-and-aggregate models for ranking of long documents, including:
     arXiv:2008.09093.
     
     Boytsov, L., Lin, T., Gao, F., Zhao, Y., Huang, J., & Nyberg, E. (2022). 
-    Understanding Performance of Long-Document Ranking Models through Comprehensive Evaluation and Leaderboarding. 
+    [Understanding Performance of Long-Document Ranking Models through Comprehensive Evaluation and Leaderboarding](https://arxiv.org/abs/2207.01262). 
     arXiv:2207.01262.
     
    
