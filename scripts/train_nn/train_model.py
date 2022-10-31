@@ -438,6 +438,7 @@ def do_train(device_qty,
 
         train_stat[epoch] = {'loss': loss,
                               'score': valid_score,
+                              'metric_name': train_params.eval_metric,
                               'lr': lr,
                               'bert_lr': bert_lr,
                               'train_time': end_train_time - start_train_time,

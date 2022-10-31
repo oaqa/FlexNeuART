@@ -215,6 +215,7 @@ print(f'Metric {metric_name} score: {valid_score} # of queries: {query_qty}')
 
 valid_stat= {
      'score': valid_score,
+     'metric_name' : metric_name,
      'validation_time': end_val_time - start_val_time
 }
 
