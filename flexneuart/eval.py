@@ -25,35 +25,67 @@ from flexneuart.io import create_temp_file
 from flexneuart.io.runs import get_sorted_scores_from_score_dict, write_run_dict
 from flexneuart.io.qrels import read_qrels_dict, write_qrels_dict
 
+from flexneuart import Registry
+eval_registry = Registry()
+register = eval_registry.register
 
 FAKE_DOC_ID = "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES"
 
-METRIC_MAP = 'map'
-METRIC_NDCG10 = 'ndcg@10'
-METRIC_NDCG20 = 'ndcg@20'
-METRIC_MRR = "recip_rank"
+METRIC_RECALL_PREF = 'recall'
+METRIC_MAP_PREF = 'map'
+METRIC_MRR_PREF = 'mrr'
+METRIC_MRR_PREF_ADD = 'recip_rank'
+METRIC_NDCG_PREF = 'ndcg'
 
-METRIC_LIST = [METRIC_MAP, METRIC_NDCG10, METRIC_NDCG20, METRIC_MRR]
+# This mimics trec_eval
+CUTOFF_ARR = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
+
+METRIC_NDCG_LIST = [f'{METRIC_NDCG_PREF}@{k}' for k in CUTOFF_ARR]
+METRIC_RECALL_LIST = [f'{METRIC_RECALL_PREF}@{k}' for k in CUTOFF_ARR]
+METRIC_MRR_LIST = [METRIC_MRR_PREF, METRIC_MRR_PREF_ADD] + [f'{METRIC_MRR_PREF}@{k}' for k in CUTOFF_ARR]
+METRIC_MAP_LIST = [METRIC_MAP_PREF] + [f'{METRIC_MAP_PREF}@{k}' for k in CUTOFF_ARR]
+
+LOG2_MULT = math.log(2)
+
+METRIC_LIST = METRIC_MRR_LIST + METRIC_NDCG_LIST + METRIC_MAP_LIST +  METRIC_RECALL_LIST
 
 RELEVANCE_THRESHOLD = 1e-5
 
 qrel_cache = {}
 
+class MetricBase:
+    def __init__(self, cut_off):
+        self.cut_off = cut_off
 
-class NormalizedDiscountedCumulativeGain:
-    def __init__(self, k):
-        self._k = k
+    @staticmethod
+    def get_total_rel(qrel_dict):
+        """Compute a total number of relevant items."""
+        return sum([int(rel > RELEVANCE_THRESHOLD) for did, rel in qrel_dict.items()])
+
+    def get_cut_rels(self, rels_arr):
+        """
+            Conveninence wrapper to cut a list of relevance score with respect
+            to pre-defined cutoff value. When there is not cutoff (infinity)
+            then the original value is returned
+        """
+        if type(self.cut_off) == int:
+            return rels_arr[0 : self.cut_off]
+        else:
+            return rels_arr
+
+
+@register(METRIC_NDCG_PREF)
+class NormalizedDiscountedCumulativeGain(MetricBase):
+    def __init__(self, cut_off=float('inf')):
+        super().__init__(cut_off)
 
     def _dcg(self, rels_sorted_by_scores):
-
         res = 0
         for i, rel in enumerate(rels_sorted_by_scores):
-            if i >= self._k:
-                break
             if rel > RELEVANCE_THRESHOLD:
-                res += (math.pow(2., rel) - 1.) / math.log(2. + i)
+                res += rel / math.log(2 + i)
 
-        return res
+        return res * LOG2_MULT
 
     def __call__(self, rels_sorted_by_scores, qrel_dict):
         """
@@ -64,11 +96,16 @@ class NormalizedDiscountedCumulativeGain:
             :param qrel_dict: true relevance scores indexed by document ids
             :return: NDCG.
         """
-        idcg = self._dcg(sorted(qrel_dict.values(), reverse=True))
-        return self._dcg(rels_sorted_by_scores) / idcg if idcg > 0 else 0
+        # Note that the ideal ranking is also cut off using the same threshold
+        idcg = self._dcg(self.get_cut_rels(sorted(qrel_dict.values(), reverse=True)))
+        return self._dcg(self.get_cut_rels(rels_sorted_by_scores)) / idcg if idcg > 0 else 0
 
 
-class MeanAveragePrecision:
+@register(METRIC_MAP_PREF)
+class MeanAveragePrecision(MetricBase):
+    def __init__(self, cut_off=float('inf')):
+        super().__init__(cut_off)
+
     def __call__(self, rels_sorted_by_scores, qrel_dict):
         """
             Calculate mean average precision. The function assumes,
@@ -79,40 +116,91 @@ class MeanAveragePrecision:
             :return: Mean average precision.
         """
         result = 0.
-        post_qty = sum([int(rel > RELEVANCE_THRESHOLD) for did, rel in qrel_dict.items()])
+        tot_rel_qty = self.get_total_rel(qrel_dict)
+        if tot_rel_qty == 0:
+            return 0
 
         pos = 0
-        for i, rel in enumerate(rels_sorted_by_scores):
+        for i, rel in enumerate(self.get_cut_rels(rels_sorted_by_scores)):
             if rel > RELEVANCE_THRESHOLD:
                 pos += 1.
                 result += pos / (i + 1.)
 
-        return result / post_qty
+        return result / tot_rel_qty
 
 
-class MeanReciprocalRank:
+@register([METRIC_MRR_PREF, METRIC_MRR_PREF_ADD])
+class MeanReciprocalRank(MetricBase):
     def __init__(self, cut_off=float('inf')):
-        self.cut_off = cut_off
+        super().__init__(cut_off)
         
     def __call__(self, rels_sorted_by_scores, qrel_dict):
-        for i, rel in enumerate(rels_sorted_by_scores):
-            if i >= self.cut_off:
-                break
+        for i, rel in enumerate(self.get_cut_rels(rels_sorted_by_scores)):
             if rel > RELEVANCE_THRESHOLD:
                 return 1 / (i + 1.)
         return 0
 
 
-class RecallAtK:
-    def __init__(self, k):
-        self.k = k
+@register(METRIC_RECALL_PREF)
+class RecallAtK(MetricBase):
+    def __init__(self, cut_off=float('inf')):
+        super().__init__(cut_off)
+
     def __call__(self, rels_sorted_by_scores, qrel_dict):
-        for i, rel in enumerate(rels_sorted_by_scores):
-            if i >= self.k:
-                break
+        pos = 0
+
+        tot_rel_qty = self.get_total_rel(qrel_dict)
+        if tot_rel_qty == 0:
+            return 0
+
+        for i, rel in enumerate(self.get_cut_rels(rels_sorted_by_scores)):
             if rel > RELEVANCE_THRESHOLD:
-                return 1.0
-        return 0
+                pos += 1
+
+        return pos / tot_rel_qty
+
+
+def get_cutoff(prefix: str, desc_with_cutoff) -> Union[int, float]:
+    """A function to extract the cutoff value from metric names such as :
+
+            ndcg@20, mrr@10, mrr, ndcg, etc ...
+
+       When @K is missing, the cutoff value is infinite.
+
+    :param prefix:   metric name prefix (but without @)
+    :param desc_with_cutoff: a metric name description, e.g., mrr@10, ndcg@20, or mrr
+
+    :return: an integer cutoff value or float('inf')
+    """
+    assert desc_with_cutoff.startswith(prefix), \
+        f'Description {desc_with_cutoff} should have prefix: {prefix} or {prefix}@'
+    if prefix == desc_with_cutoff:
+        return float('inf')
+    cutoff_str = desc_with_cutoff[len(prefix) + 1:]
+    try:
+        res = int(cutoff_str)
+
+        assert res > 0, f'Cutoff value {cutoff_str} is not a positive integer!'
+
+        return res
+    except ValueError as e:
+        raise Exception(f'Cutoff value {cutoff_str} is not a positive integer!')
+
+
+def create_metric_obj(desc_with_cutoff : str):
+    """A function that creates a metric evaluation object from metric description.
+
+    :param desc_with_cutoff: a metric name description, e.g., mrr@10, ndcg@20, or mrr
+    :return: a tuple: a rank cutoff vlue, an object that can compute evaluation metric
+    """
+    prefix_list = []
+    for prefix, func in eval_registry.registered.items():
+        prefix_list.append(prefix)
+        if desc_with_cutoff.startswith(prefix):
+            return func(get_cutoff(prefix, desc_with_cutoff))
+
+    raise Exception(f'Unsupported metric {desc_with_cutoff}, supported metrics (can optionally add @K): '
+                    + ','.join(prefix_list))
 
 
 def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
@@ -159,64 +247,46 @@ def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
     return res
 
 
-def get_eval_results(use_external_eval,
-                   eval_metric,
+def get_eval_results(use_external_eval : bool,
+                   eval_metric : str,
                    rerank_run,
                    qrel_file,
-                   run_file=None,
-                   use_qrel_cache=False):
+                   run_file=None):
     """
         Carry out internal or external evaluation.
 
         :param use_external_eval:   True to use external evaluation tools.
-        :param eval_metric:        Evaluation metric (from the METRIC_LIST above)
+        :param eval_metric:        Evaluation metric description.
         :param run_file:           A run file to store results (or None).
         :param qrel_file:          A QREL file.
-        :param use_qrel_cache:  use global QREL file cache (dangerous option: there should
-                              be no file-name collisions to for this)
 
         :return:  average metric value.
     """
 
     if use_external_eval:
-        m = None
-        if eval_metric == METRIC_MAP:
+        if eval_metric == METRIC_MAP_PREF:
             m = 'map'
-        elif eval_metric == METRIC_NDCG10:
-            m = 'ndcg_cut_10'
-        elif eval_metric == METRIC_NDCG20:
-            m = 'ndcg_cut_20'
-        elif eval_metric == METRIC_MRR:
+        elif eval_metric.startswith(METRIC_MAP_PREF) or \
+             eval_metric.startswith(METRIC_NDCG_PREF):
+            m = eval_metric.replace('@', '_cut_')
+        elif eval_metric.startswith(METRIC_RECALL_PREF):
+            m = eval_metric.replace('@', '_')
+        elif eval_metric in [METRIC_MRR_PREF, METRIC_MRR_PREF_ADD]:
             m = 'recip_rank'
         else:
-            raise Exception('Unsupported metric: ' + eval_metric)
+            raise Exception('Unsupported trec_eval metric: ' + eval_metric)
 
         assert run_file is not None, "Run file name should not be None"
         write_run_dict(rerank_run, run_file)
 
         return trec_eval(run_file, qrel_file, m)[0]
     else:
-        f = None
-        if eval_metric == METRIC_MAP:
-            f = MeanAveragePrecision()
-        elif eval_metric == METRIC_NDCG20:
-            f = NormalizedDiscountedCumulativeGain(20)
-        elif eval_metric == METRIC_NDCG10:
-            f = NormalizedDiscountedCumulativeGain(10)
-        elif eval_metric == METRIC_MRR:
-            f = MeanReciprocalRank()
-        else:
-            raise Exception('Unsupported metric: ' + eval_metric)
+        f = create_metric_obj(eval_metric)
 
         if run_file is not None:
             write_run_dict(rerank_run, run_file)
 
-        global qrel_cache
-
-        if use_qrel_cache and qrel_file in qrel_cache:
-            qrels = qrel_cache[qrel_file]
-        else:
-            qrels = qrel_cache[qrel_file] = read_qrels_dict(qrel_file)
+        qrels = read_qrels_dict(qrel_file)
 
         return eval_run(rerank_run=rerank_run,
                        qrels_dict=qrels,
@@ -255,8 +325,7 @@ def trec_eval(run : Union[str, Dict[str, Dict[str, int]]],
 
     trec_eval_params = [trec_eval_path,
                         '-q',  # all query results
-                        '-m', 'official',
-                        '-m', 'ndcg_cut',
+                        '-m', 'all_trec',
                         qrel_f, run_f]
     results = []
     avg_res = None

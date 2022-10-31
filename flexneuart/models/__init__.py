@@ -1,5 +1,5 @@
 from flexneuart import Registry
-model_registry = Registry(default='models')
+model_registry = Registry()
 register = model_registry.register
 
 VANILLA_BERT='vanilla_bert'

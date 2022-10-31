@@ -16,7 +16,7 @@
 #
 import os
 
-from typing import Dict, Callable
+from typing import Dict, Callable, List, Union
 
 import flexneuart
 
@@ -67,16 +67,24 @@ class Registry:
         MIT License is compatible with Apache 2 license for the code in this repo.
 
     """
-    def __init__(self, default: str = None):
+    def __init__(self):
         self.registered : Dict[str, Callable] = {}
-        self.default = default
 
-    def register(self, name):
+    def register(self, name_or_names : Union[str, List[str]]):
         registry = self
 
+        if type(name_or_names) == str:
+            name_arr = [name_or_names]
+        else:
+            assert type(name_or_names) == list
+            name_arr = name_or_names
+
         def wrapped(fn):
-            registry.registered[name] = fn
-            fn.name = name
+            for name in name_arr:
+                registry.registered[name] = fn
+
+            fn.name = name_arr[0]
             return fn
+
         return wrapped
 
