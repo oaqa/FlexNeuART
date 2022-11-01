@@ -13,6 +13,7 @@ Transactions of the Association for Computational Linguistics 2022; 10 224–239
 doi: https://doi.org/10.1162/tacl_a_00457
 """
 
+@register_augmentation("case_fold")
 class CaseFold(DataAugment):
     """
     A class to convert the document to lower case
@@ -27,12 +28,13 @@ class CaseFold(DataAugment):
     augment(text)
         returns the lowercased text
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name, conf):
+        super().__init__(name)
 
     def augment(self, text):
         return text.lower()
 
+@register_augmentation("del_punctuation")
 class DelPunct(DataAugment):
     """
     A class used for removing all punctuations from the document
@@ -48,14 +50,15 @@ class DelPunct(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name, conf):
+        super().__init__(name)
         self.trans_punct = str.maketrans('', '', string.punctuation)
 
     def augment(self, text):
         return text.translate(self.trans_punct)
 
-
+    
+@register_augmentation("del_sentence")
 class DelSent(DataAugment):
     """
     A class that that would delete a sentence in the document with a given probability
@@ -73,10 +76,10 @@ class DelSent(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha=0.0, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
-        self.alpha = alpha
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        self.alpha = conf[self.augmentation_name]["alpha"]
 
     def augment(self, text):
         sents = list(self.nlp(text).sents)
@@ -88,6 +91,7 @@ class DelSent(DataAugment):
         return " ".join(remaining)
 
 
+@register_augmentation("lemmatize")
 class Lemmatize(DataAugment):
     """
     A class to lemmatize the words in a document
@@ -103,15 +107,16 @@ class Lemmatize(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
     
     def augment(self, text):
         dtext_b = [t.lemma_ if not t.is_stop else t for t in self.nlp(text)]
         return ' '.join(str(s) for s in dtext_b)
 
 
+@register_augmentation("shuffle_words")
 class ShufWords(DataAugment):
     """
     A class to shuffle the tokens in a sentence
@@ -127,9 +132,9 @@ class ShufWords(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
     
     def augment(self, text):
         dtoks = [str(t) for t in self.nlp(text)]
@@ -137,6 +142,7 @@ class ShufWords(DataAugment):
         return ' '.join(str(s) for s in dtoks)
 
 
+@register_augmentation("shuffle_words_keep_sentences")
 class ShufWordsKeepSents(DataAugment):
     """
     A class to shuffle the tokens in a sentence with some given probability
@@ -154,10 +160,10 @@ class ShufWordsKeepSents(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha=0.0, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
-        self.alpha = alpha
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        self.alpha = conf[self.augmentation_name]["alpha"]
 
     def augment(self, text):
         dsents = []
@@ -173,6 +179,7 @@ class ShufWordsKeepSents(DataAugment):
         return ' '.join(dsents)
 
 
+@register_augmentation("shuffle_words_keep_sent_and_nps")
 class ShufWordsKeepSentsAndNPs(DataAugment):
     """
     A class to shuffle sentences but sentence order and order of words in a noun chunk is preserved
@@ -190,10 +197,10 @@ class ShufWordsKeepSentsAndNPs(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha=0.0, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
-        self.alpha = alpha
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        self.alpha = conf[self.augmentation_name]["alpha"]
 
     def augment(self, text):
         dsents = []

@@ -41,6 +41,10 @@
     {
 	"probability" : 0.1
     },
+    "document_constant_length" :
+    {
+	"doc_length" : 1000
+    },
     "document_cut_out" :
     {
 	"p" : 0.1,
@@ -57,6 +61,29 @@
     "hypernym_word_replacement" :
     {
 	"probability" : 0.05
+    },
+    "del_sentence" :
+    {
+	"spacy_model" : "en_core_web_sm",
+	"alpha" : 0.0
+    },
+    "lemmatize" :
+    {
+	"spacy_model" :	"en_core_web_sm"
+    },
+    "shuffle_words" :
+    {
+	"spacy_model" :	"en_core_web_sm"
+    },
+    "shuffle_words_keep_sentences" :
+    {
+	"spacy_model" : "en_core_web_sm",
+	"alpha" : 0.0
+    },
+    "shuffle_words_keep_sent_and_nps" :
+    {
+	"spacy_model" : "en_core_web_sm",
+	"alpha" : 0.0
     }
 }
     

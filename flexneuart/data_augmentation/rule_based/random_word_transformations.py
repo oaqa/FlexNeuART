@@ -1,10 +1,12 @@
 from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
+from flexneuart.data_augmentation import register_augmentation
 import re
 import random
 
 
 # This file contains functions that would do augmentatation on random words in the document
 
+@register_augmentation("random_word_insertion")
 class RandomWordInsertion(DataAugment):
     """
     A class used for Inserting Random words in the Document
@@ -20,9 +22,9 @@ class RandomWordInsertion(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha_ri=0.1):
-        super().__init__()
-        self.alpha_ri = alpha_ri
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.alpha_ri =  conf[self.augmentation_name]["probability"]
 
     def augment(self, text):
         words = re.split('\s+', text)
@@ -60,7 +62,8 @@ class RandomWordInsertion(DataAugment):
         random_idx = random.randint(0, len(new_words)-1)
         new_words.insert(random_idx, repeat_word)
 
-
+        
+@register_augmentation("random_word_deletion")
 class RandomWordDeletion(DataAugment):
     """
     A class used for Inserting Random words in the Document
@@ -76,9 +79,9 @@ class RandomWordDeletion(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, p = 0.2):
-        super().__init__()
-        self.p = p
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.p = conf[self.augmentation_name]["probability"]
 
     def augment(self, text):
         # Code referenced from: https://github.com/jasonwei20/eda_nlp/blob/master/code/eda.py
@@ -104,6 +107,7 @@ class RandomWordDeletion(DataAugment):
         return " ".join(new_words)
 
 
+@register_augmentation("random_word_swap")
 class RandomWordSwap(DataAugment):
     """
     A class used for Inserting Random words in the Document
@@ -119,9 +123,9 @@ class RandomWordSwap(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha_rs=0.1):
-        super().__init__()
-        self.alpha_rs = alpha_rs # percentage of random swap
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.alpha_rs = conf[self.augmentation_name]["probability"]
 
     def augment(self, text):
         words = re.split('\s+', text)

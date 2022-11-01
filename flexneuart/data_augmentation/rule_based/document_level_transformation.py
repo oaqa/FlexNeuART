@@ -2,6 +2,7 @@ from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 import random
 import re
 
+@register_augmentation("document_constant_length")
 class ConstantDocLength(DataAugment):
     """
     Randomly delete words reduce the document length
@@ -17,9 +18,9 @@ class ConstantDocLength(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, doc_length):
-        super().__init__()
-        self.doc_length = doc_length
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.doc_length = conf[self.augmentation_name]["doc_length"]
 
     def augment(self, text):
         tokens = text.split()
@@ -39,6 +40,8 @@ class ConstantDocLength(DataAugment):
         
         return " ".join(constant_length_text)
 
+    
+@register_augmentation("document_cut_out")
 class DocuemntCutOut(DataAugment):
     """
     Randomly drop a span of the document
@@ -55,10 +58,10 @@ class DocuemntCutOut(DataAugment):
         returns the augmented text
     """
 
-    def __init__(self, p=0.1, span_p=0.2):
-        super().__init__()
-        self.p = p
-        self.span_p = span_p
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.p = conf[self.augmentation_name]["p"]
+        self.span_p = conf[self.augmentation_name]["span_p"]
     
     def augment(self, text):
         r = random.uniform(0, 1)
@@ -73,6 +76,7 @@ class DocuemntCutOut(DataAugment):
         return ' '.join(augmented_words)
 
 
+@register_augmentation("query_cut_out")
 class QueryTextDrop(DataAugment):
     """
     Randomly drop a span of the document
@@ -88,9 +92,9 @@ class QueryTextDrop(DataAugment):
         returns the augmented text
     """
 
-    def __init__(self, p=0.5):
-        super().__init__()
-        self.p = p
+    def __init__(self, name, conf):
+        super().__init__(name)
+        self.p = conf[self.augmentation_name]["p"]
     
     def augment(self, text, query=None):
         r = random.uniform(0, 1)
