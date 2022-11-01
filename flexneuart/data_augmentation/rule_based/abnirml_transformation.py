@@ -3,6 +3,7 @@ import string
 import random
 import itertools
 import spacy
+from flexneuart.data_augmentation import register_augmentation
 
 """
 The augmentation techniques implemented and code in this file is inspired by -
@@ -221,7 +222,7 @@ class ShufWordsKeepSentsAndNPs(DataAugment):
         return ' '.join(dsents)
 
 
-
+@register_augmentation("shuf_words_keep_noun_phrase")
 class ShufWordsKeepNPs(DataAugment):
     """
     A class to shuffle sentences but but preserve the order of words in a noun chunk
@@ -252,6 +253,7 @@ class ShufWordsKeepNPs(DataAugment):
         return ' '.join(toks)
 
 
+@register_augmentation("shuf_noun_phrase")
 class ShufNPSlots(DataAugment):
     """
     A class to shuffle noun chunks and preserve the rest of the sentence
@@ -296,6 +298,7 @@ class ShufNPSlots(DataAugment):
                 toks.append(chunk)
         return ' '.join(toks)
 
+@register_augmentation("shuf_prepositions")
 class ShufPrepositions(DataAugment):
     """
     A class to shuffle the prepositions in the sentences of a document
@@ -339,6 +342,7 @@ class ShufPrepositions(DataAugment):
                 toks.append(chunk)
         return ' '.join(toks)
 
+@register_augmentation("reverse_noun_phrase_slots")
 class ReverseNPSlots(DataAugment):
     """
     A class to reverse noun chunks in a sentence
@@ -383,7 +387,7 @@ class ReverseNPSlots(DataAugment):
                 toks.append(chunk)
         return ' '.join(toks)
 
-
+@register_augmentation("shuffle_sentences")
 class ShufSents(DataAugment):
     """
     A class to shuffle the sentences in a document
@@ -409,6 +413,7 @@ class ShufSents(DataAugment):
         dtext_b = ' '.join(str(s) for s in dsents)
         return dtext_b
 
+@register_augmentation("register_sentences")
 class ReverseSents(DataAugment):
     """
     A class to reverse the sentence order in a document
@@ -433,6 +438,7 @@ class ReverseSents(DataAugment):
         dtext_b = ' '.join(str(s) for s in reversed(dsents))
         return dtext_b
 
+@register_augmentation("reverse_words")
 class ReverseWords(DataAugment):
     """
     A class to reverse the word order in the document
@@ -456,7 +462,7 @@ class ReverseWords(DataAugment):
         dtext_b = [str(s) for s in reversed(self.nlp(text))]
         return ' '.join(dtext_b)
 
-
+@register_augmentation("remove_stopwords")
 class RmStops(DataAugment):
     """
     A class to remove stopwords from the document
