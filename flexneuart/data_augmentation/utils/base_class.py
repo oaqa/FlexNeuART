@@ -6,4 +6,8 @@ class DataAugment:
         
     @abstractmethod
     def augment(self, text, query=None):
-        pass       
+        pass
+
+    @classmethod
+    def build_augmentation(self, args):
+        return cls(args)       
