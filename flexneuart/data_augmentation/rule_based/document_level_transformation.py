@@ -1,6 +1,7 @@
 from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 import random
 import re
+from flexneuart.data_augmentation import register_augmentation
 
 @register_augmentation("document_constant_length")
 class ConstantDocLength(DataAugment):

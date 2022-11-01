@@ -1,4 +1,5 @@
 from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
+from flexneuart.data_augmentation import register_augmentation
 
 import re
 import random
