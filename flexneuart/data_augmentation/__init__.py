@@ -32,7 +32,11 @@ def register_augmentation(name):
     return register_task_cls
 
 def get_augmentation_method(name, conf):
-    return AUGMENTATION_REGISTRY[name](name, conf)
+    if name in AUGMENTATION_REGISTRY:
+        return AUGMENTATION_REGISTRY[name](name, conf)
+    else:
+        print("Augmentation Not Found. Running without any Augmentation Technique")
+        return None
 
 def get_registered_name(cls):
     return CLASS_TO_NAME[cls]

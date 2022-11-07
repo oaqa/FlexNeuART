@@ -55,6 +55,6 @@ class DataAugmentModule:
             pass
 
     def augment(self, query_text, doc_text):
-        # if self.doc_augment is not None and random.random() < self.p:
-        doc_text = self.doc_augment.augment(doc_text)
+        if self.doc_augment is not None and random.random() < self.p:
+            doc_text = self.doc_augment.augment(doc_text)
         return query_text, doc_text
