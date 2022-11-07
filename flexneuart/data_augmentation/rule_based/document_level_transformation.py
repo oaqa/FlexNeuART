@@ -72,7 +72,7 @@ class DocuemntCutOut(DataAugment):
         words = re.split('\s+', text)
         num_words_to_drop = len(words)*self.span_p
         index_to_cut = random.randint(0, len(words))
-        augmented_words = words[:index_to_cut] + words[index_to_cut+num_words_to_drop:]
+        augmented_words = words[:index_to_cut] + words[int(index_to_cut+num_words_to_drop):]
         
         return ' '.join(augmented_words)
 
