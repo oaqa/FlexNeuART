@@ -232,7 +232,7 @@ python -u ./train_nn/train_model.py \
   --epoch_qty $epochQty \
   --epoch_repeat_qty $epochRepeatQty \
   --da_techniques $dataAugment \
-  --da_congig $daConfig \
+  --da_config $daConfig \
   --da_prob $augmentP \
   $saveEpochSnapshotsArg \
   --master_port $masterPort \
