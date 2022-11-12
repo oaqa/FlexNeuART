@@ -1,5 +1,6 @@
 from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 import re
+import json
 import string
 import random
 from flexneuart.data_augmentation import register_augmentation
@@ -38,8 +39,15 @@ class AddCharacterTransformation(DataAugment):
             the probability with which to add characters within the selected word
         """
         super().__init__(name)
-        self.word_add_probability = conf[self.augmentation_name]["word_add_probability"]
-        self.character_add_probability = conf[self.augmentation_name]["character_add_probability"]
+        try:
+            self.word_add_probability = conf[self.augmentation_name]["word_add_probability"]
+            self.character_add_probability = conf[self.augmentation_name]["character_add_probability"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"word_add_probability": 0.1,
+                                "character_add_probability": 0.2}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         """
