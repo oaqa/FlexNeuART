@@ -739,7 +739,8 @@ def main_cli():
                         help='provide multiple augmentation methods')
 
     parser.add_argument('--da_config', metavar='Path to config to be used for data augmentaiton',
-                        type=str, default=None, help='config for augmentation parameters')
+                        type=str, nargs='?', default=None,
+                        help='config for augmentation parameters')
 
     parser.add_argument('--da_prob', metavar='Augmentation Probability',
                         type=float, default=0.25, help='Probabilty of doing augmentation')
