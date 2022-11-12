@@ -205,11 +205,11 @@ def train_iteration(model_holder, device_name,
                                                epoch_repeat_qty=train_params.epoch_repeat_qty,
                                                do_shuffle=train_params.shuffle_train)
 
-    data_augment_method = None
-    if train_params.data_augment is not None:
-        data_augment_method = DataAugmentModule(train_params.data_augment,
-                                                train_params.data_augment_config,
-                                                train_params.augment_p)
+    data_augment_methods = None
+    if len(train_params.da_techniques) != 0:
+        data_augment_methods = DataAugmentModule(train_params.da_techniques,
+                                                train_params.da_config,
+                                                train_params.da_prob)
     else:
         print('No Data Augmentation')
         
@@ -218,7 +218,7 @@ def train_iteration(model_holder, device_name,
                                                  max_query_len=train_params.max_query_len,
                                                  max_doc_len=train_params.max_doc_len,
                                                  train_sampler=train_sampler,
-                                                 data_augment_module=data_augment_method)
+                                                 data_augment_module=data_augment_methods)
 
     sync_qty = 0
 
@@ -767,7 +767,7 @@ def main_cli():
             setattr(args, arg_name, arg_val)
 
     print(args)
-    print(args.data_augment)
+    print(args.da_techniques)
     sync_out_streams()
 
     set_all_seeds(args.seed)
