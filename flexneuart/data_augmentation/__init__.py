@@ -33,7 +33,9 @@ def register_augmentation(name):
 
 def get_augmentation_method(name, conf):
     if name in AUGMENTATION_REGISTRY:
-        return AUGMENTATION_REGISTRY[name](name, conf)
+        da_class = AUGMENTATION_REGISTRY[name](name, conf)
+        print("Loaded Augmentation Class {0}".format(da_class.__name__))
+        return da_class
     else:
         print("Augmentation Not Found. Running without any Augmentation Technique")
         return None
