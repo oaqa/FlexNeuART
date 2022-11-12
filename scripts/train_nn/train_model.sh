@@ -46,6 +46,8 @@ maxQueryVal=""
 valType=""
 batchesPerEpoch=""
 distrBackend="gloo"
+daConfig=""
+augmentP=0.25
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
