@@ -735,13 +735,13 @@ def main_cli():
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
     
-    parser.add_argument('--data_augment', nargs='*', metavar='Data Augmentation Methods',
+    parser.add_argument('--da_techniques', nargs='*', metavar='Data Augmentation Methods',
                         help='provide multiple augmentation methods')
 
-    parser.add_argument('--data_augment_config', metavar='Path to config to be used for data augmentaiton',
-                        type=str, nargs='?', help='config for augmentation parameters')
+    parser.add_argument('--da_config', metavar='Path to config to be used for data augmentaiton',
+                        type=str, default='', help='config for augmentation parameters')
 
-    parser.add_argument('--data_augment_p', metavar='Augmentation Probability',
+    parser.add_argument('--da_prob', metavar='Augmentation Probability',
                         type=float, default=0.25, help='Probabilty of doing augmentation')
 
     args = parser.parse_args()
