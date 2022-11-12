@@ -89,7 +89,7 @@ TrainParams = namedtuple('TrainParams',
                      'shuffle_train',
                      'valid_type',
                      'use_external_eval', 'eval_metric',
-                     'data_augment'])
+                     'data_augment', 'data_augment_config', 'augment_p'])
 
 
 def get_lr_desc(optimizer):
@@ -207,7 +207,9 @@ def train_iteration(model_holder, device_name,
 
     data_augment_method = None
     if train_params.data_augment is not None:
-        data_augment_method = DataAugmentModule(train_params.data_augment)
+        data_augment_method = DataAugmentModule(train_params.data_augment,
+                                                train_params.data_augment_config,
+                                                train_params.augment_p)
     else:
         print('No Data Augmentation')
         
@@ -733,9 +735,14 @@ def main_cli():
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
     
-    parser.add_argument('--data_augment', metavar='Data Augmentation Method',
-                        type=str, default="shuf_sent",
-                        help='select data augmentation method: shuf_sent')
+    parser.add_argument('--data_augment', nargs='*', metavar='Data Augmentation Methods',
+                        help='provide multiple augmentation methods')
+
+    parser.add_argument('--data_augment_config', metavar='Path to config to be used for data augmentaiton',
+                        type=str, default='', help='config for augmentation parameters')
+
+    parser.add_argument('--data_augment_p', metavar='Augmentation Probability',
+                        type=float, default=0.25, help='Probabilty of doing augmentation')
 
     args = parser.parse_args()
 
@@ -855,7 +862,8 @@ def main_cli():
                                shuffle_train=not args.no_shuffle_train,
                                valid_type=args.valid_type,
                                optim=args.optim,
-                               data_augment=args.data_augment)
+                               data_augment=args.data_augment,
+                               data_augment_config=args.data_augment_config)
 
     do_train(
         device_qty=device_qty,

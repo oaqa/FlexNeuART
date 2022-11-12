@@ -67,6 +67,8 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "valid_type"         "valType"          "validation type: always (every epoch), last (last epoch), never"
       "distr_backend"      "distrBackend"     "Pytorch backend for distributed processing"
       "data_augment"       "dataAugment"      "data augmentation method"
+      "data_augment_config"   "daConfig"      "data augmentation technique config"
+      "augment_p"          "augmentP"         "augmentation probability for every document"        
 )
 
 parseArguments $@
@@ -228,6 +230,8 @@ python -u ./train_nn/train_model.py \
   --epoch_qty $epochQty \
   --epoch_repeat_qty $epochRepeatQty \
   --data_augment $dataAugment \
+  --data_augment_config $daConfig \
+  --augment_p $augmentP \
   $saveEpochSnapshotsArg \
   --master_port $masterPort \
   --datafiles "$trainDir/data_query.tsv"  \

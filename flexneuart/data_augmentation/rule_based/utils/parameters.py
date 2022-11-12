@@ -1,4 +1,4 @@
-{
+conf = {
     "random_character_insertion" :
     {
 	"word_add_probability" : 0.1,
