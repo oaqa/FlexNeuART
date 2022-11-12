@@ -89,7 +89,7 @@ TrainParams = namedtuple('TrainParams',
                      'shuffle_train',
                      'valid_type',
                      'use_external_eval', 'eval_metric',
-                     'data_augment', 'data_augment_config', 'augment_p'])
+                     'da_techniques', 'da_config', 'da_prob'])
 
 
 def get_lr_desc(optimizer):
@@ -863,8 +863,10 @@ def main_cli():
                                shuffle_train=not args.no_shuffle_train,
                                valid_type=args.valid_type,
                                optim=args.optim,
-                               data_augment=args.data_augment,
-                               data_augment_config=args.data_augment_config)
+                               da_techniques=args.da_techniques,
+                               da_config=args.da_config,
+                               da_prob=args.da_prob
+                               )
 
     do_train(
         device_qty=device_qty,
