@@ -7,7 +7,7 @@ class DataAugmentModule:
     def __init__(self, augment_type, config_path, augment_p=0.25):
         self.p = augment_p
         random.seed(random_seed)
-        self.doc_augment = None
+        self.doc_augment_techniques = list()
         if config_path is None:
             conf = default_conf
         else:
@@ -17,13 +17,15 @@ class DataAugmentModule:
                 conf_file.close()
             except:
                 raise Exception("Please ensure that the path to the config file is correct.")
-        try:
-            self.doc_augment = get_augmentation_method(augment_type, conf)
-        except:
-            raise Exception("No Augmentation Registered Augmentation Found by the name {0}".format(augment_type))
-            pass
+
+        for technique in augment_type:
+            try:
+                self.doc_augment_techniques.append(get_augmentation_method(augment_type, conf))
+            except:
+                raise Exception("No Augmentation Registered Augmentation Found by the name {0}".format(augment_type))
 
     def augment(self, query_text, doc_text):
-        if self.doc_augment is not None and random.random() < self.p:
-            doc_text = self.doc_augment.augment(doc_text)
+        for technique in self.doc_augment_techniques:
+            if random.random() < self.p:
+                doc_text = technique.augment(doc_text)
         return query_text, doc_text
