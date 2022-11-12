@@ -177,6 +177,8 @@ if [ "$amp" = "1" ] ; then
   ampArg=" --amp "
 fi
 
+DA=`echo $dataAugment | tr ',' ' '`
+
 echo "=========================================================================="
 echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
@@ -231,7 +233,7 @@ python -u ./train_nn/train_model.py \
   --batch_sync_qty $batchSyncQty \
   --epoch_qty $epochQty \
   --epoch_repeat_qty $epochRepeatQty \
-  --da_techniques $dataAugment \
+  --da_techniques $DA \
   --da_config $daConfig \
   --da_prob $augmentP \
   $saveEpochSnapshotsArg \
