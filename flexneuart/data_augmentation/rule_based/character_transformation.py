@@ -45,7 +45,7 @@ class AddCharacterTransformation(DataAugment):
         except:
             expected_config = {self.augmentation_name :
                                {"word_add_probability": 0.1,
-                                "character_add_probability": 0.2}}
+                                "character_add_probability": 0.1}}
             raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
                             % json.dumps(expected_config, indent = 3))
 
@@ -108,8 +108,15 @@ class RemoveCharacterTransformation(DataAugment):
             the probability with which to delete characters within the selected word
         """
         super().__init__(name)
-        self.word_remove_probability = conf[self.augmentation_name]["word_remove_probability"]
-        self.character_remove_probability = conf[self.augmentation_name]["character_remove_probability"]
+        try:
+            self.word_remove_probability = conf[self.augmentation_name]["word_remove_probability"]
+            self.character_remove_probability = conf[self.augmentation_name]["character_remove_probability"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"word_remove_probability": 0.1,
+                                "character_remove_probability": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         """
@@ -170,8 +177,16 @@ class SwapCharacterTransformation(DataAugment):
             the probability with which to swap characters within the selected word
         """
         super().__init__(name)
-        self.word_swap_probability = conf[self.augmentation_name]["word_swap_probability"]
-        self.character_swap_probability = conf[self.augmentation_name]["character_swap_probability"]
+        try:
+            self.word_swap_probability = conf[self.augmentation_name]["word_swap_probability"]
+            self.character_swap_probability = conf[self.augmentation_name]["character_swap_probability"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"word_swap_probability": 0.1,
+                                "character_swap_probability": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+
 
     def augment(self, text):
         """
@@ -236,9 +251,17 @@ class ReplaceCharacterTransformation(DataAugment):
             the probability with which to replace characters within the selected word
         """
         super().__init__(name)
-        self.word_replace_probability = conf[self.augmentation_name]["word_replace_probability"]
-        self.character_replace_probability = conf[self.augmentation_name]["character_replace_probability"]
-        self.keyboard_positions = KEYBOARD_POSITIONS
+        try:
+            self.word_replace_probability = conf[self.augmentation_name]["word_replace_probability"]
+            self.character_replace_probability = conf[self.augmentation_name]["character_replace_probability"]
+            self.keyboard_positions = KEYBOARD_POSITIONS
+        except:
+            expected_config = {self.augmentation_name :
+                               {"word_replace_probability": 0.1,
+                                "character_replace_probability": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+
 
     def augment(self, text):
         """
@@ -299,9 +322,16 @@ class ReplaceCharacterKeyboardTransformation(DataAugment):
             the probability with which to replace characters within the selected word
         """
         super().__init__(name)
-        self.word_replace_probability = conf[self.augmentation_name]["word_replace_probability"]
-        self.character_replace_probability = conf[self.augmentation_name]["character_replace_probability"]
-        self.keyboard_positions = KEYBOARD_POSITIONS
+        try:
+            self.word_replace_probability = conf[self.augmentation_name]["word_replace_probability"]
+            self.character_replace_probability = conf[self.augmentation_name]["character_replace_probability"]
+            self.keyboard_positions = KEYBOARD_POSITIONS
+        except:
+            expected_config = {self.augmentation_name :
+                               {"word_replace_probability": 0.1,
+                                "character_replace_probability": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         """
@@ -390,9 +420,17 @@ class AddCharacterKeyboardAdjacentTransformation(DataAugment):
             the probability with which to add characters within the selected word
         """
         super().__init__(name)
-        self.word_add_probability = conf[self.augmentation_name]["word_add_probability"]
-        self.character_add_probability = conf[self.augmentation_name]["character_add_probability"]
-        self.keyboard_positions = KEYBOARD_POSITIONS
+        try:
+            self.word_add_probability = conf[self.augmentation_name]["word_add_probability"]
+            self.character_add_probability = conf[self.augmentation_name]["character_add_probability"]
+            self.keyboard_positions = KEYBOARD_POSITIONS
+        except:
+            expected_config = {self.augmentation_name :
+                               {"word_add_probability": 0.1,
+                                "character_add_probability": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+
 
 
     def augment(self, text):

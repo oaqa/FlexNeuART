@@ -79,8 +79,15 @@ class DelSent(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
-        self.alpha = conf[self.augmentation_name]["alpha"]
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.alpha = conf[self.augmentation_name]["alpha"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm",
+                                "alpha": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         sents = list(self.nlp(text).sents)
@@ -110,7 +117,14 @@ class Lemmatize(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+
     
     def augment(self, text):
         dtext_b = [t.lemma_ if not t.is_stop else t for t in self.nlp(text)]
@@ -135,7 +149,13 @@ class ShufWords(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dtoks = [str(t) for t in self.nlp(text)]
@@ -163,8 +183,16 @@ class ShufWordsKeepSents(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
-        self.alpha = conf[self.augmentation_name]["alpha"]
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.alpha = conf[self.augmentation_name]["alpha"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm",
+                                "alpha": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+
 
     def augment(self, text):
         dsents = []
@@ -200,8 +228,16 @@ class ShufWordsKeepSentsAndNPs(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
-        self.alpha = conf[self.augmentation_name]["alpha"]
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.alpha = conf[self.augmentation_name]["alpha"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm",
+                                "alpha": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+        
 
     def augment(self, text):
         dsents = []
@@ -238,9 +274,15 @@ class ShufWordsKeepNPs(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -269,9 +311,15 @@ class ShufNPSlots(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -314,9 +362,15 @@ class ShufPrepositions(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -358,9 +412,15 @@ class ReverseNPSlots(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -403,9 +463,15 @@ class ShufSents(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dsents = [str(s) for s in self.nlp(text).sents]
@@ -429,9 +495,15 @@ class ReverseSents(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dsents = [str(s) for s in self.nlp(text).sents]
@@ -454,9 +526,15 @@ class ReverseWords(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dtext_b = [str(s) for s in reversed(self.nlp(text))]
@@ -478,9 +556,15 @@ class RmStops(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         stopwords = self.nlp.Defaults.stop_words
