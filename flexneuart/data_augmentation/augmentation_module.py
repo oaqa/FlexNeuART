@@ -6,7 +6,6 @@ import json
 class DataAugmentModule:
     def __init__(self, augment_type, config_path, augment_p=0.25):
         self.p = augment_p
-        random.seed(random_seed)
         self.doc_augment_techniques = list()
         if config_path is None:
             conf = default_conf
