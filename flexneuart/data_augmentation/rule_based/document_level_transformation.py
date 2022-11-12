@@ -1,7 +1,9 @@
 from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 import random
 import re
+import json
 from flexneuart.data_augmentation import register_augmentation
+
 
 @register_augmentation("document_constant_length")
 class ConstantDocLength(DataAugment):
@@ -21,7 +23,13 @@ class ConstantDocLength(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.doc_length = conf[self.augmentation_name]["doc_length"]
+        try:
+            self.doc_length = conf[self.augmentation_name]["doc_length"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"doc_length": 100}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         tokens = text.split()
@@ -61,8 +69,15 @@ class DocuemntCutOut(DataAugment):
 
     def __init__(self, name, conf):
         super().__init__(name)
-        self.p = conf[self.augmentation_name]["p"]
-        self.span_p = conf[self.augmentation_name]["span_p"]
+        try:
+            self.p = conf[self.augmentation_name]["p"]
+            self.span_p = conf[self.augmentation_name]["span_p"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"p": 0.1,
+                                "span_p": 0.2}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         r = random.uniform(0, 1)
@@ -95,7 +110,13 @@ class QueryTextDrop(DataAugment):
 
     def __init__(self, name, conf):
         super().__init__(name)
-        self.p = conf[self.augmentation_name]["p"]
+        try:
+            self.p = conf[self.augmentation_name]["p"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"p": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text, query=None):
         r = random.uniform(0, 1)

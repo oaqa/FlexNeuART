@@ -2,6 +2,7 @@ from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 from flexneuart.data_augmentation import register_augmentation
 import re
 import random
+import json
 
 
 # This file contains functions that would do augmentatation on random words in the document
@@ -24,7 +25,13 @@ class RandomWordInsertion(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.alpha_ri =  conf[self.augmentation_name]["probability"]
+        try:
+            self.alpha_ri =  conf[self.augmentation_name]["probability"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"alpha_ri": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         words = re.split('\s+', text)
@@ -81,7 +88,13 @@ class RandomWordDeletion(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.p = conf[self.augmentation_name]["probability"]
+        try:
+            self.p = conf[self.augmentation_name]["probability"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"p": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         # Code referenced from: https://github.com/jasonwei20/eda_nlp/blob/master/code/eda.py
@@ -125,7 +138,13 @@ class RandomWordSwap(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
-        self.alpha_rs = conf[self.augmentation_name]["probability"]
+        try:
+            self.alpha_rs = conf[self.augmentation_name]["probability"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"alpha_rs": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         words = re.split('\s+', text)

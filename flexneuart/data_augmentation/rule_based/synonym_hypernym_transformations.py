@@ -4,6 +4,7 @@ from flexneuart.data_augmentation import register_augmentation
 import re
 import random
 import nltk
+import json
 from nltk.corpus import wordnet, stopwords
 
 nltk.download('wordnet') 
@@ -37,8 +38,14 @@ class SynonymWordReplacement(DataAugment):
             percentage of words to be replaced by their synonym
         """
         super().__init__(name)
-        self.alpha_sr = conf[self.augmentation_name]["probability"]
-        self.stopwords = stopwords.words('english')
+        try:
+            self.alpha_sr = conf[self.augmentation_name]["probability"]
+            self.stopwords = stopwords.words('english')
+        except:
+            expected_config = {self.augmentation_name :
+                               {"alpha_sr": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         words = re.split('\s+', text)
@@ -126,8 +133,14 @@ class HypernymWordReplacement(DataAugment):
             percentage of words to be replaced by their hypernym                                                                                                                                                                          
         """
         super().__init__(name)
-        self.alpha_hr = conf[self.augmentation_name]["probability"]
-        self.stopwords = stopwords.words('english')
+        try:
+            self.alpha_hr = conf[self.augmentation_name]["probability"]
+            self.stopwords = stopwords.words('english')
+        except:
+            expected_config = {self.augmentation_name :
+                               {"alpha_hr": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         words = re.split('\s+', text)
