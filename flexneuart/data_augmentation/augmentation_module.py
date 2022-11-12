@@ -8,7 +8,7 @@ class DataAugmentModule:
         self.p = augment_p
         random.seed(random_seed)
         self.doc_augment = None
-        if config_path == "":
+        if config_path is None:
             conf = default_conf
         else:
             try:
