@@ -19,9 +19,9 @@ class DataAugmentModule:
 
         for technique in augment_type:
             try:
-                self.doc_augment_techniques.append(get_augmentation_method(augment_type, conf))
+                self.doc_augment_techniques.append(get_augmentation_method(technique, conf))
             except:
-                raise Exception("No Augmentation Registered Augmentation Found by the name {0}".format(augment_type))
+                raise Exception("No Augmentation Registered Augmentation Found by the name {0}".format(technique))
 
     def augment(self, query_text, doc_text):
         for technique in self.doc_augment_techniques:
