@@ -69,7 +69,8 @@ conf = {
     },
     "lemmatize" :
     {
-	"spacy_model" :	"en_core_web_sm"
+	"spacy_model" :	"en_core_web_sm",
+    "alphs" : 0.1
     },
     "shuffle_words" :
     {
