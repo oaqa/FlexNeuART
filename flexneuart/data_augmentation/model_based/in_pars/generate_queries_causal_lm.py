@@ -57,7 +57,7 @@ class InParsDataset(Dataset):
         self.doc_file = doc_file
         self.max_examples = max_examples
         self.get_docs()
-        self.prompts = self.__read_prompts(prompt_path)
+        self.prompts, self.prompt_names = self.__read_prompts(prompt_path)
         self.num_prompts = len(self.prompts)
 
     # Getting max examples
@@ -82,16 +82,18 @@ class InParsDataset(Dataset):
     
     def __getitem__(self, index):
         prompt_index = random.randint(0, self.num_prompts-1)
-        return self.sents[index][0], self.prompts[prompt_index].format(document_text=self.sents[index][1]), self.sents[index][1]
+        return self.sents[index][0], self.prompts[prompt_index].format(document_text=self.sents[index][1]), self.sents[index][1], self.prompt_names[prompt_index]
 
     def __read_prompts(self, prompt_paths):
         prompts = []
+        prompt_names = []
         for pp in prompt_paths:
             prompt_file = open(pp)
             prompts.append(prompt_file.read())
             prompt_file.close()
+            prompt_names.append(pp)
 
-        return prompts
+        return prompts, prompt_names
 
 # implements the collate function to create the input batch
 class InParsCollater(object):
@@ -104,8 +106,9 @@ class InParsCollater(object):
         batch_lengths = [len(i) for i in batch_texts]
         orig_data = [i[2] for i in batch]
         batch_data = self.tokenizer.batch_encode_plus(batch_texts, return_tensors='pt', padding=True)
+        prompt_name = [i[3] for i in batch]
 
-        return batch_ids, batch_data, batch_lengths, orig_data
+        return batch_ids, batch_data, batch_lengths, orig_data, prompt_name
 
 # dump the generated queries to file
 # output format - query_id \t query \t query_score
@@ -113,19 +116,20 @@ def write_to_output(add_query_pref,
                     syn_query_list, 
                     syn_query_probs, did_list, 
                     output,
-                    timestamp, counter, doc_data):
+                    timestamp, counter, doc_data, prompt_names):
     try:
         with open(output, 'a') as outf:
             
-            iter_data = zip(syn_query_list, syn_query_probs, did_list, doc_data)
-            for query_text, query_prob, doc_id, doc_text in iter_data:
+            iter_data = zip(syn_query_list, syn_query_probs, did_list, doc_data, prompt_names)
+            for query_text, query_prob, doc_id, doc_text, prompt_name in iter_data:
                 qid = f'QP{add_query_pref}_{timestamp}_{doc_id}_{counter}'
                 query_text = query_text.replace('\n', '').strip()
                 json_dict = {'doc_id':  doc_id,
                             'query_id': qid,
                             'doc_text': doc_text,
                             'question': query_text,
-                            'log_probs':  [query_prob]}
+                            'log_probs':  [query_prob],
+                            'prompt_name': prompt_name}
                 outf.write(json.dumps(json_dict, ensure_ascii=False) + '\n')
                 counter += 1
         return counter
@@ -259,7 +263,7 @@ def generate_queries(args, inpars_dataset, device, split_num, queue, configurer)
                                     args.output+split_num,
                                     query_id_timestamp,
                                     query_id_counter,
-                                    batch[3])
+                                    batch[3], batch[4])
             except Exception as e:
                 curr_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 logger.log(logging.DEBUG, "{0} {1}".format(curr_time, str(e)))
