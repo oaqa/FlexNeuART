@@ -50,7 +50,7 @@ conf = {
     },
     "del_sentence": {
         "spacy_model": "en_core_web_sm",
-        "alpha": 0.0
+        "alpha": 0.1
     },
     "lemmatize": {
         "spacy_model": "en_core_web_sm",
@@ -61,10 +61,10 @@ conf = {
     },
     "shuffle_words_keep_sentences": {
         "spacy_model": "en_core_web_sm",
-        "alpha": 0.0
+        "alpha": 0.1
     },
     "shuffle_words_keep_sent_and_nps": {
         "spacy_model": "en_core_web_sm",
-        "alpha": 0.0
+        "alpha": 0.1
     }
 }
