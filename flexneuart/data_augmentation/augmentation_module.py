@@ -18,10 +18,8 @@ class DataAugmentModule:
                 raise Exception("Please ensure that the path to the config file is correct.")
 
         for technique in augment_type:
-            try:
-                self.doc_augment_techniques.append(get_augmentation_method(technique, conf))
-            except:
-                raise Exception("No Augmentation Registered Augmentation Found by the name {0}".format(technique))
+            self.doc_augment_techniques.append(get_augmentation_method(technique, conf))
+                
 
     def augment(self, query_text, doc_text):
         for technique in self.doc_augment_techniques:
