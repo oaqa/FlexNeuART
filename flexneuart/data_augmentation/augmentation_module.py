@@ -4,7 +4,7 @@ from flexneuart.data_augmentation.rule_based.utils.parameters import conf as def
 import json
 
 class DataAugmentModule:
-    def __init__(self, augment_type, config_path, augment_p=0.25):
+    def __init__(self, augment_type, config_path, augment_p):
         self.p = augment_p
         self.doc_augment_techniques = list()
         if config_path is None:
