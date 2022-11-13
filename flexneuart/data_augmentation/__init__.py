@@ -34,7 +34,7 @@ def register_augmentation(name):
 def get_augmentation_method(name, conf):
     if name in AUGMENTATION_REGISTRY:
         da_class = AUGMENTATION_REGISTRY[name](name, conf)
-        print("Loaded Augmentation Class {0}".format(da_class.__name__))
+        print("Loaded Augmentation Class {0}".format(da_class.__class__.__name__))
         return da_class
     else:
         raise Exception("No registered class found want for key name {0}".format(name))
