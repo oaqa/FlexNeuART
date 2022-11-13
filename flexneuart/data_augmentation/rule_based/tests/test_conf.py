@@ -24,7 +24,7 @@ conf = {
         "character_replace_probability": 0.1
     },
     "random_word_deletion": {
-        "probability": 0.1
+        "probability": 0.5
     },
     "random_word_insertion": {
         "probability": 0.1
@@ -33,7 +33,7 @@ conf = {
         "probability": 0.1
     },
     "document_constant_length": {
-        "doc_length": 1000
+        "doc_length": 7
     },
     "document_cut_out": {
         "p": 0.1,
@@ -50,22 +50,22 @@ conf = {
     },
     "del_sentence": {
         "spacy_model": "en_core_web_sm",
-        "alpha": 0.1
+        "alpha": 1.0
     },
     "lemmatize": {
         "spacy_model": "en_core_web_sm",
-        "alphs": 0.1
+        "alphs": 1.0
     },
     "shuffle_words": {
         "spacy_model": "en_core_web_sm"
     },
     "shuffle_words_keep_sentences": {
         "spacy_model": "en_core_web_sm",
-        "alpha": 0.1
+        "alpha": 1.0
     },
     "shuffle_words_keep_sent_and_nps": {
         "spacy_model": "en_core_web_sm",
-        "alpha": 0.1
+        "alpha": 1.0
     },
     "shuf_words_keep_noun_phrase": {
         "spacy_model": "en_core_web_sm"

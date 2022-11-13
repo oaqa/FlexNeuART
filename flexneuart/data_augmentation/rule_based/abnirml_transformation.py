@@ -4,6 +4,7 @@ import random
 import itertools
 import spacy
 from flexneuart.data_augmentation import register_augmentation
+import json
 
 """
 The augmentation techniques implemented and code in this file is inspired by -
@@ -479,7 +480,7 @@ class ShufSents(DataAugment):
         dtext_b = ' '.join(str(s) for s in dsents)
         return dtext_b
 
-@register_augmentation("register_sentences")
+@register_augmentation("reverse_sentences")
 class ReverseSents(DataAugment):
     """
     A class to reverse the sentence order in a document
