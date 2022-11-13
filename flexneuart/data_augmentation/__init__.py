@@ -37,7 +37,7 @@ def get_augmentation_method(name, conf):
         print("Loaded Augmentation Class {0}".format(da_class.__name__))
         return da_class
     else:
-        print("Augmentation Not Found. Running without any Augmentation Technique")
+        print("No registered class found want for key name {0}".format(name))
         return None
 
 def get_registered_name(cls):
