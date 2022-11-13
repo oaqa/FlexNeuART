@@ -1,8 +1,9 @@
-from flexneuart.data_augmentation.utils.base_class import DataAugment
+from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 import string
 import random
 import itertools
 import spacy
+from flexneuart.data_augmentation import register_augmentation
 
 """
 The augmentation techniques implemented and code in this file is inspired by -
@@ -13,6 +14,7 @@ Transactions of the Association for Computational Linguistics 2022; 10 224–239
 doi: https://doi.org/10.1162/tacl_a_00457
 """
 
+@register_augmentation("case_fold")
 class CaseFold(DataAugment):
     """
     A class to convert the document to lower case
@@ -27,12 +29,13 @@ class CaseFold(DataAugment):
     augment(text)
         returns the lowercased text
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name, conf):
+        super().__init__(name)
 
     def augment(self, text):
         return text.lower()
 
+@register_augmentation("del_punctuation")
 class DelPunct(DataAugment):
     """
     A class used for removing all punctuations from the document
@@ -48,14 +51,15 @@ class DelPunct(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name, conf):
+        super().__init__(name)
         self.trans_punct = str.maketrans('', '', string.punctuation)
 
     def augment(self, text):
         return text.translate(self.trans_punct)
 
-
+    
+@register_augmentation("del_sentence")
 class DelSent(DataAugment):
     """
     A class that that would delete a sentence in the document with a given probability
@@ -73,10 +77,17 @@ class DelSent(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha=0.0, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
-        self.alpha = alpha
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.alpha = conf[self.augmentation_name]["alpha"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm",
+                                "alpha": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         sents = list(self.nlp(text).sents)
@@ -88,6 +99,7 @@ class DelSent(DataAugment):
         return " ".join(remaining)
 
 
+@register_augmentation("lemmatize")
 class Lemmatize(DataAugment):
     """
     A class to lemmatize the words in a document
@@ -103,15 +115,23 @@ class Lemmatize(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+
     
     def augment(self, text):
         dtext_b = [t.lemma_ if not t.is_stop else t for t in self.nlp(text)]
         return ' '.join(str(s) for s in dtext_b)
 
 
+@register_augmentation("shuffle_words")
 class ShufWords(DataAugment):
     """
     A class to shuffle the tokens in a sentence
@@ -127,9 +147,15 @@ class ShufWords(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dtoks = [str(t) for t in self.nlp(text)]
@@ -137,6 +163,7 @@ class ShufWords(DataAugment):
         return ' '.join(str(s) for s in dtoks)
 
 
+@register_augmentation("shuffle_words_keep_sentences")
 class ShufWordsKeepSents(DataAugment):
     """
     A class to shuffle the tokens in a sentence with some given probability
@@ -154,10 +181,18 @@ class ShufWordsKeepSents(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha=0.0, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
-        self.alpha = alpha
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.alpha = conf[self.augmentation_name]["alpha"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm",
+                                "alpha": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+
 
     def augment(self, text):
         dsents = []
@@ -173,6 +208,7 @@ class ShufWordsKeepSents(DataAugment):
         return ' '.join(dsents)
 
 
+@register_augmentation("shuffle_words_keep_sent_and_nps")
 class ShufWordsKeepSentsAndNPs(DataAugment):
     """
     A class to shuffle sentences but sentence order and order of words in a noun chunk is preserved
@@ -190,10 +226,18 @@ class ShufWordsKeepSentsAndNPs(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, alpha=0.0, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
-        self.alpha = alpha
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.alpha = conf[self.augmentation_name]["alpha"]
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm",
+                                "alpha": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
+        
 
     def augment(self, text):
         dsents = []
@@ -214,7 +258,7 @@ class ShufWordsKeepSentsAndNPs(DataAugment):
         return ' '.join(dsents)
 
 
-
+@register_augmentation("shuf_words_keep_noun_phrase")
 class ShufWordsKeepNPs(DataAugment):
     """
     A class to shuffle sentences but but preserve the order of words in a noun chunk
@@ -230,9 +274,15 @@ class ShufWordsKeepNPs(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -245,6 +295,7 @@ class ShufWordsKeepNPs(DataAugment):
         return ' '.join(toks)
 
 
+@register_augmentation("shuf_noun_phrase")
 class ShufNPSlots(DataAugment):
     """
     A class to shuffle noun chunks and preserve the rest of the sentence
@@ -260,9 +311,15 @@ class ShufNPSlots(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -289,6 +346,7 @@ class ShufNPSlots(DataAugment):
                 toks.append(chunk)
         return ' '.join(toks)
 
+@register_augmentation("shuf_prepositions")
 class ShufPrepositions(DataAugment):
     """
     A class to shuffle the prepositions in the sentences of a document
@@ -304,9 +362,15 @@ class ShufPrepositions(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -332,6 +396,7 @@ class ShufPrepositions(DataAugment):
                 toks.append(chunk)
         return ' '.join(toks)
 
+@register_augmentation("reverse_noun_phrase_slots")
 class ReverseNPSlots(DataAugment):
     """
     A class to reverse noun chunks in a sentence
@@ -347,9 +412,15 @@ class ReverseNPSlots(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         parsed_text = self.nlp(text)
@@ -376,7 +447,7 @@ class ReverseNPSlots(DataAugment):
                 toks.append(chunk)
         return ' '.join(toks)
 
-
+@register_augmentation("shuffle_sentences")
 class ShufSents(DataAugment):
     """
     A class to shuffle the sentences in a document
@@ -392,9 +463,15 @@ class ShufSents(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dsents = [str(s) for s in self.nlp(text).sents]
@@ -402,6 +479,7 @@ class ShufSents(DataAugment):
         dtext_b = ' '.join(str(s) for s in dsents)
         return dtext_b
 
+@register_augmentation("register_sentences")
 class ReverseSents(DataAugment):
     """
     A class to reverse the sentence order in a document
@@ -417,15 +495,22 @@ class ReverseSents(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dsents = [str(s) for s in self.nlp(text).sents]
         dtext_b = ' '.join(str(s) for s in reversed(dsents))
         return dtext_b
 
+@register_augmentation("reverse_words")
 class ReverseWords(DataAugment):
     """
     A class to reverse the word order in the document
@@ -441,15 +526,21 @@ class ReverseWords(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         dtext_b = [str(s) for s in reversed(self.nlp(text))]
         return ' '.join(dtext_b)
 
-
+@register_augmentation("remove_stopwords")
 class RmStops(DataAugment):
     """
     A class to remove stopwords from the document
@@ -465,9 +556,15 @@ class RmStops(DataAugment):
     augment(text)
         returns the augmented text
     """
-    def __init__(self, spacy_model="en_core_web_sm"):
-        super().__init__()
-        self.nlp = spacy.load(spacy_model)
+    def __init__(self, name, conf):
+        super().__init__(name)
+        try:
+            self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+        except:
+            expected_config = {self.augmentation_name :
+                               {"spacy_model":  "en_core_web_sm"}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
     
     def augment(self, text):
         stopwords = self.nlp.Defaults.stop_words

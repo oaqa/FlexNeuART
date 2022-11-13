@@ -46,6 +46,8 @@ maxQueryVal=""
 valType=""
 batchesPerEpoch=""
 distrBackend="gloo"
+daConfig=""
+augmentP=0.25
 
 paramOpts=("seed"          "seed"             "seed (default $seed)"
       "optim"              "optim"            "optimizer (default $optim)"
@@ -66,7 +68,9 @@ paramOpts=("seed"          "seed"             "seed (default $seed)"
       "init_model"         "initModel"        "init model"
       "valid_type"         "valType"          "validation type: always (every epoch), last_epoch (last epoch), never"
       "distr_backend"      "distrBackend"     "Pytorch backend for distributed processing"
-      "data_augment"       "dataAugment"      "data augmentation method"
+      "da_techniques"      "dataAugment"      "data augmentation method"
+      "da_config"          "daConfig"         "data augmentation technique config"
+      "da_prob"            "augmentP"         "augmentation probability for every document"        
 )
 
 parseArguments $@
@@ -173,6 +177,8 @@ if [ "$amp" = "1" ] ; then
   ampArg=" --amp "
 fi
 
+DA=`echo $dataAugment | tr ',' ' '`
+
 echo "=========================================================================="
 echo "Training data directory:                        $trainDir"
 echo "Output model directory:                         $outModelDir"
@@ -227,7 +233,9 @@ python -u ./train_nn/train_model.py \
   --batch_sync_qty $batchSyncQty \
   --epoch_qty $epochQty \
   --epoch_repeat_qty $epochRepeatQty \
-  --data_augment $dataAugment \
+  --da_techniques $DA \
+  --da_config $daConfig \
+  --da_prob $augmentP \
   $saveEpochSnapshotsArg \
   --master_port $masterPort \
   --datafiles "$trainDir/data_query.tsv"  \

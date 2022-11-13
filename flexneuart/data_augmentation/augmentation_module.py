@@ -1,37 +1,28 @@
 import random
-from abc import abstractmethod
-from flexneuart.data_augmentation.utils.abnirml_transformation import *
-from flexneuart.data_augmentation.utils.random_word_transformations import *
-from flexneuart.data_augmentation.utils.document_level_transformation import *
-from flexneuart.data_augmentation.utils.character_transformation import *
+from flexneuart.data_augmentation import get_augmentation_method
+from flexneuart.data_augmentation.rule_based.utils.parameters import conf as default_conf
+import json
 
 class DataAugmentModule:
-    def __init__(self, augment_type, random_seed=42, augment_p=0.25):
+    def __init__(self, augment_type, config_path, augment_p):
         self.p = augment_p
-        random.seed(random_seed)
-        self.doc_augment = None
-        if augment_type == 'random_word_deletion':
-            self.doc_augment = RandomWordDeletion(p = 0.05)
-        elif augment_type == 'random_word_insertion':
-            self.doc_augment = RandomWordInsertion(alpha_ri = 0.05)
-        elif augment_type == 'random_word_swap':
-            self.doc_augment = RandomWordSwap(alpha_rs = 0.05)
-        elif augment_type == 'constant_document_length':
-            self.doc_augment = ConstantDocLength(doc_length=500)
-        elif augment_type == 'random_character_insertion':
-            self.doc_augment = AddCharacterTransformation(word_add_probability=0.05, character_add_probability=0.1)
-        elif augment_type == 'random_character_deletion':
-            self.doc_augment = RemoveCharacterTransformation(word_remove_probability=0.05, character_remove_probability=0.1)
-        elif augment_type == 'random_character_swap':
-            self.doc_augment = SwapCharacterTransformation(word_swap_probability=0.05, character_swap_probability=0.1)
-        elif augment_type == 'random_character_replace':
-            self.doc_augment = ReplaceCharacterTransformation(word_replace_probability=0.05, character_replace_probability=0.1)
-        elif augment_type == 'keyboard_character_insertion': 
-            self.doc_augment = AddCharacterKeyboardAdjacentTransformation(word_add_probability=0.05, character_add_probability=0.1)  
-        elif augment_type == 'keyboard_character_replace':    
-            self.doc_augment = ReplaceCharacterKeyboardTransformation(word_replace_probability=0.05, character_replace_probability=0.1) 
+        self.doc_augment_techniques = list()
+        if config_path is None:
+            conf = default_conf
+        else:
+            try:
+                conf_file = open(config_path)
+                conf = json.load(conf_file)
+                conf_file.close()
+            except:
+                raise Exception("Please ensure that the path to the config file is correct.")
+
+        for technique in augment_type:
+            self.doc_augment_techniques.append(get_augmentation_method(technique, conf))
+                
 
     def augment(self, query_text, doc_text):
-        if self.doc_augment is not None and random.random() < self.p:
-            doc_text = self.doc_augment.augment(doc_text)
+        for technique in self.doc_augment_techniques:
+            if random.random() < self.p:
+                doc_text = technique.augment(doc_text)
         return query_text, doc_text

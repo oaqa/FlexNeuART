@@ -1,0 +1,9 @@
+{
+    "original_query": "query.tsv",
+    "original_doc": "doc.tsv",
+    "original_qrels": "qrels.txt",
+    "aug_query": "aug_query.tsv",
+    "aug_query_qrels": "aug_query_qrels.txt",
+    "neg_doc": "neg_doc.tsv",
+    "neg_doc_qrels": "neg_doc_qrels.txt"
+}

@@ -1,43 +1,51 @@
-from flexneuart.data_augmentation.utils.base_class import DataAugment
+from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
+from flexneuart.data_augmentation import register_augmentation
 
 import re
 import random
 import nltk
+import json
 from nltk.corpus import wordnet, stopwords
 
 nltk.download('wordnet') 
 nltk.download('stopwords')
 nltk.download('omw-1.4')
 
+@register_augmentation("synonym_word_replacement")
 class SynonymWordReplacement(DataAugment):
-    """                                                                                                                                                                                                     
-    A class used for replacing words with their synonyms using nltk                                                                                                                                                                                                                                                                                                                      
-    ...                                                                                                                                                                                                     
-                                                                                                                                                                                                            
-    Attributes                                                                                                                                                                                              
-    ----------                                                                                                                                                                                              
-    alpha_sr : float                                                                                                                                                                        
-        percentage of words to be replaced by their synonyms                                                                                                                                                 
+    """
+    A class used for replacing words with their synonyms using nltk
+    ...
+
+    Attributes
+    ----------
+    alpha_sr : float
+        percentage of words to be replaced by their synonyms
     stopwords: list(string)  
-        list of the english stopwords from the nltk corpus                                                                                                                 
-                                                                                                                                                                                                            
-    Methods                                                                                                                                                                                                 
-    -------                                                                                                                                                                                                 
-    augment(text)                                                                                                                                                                                           
+        list of the english stopwords from the nltk corpus  
+
+    Methods
+    -------
+    augment(text)
         returns the augmented text
 
     """
-
-    def __init__(self, alpha_sr=0.1):
-        """                                                                                                                                                                                                                                                                                                                                                               
-        Parameters                                                                                                                                                                                          
-        ----------                                                                                                                                                                                          
-        alpha_sr : float                                                                                                                                                                                          
-            percentage of words to be replaced by their synonym                                                                                                                                                                          
+    def __init__(self, name, conf):
         """
-        super().__init__()
-        self.alpha_sr = alpha_sr 
-        self.stopwords = stopwords.words('english')
+        Parameters
+        ----------
+        alpha_sr : float
+            percentage of words to be replaced by their synonym
+        """
+        super().__init__(name)
+        try:
+            self.alpha_sr = conf[self.augmentation_name]["probability"]
+            self.stopwords = stopwords.words('english')
+        except:
+            expected_config = {self.augmentation_name :
+                               {"alpha_sr": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         words = re.split('\s+', text)
@@ -49,8 +57,8 @@ class SynonymWordReplacement(DataAugment):
     def __synonym_replacement(self, words, n):
         """  
         Given a list of words, n words in the list are replaced by synonyms 
-        Parameters                                                                                                                                                                                          
-        ----------                                                                                                                                                                                          
+        Parameters                                             
+        ----------                                          
         words : list(string)  
             list of words in which n words are to be replaced by synonyms
         n: int
@@ -96,6 +104,8 @@ class SynonymWordReplacement(DataAugment):
             synonyms.remove(word)
         return list(synonyms)
 
+
+@register_augmentation("hypernym_word_replacement")
 class HypernymWordReplacement(DataAugment):
     """                                                                                                                                                                                                     
     A class used for replacing words with their hypernyms using nltk                                                                                                                                                                                                                                                                                                                      
@@ -115,16 +125,22 @@ class HypernymWordReplacement(DataAugment):
                                                                                                                                                                               
     """
     
-    def __init__(self, alpha_hr=0.1):
+    def __init__(self, name, conf):
         """                                                                                                                                                                                                                                                                                                                                                               
         Parameters                                                                                                                                                                                          
         ----------                                                                                                                                                                                          
         alpha_hr : float                                                                                                                                                                                          
             percentage of words to be replaced by their hypernym                                                                                                                                                                          
         """
-        super().__init__()
-        self.alpha_hr = alpha_hr 
-        self.stopwords = stopwords.words('english')
+        super().__init__(name)
+        try:
+            self.alpha_hr = conf[self.augmentation_name]["probability"]
+            self.stopwords = stopwords.words('english')
+        except:
+            expected_config = {self.augmentation_name :
+                               {"alpha_hr": 0.1}}
+            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
+                            % json.dumps(expected_config, indent = 3))
 
     def augment(self, text):
         words = re.split('\s+', text)
