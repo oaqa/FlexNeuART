@@ -32,12 +32,14 @@ def register_augmentation(name):
     return register_task_cls
 
 def get_augmentation_method(name, conf):
-    if name in AUGMENTATION_REGISTRY:
-        da_class = AUGMENTATION_REGISTRY[name](name, conf)
-        print("Loaded Augmentation Class {0}".format(da_class.__class__.__name__))
-        return da_class
-    else:
+
+    if name not in AUGMENTATION_REGISTRY:
         raise Exception("No registered class found want for key name {0}".format(name))
+
+    da_class = AUGMENTATION_REGISTRY[name](name, conf)
+    print("Loaded Augmentation Class {0}".format(da_class.__class__.__name__))
+    return da_class
+        
 
 def get_registered_name(cls):
     return CLASS_TO_NAME[cls]
