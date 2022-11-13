@@ -8,7 +8,7 @@ import json
 from nltk.corpus import wordnet, stopwords
 import warnings
 
-warnings.filterwarnings(action='ignore', category='UserWarning')
+warnings.filterwarnings(action='ignore', category=UserWarning)
 
 nltk.download('wordnet') 
 nltk.download('stopwords')
