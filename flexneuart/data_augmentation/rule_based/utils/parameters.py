@@ -66,5 +66,29 @@ conf = {
     "shuffle_words_keep_sent_and_nps": {
         "spacy_model": "en_core_web_sm",
         "alpha": 0.1
+    },
+    "shuf_words_keep_noun_phrase": {
+        "spacy_model": "en_core_web_sm"
+    },
+    "shuf_noun_phrase": {
+        "spacy_model": "en_core_web_sm"
+    },
+    "shuf_prepositions": {
+        "spacy_model": "en_core_web_sm"
+    },
+    "reverse_noun_phrase_slots": {
+        "spacy_model": "en_core_web_sm"
+    },
+    "shuffle_sentences": {
+        "spacy_model": "en_core_web_sm"
+    },
+    "reverse_sentences": {
+        "spacy_model": "en_core_web_sm"
+    },
+    "reverse_words": {
+        "spacy_model": "en_core_web_sm"
+    },
+    "remove_stopwords": {
+        "spacy_model": "en_core_web_sm"
     }
 }
