@@ -265,7 +265,7 @@ def train_iteration(model_holder, device_name,
             pbar.update(count)
             pbar.refresh()
             sync_out_streams()
-            pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(total_qty)))
+            pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(max(1, total_qty))))
 
     # Final model averaging in the end.
 
@@ -293,7 +293,7 @@ def train_iteration(model_holder, device_name,
         pbar.close()
         sync_out_streams()
 
-    return total_loss / float(total_qty)
+    return total_loss / float(max(total_qty, 1))
 
 
 def do_train(device_qty,
