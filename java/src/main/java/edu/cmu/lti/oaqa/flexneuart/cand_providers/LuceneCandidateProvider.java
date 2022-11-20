@@ -114,21 +114,10 @@ public class LuceneCandidateProvider extends CandidateProvider {
 
     ArrayList<CandidateEntry> resArr = new ArrayList<CandidateEntry>();
     
-    String text = queryFields.getString(mQueryFieldName);
-    if (null == text) {
+    String query = queryFields.getString(mQueryFieldName);
+    if (null == query) {
       throw new Exception(
           String.format("Query (%s) is undefined for query # %d", mQueryFieldName, queryNum));
-    }
-    
-    String query = StringUtils.removePunct(text.trim());
-
-    ArrayList<String>   toks = new ArrayList<String>();
-    for (String s: mSpaceSplit.split(query)) {
-      toks.add(s);
-    }
-    if (2 * toks.size() > BooleanQuery.getMaxClauseCount()) {
-      // This a heuristic, but it should work fine in many cases
-      BooleanQuery.setMaxClauseCount(2 * toks.size());
     }
 
     long    numFound = 0;
@@ -140,6 +129,15 @@ public class LuceneCandidateProvider extends CandidateProvider {
       if (mExactMatch) {
         parsedQuery = new TermQuery(new Term(mIndexFieldName, query));
       } else {
+        ArrayList<String> toks = new ArrayList<String>();
+        for (String s : mSpaceSplit.split(query)) {
+          toks.add(s);
+        }
+        if (2 * toks.size() > BooleanQuery.getMaxClauseCount()) {
+          // This a heuristic, but it should work fine in many cases
+          BooleanQuery.setMaxClauseCount(2 * toks.size());
+        } 
+        
         // QueryParser cannot be shared among threads!
         QueryParser parser = new QueryParser(mIndexFieldName, mAnalyzer);
         parser.setDefaultOperator(QueryParser.OR_OPERATOR);
