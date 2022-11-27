@@ -129,6 +129,10 @@ public class LuceneCandidateProvider extends CandidateProvider {
       if (mExactMatch) {
         parsedQuery = new TermQuery(new Term(mIndexFieldName, query));
       } else {
+        // In some cases, punctuation can throw off Lucene parsers, b/c
+        // it's being interpreted as a part of the query language, 
+        // so we need to remove it
+        query = StringUtils.removePunct(query.trim());
         ArrayList<String> toks = new ArrayList<String>();
         for (String s : mSpaceSplit.split(query)) {
           toks.add(s);
