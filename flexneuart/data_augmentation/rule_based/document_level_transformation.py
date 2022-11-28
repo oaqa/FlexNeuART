@@ -114,7 +114,7 @@ class QueryTextDrop(DataAugment):
         super().__init__(name)
         try:
             self.p = conf[self.augmentation_name]["p"]
-            self.types = "query"
+            self.types = "document"
         except:
             expected_config = {self.augmentation_name :
                                {"p": 0.1}}
