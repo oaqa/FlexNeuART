@@ -18,7 +18,7 @@ class DataAugment:
             doc = self.augment(doc, **kwargs)
             query = self.augment(query, **kwargs)
         else:
-            raise NotImplementedError("Augmentation type needs to be one of -> [document, query, both]. Check config file")
+            raise NotImplementedError("Augmentation type needs to be one of -> [document, query, both]. Check \"types\" key in config file.")
         
         return query, doc
         
