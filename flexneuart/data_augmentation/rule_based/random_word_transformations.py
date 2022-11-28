@@ -27,6 +27,7 @@ class RandomWordInsertion(DataAugment):
         super().__init__(name)
         try:
             self.alpha_ri =  conf[self.augmentation_name]["probability"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"alpha_ri": 0.1}}
@@ -90,6 +91,7 @@ class RandomWordDeletion(DataAugment):
         super().__init__(name)
         try:
             self.p = conf[self.augmentation_name]["probability"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"p": 0.1}}
@@ -140,6 +142,7 @@ class RandomWordSwap(DataAugment):
         super().__init__(name)
         try:
             self.alpha_rs = conf[self.augmentation_name]["probability"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"alpha_rs": 0.1}}

@@ -25,6 +25,7 @@ class ConstantDocLength(DataAugment):
         super().__init__(name)
         try:
             self.doc_length = conf[self.augmentation_name]["doc_length"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"doc_length": 100}}
@@ -72,6 +73,7 @@ class DocuemntCutOut(DataAugment):
         try:
             self.p = conf[self.augmentation_name]["p"]
             self.span_p = conf[self.augmentation_name]["span_p"]
+            self.types = "document"
         except:
             expected_config = {self.augmentation_name :
                                {"p": 0.1,
@@ -112,6 +114,7 @@ class QueryTextDrop(DataAugment):
         super().__init__(name)
         try:
             self.p = conf[self.augmentation_name]["p"]
+            self.types = "query"
         except:
             expected_config = {self.augmentation_name :
                                {"p": 0.1}}

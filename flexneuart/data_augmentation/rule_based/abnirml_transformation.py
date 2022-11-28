@@ -32,6 +32,7 @@ class CaseFold(DataAugment):
     """
     def __init__(self, name, conf):
         super().__init__(name)
+        self.types = conf[self.augmentation_name].get("types", self.types)
 
     def augment(self, text):
         return text.lower()
@@ -55,6 +56,7 @@ class DelPunct(DataAugment):
     def __init__(self, name, conf):
         super().__init__(name)
         self.trans_punct = str.maketrans('', '', string.punctuation)
+        self.types = conf[self.augmentation_name].get("types", self.types)
 
     def augment(self, text):
         return text.translate(self.trans_punct)
@@ -83,6 +85,7 @@ class DelSent(DataAugment):
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
             self.alpha = conf[self.augmentation_name]["alpha"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm",
@@ -120,6 +123,7 @@ class Lemmatize(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -152,6 +156,7 @@ class ShufWords(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -187,6 +192,7 @@ class ShufWordsKeepSents(DataAugment):
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
             self.alpha = conf[self.augmentation_name]["alpha"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm",
@@ -232,6 +238,7 @@ class ShufWordsKeepSentsAndNPs(DataAugment):
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
             self.alpha = conf[self.augmentation_name]["alpha"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm",
@@ -279,6 +286,7 @@ class ShufWordsKeepNPs(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -316,6 +324,7 @@ class ShufNPSlots(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -367,6 +376,7 @@ class ShufPrepositions(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -417,6 +427,7 @@ class ReverseNPSlots(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -468,6 +479,7 @@ class ShufSents(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -500,6 +512,7 @@ class ReverseSents(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -531,6 +544,7 @@ class ReverseWords(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}
@@ -561,6 +575,7 @@ class RmStops(DataAugment):
         super().__init__(name)
         try:
             self.nlp = spacy.load(conf[self.augmentation_name]["spacy_model"])
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"spacy_model":  "en_core_web_sm"}}

@@ -44,6 +44,7 @@ class SynonymWordReplacement(DataAugment):
         try:
             self.alpha_sr = conf[self.augmentation_name]["probability"]
             self.stopwords = stopwords.words('english')
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"alpha_sr": 0.1}}
@@ -139,6 +140,7 @@ class HypernymWordReplacement(DataAugment):
         try:
             self.alpha_hr = conf[self.augmentation_name]["probability"]
             self.stopwords = stopwords.words('english')
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"alpha_hr": 0.1}}

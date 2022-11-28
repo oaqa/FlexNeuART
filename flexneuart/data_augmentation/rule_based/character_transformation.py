@@ -1,3 +1,4 @@
+from pyparsing import types
 from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 import re
 import json
@@ -326,6 +327,7 @@ class ReplaceCharacterKeyboardTransformation(DataAugment):
             self.word_replace_probability = conf[self.augmentation_name]["word_replace_probability"]
             self.character_replace_probability = conf[self.augmentation_name]["character_replace_probability"]
             self.keyboard_positions = KEYBOARD_POSITIONS
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_replace_probability": 0.1,
@@ -424,6 +426,7 @@ class AddCharacterKeyboardAdjacentTransformation(DataAugment):
             self.word_add_probability = conf[self.augmentation_name]["word_add_probability"]
             self.character_add_probability = conf[self.augmentation_name]["character_add_probability"]
             self.keyboard_positions = KEYBOARD_POSITIONS
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_add_probability": 0.1,
