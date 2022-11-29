@@ -31,6 +31,11 @@ checkVarNonEmpty "partTest"
 
 checkVarNonEmpty "hardNegQty"
 checkVarNonEmpty "sampleMedNegQty"
+# When exporting with scores we actually cannot support easy negatives.
+# However, we still pass the value of the respective parameter.
+# If by mistake it was set to a non-zero value, the java binary
+# will produce an error message.
+checkVarNonEmpty "sampleEasyNegQty"
 
 cat "$inputDataDir/$partTrain/$QREL_FILE" "$inputDataDir/$partTest/$QREL_FILE"  > "$outDir/$QREL_FILE"
 
@@ -55,6 +60,7 @@ $candProvParams \
 \
 -hard_neg_qty $hardNegQty \
 -sample_med_neg_qty $sampleMedNegQty \
+-sample_easy_neg_qty $sampleEasyNegQty \
 \
 -index_export_field $indexExportFieldName \
 -query_export_field $queryExportFieldName \
