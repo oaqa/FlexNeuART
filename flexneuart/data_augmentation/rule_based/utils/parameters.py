@@ -48,6 +48,9 @@ conf = {
     "hypernym_word_replacement": {
         "probability": 0.05
     },
+    "query_cache": {
+        "cache_path": "/home/ubuntu/efs/capstone/data_aug/cache_data/queries_100.json"
+    },
     "del_sentence": {
         "spacy_model": "en_core_web_sm",
         "alpha": 0.1
