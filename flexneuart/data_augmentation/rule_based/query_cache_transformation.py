@@ -35,7 +35,7 @@ class QueryCache(DataAugment):
 
     def __read_cache(self, cache_path):
         f = open(cache_path)
-        cache = json.loads(f)
+        cache = json.load(f)
         f.close()
         return cache
 
