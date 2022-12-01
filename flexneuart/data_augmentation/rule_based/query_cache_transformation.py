@@ -42,19 +42,12 @@ class QueryCache(DataAugment):
     def augment(self, text):
         text = text.strip()
         if text not in self.cache:
-            print("Not Found")
-            print(text)
             return text
-        
-        if len(self.cache[text])==0:
-            print("No Samples found")
         
         try:
             new_query = random.choice(self.cache[text])
         except:
             new_query = text
-
-        print(text, new_query)
 
         return new_query
 
