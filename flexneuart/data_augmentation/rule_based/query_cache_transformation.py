@@ -40,6 +40,7 @@ class QueryCache(DataAugment):
         return cache
 
     def augment(self, text):
+        text = text.strip()
         if text not in self.cache:
             print("Not Found")
             print(text)
