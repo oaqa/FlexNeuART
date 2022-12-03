@@ -22,7 +22,7 @@ class DataAugmentModule:
                 
 
     def augment(self, query_text, doc_text):
-        for technique in self.doc_augment_techniques:
-            if random.random() < self.p:
-                query_text, doc_text = technique.augment_select(query_text, doc_text)
+        if random.random() < self.p:
+            technique = random.choice(self.doc_augment_techniques)
+            query_text, doc_text = technique.augment_select(query_text, doc_text)
         return query_text, doc_text
