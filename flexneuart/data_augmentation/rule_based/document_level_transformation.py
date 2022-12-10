@@ -133,3 +133,13 @@ class QueryTextDrop(DataAugment):
         return ' '.join(augmented_words)
 
         
+@register_augmentation("sample_augmentation_technique")
+class SampleAugmentationTechnique(DataAugment):
+    def __init__(name, conf):
+        super().__init__(name)
+    
+    def augment(self, text, **kwargs):
+        # custom augmentation implementation
+        raise NotImplementedError
+
+
