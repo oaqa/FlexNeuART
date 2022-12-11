@@ -21,7 +21,7 @@ def perform_checks(args):
 
 def augment_queries(dma, args):
     query_path = os.path.join(args.input_dir, "data_query.tsv")
-    test_file = os.path.join(args.output_dir, "test_run.txt")
+    test_file = os.path.join(args.input_dir, "test_run.txt")
     test_query = []
     with open(test_file) as f:
         for line in f:
