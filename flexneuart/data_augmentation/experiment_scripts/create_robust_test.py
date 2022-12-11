@@ -107,7 +107,7 @@ if __name__=="__main__":
                         help='Path to directory where output files will be written')
     parser.add_argument('--da_conf', type=str, required=True,
                         help='Path to augmentation config path')
-    parser.add_argument('--da_prob', type=float, required=False,
+    parser.add_argument('--da_prob', type=float, required=True,
                         help='Augmentation probability to be used while perturbing test data')
     parser.add_argument('--da_techniques', nargs='*', metavar='Data Augmentation Methods',
                         help='List of Data augmentation methods')
