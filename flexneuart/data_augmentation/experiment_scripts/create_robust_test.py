@@ -20,7 +20,7 @@ def perform_checks(args):
 
 
 def augment_queries(dma, args):
-    query_path = os.path.join(args.input_path, "data_query.tsv")
+    query_path = os.path.join(args.input_dir, "data_query.tsv")
     test_file = os.path.join(args.output_dir, "test_run.txt")
     test_query = []
     with open(test_file) as f:
@@ -46,9 +46,9 @@ def augment_queries(dma, args):
 
 
 def augment_docs(dma, args):
-    doc_path = os.path.join(args.input_path, "data_docs.tsv")
+    doc_path = os.path.join(args.input_dir, "data_docs.tsv")
     test_docs = []
-    test_file = os.path.join(args.input_path, "test_run.txt")
+    test_file = os.path.join(args.input_dir, "test_run.txt")
     with open(test_file) as f:
         for line in f:
             doc_id = line.strip().split()[2]
@@ -72,13 +72,13 @@ def augment_docs(dma, args):
 
 
 def copy_files(args):
-    os.system("cp {0} {1}".format(os.path.join(args.input_path, "test_run.txt"), 
+    os.system("cp {0} {1}".format(os.path.join(args.input_dir, "test_run.txt"), 
                                 os.path.join(args.output_dir, "test_run.txt")))
     
-    os.system("cp {0} {1}".format(os.path.join(args.input_path, "qrels.txt"), 
+    os.system("cp {0} {1}".format(os.path.join(args.input_dir, "qrels.txt"), 
                                 os.path.join(args.output_dir, "qrels.txt")))
     
-    os.system("cp {0} {1}".format(os.path.join(args.input_path, "train_pairs.tsv"), 
+    os.system("cp {0} {1}".format(os.path.join(args.input_dir, "train_pairs.tsv"), 
                                 os.path.join(args.output_dir, "train_pairs.tsv")))
 
 def main(args):
@@ -86,11 +86,11 @@ def main(args):
 
     if args.query:
         augment_queries(dma, args)
-        os.system("cp {0} {1}".format(os.path.join(args.input_path, "data_docs.tsv"), 
+        os.system("cp {0} {1}".format(os.path.join(args.input_dir, "data_docs.tsv"), 
                                 os.path.join(args.output_dir, "data_docs.tsv")))
     elif args.docs:
         augment_docs(dma, args)
-        os.system("cp {0} {1}".format(os.path.join(args.input_path, "data_query.tsv"), 
+        os.system("cp {0} {1}".format(os.path.join(args.input_dir, "data_query.tsv"), 
                                 os.path.join(args.output_dir, "data_query.tsv")))
     else:
         augment_docs(dma, args)
