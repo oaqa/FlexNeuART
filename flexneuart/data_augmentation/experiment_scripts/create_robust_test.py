@@ -9,7 +9,7 @@ def perform_checks(args):
     if os.path.exists(args.output_dir):
         raise ValueError("Output path exists.")
     else:
-        os.system("mkdir -p {0}".format(args.output_path))
+        os.system("mkdir -p {0}".format(args.output_dir))
     
     expected_files = ["data_docs.tsv", "data_query.tsv", "qrels.txt", "test_run.txt", "train_pairs.tsv"]
     files = os.listdir(args.input_dir)
@@ -21,7 +21,7 @@ def perform_checks(args):
 
 def augment_queries(dma, args):
     query_path = os.path.join(args.input_path, "data_query.tsv")
-    test_file = os.path.join(args.output_path, "test_run.txt")
+    test_file = os.path.join(args.output_dir, "test_run.txt")
     test_query = []
     with open(test_file) as f:
         for line in f:
@@ -38,7 +38,7 @@ def augment_queries(dma, args):
             else:
                 visit[query_id] = text.strip()
     
-    op_file = os.path.join(args.output_path, "data_query.tsv")
+    op_file = os.path.join(args.output_dir, "data_query.tsv")
     with open(op_file, "w") as f:
         for k, v in visit.items():
             f.write('\t'.join(["query", k, v]))
@@ -64,7 +64,7 @@ def augment_docs(dma, args):
             else:
                 visit[doc_id] = text.strip()
     
-    op_file = os.path.join(args.output_path, "data_docs.tsv")
+    op_file = os.path.join(args.output_dir, "data_docs.tsv")
     with open(op_file, "w") as f:
         for k, v in visit.items():
             f.write('\t'.join(["doc", k, v]))
@@ -73,13 +73,13 @@ def augment_docs(dma, args):
 
 def copy_files(args):
     os.system("cp {0} {1}".format(os.path.join(args.input_path, "test_run.txt"), 
-                                os.path.join(args.output_path, "test_run.txt")))
+                                os.path.join(args.output_dir, "test_run.txt")))
     
     os.system("cp {0} {1}".format(os.path.join(args.input_path, "qrels.txt"), 
-                                os.path.join(args.output_path, "qrels.txt")))
+                                os.path.join(args.output_dir, "qrels.txt")))
     
     os.system("cp {0} {1}".format(os.path.join(args.input_path, "train_pairs.tsv"), 
-                                os.path.join(args.output_path, "train_pairs.tsv")))
+                                os.path.join(args.output_dir, "train_pairs.tsv")))
 
 def main(args):
     dma = DataAugmentModule(args.da_techniques, args.da_conf, args.da_prob)
@@ -87,11 +87,11 @@ def main(args):
     if args.query:
         augment_queries(dma, args)
         os.system("cp {0} {1}".format(os.path.join(args.input_path, "data_docs.tsv"), 
-                                os.path.join(args.output_path, "data_docs.tsv")))
+                                os.path.join(args.output_dir, "data_docs.tsv")))
     elif args.docs:
         augment_docs(dma, args)
         os.system("cp {0} {1}".format(os.path.join(args.input_path, "data_query.tsv"), 
-                                os.path.join(args.output_path, "data_query.tsv")))
+                                os.path.join(args.output_dir, "data_query.tsv")))
     else:
         augment_docs(dma, args)
         augment_queries(dma, args)
