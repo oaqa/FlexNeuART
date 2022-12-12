@@ -20,6 +20,8 @@
 import os
 import sys
 import argparse
+
+from typing import Tuple, Dict, List
 from tqdm import tqdm
 
 from flexneuart.config import DEFAULT_VAL_BATCH_SIZE
@@ -29,7 +31,7 @@ from flexneuart.models.base import ModelSerializer
 
 from flexneuart.io.queries import read_queries_dict
 from flexneuart.io.json import save_json
-from flexneuart.io.runs import read_run_dict
+from flexneuart.io.runs import read_run_dict, get_sorted_scores_from_score_dict
 
 from flexneuart import configure_classpath
 from flexneuart.retrieval import create_featextr_resource_manager
@@ -78,6 +80,9 @@ parser.add_argument('--keep_case', action='store_true',
 parser.add_argument('--batch_size', metavar='batch size',
                     default=DEFAULT_VAL_BATCH_SIZE, type=int,
                     help='batch size')
+parser.add_argument('--top_k', metavar='top-k docs to rerank',
+                    type=int, default=None,
+                    help='for each query, apply the reranker only to the given number of documents with highest scores')
 parser.add_argument('--max_num_query', metavar='max # of val queries',
                     type=int, default=None,
                     help='max # of validation queries (for debug purposes only)')
@@ -150,18 +155,50 @@ orig_run = read_run_dict(args.run_orig)
 query_ids = list(orig_run.keys())
 if max_query_val is not None:
     query_ids = query_ids[0:max_query_val]
-    valid_run = {k: orig_run[k] for k in query_ids}
+    valid_run_all_cand = {k: orig_run[k] for k in query_ids}
 else:
-    valid_run = orig_run
+    valid_run_all_cand = orig_run
 
-diff_keys = set(valid_run.keys()).symmetric_difference(set(query_dict.keys()))
+diff_keys = set(valid_run_all_cand.keys()).symmetric_difference(set(query_dict.keys()))
 if diff_keys and not getattr(args, IGNORE_MISS):
     print(f'There is a mismatch (symmetric diff size: {len(diff_keys)}) in the query IDs between the run file and the query file, if this is expected, specify --{IGNORE_MISS}') 
     sys.exit(1)
 else:
-    valid_run_flt = {k : valid_run[k] for k in valid_run if k in query_dict}
-    valid_run = valid_run_flt
+    valid_run_flt = {k : valid_run_all_cand[k] for k in valid_run_all_cand if k in query_dict}
+    valid_run_all_cand = valid_run_flt
 
+# valid_run_head and valid_run_tail will store information differently
+# valid_run_head stores each run as a dictionary of document ids -> score
+valid_run_head : Dict[str, Dict[str, float]]= {}
+# valid_run_tail stores each run as an array of (document ID, score) tuples sorted
+# in the decreasing order of scores
+valid_run_tail : Dict[str, List[Tuple[str, float]]]= {}
+
+top_k = args.top_k
+if top_k is None:
+    top_k = max([len(r) for qid, r in valid_run_all_cand.items()])
+    print('No top_k is specified, setting top_k to the maximum # of candidates returned:', top_k)
+
+print('top-k used', top_k)
+
+min_top_orig_score = {}
+
+for qid, run_orig in valid_run_all_cand.items():
+    assert len(run_orig) > 0, f"Empty run for qid={qid}"
+    # Get an array of sorted pairs (document ID, score)
+    ra = get_sorted_scores_from_score_dict(run_orig)
+
+    valid_run_head[qid] = {}
+    head = ra[0:top_k]
+    for did, score in head:
+        valid_run_head[qid][did] = score
+    assert type(score) == float
+    last_top_k = head[-1]
+    min_top_orig_score[qid] = last_top_k[1]
+    assert type(min_top_orig_score[qid]) == float
+
+    tail = ra[top_k:]
+    valid_run_tail[qid] = tail
 #
 # The fake document ID will be generated for queries that don't return
 # a single document for some reason. The reason we have them
@@ -174,7 +211,7 @@ else:
 # per query and it is totally irrelevant what their score is.
 #
 
-for qid, query_scores in tqdm(valid_run.items(), 'reading documents'):
+for qid, query_scores in tqdm(valid_run_all_cand.items(), 'reading documents'):
     for did, _ in query_scores.items():
         if did not in data_dict:
             if did != FAKE_DOC_ID:
@@ -190,13 +227,13 @@ for qid, query_scores in tqdm(valid_run.items(), 'reading documents'):
             data_dict[did] = doc_text
 
 start_val_time = time()
-rerank_run = run_model(model,
-              device_name=device_name,
-              batch_size=args.batch_size, amp=args.amp,
-              max_query_len=max_query_len, max_doc_len=max_doc_len,
-              dataset=dataset, orig_run=valid_run,
-              cand_score_weight=args.cand_score_weight,
-              desc='validating the run')
+rerank_run_head = run_model(model,
+                       device_name=device_name,
+                       batch_size=args.batch_size, amp=args.amp,
+                       max_query_len=max_query_len, max_doc_len=max_doc_len,
+                       dataset=dataset, orig_run=valid_run_head,
+                       cand_score_weight=args.cand_score_weight,
+                       desc='validating the run')
 end_val_time = time()
 
 # HF tokenizers do not "like" to be forked, but it doesn't matter at this point
@@ -204,7 +241,37 @@ end_val_time = time()
 # see, e.g., https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 metric_name=args.eval_metric.lower()
-query_qty=len(rerank_run)
+query_qty=len(rerank_run_head)
+
+#
+# Now we need to merge the re-ranked head run and the tail run in such a fashion that tails entries trail all the head scores.
+# Merging approach: modify tail not head, b/c the tail can even be empty.
+# 1. Compute the minimum top-k scores original (min_top_orig_score) and re-ranked (min_top_rerank_score)
+# 2. Compute
+rerank_run = {}
+assert len(rerank_run_head) == len(valid_run_tail)
+for qid, qrun in rerank_run_head.items():
+    ra_head = get_sorted_scores_from_score_dict(qrun)
+    assert len(ra_head) > 0
+    min_top_rerank_score = ra_head[-1][1]
+    assert type(min_top_rerank_score) == float
+
+    # the head of the run should be unmodified
+    qrun_merged = qrun
+
+    ra_tail = valid_run_tail[qid]
+    for did, orig_score in ra_tail:
+        # there should be no repetation
+        assert not (did in qrun_merged), f"Repeating document ID {did}, likely a bug in the splitting a run into two parts."
+        # any tail score should not exceed the minimum original score from the head
+        diff = min_top_orig_score[qid] - orig_score
+        assert diff >= 0
+        qrun_merged[did] = min_top_rerank_score - diff
+
+    rerank_run[qid] = qrun_merged
+
+
+# get_eval_results with use_external_eval == True saves the run
 valid_score = get_eval_results(use_external_eval=True, # Must use trec_eval here, which is an official eval tool
                           eval_metric=metric_name,
                           rerank_run=rerank_run,
