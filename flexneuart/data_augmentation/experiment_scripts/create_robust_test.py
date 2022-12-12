@@ -1,7 +1,10 @@
 import os
 import argparse
 from flexneuart.data_augmentation.augmentation_module import DataAugmentModule
-import shutil
+
+"""
+This script is used to add noise to the validation data
+"""
 
 def perform_checks(args):
     if os.path.exists(args.input_dir)==False:
@@ -72,14 +75,12 @@ def augment_docs(dma, args):
 
 
 def copy_files(args):
-    os.system("cp {0} {1}".format(os.path.join(args.input_dir, "test_run.txt"), 
-                                os.path.join(args.output_dir, "test_run.txt")))
-    
-    os.system("cp {0} {1}".format(os.path.join(args.input_dir, "qrels.txt"), 
-                                os.path.join(args.output_dir, "qrels.txt")))
-    
-    os.system("cp {0} {1}".format(os.path.join(args.input_dir, "train_pairs.tsv"), 
-                                os.path.join(args.output_dir, "train_pairs.tsv")))
+
+    to_move = ["qrels.txt", "test_run.txt", "train_pairs.tsv"]
+
+    for f in to_move:
+        os.system("cp {0} {1}".format(os.path.join(args.input_dir, f), 
+                                    os.path.join(args.output_dir, f)))
 
 def main(args):
     dma = DataAugmentModule(args.da_techniques, args.da_conf, args.da_prob)
