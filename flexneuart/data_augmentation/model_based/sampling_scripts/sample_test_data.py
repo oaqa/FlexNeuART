@@ -49,7 +49,7 @@ def main(args):
     if args.count!=None:
         sample_size = min(num_queries, args.count)
     else:
-        sample_size = num_queries * args.fraction
+        sample_size = int(num_queries * args.fraction)
     
     cands = list(test_dict.keys())
     sample_qids = set(np.random.choice(cands, sample_size, replace=False))
