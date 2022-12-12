@@ -65,6 +65,9 @@ def main(args):
                 op_file.write(line)
     op_file.close()
 
+    if args.copy==True:
+        copy_files(args)
+
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -73,6 +76,8 @@ if __name__=="__main__":
                         help='Path to input directory with FlexNeuART data')
     parser.add_argument('--output_dir', type=str, required=True,
                         help='Path to directory where output files will be written')
+    parser.add_argument('--copy', action='store_true',
+                        help='If set to true will copy all other files from input to output dir')
     
     sampling_criteria = parser.add_mutually_exclusive_group(required=True)
     sampling_criteria.add_argument('--count', type=int, help='Number of queries to sample')
