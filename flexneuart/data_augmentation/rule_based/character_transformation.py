@@ -1,3 +1,4 @@
+from pyparsing import types
 from flexneuart.data_augmentation.rule_based.data_augment import DataAugment
 import re
 import json
@@ -42,6 +43,7 @@ class AddCharacterTransformation(DataAugment):
         try:
             self.word_add_probability = conf[self.augmentation_name]["word_add_probability"]
             self.character_add_probability = conf[self.augmentation_name]["character_add_probability"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_add_probability": 0.1,
@@ -111,6 +113,7 @@ class RemoveCharacterTransformation(DataAugment):
         try:
             self.word_remove_probability = conf[self.augmentation_name]["word_remove_probability"]
             self.character_remove_probability = conf[self.augmentation_name]["character_remove_probability"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_remove_probability": 0.1,
@@ -180,6 +183,7 @@ class SwapCharacterTransformation(DataAugment):
         try:
             self.word_swap_probability = conf[self.augmentation_name]["word_swap_probability"]
             self.character_swap_probability = conf[self.augmentation_name]["character_swap_probability"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_swap_probability": 0.1,
@@ -255,6 +259,7 @@ class ReplaceCharacterTransformation(DataAugment):
             self.word_replace_probability = conf[self.augmentation_name]["word_replace_probability"]
             self.character_replace_probability = conf[self.augmentation_name]["character_replace_probability"]
             self.keyboard_positions = KEYBOARD_POSITIONS
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_replace_probability": 0.1,
@@ -326,6 +331,7 @@ class ReplaceCharacterKeyboardTransformation(DataAugment):
             self.word_replace_probability = conf[self.augmentation_name]["word_replace_probability"]
             self.character_replace_probability = conf[self.augmentation_name]["character_replace_probability"]
             self.keyboard_positions = KEYBOARD_POSITIONS
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_replace_probability": 0.1,
@@ -424,6 +430,7 @@ class AddCharacterKeyboardAdjacentTransformation(DataAugment):
             self.word_add_probability = conf[self.augmentation_name]["word_add_probability"]
             self.character_add_probability = conf[self.augmentation_name]["character_add_probability"]
             self.keyboard_positions = KEYBOARD_POSITIONS
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"word_add_probability": 0.1,

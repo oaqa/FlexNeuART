@@ -161,18 +161,6 @@ for i in tqdm(range(num_pairs)):
     if doc_ids_orig[i] in doc_ids_inp:
         qid_to_write.append(qid_orig[i])
 
-# qids1 = list(train_pairs1.keys())
-# if args.prob1 < 1:
-#     qids1 = list(np.random.choice(qids1, size=int(args.prob1 * len(qids1)), replace=False))
-
-# print('Selected ', len(qids1), 'queries from ', len(train_pairs1))
-
-# qids2 = list(train_pairs2.keys())
-# if args.prob2 < 2:
-#     qids2 = list(np.random.choice(qids2, size=int(args.prob2 * len(qids2)), replace=False))
-
-# print('Selected ', len(qids2), 'queries from ', len(train_pairs2))
-
 qids_all = set(qid_to_write)
 
 dids_all1 = []
@@ -182,14 +170,6 @@ for qid, did_dict in train_pairs1.items():
 dids_all1 = set(dids_all1)
 print('Selected', len(dids_all1), 'documents from ', len(data1))
 
-# dids_all2 = []
-# for qid, did_dict in train_pairs2.items():
-#     if qid in qids_all:
-#         dids_all2.extend(list(did_dict.keys()))
-# dids_all2 = set(dids_all2)
-# print('Selected', len(dids_all2), 'documents from ', len(data2))
-
-# dids_all = set(list(dids_all1) + list(dids_all2))
 dids_all = set(dids_all1)
 
 #

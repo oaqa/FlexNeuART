@@ -25,6 +25,7 @@ class ConstantDocLength(DataAugment):
         super().__init__(name)
         try:
             self.doc_length = conf[self.augmentation_name]["doc_length"]
+            self.types = conf[self.augmentation_name].get("types", self.types)
         except:
             expected_config = {self.augmentation_name :
                                {"doc_length": 100}}
@@ -72,6 +73,7 @@ class DocuemntCutOut(DataAugment):
         try:
             self.p = conf[self.augmentation_name]["p"]
             self.span_p = conf[self.augmentation_name]["span_p"]
+            self.types = "document"
         except:
             expected_config = {self.augmentation_name :
                                {"p": 0.1,
@@ -92,41 +94,3 @@ class DocuemntCutOut(DataAugment):
         return ' '.join(augmented_words)
 
 
-@register_augmentation("query_cut_out")
-class QueryTextDrop(DataAugment):
-    """
-    Randomly drop a span of the document
-    ...
-
-    Attributes
-    ----------
-    p: probability of removing query words from a document
-
-    Methods
-    -------
-    augment(text, query)
-        returns the augmented text
-    """
-
-    def __init__(self, name, conf):
-        super().__init__(name)
-        try:
-            self.p = conf[self.augmentation_name]["p"]
-        except:
-            expected_config = {self.augmentation_name :
-                               {"p": 0.1}}
-            raise Exception("ERROR: Config file is missing parameters. Please ensure the following parameters exists - \n%s"
-                            % json.dumps(expected_config, indent = 3))
-    
-    def augment(self, text, query=None):
-        r = random.uniform(0, 1)
-        if r > self.p:
-            return text        
-        doc_words = re.split('\s+', text)
-        query_words = set(re.split('\s+', query))
-
-        augmented_words = [w for w in doc_words if w not in query_words]
-
-        return ' '.join(augmented_words)
-
-        
