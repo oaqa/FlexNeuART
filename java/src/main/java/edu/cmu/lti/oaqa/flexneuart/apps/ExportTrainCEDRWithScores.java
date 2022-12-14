@@ -58,6 +58,10 @@ class ExportTrainCEDRWithScores extends ExportTrainNegSampleWithScoresBase {
       return err;
     }
     
+    if (mSampleEasyNegQty > 0) {
+      return "Easy negatives are not supported when we sample with candidate scores (b/c we generally do not know candidate scores of randomly sampled easy negatives)!";
+    }
+    
     mTestRunFileName = cmd.getOptionValue(ExportCEDRParams.TEST_RUN_FILE_PARAM);    
     if (null == mTestRunFileName) {
       return "Specify option: " + ExportCEDRParams.TEST_RUN_FILE_PARAM;

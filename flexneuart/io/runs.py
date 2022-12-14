@@ -16,6 +16,7 @@
 from tqdm import tqdm
 from flexneuart.io.utils import FileWrapper
 from flexneuart.io import open_with_default_enc
+from typing import List, Tuple
 
 FAKE_RUN_ID = "fake_run"
 
@@ -57,13 +58,16 @@ def read_run_dict(file_name):
     return result
 
 
-def get_sorted_scores_from_score_dict(query_run_dict):
+def get_sorted_scores_from_score_dict(query_run_dict) -> List[Tuple[str, float]]:
     """Take a dictionary of document scores indexed by the document id
     and produce a list of (document id, score tuples) sorted
     in the order of decreasing scores.
 
     :param   query_run_dict: a single-query run info in the dictionary format.
+    :return  a list of pairs (document ID, document socre) sorted by the score in the decreasing order.
     """
+    # items() are pairs document ID, document score, but the sorting uses the pair:
+    # document score, document ID
     return list(sorted(query_run_dict.items(), key=lambda x: (x[1], x[0]), reverse=True))
 
 
