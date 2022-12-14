@@ -112,12 +112,19 @@ class ExportTrainCEDRWithScores extends ExportTrainNegSampleWithScoresBase {
                          HashSet<String> relDocIds, 
                          ArrayList<CandidateEntry> docs) throws Exception {
     
-   
-    if (mSeenQueryIds.contains(queryId)) {
-      logger.warn("Ignoring repeating query: " + queryId);
-      return;
+    if (isTestQuery) {
+      if (mSeenTestQueryIds.contains(queryId)) {
+        logger.warn("Ignoring repeating test query: " + queryId);
+        return;
+      }
+      mSeenTestQueryIds.add(queryId);
+    } else {
+      if (mSeenTrainQueryIds.contains(queryId)) {
+        logger.warn("Ignoring repeating train query: " + queryId);
+        return;
+      }
+      mSeenTrainQueryIds.add(queryId);
     }
-    mSeenQueryIds.add(queryId);
     mOutNumQueries++;
     
     mDataQueries.write("query\t" + queryId + "\t" + StringUtils.replaceWhiteSpaces(queryExportFieldText) + Const.NL);
@@ -180,6 +187,7 @@ class ExportTrainCEDRWithScores extends ExportTrainNegSampleWithScoresBase {
   String                 mQueryDocTrainPairsFileName;
   
   HashSet<String>        mSeenDocIds = new HashSet<>();
-  HashSet<String>        mSeenQueryIds = new HashSet<>();
+  HashSet<String>        mSeenTestQueryIds = new HashSet<>();
+  HashSet<String>        mSeenTrainQueryIds = new HashSet<>();
   
 }
