@@ -77,6 +77,8 @@ parser.add_argument('--cand_score_weight', metavar='candidate provider score wei
                     help='a weight of the candidate generator score used to combine it with the model score.')
 parser.add_argument('--keep_case', action='store_true',
                     help='no lower-casing')
+parser.add_argument('--internal_eval', action='store_true',
+                    help='use internal validation metrics (not recommended unless that is something not supported by trec_eval')
 parser.add_argument('--batch_size', metavar='batch size',
                     default=DEFAULT_VAL_BATCH_SIZE, type=int,
                     help='batch size')
@@ -272,7 +274,7 @@ for qid, qrun in rerank_run_head.items():
 
 
 # get_eval_results with use_external_eval == True saves the run
-valid_score = get_eval_results(use_external_eval=True, # Must use trec_eval here, which is an official eval tool
+valid_score = get_eval_results(use_external_eval=not args.internal_eval,
                           eval_metric=metric_name,
                           rerank_run=rerank_run,
                           qrel_file=args.qrels,
