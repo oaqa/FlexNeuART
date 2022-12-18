@@ -181,7 +181,7 @@ if top_k is None:
     top_k = max([len(r) for qid, r in valid_run_all_cand.items()])
     print('No top_k is specified, setting top_k to the maximum # of candidates returned:', top_k)
 
-print('top-k used', top_k)
+print('top-k used', top_k, '# of queries used', len(valid_run_all_cand))
 
 min_top_orig_score = {}
 
