@@ -20,10 +20,15 @@ def read_datafiles(file_names):
     docs = {}
     for file_name in file_names:
         with open_with_default_enc(file_name, 'rt') as file:
-            for line in tqdm(file, desc='loading datafile (by line)', leave=False):
-                cols = line.rstrip().split('\t')
-                if len(cols) != 3:
-                    tqdm.write(f'skipping line: `{line.rstrip()}`')
+            for ln, line in enumerate(tqdm(file, desc='loading datafile (by line)', leave=False)):
+                line = line.rstrip()
+                if not line:
+                    tqdm.write(f'Skipping empty line: {ln+1}')
+                    continue
+                cols = line.split('\t')
+                field_qty = len(cols)
+                if field_qty != 3:
+                    tqdm.write(f'skipping line {ln+1} because it has wrong # of fields: "{field_qty}"')
                     continue
                 c_type, c_id, c_text = cols
                 assert c_type in ('query', 'doc')
@@ -48,6 +53,10 @@ def read_pairs_dict(file_name):
     result = {}
     with open_with_default_enc(file_name, 'rt') as file:
         for ln, line in enumerate(tqdm(file, desc='loading pairs (by line)', leave=False)):
+            line = line.rstrip()
+            if not line:
+                tqdm.write(f'Skipping empty line: {ln+1}')
+                continue
             fields = line.split()
             if not len(fields) in [2, 3]:
                 raise Exception(f'Wrong # of fields {len(fields)} in file {file}, line #: {ln+1}')
