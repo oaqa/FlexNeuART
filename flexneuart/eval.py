@@ -29,6 +29,8 @@ from flexneuart import Registry
 eval_registry = Registry()
 register = eval_registry.register
 
+DEFAULT_TREC_EVAL_PATH='trec_eval/trec_eval'
+
 FAKE_DOC_ID = "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES"
 
 METRIC_RECALL_PREF = 'recall'
@@ -211,7 +213,7 @@ def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
         :param qrels_dict:     a QRELs dictionary read by the function read_qrels_dict
         :param metric_func:    a metric function or class instance with overloaded __call__
 
-        :return:  the average metric value
+        :return: a tuple (the average metric value, np array of query-specific values)
     """
     res_arr = []
 
@@ -244,25 +246,30 @@ def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
     if debug:
         print('mean %g' % res)
 
-    return res
+    return res, res_arr
 
 
 def get_eval_results(use_external_eval : bool,
                    eval_metric : str,
                    rerank_run,
                    qrel_file,
+                   ret_query_vals=False,
+                   trec_eval_path : str = DEFAULT_TREC_EVAL_PATH,
                    run_file=None):
     """
         Carry out internal or external evaluation.
 
-        :param use_external_eval:   True to use external evaluation tools.
+        :param use_external_eval:  True to use external evaluation tools.
         :param eval_metric:        Evaluation metric description.
+        :param rerank_run:         A run to evaluate
         :param run_file:           A run file to store results (or None).
         :param qrel_file:          A QREL file.
+        :param trec_eval_path:     A path to a trec_eval binary
+        :param ret_query_vals:     return query-specific values (not just averages)
 
-        :return:  average metric value.
+        :return:  if :ret_query_vals is False return average metric value
+                  if :ret_query_vals is True return a  tuple (the average metric value, np array of query-specific values)
     """
-
     if use_external_eval:
         if eval_metric == METRIC_MAP_PREF:
             m = 'map'
@@ -276,10 +283,18 @@ def get_eval_results(use_external_eval : bool,
         else:
             raise Exception('Unsupported trec_eval metric: ' + eval_metric)
 
-        assert run_file is not None, "Run file name should not be None"
-        write_run_dict(rerank_run, run_file)
+        if run_file is not None:
+            trec_eval_run_file = run_file
+        else:
+            trec_eval_run_file = create_temp_file()
+        write_run_dict(rerank_run, trec_eval_run_file)
 
-        return trec_eval(run_file, qrel_file, m)[0]
+        try:
+            full_res = trec_eval(trec_eval_run_file, qrel_file, m, trec_eval_path=trec_eval_path)
+        except Exception as e:
+            os.path.unlink(trec_eval_run_file)
+            raise e
+
     else:
         f = create_metric_obj(eval_metric)
 
@@ -288,15 +303,20 @@ def get_eval_results(use_external_eval : bool,
 
         qrels = read_qrels_dict(qrel_file)
 
-        return eval_run(rerank_run=rerank_run,
-                       qrels_dict=qrels,
-                       metric_func=f)
+        full_res = eval_run(rerank_run=rerank_run,
+                           qrels_dict=qrels,
+                           metric_func=f)
+
+    if ret_query_vals:
+        return full_res
+    else:
+        return full_res[0]
 
 
 def trec_eval(run : Union[str, Dict[str, Dict[str, int]]],
               qrels : Union[str, Dict[str, Dict[str, int]]],
               metric : str,
-              trec_eval_path : str = 'trec_eval/trec_eval'
+              trec_eval_path : str = DEFAULT_TREC_EVAL_PATH
               ):
     """
         Run an external tool: trec_eval and retrieve results.
@@ -304,9 +324,9 @@ def trec_eval(run : Union[str, Dict[str, Dict[str, int]]],
         :param run:    a run file name or a run file dictionary
         :param qrel:   a QREL file name or a QREL dictionary
         :param metric:  a metric code (should match what trec_eval prints)
-        :param trec_eval_bin: a path to a trec_eval binary
+        :param trec_eval_path: a path to a trec_eval binary
 
-        :return: a tuple (the average metric value, an np array of query-specific values)
+        :return: a tuple (the average metric value, np array of query-specific values)
     """
     unlink_files = []
     if type(run) != str:
