@@ -54,45 +54,43 @@ print(args)
 
 qrels = read_qrels_dict(args.qrels)
 run = read_run_dict(args.run)
-query_ids = list(run.keys())
-
-tmp_file_name_run = create_temp_file()
-tmp_file_name_qrels = create_temp_file()
 
 print('Comparison statistics')
 print('query_id trec_eval ours')
 print('-----------------------')
 
-res_all_int = []
-res_all_ext = []
+_, res_all_int = get_eval_results(use_external_eval=False,
+                                  eval_metric=args.eval_metric,
+                                  run=run,
+                                  qrels=qrels,
+                                  ret_query_vals=True)
+_, res_all_ext = get_eval_results(use_external_eval=True,
+                                  eval_metric=args.eval_metric,
+                                  run=run,
+                                  qrels=qrels,
+                                  ret_query_vals=True)
+
+if len(res_all_ext) != len(res_all_int):
+    print(f'Different number of entries returned, internal: {len(res_all_int)}, external: {len(res_all_ext)}')
+    sys.exit(1)
+
+if set(res_all_ext.keys()) != set(res_all_int.keys()):
+    print(f'Different query IDs return by external and internal.')
+    sys.exit(1)
 
 diverge_qty = 0
 
-for qid in query_ids:
-    tmp_qrels = []
-    if qid in qrels:
-        for did, rel_grade in qrels[qid].items():
-            tmp_qrels.append(QrelEntry(query_id=qid, doc_id=did, rel_grade=rel_grade))
-    tmp_run = {qid : run[qid]}
-    write_qrels(tmp_qrels, tmp_file_name_qrels)
-    write_run_dict(tmp_run, tmp_file_name_run)
-    res = []
-    for i in range(2):
-        res.append(get_eval_results(i==0,
-                                  args.eval_metric,
-                                  rerank_run=tmp_run,
-                                  qrel_file=tmp_file_name_qrels,
-                                  run_file=tmp_file_name_run))
-
-    val_ext, val_int = res[0], round(res[1], TREC_ROUND)
+for qid in res_all_int:
+    val_int = round(res_all_int[qid], TREC_ROUND)
+    val_ext = round(res_all_ext[qid], TREC_ROUND)
     if abs(val_int - val_ext) > TREC_DIFF_EPS:
         print(qid, val_ext, val_int)
         diverge_qty +=1
-    res_all_ext.append(val_ext)
-    res_all_int.append(val_int)
 
 print('-----------------------')
-print('mean', round(np.mean(res_all_ext), TREC_ROUND), round(np.mean(res_all_int), TREC_ROUND))
+print('mean',
+      round(np.mean(list(res_all_ext.values())), TREC_ROUND),
+      round(np.mean(list(res_all_int.values())), TREC_ROUND))
 if diverge_qty > 0:
     print(f'Failed because {diverge_qty} queries diverged substantially (see divergence statistics)!')
     sys.exit(1)

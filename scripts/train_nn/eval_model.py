@@ -31,7 +31,7 @@ from flexneuart.models.base import ModelSerializer
 
 from flexneuart.io.queries import read_queries_dict
 from flexneuart.io.json import save_json
-from flexneuart.io.runs import read_run_dict, get_sorted_scores_from_score_dict
+from flexneuart.io.runs import read_run_dict, write_run_dict, get_sorted_scores_from_score_dict
 
 from flexneuart import configure_classpath
 from flexneuart.retrieval import create_featextr_resource_manager
@@ -275,10 +275,11 @@ for qid, qrun in rerank_run_head.items():
 
 # get_eval_results with use_external_eval == True saves the run
 valid_score = get_eval_results(use_external_eval=not args.internal_eval,
-                          eval_metric=metric_name,
-                          rerank_run=rerank_run,
-                          qrel_file=args.qrels,
-                          run_file=args.run_rerank)
+                               eval_metric=metric_name,
+                               run=rerank_run,
+                               qrels=args.qrels)
+
+write_run_dict(rerank_run, args.run_rerank)
 
 print(f'Metric {metric_name} score: {valid_score} # of queries: {query_qty}')
 

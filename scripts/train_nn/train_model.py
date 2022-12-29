@@ -580,12 +580,12 @@ def validate(model,
     sync_out_streams()
 
     # Let us always save the run
-    return get_eval_results(use_external_eval=train_params.use_external_eval,
-                              eval_metric=eval_metric,
-                              rerank_run=rerank_run,
-                              qrel_file=qrelf,
-                              run_file=run_filename)
+    write_run_dict(rerank_run, run_filename)
 
+    return get_eval_results(use_external_eval=train_params.use_external_eval,
+                            eval_metric=eval_metric,
+                            run=rerank_run,
+                            qrels=qrelf)
 
 def main_cli():
     parser = argparse.ArgumentParser('model training and validation')

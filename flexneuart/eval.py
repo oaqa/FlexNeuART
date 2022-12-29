@@ -22,7 +22,7 @@ import math
 from typing import Union, Dict
 
 from flexneuart.io import create_temp_file
-from flexneuart.io.runs import get_sorted_scores_from_score_dict, write_run_dict
+from flexneuart.io.runs import get_sorted_scores_from_score_dict, write_run_dict, read_run_dict
 from flexneuart.io.qrels import read_qrels_dict, write_qrels_dict
 
 from flexneuart import Registry
@@ -205,70 +205,25 @@ def create_metric_obj(desc_with_cutoff : str):
                     + ','.join(prefix_list))
 
 
-def eval_run(rerank_run, qrels_dict, metric_func, debug=False):
-    """
-        Evaluate run stored in a file using QRELs stored in a file.
-
-        :param rerank_run:     a run dictionary (of dictionaries)
-        :param qrels_dict:     a QRELs dictionary read by the function read_qrels_dict
-        :param metric_func:    a metric function or class instance with overloaded __call__
-
-        :return: a tuple (the average metric value, np array of query-specific values)
-    """
-    res_arr = []
-
-    assert type(qrels_dict) == dict, \
-        "Relevance info object must be a dictionary, make sure you used read_qrels_dict and not read_qrels!"
-
-    for qid, score_dict in rerank_run.items():
-        rels_sorted_by_scores = []
-
-        val = 0
-
-        if qid in qrels_dict:
-            query_qrel_dict = qrels_dict[qid]
-
-            for did, score in get_sorted_scores_from_score_dict(score_dict):
-                rel_score = 0
-                if did in query_qrel_dict:
-                    rel_score = query_qrel_dict[did]
-
-                rels_sorted_by_scores.append(rel_score)
-
-            val = metric_func(rels_sorted_by_scores, query_qrel_dict) if query_qrel_dict else 0
-
-        if debug:
-            print('%s %g' % (qid, val))
-
-        res_arr.append(val)
-
-    res = np.mean(res_arr)
-    if debug:
-        print('mean %g' % res)
-
-    return res, res_arr
-
-
 def get_eval_results(use_external_eval : bool,
-                   eval_metric : str,
-                   rerank_run,
-                   qrel_file,
-                   ret_query_vals=False,
-                   trec_eval_path : str = DEFAULT_TREC_EVAL_PATH,
-                   run_file=None):
+                     eval_metric : str,
+                     run : Union[str, Dict[str, Dict[str, int]]],
+                     qrels : Union[str, Dict[str, Dict[str, int]]],
+                     ret_query_vals=False,
+                     trec_eval_path : str = DEFAULT_TREC_EVAL_PATH):
     """
         Carry out internal or external evaluation.
 
         :param use_external_eval:  True to use external evaluation tools.
         :param eval_metric:        Evaluation metric description.
-        :param rerank_run:         A run to evaluate
-        :param run_file:           A run file to store results (or None).
-        :param qrel_file:          A QREL file.
-        :param trec_eval_path:     A path to a trec_eval binary
+        :param run:                a run file name or a run file dictionary
+        :param qrels:              a QREL file name or a QREL dictionary
         :param ret_query_vals:     return query-specific values (not just averages)
+        :param trec_eval_path:     A path to a trec_eval binary
+        :param run_file:           A run file to store results (or None).
 
         :return:  if :ret_query_vals is False return average metric value
-                  if :ret_query_vals is True return a  tuple (the average metric value, np array of query-specific values)
+                  if :ret_query_vals is True return a  tuple (the average metric value, a dictionary of query-specific values)
     """
     if use_external_eval:
         if eval_metric == METRIC_MAP_PREF:
@@ -283,29 +238,10 @@ def get_eval_results(use_external_eval : bool,
         else:
             raise Exception('Unsupported trec_eval metric: ' + eval_metric)
 
-        if run_file is not None:
-            trec_eval_run_file = run_file
-        else:
-            trec_eval_run_file = create_temp_file()
-        write_run_dict(rerank_run, trec_eval_run_file)
-
-        try:
-            full_res = trec_eval(trec_eval_run_file, qrel_file, m, trec_eval_path=trec_eval_path)
-        except Exception as e:
-            os.path.unlink(trec_eval_run_file)
-            raise e
-
+        full_res = trec_eval(run, qrels, m, trec_eval_path=trec_eval_path)
     else:
         f = create_metric_obj(eval_metric)
-
-        if run_file is not None:
-            write_run_dict(rerank_run, run_file)
-
-        qrels = read_qrels_dict(qrel_file)
-
-        full_res = eval_run(rerank_run=rerank_run,
-                           qrels_dict=qrels,
-                           metric_func=f)
+        full_res = internal_eval(run=run, qrels=qrels, metric_func=f)
 
     if ret_query_vals:
         return full_res
@@ -322,7 +258,7 @@ def trec_eval(run : Union[str, Dict[str, Dict[str, int]]],
         Run an external tool: trec_eval and retrieve results.
 
         :param run:    a run file name or a run file dictionary
-        :param qrel:   a QREL file name or a QREL dictionary
+        :param qrels:   a QREL file name or a QREL dictionary
         :param metric:  a metric code (should match what trec_eval prints)
         :param trec_eval_path: a path to a trec_eval binary
 
@@ -343,26 +279,32 @@ def trec_eval(run : Union[str, Dict[str, Dict[str, int]]],
     else:
         qrel_f = qrels
 
-    trec_eval_params = [trec_eval_path,
-                        '-q',  # all query results
-                        '-m', 'all_trec',
-                        qrel_f, run_f]
-    results = []
-    avg_res = None
-    seen_metric = False
-    metric_set = set()
-    for line in subprocess.check_output(trec_eval_params).decode().split('\n'):
-        if not line:
-            continue
-        fields = line.rstrip().split()
-        metric_set.add(fields[0])
-        if len(fields) >= 3 and fields[0] == metric:
-            seen_metric = True
-            val = float(fields[2])
-            if fields[1] != 'all':
-                results.append(val)
-            else:
-                avg_res = val
+    try:
+        trec_eval_params = [trec_eval_path,
+                            '-q',  # all query results
+                            '-m', 'all_trec',
+                            qrel_f, run_f]
+        res_dict = {}
+        avg_res = None
+        seen_metric = False
+        metric_set = set()
+        for line in subprocess.check_output(trec_eval_params).decode().split('\n'):
+            if not line:
+                continue
+            fields = line.rstrip().split()
+            metric_set.add(fields[0])
+            if len(fields) >= 3 and fields[0] == metric:
+                seen_metric = True
+                qid = str(fields[1])
+                val = float(fields[2])
+                if fields[1] != 'all':
+                    res_dict[qid] = val
+                else:
+                    avg_res = val
+    except Exception as e:
+        for fn in unlink_files:
+            os.unlink(fn)
+        raise e
 
     for fn in unlink_files:
         os.unlink(fn)
@@ -370,6 +312,62 @@ def trec_eval(run : Union[str, Dict[str, Dict[str, int]]],
     assert seen_metric, f'Wrong metric: {metric}, supported metrics: ' + ', '.join(list(metric_set))
     assert avg_res is not None, 'Some inconsistency detected: no aggregate/average value is produced by trec_eval!'
 
-    return avg_res, np.array(results)
+    return avg_res, res_dict
 
+
+def internal_eval(run : Union[str, Dict[str, Dict[str, int]]],
+             qrels : Union[str, Dict[str, Dict[str, int]]],
+             metric_func,
+             debug=False):
+    """
+        Evaluate run stored in a file using QRELs stored in a file.
+
+        :param run:    a run file name or a run file dictionary
+        :param qrels:   a QREL file name or a QREL dictionary
+        :param metric_func:    a metric function or class instance with overloaded __call__
+
+        :return: a tuple (the average metric value, a dictionary of query-specific values)
+    """
+    if type(run) == str:
+        run_dict = read_run_dict(run)
+    else:
+        run_dict = run
+
+    if type(qrels) == str:
+        qrel_dict = read_qrels_dict(qrels)
+    else:
+        qrel_dict = qrels
+
+    res_dict = {}
+
+    for qid, score_dict in run_dict.items():
+        # trec_eval ignores queries without QRELs
+        if qid not in qrel_dict:
+            continue
+        rels_sorted_by_scores = []
+
+        val = 0
+
+        if qid in qrel_dict:
+            query_qrel_dict = qrel_dict[qid]
+
+            for did, score in get_sorted_scores_from_score_dict(score_dict):
+                rel_score = 0
+                if did in query_qrel_dict:
+                    rel_score = query_qrel_dict[did]
+
+                rels_sorted_by_scores.append(rel_score)
+
+            val = metric_func(rels_sorted_by_scores, query_qrel_dict) if query_qrel_dict else 0
+
+        if debug:
+            print('%s %g' % (qid, val))
+
+        res_dict[qid] = val
+
+    avg = np.mean(list(res_dict.values()))
+    if debug:
+        print('mean %g' % avg)
+
+    return avg, res_dict
 
