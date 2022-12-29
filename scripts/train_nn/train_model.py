@@ -706,7 +706,7 @@ def main_cli():
                         help='disabling shuffling of training data')
 
     parser.add_argument('--use_external_eval', action='store_true',
-                        help='use external eval tools: gdeval or trec_eval')
+                        help='use external eval tool trec_eval')
 
     parser.add_argument('--eval_metric', choices=METRIC_LIST, default=METRIC_LIST[0],
                         help='Metric list: ' +  ','.join(METRIC_LIST), 
