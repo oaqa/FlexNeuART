@@ -1,7 +1,7 @@
 This directory has notebooks covering all essential functionality of FlexNeuART. The notebooks should be explored in the following order:
 
 1. [Installation](installation.ipynb)
-2. [Basic data preparation and processing](basic_data_preparation_and_processing.ipynb)
+2. [Basic data preparation and processing (including generation of dense embeddings)](basic_data_preparation_and_processing.ipynb)
 3. [Basic indexing (inverted and forward indices)](basic_indexing.ipynb)
 4. [Training a neural model: vanilla BERT ranker](train_neural_model.ipynb)
 5. [Training IBM Model 1 (non-neural lexical translation model)](train_model1.ipynb)
