@@ -3,10 +3,11 @@
 We support (somewhat experimentally) simple conversion pipelines for [ir-datasets](https://ir-datasets.com/).
 They are processed using the script [configurable_convert.py](configurable_convert.py),
 which is guided by a JSON configuration file. 
-The output of this file is one or more JSONL files, 
-which can be processed using standard FlexNeuART tools.
+The output of this file is one or more JSONL files, which can be processed using standard FlexNeuART tools.
 
-**Note**: A small number of documents in Gov2 and ClueWeb12B are currently being lost, but the exact reason is not known (it is possible that there are parsing errors). The issue might be related to multiprocessing. So, for small collections like `Robust04` and `Cranfield` we recommend to do conversion using a single process.
+**Limitations**: 
+1. There is no support for complex fields, each document / query part has to be a simple string attribute. This is nearly always true and we currently encountered only one exception: TREC COVID dataset (although TREC COVID BEIR comes in a simple format).
+2. A small number of documents in Gov2 and ClueWeb12B are currently being lost, but the exact reason is not known (it is possible that there are parsing errors). The issue might be related to multiprocessing. So, for small collections like `Robust04` and `Cranfield` we recommend to do conversion using a single process.
 
 We have (sample) configuration files for the following collections:
 
