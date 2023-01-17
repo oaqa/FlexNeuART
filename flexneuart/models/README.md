@@ -8,7 +8,7 @@ JSON parameter names should match constructor parameters of a respective models.
 
     Nogueira, Rodrigo, and Kyunghyun Cho. "Passage Re-ranking with BERT." arXiv:1901.04085 (2019).
     
-2. [Dot-product models from the Sentence Transformers library](biencoder/sbert.py).
+2. [Dot-product models from the Sentence-BERT library](biencoder/sbert.py).
    One can use any "dot-product" model from the [Sentence Transformers library](https://www.sbert.net/) out of the box and fine-tune it on their  data. The main ciation for this library is provided shortly, but make sure you also cite the model-specific citation if there is one: Reimers, Nils, et al. "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks." 
 
 
