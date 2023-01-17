@@ -12,11 +12,13 @@ We have (sample) configuration files for the following collections:
 
 1. [Cranfield](sample_configs/cranfield.json)
 2. [Robust04](sample_configs/trec_robust04.json)
-3. [Gov2](sample_configs/gov2.json)
-4. [ClueWeb12B](sample_configs/clueweb12-b13.json)
+3. [TREC COVID (BEIR version)](sample_configs/beir_trec_covid_krovetz.json)
+4. [Natural Questions (BEIR version)](sample_configs/beir_nq_krovetz.json)
+5. [Gov2](sample_configs/gov2.json)
+6. [ClueWeb12B](sample_configs/clueweb12-b13.json)
  
 Although some datasets will be automatically downloaded by `ir-datasets`, 
-many datasets are licensed and need to be installed **manually**.
+many datasets are licensed and need to be installed **manually** (as described in the `ir-datasets` documentation).
 
 The JSON configuration file contains an array of descriptions, each of which is supposed
 to be applicable to a specific dataset part: a dataset split. 
