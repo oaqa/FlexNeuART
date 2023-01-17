@@ -7,8 +7,6 @@ Flexible classic and NeurAl Retrieval Toolkit, or shortly `FlexNeuART` (**intend
 is a substantially reworked [`knn4qa` package](legacy_docs/knn4qa.md).  The overview can be found in our EMNLP OSS workshop paper: 
 [Flexible retrieval with NMSLIB and FlexNeuART, 2020. Leonid Boytsov, Eric Nyberg](https://arxiv.org/abs/2010.14848).
 
-Please, note that this version is quite behind a rather stable branch `pypi2021` (unfortunately it is not fully documented and not merged into main), which has [a lot of extra goodies and models](https://github.com/oaqa/FlexNeuART/blob/pypi2021/flexneuart/models/README.md). Documentation is in progress, please, let us know if you would like to use our library to produce strong dense-sparse runs, achieve strong results in TREC or on leaderboards. We can guide you around some missing documentation.
-
 In Aug-Dec 2020, we used this framework to generate best traditional and/or neural runs 
 in the [MSMARCO Document ranking task](https://microsoft.github.io/msmarco/#docranking).
 In fact, our best traditional (non-neural) run slightly outperformed a couple of neural submissions.
@@ -52,12 +50,11 @@ We support [a number of neural BERT-based ranking models](flexneuart/models/READ
 ranking models including IBM Model 1 (description of non-neural rankers to follow).
 
 The framework supports data in generic JSONL format. We provide conversion (and in some cases download) scripts for the following collections:
-* [Cranfield](scripts/data_convert/cranfield/README.md) (a small toy collection)
+* [Configurable dataset processing of standard datasets](/scripts/data_convert/ir_datasets/README.md) provided by [ir-datasets](https://ir-datasets.com/).
 * MS MARCO [v1](scripts/data_convert/msmarco) and [v2](scripts/data_convert/msmarco_v2) (documents and passages)
 * [Wikipedia DPR](scripts/data_convert/wikipedia_dpr/README.md) (Natural Questions, Trivia QA, SQuAD)
 * [Yahoo Answers](/scripts/data_convert/yahoo_answers)
-* [Configurable dataset processing of standard datasets](/scripts/data_convert/ir_datasets/README.md) provided by [ir-datasets](https://ir-datasets.com/).
-
+* [Cranfield](scripts/data_convert/cranfield/README.md) (a small toy collection)
 
 ## Acknowledgements
 
