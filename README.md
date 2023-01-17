@@ -34,7 +34,7 @@ Develop & maintain a (relatively) light-weight modular middleware useful primari
   parsed and "raw" text input as well as sparse and dense vectors.
 * Forward indices can be created in append-only mode, which requires much less RAM.
 * Pluggable generic rankers (via a server)
-* SOTA neural ([PARADE, BERT FirstP/MaxP/Sum, COLBERT (re-ranking), dot-product models from the Sentence Transformers library](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1). More models, including Longformer, Sentence BERT, and COLBERT v2 ranker [are available in a branch](https://github.com/oaqa/FlexNeuART/blob/pypi2021/flexneuart/models/README.md).
+* SOTA neural ([PARADE, BERT FirstP/MaxP/Sum, Longformer, COLBERT (re-ranking), dot-product Senence BERT models](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1).
 * Multi-GPU training **and** inference with out-of-the box support for ensembling
 * Basic experimentation framework (+LETOR)
 * Python API to use retrievers and rankers as well as to access indexed data.
