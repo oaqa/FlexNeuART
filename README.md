@@ -29,12 +29,12 @@ Develop & maintain a (relatively) light-weight modular middleware useful primari
 
 ## Main features
 
-* Dense, sparse, or dense-sparse retrieval using Lucene and NMSLIB.
+* Dense, sparse, or dense-sparse retrieval using Lucene and NMSLIB (dense embeddings can be created using any Sentence BERT model).
 * Multi-field multi-level forward indices (+parent-child field relations) that can store 
   parsed and "raw" text input as well as sparse and dense vectors.
 * Forward indices can be created in append-only mode, which requires much less RAM.
 * Pluggable generic rankers (via a server)
-* SOTA neural ([CEDR, PARADE, BERT FirstP/MaxP/Sum](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1). More models, including Longformer, Sentence BERT, and COLBERT v2 ranker [are available in a branch](https://github.com/oaqa/FlexNeuART/blob/pypi2021/flexneuart/models/README.md).
+* SOTA neural ([PARADE, BERT FirstP/MaxP/Sum, COLBERT (re-ranking), dot-product models from the Sentence Transformers library](flexneuart/models/README.md)) and non-neural models (multi-field BM25, IBM Model 1). More models, including Longformer, Sentence BERT, and COLBERT v2 ranker [are available in a branch](https://github.com/oaqa/FlexNeuART/blob/pypi2021/flexneuart/models/README.md).
 * Multi-GPU training **and** inference with out-of-the box support for ensembling
 * Basic experimentation framework (+LETOR)
 * Python API to use retrievers and rankers as well as to access indexed data.
