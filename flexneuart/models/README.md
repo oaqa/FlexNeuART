@@ -35,7 +35,3 @@ Various chunk-and-aggregate models for ranking of long documents, including:
 4. [MaxP & SumP models](bert_aggreg_p.py).
 
     Dai, Zhuyun, and Jamie Callan. "Deeper text understanding for IR with contextual neural language modeling." SIGIR. 2019.
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/master
