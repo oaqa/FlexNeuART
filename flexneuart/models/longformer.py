@@ -16,6 +16,7 @@
 import torch
 
 from flexneuart.models import register
+from flexneuart.models.utils import is_longformer
 from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
 
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
@@ -40,8 +41,7 @@ class LongformerRanker(BertBaseRanker):
 
         """
         super().__init__(bert_flavor)
-        assert bert_flavor.lower().find('longformer') >= 0, \
-            'bert_flavor_parameter: you should use one of the Longformer models'
+        assert is_longformer(bert_flavor), 'bert_flavor_parameter: you should use one of the Longformer models'
         self.dropout = torch.nn.Dropout(dropout)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
