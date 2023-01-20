@@ -55,13 +55,20 @@ class VanillaBertStandard(BertBaseRanker):
             "Document array length must be the same as query array length!"
         input_list = list(zip(query_texts, doc_texts))
 
+        
+        # With only_second truncation, sometimes this will fail b/c the first sequence is already longer 
+        # than the maximum allowed length so batch_encode_plus will fail with an exception.
+        # In many IR applications, a document is much longer than a string, so effectively
+        # only_second truncation strategy will be used most of the time.
         res : BatchEncoding = tok.batch_encode_plus(batch_text_or_text_pairs=input_list,
                                    padding='longest',
-                                   truncation='only_second',
+                                   #truncation='only_second',
+                                   truncation='longest_first',
                                    max_length=3 + max_query_len + max_doc_len,
                                    return_tensors='pt')
 
-        return (res.input_ids, res.token_type_ids, res.attention_mask)
+        # token_type_ids may be missing
+        return (res.input_ids, getattr(res, "token_type_ids", None), res.attention_mask)
 
     def forward(self, input_ids, token_type_ids, attention_mask):
         outputs: BaseModelOutputWithPoolingAndCrossAttentions = \

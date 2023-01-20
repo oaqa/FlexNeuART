@@ -47,6 +47,8 @@ class BatchObject:
         # https://github.com/bmitra-msft/TREC-Deep-Learning-Quick-Start,
         # which has an Apache2 compatible MIT license
         #
+        if features is None:
+            return None
         if isinstance(features, torch.Tensor):
             return features.to(device_name)
         if isinstance(features, tuple):
