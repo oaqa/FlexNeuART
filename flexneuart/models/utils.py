@@ -19,11 +19,20 @@ from flexneuart.models import model_registry
 # An attribute to store the main BERT encoder
 BERT_ATTR='bert'
 
+def is_longformer(bert_flavor: str):
+    """
+    A very hacky check if the model is a longformer-type model.
+
+    :param bert_flavor:   the name of the underlying BERT Transformer
+    :return:
+    """
+    return bert_flavor.lower().find('longformer') >= 0
+
 def init_model(obj_ref, bert_flavor : str):
     """Instantiate a model, a tokenizer, and remember their parameters.
 
     :param obj_ref:       an object to initialize.
-    :param bert_flavor:   the name of the underlying Transformer/BERT
+    :param bert_flavor:   the name of the underlying BERT Transformer
     """
 
     obj_ref.BERT_MODEL = bert_flavor

@@ -15,10 +15,8 @@ pyjnius
 torch
 torchtext
 
-# let's fix transformers versions, this is the key library and 
-# each upgrade can be a surprise
-transformers==4.22.2
-# same applies to spacy
+transformers
+# we fix Spacy version, though in the future we would have to upgrade too
 spacy==2.2.3
 sentence-transformers
 sentencepiece
