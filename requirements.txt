@@ -16,8 +16,7 @@ torch
 torchtext
 
 transformers
-# we fix Spacy version, though in the future we would have to upgrade too
-spacy==2.2.3
+spacy
 sentence-transformers
 sentencepiece
 krovetzstemmer
