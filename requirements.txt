@@ -29,6 +29,9 @@ typing-extensions
 
 # Colbert specific
 ujson
-# Deeberta specific, might fail with older
-# protobuf versions.
-protobuf==3.20
+
+# Deeberta specific, might fail with older protobuf versions.
+# but let's not install it by default, actually newer 
+# transformer versions should install protbuf on its own
+#protobuf==3.20
+
