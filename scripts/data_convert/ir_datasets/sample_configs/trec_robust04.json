@@ -48,7 +48,7 @@
         ]
     },
     {
-        "part_name": "all",
+        "part_name": "queries_all",
         "dataset_name": "trec-robust04",
         "is_query": true,
         "src_attributes": [

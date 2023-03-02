@@ -42,7 +42,7 @@ class Sentencizer:
         :param model_name: a name of the spacy model to use, e.g., en_core_web_sm
         """
         self._nlp = spacy.load(model_name, disable=[SPACY_NER, SPACY_PARSER, SPACY_POS])
-        self._nlp.add_pipe(self._nlp.create_pipe("sentencizer"))
+        self._nlp.add_pipe("sentencizer")
 
     def __call__(self, text):
         """A thin wrapper that merely calls spacy.
@@ -111,8 +111,7 @@ class SpacyTextParser:
 
         self._nlp = spacy.load(model_name, disable=disable_list)
         if sent_split:
-            sentencizer = self._nlp.create_pipe("sentencizer")
-            self._nlp.add_pipe(sentencizer)
+            self._nlp.add_pipe("sentencizer")
 
         self._removePunct = remove_punct
         self._stopWords = frozenset([w.lower() for w in stop_words])

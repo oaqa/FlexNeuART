@@ -39,7 +39,6 @@ class SpacyTextProcessor(BaseTextProcessor):
         :param  model_name     a name of the spacy model to use, e.g., en_core_web_sm
         :param  stop_word_file  the name of the stop word file
         :param  remove_punct  a bool flag indicating if the punctuation tokens need to be removed
-        :param  sent_split    a bool flag indicating if sentence splitting is necessary
         :param  keep_only_alpha_num a bool flag indicating if we need to keep only alpha-numeric characters
         :param  enable_pos    a bool flag that enables POS tagging (which, e.g., can improve lemmatization)
         """
