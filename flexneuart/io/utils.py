@@ -102,6 +102,10 @@ class FileWrapper:
         for line in self._file:
             yield line.decode(encoding=DEFAULT_ENCODING, errors=self.decode_errors) if self._is_compr else line
 
+    def name(self):
+        return self._file.name
+
+
 
 def jsonl_gen(file_name):
     """A generator that produces parsed doc/query entries one by one.

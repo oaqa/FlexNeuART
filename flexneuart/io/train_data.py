@@ -7,7 +7,7 @@
 # MIT License is compatible with Apache 2 license for the code in this repo.
 #
 from tqdm import tqdm
-from flexneuart.io import open_with_default_enc
+from flexneuart.io import open_with_default_enc, FileWrapper
 from flexneuart.io.qrels import QrelEntry, qrel_entry2_str
 
 # This things are hard-coded and must match Java and shell scripts
@@ -80,6 +80,16 @@ def read_pairs_dict(file_name):
 
     return result
 
+def write_pairs_dict_open_file(train_pairs, outf):
+    """Write training pairs: out_f must be an open file.
+
+    :param train_pairs:   training data dictionary of dictionaries.
+    :param outf          an open file.
+    """
+    for qid, docid_dict in train_pairs.items():
+        for did, score in docid_dict.items():
+            outf.write(f'{qid}\t{did}\t{score}\n')
+
 
 def write_pairs_dict(train_pairs, file_name):
     """Write training pairs.
@@ -87,10 +97,8 @@ def write_pairs_dict(train_pairs, file_name):
     :param train_pairs:   training data dictionary of dictionaries.
     :param file_name:     output file name
     """
-    with open_with_default_enc(file_name, 'w') as outf:
-        for qid, docid_dict in train_pairs.items():
-            for did, score in docid_dict.items():
-                outf.write(f'{qid}\t{did}\t{score}\n')
+    with FileWrapper(file_name, 'w') as outf:
+        write_pairs_dict_open_file(train_pairs, outf)
 
 
 def train_item_qty_upper_bound(train_pairs, epoch_repeat_qty):
@@ -127,7 +135,7 @@ def write_filtered_train_pairs(out_fn, train_pairs_full, qid_filter_set):
             train_pairs_filtered[qid] = did_dict
             qty += len(did_dict)
 
-    write_pairs_dict(train_pairs_filtered, out_fn)
+    write_pairs_dict_open_file(train_pairs_filtered, out_fn)
 
     print(f'# of queris in a full set: {len(train_pairs_full)} filtered set: {len(train_pairs_filtered)}')
     print(f'{qty} items written')
