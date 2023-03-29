@@ -8,7 +8,17 @@
 #
 from tqdm import tqdm
 from flexneuart.io import open_with_default_enc
+from flexneuart.io.qrels import QrelEntry, qrel_entry2_str
 
+# This things are hard-coded and must match Java and shell scripts
+DATA_QUERY = 'data_query.tsv'
+DATA_DOCS = 'data_docs.tsv'
+TRAIN_PAIRS = 'train_pairs.tsv'
+TEST_RUN = 'test_run.txt'
+QRELS = 'qrels.txt'
+
+DATA_TYPE_QUERY = 'query'
+DATA_TYPE_DOC = 'doc'
 
 def read_datafiles(file_names):
     """Read train and test files in CEDR format.
@@ -31,10 +41,10 @@ def read_datafiles(file_names):
                     tqdm.write(f'skipping line {ln+1} because it has wrong # of fields: "{field_qty}"')
                     continue
                 c_type, c_id, c_text = cols
-                assert c_type in ('query', 'doc')
-                if c_type == 'query':
+                assert c_type in (DATA_TYPE_QUERY, DATA_TYPE_DOC)
+                if c_type == DATA_TYPE_QUERY:
                     queries[c_id] = c_text
-                if c_type == 'doc':
+                if c_type == DATA_TYPE_DOC:
                     docs[c_id] = c_text
 
     return queries, docs
@@ -93,3 +103,46 @@ def train_item_qty_upper_bound(train_pairs, epoch_repeat_qty):
        to define a number of training steps per epoch explicitly.
     """
     return epoch_repeat_qty * len(list(train_pairs.keys()))
+
+
+def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
+    # File must be opened
+    print(f'Writing to {out_f.name} type: {data_type}')
+    qty = 0
+    for id, v in data.items():
+        if id in id_filter_set:
+            out_f.write(f'{data_type}\t{id}\t{v}\n')
+            qty += 1
+
+    print(f'{qty} items written')
+
+
+def write_filtered_train_pairs(out_fn, train_pairs_full, qid_filter_set):
+    # File must be opened
+    print(f'Writing train pairs to {out_fn}')
+    qty = 0
+    train_pairs_filtered = {}
+    for qid, did_dict in train_pairs_full.items():
+        if qid in qid_filter_set:
+            train_pairs_filtered[qid] = did_dict
+            qty += len(did_dict)
+
+    write_pairs_dict(train_pairs_filtered, out_fn)
+
+    print(f'# of queris in a full set: {len(train_pairs_full)} filtered set: {len(train_pairs_filtered)}')
+    print(f'{qty} items written')
+
+
+def write_filtered_qrels(out_f, qrels, qid_filter_set):
+    print(f'Writing qrels to {out_f.name}')
+    # File must be opened
+    qty = 0
+    for qid, did_rel_dict in qrels.items():
+        if qid in qid_filter_set:
+            for did, grade in did_rel_dict.items():
+                e = QrelEntry(query_id=qid, doc_id=did, rel_grade=grade)
+                out_f.write(qrel_entry2_str(e) + '\n')
+                qty += 1
+
+    print(f'{qty} items written')
+

@@ -24,23 +24,16 @@ import sys
 import os
 import numpy as np
 
+from flexneuart.utils import merge_dict
 from flexneuart.io import open_with_default_enc
-
-# This things are hard-coded and must match Java and shell scripts
-DATA_QUERY = 'data_query.tsv'
-DATA_DOCS = 'data_docs.tsv'
-TRAIN_PAIRS = 'train_pairs.tsv'
-TEST_RUN = 'test_run.txt'
-QRELS = 'qrels.txt'
-
-DATA_TYPE_QUERY = 'query'
-DATA_TYPE_DOC = 'doc'
 
 sys.path.append('.')
 
-from flexneuart.io.train_data import read_pairs_dict, write_pairs_dict, read_datafiles
+from flexneuart.io.train_data import QRELS, TRAIN_PAIRS, TEST_RUN, DATA_DOCS, DATA_QUERY, DATA_TYPE_QUERY, DATA_TYPE_DOC
+from flexneuart.io.train_data import read_pairs_dict, write_filtered_train_pairs, \
+    write_filtered_qrels, read_datafiles, write_filtered_datafiles
 from flexneuart.io.runs import read_run_dict, write_run_dict
-from flexneuart.io.qrels import read_qrels_dict, qrel_entry2_str, QrelEntry
+from flexneuart.io.qrels import read_qrels_dict
 from flexneuart.utils import set_all_seeds
 
 
@@ -51,60 +44,6 @@ def prefix_key(d, pref):
 def prefix_key_val(d, pref):
     return {pref + k : prefix_key(v, pref) for k, v in d.items()}
 
-
-def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
-    # File must be opened
-    print(f'Writing to {out_f.name} type: {data_type}')
-    qty = 0
-    for id, v in data.items():
-        if id in id_filter_set:
-            out_f.write(f'{data_type}\t{id}\t{v}\n')
-            qty += 1
-
-    print(f'{qty} items written')
-
-
-def write_filtered_train_pairs(out_fn, train_pairs_full, qid_filter_set):
-    # File must be opened
-    print(f'Writing train pairs to {out_fn}')
-    qty = 0
-    train_pairs_filtered = {}
-    for qid, did_dict in train_pairs_full.items():
-        if qid in qid_filter_set:
-            train_pairs_filtered[qid] = did_dict
-            qty += len(did_dict)
-
-    write_pairs_dict(train_pairs_filtered, out_fn)
-
-    print(f'# of queris in a full set: {len(train_pairs_full)} filtered set: {len(train_pairs_filtered)}')
-    print(f'{qty} items written')
-
-
-def write_filtered_qrels(out_f, qrels, qid_filter_set):
-    print(f'Writing qrels to {out_f.name}')
-    # File must be opened
-    qty = 0
-    for qid, did_rel_dict in qrels.items():
-        if qid in qid_filter_set:
-            for did, grade in did_rel_dict.items():
-                e = QrelEntry(query_id=qid, doc_id=did, rel_grade=grade)
-                out_f.write(qrel_entry2_str(e) + '\n')
-                qty += 1
-
-    print(f'{qty} items written')
-
-
-def merge_dict(dict1, dict2):
-    res_dict = {}
-
-    for k1, v1 in dict1.items():
-        res_dict[k1] = v1
-
-    for k2, v2 in dict2.items():
-        assert not k2 in res_dict, f'Repeating dictionary key: {k2}'
-        res_dict[k2] = v2
-
-    return res_dict
 
 
 parser = argparse.ArgumentParser('Mix two training sets in CEDR format')
