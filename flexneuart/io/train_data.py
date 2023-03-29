@@ -127,7 +127,7 @@ def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
 
 def write_filtered_train_pairs(out_fn, train_pairs_full, qid_filter_set):
     # File must be opened
-    print(f'Writing train pairs to {out_fn}')
+    print(f'Writing train pairs to {out_fn.name}')
     qty = 0
     train_pairs_filtered = {}
     for qid, did_dict in train_pairs_full.items():
