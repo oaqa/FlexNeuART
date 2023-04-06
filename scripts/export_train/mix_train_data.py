@@ -120,7 +120,7 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
                         if qid in qids:
                             dids.extend(list(did_dict.keys()))
                     dids = set(dids)
-                    print('Selected', len(dids, 'documents from ', len(data)))
+                    print('Selected', len(dids), 'documents from ', len(data))
 
                     write_filtered_qrels(out_qrels_f, qrels, qids)
                     write_filtered_datafiles(out_data_f, data, DATA_TYPE_DOC, dids)
