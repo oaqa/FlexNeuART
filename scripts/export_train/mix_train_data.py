@@ -73,7 +73,7 @@ if args.prob:
     assert np.all(probs <= 1), 'probabilities should be <= 1'
     print('Sampling probabilities (used separately for each collection):', probs)
 else:
-    probs = np.full(1, input_qty)
+    probs = np.full(input_qty, 1)
 
 print('Mixing probabilities:', probs)
 
