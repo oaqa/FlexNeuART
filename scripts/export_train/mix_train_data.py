@@ -59,15 +59,21 @@ output_dir = args.output_dir
 input_qty = len(input_dirs)
 assert input_qty
 
+print('Input directories:')
+for d in input_dirs:
+    print(d)
+print('=================')
+print('Output:', output_dir)
+
 if args.prob:
     probs = np.array(args.prob)
+    assert input_qty == len(probs) or len(probs) == 0, \
+        'The number of probabilities should match the number of input directories (or do not use probabilities at all)'
     assert np.all(probs > 0), 'probabilities should be > 0'
     assert np.all(probs <= 1), 'probabilities should be <= 1'
+    print('Sampling probabilities (used separately for each collection):', probs)
 else:
     probs = np.full(1, input_qty)
-
-assert len(input_dirs) == len(probs) or len(probs) == 0, \
-    'The number of probabilities should match the number of input directories (or do not use probabilities at all)'
 
 print('Mixing probabilities:', probs)
 
