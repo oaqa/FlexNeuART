@@ -87,7 +87,7 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
                     out_pref = f'set_{inp_id}'
 
                     dids = []
-                    qidx = []
+                    qids = []
 
                     # Read convert & save the run
                     if inp_id + 1 >= input_qty:
