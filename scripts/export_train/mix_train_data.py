@@ -96,7 +96,7 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
 
                         # We need to add validation query/document IDs to the set of queries and documents to save.
                         for qid, did_dict in run.items():
-                            qids.add(qid)
+                            qids.append(qid)
                             dids.extend(list(did_dict.keys()))
 
                     queries, data = read_datafiles([os.path.join(inp_dir, fn) for fn in [DATA_DOCS, DATA_QUERY]])
