@@ -110,9 +110,9 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
 
                     prob = probs[inp_id]
                     if prob < 1:
-                        qids = list(np.random.choice(qids, size=int(prob * len(qids)), replace=False))
+                        qids.extend(list(np.random.choice(qids, size=int(prob * len(qids)), replace=False)))
 
-                    print('Set', inp_id, 'Selected ', len(qids), 'training queries from ', len(train_pairs))
+                    print('Set', inp_id, 'has ', len(qids))
 
                     qids = set(qids)
 
