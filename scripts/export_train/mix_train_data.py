@@ -91,25 +91,22 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
                     queries, data = read_datafiles([os.path.join(inp_dir, fn) for fn in [DATA_DOCS, DATA_QUERY]])
                     queries = prefix_key(queries, out_pref)
                     data = prefix_key(data, out_pref)
+                    all_dids = set(data.keys())
 
                     train_pairs = prefix_key_val(read_pairs_dict(os.path.join(inp_dir, TRAIN_PAIRS)), out_pref)
                     qids_train_pairs.extend(list(train_pairs.keys()))
 
                     qrels = prefix_key_val(read_qrels_dict(os.path.join(inp_dir, QRELS)), out_pref)
 
+                    qids_train_pairs = list(set(qids_train_pairs))
+
                     prob = probs[inp_id]
                     prob = min(1, max(0, prob)) 
-                    sel_qids = list(np.random.choice(qids_train_pairs, size=int(prob * len(qids_train_pairs)), replace=False))
+                    sel_qids_train_pairs = set(np.random.choice(qids_train_pairs, size=int(prob * len(qids_train_pairs)), replace=False))
 
-                    print('Set', inp_id, '# of selected training qids ', len(sel_qids))
+                    print('Set', inp_id, '# of selected training qids ', len(sel_qids_train_pairs))
 
-                    sel_qids = set(sel_qids)
-
-                    dids = []
-                    for qid, did_dict in train_pairs.items():
-                        if qid in sel_qids:
-                            dids.extend(list(did_dict.keys()))
-                    print('Selected', len(dids), 'documents from ', len(data))
+                    sel_qids_test_run = set()
 
                     # Read convert & save the run
                     if inp_id + 1 >= input_qty:
@@ -118,15 +115,15 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
 
                         # We need to add validation query/document IDs to the set of queries and documents to save.
                         for qid, did_dict in run.items():
-                            sel_qids.add(qid)
-                            dids.extend(list(did_dict.keys()))
+                            sel_qids_test_run.add(qid)
 
-                    dids = set(dids)
 
-                    write_filtered_qrels(out_qrels_f, qrels, sel_qids)
-                    write_filtered_datafiles(out_data_f, data, DATA_TYPE_DOC, dids)
-                    write_filtered_datafiles(out_query_f, queries, DATA_TYPE_QUERY, sel_qids)
-                    write_filtered_train_pairs(out_trainp_f, train_pairs, sel_qids)
+                    sel_qids_all = sel_qids_train_pairs | sel_qids_test_run
+
+                    write_filtered_qrels(out_qrels_f, qrels, sel_qids_all)
+                    write_filtered_datafiles(out_data_f, data, DATA_TYPE_DOC, all_dids)
+                    write_filtered_datafiles(out_query_f, queries, DATA_TYPE_QUERY, sel_qids_all)
+                    write_filtered_train_pairs(out_trainp_f, train_pairs, sel_qids_train_pairs)
 
 
 
