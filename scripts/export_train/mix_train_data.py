@@ -69,7 +69,7 @@ if args.prob:
     probs = np.array(args.prob)
     assert input_qty == len(probs) or len(probs) == 0, \
         'The number of probabilities should match the number of input directories (or do not use probabilities at all)'
-    assert np.all(probs > 0), 'probabilities should be > 0'
+    assert np.all(probs >= 0), 'probabilities should be >= 0'
     assert np.all(probs <= 1), 'probabilities should be <= 1'
     print('Sampling probabilities (used separately for each collection):', probs)
 else:
@@ -86,8 +86,30 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
                 for inp_id, inp_dir in enumerate(input_dirs):
                     out_pref = f'set_{inp_id}'
 
+                    qids_train_pairs = []
+
+                    queries, data = read_datafiles([os.path.join(inp_dir, fn) for fn in [DATA_DOCS, DATA_QUERY]])
+                    queries = prefix_key(queries, out_pref)
+                    data = prefix_key(data, out_pref)
+
+                    train_pairs = prefix_key_val(read_pairs_dict(os.path.join(inp_dir, TRAIN_PAIRS)), out_pref)
+                    qids_train_pairs.extend(list(train_pairs.keys()))
+
+                    qrels = prefix_key_val(read_qrels_dict(os.path.join(inp_dir, QRELS)), out_pref)
+
+                    prob = probs[inp_id]
+                    prob = min(1, max(0, prob)) 
+                    sel_qids = list(np.random.choice(qids_train_pairs, size=int(prob * len(qids_train_pairs)), replace=False))
+
+                    print('Set', inp_id, '# of selected training qids ', len(sel_qids))
+
+                    sel_qids = set(sel_qids)
+
                     dids = []
-                    qids = []
+                    for qid, did_dict in train_pairs.items():
+                        if qid in sel_qids:
+                            dids.extend(list(did_dict.keys()))
+                    print('Selected', len(dids), 'documents from ', len(data))
 
                     # Read convert & save the run
                     if inp_id + 1 >= input_qty:
@@ -96,36 +118,15 @@ with open_with_default_enc(os.path.join(output_dir, QRELS), 'w') as out_qrels_f:
 
                         # We need to add validation query/document IDs to the set of queries and documents to save.
                         for qid, did_dict in run.items():
-                            qids.append(qid)
+                            sel_qids.add(qid)
                             dids.extend(list(did_dict.keys()))
 
-                    queries, data = read_datafiles([os.path.join(inp_dir, fn) for fn in [DATA_DOCS, DATA_QUERY]])
-                    queries = prefix_key(queries, out_pref)
-                    data = prefix_key(data, out_pref)
-
-                    train_pairs = prefix_key_val(read_pairs_dict(os.path.join(inp_dir, TRAIN_PAIRS)), out_pref)
-                    qids.extend(list(train_pairs.keys()))
-
-                    qrels = prefix_key_val(read_qrels_dict(os.path.join(inp_dir, QRELS)), out_pref)
-
-                    prob = probs[inp_id]
-                    if prob < 1:
-                        qids.extend(list(np.random.choice(qids, size=int(prob * len(qids)), replace=False)))
-
-                    print('Set', inp_id, 'has ', len(qids))
-
-                    qids = set(qids)
-
-                    for qid, did_dict in train_pairs.items():
-                        if qid in qids:
-                            dids.extend(list(did_dict.keys()))
                     dids = set(dids)
-                    print('Selected', len(dids), 'documents from ', len(data))
 
-                    write_filtered_qrels(out_qrels_f, qrels, qids)
+                    write_filtered_qrels(out_qrels_f, qrels, sel_qids)
                     write_filtered_datafiles(out_data_f, data, DATA_TYPE_DOC, dids)
-                    write_filtered_datafiles(out_query_f, queries, DATA_TYPE_QUERY, qids)
-                    write_filtered_train_pairs(out_trainp_f, train_pairs, qids)
+                    write_filtered_datafiles(out_query_f, queries, DATA_TYPE_QUERY, sel_qids)
+                    write_filtered_train_pairs(out_trainp_f, train_pairs, sel_qids)
 
 
 
