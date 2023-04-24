@@ -14,7 +14,7 @@
 #  limitations under the License.
 #
 import collections
-from typing import Dict, List
+from typing import Dict, List, Union
 from tqdm import tqdm
 from flexneuart.io import FileWrapper
 
@@ -25,7 +25,7 @@ QrelEntry = collections.namedtuple('QrelEntry',
 #
 
 
-def gen_qrel_str(query_id : str, doc_id: str, rel_grade : int) -> str:
+def gen_qrel_str(query_id : str, doc_id: str, rel_grade : Union[int, float]) -> str:
     """Produces a string representing one QREL entry
 
     :param query_id:   question/query ID
@@ -49,7 +49,7 @@ def qrel_entry2_str(qrel_entry : QrelEntry) -> str:
 def parse_qrel_entry(line) -> QrelEntry:
     """Parse one QREL entry
     :param line  a single line with a QREL entry.
-            Relevance graded is expected to be integer.
+            Relevance graded is expected to be integer or float.
 
     :return a parsed QrelEntry entry.
     """
@@ -59,7 +59,12 @@ def parse_qrel_entry(line) -> QrelEntry:
     if len(parts) != 4:
         raise Exception('QREL entry format error, expecting just 4 white-space separted field in the entry: ' + line)
 
-    return QrelEntry(query_id=parts[0], doc_id=parts[2], rel_grade=int(parts[3]))
+    try:
+        v = int(parts[3])
+    except ValueError:
+        v= float(parts[3])
+        
+    return QrelEntry(query_id=parts[0], doc_id=parts[2], rel_grade=v)
 
 
 def read_qrels(file_name : str) -> List[QrelEntry]:
@@ -98,7 +103,7 @@ def write_qrels(qrel_list : List[QrelEntry], file_name : str):
             f.write('\n')
 
 
-def write_qrels_dict(qrel_dict : Dict[str, Dict[str, int]],
+def write_qrels_dict(qrel_dict : Dict[str, Dict[str, Union[int, float]]],
                      file_name : str):
     """Write a QREL dictionary stored in the format produced by the
        function read_qrels_dict.
@@ -113,7 +118,7 @@ def write_qrels_dict(qrel_dict : Dict[str, Dict[str, int]],
                 f.write('\n')
 
 
-def read_qrels_dict(file_name : str) -> Dict[str, Dict[str, int]]:
+def read_qrels_dict(file_name : str) -> Dict[str, Dict[str, Union[int, float]]]:
     """Read QRELs in the form of a dictionary where keys are query IDs.
 
     :param file_name: QREL file name
@@ -121,7 +126,7 @@ def read_qrels_dict(file_name : str) -> Dict[str, Dict[str, int]]:
     """
     result = {}
     for e in read_qrels(file_name):
-        result.setdefault(e.query_id, {})[e.doc_id] = int(e.rel_grade)
+        result.setdefault(e.query_id, {})[e.doc_id] = e.rel_grade
     return result
 
 
