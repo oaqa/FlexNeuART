@@ -80,6 +80,10 @@ class FileWrapper:
             self._file = open(file_name, flags, encoding=encoding)
             self._is_compr = False
 
+    @property
+    def name(self):
+        return self._file.name
+
     def write(self, s):
         if self._is_compr:
             self._file.write(s.encode())
@@ -101,6 +105,7 @@ class FileWrapper:
     def __iter__(self):
         for line in self._file:
             yield line.decode(encoding=DEFAULT_ENCODING, errors=self.decode_errors) if self._is_compr else line
+
 
 
 def jsonl_gen(file_name):

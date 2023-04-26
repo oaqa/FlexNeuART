@@ -12,7 +12,7 @@ ir_datasets
 
 pyjnius
 
-torch
+torch<2.0
 torchtext
 
 transformers
