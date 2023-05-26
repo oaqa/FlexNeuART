@@ -46,6 +46,8 @@ from flexneuart.models.train.distr_utils import run_distributed, get_device_name
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import get_amp_processors
 
+from flexneuart.data_augmentation.augmentation_module import *
+
 from flexneuart import sync_out_streams, set_all_seeds
 from flexneuart.io.json import read_json, save_json
 from flexneuart.io.runs import read_run_dict, write_run_dict
@@ -86,7 +88,8 @@ TrainParams = namedtuple('TrainParams',
                      'print_grads',
                      'shuffle_train',
                      'valid_type',
-                     'use_external_eval', 'eval_metric'])
+                     'use_external_eval', 'eval_metric',
+                     'da_techniques', 'da_config', 'da_prob'])
 
 
 def get_lr_desc(optimizer):
@@ -201,11 +204,21 @@ def train_iteration(model_holder, device_name,
                                                qrels=qrels,
                                                epoch_repeat_qty=train_params.epoch_repeat_qty,
                                                do_shuffle=train_params.shuffle_train)
+
+    data_augment_methods = None
+    if len(train_params.da_techniques) != 0:
+        data_augment_methods = DataAugmentModule(train_params.da_techniques,
+                                                train_params.da_config,
+                                                train_params.da_prob)
+    else:
+        print('No Data Augmentation')
+        
     train_iterator = BatchingTrainFixedChunkSize(batch_size=train_params.backprop_batch_size,
                                                  dataset=dataset, model=model,
                                                  max_query_len=train_params.max_query_len,
                                                  max_doc_len=train_params.max_doc_len,
-                                                 train_sampler=train_sampler)
+                                                 train_sampler=train_sampler,
+                                                 data_augment_module=data_augment_methods)
 
     sync_qty = 0
 
@@ -722,6 +735,16 @@ def main_cli():
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
+    
+    parser.add_argument('--da_techniques', nargs='*', metavar='Data Augmentation Methods',
+                        help='provide multiple augmentation methods')
+
+    parser.add_argument('--da_config', metavar='Path to config to be used for data augmentaiton',
+                        type=str, nargs='?', default=None,
+                        help='config for augmentation parameters')
+
+    parser.add_argument('--da_prob', metavar='Augmentation Probability',
+                        type=float, default=0.25, help='Probabilty of doing augmentation')
 
     args = parser.parse_args()
 
@@ -745,6 +768,7 @@ def main_cli():
             setattr(args, arg_name, arg_val)
 
     print(args)
+    print(args.da_techniques)
     sync_out_streams()
 
     set_all_seeds(args.seed)
@@ -839,7 +863,11 @@ def main_cli():
                                print_grads=args.print_grads,
                                shuffle_train=not args.no_shuffle_train,
                                valid_type=args.valid_type,
-                               optim=args.optim)
+                               optim=args.optim,
+                               da_techniques=args.da_techniques,
+                               da_config=args.da_config,
+                               da_prob=args.da_prob
+                               )
 
     do_train(
         device_qty=device_qty,

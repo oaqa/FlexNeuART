@@ -5,6 +5,7 @@ __pycache__
 .idea
 .iml
 .project
+.pyc
 run.txt
 build.log
 collections*

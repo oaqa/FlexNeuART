@@ -20,6 +20,8 @@ from flexneuart.models.train.sampler import TrainSamplerFixedChunkSize, TrainSam
 from flexneuart.models.base import BaseModel
 from flexneuart.models.train.batch_obj import BatchObject
 
+from flexneuart.data_augmentation.augmentation_module import *
+
 PAD_CODE=1 # your typical padding symbol
 
 
@@ -130,12 +132,14 @@ class BatchingTrainFixedChunkSize(BatchingBase):
                         model : BaseModel,
                         max_query_len, max_doc_len,
                         train_sampler: TrainSamplerFixedChunkSize,
+                        data_augment_module: DataAugmentModule = None,
                  ):
         super().__init__(batch_size=batch_size,
                          dataset=dataset,
                          model=model,
                          max_query_len=max_query_len, max_doc_len=max_doc_len)
         self.train_sampler = train_sampler
+        self.data_augment_module = data_augment_module
 
     def __call__(self):
 
@@ -155,6 +159,9 @@ class BatchingTrainFixedChunkSize(BatchingBase):
             pos_doc_text = ds_docs.get(qobj.pos_id)
             assert pos_doc_text is not None, f'Missing document ID: {qobj.pos_id}'
 
+            if self.data_augment_module is not None:
+                query_text, pos_doc_text = self.data_augment_module.augment(query_text, pos_doc_text)
+                
             self._add_to_batch(qid=qobj.qid, query_text=query_text,
                                did=qobj.pos_id, doc_text=pos_doc_text,
                                cand_score=qobj.pos_id_score, label=1)
@@ -162,6 +169,10 @@ class BatchingTrainFixedChunkSize(BatchingBase):
             for neg_id, neg_score in zip(qobj.neg_ids, qobj.neg_id_scores):
                 neg_doc_text=ds_docs.get(neg_id)
                 assert neg_doc_text is not None, f'Missing document ID: {neg_id}'
+
+                if self.data_augment_module is not None:
+                    _, neg_doc_text = self.data_augment_module.augment(query_text, neg_doc_text)
+                
                 self._add_to_batch(qid=qobj.qid, query_text=query_text,
                                    did=neg_id, doc_text=neg_doc_text,
                                    cand_score=neg_score, label=0)

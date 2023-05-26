@@ -1,0 +1,5 @@
+{
+    "original_weight": 1,
+    "aug_query_weight": 1,
+    "neg_doc_weight": 1
+}
