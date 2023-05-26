@@ -133,6 +133,14 @@ public class LuceneCandidateProvider extends CandidateProvider {
         // it's being interpreted as a part of the query language, 
         // so we need to remove it
         query = StringUtils.removePunct(query.trim());
+        //
+        // # 27
+        // Special Lucene operators need to be removed too.
+        // However, a better approach is to eventually switch to 
+        // constructing the explicit boolean query yourself
+        // https://github.com/oaqa/FlexNeuART/issues/27
+        //
+        query = StringUtils.removeLuceneSpecialOps(query);
         ArrayList<String> toks = new ArrayList<String>();
         for (String s : mSpaceSplit.split(query)) {
           toks.add(s);

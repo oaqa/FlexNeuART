@@ -18,6 +18,8 @@ package edu.cmu.lti.oaqa.flexneuart.utils;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -228,6 +230,32 @@ public class StringUtils {
     return mJoinOnSpace.join(arr);
   }
   
+  public static String removeLuceneSpecialOps(String s) {
+    List<String> res = new ArrayList<String>();
+    for (String tok: splitOnWhiteSpace(s)) {
+      if (!mLuceneSpecialOpsSet.contains(tok)) {
+        res.add(tok);
+      }
+    }
+    return joinWithSpace(res);
+  }
+  
+  public static String[] LUCENE_SPECIAL_OPS = {"OR", "AND", "NOT", "TO"};
+  public static HashSet<String> mLuceneSpecialOpsSet;
   static Joiner   mJoinOnSpace  = Joiner.on(' ');
   static Joiner   mJoinOnNewLine  = Joiner.on(Const.NL);
+  
+  static {
+    mLuceneSpecialOpsSet = new HashSet<String>();
+    for (String s : LUCENE_SPECIAL_OPS) {
+      mLuceneSpecialOpsSet.add(s);
+    }    
+  }
+  
+  public static void main(String [] args) {
+    System.out.println(removeLuceneSpecialOps("this is an or test AND"));
+    System.out.println(removeLuceneSpecialOps("this is an or test and"));
+    System.out.println(removeLuceneSpecialOps("AND OR TO NOT"));
+    System.out.println(removeLuceneSpecialOps("and or to not AND OR TO NOT"));
+  }
 }

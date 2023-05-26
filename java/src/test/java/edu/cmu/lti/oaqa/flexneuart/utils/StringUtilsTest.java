@@ -23,9 +23,28 @@ import java.util.ArrayList;
 import org.junit.Test;
 
 public class StringUtilsTest {
+  
+  @Test 
+  public void testRemoveLuceneOps() {
+    String src[] = {
+        "this is an or test AND", 
+        "this is an or test and", 
+        "AND OR TO NOT",
+        "and or to not AND OR TO NOT"
+    };
+    String dst[] = {
+        "this is an or test", 
+        "this is an or test and", 
+        "",
+        "and or to not"        
+    };
+    for (int i = 0; i < src.length; i++) {
+      assertEquals(dst[i], StringUtils.removeLuceneSpecialOps(src[i]));
+    }
+  }
 
   @Test
-  public void TestTruncAt() {
+  public void testTruncAt() {
     ArrayList<String> src = new ArrayList<String>();
     ArrayList<String> trg = new ArrayList<String>();
     ArrayList<Integer> k = new ArrayList<Integer>();
