@@ -837,8 +837,8 @@ public abstract class ForwardIndex {
           ++mDocQty;
           
           if (dataEntry.mEntryId == null) {
-            logger.warn(String.format("No entry/doc ID entry #%d ignoring", mDocQty));
-            continue;
+            // https://github.com/oaqa/FlexNeuART/issues/28
+            throw new Exception(String.format("No entry/doc ID entry #%d ignoring", mDocQty));
           }
           
           String text = null;
@@ -846,7 +846,11 @@ public abstract class ForwardIndex {
           if (isParsed() || isTextRaw()) {
               text = dataEntry.getString(fieldName);
 
-              if (text == null) text = "";
+              if (text == null) {
+                // https://github.com/oaqa/FlexNeuART/issues/28
+                throw new Exception(String.format("Warning: now field '%s' for document '%s'",
+                                                  fieldName, dataEntry.mEntryId));     
+              }
               if (text.isEmpty()) {
                 logger.warn(String.format("Warning: empty field '%s' for document '%s'",
                                           fieldName, dataEntry.mEntryId));
@@ -858,18 +862,19 @@ public abstract class ForwardIndex {
           } else if (isBinary()) {
             byte [] data = dataEntry.getBinary(fieldName);
             if (data == null) {
-              logger.warn(String.format("Warning: empty field '%s' for document '%s'",
-                                         fieldName, dataEntry.mEntryId));
+              // https://github.com/oaqa/FlexNeuART/issues/28
+              throw new Exception(String.format("Warning: empty field '%s' for document '%s'",
+                                                fieldName, dataEntry.mEntryId));
             } else {
               addDocEntryBinary(dataEntry.mEntryId, data);
             }
           } else {         
-            // If the string is empty, the array will contain an empty string, but we don't want this
             text=text.trim();
             String words[];
    
             DocEntryParsed doc;
             
+            // If the string is empty, the split will produce an empty string, but we need an empty array           
             words = text.isEmpty() ? new String[0] : text.split("\\s+");
             // First obtain word IDs for unknown words
             for (int i = 0; i < words.length; ++i) {

@@ -193,16 +193,15 @@ public class LuceneIndexer {
 				  String id = docFields.mEntryId;
 
 				  if (id == null) {
-					  logger.warn("Ignoring document #" + docNum + " b/c it has no document ID.");
-					  continue;
+				      // https://github.com/oaqa/FlexNeuART/issues/28
+					  throw new Exception("Ignoring document #" + docNum + " b/c it has no document ID.");
 				  }
 
 				  String textFieldValue = docFields.getString(indexFieldName);
 
 				  if (textFieldValue == null) {
-					  logger.warn(String.format("Warning: No field '%s', offending DOC #%d", 
-							  indexFieldName, docNum));
-					  continue;
+				      // https://github.com/oaqa/FlexNeuART/issues/28
+				    throw new Exception(String.format("Warning: No field '%s', offending DOC #%d", indexFieldName, docNum));
 				  }
 
 				  Document luceneDoc = new Document();
