@@ -30,6 +30,8 @@ class Empty:
     pass
 
 RAND_SPECIAL_INIT_DEFAULT=True
+DEFAULT_USE_SEP=True
+DEFAULT_POS_EMB=True 
 
 
 class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
@@ -62,7 +64,7 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
                  bert_aggreg_flavor=MSMARCO_MINILM_L2,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
-                 dropout=DEFAULT_BERT_DROPOUT):
+                 dropout=DEFAULT_BERT_DROPOUT, use_sep=DEFAULT_USE_SEP,):
         """Constructor.
 
         :param bert_flavor:             name of the main BERT model.
@@ -71,9 +73,11 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
         :param stride:                  aggregating window stride
         :param rand_special_init:       true to initialize aggregator CLS token randomly
         :param dropout:                 dropout before CLS
+        :param use_sep:                 true to include SEP embeddings
         """
         super().__init__(bert_flavor, cls_aggreg_type=CLS_AGGREG_STACK,
                          window_size=window_size, stride=stride)
+        self.use_sep = use_sep
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)
 
@@ -92,11 +96,13 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
 
             embeds = self.bert_aggreg.embeddings.word_embeddings.weight.data
             self.bert_aggreg_cls_embed = torch.nn.Parameter(embeds[self.tokenizer.cls_token_id].clone())
+            self.bert_aggreg_sep_embed = torch.nn.Parameter(embeds[self.tokenizer.sep_token_id].clone())
         else:
             print(f'Initializing special token CLS randomly')
 
             norm = 1.0 / math.sqrt(self.BERT_AGGREG_SIZE)
             self.bert_aggreg_cls_embed = torch.nn.Parameter(norm * torch.randn(self.BERT_AGGREG_SIZE))
+            self.bert_aggreg_sep_embed = torch.nn.Parameter(norm * torch.randn(self.BERT_AGGREG_SIZE))
 
 
         # If there's a mismatch between the embedding size of the aggregating BERT and the
@@ -121,11 +127,11 @@ class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
     def __init__(self, bert_flavor=BERT_BASE_MODEL, bert_aggreg_flavor=MSMARCO_MINILM_L2,
                  rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
-                 dropout=DEFAULT_BERT_DROPOUT):
+                 dropout=DEFAULT_BERT_DROPOUT, use_sep=DEFAULT_USE_SEP):
         super().__init__(bert_flavor=bert_flavor, bert_aggreg_flavor=bert_aggreg_flavor,
                          rand_special_init=rand_special_init,
                          window_size=window_size, stride=stride,
-                         dropout=dropout)
+                         dropout=dropout, use_sep=DEFAULT_USE_SEP)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         cls_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask).cls_results
@@ -139,15 +145,48 @@ class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
             last_layer_cls_rep_proj = last_layer_cls_rep
 
         # +two singletown dimensions before the CLS embedding
-        aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1, self.BERT_AGGREG_SIZE)
+        aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1, 
+                                                                                                 self.BERT_AGGREG_SIZE)
+        ONES = torch.ones_like(query_mask[:, :1]) # Bx1
+        NILS = torch.zeros_like(query_mask[:, :1]) # Bx1
 
-        # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
-        last_layer_cls_rep_proj = torch.cat([last_layer_cls_rep_proj, aggreg_cls_tok_exp], dim=1) #[B, N+1, BERT_AGGREG_SIZE]
+        assert ONES.shape == (B, 1)
+        assert NILS.shape == (B, 1)
+
+        mask = torch.ones_like(last_layer_cls_rep_proj[..., 0])
+
+        if self.use_sep:
+            aggreg_sep_tok_exp = self.bert_aggreg_sep_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 
+                                                                                                     1, self.BERT_AGGREG_SIZE)
+            EXPECT_TOT_N = N + 3
+
+            # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
+            last_layer_cls_rep_proj = torch.cat([aggreg_cls_tok_exp, aggreg_sep_tok_exp, 
+                                             last_layer_cls_rep_proj, aggreg_sep_tok_exp], dim=1) #[B, N+3, BERT_AGGREG_SIZE]
+
+            mask = torch.cat([ONES, ONES, mask, ONES], dim=1)
+            segment_ids = torch.cat([NILS] * 2 + [ONES] * (N) + [NILS], dim=1)
+
+        else:
+            # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
+            last_layer_cls_rep_proj = torch.cat([aggreg_cls_tok_exp, 
+                                             last_layer_cls_rep_proj], dim=1) #[B, N+1, BERT_AGGREG_SIZE]
+            
+            EXPECT_TOT_N = N + 1
+
+            mask = torch.cat([ONES, mask], dim=1)
+            segment_ids = torch.cat([NILS] + [ONES] * (N), dim=1)
+
+        assert last_layer_cls_rep_proj.shape == (B, EXPECT_TOT_N, self.BERT_AGGREG_SIZE)
+        assert mask.shape == (B, EXPECT_TOT_N)
+        assert segment_ids.shape == (B, EXPECT_TOT_N)
 
         # run aggregating BERT and get the last layer output
         # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
         # it's pointless at this stage
-        outputs : BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(inputs_embeds=last_layer_cls_rep_proj)
+        outputs : BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(inputs_embeds=last_layer_cls_rep_proj,
+                                                                                  token_type_ids=segment_ids.long(),
+                                                                                  attention_mask=mask)
         result = outputs.last_hidden_state
 
         # The cls vector of the last Transformer output layer
@@ -167,16 +206,22 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
     def __init__(self, bert_flavor=BERT_BASE_MODEL,
                  aggreg_layer_qty=2, aggreg_head_qty=4,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
-                 dropout=DEFAULT_BERT_DROPOUT):
+                 dropout=DEFAULT_BERT_DROPOUT, use_pos_emb=DEFAULT_POS_EMB):
         super().__init__(bert_flavor, cls_aggreg_type=CLS_AGGREG_STACK,
                          window_size=window_size, stride=stride)
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)
+        self.use_pos_emb = use_pos_emb
 
         # Let's create an aggregator Transformer
         encoder_layer = torch.nn.TransformerEncoderLayer(d_model=self.BERT_SIZE, nhead=aggreg_head_qty)
         norm_layer = torch.nn.LayerNorm(self.BERT_SIZE)
         self.transf_aggreg = torch.nn.TransformerEncoder(encoder_layer, aggreg_layer_qty, norm=norm_layer)
+        
+        # create positonal embeddings and the assocuated layernmorm and dropout
+        self.position_embeddings = torch.nn.Embedding(window_size, self.BERT_SIZE)
+        self.norm_layer1 = torch.nn.LayerNorm(self.BERT_SIZE)
+        self.dropout1 = torch.nn.Dropout(dropout)
 
         self.bert_aggreg_cls_embed = torch.nn.Parameter(torch.randn(self.BERT_SIZE))
 
@@ -189,12 +234,21 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
 
         B, N, _ = last_layer_cls_rep.shape
 
-        # +two singletown dimensions before the CLS embedding
+        # +two singleton dimensions before the CLS embedding
         aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
                                                                                                  self.BERT_SIZE)
 
         # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
-        last_layer_cls_rep = torch.cat([last_layer_cls_rep, aggreg_cls_tok_exp], dim=1)  # [B, N+1, BERT_AGGREG_SIZE]
+        last_layer_cls_rep = torch.cat([aggreg_cls_tok_exp, last_layer_cls_rep], dim=1)  # [B, N+1, BERT_AGGREG_SIZE]
+
+        # The position_embedding_type is always absolute
+        if self.use_pos_emb:
+            position_ids = torch.arange(last_layer_cls_rep.size(1), 
+                                        device=last_layer_cls_rep.device).unsqueeze(0).expand(B, -1)
+            position_embeddings = self.position_embeddings(position_ids)
+            last_layer_cls_rep += position_embeddings
+            last_layer_cls_rep = self.norm_layer1(last_layer_cls_rep)
+            last_layer_cls_rep = self.dropout1(last_layer_cls_rep)
 
         # run aggregating BERT and get the last layer output
         # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
@@ -221,7 +275,7 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  separate_query_proj=False,
                  rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
-                 dropout=DEFAULT_BERT_DROPOUT):
+                 dropout=DEFAULT_BERT_DROPOUT, use_sep=DEFAULT_USE_SEP):
         """Constructor.
 
         :param bert_flavor:             name of the main BERT model.
@@ -232,11 +286,12 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
         :param dropout:                 dropout before CLS
         :param separate_query_proj:     true to enable a separate projection matrix for query embeddings (passed to the
                                         aggregator Transformer).
+        :param use_sep:                 true to include SEP embeddings
         """
         super().__init__(bert_flavor=bert_flavor, bert_aggreg_flavor=bert_aggreg_flavor,
                          rand_special_init=rand_special_init,
                          window_size=window_size, stride=stride,
-                         dropout=dropout)
+                         dropout=dropout, use_sep=DEFAULT_USE_SEP)
         if separate_query_proj:
             print('Using a separate projection matrix for query embeddings')
             self.proj_query = torch.nn.Linear(self.BERT_SIZE, self.BERT_AGGREG_SIZE)
@@ -283,15 +338,7 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
         # +two singletown dimensions before the CLS embedding
         aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
                                                                                                  self.BERT_AGGREG_SIZE)
-
-        EXPECT_TOT_N = N + 1 + Q
-        # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
-        aggreg_repr = torch.cat([aggreg_cls_tok_exp,
-                                 last_layer_query_rep_proj,
-                                 last_layer_cls_rep_proj],
-                                             dim=1)  # [B, N + 1 + Q, BERT_AGGREG_SIZE]
-        assert aggreg_repr.shape == (B, EXPECT_TOT_N, self.BERT_AGGREG_SIZE)
-
+        
         ONES = torch.ones_like(query_mask[:, :1]) # Bx1
         NILS = torch.zeros_like(query_mask[:, :1]) # Bx1
 
@@ -300,20 +347,49 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
 
         doc_mask_aggreg = torch.ones_like(last_layer_cls_rep[:,:,0])
         assert doc_mask_aggreg.shape == (B, N), f'Internal error, expected shape ({B},{N}) actual shape: {doc_mask_aggreg.shape} last_layer_cls_rep.shape: {last_layer_cls_rep.shape}'
+        
+        if self.use_sep:
+            aggreg_sep_tok_exp = self.bert_aggreg_sep_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
+                                                                                                 self.BERT_AGGREG_SIZE)
 
-        mask = torch.cat([ONES, query_mask, doc_mask_aggreg], dim=1)
-        assert mask.shape == (B, EXPECT_TOT_N)
+            EXPECT_TOT_N = N + 4 + Q
+            # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
+            aggreg_repr = torch.cat([aggreg_cls_tok_exp, aggreg_sep_tok_exp,
+                                    last_layer_query_rep_proj, aggreg_sep_tok_exp,
+                                    last_layer_cls_rep_proj, aggreg_sep_tok_exp,],
+                                             dim=1)  # [B, N + 4 + Q, BERT_AGGREG_SIZE]
+            assert aggreg_repr.shape == (B, EXPECT_TOT_N, self.BERT_AGGREG_SIZE)
 
-        segment_ids = torch.cat([NILS] * (1 + Q) + [ONES] * (N), dim=1)
+            mask = torch.cat([ONES, ONES, query_mask, ONES, doc_mask_aggreg, ONES], dim=1)
+            assert mask.shape == (B, EXPECT_TOT_N)
 
-        assert segment_ids.shape == (B, EXPECT_TOT_N)
+            segment_ids = torch.cat([NILS] * (3 + Q) + [ONES] * (N) + [NILS], dim=1)
+
+            assert segment_ids.shape == (B, EXPECT_TOT_N)
+
+        else:
+            EXPECT_TOT_N = N + 1 + Q
+            # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
+            aggreg_repr = torch.cat([aggreg_cls_tok_exp,
+                                    last_layer_query_rep_proj,
+                                    last_layer_cls_rep_proj],
+                                             dim=1)  # [B, N + 1 + Q, BERT_AGGREG_SIZE]
+            assert aggreg_repr.shape == (B, EXPECT_TOT_N, self.BERT_AGGREG_SIZE)
+
+            mask = torch.cat([ONES, query_mask, doc_mask_aggreg], dim=1)
+            assert mask.shape == (B, EXPECT_TOT_N)
+
+            segment_ids = torch.cat([NILS] * (1 + Q) + [ONES] * (N), dim=1)
+
+            assert segment_ids.shape == (B, EXPECT_TOT_N)
+
 
         # run aggregating BERT and get the last layer output
         # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
         # it's pointless at this stage
         outputs: BaseModelOutputWithPoolingAndCrossAttentions = self.bert_aggreg(inputs_embeds=aggreg_repr,
                                                                                  token_type_ids=segment_ids.long(),
-                                                                                 attention_mask=mask,)
+                                                                                 attention_mask=mask)
         result = outputs.last_hidden_state
 
         # The cls vector of the last Transformer output layer
