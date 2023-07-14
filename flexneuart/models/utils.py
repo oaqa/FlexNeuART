@@ -18,6 +18,7 @@ from flexneuart.models import model_registry
 
 # An attribute to store the main BERT encoder
 BERT_ATTR='bert'
+BART_ATTR='bart'
 
 def is_longformer(bert_flavor: str):
     """
@@ -57,6 +58,39 @@ def init_model(obj_ref, bert_flavor : str):
     print('Model type:', obj_ref.BERT_MODEL,
           '# of channels:', obj_ref.CHANNELS,
           'hidden layer size:', obj_ref.BERT_SIZE,
+          'input window size:', obj_ref.MAXLEN,
+          'no token type IDs:', obj_ref.no_token_type_ids)
+
+
+def init_bart(obj_ref, bart_flavor : str):
+    """Instantiate a model, a tokenizer, and remember their parameters.
+
+    :param obj_ref:       an object to initialize.
+    :param bart_flavor:   the name of the underlying BART Transformer
+    """
+
+    obj_ref.BART_MODEL = bart_flavor
+
+    model = AutoModel.from_pretrained(bart_flavor)
+
+    config = model.config
+    setattr(obj_ref, BART_ATTR, model)
+    obj_ref.config = config
+
+    tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(bart_flavor)
+    obj_ref.tokenizer = tokenizer
+    obj_ref.no_token_type_ids = not 'token_type_ids' in tokenizer.model_input_names
+
+    obj_ref.CHANNELS = config.num_hidden_layers + 1
+    obj_ref.BART_SIZE = config.hidden_size
+    obj_ref.MAXLEN = config.max_position_embeddings
+
+    obj_ref.CLS_TOK_ID = tokenizer.cls_token_id
+    obj_ref.EOS_TOK_ID = tokenizer.eos_token_id
+
+    print('Model type:', obj_ref.BART_MODEL,
+          '# of channels:', obj_ref.CHANNELS,
+          'hidden layer size:', obj_ref.BART_SIZE,
           'input window size:', obj_ref.MAXLEN,
           'no token type IDs:', obj_ref.no_token_type_ids)
 

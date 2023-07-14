@@ -50,6 +50,7 @@ IMAP_PROC_CHUNK_QTY=500
 DEVICE_CPU = 'cpu'
 DEFAULT_DEVICE_GPU = 'cuda'
 
+BART_BASE_MODEL='facebook/bart-base'
 BERT_BASE_MODEL='bert-base-uncased'
 MSMARCO_MINILM_L2='cross-encoder/ms-marco-MiniLM-L-2-v2'
 

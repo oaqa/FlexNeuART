@@ -131,7 +131,7 @@ class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
         super().__init__(bert_flavor=bert_flavor, bert_aggreg_flavor=bert_aggreg_flavor,
                          rand_special_init=rand_special_init,
                          window_size=window_size, stride=stride,
-                         dropout=dropout, use_sep=DEFAULT_USE_SEP)
+                         dropout=dropout, use_sep=use_sep)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         cls_reps = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask).cls_results
@@ -156,8 +156,8 @@ class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
         mask = torch.ones_like(last_layer_cls_rep_proj[..., 0])
 
         if self.use_sep:
-            aggreg_sep_tok_exp = self.bert_aggreg_sep_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 
-                                                                                                     1, self.BERT_AGGREG_SIZE)
+            aggreg_sep_tok_exp = self.bert_aggreg_sep_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1, 
+                                                                                                     self.BERT_AGGREG_SIZE)
             EXPECT_TOT_N = N + 3
 
             # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
@@ -335,7 +335,7 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
         else:
             last_layer_query_rep_proj = last_layer_query_rep
 
-        # +two singletown dimensions before the CLS embedding
+        # +two singleton dimensions before the CLS embedding
         aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
                                                                                                  self.BERT_AGGREG_SIZE)
         
@@ -358,14 +358,10 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
                                     last_layer_query_rep_proj, aggreg_sep_tok_exp,
                                     last_layer_cls_rep_proj, aggreg_sep_tok_exp,],
                                              dim=1)  # [B, N + 4 + Q, BERT_AGGREG_SIZE]
-            assert aggreg_repr.shape == (B, EXPECT_TOT_N, self.BERT_AGGREG_SIZE)
 
             mask = torch.cat([ONES, ONES, query_mask, ONES, doc_mask_aggreg, ONES], dim=1)
-            assert mask.shape == (B, EXPECT_TOT_N)
-
             segment_ids = torch.cat([NILS] * (3 + Q) + [ONES] * (N) + [NILS], dim=1)
 
-            assert segment_ids.shape == (B, EXPECT_TOT_N)
 
         else:
             EXPECT_TOT_N = N + 1 + Q
@@ -374,14 +370,13 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
                                     last_layer_query_rep_proj,
                                     last_layer_cls_rep_proj],
                                              dim=1)  # [B, N + 1 + Q, BERT_AGGREG_SIZE]
-            assert aggreg_repr.shape == (B, EXPECT_TOT_N, self.BERT_AGGREG_SIZE)
 
             mask = torch.cat([ONES, query_mask, doc_mask_aggreg], dim=1)
-            assert mask.shape == (B, EXPECT_TOT_N)
-
             segment_ids = torch.cat([NILS] * (1 + Q) + [ONES] * (N), dim=1)
 
-            assert segment_ids.shape == (B, EXPECT_TOT_N)
+        assert aggreg_repr.shape == (B, EXPECT_TOT_N, self.BERT_AGGREG_SIZE)
+        assert mask.shape == (B, EXPECT_TOT_N)
+        assert segment_ids.shape == (B, EXPECT_TOT_N)
 
 
         # run aggregating BERT and get the last layer output
