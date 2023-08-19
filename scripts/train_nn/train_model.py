@@ -23,6 +23,7 @@ import sys
 import math
 import argparse
 import numpy as np
+import wandb
 
 from transformers.optimization import get_constant_schedule_with_warmup
 from threading import BrokenBarrierError
@@ -71,7 +72,10 @@ LR_SCHEDULE_ONE_CYCLE_LR = 'one_cycle'
 TrainParams = namedtuple('TrainParams',
                     ['optim',
                      'device_name',
-                     'init_lr', 'init_bert_lr', 'epoch_lr_decay', 'weight_decay',
+                     'init_lr', 'init_bert_lr', 
+                     'init_aggreg_lr', 'init_bart_lr',
+                     'init_interact_lr',
+                     'epoch_lr_decay', 'weight_decay',
                      'momentum',
                      'amp',
                      'warmup_pct', 'lr_schedule',
@@ -99,25 +103,62 @@ def get_lr_desc(optimizer):
 
 def train_iteration(model_holder, device_name,
                     sync_barrier, sync_qty_target,
-                    lr, bert_lr,
+                    lr, bert_lr, aggreg_lr, interact_lr,
                     is_main_proc, device_qty,
                     loss_obj,
                     train_params,
-                    dataset, train_pairs, qrels):
+                    dataset, train_pairs, qrels,
+                    wandb_run):
 
-    bert_param_keys = model_holder.model.bert_param_names()
+    if train_params.init_bart_lr is not None:
+        bart_param_keys = model_holder.model.bart_param_names()
+    else:
+        bert_param_keys = model_holder.model.bert_param_names()
     model = model_holder.model
+
+    if aggreg_lr is not None:
+        aggreg_keys = model_holder.model.aggreg_param_names()
+    else:
+        aggreg_keys = []
+
+    if interact_lr is not None:
+        interact_keys = model_holder.model.interact_param_names()
+    else:
+        interact_keys = []
 
     all_params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
     # BERT parameters use a special learning weight
-    bert_params = {'params': [v for k, v in all_params if k in bert_param_keys], 'lr': bert_lr}
-    non_bert_params = {'params': [v for k, v in all_params if not k in bert_param_keys]}
+    if train_params.init_bart_lr is not None:
+        bart_params = {'params': [v for k, v in all_params if k in bart_param_keys], 'lr': bert_lr}
+    else:
+        bert_params = {'params': [v for k, v in all_params if k in bert_param_keys], 'lr': bert_lr}
+    
+    if aggreg_lr is not None:
+        aggreg_params = {'params': [v for k, v in all_params if k in aggreg_keys], 'lr': aggreg_lr}
+    else:
+        aggreg_params = {}
+    if  interact_lr is not None:
+        interact_params = {'params': [v for k, v in all_params if k in interact_keys], 'lr': interact_lr}
+    else:
+        interact_params = {}
+    if train_params.init_bart_lr is not None:
+        non_bert_params = {'params': [v for k, v in all_params if not k in bart_param_keys and not k in aggreg_keys \
+                                      and not k in interact_keys]}
+    else:
+        non_bert_params = {'params': [v for k, v in all_params if not k in bert_param_keys and not k in aggreg_keys \
+                                      and not k in interact_keys]}
+
+    if train_params.init_bart_lr is not None:
+        params = list(filter(None, [non_bert_params, bart_params, interact_params, aggreg_params]))
+    else:
+        params = list(filter(None, [non_bert_params, bert_params, interact_params, aggreg_params]))
+
 
     if train_params.optim == OPT_ADAMW:
-        optimizer = torch.optim.AdamW([non_bert_params, bert_params],
+        optimizer = torch.optim.AdamW(params,
                                       lr=lr, weight_decay=train_params.weight_decay)
     elif train_params.optim == OPT_SGD:
-        optimizer = torch.optim.SGD([non_bert_params, bert_params],
+        optimizer = torch.optim.SGD(params,
                                     lr=lr, weight_decay=train_params.weight_decay,
                                     momentum=train_params.momentum)
     else:
@@ -141,7 +182,7 @@ def train_iteration(model_holder, device_name,
                 print(f'Using a one-cycle scheduler with a warm-up for {num_warmup_steps} steps')
             scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
                                                             total_steps=lr_steps,
-                                                            max_lr=[lr, bert_lr],
+                                                            max_lr=[lr, bert_lr, interact_lr, aggreg_lr],
                                                             anneal_strategy='linear',
                                                             pct_start=train_params.warmup_pct)
         else:
@@ -223,6 +264,8 @@ def train_iteration(model_holder, device_name,
             assert count * train_sampler.get_chunk_size() == data_qty
             scores = scores.reshape(count, 1 + neg_qty_per_query)
             loss = loss_obj.compute(scores)
+            if wandb_run is not None:
+                wandb_run.log({'loss': loss.item()})
 
         scaler.scale(loss).backward()
         total_qty += count
@@ -261,11 +304,16 @@ def train_iteration(model_holder, device_name,
 
             batch_id += 1
 
+        avg_loss = total_loss / float(max(1, total_qty))
+
         if pbar is not None:
             pbar.update(count)
             pbar.refresh()
             sync_out_streams()
-            pbar.set_description('%s train loss %.5f' % (lr_desc, total_loss / float(max(1, total_qty))))
+            pbar.set_description('%s train loss %.5f' % (lr_desc, avg_loss))
+
+        wandb_run.log({'avg_loss': avg_loss})
+
 
     # Final model averaging in the end.
 
@@ -304,22 +352,51 @@ def do_train(device_qty,
              model_out_dir,
              model_holder,
              loss_obj,
-             train_params):
+             train_params,
+             wandb_run):
 
     sync_barrier = Barrier(device_qty)
 
-    bert_param_keys = model_holder.model.bert_param_names()
+    if train_params.init_bart_lr is not None:
+        bart_param_keys = model_holder.model.bart_param_names()
+        bert_lr = train_params.init_bart_lr
+    else:
+        bert_param_keys = model_holder.model.bert_param_names()
+        bert_lr = train_params.init_bert_lr
+
+    if train_params.init_aggreg_lr is not None:
+        aggregator_param_keys = model_holder.model.aggreg_param_names()
+    else:
+        aggregator_param_keys = []
+
+    if train_params.init_interact_lr is not None:
+        interaction_param_keys = model_holder.model.interact_param_names()
+    else:
+        interaction_param_keys = []
 
     tqdm.write('Training parameters:')
     tqdm.write(str(train_params))
-    tqdm.write('BERT parameters:')
-    tqdm.write(str(bert_param_keys))
+    if train_params.init_bart_lr is not None:
+        tqdm.write('BART parameters:')
+        tqdm.write(str(bart_param_keys))
+    else:
+        tqdm.write('BERT parameters:')
+        tqdm.write(str(bert_param_keys))
+    if train_params.init_aggreg_lr is not None:
+        tqdm.write('Aggregator parameters:')
+        tqdm.write(str(aggregator_param_keys))
+    if train_params.init_interact_lr is not None:
+        tqdm.write('Interaction parameters:')
+        tqdm.write(str(interaction_param_keys))
     tqdm.write('Loss function:' + loss_obj.name())
 
     epoch_lr_decay = train_params.epoch_lr_decay
 
     lr = train_params.init_lr
-    bert_lr = train_params.init_bert_lr
+    
+    aggreg_lr = train_params.init_aggreg_lr
+
+    interact_lr = train_params.init_interact_lr
 
     top_valid_score = None
 
@@ -375,6 +452,8 @@ def do_train(device_qty,
             shared_params = {
                 'lr': lr,
                 'bert_lr': bert_lr,
+                'aggreg_lr': aggreg_lr,
+                'interact_lr': interact_lr,
                 'model_holder': model_holder,
                 'sync_barrier': sync_barrier,
                 'sync_qty_target': sync_qty_target,
@@ -382,7 +461,8 @@ def do_train(device_qty,
                 'loss_obj': loss_obj,
                 'train_params': train_params,
                 'dataset': dataset,
-                'qrels': qrels
+                'qrels': qrels,
+                'wandb_run': wandb_run
             }
 
             loss = run_distributed(train_iteration,
@@ -390,7 +470,8 @@ def do_train(device_qty,
                                         proc_specific_params=proc_specific_params,
                                         master_port=master_port,
                                         distr_backend=distr_backend,
-                                        proc_qty=device_qty)
+                                        proc_qty=device_qty
+                                        )
         else:
             loss = 0
 
@@ -405,7 +486,13 @@ def do_train(device_qty,
 
         os.makedirs(model_out_dir, exist_ok=True)
 
-        tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
+        if aggreg_lr is not None and interact_lr is None:
+            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} aggreg_lr={aggreg_lr:g}')
+        elif aggreg_lr is not None and interact_lr is not None:
+            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} \
+                       interact_lr={interact_lr:g} aggreg_lr={aggreg_lr:g}')
+        else:
+            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
 
         sync_out_streams()
 
@@ -436,11 +523,15 @@ def do_train(device_qty,
         if valid_score is not None:
             tqdm.write(f'validation epoch={epoch} score={valid_score:.4g}')
 
+        wandb_run.log({'final_loss': loss, 'epoch': epoch, 'valid_score': valid_score})
+
         train_stat[epoch] = {'loss': loss,
                               'score': valid_score,
                               'metric_name': train_params.eval_metric,
                               'lr': lr,
                               'bert_lr': bert_lr,
+                              'aggreg_lr': aggreg_lr,
+                              'interact_lr': interact_lr,
                               'train_time': end_train_time - start_train_time,
                               'validation_time': end_val_time - start_val_time}
 
@@ -458,7 +549,10 @@ def do_train(device_qty,
 
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
-
+        if aggreg_lr is not None:
+            aggreg_lr *= epoch_lr_decay
+        if interact_lr is not None:
+            interact_lr *= epoch_lr_decay
 
 def run_model_wrapper(model, is_main_proc, rerank_run_file_name,
                       device_name, batch_size, amp,
@@ -632,6 +726,7 @@ def main_cli():
     parser.add_argument('--warmup_pct', metavar='warm-up fraction',
                         default=None, type=float,
                         help='use a warm-up/cool-down learning-reate schedule')
+    
     parser.add_argument('--lr_schedule', metavar='LR schedule',
                         default=LR_SCHEDULE_CONST,
                         choices=[LR_SCHEDULE_CONST, LR_SCHEDULE_CONST_WARMUP, LR_SCHEDULE_ONE_CYCLE_LR])
@@ -676,7 +771,22 @@ def main_cli():
                         help='a weight of the candidate generator score used to combine it with the model score.')
 
     parser.add_argument('--init_bert_lr', metavar='init BERT learn. rate',
-                        type=float, default=0.00005, help='initial learning rate for BERT parameters')
+                        type=float, default=None, help='initial learning rate for BERT parameters')
+    
+    parser.add_argument('--init_bart_lr', metavar='init BART learn. rate',
+                        type=float, default=None, help='initial learning rate for BERT parameters')
+    
+    parser.add_argument('--init_aggreg_lr', metavar='init aggregation learn. rate',
+                        type=float, default=None, help='initial learning rate for aggregation parameters')
+    
+    parser.add_argument('--init_interact_lr', metavar='init interaction learn. rate',
+                        type=float, default=None, help='initial learning rate for interaction parameters')
+    
+    parser.add_argument('--use_sep', metavar='use sep',
+                        type=bool, default=False, help='use SEP embeddings for bert_like aggregation models')
+    
+    parser.add_argument('--use_pos_emb', metavar='use pos emb',
+                        type=bool, default=False, help='use positional embeddings for Trasnformer aggregation model')
 
     parser.add_argument('--epoch_lr_decay', metavar='epoch LR decay',
                         type=float, default=1.0, help='per-epoch learning rate decay')
@@ -718,6 +828,21 @@ def main_cli():
     parser.add_argument('--loss_func', choices=LOSS_FUNC_LIST,
                         default=PairwiseMarginRankingLossWrapper.name(),
                         help='Loss functions: ' + ','.join(LOSS_FUNC_LIST))
+    
+    parser.add_argument('--wandb_api_key', metavar='wandb_api_key', type=str, default=None,
+                        help='wandb api key for logging')
+    
+    parser.add_argument('--wandb_project', metavar='wandb_project', type=str, default=None,
+                        help='wandb project for logging')
+    
+    parser.add_argument('--wandb_team_name', metavar='wandb_team_name', type=str, default=None,
+                        help='wandb team name for logging')
+    
+    parser.add_argument('--wandb_run_name', metavar='wandb_run_name', type=str, default=None,
+                        help='wandb run name for logging')
+    
+    parser.add_argument('--wandb_group_name', metavar='wandb_group_name', type=str, default=None,
+                        help='wandb group name for logging')
 
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
@@ -745,6 +870,9 @@ def main_cli():
             setattr(args, arg_name, arg_val)
 
     print(args)
+    if args.init_bert_lr is None and args.init_bart_lr is None:
+        raise ValueError("At least one of init_bert_lr or init_bart_lr is required")
+    
     sync_out_streams()
 
     set_all_seeds(args.seed)
@@ -786,6 +914,12 @@ def main_cli():
             print('Creating the model from scratch!')
             model_holder.create_model_from_args(args)
 
+    if hasattr(model_holder.model, "use_sep"):
+        model_holder.model.use_sep = args.use_sep
+
+    if hasattr(model_holder.model, "use_pos_emb"):
+        model_holder.model.use_pos_emb = args.use_pos_emb
+
     if args.neg_qty_per_query < 1:
         print('A number of negatives per query cannot be < 1')
         sys.exit(1)
@@ -818,7 +952,30 @@ def main_cli():
             print('Specify a master port for distributed training!')
             sys.exit(1)
 
+    if args.wandb_api_key is not None:
+        wandb.login(key=args.wandb_api_key)
+
+        args_dict = vars(args)
+
+        # remove any key that start with "wandb"
+        config = {k: v for k, v in args_dict.items() if not k.startswith('wandb')}
+
+        if args.wandb_project is None:
+            wandb_project = args.model_name
+
+        wandb_run = wandb.init(project=wandb_project, 
+                   entity=args.wandb_team_name, 
+                   config=config,
+                   name=args.wandb_run_name,
+                   group=args.wandb_group_name)
+    else:
+        wandb_run = None
+    
+    
+
     train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
+                               init_aggreg_lr=args.init_aggreg_lr, init_bart_lr=args.init_bart_lr,
+                               init_interact_lr=args.init_interact_lr,
                                device_name=args.device_name,
                                momentum=args.momentum, amp=args.amp,
                                warmup_pct=args.warmup_pct,
@@ -850,7 +1007,8 @@ def main_cli():
         model_out_dir=args.model_out_dir,
         model_holder=model_holder,
         loss_obj=loss_obj,
-        train_params=train_params
+        train_params=train_params,
+        wandb_run=wandb_run
     )
 
 

@@ -19,7 +19,7 @@ import math
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
 
 from flexneuart.config import BERT_BASE_MODEL, MSMARCO_MINILM_L2
-from flexneuart.models.utils import init_model
+from flexneuart.models.utils import init_model, AGGREG_ATTR
 from flexneuart.models import register
 from flexneuart.models.base_bert_split_slide_window import \
         BertSplitSlideWindowRanker, DEFAULT_STRIDE, DEFAULT_WINDOW_SIZE, \
@@ -64,7 +64,7 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
                  bert_aggreg_flavor=MSMARCO_MINILM_L2,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
                  rand_special_init=RAND_SPECIAL_INIT_DEFAULT,
-                 dropout=DEFAULT_BERT_DROPOUT, use_sep=DEFAULT_USE_SEP,):
+                 dropout=DEFAULT_BERT_DROPOUT, use_sep=DEFAULT_USE_SEP):
         """Constructor.
 
         :param bert_flavor:             name of the main BERT model.
@@ -82,12 +82,12 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
         print('Dropout', self.dropout)
 
         # Let's create an aggregator BERT
-        init_data = Empty()
-        init_model(init_data, bert_aggreg_flavor)
+        #init_data = Empty()
+        init_model(self, bert_aggreg_flavor, is_aggreg=True)
         # Must memorize this as a class attribute
-        self.bert_aggreg = init_data.bert
+        #self.bert_aggreg = init_data.bert_aggreg
 
-        self.BERT_AGGREG_SIZE = init_data.BERT_SIZE
+        self.BERT_AGGREG_SIZE = self.bert_aggreg.config.hidden_size
 
 
         # Sometimes SEP embeddings isn't used, but there's not much harm to always init
@@ -117,6 +117,14 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
         self.cls = torch.nn.Linear(self.BERT_AGGREG_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
 
+    def aggreg_param_names(self):
+        """
+        :return: a list of the aggregate BERT-parameters. Because we assigned the aggregate model
+                 to an attribute with the name AGGREG_ATTR, all parameter keys must start with this
+                 value followed by a dot.
+        """
+        return set([k for k in self.state_dict().keys() if k.startswith( f'{AGGREG_ATTR}.')])
+    
 
 @register('parade_transf_pretr')
 class ParadeTransfPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
@@ -211,6 +219,7 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
                          window_size=window_size, stride=stride)
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)
+
         self.use_pos_emb = use_pos_emb
 
         # Let's create an aggregator Transformer
@@ -218,7 +227,7 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         norm_layer = torch.nn.LayerNorm(self.BERT_SIZE)
         self.transf_aggreg = torch.nn.TransformerEncoder(encoder_layer, aggreg_layer_qty, norm=norm_layer)
         
-        # create positonal embeddings and the assocuated layernmorm and dropout
+        # create positonal embeddings and the associated layernmorm and dropout
         self.position_embeddings = torch.nn.Embedding(window_size, self.BERT_SIZE)
         self.norm_layer1 = torch.nn.LayerNorm(self.BERT_SIZE)
         self.dropout1 = torch.nn.Dropout(dropout)
@@ -291,7 +300,7 @@ class ParadeTransfWithQueryPretrAggregRanker(ParadeTransfPretrAggregRankerBase):
         super().__init__(bert_flavor=bert_flavor, bert_aggreg_flavor=bert_aggreg_flavor,
                          rand_special_init=rand_special_init,
                          window_size=window_size, stride=stride,
-                         dropout=dropout, use_sep=DEFAULT_USE_SEP)
+                         dropout=dropout, use_sep=use_sep)
         if separate_query_proj:
             print('Using a separate projection matrix for query embeddings')
             self.proj_query = torch.nn.Linear(self.BERT_SIZE, self.BERT_AGGREG_SIZE)

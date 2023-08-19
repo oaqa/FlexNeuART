@@ -5,7 +5,7 @@ import math
 
 from flexneuart.config import BART_BASE_MODEL, MSMARCO_MINILM_L2
 from flexneuart.models import utils as modeling_util
-from flexneuart.models.utils import init_bart, init_model
+from flexneuart.models.utils import init_model, AGGREG_ATTR
 from flexneuart.models.base_bart import BartBaseRanker
 
 from flexneuart.models import register
@@ -21,8 +21,6 @@ DEFAULT_OUTPUT_ATTENTIONS = True
 RAND_SPECIAL_INIT_DEFAULT=True
 DEFAULT_USE_SEP=True
 
-class Empty:
-    pass
 
 class BartMoresModule(BartBaseRanker):
     def __init__(self, bart_flavor, window_size,
@@ -171,12 +169,12 @@ class BartMoresTransfRanker(BartMoresModule):
         self.use_sep = use_sep
 
         # Let's create an aggregator BERT
-        init_aggreg = Empty()
-        init_model(init_aggreg, bert_aggreg_flavor)
+        #init_aggreg = Empty()
+        init_model(self, bert_aggreg_flavor, is_aggreg=True)
         # Must memorize this as a class attribute
-        self.bert_aggreg = init_aggreg.bert
+        #self.bert_aggreg = init_aggreg.bert
 
-        self.BERT_AGGREG_SIZE = init_aggreg.BERT_SIZE
+        self.BERT_AGGREG_SIZE = self.bert_aggreg.config.hidden_size
 
 
         if not rand_special_init and hasattr(self.bert_aggreg, 'embeddings'):
@@ -202,6 +200,14 @@ class BartMoresTransfRanker(BartMoresModule):
         self.cls = torch.nn.Linear(self.BERT_AGGREG_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
         self.dropout = nn.Dropout(dropout)
+
+    def aggreg_param_names(self):
+        """
+        :return: a list of the aggregate BERT-parameters. Because we assigned the aggregate model
+                 to an attribute with the name AGGREG_ATTR, all parameter keys must start with this
+                 value followed by a dot.
+        """
+        return set([k for k in self.state_dict().keys() if k.startswith( f'{AGGREG_ATTR}.')])
 
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):

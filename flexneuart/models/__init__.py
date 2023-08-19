@@ -11,4 +11,5 @@ from flexneuart.models import vanilla_bert_standard, \
                             cedr, \
                             ndrm, \
                             biencoder, \
-                            colbert
+                            colbert, \
+                            mores

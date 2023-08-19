@@ -35,3 +35,6 @@ ujson
 # transformer versions should install protbuf on its own
 #protobuf==3.20
 
+# for logging
+wandb
+

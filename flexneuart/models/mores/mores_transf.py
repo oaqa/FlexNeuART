@@ -4,7 +4,7 @@ import math
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
 
 from flexneuart.config import BERT_BASE_MODEL, MSMARCO_MINILM_L2
-from flexneuart.models.utils import init_model
+from flexneuart.models.utils import init_model, AGGREG_ATTR, INTERACT_ATTR
 from flexneuart.models import register
 
 from flexneuart.models.base_bert_late_interaction import \
@@ -32,20 +32,20 @@ class MoresTransfAggregRanker(BertLateInteraction):
         print('Dropout', self.dropout)
 
         # Let's create an interaction BERT
-        init_interact = Empty()
-        init_model(init_interact, bert_interact_flavor)
+        #init_interact = Empty()
+        init_model(self, bert_interact_flavor, is_interact=True)
         # Must memorize this as a class attribute
-        self.bert_interact = init_interact.bert
+        #self.bert_interact = init_interact.bert
 
-        self.BERT_INTERACT_SIZE = init_interact.BERT_SIZE
+        self.BERT_INTERACT_SIZE = self.bert_interact.config.hidden_size
         
         # Let's create an aggregator BERT
-        init_aggreg = Empty()
-        init_model(init_aggreg, bert_aggreg_flavor)
+        #init_data = Empty()
+        init_model(self, bert_aggreg_flavor, is_aggreg=True)
         # Must memorize this as a class attribute
-        self.bert_aggreg = init_aggreg.bert
+        #self.bert_aggreg = init_data.bert_aggreg
 
-        self.BERT_AGGREG_SIZE = init_aggreg.BERT_SIZE
+        self.BERT_AGGREG_SIZE = self.bert_aggreg.config.hidden_size
 
         if not rand_special_init and hasattr(self.bert_interact, 'embeddings'):
             print(f'Initializing special token CLS using pre-trained embeddings of {bert_interact_flavor}')
@@ -89,6 +89,22 @@ class MoresTransfAggregRanker(BertLateInteraction):
 
         self.cls = torch.nn.Linear(self.BERT_AGGREG_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
+    
+    def aggreg_param_names(self):
+        """
+        :return: a list of the aggregate BERT-parameters. Because we assigned the aggregate model
+                 to an attribute with the name AGGREG_ATTR, all parameter keys must start with this
+                 value followed by a dot.
+        """
+        return set([k for k in self.state_dict().keys() if k.startswith( f'{AGGREG_ATTR}.')])
+    
+    def interact_param_names(self):
+        """
+        :return: a list of the interact BERT-parameters. Because we assigned the interaction model
+                 to an attribute with the name INTERACT_ATTR, all parameter keys must start with this
+                 value followed by a dot.
+        """
+        return set([k for k in self.state_dict().keys() if k.startswith( f'{INTERACT_ATTR}.')])
 
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
