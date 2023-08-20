@@ -312,7 +312,8 @@ def train_iteration(model_holder, device_name,
             sync_out_streams()
             pbar.set_description('%s train loss %.5f' % (lr_desc, avg_loss))
 
-        wandb_run.log({'avg_loss': avg_loss})
+        if wandb_run is not None:
+            wandb_run.log({'avg_loss': avg_loss})
 
 
     # Final model averaging in the end.

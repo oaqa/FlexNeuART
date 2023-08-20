@@ -28,6 +28,7 @@ from flexneuart.models.train.batching import PAD_CODE
 
 USE_BATCH_COEFF = True
 DEFAULT_BERT_DROPOUT = 0.1
+USE_FLASH_ATTN = False
 
 
 class BertBaseRanker(BaseModel):
@@ -37,7 +38,7 @@ class BertBaseRanker(BaseModel):
        We generally/broadly consider these models to be BERT-variants, hence, the name of the base class.
     """
 
-    def __init__(self, bert_flavor):
+    def __init__(self, bert_flavor, use_flash_attn=USE_FLASH_ATTN):
         """Bert ranker constructor.
 
             :param bert_flavor:   The name of the underlying Transformer/BERT or a path
@@ -48,7 +49,7 @@ class BertBaseRanker(BaseModel):
                                   BaseModelOutputWithPoolingAndCrossAttentions.
         """
         super().__init__()
-        init_model(self, bert_flavor)
+        init_model(self, bert_flavor, use_flash_attn=use_flash_attn)
 
     def bert_param_names(self):
         """

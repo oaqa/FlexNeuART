@@ -12,6 +12,8 @@ import argparse
 
 from transformers import PreTrainedTokenizerBase
 
+from flexneuart.config import BERT_BASE_MODEL
+
 from flexneuart.config import DEFAULT_DEVICE_GPU
 from transformers import AutoTokenizer, AutoModel
 from flexneuart.models import model_registry
@@ -31,13 +33,15 @@ def is_longformer(bert_flavor: str):
     """
     return bert_flavor.lower().find('longformer') >= 0
 
-def init_model(obj_ref, bert_flavor : str, is_aggreg=False, is_interact=False):
+def init_model(obj_ref, bert_flavor : str, use_flash_attn: bool=False,
+               is_aggreg: bool=False, is_interact: bool=False):
     """Instantiate a model, a tokenizer, and remember their parameters.
 
     :param obj_ref:       an object to initialize.
     :param bert_flavor:   the name of the underlying BERT Transformer
     :param is_aggreg:      Whether the model is an aggregate model. Default to False.
     :param is_aggreg:      Whether the model is an interaction model. Default to False.
+    :param use_flash:     Whether the model has flash attention. Default to False.
     """
 
     obj_ref.BERT_MODEL = bert_flavor
@@ -47,29 +51,33 @@ def init_model(obj_ref, bert_flavor : str, is_aggreg=False, is_interact=False):
     config = model.config
     if is_aggreg:
         setattr(obj_ref, AGGREG_ATTR, model)
-    elif is_interact:
+        return
+    if is_interact:
         setattr(obj_ref, INTERACT_ATTR, model)
+        return
+    if use_flash_attn:
+        tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(BERT_BASE_MODEL)
     else:
-        setattr(obj_ref, BERT_ATTR, model)
-        obj_ref.config = config
-
         tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(bert_flavor)
-        obj_ref.tokenizer = tokenizer
-        obj_ref.no_token_type_ids = not 'token_type_ids' in tokenizer.model_input_names
 
-        obj_ref.CHANNELS = config.num_hidden_layers + 1
-        obj_ref.BERT_SIZE = config.hidden_size
-        obj_ref.MAXLEN = config.max_position_embeddings
+    setattr(obj_ref, BERT_ATTR, model)
+    obj_ref.config = config
+    obj_ref.tokenizer = tokenizer
+    obj_ref.no_token_type_ids = not 'token_type_ids' in tokenizer.model_input_names
 
-        obj_ref.CLS_TOK_ID = tokenizer.cls_token_id
-        obj_ref.SEP_TOK_ID = tokenizer.sep_token_id
+    obj_ref.CHANNELS = config.num_hidden_layers + 1
+    obj_ref.BERT_SIZE = config.hidden_size
+    obj_ref.MAXLEN = config.max_position_embeddings
 
-        print('Model type:', obj_ref.BERT_MODEL,
-            '# of channels:', obj_ref.CHANNELS,
-            'hidden layer size:', obj_ref.BERT_SIZE,
-            'input window size:', obj_ref.MAXLEN,
-            'no token type IDs:', obj_ref.no_token_type_ids)
+    obj_ref.CLS_TOK_ID = tokenizer.cls_token_id
+    obj_ref.SEP_TOK_ID = tokenizer.sep_token_id
 
+    print('Model type:', obj_ref.BERT_MODEL,
+        '# of channels:', obj_ref.CHANNELS,
+        'hidden layer size:', obj_ref.BERT_SIZE,
+        'input window size:', obj_ref.MAXLEN,
+        'no token type IDs:', obj_ref.no_token_type_ids)
+    return
 
 def init_bart(obj_ref, bart_flavor : str, is_aggreg=False):
     """Instantiate a model, a tokenizer, and remember their parameters.
@@ -105,6 +113,7 @@ def init_bart(obj_ref, bart_flavor : str, is_aggreg=False):
             'hidden layer size:', obj_ref.BART_SIZE,
             'input window size:', obj_ref.MAXLEN,
             'no token type IDs:', obj_ref.no_token_type_ids)
+    return
 
 
 #
