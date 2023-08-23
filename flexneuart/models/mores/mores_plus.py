@@ -11,6 +11,7 @@ from flexneuart.models.base_bart import BartBaseRanker
 from flexneuart.models import register
 
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
+from transformers.models.bart.modeling_bart import BartClassificationHead
 
 
 DEFAULT_WINDOW_SIZE = 150
@@ -94,9 +95,10 @@ class BartMoresRanker(BartMoresModule):
                  output_attentions=output_attentions,
                  output_hidden_states=output_hidden_states)
 
-        self.cls = nn.Linear(self.BART_SIZE, 1)
-        nn.init.xavier_uniform_(self.cls.weight)
-        self.dropout = nn.Dropout(dropout)
+        self.classification_head = BartClassificationHead(input_dim=self.BART_SIZE, 
+                                                          inner_dim=self.BART_SIZE,
+                                                          num_classes=1,
+                                                          pooler_dropout=dropout,)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         query_toks, query_masks, _ = self._prepare_tokens(query_tok, query_mask)
@@ -130,11 +132,13 @@ class BartMoresRanker(BartMoresModule):
             output_hidden_states=self.output_hidden_states,
         )
 
-        # The cls vector of the last Transformer output layer
-        cls_result = decoder_outputs.last_hidden_state[:, 0, :]
+        last_hidden_state = decoder_outputs.last_hidden_state
 
-        scores = self.cls(self.dropout(cls_result))
-        return scores.squeeze(dim=-1)
+        eos_mask = torch.where(query_toks == self.config.eos_token_id, 1, 0).to(last_hidden_state.dtype)
+        sentence_representation = (eos_mask.view(eos_mask.shape + (1,)) * last_hidden_state).sum(1)
+        logits = self.classification_head(sentence_representation)
+        
+        return logits.squeeze(dim=-1)
 
 @register('mores_plus_transf')
 class BartMoresTransfRanker(BartMoresModule):

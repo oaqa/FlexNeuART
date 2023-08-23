@@ -524,7 +524,14 @@ def do_train(device_qty,
         if valid_score is not None:
             tqdm.write(f'validation epoch={epoch} score={valid_score:.4g}')
 
-        wandb_run.log({'final_loss': loss, 'epoch': epoch, 'valid_score': valid_score})
+        train_time = end_train_time - start_train_time
+        val_time = end_val_time - start_val_time
+        
+        if wandb_run is not None:
+            wandb_run.log({'final_loss': loss, 'epoch': epoch, 
+                           'valid_score': valid_score,
+                           'train_time': train_time,
+                           'validation_time': val_time})
 
         train_stat[epoch] = {'loss': loss,
                               'score': valid_score,
@@ -533,8 +540,8 @@ def do_train(device_qty,
                               'bert_lr': bert_lr,
                               'aggreg_lr': aggreg_lr,
                               'interact_lr': interact_lr,
-                              'train_time': end_train_time - start_train_time,
-                              'validation_time': end_val_time - start_val_time}
+                              'train_time': train_time,
+                              'validation_time': val_time}
 
         save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
 
