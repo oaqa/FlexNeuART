@@ -9,10 +9,12 @@
 #
 import torch
 
-from flexneuart.config import BERT_BASE_MODEL
+from flexneuart.config import BERT_BASE_MODEL, BERT_FLASH_ATTN_MODEL
 from flexneuart import models
 from flexneuart.models.base_bert_split_max_chunk import BertSplitMaxChunkRanker
 from flexneuart.models.base_bert import DEFAULT_BERT_DROPOUT
+
+DEFAULT_USE_FLASH_ATTN = True
 
 
 @models.register(models.VANILLA_BERT)
@@ -40,6 +42,26 @@ class VanillaBertCEDRRanker(BertSplitMaxChunkRanker):
     """
     def __init__(self, bert_flavor=BERT_BASE_MODEL, dropout=DEFAULT_BERT_DROPOUT):
         super().__init__(bert_flavor)
+        self.dropout = torch.nn.Dropout(dropout)
+        print('Dropout', self.dropout)
+        self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
+        torch.nn.init.xavier_uniform_(self.cls.weight)
+
+    def forward(self, query_tok, query_mask, doc_tok, doc_mask):
+        cls_reps, _, _ = self.encode_bert(query_tok, query_mask, doc_tok, doc_mask)
+        out = self.cls(self.dropout(cls_reps[-1]))
+        # the last dimension is singleton and needs to be removed
+        return out.squeeze(dim=-1)
+
+
+@models.register(models.VANILLA_BERT_FLASH_ATTN)
+class VanillaBertFlashAttnCEDRRanker(BertSplitMaxChunkRanker):
+    """
+        Similar to VanillaBertCEDRRanker, but uses FLASH attention.
+    """
+    def __init__(self, bert_flavor=BERT_FLASH_ATTN_MODEL, use_flash_attn=DEFAULT_USE_FLASH_ATTN,
+                 dropout=DEFAULT_BERT_DROPOUT):
+        super().__init__(bert_flavor, use_flash_attn=use_flash_attn)
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)

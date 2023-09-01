@@ -50,8 +50,10 @@ IMAP_PROC_CHUNK_QTY=500
 DEVICE_CPU = 'cpu'
 DEFAULT_DEVICE_GPU = 'cuda'
 
+BART_BASE_MODEL='facebook/bart-base'
 BERT_BASE_MODEL='bert-base-uncased'
 MSMARCO_MINILM_L2='cross-encoder/ms-marco-MiniLM-L-2-v2'
+BERT_FLASH_ATTN_MODEL ='mosaicml/mosaic-bert-base-seqlen-2048'
 
 QREL_FILE = 'qrels.txt'
 QUESTION_FILE_PREFIX='QuestionFields'

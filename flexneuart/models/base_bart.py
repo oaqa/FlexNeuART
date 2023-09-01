@@ -23,25 +23,24 @@ from typing import List
 import torch
 
 from flexneuart.models.base import BaseModel
-from flexneuart.models.utils import init_model, BERT_ATTR
+from flexneuart.models.utils import init_bart, BART_ATTR
 from flexneuart.models.train.batching import PAD_CODE
 
 USE_BATCH_COEFF = True
-DEFAULT_BERT_DROPOUT = 0.1
-USE_FLASH_ATTN = False
+DEFAULT_BART_DROPOUT = 0.1
 
 
-class BertBaseRanker(BaseModel):
+class BartBaseRanker(BaseModel):
     """
        The base class for all Transformer-based ranking models.
 
-       We generally/broadly consider these models to be BERT-variants, hence, the name of the base class.
+       We generally/broadly consider these models to be BART-variants, hence, the name of the base class.
     """
 
-    def __init__(self, bert_flavor, use_flash_attn=USE_FLASH_ATTN):
-        """Bert ranker constructor.
+    def __init__(self, bart_flavor):
+        """Bart ranker constructor.
 
-            :param bert_flavor:   The name of the underlying Transformer/BERT or a path
+            :param bart_flavor:   The name of the underlying Transformer/BART or a path
                                   to a previously stored model. This will will be passed
                                   to AutoModel.from_pretrained().
                                   One can use quite a few Transformer models as long as
@@ -49,15 +48,15 @@ class BertBaseRanker(BaseModel):
                                   BaseModelOutputWithPoolingAndCrossAttentions.
         """
         super().__init__()
-        init_model(self, bert_flavor, use_flash_attn=use_flash_attn)
+        init_bart(self, bart_flavor)
 
-    def bert_param_names(self):
+    def bart_param_names(self):
         """
-        :return: a list of the main BERT-parameters. Because we assigned the main BERT model
-                 to an attribute with the name BERT_ATTR, all parameter keys must start with this
+        :return: a list of the main BART-parameters. Because we assigned the main BART model
+                 to an attribute with the name BART_ATTR, all parameter keys must start with this
                  value followed by a dot.
         """
-        return set([k for k in self.state_dict().keys() if k.startswith( f'{BERT_ATTR}.')])
+        return set([k for k in self.state_dict().keys() if k.startswith( f'{BART_ATTR}.')])
 
     def featurize(self, max_query_len : int, max_doc_len : int,
                         query_texts : List[str],
