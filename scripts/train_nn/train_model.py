@@ -26,8 +26,6 @@ import numpy as np
 import wandb
 
 from transformers.optimization import get_constant_schedule_with_warmup
-from threading import BrokenBarrierError
-from multiprocessing import Barrier
 from typing import List
 
 import flexneuart.config
@@ -42,8 +40,7 @@ from flexneuart.models.train.batching import TrainSamplerFixedChunkSize,\
                                              BatchingTrainFixedChunkSize
 
 from flexneuart.models.train.distr_utils import run_distributed, get_device_name_arr, \
-                                                enable_spawn, avg_model_params, \
-                                                BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT
+                                                enable_spawn, avg_model_params
 from flexneuart.models.train.loss import *
 from flexneuart.models.train.amp import get_amp_processors
 
@@ -102,7 +99,7 @@ def get_lr_desc(optimizer):
 
 
 def train_iteration(model_holder, device_name,
-                    sync_barrier, sync_qty_target,
+                    sync_qty_target,
                     lr, bert_lr, aggreg_lr, interact_lr,
                     is_main_proc, device_qty,
                     loss_obj,
@@ -295,10 +292,7 @@ def train_iteration(model_holder, device_name,
             if device_qty > 1:
                 if batch_id % train_params.batch_sync_qty == 0:
                     if sync_qty < sync_qty_target:
-                        try:
-                            sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
-                        except BrokenBarrierError:
-                            raise Exception('A waiting-for-model-parameter-synchronization timeout!')
+                        torch.distributed.barrier()
                         sync_qty += 1
                         avg_model_params(model, train_params.amp)
 
@@ -322,10 +316,7 @@ def train_iteration(model_holder, device_name,
         # This ensures we go through the barrier and averaging parameters exactly the same number of time in each process
         # sync_qty_target + 1 is to ensure we make at least one more final sync after the end of the epoch
         while sync_qty < sync_qty_target + 1:
-            try:
-                sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
-            except BrokenBarrierError:
-                raise Exception('A waiting-for-model-parameter-synchronization timeout!')
+            torch.distributed.barrier()
             sync_qty += 1
             avg_model_params(model, train_params.amp)
 
@@ -333,10 +324,7 @@ def train_iteration(model_holder, device_name,
     #
     # Might be a bit paranoid, but this ensures no process terminates before the last avg_model_params finishes
     #
-    try:
-        sync_barrier.wait(BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT)
-    except BrokenBarrierError:
-        raise Exception('A waiting-for-model-parameter-synchronization timeout!')
+    torch.distributed.barrier()
 
     if pbar is not None:
         pbar.close()
@@ -355,8 +343,6 @@ def do_train(device_qty,
              loss_obj,
              train_params,
              wandb_run):
-
-    sync_barrier = Barrier(device_qty)
 
     if train_params.init_bart_lr is not None:
         bart_param_keys = model_holder.model.bart_param_names()
@@ -456,7 +442,6 @@ def do_train(device_qty,
                 'aggreg_lr': aggreg_lr,
                 'interact_lr': interact_lr,
                 'model_holder': model_holder,
-                'sync_barrier': sync_barrier,
                 'sync_qty_target': sync_qty_target,
                 'device_qty': device_qty,
                 'loss_obj': loss_obj,

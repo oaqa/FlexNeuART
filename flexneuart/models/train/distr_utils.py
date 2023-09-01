@@ -27,10 +27,6 @@ from flexneuart.models.train.amp import get_amp_processors
 
 from multiprocessing import Process
 
-# 5 minutes should be more than enough while waiting
-# for other processes to reach the same training point
-BARRIER_WAIT_MODEL_AVERAGE_TIMEOUT=60*5
-
 MAIN_PROC_FLAG_ARG= 'is_main_proc'
 
 def avg_model_params(model, amp):
