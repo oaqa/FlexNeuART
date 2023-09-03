@@ -77,9 +77,11 @@ class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
         """
         super().__init__(bert_flavor, cls_aggreg_type=CLS_AGGREG_STACK,
                          window_size=window_size, stride=stride)
-        self.use_sep = use_sep
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)
+
+        self.use_sep = use_sep
+        print('Use SEP embeddings', self.use_sep)
 
         # Let's create an aggregator BERT
         #init_data = Empty()
@@ -221,6 +223,7 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         print('Dropout', self.dropout)
 
         self.use_pos_emb = use_pos_emb
+        print('Use positional embeddings', self.use_pos_emb)
 
         # Let's create an aggregator Transformer
         encoder_layer = torch.nn.TransformerEncoderLayer(d_model=self.BERT_SIZE, nhead=aggreg_head_qty)
@@ -228,9 +231,10 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         self.transf_aggreg = torch.nn.TransformerEncoder(encoder_layer, aggreg_layer_qty, norm=norm_layer)
         
         # create positonal embeddings and the associated layernmorm and dropout
-        self.position_embeddings = torch.nn.Embedding(window_size, self.BERT_SIZE)
-        self.norm_layer1 = torch.nn.LayerNorm(self.BERT_SIZE)
-        self.dropout1 = torch.nn.Dropout(dropout)
+        if self.use_pos_emb:
+            self.position_embeddings = torch.nn.Embedding(window_size, self.BERT_SIZE)
+            self.norm_layer1 = torch.nn.LayerNorm(self.BERT_SIZE)
+            self.dropout1 = torch.nn.Dropout(dropout)
 
         self.bert_aggreg_cls_embed = torch.nn.Parameter(torch.randn(self.BERT_SIZE))
 

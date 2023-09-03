@@ -774,12 +774,6 @@ def main_cli():
     
     parser.add_argument('--init_interact_lr', metavar='init interaction learn. rate',
                         type=float, default=None, help='initial learning rate for interaction parameters')
-    
-    parser.add_argument('--use_sep', metavar='use sep',
-                        type=bool, default=False, help='use SEP embeddings for bert_like aggregation models')
-    
-    parser.add_argument('--use_pos_emb', metavar='use pos emb',
-                        type=bool, default=False, help='use positional embeddings for Trasnformer aggregation model')
 
     parser.add_argument('--epoch_lr_decay', metavar='epoch LR decay',
                         type=float, default=1.0, help='per-epoch learning rate decay')
@@ -906,12 +900,6 @@ def main_cli():
             model_holder = ModelSerializer(args.model_name)
             print('Creating the model from scratch!')
             model_holder.create_model_from_args(args)
-
-    if hasattr(model_holder.model, "use_sep"):
-        model_holder.model.use_sep = args.use_sep
-
-    if hasattr(model_holder.model, "use_pos_emb"):
-        model_holder.model.use_pos_emb = args.use_pos_emb
 
     if args.neg_qty_per_query < 1:
         print('A number of negatives per query cannot be < 1')
