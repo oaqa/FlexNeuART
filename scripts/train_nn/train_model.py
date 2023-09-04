@@ -324,7 +324,8 @@ def train_iteration(model_holder, device_name,
     #
     # Might be a bit paranoid, but this ensures no process terminates before the last avg_model_params finishes
     #
-    torch.distributed.barrier()
+    if device_qty > 1:
+        torch.distributed.barrier()
 
     if pbar is not None:
         pbar.close()
