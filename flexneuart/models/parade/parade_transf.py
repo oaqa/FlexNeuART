@@ -15,8 +15,11 @@
 #
 import torch
 import math
+import copy
 
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions
+
+from transformers.models.bert.modeling_bert import BertModel
 
 from flexneuart.config import BERT_BASE_MODEL, MSMARCO_MINILM_L2
 from flexneuart.models.utils import init_model, AGGREG_ATTR
@@ -31,7 +34,7 @@ class Empty:
 
 RAND_SPECIAL_INIT_DEFAULT=True
 DEFAULT_USE_SEP=True
-DEFAULT_POS_EMB=True 
+DEFAULT_USE_POS_EMB=True
 
 
 class ParadeTransfPretrAggregRankerBase(BertSplitSlideWindowRanker):
@@ -216,27 +219,26 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
     def __init__(self, bert_flavor=BERT_BASE_MODEL,
                  aggreg_layer_qty=2, aggreg_head_qty=4,
                  window_size=DEFAULT_WINDOW_SIZE, stride=DEFAULT_STRIDE,
-                 dropout=DEFAULT_BERT_DROPOUT, use_pos_emb=DEFAULT_POS_EMB):
+                 dropout=DEFAULT_BERT_DROPOUT, use_pos_emb=DEFAULT_USE_POS_EMB, use_sep=DEFAULT_USE_SEP):
         super().__init__(bert_flavor, cls_aggreg_type=CLS_AGGREG_STACK,
                          window_size=window_size, stride=stride)
         self.dropout = torch.nn.Dropout(dropout)
         print('Dropout', self.dropout)
 
+        self.use_sep = use_sep
+        print('Use SEP embeddings', self.use_sep)
+
         self.use_pos_emb = use_pos_emb
         print('Use positional embeddings', self.use_pos_emb)
 
         # Let's create an aggregator Transformer
-        encoder_layer = torch.nn.TransformerEncoderLayer(d_model=self.BERT_SIZE, nhead=aggreg_head_qty)
-        norm_layer = torch.nn.LayerNorm(self.BERT_SIZE)
-        self.transf_aggreg = torch.nn.TransformerEncoder(encoder_layer, aggreg_layer_qty, norm=norm_layer)
-        
-        # create positonal embeddings and the associated layernmorm and dropout
-        if self.use_pos_emb:
-            self.position_embeddings = torch.nn.Embedding(window_size, self.BERT_SIZE)
-            self.norm_layer1 = torch.nn.LayerNorm(self.BERT_SIZE)
-            self.dropout1 = torch.nn.Dropout(dropout)
+        config = copy.deepcopy(self.config)
+        config.num_hidden_layers = aggreg_layer_qty
+        self.transf_aggreg = BertModel(config)
 
-        self.bert_aggreg_cls_embed = torch.nn.Parameter(torch.randn(self.BERT_SIZE))
+        embeds = self.bert.embeddings.word_embeddings.weight.data
+        self.transf_aggreg_cls_embed = torch.nn.Parameter(embeds[self.tokenizer.cls_token_id].clone())
+        self.transf_aggreg_sep_embed = torch.nn.Parameter(embeds[self.tokenizer.sep_token_id].clone())
 
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
@@ -248,28 +250,53 @@ class ParadeTransfRandAggregRanker(BertSplitSlideWindowRanker):
         B, N, _ = last_layer_cls_rep.shape
 
         # +two singleton dimensions before the CLS embedding
-        aggreg_cls_tok_exp = self.bert_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
+        aggreg_cls_tok_exp = self.transf_aggreg_cls_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1,
                                                                                                  self.BERT_SIZE)
+        
+        ONES = torch.ones_like(query_mask[:, :1]) # Bx1
+        NILS = torch.zeros_like(query_mask[:, :1]) # Bx1
 
-        # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
-        last_layer_cls_rep = torch.cat([aggreg_cls_tok_exp, last_layer_cls_rep], dim=1)  # [B, N+1, BERT_AGGREG_SIZE]
+        assert ONES.shape == (B, 1)
+        assert NILS.shape == (B, 1)
 
-        # The position_embedding_type is always absolute
+        mask = torch.ones_like(last_layer_cls_rep[..., 0])
+        
+        if self.use_sep:
+            aggreg_sep_tok_exp = self.transf_aggreg_sep_embed.unsqueeze(dim=0).unsqueeze(dim=0).expand(B, 1, 
+                                                                                                     self.BERT_SIZE)
+            EXPECT_TOT_N = N + 3
+
+            last_layer_cls_rep = torch.cat([aggreg_cls_tok_exp, aggreg_sep_tok_exp, 
+                                            last_layer_cls_rep, aggreg_sep_tok_exp], dim=1)  # [B, N+3, BERT_SIZE]
+            
+            mask = torch.cat([ONES, ONES, mask, ONES], dim=1)
+            segment_ids = torch.cat([NILS] * 2 + [ONES] * (N) + [NILS], dim=1)
+        else:
+            # We need to prepend a CLS token vector as the classifier operation depends on the existence of such special token!
+            last_layer_cls_rep = torch.cat([aggreg_cls_tok_exp, last_layer_cls_rep], dim=1)  # [B, N+1, BERT_AGGREG_SIZE]
+
+            EXPECT_TOT_N = N + 1
+
+            mask = torch.cat([ONES, mask], dim=1)
+            segment_ids = torch.cat([NILS] + [ONES] * (N), dim=1)
+
+        assert last_layer_cls_rep.shape == (B, EXPECT_TOT_N, self.BERT_SIZE)
+        assert mask.shape == (B, EXPECT_TOT_N)
+        assert segment_ids.shape == (B, EXPECT_TOT_N)
+
         if self.use_pos_emb:
-            position_ids = torch.arange(last_layer_cls_rep.size(1), 
-                                        device=last_layer_cls_rep.device).unsqueeze(0).expand(B, -1)
-            position_embeddings = self.position_embeddings(position_ids)
-            last_layer_cls_rep += position_embeddings
-            last_layer_cls_rep = self.norm_layer1(last_layer_cls_rep)
-            last_layer_cls_rep = self.dropout1(last_layer_cls_rep)
-
-        # run aggregating BERT and get the last layer output
-        # note that we pass directly vectors (CLS vector including!) without carrying out an embedding, b/c
-        # it's pointless at this stage
-        result = self.transf_aggreg(last_layer_cls_rep)
+            result = self.transf_aggreg(inputs_embeds=last_layer_cls_rep,
+                                        attention_mask=mask,
+                                        token_type_ids=segment_ids.long())
+        else:
+            input_shape = last_layer_cls_rep.size()[:-1]
+            mask = self.transf_aggreg.get_extended_attention_mask(mask, input_shape)
+            result = self.transf_aggreg.encoder(last_layer_cls_rep,
+                                                attention_mask=mask,
+                                                return_dict=True)
 
         # The cls vector of the last Transformer output layer
-        parade_cls_reps = result[:, 0, :]  #
+        parade_cls_reps = result.last_hidden_state[:, 0, :]  #
 
         out = self.cls(self.dropout(parade_cls_reps))
         # the last dimension is singleton and needs to be removed
