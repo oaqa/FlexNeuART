@@ -17,7 +17,7 @@ class Empty:
 
 RAND_SPECIAL_INIT_DEFAULT=True
 
-@register('parade_lateir')    
+@register('parade_lateir_transf')
 class ParadeLateirTransfAggregRanker(BertLateInteraction):
     def __init__(self, bert_flavor=BERT_BASE_MODEL,
                  bert_interact_flavor=MSMARCO_MINILM_L2,
