@@ -99,6 +99,8 @@ class BartMoresRanker(BartMoresModule):
                                                           inner_dim=self.BART_SIZE,
                                                           num_classes=1,
                                                           pooler_dropout=dropout,)
+        # initialize classification head
+        self.classification_head.apply(self.bart._init_weights)
 
     def forward(self, query_tok, query_mask, doc_tok, doc_mask):
         query_toks, query_masks, _ = self._prepare_tokens(query_tok, query_mask)
