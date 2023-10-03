@@ -12,19 +12,13 @@ from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAtte
 from flexneuart.models import utils as modeling_util
 from flexneuart.models.base_bert import BertBaseRanker, USE_BATCH_COEFF
 
-DEFAULT_USE_FLASH_ATTN = False
-
-
 class BertSplitMaxChunkRanker(BertBaseRanker):
     """
         A BERT-based ranker that sub-batches long documents by splitting them into
         chunks that are as large as possible (except the last chunk). For example,
-        if the query size is 32 with no flash attn, and the BERT input window size is 512 tokens,
-        the first chunk size will be 512 - 32 - 3. Three is subtracted because
-        we have three special tokens to accommodate: CLS and two SEP tokens.
     """
 
-    def __init__(self, bert_flavor, use_flash_attn=DEFAULT_USE_FLASH_ATTN):
+    def __init__(self, bert_flavor):
         """Constructor.
 
             :param bert_flavor:   the name of the underlying Transformer/BERT. Various
@@ -32,7 +26,7 @@ class BertSplitMaxChunkRanker(BertBaseRanker):
                                   the object BaseModelOutputWithPoolingAndCrossAttentions.
 
         """
-        super().__init__(bert_flavor, use_flash_attn)
+        super().__init__(bert_flavor)
 
     def forward(self, **inputs):
         raise NotImplementedError
