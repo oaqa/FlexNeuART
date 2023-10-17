@@ -249,7 +249,10 @@ query_qty=len(rerank_run_head)
 # Now we need to merge the re-ranked head run and the tail run in such a fashion that tails entries trail all the head scores.
 # Merging approach: modify tail not head, b/c the tail can even be empty.
 # 1. Compute the minimum top-k scores original (min_top_orig_score) and re-ranked (min_top_rerank_score)
-# 2. Compute
+# 2. Iterate over the tail and compute the difference between min_top_orig_score and the current score (must be >=0)
+# 3. Subtract this difference from min_top_rerank_score. Since the difference >= 0, all tail scores:
+#    i. have scores <= compared to the minimum score (after re-ranking) in the head
+#    ii. maintain their original relative order, because each score is "shifted" using the same constant.
 rerank_run = {}
 assert len(rerank_run_head) == len(valid_run_tail)
 for qid, qrun in rerank_run_head.items():
