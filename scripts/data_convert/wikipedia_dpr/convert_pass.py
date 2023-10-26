@@ -41,7 +41,8 @@ from flexneuart.data_convert import add_bert_tok_args, create_bert_tokenizer_if_
 from flexneuart.config import IMAP_PROC_CHUNK_QTY, REPORT_QTY, \
     TEXT_BERT_TOKENIZED_NAME, \
     TEXT_FIELD_NAME, DOCID_FIELD, \
-    TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
+    TEXT_RAW_FIELD_NAME, TEXT_UNLEMM_FIELD_NAME, \
+    TITLE_RAW_FIELD_NAME, TITLE_FIELD_NAME, TITLE_UNLEMM_FIELD_NAME, \
     SPACY_MODEL
 
 
@@ -97,20 +98,22 @@ class PassParseWorker:
 
         assert len(fields) == 3, f"Wrong format fline: {line}"
         # The passage text is not lower cased, please keep it this way.
-        pass_id, raw_text, title = fields
+        pass_id, raw_text, raw_title = fields
 
         if flt_pass_ids is not None:
             if pass_id not in flt_pass_ids:
                 return ''
 
         text_lemmas, text_unlemm = text_processor.proc_text(raw_text)
-        title_lemmas, title_unlemm = text_processor.proc_text(title)
+        title_lemmas, title_unlemm = text_processor.proc_text(raw_title)
 
         doc = {DOCID_FIELD: pass_id,
                TEXT_FIELD_NAME: title_lemmas + ' ' + text_lemmas,
+
                TITLE_UNLEMM_FIELD_NAME: title_unlemm,
                TEXT_UNLEMM_FIELD_NAME: text_unlemm,
-               TEXT_RAW_FIELD_NAME: title_unlemm + ' ' + raw_text}
+
+               TEXT_RAW_FIELD_NAME: raw_title + ' ' + raw_text}
 
         add_retokenized_field(doc, TEXT_RAW_FIELD_NAME, TEXT_BERT_TOKENIZED_NAME, bert_tokenizer)
         return json.dumps(doc)

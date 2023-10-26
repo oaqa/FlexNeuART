@@ -71,7 +71,7 @@ TEXT_UNLEMM_FIELD_NAME = 'text_unlemm'
 TEXT_BERT_TOKENIZED_NAME = 'text_bert_tok'
 TITLE_FIELD_NAME = 'title'
 TITLE_UNLEMM_FIELD_NAME = 'title_unlemm'
-TITLE_FIELD_NAME = 'title'
+TITLE_RAW_FIELD_NAME = 'title_raw'
 TEXT_RAW_FIELD_NAME = 'text_raw'
 
 ANSWER_LIST_FIELD_NAME = 'answer_list'
