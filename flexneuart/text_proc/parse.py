@@ -28,8 +28,7 @@ SPACY_POS = 'tagger'
 SPACY_NER = 'ner'
 SPACY_PARSER = 'parser'
 
-ALPHANUM_TOKENS = re.compile("^[a-zA-Z-_.0-9]+$")
-
+ALPHANUM_TOKENS = re.compile("^[\w\-_.]+$")
 
 def is_alpha_num(s):
     return s and (ALPHANUM_TOKENS.match(s) is not None)
