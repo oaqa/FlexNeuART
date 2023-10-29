@@ -33,19 +33,21 @@ def is_longformer(bert_flavor: str):
     """
     return bert_flavor.lower().find('longformer') >= 0
 
-def init_model(obj_ref, bert_flavor : str,
-               is_aggreg: bool=False, is_interact: bool=False):
+def init_model(obj_ref, bert_flavor : str, is_aggreg: bool=False,
+               is_interact: bool=False, use_trust_remote_code: bool=False):
     """Instantiate a model, a tokenizer, and remember their parameters.
 
     :param obj_ref:       an object to initialize.
     :param bert_flavor:   the name of the underlying BERT Transformer
     :param is_aggreg:      Whether the model is an aggregate model. Default to False.
-    :param is_aggreg:      Whether the model is an interaction model. Default to False.
+    :param is_intereact:      Whether the model is an interaction model. Default to False.
+    :param use_trust_remote_code:   Whether to trust remote code. Default to False.
     """
 
     obj_ref.BERT_MODEL = bert_flavor
 
-    model = AutoModel.from_pretrained(bert_flavor)
+    model = AutoModel.from_pretrained(bert_flavor,
+                                      trust_remote_code=use_trust_remote_code)
 
     config = model.config
     if is_aggreg:
@@ -75,11 +77,12 @@ def init_model(obj_ref, bert_flavor : str,
         'no token type IDs:', obj_ref.no_token_type_ids)
     return
 
-def init_bart(obj_ref, bart_flavor : str, is_aggreg=False):
+def init_bart(obj_ref, bart_flavor : str, is_aggreg: str=False):
     """Instantiate a model, a tokenizer, and remember their parameters.
 
     :param obj_ref:       an object to initialize.
     :param bart_flavor:   the name of the underlying BART Transformer
+    :param is_aggreg:      Whether the model is an aggregate model. Default to False.
     """
 
     obj_ref.BART_MODEL = bart_flavor
@@ -110,7 +113,6 @@ def init_bart(obj_ref, bart_flavor : str, is_aggreg=False):
             'input window size:', obj_ref.MAXLEN,
             'no token type IDs:', obj_ref.no_token_type_ids)
     return
-
 
 #
 # This function should produce averaging coefficients compatible with the split produced by subbatch
@@ -217,3 +219,15 @@ def add_model_init_basic_args(parser, add_device_name, add_init_model_weights, m
     if add_device_name:
         parser.add_argument('--device_name', metavar='CUDA device name or cpu', default=DEFAULT_DEVICE_GPU,
                             help='The name of the CUDA device to use')
+
+def mean_pool(output_seq, attn_mask):
+
+    # output_seq tensor [batch X sequence len X dim ]
+
+    assert len(output_seq.shape) == 3
+
+    attn_mask_exp = attn_mask.unsqueeze(-1).expand(output_seq.size()).float()
+
+    scale_val = torch.clamp(attn_mask_exp.sum(dim=1), min=1e-10)
+
+    return torch.sum(output_seq * attn_mask_exp, dim=1) / scale_val
