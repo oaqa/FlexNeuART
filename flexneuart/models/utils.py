@@ -23,6 +23,7 @@ BERT_ATTR='bert'
 BART_ATTR='bart'
 AGGREG_ATTR='bert_aggreg'
 INTERACT_ATTR='bert_interact'
+T5_ATTR='t5'
 
 def is_longformer(bert_flavor: str):
     """
@@ -112,6 +113,40 @@ def init_bart(obj_ref, bart_flavor : str, is_aggreg: str=False):
             'hidden layer size:', obj_ref.BART_SIZE,
             'input window size:', obj_ref.MAXLEN,
             'no token type IDs:', obj_ref.no_token_type_ids)
+    return
+
+def init_t5(obj_ref, t5_flavor : str):
+    """Instantiate a model, a tokenizer, and remember their parameters.
+
+    :param obj_ref:       an object to initialize.
+    :param t5_flavor:   the name of the underlying T5 Transformer
+    """
+
+    obj_ref.T5_MODEL = t5_flavor
+
+    model = AutoModel.from_pretrained(t5_flavor)
+
+    config = model.config
+
+    setattr(obj_ref, T5_ATTR, model)
+    obj_ref.config = config
+
+    tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(t5_flavor)
+
+    obj_ref.tokenizer = tokenizer
+    obj_ref.no_token_type_ids = not 'token_type_ids' in tokenizer.model_input_names
+
+    obj_ref.CHANNELS = config.num_hidden_layers + 1
+    obj_ref.T5_SIZE = config.hidden_size
+    obj_ref.MAXLEN = config.n_positions
+
+    obj_ref.EOS_TOK_ID = tokenizer.eos_token_id
+
+    print('Model type:', obj_ref.T5_MODEL,
+          '# of channels:', obj_ref.CHANNELS,
+          'hidden layer size:', obj_ref.T5_SIZE,
+          'input window size:', obj_ref.MAXLEN,
+          'no token type IDs:', obj_ref.no_token_type_ids)
     return
 
 #
