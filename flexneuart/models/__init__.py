@@ -12,4 +12,7 @@ from flexneuart.models import vanilla_bert_standard, \
                             ndrm, \
                             biencoder, \
                             colbert, \
-                            mores
+                            mores,\
+                            longt5, \
+                            mosaicbert
+                            
