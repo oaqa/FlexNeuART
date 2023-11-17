@@ -13,6 +13,5 @@ from flexneuart.models import vanilla_bert_standard, \
                             biencoder, \
                             colbert, \
                             mores,\
-                            longt5, \
+                            t5ranker, \
                             mosaicbert
-                            
