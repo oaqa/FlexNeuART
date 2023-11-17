@@ -95,11 +95,7 @@ class T5EncRanker(T5RankerBase):
 
         """
         toks, mask = self.prepare_toks(query_tok, query_mask, doc_tok, doc_mask)
-
-
-        # execute BERT model
         outputs = self.t5.encoder(input_ids=toks)
-
 
         return outputs.last_hidden_state[ :, 0]
 
@@ -110,7 +106,7 @@ class T5EncRanker(T5RankerBase):
         return out.squeeze(dim=-1)
 
 @register('t5_encdec')
-class T5EncDECRanker(T5RankerBase):
+class T5EncDecRanker(T5RankerBase):
     """
     """
 

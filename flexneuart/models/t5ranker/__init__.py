@@ -1,1 +1,1 @@
-from flexneuart.models.t5ranker import t5Enc, t5EncDec
+from flexneuart.models.t5ranker.t5 import T5EncRanker, T5EncDecRanker
