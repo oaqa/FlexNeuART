@@ -39,7 +39,7 @@ class BertBaseRanker(BaseModel):
     def __init__(self, bert_flavor, use_trust_remote_code: bool=False):
         """Bert ranker constructor.
 
-            :param bert_flavor:   The name of the underlying Transformer/BERT or a path
+                :param bert_flavor:   The name of the underlying Transformer/BERT or a path
                                   to a previously stored model. This will will be passed
                                   to AutoModel.from_pretrained().
                                   One can use quite a few Transformer models as long as

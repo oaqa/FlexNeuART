@@ -44,35 +44,14 @@ file_path = Path(__file__).resolve()
 # Get the parent directory
 parent_dir = file_path.parent
 
-# Assumes the pytorch model and the config.json files are stored in the current directory
-# To use the mosaic bert type e.g mosaic-bert-base-seqlen-2048, go to Huggingface and download the pytorch model and config.json
-# and copy to the current directory
-
-def init_mosaic(obj_ref):
-    json_file_path = parent_dir / "config.json"
-    with open(json_file_path, 'r') as file:
-        config_params = json.load(file)
-
+def init_mosaic(obj_ref, bert_flavor):
     # Create config object
-    config = BertConfig.from_dict(config_params)
-    model = BertModel(config, add_pooling_layer=False)
+    config = BertConfig.from_pretrained(bert_flavor)
+    model = BertModel(config, add_pooling_layer=True)
 
-    # Load the model's state dictionary
-    state_dict = torch.load(parent_dir / 'pytorch_model.bin')
-    new_state_dict = {}
-    for key in state_dict.keys():
-        new_key = key.replace("bert.", "", 1)  # the "1" ensures only the first occurrence is replaced
-        new_state_dict[new_key] = state_dict[key]
+    model.load_state_dict(BertModel.from_pretrained(bert_flavor).state_dict())
 
-    # Remove keys that start with "cls"
-    keys_to_delete = [key for key in new_state_dict.keys() if key.startswith("cls")]
-    for key in keys_to_delete:
-        del new_state_dict[key]
-
-    # Apply the loaded state dictionary to the model
-    model.load_state_dict(new_state_dict)
-
-    obj_ref.BERT_MODEL = "mosaic_bert"
+    obj_ref.BERT_MODEL = bert_flavor
 
     tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(BERT_BASE_MODEL)
     setattr(obj_ref, BERT_ATTR, model)
@@ -94,20 +73,26 @@ def init_mosaic(obj_ref):
         'no token type IDs:', obj_ref.no_token_type_ids)
     return
 
-
-class MosaicBertBaseRanker(BaseModel):
+@register('mosaic_bert')
+class MosaicBert(BaseModel):
     """
-       The base class for all Transformer-based ranking models.
-
-       We generally/broadly consider these models to be BERT-variants, hence, the name of the base class.
+        A special wrapper for MOSAIC BERT code, e.g., mosaicml/mosaic-bert-base-seqlen-2048
     """
+    def __init__(self,
+                 bert_flavor="mosaicml/mosaic-bert-base-seqlen-2048",
+                 dropout=DEFAULT_BERT_DROPOUT):
+        """
 
-    def __init__(self):
-        """Mosaic Bert ranker constructor.
+        :param bert_flavor: a name / location of a MOSAIC BERT model, e.g., mosaicml/mosaic-bert-base-seqlen-2048
+        :param dropout:
         """
         super().__init__()
-        init_mosaic(self)
-        
+        assert bert_flavor.startswith("mosaicml/mosaic-bert"), 'bert_flavor_parameter: you should use one of the mosaic BERT models'
+        init_mosaic(self, bert_flavor)
+        self.dropout = torch.nn.Dropout(dropout)
+        print('Dropout', self.dropout)
+        self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
+        torch.nn.init.xavier_uniform_(self.cls.weight)
 
     def bert_param_names(self):
         """
@@ -121,73 +106,6 @@ class MosaicBertBaseRanker(BaseModel):
                         query_texts : List[str],
                         doc_texts : List[str]) -> tuple:
         """
-           "Featurizes" input. Convert input queries and texts to a set of features,
-            which are compatible to the model's forward function.
-
-            **ATTENTION!!!** This function *MUST* itself create a batch
-            b/c training code does not use a standard PyTorch loader!
-        """
-
-        query_tok_ids = [self._tokenize_and_encode(query) for query in query_texts]
-        query_tok = self._pad_crop(query_tok_ids, max_len=max_query_len)
-        query_mask = self._mask(query_tok_ids, max_len=max_query_len)
-
-        doc_tok_ids = [self._tokenize_and_encode(doc) for doc in doc_texts]
-        doc_tok = self._pad_crop(doc_tok_ids, max_len=max_doc_len)
-        doc_mask = self._mask(doc_tok_ids, max_len=max_doc_len)
-
-        return (query_tok, query_mask, doc_tok, doc_mask)
-
-    def forward(self, **inputs):
-        raise NotImplementedError
-
-    def _tokenize_and_encode(self, text):
-        """Tokenizes the text and converts tokens to respective IDs
-
-        :param text:  input text
-        :return:      an array of token IDs
-        """
-        toks = self.tokenizer.tokenize(text)
-        return self.tokenizer.convert_tokens_to_ids(toks)
-
-    @staticmethod
-    def _pad_crop(items, max_len, pad_code=PAD_CODE):
-        result = []
-        for item in items:
-            if len(item) < max_len:
-                item = item + [pad_code] * (max_len - len(item))
-            if len(item) > max_len:
-                item = item[:max_len]
-            result.append(item)
-
-        return torch.tensor(result).long()
-
-    @staticmethod
-    def _mask(items, max_len):
-        result = []
-        for e in items:
-            elen = min(len(e), max_len)
-            result.append([1.] * elen + [0.] * (max_len - elen))
-
-        return torch.tensor(result).float()
-
-
-@register('mosaic_bert')
-class MosaicBert(MosaicBertBaseRanker):
-    """
-        A standard vanilla BERT Ranker, which does not pad queries (unlike CEDR version of FirstP).
-    """
-    def __init__(self, dropout=DEFAULT_BERT_DROPOUT):
-        super().__init__()
-        self.dropout = torch.nn.Dropout(dropout)
-        print('Dropout', self.dropout)
-        self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
-        torch.nn.init.xavier_uniform_(self.cls.weight)
-
-    def featurize(self, max_query_len : int, max_doc_len : int,
-                        query_texts : List[str],
-                        doc_texts : List[str]) -> tuple:
-        """
            "Featurizes" input. This function itself create a batch
             b/c training code does not use a standard PyTorch loader!
         """
@@ -195,7 +113,6 @@ class MosaicBert(MosaicBertBaseRanker):
         assert len(query_texts) == len(doc_texts), \
             "Document array length must be the same as query array length!"
         input_list = list(zip(query_texts, doc_texts))
-
 
         # With only_second truncation, sometimes this will fail b/c the first sequence is already longer
         # than the maximum allowed length so batch_encode_plus will fail with an exception.
