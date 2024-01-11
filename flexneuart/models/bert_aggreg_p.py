@@ -56,7 +56,7 @@ class BertAggregPRanker(BertSplitSlideWindowRanker):
         if self.aggreg_type == BERT_MAXP:
             out, _ = out.squeeze(dim=-1).max(dim=1)
         elif self.aggreg_type == BERT_SUMP:
-            out, _ = out.squeeze(dim=-1).sum(dim=1)
+            out = out.squeeze(dim=-1).sum(dim=1)
         else:
             raise Exception(f'Unsupported aggregation type: {self.aggreg_type}')
 
