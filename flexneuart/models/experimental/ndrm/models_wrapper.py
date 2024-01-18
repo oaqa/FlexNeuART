@@ -15,7 +15,7 @@ from flexneuart import models
 from flexneuart.io import open_with_default_enc
 from flexneuart.utils import DictToObject, clear_line_console
 from flexneuart.models.base import BaseModel
-from flexneuart.models.ndrm.models_main import NDRM1, NDRM2, NDRM3
+from .models_main import NDRM1, NDRM2, NDRM3
 
 NDRM_MODEL_DICT = {
     'ndrm1' : NDRM1,
