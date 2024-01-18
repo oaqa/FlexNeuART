@@ -1,1 +1,1 @@
-import mosaicbert
+from .mosaicbert import MosaicBert

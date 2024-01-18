@@ -30,8 +30,8 @@ from flexneuart.models import register
 from flexneuart.models.base import BaseModel
 from flexneuart.config import BERT_BASE_MODEL
 
-from .mosaicbert.bert_layers import BertModel
-from .mosaicbert.configuration_bert import BertConfig
+from .bert_layers import BertModel
+from .configuration_bert import BertConfig
 
 PAD_CODE = 0
 DEFAULT_BERT_DROPOUT = 0.1
