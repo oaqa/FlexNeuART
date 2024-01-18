@@ -11,5 +11,5 @@ from flexneuart.models import vanilla_bert_standard, \
                             cedr, \
                             biencoder, \
                             colbert, \
-                            experimenal
+                            experimental
 
