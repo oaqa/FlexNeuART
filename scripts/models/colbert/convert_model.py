@@ -38,13 +38,16 @@ parser.add_argument('--input_dir', metavar='input directory',
 parser.add_argument('--output', metavar='output model',
                     help='output model readable by FlexNeuART code',
                     type=str, required=True)
+parser.add_argument('--bert_flavor', metavar='COLBERT model backbone',
+                    help='COLBERT model backbone',
+                    type=str, default=BERT_BASE_MODEL)
 
 args = parser.parse_args()
 print(args)
 
 model_holder = ModelSerializer('colbert')
 input_dir = args.input_dir
-bert_flavor = BERT_BASE_MODEL
+bert_flavor = args.bert_flavor
 
 print('BERT flavor:', bert_flavor, 'input directory:', input_dir)
 
