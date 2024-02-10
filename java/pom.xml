@@ -6,7 +6,7 @@
   <groupId>edu.cmu.lti.oaqa</groupId>
   <artifactId>FlexNeuART</artifactId>
   <!-- version *MUST* be in sync with flexneuart/version.py -->
-  <version>1.2.4</version>
+  <version>1.2.5</version>
   <inceptionYear>2014</inceptionYear>
   <name>Flexible classic and NeurAl Retrieval Toolkit</name>
   <packaging>jar</packaging>
