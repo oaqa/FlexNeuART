@@ -32,7 +32,7 @@ typing-extensions
 ujson
 
 # Mosaic bert specific
-triton==2.0.0.dev20221202
+#triton==2.0.0.dev20221202
 
 # Deeberta specific, might fail with older protobuf versions.
 # but let's not install it by default, actually newer 
