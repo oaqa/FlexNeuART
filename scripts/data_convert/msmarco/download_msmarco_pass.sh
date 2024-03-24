@@ -8,11 +8,9 @@ dstDir="$1"
 
 source ./common_proc.sh
 
-check_has_azcopy
-
 cd "$dstDir"
 
-azcopy copy https://msmarco.blob.core.windows.net/msmarcoranking/collectionandqueries.tar.gz .
+wget https://msmarco.z22.web.core.windows.net/msmarcoranking/collectionandqueries.tar.gz
 tar zxvf collectionandqueries.tar.gz
 gzip collection.tsv
 
