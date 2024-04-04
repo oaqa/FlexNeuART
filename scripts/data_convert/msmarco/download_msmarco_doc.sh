@@ -8,23 +8,23 @@ dstDir="$1"
 
 source ./common_proc.sh
 
-check_has_azcopy
+#check_has_azcopy
 
 cd "$dstDir"
 
 
 
 for fn in msmarco-docdev-qrels.tsv.gz \
-          msmarco-docs.tsv.gz	\
           msmarco-doctrain-queries.tsv.gz \
           msmarco-docdev-queries.tsv.gz \
           msmarco-doctrain-qrels.tsv.gz \
           msmarco-test2019-queries.tsv.gz \
           msmarco-test2020-queries.tsv.gz \
+          msmarco-docs.tsv.gz	\
           ; do
-  uri=https://msmarco.blob.core.windows.net/msmarcoranking/$fn
+  uri=https://msmarco.z22.web.core.windows.net/msmarcoranking/$fn
   echo "Downloading $uri"
-  azcopy copy "$uri" .
+  wget "$uri" 
 done
 
 for year in 2019 2020 ; do
