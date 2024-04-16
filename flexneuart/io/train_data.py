@@ -31,10 +31,6 @@ def read_datafiles(file_names):
     for file_name in file_names:
         with open_with_default_enc(file_name, 'rt') as file:
             for ln, line in enumerate(tqdm(file, desc='loading datafile (by line)', leave=False)):
-                line = line.rstrip()
-                if not line:
-                    tqdm.write(f'Skipping empty line: {ln+1}')
-                    continue
                 cols = line.split('\t')
                 field_qty = len(cols)
                 if field_qty != 3:
