@@ -45,6 +45,8 @@ class VanillaBertStandard(BertBaseRanker):
         print('Dropout', self.dropout, 'use_mean_pool:', use_mean_pool)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
+        # Uncomment this line when using TinyLlama
+        #self.tokenizer.pad_token=self.tokenizer.eos_token
 
     def featurize(self, max_query_len : int, max_doc_len : int,
                         query_texts : List[str],
@@ -74,8 +76,11 @@ class VanillaBertStandard(BertBaseRanker):
         return (res.input_ids, getattr(res, "token_type_ids", None), res.attention_mask)
 
     def forward(self, input_ids, token_type_ids, attention_mask):
+        kwargs = {}
+        if token_type_ids is not None:
+            kwargs["token_type_ids"] = token_type_ids
         outputs: BaseModelOutputWithPoolingAndCrossAttentions = \
-            self.bert(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
+                self.bert(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
         if not self.use_mean_pool:
             cls_reps = outputs.last_hidden_state[:, 0]
         else:
