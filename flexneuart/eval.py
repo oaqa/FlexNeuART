@@ -167,7 +167,7 @@ class RecallAtK(MetricBase):
 
 @register(METRIC_PRECISION_PREF)
 class PrecisionAtK(MetricBase):
-    def __init__(self, cut_off=float('inf')):
+    def __init__(self, cut_off):
         super().__init__(cut_off)
 
     def __call__(self, rels_sorted_by_scores, qrel_dict):
@@ -175,7 +175,7 @@ class PrecisionAtK(MetricBase):
         tot_rel_qty = sum([rel > RELEVANCE_THRESHOLD for rel in cut_rels])
         assert tot_rel_qty <= len(cut_rels)
 
-        return tot_rel_qty / max(len(cut_rels), 1)
+        return tot_rel_qty / self.cut_off
 
 @register(METRIC_R_PRECISION_PREF)
 class RPrecisionAtK(MetricBase):
