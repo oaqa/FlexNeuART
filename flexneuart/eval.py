@@ -34,6 +34,8 @@ DEFAULT_TREC_EVAL_PATH='trec_eval/trec_eval'
 FAKE_DOC_ID = "THIS_IS_A_VERY_LONG_FAKE_DOCUMENT_ID_THAT_SHOULD_NOT_MATCH_ANY_REAL_ONES"
 
 METRIC_RECALL_PREF = 'recall'
+METRIC_PRECISION_PREF = 'precision'
+METRIC_R_PRECISION_PREF='R-precision'
 METRIC_MAP_PREF = 'map'
 METRIC_MRR_PREF = 'mrr'
 METRIC_MRR_PREF_ADD = 'recip_rank'
@@ -44,12 +46,14 @@ CUTOFF_ARR = [5, 10, 15, 20, 30, 100, 200, 500, 1000]
 
 METRIC_NDCG_LIST = [f'{METRIC_NDCG_PREF}@{k}' for k in CUTOFF_ARR]
 METRIC_RECALL_LIST = [f'{METRIC_RECALL_PREF}@{k}' for k in CUTOFF_ARR]
+METRIC_PRECISION_LIST = [f'{METRIC_PRECISION_PREF}@{k}' for k in CUTOFF_ARR]
+METRIC_R_PRECISION_LIST = [METRIC_R_PRECISION_PREF] + [f'{METRIC_PRECISION_PREF}@{k}' for k in CUTOFF_ARR]
 METRIC_MRR_LIST = [METRIC_MRR_PREF, METRIC_MRR_PREF_ADD] + [f'{METRIC_MRR_PREF}@{k}' for k in CUTOFF_ARR]
 METRIC_MAP_LIST = [METRIC_MAP_PREF] + [f'{METRIC_MAP_PREF}@{k}' for k in CUTOFF_ARR]
 
 LOG2_MULT = math.log(2)
 
-METRIC_LIST = METRIC_MRR_LIST + METRIC_NDCG_LIST + METRIC_MAP_LIST +  METRIC_RECALL_LIST
+METRIC_LIST = METRIC_MRR_LIST + METRIC_NDCG_LIST + METRIC_MAP_LIST +  METRIC_RECALL_LIST + METRIC_PRECISION_LIST + METRIC_R_PRECISION_LIST
 
 RELEVANCE_THRESHOLD = 1e-5
 
@@ -161,7 +165,7 @@ class RecallAtK(MetricBase):
 
         return pos / tot_rel_qty
 
-@register('precision')
+@register(METRIC_PRECISION_PREF)
 class PrecisionAtK(MetricBase):
     def __init__(self, cut_off=float('inf')):
         super().__init__(cut_off)
@@ -173,17 +177,15 @@ class PrecisionAtK(MetricBase):
 
         return tot_rel_qty / max(len(cut_rels), 1)
 
-@register('R-precision')
+@register(METRIC_R_PRECISION_PREF)
 class RPrecisionAtK(MetricBase):
     def __init__(self, cut_off=float('inf')):
         super().__init__(cut_off)
 
     def __call__(self, rels_sorted_by_scores, qrel_dict):
+        tot_rel_qty = self.get_total_rel(qrel_dict)
         cut_rels = self.get_cut_rels(rels_sorted_by_scores)
-        tot_rel_qty = sum([rel > RELEVANCE_THRESHOLD for rel in cut_rels])
-        assert tot_rel_qty <= len(cut_rels)
         rel_qty = sum([rel > RELEVANCE_THRESHOLD for rel in cut_rels[0:tot_rel_qty]])
-
 
         return rel_qty / max(tot_rel_qty, 1)
 
@@ -253,11 +255,15 @@ def get_eval_results(use_external_eval : bool,
     if use_external_eval:
         if eval_metric == METRIC_MAP_PREF:
             m = 'map'
+        elif eval_metric == METRIC_R_PRECISION_PREF:
+            m = 'Rprec'
         elif eval_metric.startswith(METRIC_MAP_PREF) or \
              eval_metric.startswith(METRIC_NDCG_PREF):
             m = eval_metric.replace('@', '_cut_')
         elif eval_metric.startswith(METRIC_RECALL_PREF):
             m = eval_metric.replace('@', '_')
+        elif eval_metric.startswith(METRIC_PRECISION_PREF):
+            m = eval_metric.replace(f'{METRIC_PRECISION_PREF}@', 'P_')
         elif eval_metric in [METRIC_MRR_PREF, METRIC_MRR_PREF_ADD]:
             m = 'recip_rank'
         else:
