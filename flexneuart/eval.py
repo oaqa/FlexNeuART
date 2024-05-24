@@ -161,6 +161,31 @@ class RecallAtK(MetricBase):
 
         return pos / tot_rel_qty
 
+@register('precision')
+class PrecisionAtK(MetricBase):
+    def __init__(self, cut_off=float('inf')):
+        super().__init__(cut_off)
+
+    def __call__(self, rels_sorted_by_scores, qrel_dict):
+        cut_rels = self.get_cut_rels(rels_sorted_by_scores)
+        tot_rel_qty = sum([rel > RELEVANCE_THRESHOLD for rel in cut_rels])
+        assert tot_rel_qty <= len(cut_rels)
+
+        return tot_rel_qty / max(len(cut_rels), 1)
+
+@register('R-precision')
+class RPrecisionAtK(MetricBase):
+    def __init__(self, cut_off=float('inf')):
+        super().__init__(cut_off)
+
+    def __call__(self, rels_sorted_by_scores, qrel_dict):
+        cut_rels = self.get_cut_rels(rels_sorted_by_scores)
+        tot_rel_qty = sum([rel > RELEVANCE_THRESHOLD for rel in cut_rels])
+        assert tot_rel_qty <= len(cut_rels)
+        rel_qty = sum([rel > RELEVANCE_THRESHOLD for rel in cut_rels[0:tot_rel_qty]])
+
+
+        return rel_qty / max(tot_rel_qty, 1)
 
 def get_cutoff(prefix: str, desc_with_cutoff) -> Union[int, float]:
     """A function to extract the cutoff value from metric names such as :
