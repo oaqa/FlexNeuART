@@ -1,7 +1,12 @@
 #!/bin/bash
 
 # A wrapper that compares all key metrics between our code and trec_eval
-for metric in  ndcg@10 ndcg@20 ndcg@100 recip_rank mrr map map@10 map@100 recall@10 recall@20 recall@100 ; do
+for metric in R-precision \
+            precision@10 precision@20 precision@100 \
+            ndcg@10 ndcg@20 ndcg@100 \
+            recip_rank mrr \
+            map map@10 map@100 \
+            recall@10 recall@20 recall@100 ; do
     echo "Testing metric $metric"
     ./check_utils/compare_eval_tools.py \
         --qrels data/sample_runs/trec2022/qrels.txt.bz2 \
@@ -13,7 +18,12 @@ for metric in  ndcg@10 ndcg@20 ndcg@100 recip_rank mrr map map@10 map@100 recall
     fi
 done
 
-for metric in ndcg@10 ndcg@20 ndcg@100 recip_rank mrr map map@10 map@100 recall@10 recall@20 recall@100 ; do
+for metric in R-precision \
+            precision@10 precision@20 precision@100 \
+            ndcg@10 ndcg@20 ndcg@100 \
+            recip_rank mrr \
+            map map@10 map@100 \
+            recall@10 recall@20 recall@100 ; do
     echo "Testing metric $metric"
     ./check_utils/compare_eval_tools.py \
         --qrels data/sample_runs/manner_dev1/qrels.txt.bz2 \
