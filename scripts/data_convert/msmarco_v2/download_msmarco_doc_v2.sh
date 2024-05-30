@@ -8,8 +8,6 @@ dstDir="$1"
 
 source ./common_proc.sh
 
-check_has_azcopy
-
 cd "$dstDir"
 
 for fn in \
@@ -21,9 +19,10 @@ for fn in \
           docv2_dev2_qrels.tsv \
           msmarco_v2_doc.tar \
           ; do
-  uri=https://msmarco.blob.core.windows.net/msmarcoranking/$fn
+  uri=https://msmarco.z22.web.core.windows.net/msmarcoranking/$fn
   echo "Downloading $uri"
-  azcopy copy "$uri" .
+  # Header suggestion is from https://microsoft.github.io/msmarco/TREC-Deep-Learning.html#downloading-the-datasets
+  wget --header "X-Ms-Version: 2019-12-12"  $uri
 done
 
 tar xvf msmarco_v2_doc.tar  
