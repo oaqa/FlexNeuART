@@ -45,8 +45,8 @@ class VanillaBertStandard(BertBaseRanker):
         print('Dropout', self.dropout, 'use_mean_pool:', use_mean_pool)
         self.cls = torch.nn.Linear(self.BERT_SIZE, 1)
         torch.nn.init.xavier_uniform_(self.cls.weight)
-        # Uncomment this line when using TinyLlama
-        #self.tokenizer.pad_token=self.tokenizer.eos_token
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def featurize(self, max_query_len : int, max_doc_len : int,
                         query_texts : List[str],
