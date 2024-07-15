@@ -15,8 +15,9 @@ inputDataSubDir="$INPUT_DATA_SUBDIR"
 indexSubDir=$LUCENE_INDEX_SUBDIR
 indexFieldName="$DEFAULT_QUERY_TEXT_FIELD_NAME"
 
-boolOpts=("h"           "help"          "print help"
-          "exact_match" "exactMatch"    "create index for exact match")
+boolOpts=("h"                     "help"                "print help"
+          "exact_match"           "exactMatch"          "create index for exact match"
+          "ignore_missing_field"  "ignoreMissingField"  "ignore missing fields (use cautiously, fields normally should not be missing")
 
 
 paramOpts=(
@@ -41,10 +42,17 @@ if [ "$collect" = "" ] ; then
 fi
 
 if [ "$exactMatch" = "1" ] ; then
-  exactMatchParam=" -exact_match ";
+  exactMatchParam=" -exact_match "
 else
-  exactMatchParam="";
+  exactMatchParam=""
 fi
+
+if [ "$ignoreMissingField" = "1" ] ; then
+  ignoreMissingFieldParam=" -ignore_missing_field "
+else
+  ignoreMissingFieldParam=""
+fi
+
 inputDataDir="$COLLECT_ROOT/$collect/$inputDataSubDir"
 indexDir="$COLLECT_ROOT/$collect/$indexSubDir"
 
@@ -53,6 +61,7 @@ echo "Input data directory: $inputDataDir"
 echo "Index directory:      $indexDir"
 echo "Index field name:     $indexFieldName"
 echo "Exact match param:    $exactMatchParam"
+echo "Ignore missing field: $ignoreMissingFieldParam"
 
 if [ ! -d "$indexDir" ] ; then
   mkdir -p "$indexDir"
@@ -78,7 +87,7 @@ fi
 # This APP can be memory greedy
 setJavaMem 1 8
 LuceneIndexer \
-    $exactMatchParam \
+    $exactMatchParam $ignoreMissingFieldParam \
     -input_data_dir "$inputDataDir" \
     -index_dir "$indexDir" \
     -index_field "$indexFieldName" \

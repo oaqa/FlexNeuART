@@ -76,6 +76,7 @@ public class LuceneIndexer {
     options.addOption(CommonParams.DATA_FILE_PARAM,     null, true, CommonParams.DATA_FILE_DESC);
     options.addOption(CommonParams.OUT_INDEX_PARAM,     null, true, CommonParams.OUT_INDEX_DESC);
     options.addOption(CommonParams.INDEX_FIELD_NAME_PARAM, null, true, CommonParams.INDEX_FIELD_NAME_DESC);
+    options.addOption(CommonParams.IGNORE_MISSING_FIELD_PARAM, null, false, CommonParams.IGNORE_MISSING_FIELD_DESC);
     options.addOption(EXACT_MATCH_PARAM, null, false, "Create index for exact search");
     
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
@@ -84,6 +85,7 @@ public class LuceneIndexer {
       CommandLine cmd = parser.parse(options, args);
       
       boolean exactMatch = cmd.hasOption(EXACT_MATCH_PARAM);
+      boolean ignoreMissingField = cmd.hasOption(CommonParams.IGNORE_MISSING_FIELD_PARAM);
       
       String indexFieldName = cmd.getOptionValue(CommonParams.INDEX_FIELD_NAME_PARAM);
       
@@ -125,7 +127,8 @@ public class LuceneIndexer {
         }
       }
 
-      createLuceneIndex(inputDataDir, subDirList, dataFileName, outputDirName, indexFieldName, exactMatch, maxNumRec);
+      createLuceneIndex(inputDataDir, subDirList, dataFileName, outputDirName, indexFieldName, 
+                        exactMatch, ignoreMissingField, maxNumRec);
       
     } catch (ParseException e) {
       Usage("Cannot parse arguments", options);
@@ -140,7 +143,8 @@ public class LuceneIndexer {
   public static void createLuceneIndex(String inputDataDir, 
 		  								String subDirList, String dataFileName,
 		  								String outputDirName, 
-		  								String indexFieldName, boolean exactMatch, 
+		  								String indexFieldName, 
+                      boolean exactMatch, boolean ignoreMissingField,
 		  								int maxNumRec) throws IOException, Exception {
 	  File outputDir = new File(outputDirName);
 	  if (!outputDir.exists()) {
@@ -200,8 +204,13 @@ public class LuceneIndexer {
 				  String textFieldValue = docFields.getString(indexFieldName);
 
 				  if (textFieldValue == null) {
-				      // https://github.com/oaqa/FlexNeuART/issues/28
-				    throw new Exception(String.format("Warning: No field '%s', offending DOC #%d", indexFieldName, docNum));
+            if (!ignoreMissingField) {
+				        // https://github.com/oaqa/FlexNeuART/issues/28
+				      throw new Exception(String.format("Warning: No field '%s', offending DOC #%d", indexFieldName, docNum));
+            } else {
+              textFieldValue = "";
+				      logger.warn(String.format("No field '%s', offending DOC #%d", indexFieldName, docNum));
+            }
 				  }
 
 				  Document luceneDoc = new Document();

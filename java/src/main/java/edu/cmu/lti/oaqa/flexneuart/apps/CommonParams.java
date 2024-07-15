@@ -156,6 +156,9 @@ public class CommonParams {
   
   public static final String BATCH_SIZE_PARAM = "batch_size";
   public static final String BATCH_SIZE_DESC = "batch size";
+
+  public static final String IGNORE_MISSING_FIELD_PARAM = "ignore_missing_field";
+  public static final String IGNORE_MISSING_FIELD_DESC = "Use with caution: ignore missing field in the data file (if two many are missing, this can be a big problem";
   
   public static final int USAGE_WIDTH = 90;
   
