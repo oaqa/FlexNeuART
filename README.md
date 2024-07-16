@@ -14,7 +14,7 @@ Please, see our write-up for details: [Boytsov, Leonid. "Traditional IR rivals n
 
 In 2021, after being outsripped by a number of participants, we again advanced to a good position with a help of newly implemented models for ranking long documents. Please, see our write-up for details: Boytsov, L., Lin, T., Gao, F., Zhao, Y., Huang, J., & Nyberg, E. (2022). [Understanding Performance of Long-Document Ranking Models through Comprehensive Evaluation and Leaderboarding](https://arxiv.org/abs/2207.01262). At the moment of writing (October 2022), we have competitive submissions on **both** MS MARCO leaderboards.
 
-Regretffully, for adminstrative and licensing/patenting issues (there is a patent submitted), neural Model 1 code cannot be released. 
+Code corresponding to Neural Model 1 is not included as this may be subject to a third party patent. 
 This model (together with its non-contextualized variant) is described and evaluated in our ECIR 2021 paper:
 [Boytsov, Leonid, and Zico Kolter. "Exploring Classic and Neural Lexical Translation Models for Information Retrieval: Interpretability, Effectiveness, and Efficiency Benefits." ECIR 2021](https://arxiv.org/abs/2102.06815).
 
