@@ -32,7 +32,7 @@ batchesPerEpoch=0
 masterPort=10001
 deviceQty=1
 batchSyncQty=4
-deviceName="cpu" #"cuda:0"
+deviceName="cuda:0"
 addExperSubdir=""
 jsonConf=""
 initModelWeights=""
@@ -207,7 +207,8 @@ echo "==========================================================================
 
 set -o pipefail
 
-accelerate launch ./train_nn/train_model_accelerate.py \
+accelerate launch  \
+  ./train_nn/train_model_accelerate.py \
   $initModelArgs \
   $ampArg \
   $jsonConfArg \
@@ -232,8 +233,8 @@ accelerate launch ./train_nn/train_model_accelerate.py \
    --train_pairs "$trainDir/train_pairs.tsv" \
   --valid_run "$trainDir/test_run.txt" \
   --qrels "$trainDir/qrels.txt" \
-  --sbert_train_file "$derivedDataDir/sbert_msmarco_doc/train.jsonl" \
+  --sbert_train_file "$derivedDataDir/sbert_train/train.jsonl" \
   --model_out_dir "$outModelDir" \
-  --neg_qty_per_query 3 \
+  --neg_qty_per_query 7 \
 2>&1|tee "$outModelDir/train.log"
 

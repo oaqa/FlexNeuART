@@ -127,58 +127,14 @@ def create_collate_fn(model, max_query_length, max_doc_length):
         qids, docids, labels, cand_scores, query_text, doc_text = zip(*batch)
 
         features = model.featurize(max_query_len=max_query_length,
-                                        max_doc_len=max_doc_length,
-                                        query_texts=query_text,
-                                        doc_texts=doc_text)
+                                   max_doc_len=max_doc_length,
+                                   query_texts=query_text,
+                                   doc_texts=doc_text)
 
         return qids, docids, labels, torch.FloatTensor(cand_scores), features
     return collate_fn
 
-def do_train(train_params, model_holder, dataset, query_groups, loss_obj):
-    msmarco_dataset = MSMarcoDataset(dataset[0], dataset[1], 3, 1, 
-                                     train_params.max_query_len, train_params.max_doc_len, 
-                                     query_groups)
-
-    if train_params.init_bart_lr is not None:
-        bart_param_keys = model_holder.model.bart_param_names()
-        bert_lr = train_params.init_bart_lr
-    else:
-        bert_param_keys = model_holder.model.bert_param_names()
-        bert_lr = train_params.init_bert_lr
-
-    if train_params.init_aggreg_lr is not None:
-        aggregator_param_keys = model_holder.model.aggreg_param_names()
-    else:
-        aggregator_param_keys = []
-
-    if train_params.init_interact_lr is not None:
-        interaction_param_keys = model_holder.model.interact_param_names()
-    else:
-        interaction_param_keys = []
-
-    tqdm.write('Training parameters:')
-    tqdm.write(str(train_params))
-    if train_params.init_bart_lr is not None:
-        tqdm.write('BART parameters:')
-        tqdm.write(str(bart_param_keys))
-    else:
-        tqdm.write('BERT parameters:')
-        tqdm.write(str(bert_param_keys))
-    if train_params.init_aggreg_lr is not None:
-        tqdm.write('Aggregator parameters:')
-        tqdm.write(str(aggregator_param_keys))
-    if train_params.init_interact_lr is not None:
-        tqdm.write('Interaction parameters:')
-        tqdm.write(str(interaction_param_keys))
-    tqdm.write('Loss function:' + loss_obj.name())
-
-    epoch_lr_decay = train_params.epoch_lr_decay
-
-    lr = train_params.init_lr
-    
-    aggreg_lr = train_params.init_aggreg_lr
-
-    interact_lr = train_params.init_interact_lr
+def train_iteration(train_params, model_holder, accelerator, dataset, query_groups, loss_obj, lr, bert_lr, aggreg_lr, interact_lr):
 
     if train_params.init_bart_lr is not None:
         bart_param_keys = model_holder.model.bart_param_names()
@@ -223,9 +179,6 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj):
     else:
         params = list(filter(None, [non_bert_params, bert_params, interact_params, aggreg_params]))
 
-    dataloader = DataLoader(msmarco_dataset, batch_size = 4, shuffle=False, 
-                            collate_fn=create_collate_fn(model_holder.model, train_params.max_query_len, train_params.max_doc_len))
-
     if train_params.optim == OPT_ADAMW:
         optimizer = torch.optim.AdamW(params,
                                       lr=lr, weight_decay=train_params.weight_decay)
@@ -235,18 +188,63 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj):
                                     momentum=train_params.momentum)
     else:
         raise Exception('Unsupported optimizer: ' + train_params.optim)
-    
-    max_train_qty = len(query_groups)
+
+    max_train_qty = len(query_groups) * (1 + train_params.neg_qty_per_query) * train_params.epoch_repeat_qty
     lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
 
-    accelerator = Accelerator()
+    scheduler = None
+    lr_schedule= train_params.lr_schedule
+    if lr_schedule == LR_SCHEDULE_CONST:
+        if train_params.warmup_pct:
+            raise Exception('Warm-up cannot be used with LR schedule: ' + lr_schedule)
+    elif lr_schedule in [LR_SCHEDULE_CONST_WARMUP, LR_SCHEDULE_ONE_CYCLE_LR]:
+        if not train_params.warmup_pct:
+            raise Exception('LR schedule: ' + lr_schedule + ' requires a warm-up parameter!')
+
+        num_warmup_steps = int(train_params.warmup_pct * lr_steps // accelerator.state.num_processes)
+
+        if lr_schedule == LR_SCHEDULE_ONE_CYCLE_LR:
+            if accelerator.is_main_process:
+                print(f'Using a one-cycle scheduler with a warm-up for {num_warmup_steps} steps')
+            scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
+                                                            total_steps=lr_steps,
+                                                            max_lr=[lr, bert_lr, interact_lr, aggreg_lr],
+                                                            anneal_strategy='linear',
+                                                            pct_start=train_params.warmup_pct)
+        else:
+            assert lr_schedule == LR_SCHEDULE_CONST_WARMUP
+            if accelerator.is_main_process:
+                print(f'Using a const-learning rate scheduler with a warm-up for {num_warmup_steps} steps')
+
+            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=num_warmup_steps)
+
+    else:
+        raise Exception('Unsupported LR schedule: ' + lr_schedule)
+
+    msmarco_dataset = MSMarcoDataset(queries=dataset[0], 
+                                     docs=dataset[1], 
+                                     neg_qty_per_query=train_params.neg_qty_per_query, 
+                                     epoch_repeat_qty=train_params.epoch_repeat_qty, 
+                                     max_query_length=train_params.max_query_len, 
+                                     max_doc_length=train_params.max_doc_len, 
+                                     query_groups=query_groups)
+    dataloader = DataLoader(msmarco_dataset,
+                            batch_size=train_params.batch_size, 
+                            shuffle=False, 
+                            pin_memory=True,
+                            collate_fn=create_collate_fn(model_holder.model, train_params.max_query_len, train_params.max_doc_len))
+
     auto_cast_class, scaler = get_amp_processors(train_params.amp)
-    model, optimizer, dataloader = accelerator.prepare(model, optimizer, dataloader)
-    device_name = accelerator.device
-    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(device_name)
 
-    pbar = tqdm('training', total=max_train_qty, ncols=80, desc=None, leave=False, file=TQDM_FILE)
+    model, optimizer, scheduler, dataloader = accelerator.prepare(model, optimizer, scheduler, dataloader)
 
+    max_train_qty = len(dataloader)
+    lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
+
+    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight])
+
+    pbar = tqdm('training', total=max_train_qty, ncols=120, desc=None, leave=False, file=TQDM_FILE)
+    model=model_holder.model
     model.train()
     total_loss = 0.
     total_prev_qty = total_qty = 0. # This is a total number of records processed, it can be different from
@@ -256,11 +254,11 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj):
     optimizer.zero_grad()
 
     lr_desc = get_lr_desc(optimizer)
-
     for batch in dataloader:
         with accelerator.autocast():
             model_scores = model(*batch[4])
             assert len(model_scores) == len(batch[0])
+            cand_score_weight = cand_score_weight.to(model_scores.device)
             scores = model_scores + batch[3] * cand_score_weight
 
             data_qty = len(batch[0])
@@ -268,11 +266,10 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj):
             scores = scores.reshape(count, 1 + train_params.neg_qty_per_query)
             loss = loss_obj.compute(scores)
 
-        #scaler.scale(loss).backward()
         accelerator.backward(scaler.scale(loss))
         total_qty += count
 
-        if train_params.print_grads:
+        if accelerator.is_local_main_process and train_params.print_grads:
             tqdm.write(f'Records processed {total_qty} Gradient sums:')
             for k, v in model.named_parameters():
                 tqdm.write(k + ' ' + str('None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2))))
@@ -290,12 +287,271 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj):
 
         avg_loss = total_loss / float(max(1, total_qty))
 
+        # Scheduler must make a step in each batch! *AFTER* the optimizer makes an update!
+        if scheduler is not None:
+            scheduler.step()
+            lr_desc = get_lr_desc(optimizer)
+        
+        avg_loss = total_loss / float(max(1, total_qty))
+
         if pbar is not None:
             pbar.update(count)
             pbar.refresh()
             sync_out_streams()
-            pbar.set_description('%s train loss %.5f' % (lr_desc, avg_loss))
+            device_index = accelerator.device.index if accelerator.device.index is not None else 0
+            pbar.set_description('Process: %d, %s train loss %.5f' % (device_index, lr_desc, avg_loss))
 
+    accelerator.wait_for_everyone()
+    if pbar is not None:
+        pbar.close()
+        sync_out_streams()
+
+    return total_loss / float(max(total_qty, 1))
+
+def run_model_wrapper(model, is_main_proc, rerank_run_file_name,
+                      device_name, batch_size, amp,
+                      max_query_len, max_doc_len,
+                      dataset, orig_run,
+                      cand_score_weight,
+                      desc):
+
+    model.eval()
+    model.to(device_name)
+
+    res = run_model(model,
+                      device_name, batch_size, amp,
+                      max_query_len, max_doc_len,
+                      dataset, orig_run,
+                      cand_score_weight=cand_score_weight,
+                      desc=desc, 
+                      use_progress_bar=is_main_proc)
+    
+    write_run_dict(res, rerank_run_file_name)
+
+def validate(model,
+             accelerator,
+             train_params,
+             dataset,
+             orig_run,
+             qrelf,
+             run_filename):
+    """
+        Model validation step:
+         1. Re-rank a given run
+         2. Save the re-ranked run
+         3. Evaluate results
+
+        :param model:           a model reference.
+        :param device_qty:      a number of devices to use for validation
+        :param master_port:     optional master port (mandatory if proc_qty > 1)
+        :param distr_backend:   optional distributed backend type (mandatory if proc_qty > 1)
+        :param train_params:    training parameters
+        :param dataset:         validation dataset
+        :param orig_run:        a run to re-rank
+        :param qrelf:           QREL files
+        :param run_filename:    a file name to store the *RE-RANKED* run
+        :return: validation score
+
+    """
+    sync_out_streams()
+
+    device_qty = accelerator.state.num_processes
+    proc_specific_params = []
+    device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
+    rerank_file_name_arr = [f'{run_filename}_{rank}' for rank in range(device_qty)]
+
+    qids = list(orig_run.keys())
+    valid_pair_qty = len(qids)
+    run_dict = {}
+    for rank in range(device_qty):
+        if device_qty > 1:
+            vpart_qty = int((valid_pair_qty + device_qty - 1) / device_qty)
+            valid_start = rank * vpart_qty
+            valid_end = min(valid_start + vpart_qty, len(qids))
+            run = {k: orig_run[k] for k in qids[valid_start: valid_end]}
+        else:
+            run = orig_run
+
+        run_dict[rank] = run
+
+    run_model_wrapper(model, True, rerank_file_name_arr[accelerator.process_index],
+                        device_name_arr[accelerator.process_index], train_params.batch_size_val, train_params.amp,
+                        train_params.max_query_len, train_params.max_doc_len, 
+                        dataset, run_dict[accelerator.process_index],
+                        train_params.cand_score_weight, f'Process: {accelerator.process_index}, validation')
+
+    rerank_run = {}
+
+    # Let all the processes finish before merging runs
+    accelerator.wait_for_everyone()
+
+    for k in range(device_qty):
+        sub_run = read_run_dict(rerank_file_name_arr[k])
+
+        for k, v in sub_run.items():
+            assert not k in rerank_run
+            rerank_run[k] = v
+
+    qty0 = len(rerank_run) 
+    qty1 = len(orig_run)
+    assert qty0 == qty1,\
+           f'Something went wrong: # of queries of original and re-ranked runs re diff.: {qty0} vs {qty1}'
+
+    eval_metric = train_params.eval_metric
+
+    sync_out_streams()
+
+    tqdm.write('')
+    tqdm.write(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
+
+    sync_out_streams()
+
+    # Let us always save the run
+    if accelerator.is_main_process:
+        write_run_dict(rerank_run, run_filename)
+
+    accelerator.wait_for_everyone()
+
+    return get_eval_results(use_external_eval=train_params.use_external_eval,
+                            eval_metric=eval_metric,
+                            run=rerank_run,
+                            qrels=qrelf)
+
+
+def do_train(train_params, model_holder, dataset, query_groups, loss_obj, model_out_dir, qrel_file_name, valid_run):
+    if train_params.init_bart_lr is not None:
+        bart_param_keys = model_holder.model.bart_param_names()
+        bert_lr = train_params.init_bart_lr
+    else:
+        bert_param_keys = model_holder.model.bert_param_names()
+        bert_lr = train_params.init_bert_lr
+
+    if train_params.init_aggreg_lr is not None:
+        aggregator_param_keys = model_holder.model.aggreg_param_names()
+    else:
+        aggregator_param_keys = []
+
+    if train_params.init_interact_lr is not None:
+        interaction_param_keys = model_holder.model.interact_param_names()
+    else:
+        interaction_param_keys = []
+
+    tqdm.write('Training parameters:')
+    tqdm.write(str(train_params))
+    if train_params.init_bart_lr is not None:
+        tqdm.write('BART parameters:')
+        tqdm.write(str(bart_param_keys))
+    else:
+        tqdm.write('BERT parameters:')
+        tqdm.write(str(bert_param_keys))
+    if train_params.init_aggreg_lr is not None:
+        tqdm.write('Aggregator parameters:')
+        tqdm.write(str(aggregator_param_keys))
+    if train_params.init_interact_lr is not None:
+        tqdm.write('Interaction parameters:')
+        tqdm.write(str(interaction_param_keys))
+    tqdm.write('Loss function:' + loss_obj.name())
+
+    epoch_lr_decay = train_params.epoch_lr_decay
+
+    lr = train_params.init_lr
+    
+    aggreg_lr = train_params.init_aggreg_lr
+
+    interact_lr = train_params.init_interact_lr
+
+    accelerator = Accelerator()
+    
+    top_valid_score = None
+
+    train_stat = {}
+
+    loss = 0
+
+    for epoch in range(train_params.epoch_qty):
+        start_train_time = time.time()
+        
+        loss = train_iteration(train_params, model_holder, accelerator, dataset, query_groups, loss_obj, lr, bert_lr, aggreg_lr, interact_lr)
+        
+        end_train_time = time.time()
+
+        snapshot_saved = False
+
+        if train_params.save_epoch_snapshots:
+            tqdm.write('Saving the last epoch model snapshot')
+            model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
+            snapshot_saved = True
+
+        os.makedirs(model_out_dir, exist_ok=True)
+
+        if aggreg_lr is not None and interact_lr is None:
+            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} aggreg_lr={aggreg_lr:g}')
+        elif aggreg_lr is not None and interact_lr is not None:
+            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} \
+                       interact_lr={interact_lr:g} aggreg_lr={aggreg_lr:g}')
+        else:
+            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
+
+        sync_out_streams()
+
+        start_val_time = time.time()
+
+        # Run validation if the validation type is
+        run_val = (train_params.valid_type == VALID_ALWAYS) or \
+                  ((train_params.valid_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
+
+        if run_val:
+            valid_score = validate(model=model_holder.model,
+                                accelerator=accelerator,
+                                train_params=train_params,
+                                dataset=dataset,
+                                orig_run=valid_run,
+                                qrelf=qrel_file_name,
+                                run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
+        else:
+            tqdm.write(f'No validation at epoch: {epoch}')
+            valid_score = None
+
+        end_val_time = time.time()
+
+        sync_out_streams()
+
+        if valid_score is not None:
+            tqdm.write(f'validation epoch={epoch} score={valid_score:.4g}')
+
+        train_time = end_train_time - start_train_time
+        val_time = end_val_time - start_val_time
+
+        train_stat[epoch] = {'loss': loss,
+                              'score': valid_score,
+                              'metric_name': train_params.eval_metric,
+                              'lr': lr,
+                              'bert_lr': bert_lr,
+                              'aggreg_lr': aggreg_lr,
+                              'interact_lr': interact_lr,
+                              'train_time': train_time,
+                              'validation_time': val_time}
+
+        if accelerator.is_main_process:
+            save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
+            if run_val :
+                if top_valid_score is None or valid_score > top_valid_score:
+                    top_valid_score = valid_score
+                    tqdm.write('new top validation score, saving the whole model')
+                    model_holder.save_all(os.path.join(model_out_dir, 'model.best'))
+            else:
+                if epoch + 1 == train_params.epoch_qty and not snapshot_saved:
+                    tqdm.write('Saving the last epoch snapshot')
+                    model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
+        
+        accelerator.wait_for_everyone()
+        
+        lr *= epoch_lr_decay
+        bert_lr *= epoch_lr_decay
+        if aggreg_lr is not None:
+            aggreg_lr *= epoch_lr_decay
+        if interact_lr is not None:
+            interact_lr *= epoch_lr_decay
 
 def main_cli():
     parser = argparse.ArgumentParser('model training and validation')
@@ -611,7 +867,7 @@ def main_cli():
 
 
     do_train(train_params=train_params, model_holder=model_holder, 
-             dataset=dataset, query_groups=query_groups, loss_obj=loss_obj)
+             dataset=dataset, query_groups=query_groups, loss_obj=loss_obj, model_out_dir=args.model_out_dir, qrel_file_name=qrelf, valid_run=valid_run)
         
 
 
