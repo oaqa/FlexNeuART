@@ -238,7 +238,7 @@ def train_iteration(train_params, model_holder, accelerator, dataset, query_grou
 
     model, optimizer, scheduler, dataloader = accelerator.prepare(model, optimizer, scheduler, dataloader)
 
-    max_train_qty = len(dataloader)
+    max_train_qty = len(query_groups) // accelerator.num_processes
     lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
 
     cand_score_weight = torch.FloatTensor([train_params.cand_score_weight])
@@ -255,7 +255,7 @@ def train_iteration(train_params, model_holder, accelerator, dataset, query_grou
 
     lr_desc = get_lr_desc(optimizer)
     for batch in dataloader:
-        with accelerator.autocast():
+        with accelerator.accumulate(model):
             model_scores = model(*batch[4])
             assert len(model_scores) == len(batch[0])
             cand_score_weight = cand_score_weight.to(model_scores.device)
@@ -266,33 +266,38 @@ def train_iteration(train_params, model_holder, accelerator, dataset, query_grou
             scores = scores.reshape(count, 1 + train_params.neg_qty_per_query)
             loss = loss_obj.compute(scores)
 
-        accelerator.backward(scaler.scale(loss))
-        total_qty += count
+            accelerator.backward(scaler.scale(loss))
+            total_qty += count
 
-        if accelerator.is_local_main_process and train_params.print_grads:
-            tqdm.write(f'Records processed {total_qty} Gradient sums:')
-            for k, v in model.named_parameters():
-                tqdm.write(k + ' ' + str('None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2))))
+            if accelerator.is_local_main_process and train_params.print_grads:
+                tqdm.write(f'Records processed {total_qty} Gradient sums:')
+                for k, v in model.named_parameters():
+                    tqdm.write(k + ' ' + str('None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2))))
 
-        total_loss += loss.item()
+            total_loss += loss.item()
 
         # If it's time to validate, we need to interrupt the batch
-        if total_qty - total_prev_qty >= batch_size:
+        #if total_qty - total_prev_qty >= batch_size:
+#
+        #    scaler.step(optimizer)
+        #    scaler.update()
+#
+        #    optimizer.zero_grad()
+        #    total_prev_qty = total_qty
 
+            avg_loss = total_loss / float(max(1, total_qty))
+            
             scaler.step(optimizer)
             scaler.update()
 
+            # Scheduler must make a step in each batch! *AFTER* the optimizer makes an update!
+            if scheduler is not None:
+                scheduler.step()
+                lr_desc = get_lr_desc(optimizer)
+            
             optimizer.zero_grad()
-            total_prev_qty = total_qty
 
-        avg_loss = total_loss / float(max(1, total_qty))
-
-        # Scheduler must make a step in each batch! *AFTER* the optimizer makes an update!
-        if scheduler is not None:
-            scheduler.step()
-            lr_desc = get_lr_desc(optimizer)
-        
-        avg_loss = total_loss / float(max(1, total_qty))
+            avg_loss = total_loss / float(max(1, total_qty))
 
         if pbar is not None:
             pbar.update(count)
@@ -460,7 +465,7 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj, model_
 
     interact_lr = train_params.init_interact_lr
 
-    accelerator = Accelerator()
+    accelerator = Accelerator(gradient_accumulation_steps=train_params.batch_sync_qty)
     
     top_valid_score = None
 
@@ -633,7 +638,7 @@ def main_cli():
     # If we use the listwise loss, it should be at least two negatives by default
     parser.add_argument('--neg_qty_per_query', metavar='listwise negatives',
                         help='Number of negatives per query for a listwise losse',
-                        type=int, default=2)
+                        type=int, default=3)
 
     parser.add_argument('--init_lr', metavar='init learn. rate',
                         type=float, default=0.001, help='initial learning rate for BERT-unrelated parameters')
