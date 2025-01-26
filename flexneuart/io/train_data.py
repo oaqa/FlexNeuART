@@ -115,6 +115,7 @@ def write_filtered_datafiles(out_f, data, data_type, id_filter_set):
     qty = 0
     for id, v in data.items():
         if id in id_filter_set:
+            v = v.rstrip('\n\r')
             out_f.write(f'{data_type}\t{id}\t{v}\n')
             qty += 1
 
