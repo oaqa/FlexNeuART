@@ -40,7 +40,7 @@ from flexneuart.retrieval.fwd_index import get_forward_index
 
 from flexneuart.eval import FAKE_DOC_ID, METRIC_LIST, get_eval_results
 
-from mtasklite import delayed_init
+from mtasklite import delayed_init, ExceptionBehaviour
 from mtasklite.processes import pqdm
 
 from time import time
@@ -95,7 +95,8 @@ parser.add_argument('--max_num_query', metavar='max # of val queries',
 parser.add_argument('--eval_metric', choices=METRIC_LIST, default=METRIC_LIST[0],
                     help='Metric list: ' + ','.join(METRIC_LIST),
                     metavar='eval metric')
-parser.add_argument('--device_qty', required=True, help='A number of the CUDA devices to use')
+parser.add_argument('--device_qty', type=int, required=True, help='A number of the CUDA devices to use')
+parser.add_argument('--override_max_doc_len', type=int, default=None)
 
 parser.add_argument(f'--{IGNORE_MISS}', 
                     help='ignore queries missing from the run file or vice versa',
@@ -128,6 +129,7 @@ if query_field is None:
     query_field = args.index_field
 
 device_qty=args.device_qty
+print(f'Number of devices: {device_qty}')
 
 max_query_val = args.max_num_query
 
@@ -185,11 +187,13 @@ print('top-k used', top_k, '# of queries used', len(valid_run_all_cand))
 
 @delayed_init
 class Worker:
-    def __init__(self, device_name):
+    def __init__(self, device_name, override_max_doc_len):
         print('Loading model from:', fname, ' to device', device_name)
         model_holder = ModelSerializer.load_all(fname)
         self.max_doc_len = model_holder.max_doc_len
         self.max_query_len = model_holder.max_query_len
+        if override_max_doc_len is not None:
+           self.max_doc_len = args.override_max_doc_len
         self.model = model_holder.model
         self.model.to(device_name)
         self.device_name = device_name
@@ -200,11 +204,13 @@ class Worker:
     def __call__(self, query_id):
         query_dict = {query_id: query_dict_all[query_id]}
         dataset = query_dict, data_dict
+        orig_run = {query_id: valid_run_head[query_id]}
         return run_model(self.model,
                                device_name=self.device_name,
                                batch_size=args.batch_size, amp=args.amp,
                                max_query_len=self.max_query_len, max_doc_len=self.max_doc_len,
-                               dataset=dataset, orig_run=valid_run_head,
+                               dataset=dataset, orig_run=orig_run,
+                               use_progress_bar=False,
                                cand_score_weight=args.cand_score_weight,
                                desc='validating the run')
 min_top_orig_score = {}
@@ -261,9 +267,9 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 start_val_time = time()
 rerank_run_head = {}
 
-for run_dict in pqdm(list(query_dict_all),
-                     [Worker(device_name) for device_name in get_device_name_arr(device_qty)],
-                     device_qty):
+for run_dict in pqdm(list(query_dict_all.keys()),
+                     [Worker(device_name, args.override_max_doc_len) for device_name in get_device_name_arr(device_qty)],
+                     exception_behaviour=ExceptionBehaviour.IMMEDIATE):
     for k, v in run_dict.items():
         rerank_run_head[k] = v
 
