@@ -41,3 +41,5 @@ ujson
 
 # for logging
 wandb
+
+mtasklite

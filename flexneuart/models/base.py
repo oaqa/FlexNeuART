@@ -185,7 +185,10 @@ class ModelSerializer:
 
             :return a reference to the object that contains model parameters & reference
         """
-        data = torch.load(file_name, map_location=DEVICE_CPU)
+        # weights_only == False is not safe (and relies on the old pickling methods rather than safetensors),
+        # but it is a reasonable trade off for a little research framework. Importantly, we set weights_only
+        # explicitly because this default value will change in future versions (and it currently produces are warning)
+        data = torch.load(file_name, map_location=DEVICE_CPU, weights_only=False)
         for exp_key in [MODEL_NAME, MODEL_ARGS, MODEL_STATE_DICT, MAX_QUERY_LEN, MAX_DOC_LEN]:
             if not exp_key in data:
                 raise Exception(f'Missing key {exp_key} in {file_name}')
@@ -205,7 +208,7 @@ class ModelSerializer:
     def load_weights(self, file_name, strict=False):
         """Load only weights."""
         assert self.model is not None, "The model needs to be created using 'create_model_from_args'"
-        weights = torch.load(file_name, map_location=DEVICE_CPU)
+        weights = torch.load(file_name, map_location=DEVICE_CPU, weights_only=True)
 
         print(self.model.load_state_dict(weights, strict=strict))
 
