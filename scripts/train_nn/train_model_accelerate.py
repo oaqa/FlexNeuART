@@ -1,17 +1,37 @@
+#!/usr/bin/env python
+#
+#  Copyright 2014+ Carnegie Mellon University
+#
+#  Using some bits from CEDR: https://github.com/Georgetown-IR-Lab/cedr
+#  which has MIT, i.e., Apache 2 compatible license.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
 import os
 import time
 import sys
 import math
-import json
 import argparse
+import json
 import numpy as np
 import wandb
-
+import torch
 from torch.utils.data import Dataset, DataLoader
 from accelerate import Accelerator
+from accelerate.utils import set_seed
 
 from transformers.optimization import get_constant_schedule_with_warmup
-from typing import List
+from typing import List, Tuple, Dict, Any
 
 import flexneuart.config
 import flexneuart.io.train_data
@@ -81,7 +101,7 @@ def get_lr_desc(optimizer):
 
     return ' '.join(lr_arr)
 
-class MSMarcoDataset(Dataset):
+class FlexNeuArtDataset(Dataset):
     def __init__(self, queries, docs, neg_qty_per_query, epoch_repeat_qty, max_query_length, max_doc_length, query_groups):
         self.queries = queries
         self.docs = docs
@@ -107,12 +127,11 @@ class MSMarcoDataset(Dataset):
         group = self.query_groups[group_idx]
 
         qid = group['qid']
+        
         if instance_idx == 0:
-            docid = group['pos_id']
-            cand_score = group['pos_id_score']
+            docid, cand_score = group['pos_id'], group['pos_id_score']
         else:
-            docid = group['neg_ids'][instance_idx - 1]
-            cand_score = group['neg_ids_score'][instance_idx - 1]
+            docid, cand_score = group['neg_ids'][instance_idx - 1], group['neg_ids_score'][instance_idx - 1]
 
         query_text = self.queries[qid]
         doc_text = self.docs[docid]
@@ -120,7 +139,6 @@ class MSMarcoDataset(Dataset):
         label = 1 if instance_idx == 0 else 0
 
         return qid, docid, label, cand_score, query_text, doc_text
-
 
 def create_collate_fn(model, max_query_length, max_doc_length):
     def collate_fn(batch):
@@ -134,25 +152,38 @@ def create_collate_fn(model, max_query_length, max_doc_length):
         return qids, docids, labels, torch.FloatTensor(cand_scores), features
     return collate_fn
 
-def train_iteration(train_params, model_holder, accelerator, dataset, query_groups, loss_obj, lr, bert_lr, aggreg_lr, interact_lr):
+
+def train_epoch(accelerator: Accelerator,
+                train_params: TrainParams,
+                model_holder: ModelSerializer,
+                dataloader: Any,
+                lr: float,
+                bert_lr: float,
+                aggreg_lr: float,
+                interact_lr: float,
+                sync_qty_target: int,
+                loss_obj: Any,
+                wandb_run: Any):
+    
+    model = model_holder.model.module if hasattr(model_holder.model, "module") else model_holder.model
 
     if train_params.init_bart_lr is not None:
-        bart_param_keys = model_holder.model.bart_param_names()
+        bart_param_keys = model.bart_param_names()
     else:
-        bert_param_keys = model_holder.model.bert_param_names()
-    model = model_holder.model
-
+        bert_param_keys = model.bert_param_names()
+    
     if aggreg_lr is not None:
-        aggreg_keys = model_holder.model.aggreg_param_names()
+        aggreg_keys = model.aggreg_param_names()
     else:
         aggreg_keys = []
 
     if interact_lr is not None:
-        interact_keys = model_holder.model.interact_param_names()
+        interact_keys = model.interact_param_names()
     else:
         interact_keys = []
 
     all_params = [(k, v) for k, v in model.named_parameters() if v.requires_grad]
+
     # BERT parameters use a special learning weight
     if train_params.init_bart_lr is not None:
         bart_params = {'params': [v for k, v in all_params if k in bart_param_keys], 'lr': bert_lr}
@@ -173,7 +204,7 @@ def train_iteration(train_params, model_holder, accelerator, dataset, query_grou
     else:
         non_bert_params = {'params': [v for k, v in all_params if not k in bert_param_keys and not k in aggreg_keys \
                                       and not k in interact_keys]}
-
+    
     if train_params.init_bart_lr is not None:
         params = list(filter(None, [non_bert_params, bart_params, interact_params, aggreg_params]))
     else:
@@ -189,10 +220,10 @@ def train_iteration(train_params, model_holder, accelerator, dataset, query_grou
     else:
         raise Exception('Unsupported optimizer: ' + train_params.optim)
 
-    max_train_qty = len(query_groups) * (1 + train_params.neg_qty_per_query) * train_params.epoch_repeat_qty
-    lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
-
+    lr_steps = len(dataloader) // (1 + train_params.neg_qty_per_query)
+ 
     scheduler = None
+
     lr_schedule= train_params.lr_schedule
     if lr_schedule == LR_SCHEDULE_CONST:
         if train_params.warmup_pct:
@@ -201,11 +232,11 @@ def train_iteration(train_params, model_holder, accelerator, dataset, query_grou
         if not train_params.warmup_pct:
             raise Exception('LR schedule: ' + lr_schedule + ' requires a warm-up parameter!')
 
-        num_warmup_steps = int(train_params.warmup_pct * lr_steps // accelerator.state.num_processes)
+        num_warmup_steps = int(train_params.warmup_pct * lr_steps)
 
         if lr_schedule == LR_SCHEDULE_ONE_CYCLE_LR:
-            if accelerator.is_main_process:
-                print(f'Using a one-cycle scheduler with a warm-up for {num_warmup_steps} steps')
+            
+            accelerator.print(f'Using a one-cycle scheduler with a warm-up for {num_warmup_steps} steps')
             scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
                                                             total_steps=lr_steps,
                                                             max_lr=[lr, bert_lr, interact_lr, aggreg_lr],
@@ -213,106 +244,118 @@ def train_iteration(train_params, model_holder, accelerator, dataset, query_grou
                                                             pct_start=train_params.warmup_pct)
         else:
             assert lr_schedule == LR_SCHEDULE_CONST_WARMUP
-            if accelerator.is_main_process:
-                print(f'Using a const-learning rate scheduler with a warm-up for {num_warmup_steps} steps')
+            accelerator.print(f'Using a const-learning rate scheduler with a warm-up for {num_warmup_steps} steps')
 
             scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=num_warmup_steps)
 
     else:
         raise Exception('Unsupported LR schedule: ' + lr_schedule)
 
-    msmarco_dataset = MSMarcoDataset(queries=dataset[0], 
-                                     docs=dataset[1], 
-                                     neg_qty_per_query=train_params.neg_qty_per_query, 
-                                     epoch_repeat_qty=train_params.epoch_repeat_qty, 
-                                     max_query_length=train_params.max_query_len, 
-                                     max_doc_length=train_params.max_doc_len, 
-                                     query_groups=query_groups)
-    dataloader = DataLoader(msmarco_dataset,
-                            batch_size=train_params.batch_size, 
-                            shuffle=False, 
-                            pin_memory=True,
-                            collate_fn=create_collate_fn(model_holder.model, train_params.max_query_len, train_params.max_doc_len))
+    if accelerator.is_main_process:
+        tqdm.write('Optimizer:' + str( optimizer))
 
-    auto_cast_class, scaler = get_amp_processors(train_params.amp)
+    # Freeing unused memory
+    accelerator.free_memory()
 
-    model, optimizer, scheduler, dataloader = accelerator.prepare(model, optimizer, scheduler, dataloader)
+    optimizer, scheduler = accelerator.prepare(optimizer, scheduler)
 
-    max_train_qty = len(query_groups) // accelerator.num_processes
-    lr_steps = int(math.ceil(max_train_qty / train_params.batch_size))
-
-    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight])
-
-    pbar = tqdm('training', total=max_train_qty, ncols=120, desc=None, leave=False, file=TQDM_FILE)
-    model=model_holder.model
-    model.train()
     total_loss = 0.
     total_prev_qty = total_qty = 0. # This is a total number of records processed, it can be different from
                                     # the total number of training pairs
+
     batch_size = train_params.batch_size
 
     optimizer.zero_grad()
 
     lr_desc = get_lr_desc(optimizer)
+
+    batch_id = 0
+
+    if accelerator.is_main_process:
+
+        if train_params.print_grads:
+            tqdm.write('Gradient sums before training')
+            for k, v in model.named_parameters():
+                tqdm.write(k + ' ' + str('None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2))))
+
+        pbar = tqdm('training', total=lr_steps * train_params.batch_size * accelerator.num_processes, ncols=80, desc=None, leave=False, file=TQDM_FILE)
+    else:
+        pbar = None
+
+    neg_qty_per_query = train_params.neg_qty_per_query
+    
+    cand_score_weight = torch.FloatTensor([train_params.cand_score_weight]).to(accelerator.device)
+    
+    auto_cast_class, scaler = get_amp_processors(train_params.amp)
+
+    sync_qty = 0
+
     for batch in dataloader:
         with accelerator.accumulate(model):
-            model_scores = model(*batch[4])
-            assert len(model_scores) == len(batch[0])
-            cand_score_weight = cand_score_weight.to(model_scores.device)
-            scores = model_scores + batch[3] * cand_score_weight
+            with auto_cast_class():
+                model_scores = model(*batch[4])
+                assert len(model_scores) == len(batch[3])
+                scores = model_scores + batch[3] * cand_score_weight
 
-            data_qty = len(batch[0])
-            count = data_qty // (1 + train_params.neg_qty_per_query)
-            scores = scores.reshape(count, 1 + train_params.neg_qty_per_query)
-            loss = loss_obj.compute(scores)
-
+                data_qty = len(batch[3])
+                count = data_qty // (1 + neg_qty_per_query)
+                assert count * (1 + neg_qty_per_query) == data_qty
+                scores = scores.reshape(count, 1 + neg_qty_per_query)
+                loss = loss_obj.compute(scores)
+                if wandb_run is not None:
+                    wandb_run.log({'loss': loss.item()})
+        
             accelerator.backward(scaler.scale(loss))
             total_qty += count
 
-            if accelerator.is_local_main_process and train_params.print_grads:
-                tqdm.write(f'Records processed {total_qty} Gradient sums:')
+            if accelerator.is_main_process and train_params.print_grads:
+                tqdm.write(f'Records processed {total_qty * accelerator.state.num_processes} Gradient sums:')
                 for k, v in model.named_parameters():
                     tqdm.write(k + ' ' + str('None' if v.grad is None else torch.sum(torch.norm(v.grad, dim=-1, p=2))))
 
-            total_loss += loss.item()
+            total_loss += loss
 
-        # If it's time to validate, we need to interrupt the batch
-        #if total_qty - total_prev_qty >= batch_size:
-#
-        #    scaler.step(optimizer)
-        #    scaler.update()
-#
-        #    optimizer.zero_grad()
-        #    total_prev_qty = total_qty
+            # If it's time to validate, we need to interrupt the batch
+            if total_qty - total_prev_qty >= batch_size:
+                scaler.step(optimizer)
+                scaler.update()
 
-            avg_loss = total_loss / float(max(1, total_qty))
-            
-            scaler.step(optimizer)
-            scaler.update()
+                optimizer.zero_grad()
+                total_prev_qty = total_qty
 
-            # Scheduler must make a step in each batch! *AFTER* the optimizer makes an update!
-            if scheduler is not None:
-                scheduler.step()
-                lr_desc = get_lr_desc(optimizer)
-            
-            optimizer.zero_grad()
+                # Scheduler must make a step in each batch! *AFTER* the optimizer makes an update!
+                if scheduler is not None:
+                    scheduler.step()
+                    lr_desc = get_lr_desc(optimizer)
 
-            avg_loss = total_loss / float(max(1, total_qty))
+                batch_id += 1
+
+        avg_loss = accelerator.gather(total_loss).mean().item()  / float(max(1, total_qty))
 
         if pbar is not None:
-            pbar.update(count)
+            pbar.update(count * accelerator.num_processes)
             pbar.refresh()
-            sync_out_streams()
-            device_index = accelerator.device.index if accelerator.device.index is not None else 0
-            pbar.set_description('Process: %d, %s train loss %.5f' % (device_index, lr_desc, avg_loss))
+            pbar.set_description('%s train loss %.5f' % (lr_desc, avg_loss))
 
-    accelerator.wait_for_everyone()
+        if wandb_run is not None:
+            wandb_run.log({'avg_loss': avg_loss})
+
+
+    # Final model averaging in the end.
+
+    if accelerator.state.num_processes > 1:
+        # This ensures we go through the barrier and averaging parameters exactly the same number of time in each process
+        # sync_qty_target + 1 is to ensure we make at least one more final sync after the end of the epoch
+        while sync_qty < sync_qty_target + 1:
+            accelerator.wait_for_everyone()
+            sync_qty += 1
+            avg_model_params(model, train_params.amp)
+
     if pbar is not None:
         pbar.close()
-        sync_out_streams()
 
-    return total_loss / float(max(total_qty, 1))
-
+    return accelerator.gather(total_loss).mean().item() / float(max(total_qty, 1))
+        
 def run_model_wrapper(model, is_main_proc, rerank_run_file_name,
                       device_name, batch_size, amp,
                       max_query_len, max_doc_len,
@@ -321,7 +364,6 @@ def run_model_wrapper(model, is_main_proc, rerank_run_file_name,
                       desc):
 
     model.eval()
-    model.to(device_name)
 
     res = run_model(model,
                       device_name, batch_size, amp,
@@ -333,63 +375,52 @@ def run_model_wrapper(model, is_main_proc, rerank_run_file_name,
     
     write_run_dict(res, rerank_run_file_name)
 
-def validate(model,
-             accelerator,
-             train_params,
-             dataset,
-             orig_run,
-             qrelf,
-             run_filename):
-    """
-        Model validation step:
-         1. Re-rank a given run
-         2. Save the re-ranked run
-         3. Evaluate results
 
-        :param model:           a model reference.
-        :param device_qty:      a number of devices to use for validation
-        :param master_port:     optional master port (mandatory if proc_qty > 1)
-        :param distr_backend:   optional distributed backend type (mandatory if proc_qty > 1)
-        :param train_params:    training parameters
-        :param dataset:         validation dataset
-        :param orig_run:        a run to re-rank
-        :param qrelf:           QREL files
-        :param run_filename:    a file name to store the *RE-RANKED* run
-        :return: validation score
-
-    """
-    sync_out_streams()
+def validate(accelerator: Accelerator,
+             model: Any,
+             train_params: TrainParams,
+             dataset: Tuple[Dict[str, str], Dict[str, str]],
+             orig_run: Dict[str, Dict[str, float]],
+             qrelf: str,
+             run_filename: Any):
 
     device_qty = accelerator.state.num_processes
-    proc_specific_params = []
-    device_name_arr = get_device_name_arr(device_qty, train_params.device_name)
+    device_name_arr = get_device_name_arr(device_qty, accelerator.device)
     rerank_file_name_arr = [f'{run_filename}_{rank}' for rank in range(device_qty)]
-
     qids = list(orig_run.keys())
     valid_pair_qty = len(qids)
-    run_dict = {}
-    for rank in range(device_qty):
-        if device_qty > 1:
-            vpart_qty = int((valid_pair_qty + device_qty - 1) / device_qty)
-            valid_start = rank * vpart_qty
-            valid_end = min(valid_start + vpart_qty, len(qids))
-            run = {k: orig_run[k] for k in qids[valid_start: valid_end]}
-        else:
-            run = orig_run
 
-        run_dict[rank] = run
+    rank = accelerator.state.process_index
+    if device_qty > 1:
+        vpart_qty = int((valid_pair_qty + device_qty - 1) / device_qty)
+        valid_start = rank * vpart_qty
+        valid_end = min(valid_start + vpart_qty, len(qids))
+        run = {k: orig_run[k] for k in qids[valid_start: valid_end]}
+    else:
+        run = orig_run
 
-    run_model_wrapper(model, True, rerank_file_name_arr[accelerator.process_index],
-                        device_name_arr[accelerator.process_index], train_params.batch_size_val, train_params.amp,
-                        train_params.max_query_len, train_params.max_doc_len, 
-                        dataset, run_dict[accelerator.process_index],
-                        train_params.cand_score_weight, f'Process: {accelerator.process_index}, validation')
-
+    device_name = device_name_arr[rank]
+        
+    tqdm.write('Process rank %d device %s using %d validation queries out of %d' %
+                (rank, device_name, len(run), valid_pair_qty))
+    
+    run_model_wrapper(model=model,
+                      is_main_proc=accelerator.is_main_process,
+                      rerank_run_file_name=rerank_file_name_arr[rank],
+                      device_name=accelerator.device,
+                      batch_size=train_params.batch_size,
+                      amp=train_params.amp,
+                      max_query_len=train_params.max_query_len,
+                      max_doc_len=train_params.max_doc_len,
+                      dataset=dataset,
+                      orig_run=run,
+                      cand_score_weight=train_params.cand_score_weight,
+                      desc='validation')
+    
+    # Let all processes finish their piece of work
+    accelerator.wait_for_everyone() 
+    
     rerank_run = {}
-
-    # Let all the processes finish before merging runs
-    accelerator.wait_for_everyone()
-
     for k in range(device_qty):
         sub_run = read_run_dict(rerank_file_name_arr[k])
 
@@ -404,26 +435,28 @@ def validate(model,
 
     eval_metric = train_params.eval_metric
 
-    sync_out_streams()
-
-    tqdm.write('')
-    tqdm.write(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
-
-    sync_out_streams()
-
-    # Let us always save the run
     if accelerator.is_main_process:
-        write_run_dict(rerank_run, run_filename)
+        tqdm.write('')
+        tqdm.write(f'Evaluating run with QREL file {qrelf} using metric {eval_metric}')
 
-    accelerator.wait_for_everyone()
+     # Let us always save the run
+    write_run_dict(rerank_run, run_filename)
 
     return get_eval_results(use_external_eval=train_params.use_external_eval,
                             eval_metric=eval_metric,
                             run=rerank_run,
                             qrels=qrelf)
 
-
-def do_train(train_params, model_holder, dataset, query_groups, loss_obj, model_out_dir, qrel_file_name, valid_run):
+def do_train(accelerator: Accelerator,
+             train_params: TrainParams,
+             model_holder: ModelSerializer,
+             dataset: Tuple[Dict[str, str], Dict[str, str]],
+             query_groups: List,
+             qrel_file_name: str,
+             loss_obj: Any,
+             model_out_dir: str,
+             valid_run: Dict[str, Dict[str, float]],
+             wandb_run: Any):
     if train_params.init_bart_lr is not None:
         bart_param_keys = model_holder.model.bart_param_names()
         bert_lr = train_params.init_bart_lr
@@ -440,22 +473,23 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj, model_
         interaction_param_keys = model_holder.model.interact_param_names()
     else:
         interaction_param_keys = []
-
-    tqdm.write('Training parameters:')
-    tqdm.write(str(train_params))
-    if train_params.init_bart_lr is not None:
-        tqdm.write('BART parameters:')
-        tqdm.write(str(bart_param_keys))
-    else:
-        tqdm.write('BERT parameters:')
-        tqdm.write(str(bert_param_keys))
-    if train_params.init_aggreg_lr is not None:
-        tqdm.write('Aggregator parameters:')
-        tqdm.write(str(aggregator_param_keys))
-    if train_params.init_interact_lr is not None:
-        tqdm.write('Interaction parameters:')
-        tqdm.write(str(interaction_param_keys))
-    tqdm.write('Loss function:' + loss_obj.name())
+    
+    if accelerator.is_main_process:
+        tqdm.write('Training parameters:')
+        tqdm.write(str(train_params))
+        if train_params.init_bart_lr is not None:
+            tqdm.write('BART parameters:')
+            tqdm.write(str(bart_param_keys))
+        else:
+            tqdm.write('BERT parameters:')
+            tqdm.write(str(bert_param_keys))
+        if train_params.init_aggreg_lr is not None:
+            tqdm.write('Aggregator parameters:')
+            tqdm.write(str(aggregator_param_keys))
+        if train_params.init_interact_lr is not None:
+            tqdm.write('Interaction parameters:')
+            tqdm.write(str(interaction_param_keys))
+        tqdm.write('Loss function:' + loss_obj.name())
 
     epoch_lr_decay = train_params.epoch_lr_decay
 
@@ -465,67 +499,116 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj, model_
 
     interact_lr = train_params.init_interact_lr
 
-    accelerator = Accelerator(gradient_accumulation_steps=train_params.batch_sync_qty)
-    
     top_valid_score = None
 
     train_stat = {}
 
-    loss = 0
+    device_qty = accelerator.state.num_processes
+
+    flexneuart_dataset = FlexNeuArtDataset(queries=dataset[0], 
+                                           docs=dataset[1], 
+                                           neg_qty_per_query=train_params.neg_qty_per_query,
+                                           epoch_repeat_qty=train_params.epoch_repeat_qty,
+                                           max_query_length=train_params.max_query_len,
+                                           max_doc_length=train_params.max_doc_len,
+                                           query_groups=query_groups)
+    
+    # Forcing the dataloader to emit batches that are multiple of (1+neg_qty)
+    # dataloader_batch_size = int(train_params.batch_size * (1 + train_params.neg_qty_per_query))
+    dataloader_batch_size = train_params.batch_size
+    
+    dataloader = DataLoader(flexneuart_dataset,
+                            batch_size=dataloader_batch_size,
+                            shuffle= False,
+                            collate_fn=create_collate_fn(model_holder.model, train_params.max_query_len, train_params.max_doc_len))
+
+    # Prepare for training
+    model_holder.model, dataloader = accelerator.prepare(model_holder.model, dataloader)
 
     for epoch in range(train_params.epoch_qty):
         start_train_time = time.time()
+
+        # The number of synchronization points need to be adjusted by the number of devies processes,
+        # as well as by the batch size
+        sync_qty_target = int(len(flexneuart_dataset) * train_params.epoch_repeat_qty) / \
+                              (device_qty * train_params.batch_sync_qty * train_params.batch_size)
         
-        loss = train_iteration(train_params, model_holder, accelerator, dataset, query_groups, loss_obj, lr, bert_lr, aggreg_lr, interact_lr)
-        
+        # Training mode automatically syncs the model for next epoch
+        model_holder.model.train()
+
+        if len(flexneuart_dataset) > 0:
+            loss = train_epoch(accelerator=accelerator,
+                        train_params=train_params,
+                        model_holder=model_holder,
+                        dataloader=dataloader,
+                        lr=lr,
+                        bert_lr=bert_lr,
+                        aggreg_lr=aggreg_lr,
+                        interact_lr=interact_lr,
+                        sync_qty_target=sync_qty_target,
+                        loss_obj=loss_obj,
+                        wandb_run=wandb_run)
+        else:
+            loss = 0
+
         end_train_time = time.time()
 
         snapshot_saved = False
 
         if train_params.save_epoch_snapshots:
-            tqdm.write('Saving the last epoch model snapshot')
-            model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
-            snapshot_saved = True
+            if accelerator.is_main_process:
+                tqdm.write('Saving the last epoch model snapshot')
+                model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
+                snapshot_saved = True
+                os.makedirs(model_out_dir, exist_ok=True)
 
-        os.makedirs(model_out_dir, exist_ok=True)
+            accelerator.wait_for_everyone()
 
-        if aggreg_lr is not None and interact_lr is None:
-            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} aggreg_lr={aggreg_lr:g}')
-        elif aggreg_lr is not None and interact_lr is not None:
-            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} \
-                       interact_lr={interact_lr:g} aggreg_lr={aggreg_lr:g}')
-        else:
-            tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
-
-        sync_out_streams()
-
+        if accelerator.is_main_process:
+            if aggreg_lr is not None and interact_lr is None:
+                tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} aggreg_lr={aggreg_lr:g}')
+            elif aggreg_lr is not None and interact_lr is not None:
+                tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g} \
+                            interact_lr={interact_lr:g} aggreg_lr={aggreg_lr:g}')
+            else:
+                tqdm.write(f'train epoch={epoch} loss={loss:.3g} lr={lr:g} bert_lr={bert_lr:g}')
+        
         start_val_time = time.time()
 
         # Run validation if the validation type is
         run_val = (train_params.valid_type == VALID_ALWAYS) or \
                   ((train_params.valid_type == VALID_LAST) and epoch + 1 == train_params.epoch_qty)
+        
+        # Changing the mode acts as a barrier to let all the processes catch up to this point.
+        model_holder.model.eval()
 
         if run_val:
-            valid_score = validate(model=model_holder.model,
-                                accelerator=accelerator,
-                                train_params=train_params,
-                                dataset=dataset,
-                                orig_run=valid_run,
-                                qrelf=qrel_file_name,
-                                run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
+            valid_score = validate(accelerator=accelerator,
+                                   model=model_holder.model.module if hasattr(model_holder.model, "module") else model_holder.model,
+                                   train_params=train_params,
+                                   dataset=dataset,
+                                   orig_run=valid_run,
+                                   qrelf=qrel_file_name,
+                                   run_filename=os.path.join(model_out_dir, f'{epoch}.run'))
         else:
             tqdm.write(f'No validation at epoch: {epoch}')
             valid_score = None
 
         end_val_time = time.time()
 
-        sync_out_streams()
-
         if valid_score is not None:
             tqdm.write(f'validation epoch={epoch} score={valid_score:.4g}')
 
+        accelerator.wait_for_everyone()
+
         train_time = end_train_time - start_train_time
         val_time = end_val_time - start_val_time
+
+        if accelerator.is_main_process and wandb_run is not None:
+            wandb_run.log({'final_loss': loss, 'epoch': epoch, 
+                           'valid_score': valid_score,
+                           'train_time': train_time,
+                           'validation_time': val_time})
 
         train_stat[epoch] = {'loss': loss,
                               'score': valid_score,
@@ -539,7 +622,8 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj, model_
 
         if accelerator.is_main_process:
             save_json(os.path.join(model_out_dir, 'train_stat.json'), train_stat)
-            if run_val :
+
+            if run_val:
                 if top_valid_score is None or valid_score > top_valid_score:
                     top_valid_score = valid_score
                     tqdm.write('new top validation score, saving the whole model')
@@ -548,20 +632,21 @@ def do_train(train_params, model_holder, dataset, query_groups, loss_obj, model_
                 if epoch + 1 == train_params.epoch_qty and not snapshot_saved:
                     tqdm.write('Saving the last epoch snapshot')
                     model_holder.save_all(os.path.join(model_out_dir, f'model.{epoch}'))
-        
+
         accelerator.wait_for_everyone()
-        
+
         lr *= epoch_lr_decay
         bert_lr *= epoch_lr_decay
         if aggreg_lr is not None:
             aggreg_lr *= epoch_lr_decay
         if interact_lr is not None:
             interact_lr *= epoch_lr_decay
-
+    
+    
 def main_cli():
     parser = argparse.ArgumentParser('model training and validation')
 
-    add_model_init_basic_args(parser, add_device_name=True, add_init_model_weights=True, mult_model=False)
+    add_model_init_basic_args(parser, add_device_name=False, add_init_model_weights=True, mult_model=False)
 
     parser.add_argument('--max_query_len', metavar='max. query length',
                         type=int, default=flexneuart.config.DEFAULT_MAX_QUERY_LEN,
@@ -638,7 +723,7 @@ def main_cli():
     # If we use the listwise loss, it should be at least two negatives by default
     parser.add_argument('--neg_qty_per_query', metavar='listwise negatives',
                         help='Number of negatives per query for a listwise losse',
-                        type=int, default=3)
+                        type=int, default=2)
 
     parser.add_argument('--init_lr', metavar='init learn. rate',
                         type=float, default=0.001, help='initial learning rate for BERT-unrelated parameters')
@@ -721,35 +806,39 @@ def main_cli():
     parser.add_argument('--json_conf', metavar='JSON config',
                         type=str, default=None,
             help='a JSON config (simple-dictionary): keys are the same as args, takes precedence over command line args')
-
+    
     args = parser.parse_args()
 
     all_arg_names = vars(args).keys()
 
+    # Creating the accelerator object to log only on the main process
+    accelerator = Accelerator(gradient_accumulation_steps=args.batch_sync_qty)
+
     if args.json_conf is not None:
         conf_file = args.json_conf
-        print(f'Reading configuration variables from {conf_file}')
+        accelerator.print(f'Reading configuration variables from {conf_file}')
         add_conf = read_json(conf_file)
         for arg_name, arg_val in add_conf.items():
             arg_name : str
             if arg_name not in all_arg_names and not arg_name.startswith(MODEL_PARAM_PREF):
-                print(f'Invalid option in the configuration file: {arg_name}')
+                accelerator.print(f'Invalid option in the configuration file: {arg_name}')
                 sys.exit(1)
             arg_default = getattr(args, arg_name, None)
             exp_type = type(arg_default)
             if arg_default is not None and type(arg_val) != exp_type:
-                print(f'Invalid type in the configuration file: {arg_name} expected type: '+str(type(exp_type)) + f' default {arg_default}')
+                accelerator.print(f'Invalid type in the configuration file: {arg_name} expected type: '+str(type(exp_type)) + f' default {arg_default}')
                 sys.exit(1)
-            print(f'Using {arg_name} from the config')
+            accelerator.print(f'Using {arg_name} from the config')
             setattr(args, arg_name, arg_val)
 
-    print(args)
+    accelerator.print(args)
     if args.init_bert_lr is None and args.init_bart_lr is None:
         raise ValueError("At least one of init_bert_lr or init_bart_lr is required")
-    
-    sync_out_streams()
 
     set_all_seeds(args.seed)
+
+    # Setting the same seed for accelerate
+    set_seed(args.seed)
 
     loss_name = args.loss_func
     if loss_name == PairwiseSoftmaxLoss.name():
@@ -763,38 +852,39 @@ def main_cli():
     elif loss_name == PairwiseMarginRankingLossWrapper.name():
         loss_obj = PairwiseMarginRankingLossWrapper(margin = args.loss_margin)
     else:
-        print('Unsupported loss: ' + loss_name)
+        accelerator.print('Unsupported loss: ' + loss_name)
         sys.exit(1)
 
-    print('Loss:', loss_obj)
+    accelerator.print('Loss:', loss_obj)
 
     # For details on our serialization approach, see comments in the ModelWrapper
     model_holder : ModelSerializer = None
 
     if args.init_model is not None:
-        print('Loading a complete model from:', args.init_model)
+        accelerator.print('Loading a complete model from:', args.init_model)
         model_holder = ModelSerializer.load_all(args.init_model)
     else:
         if args.model_name is None:
-            print('--model_name argument must be provided unless --init_model points to a fully serialized model!')
+            accelerator.print('--model_name argument must be provided unless --init_model points to a fully serialized model!')
             sys.exit(1)
         if args.init_model_weights is not None:
             model_holder = ModelSerializer(args.model_name)
             model_holder.create_model_from_args(args)
-            print('Loading model weights from:', args.init_model_weights)
+            accelerator.print('Loading model weights from:', args.init_model_weights)
             model_holder.load_weights(args.init_model_weights, strict=False)
         else:
             model_holder = ModelSerializer(args.model_name)
-            print('Creating the model from scratch!')
+            accelerator.print('Creating the model from scratch!')
             model_holder.create_model_from_args(args)
 
     if args.neg_qty_per_query < 1:
-        print('A number of negatives per query cannot be < 1')
+        accelerator.print('A number of negatives per query cannot be < 1')
         sys.exit(1)
 
-    os.makedirs(args.model_out_dir, exist_ok=True)
-    print(model_holder.model)
-    sync_out_streams()
+    if accelerator.is_main_process:
+        os.makedirs(args.model_out_dir, exist_ok=True)
+    
+    accelerator.print(model_holder.model)
 
     dataset = flexneuart.io.train_data.read_datafiles(args.datafiles)
     qrelf = args.qrels
@@ -807,24 +897,21 @@ def main_cli():
         query_ids = query_ids[0:max_query_val]
         valid_run = {k: valid_run[k] for k in query_ids}
 
-    print('# of eval. queries:', len(query_ids), ' in the file', args.valid_run)
+    accelerator.print('# of eval. queries:', len(query_ids), ' in the file', args.valid_run)
 
     query_groups = []
     with open(args.sbert_train_file, 'r') as sdata:
         for group in sdata:
             query_groups.append(json.loads(group))
+    accelerator.print('# of query groups :', len(query_groups), ' in the file', args.sbert_train_file)
 
-    device_qty = args.device_qty
+    device_qty = accelerator.state.num_processes
 
-    master_port = args.master_port
     if device_qty > 1:
         # Tokenizer parallelism creates problems with multiple processes
         os.environ['TOKENIZERS_PARALLELISM'] = 'false'
-        if master_port is None:
-            print('Specify a master port for distributed training!')
-            sys.exit(1)
 
-    if args.wandb_api_key is not None:
+    if accelerator.is_main_process and args.wandb_api_key is not None:
         wandb.login(key=args.wandb_api_key)
 
         args_dict = vars(args)
@@ -843,12 +930,20 @@ def main_cli():
     else:
         wandb_run = None
     
+    if  loss_obj.has_mult_negatives():
+        assert args.neg_qty_per_query > 1
+        neg_qty_per_query = args.neg_qty_per_query
+    else:
+        neg_qty_per_query = 1
     
-
+ 
+    # adjusting the batch size to be a multiple of group size
+    args.batch_size = int(math.ceil(args.batch_size / (1 + neg_qty_per_query)) * (1 + neg_qty_per_query))
+    
     train_params = TrainParams(init_lr=args.init_lr, init_bert_lr=args.init_bert_lr,
                                init_aggreg_lr=args.init_aggreg_lr, init_bart_lr=args.init_bart_lr,
                                init_interact_lr=args.init_interact_lr,
-                               device_name=args.device_name,
+                               device_name=accelerator.device,
                                momentum=args.momentum, amp=args.amp,
                                warmup_pct=args.warmup_pct,
                                lr_schedule=args.lr_schedule,
@@ -863,17 +958,26 @@ def main_cli():
                                max_query_len=model_holder.max_query_len, max_doc_len=model_holder.max_doc_len,
                                epoch_qty=args.epoch_qty, epoch_repeat_qty=args.epoch_repeat_qty,
                                cand_score_weight=args.cand_score_weight,
-                               neg_qty_per_query=args.neg_qty_per_query,
+                               neg_qty_per_query=neg_qty_per_query,
                                use_external_eval=args.use_external_eval, eval_metric=args.eval_metric.lower(),
                                print_grads=args.print_grads,
                                shuffle_train=not args.no_shuffle_train,
                                valid_type=args.valid_type,
                                optim=args.optim)
-
-
-    do_train(train_params=train_params, model_holder=model_holder, 
-             dataset=dataset, query_groups=query_groups, loss_obj=loss_obj, model_out_dir=args.model_out_dir, qrel_file_name=qrelf, valid_run=valid_run)
-        
+    
+    do_train(accelerator=accelerator,
+             train_params=train_params,
+             model_holder=model_holder, 
+             dataset=dataset, 
+             query_groups=query_groups, 
+             qrel_file_name=qrelf, 
+             loss_obj=loss_obj, 
+             model_out_dir=args.model_out_dir,
+             valid_run=valid_run,
+             wandb_run=wandb_run)
+    
+    # Clean up before termination
+    accelerator.end_training()
 
 
 if __name__ == '__main__':

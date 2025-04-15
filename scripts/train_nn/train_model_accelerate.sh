@@ -220,7 +220,6 @@ accelerate launch  \
   --optim $optim \
   --momentum $momentum \
   --seed $seed \
-  --device_name $deviceName \
   --device_qty $deviceQty \
   --distr_backend $distrBackend \
   --batch_sync_qty $batchSyncQty \
@@ -235,6 +234,5 @@ accelerate launch  \
   --qrels "$trainDir/qrels.txt" \
   --sbert_train_file "$derivedDataDir/sbert_train/train.jsonl" \
   --model_out_dir "$outModelDir" \
-  --neg_qty_per_query 7 \
 2>&1|tee "$outModelDir/train.log"
 
