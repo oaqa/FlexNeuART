@@ -1,0 +1,120 @@
+[
+    {
+        "part_name": "queries_all",
+        "dataset_name": "beir/scifact/test",
+        "is_query": true,
+        "src_attributes": [
+            "text"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "krovetz_stemmer",
+                    "args": {
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "text"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "text": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "text_raw": "text_raw",
+                            "text.stems": "text"
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "part_name": "docs",
+        "dataset_name": "beir/scifact",
+        "is_query": false,
+        "src_attributes": [
+            "title",
+            "text"
+        ],
+        "pipeline": [
+            [
+                {
+                    "name": "krovetz_stemmer",
+                    "args": {
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "title"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "title": "title_raw"
+                        }
+                    }
+                },
+                {
+                    "name": "krovetz_stemmer",
+                    "args": {
+                        "stop_word_file": "data/stopwords.txt",
+                        "input_fields": [
+                            "text"
+                        ]
+                    }
+                },
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "text": "text_raw"
+                        }
+                    }
+                }
+            ],
+            [
+                {
+                    "name": "rename",
+                    "args": {
+                        "rename_dict": {
+                            "title.stems": "title",
+                            "text.stems": "text"
+                        }
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title.stems",
+                            "text.stems"
+                        ],
+                        "output_field": "title_text"
+                    }
+                },
+                {
+                    "name": "concat",
+                    "args": {
+                        "input_fields": [
+                            "title_raw",
+                            "text_raw"
+                        ],
+                        "output_field": "title_text_raw"
+                    }
+                }
+            ]
+        ]
+    }
+]
